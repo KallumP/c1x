@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { editorReducer, emptyEditor, newObject, type EditorState } from "../../src/editor";
+import { editorReducer, emptyEditor, newObject, type EditorAction, type EditorState } from "../../src/editor";
 import type { LevelObject } from "../../src/objects";
 
 const box = (x: number): LevelObject => newObject("basic", [x, 0, 0]);
@@ -63,6 +63,52 @@ describe("remove", () => {
     let state = editorReducer(withObjects([box(1), box(2), box(3)]), { type: "select", index: 2 });
     state = editorReducer(state, { type: "remove", index: 0 });
     expect(state.objects[state.selected!]).toEqual(box(3));
+  });
+});
+
+describe("undo and redo", () => {
+  const run = (state: EditorState, ...actions: EditorAction[]) => actions.reduce(editorReducer, state);
+
+  test("undo takes back adding, changing and removing, one at a time", () => {
+    const start = withObjects([box(1)]);
+    const edited = run(start,
+      { type: "add", object: box(2) },
+      { type: "update", index: 0, changes: { stack: 2 } },
+      { type: "remove", index: 1 });
+    expect(edited.objects).toEqual([{ ...box(1), stack: 2 }]);
+    const once = run(edited, { type: "undo" });
+    expect(once.objects).toEqual([{ ...box(1), stack: 2 }, box(2)]);
+    expect(run(once, { type: "undo" }, { type: "undo" }).objects).toEqual([box(1)]);
+  });
+
+  test("redo puts back what was undone, until something else changes", () => {
+    const edited = run(withObjects([]), { type: "add", object: box(1) }, { type: "undo" });
+    expect(run(edited, { type: "redo" }).objects).toEqual([box(1)]);
+    expect(run(edited, { type: "add", object: box(2) }, { type: "redo" }).objects).toEqual([box(2)]);
+  });
+
+  test("there's nothing to undo when a level opens", () => {
+    const state = run(withObjects([box(1)]), { type: "undo" });
+    expect(state.objects).toEqual([box(1)]);
+  });
+
+  test("a drag is one change: a checkpoint, then moves that aren't recorded", () => {
+    const dragged = run(withObjects([box(1)]),
+      { type: "checkpoint" },
+      { type: "update", index: 0, changes: { at: [2, 0, 0] }, record: false },
+      { type: "update", index: 0, changes: { at: [3, 0, 0] }, record: false });
+    expect(dragged.objects[0].at).toEqual([3, 0, 0]);
+    expect(run(dragged, { type: "undo" }).objects).toEqual([box(1)]);
+  });
+
+  test("selecting isn't a change", () => {
+    const state = run(withObjects([box(1)]), { type: "add", object: box(2) }, { type: "select", index: 0 }, { type: "undo" });
+    expect(state.objects).toEqual([box(1)]);
+  });
+
+  test("undoing an add leaves nothing selected that's gone", () => {
+    const state = run(withObjects([box(1)]), { type: "add", object: box(2) }, { type: "undo" });
+    expect(state.selected).toBeNull();
   });
 });
 
