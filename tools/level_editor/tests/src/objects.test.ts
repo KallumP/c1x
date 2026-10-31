@@ -69,6 +69,16 @@ describe("formatObjects", () => {
       "]\n");
   });
 
+  test("writes the spawn first and the end last, keeping the boxes' order (a switch's outline boxes go in order)", () => {
+    const text = formatObjects([
+      { kind: "box", box: "basic", at: [1, 0, 0], raise: 0, stack: 1 },
+      { kind: "end", at: [0, 9, 0], raise: 0, stack: 1 },
+      { kind: "box", box: "outline", at: [2, 0, 0], raise: 0, stack: 1 },
+      { kind: "spawn", at: [0, 0, 0], raise: 0, stack: 1 },
+    ]);
+    expect(parseObjects(text).map((o) => o.kind + (o.box ?? ""))).toEqual(["spawn", "boxbasic", "boxoutline", "end"]);
+  });
+
   test("rounds positions to the millimetre", () => {
     expect(formatObjects([{ kind: "spawn", at: [0.1 + 0.2, -1.23456, 2], raise: 0.30004, stack: 1 }]))
       .toBe('[\n  {"kind": "spawn", "at": [0.3, -1.235, 2], "raise": 0.3}\n]\n');
