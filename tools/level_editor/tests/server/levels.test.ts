@@ -73,6 +73,12 @@ describe("objects.json", () => {
     expect(readFileSync(join(root, "lvl", "objects.json"), "utf8")).toBe("[]\n");
   });
 
+  test("keeps the line endings the file had (a windows checkout has crlf)", () => {
+    level("lvl", { "lvl.obj": "", "objects.json": "[\r\n]\r\n" });
+    writeObjects(root, "lvl", "[\n  {}\n]\n");
+    expect(readFileSync(join(root, "lvl", "objects.json"), "utf8")).toBe("[\r\n  {}\r\n]\r\n");
+  });
+
   test("won't read or write a level that isn't listed", () => {
     expect(() => readObjects(root, "nope")).toThrow();
     expect(() => writeObjects(root, "../x", "[]")).toThrow();
