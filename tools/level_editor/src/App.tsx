@@ -109,7 +109,9 @@ export default function App() {
 
   const renderMain = () => (
     <main className="viewport">
-      <Scene orbitRef={orbitRef}>{level && renderLevel(level)}</Scene>
+      <Scene orbitRef={orbitRef} onMiss={() => dispatch({ type: "select", index: null })}>
+        {level && renderLevel(level)}
+      </Scene>
     </main>
   );
 

@@ -30,11 +30,13 @@ export default function ObjectMarkers({ objects, scale, selected, warnings, onSe
     return index === selected ? SELECTED_COLOUR : colour;
   };
 
-  // pressing on an object selects it, and not the level behind it
-  const select = (index: number) => (event: ThreeEvent<PointerEvent>) => {
+  // pressing on an object grabs it; its click stops here, so it doesn't reach
+  // the level behind it (which would clear the selection, or place an object)
+  const grab = (index: number) => (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     onSelect(index);
   };
+  const stopClick = (event: ThreeEvent<MouseEvent>) => event.stopPropagation();
 
   const renderBox = (centre: Vec3, style: BoxStyle, edges: string, key: number) => {
     const size = boxSize(scale) * 0.98;
@@ -52,9 +54,7 @@ export default function ObjectMarkers({ objects, scale, selected, warnings, onSe
     const centres = stackCentres(object.at, object.raise, object.stack, scale);
     const edges = edgeColour(index, BOX_EDGE_COLOUR);
     return (
-      <group key={index} onPointerDown={select(index)}>
-        {centres.map((centre, boxIndex) => renderBox(centre, style, edges, boxIndex))}
-      </group>
+      <>{centres.map((centre, boxIndex) => renderBox(centre, style, edges, boxIndex))}</>
     );
   };
 
@@ -62,7 +62,7 @@ export default function ObjectMarkers({ objects, scale, selected, warnings, onSe
     const height = CRASH_UNITS / scale;
     const [x, y, z] = base(object);
     return (
-      <mesh key={index} position={[x, y + height / 2, z]} onPointerDown={select(index)}>
+      <mesh position={[x, y + height / 2, z]}>
         <capsuleGeometry args={[height / 5, height * 0.6, 4, 12]} />
         <meshLambertMaterial color={SPAWN_COLOUR} />
         <Edges color={edgeColour(index, SPAWN_COLOUR)} />
@@ -74,7 +74,7 @@ export default function ObjectMarkers({ objects, scale, selected, warnings, onSe
     const radius = PAD_UNITS / scale;
     const [x, y, z] = base(object);
     return (
-      <mesh key={index} position={[x, y + radius / 20, z]} onPointerDown={select(index)}>
+      <mesh position={[x, y + radius / 20, z]}>
         <cylinderGeometry args={[radius, radius, radius / 10, 24]} />
         <meshLambertMaterial color={END_COLOUR} />
         <Edges color={edgeColour(index, END_COLOUR)} />
@@ -82,7 +82,7 @@ export default function ObjectMarkers({ objects, scale, selected, warnings, onSe
     );
   };
 
-  const renderMarker = (object: LevelObject, index: number) => {
+  const renderShape = (object: LevelObject, index: number) => {
     switch (object.kind) {
       case "spawn":
         return renderSpawn(object, index);
@@ -92,6 +92,12 @@ export default function ObjectMarkers({ objects, scale, selected, warnings, onSe
         return renderBoxStack(object, index);
     }
   };
+
+  const renderMarker = (object: LevelObject, index: number) => (
+    <group key={index} onPointerDown={grab(index)} onClick={stopClick}>
+      {renderShape(object, index)}
+    </group>
+  );
 
   return <>{objects.map(renderMarker)}</>;
 }
