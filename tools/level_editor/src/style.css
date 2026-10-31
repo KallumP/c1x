@@ -19,11 +19,12 @@ input {
 
 .app {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template: "toolbar toolbar toolbar" auto "palette viewport panel" 1fr / 150px 1fr auto;
   height: 100%;
 }
 
 .toolbar {
+  grid-area: toolbar;
   display: flex;
   gap: 12px;
   align-items: center;
@@ -33,10 +34,62 @@ input {
 }
 
 .viewport {
+  grid-area: viewport;
   position: relative;
   min-height: 0;
 }
 
 .error {
   color: #ff8a80;
+}
+
+.palette {
+  grid-area: palette;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: #2b2d31;
+  border-right: 1px solid #111;
+  overflow-y: auto;
+}
+
+.palette h3 {
+  margin: 10px 0 2px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #999;
+}
+
+.tool {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  text-align: left;
+  background: #383a40;
+  color: #ddd;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.tool:hover {
+  background: #43454c;
+}
+
+.tool.active {
+  border-color: #8ab4f8;
+  background: #3b4a63;
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid #0006;
+}
+
+.grid-picker {
+  margin-top: 12px;
 }
