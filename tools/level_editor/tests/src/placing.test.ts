@@ -1,7 +1,17 @@
 import { describe, expect, test } from "vitest";
-import { placeOnFloor } from "../../src/placing";
+import { placeOnFloor, towardsViewer } from "../../src/placing";
 
 const UP: [number, number, number] = [0, 1, 0];
+
+describe("towardsViewer", () => {
+  test("keeps a normal facing back along the ray", () => {
+    expect(towardsViewer([0, 1, 0], [0, -1, 0])).toEqual([0, 1, 0]);
+  });
+
+  test("turns round a normal facing away, as faces are drawn from both sides", () => {
+    expect(towardsViewer([0, -1, 0], [0.2, -0.9, 0])).toEqual([-0, 1, -0]);
+  });
+});
 
 describe("placeOnFloor", () => {
   test("is where the click hit, in blender", () => {
