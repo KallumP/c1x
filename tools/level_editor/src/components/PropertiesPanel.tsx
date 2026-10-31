@@ -5,7 +5,9 @@ import { ChoiceField, NumberField } from "./Fields";
 
 const AXES = ["x", "y", "z"] as const;
 
-export default function PropertiesPanel({ state, dispatch }: { state: EditorState; dispatch: (action: EditorAction) => void }) {
+export default function PropertiesPanel({ state, warnings, dispatch }: {
+  state: EditorState; warnings: Set<number>; dispatch: (action: EditorAction) => void;
+}) {
   const index = state.selected;
   const object = index === null ? null : state.objects[index];
 
@@ -51,6 +53,8 @@ export default function PropertiesPanel({ state, dispatch }: { state: EditorStat
     </>
   );
 
+  const renderOverlapNote = () => <p className="warning">This box is in a wall or another box.</p>;
+
   const renderHint = () => (
     <p className="hint">
       Click an object to select it, then drag it across the floor. Pick something under Place and click the floor to add one.
@@ -62,6 +66,7 @@ export default function PropertiesPanel({ state, dispatch }: { state: EditorStat
       {object && index !== null ? (
         <>
           {renderObjectFields(object)}
+          {warnings.has(index) && renderOverlapNote()}
           <button className="delete" onClick={() => dispatch({ type: "remove", index })}>Delete</button>
         </>
       ) : (

@@ -146,3 +146,7 @@ input {
 .delete:hover {
   background: #8a3434;
 }
+
+.warning {
+  color: #ffb74d;
+}

@@ -7,12 +7,14 @@ import ObjectMarkers from "./components/ObjectMarkers";
 import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
 import Scene, { type Orbit } from "./components/Scene";
+import { DEFAULT_SCALE } from "./coords";
 import { newObject, type Tool } from "./editor";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
 import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevels } from "./hooks/useLevels";
 import { useShortcuts } from "./hooks/useShortcuts";
+import { useWarnings } from "./hooks/useWarnings";
 import { clickedFloor, isClick } from "./three/clicks";
 
 const SELECT: Tool = { kind: "select" };
@@ -23,6 +25,7 @@ export default function App() {
   const { levels, level, open } = useLevels(showError);
   const group = useLevelGroup(level, showError);
   const { state, dispatch } = useEditor(level, showError);
+  const warnings = useWarnings(state.objects, level ? level.scale : DEFAULT_SCALE, group);
   const [tool, setTool] = useState<Tool>(SELECT);
   const [grid, setGrid] = useState(0.5);
   const orbitRef = useRef<Orbit>(null);
@@ -68,9 +71,18 @@ export default function App() {
     }
   };
 
+  const renderWarningCount = () => {
+    if (warnings.size === 0) {
+      return null;
+    }
+    const boxes = warnings.size === 1 ? "box is" : "boxes are";
+    return <span className="warning">{warnings.size} {boxes} in a wall or another box</span>;
+  };
+
   const renderHeader = () => (
     <header className="toolbar">
       <LevelPicker levels={levels} level={level} onOpen={openLevel} />
+      {renderWarningCount()}
       {error && <span className="error">{error}</span>}
     </header>
   );
@@ -78,7 +90,13 @@ export default function App() {
   const renderLevel = (shownLevel: LevelInfo) => (
     <>
       {group && <LevelMesh group={group} onClick={clickLevel} onPointerMove={drag.moveOverLevel} />}
-      <ObjectMarkers objects={state.objects} scale={shownLevel.scale} selected={state.selected} onSelect={drag.start} />
+      <ObjectMarkers
+        objects={state.objects}
+        scale={shownLevel.scale}
+        selected={state.selected}
+        warnings={warnings}
+        onSelect={drag.start}
+      />
     </>
   );
 
@@ -93,7 +111,7 @@ export default function App() {
       {renderHeader()}
       <Palette tool={tool} onTool={setTool} grid={grid} onGrid={setGrid} />
       {renderMain()}
-      <PropertiesPanel state={state} dispatch={dispatch} />
+      <PropertiesPanel state={state} warnings={warnings} dispatch={dispatch} />
     </div>
   );
 }
