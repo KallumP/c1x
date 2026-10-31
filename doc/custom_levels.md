@@ -114,6 +114,29 @@ A level can have one `spawn` and one `end`, and neither is needed, and any numbe
 
 `objects.json` is read every time the level is built, so after changing it, run step 6 again. If it isn't valid (not JSON, an unknown `kind` or setting, a second `spawn` or `end`, `at` that isn't three numbers, `raise` that isn't a number, a box `type` or `subtype` the beach doesn't have, or both or neither of them, or a `stack` that isn't a whole number of at least 1), the build stops with a message saying which object is wrong.
 
+### Placing objects in 3D
+
+The level editor, in `tools/level_editor/`, shows a level source's map in 3D with its objects, so you can place them by clicking instead of typing positions. It saves the same `objects.json`.
+
+1. **Get set up (once).** You need [Node.js](https://nodejs.org/) 18 or later. From the project directory, run:
+
+   ```
+   cd tools/level_editor
+   npm install
+   ```
+2. **Start it** from `tools/level_editor/` with `npm run dev`. It opens in your browser (or open the address it prints, `http://localhost:5173/`). Pick a level source at the top left. It lists every folder in `level_src/` with one `.obj`, and opens the one you had open last (or the one named in the address, such as `http://localhost:5173/?level=tide_ruins`).
+3. **Place and move objects:**
+   - drag to orbit the camera, right-drag to pan, and scroll to zoom
+   - pick a `spawn`, `end` or box type on the left, then click the floor to put one there. A level has one `spawn` and one `end`, so placing another moves it. Clicking a wall does nothing, because the build puts objects on the floor below them
+   - **Select** (or Escape) to stop placing. Click an object to select it, and drag it across the floor to move it. Set its type, `stack`, position and `raise` on the right
+   - **Snap** (bottom left) puts objects on a grid across the floor, 0.5 m by default. Their height comes from the floor
+   - Delete removes the selected object. Ctrl+Z undoes and Ctrl+Y redoes
+4. **Save** with the button at the top or Ctrl+S. It writes `objects.json` in the level source's folder. Then build the level (step 6 above) to play it.
+
+Boxes are drawn 1 box (400 units) wide at the level's `scale` (from its `level.cfg`), coloured by type, with `outline` boxes as their edges only. Crash's start is the orange capsule and the end is the purple pad. A box that's in a wall, inside a solid (such as a pillar) or in another box is outlined in red, and the toolbar says how many there are. A box touching a wall or another box is fine.
+
+Saving writes `objects.json` one object a line: the `spawn` first, then the boxes in the order they were added, then the `end`. Blank lines you put between groups of boxes aren't kept, and positions are rounded to the millimetre. The editor checks objects by the same rules as the build. If `objects.json` isn't valid, it says why and opens the level with no objects; fix the file, or don't save over it.
+
 ### Modelling
 
 - Model the route so Crash runs towards +Y (forward in Blender's front view, away from you). The camera follows him from behind along that direction. It also slides sideways after him and keeps the same height above the floor he's on (a camera mode c1x adds for custom levels), so he can take paths that run beside each other, such as several walkways, and climb onto higher floors or drop to lower ones without leaving the view. It rises when he lands somewhere higher, not with each jump, and follows him straight down when he drops. It doesn't turn, so the route as a whole should run straight.
