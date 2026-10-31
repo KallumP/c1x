@@ -5,8 +5,8 @@ import { OrbitControls } from "@react-three/drei";
 function Lights() {
   return (
     <>
-      <ambientLight intensity={1.6} />
-      <directionalLight position={[10, 20, 10]} intensity={1.2} />
+      <hemisphereLight args={["#ffffff", "#8a8a8a", 2.2]} />
+      <directionalLight position={[10, 20, 10]} intensity={1} />
     </>
   );
 }

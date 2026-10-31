@@ -2,13 +2,21 @@ import { useCallback, useState } from "react";
 import type { LevelInfo } from "./api";
 import LevelMesh from "./components/LevelMesh";
 import LevelPicker from "./components/LevelPicker";
+import ObjectMarkers from "./components/ObjectMarkers";
 import Scene from "./components/Scene";
 import { useLevelGroup } from "./hooks/useLevelGroup";
+import { useLevelObjects } from "./hooks/useLevelObjects";
 import { useLevels } from "./hooks/useLevels";
 
 function LevelView({ level, onError }: { level: LevelInfo; onError: (message: string) => void }) {
   const group = useLevelGroup(level, onError);
-  return group && <LevelMesh group={group} />;
+  const objects = useLevelObjects(level, onError);
+  return (
+    <>
+      {group && <LevelMesh group={group} />}
+      <ObjectMarkers objects={objects} scale={level.scale} />
+    </>
+  );
 }
 
 export default function App() {
