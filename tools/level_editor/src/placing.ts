@@ -4,6 +4,13 @@ import type { Vec3 } from "./objects";
 
 const FLOOR = 0.5; // a face is floor if its normal points at least this much up
 
+// a hit face's normal, turned to face back along the ray (the camera's side),
+// as faces are drawn from both sides and can be wound either way
+export function towardsViewer(normal: Vec3, ray: Vec3): Vec3 {
+  const facing = normal[0] * ray[0] + normal[1] * ray[1] + normal[2] * ray[2];
+  return facing > 0 ? [-normal[0], -normal[1], -normal[2]] : normal;
+}
+
 const snap = (metres: number, grid: number) => (grid > 0 ? Math.round(metres / grid) * grid : metres);
 const roundToMillimetre = (metres: number) => Math.round(metres * 1000) / 1000 + 0; // + 0 turns -0 into 0
 

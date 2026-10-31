@@ -1,6 +1,6 @@
 import type { ThreeEvent } from "@react-three/fiber";
 import type { Vec3 } from "../objects";
-import { placeOnFloor } from "../placing";
+import { placeOnFloor, towardsViewer } from "../placing";
 
 const CLICK_PIXELS = 4; // the pointer moving further than this between down and up is orbiting, not a click
 
@@ -11,6 +11,7 @@ export function clickedFloor(event: ThreeEvent<MouseEvent>, grid: number): Vec3 
   if (!event.face) {
     return null;
   }
-  const normal = event.face.normal.clone().transformDirection(event.object.matrixWorld);
-  return placeOnFloor(event.point.toArray() as Vec3, normal.toArray() as Vec3, grid);
+  const normal = event.face.normal.clone().transformDirection(event.object.matrixWorld).toArray() as Vec3;
+  const facing = towardsViewer(normal, event.ray.direction.toArray() as Vec3);
+  return placeOnFloor(event.point.toArray() as Vec3, facing, grid);
 }

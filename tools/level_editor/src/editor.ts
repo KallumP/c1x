@@ -14,6 +14,8 @@ export interface EditorState {
 export type EditorAction =
   | { type: "load"; objects: LevelObject[] }
   | { type: "add"; object: LevelObject }
+  | { type: "update"; index: number; changes: Partial<LevelObject> }
+  | { type: "remove"; index: number }
   | { type: "select"; index: number | null };
 
 export const emptyEditor: EditorState = { objects: [], selected: null };
@@ -37,12 +39,31 @@ function add(state: EditorState, object: LevelObject): EditorState {
   return { objects: [...state.objects, object], selected: state.objects.length };
 }
 
+function update(state: EditorState, index: number, changes: Partial<LevelObject>): EditorState {
+  const objects = state.objects.map((object, objectIndex) => (objectIndex === index ? { ...object, ...changes } : object));
+  return { ...state, objects };
+}
+
+// the selection stays on the same object as others before it go
+function remove(state: EditorState, index: number): EditorState {
+  const objects = state.objects.filter((_, objectIndex) => objectIndex !== index);
+  const { selected } = state;
+  if (selected === null || selected < index) {
+    return { objects, selected };
+  }
+  return { objects, selected: selected === index ? null : selected - 1 };
+}
+
 export function editorReducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
     case "load":
       return { objects: action.objects, selected: null };
     case "add":
       return add(state, action.object);
+    case "update":
+      return update(state, action.index, action.changes);
+    case "remove":
+      return remove(state, action.index);
     case "select":
       return { ...state, selected: action.index };
   }
