@@ -57,6 +57,9 @@ export function readObjects(root: string, name: string): string {
   return existsSync(path) ? readFileSync(path, "utf8") : "[]\n";
 }
 
+// written with the line endings the file had, so a windows checkout's crlf ones don't all show as changed
 export function writeObjects(root: string, name: string, text: string): void {
-  writeFileSync(join(levelFolder(root, name), "objects.json"), text);
+  const path = join(levelFolder(root, name), "objects.json");
+  const crlf = existsSync(path) && readFileSync(path, "utf8").includes("\r\n");
+  writeFileSync(path, crlf ? text.replace(/\r?\n/g, "\r\n") : text);
 }

@@ -133,12 +133,17 @@ function formatObject(object: LevelObject): string {
   return `{${parts.join(", ")}}`;
 }
 
-// the text of an objects.json: one object a line, a blank line where the kind changes
-export function formatObjects(objects: LevelObject[]): string {
-  if (objects.length === 0) {
+const KIND_ORDER: Record<Kind, number> = { spawn: 0, box: 1, end: 2 };
+
+// the text of an objects.json: the spawn, the boxes in their order, then the end;
+// one object a line, with a blank line between kinds
+export function formatObjects(unordered: LevelObject[]): string {
+  if (unordered.length === 0) {
     return "[]\n";
   }
 
+  // sort is stable, so the boxes keep their order
+  const objects = [...unordered].sort((first, second) => KIND_ORDER[first.kind] - KIND_ORDER[second.kind]);
   const lines = objects.map((object, index) => {
     const isLast = index === objects.length - 1;
     const blankLine = !isLast && objects[index + 1].kind !== object.kind ? "\n" : "";

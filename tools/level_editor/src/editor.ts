@@ -1,4 +1,5 @@
-// what's being edited: a level's objects and which one is selected
+// what's being edited: a level's objects, which one is selected, and the
+// changes that can be undone and redone
 import { BOX_TYPES, type BoxType, type LevelObject, type Vec3 } from "./objects";
 
 export type Placeable = "spawn" | "end" | BoxType;
@@ -6,19 +7,26 @@ export type Placeable = "spawn" | "end" | BoxType;
 // what clicking on the level does: select, or place an object
 export type Tool = { kind: "select" } | { kind: "place"; what: Placeable };
 
+type Objects = LevelObject[];
+
 export interface EditorState {
-  objects: LevelObject[];
+  objects: Objects;
   selected: number | null;
+  past: Objects[];   // what the objects were before each change, last change last
+  future: Objects[]; // what undoing took back, last undone last
 }
 
 export type EditorAction =
-  | { type: "load"; objects: LevelObject[] }
+  | { type: "load"; objects: Objects }
   | { type: "add"; object: LevelObject }
-  | { type: "update"; index: number; changes: Partial<LevelObject> }
+  | { type: "update"; index: number; changes: Partial<LevelObject>; record?: boolean }
   | { type: "remove"; index: number }
-  | { type: "select"; index: number | null };
+  | { type: "select"; index: number | null }
+  | { type: "checkpoint" } // remember the objects now, as one change (a drag's start)
+  | { type: "undo" }
+  | { type: "redo" };
 
-export const emptyEditor: EditorState = { objects: [], selected: null };
+export const emptyEditor: EditorState = { objects: [], selected: null, past: [], future: [] };
 
 export function newObject(what: Placeable, at: Vec3): LevelObject {
   const kind = what in BOX_TYPES ? "box" : (what as "spawn" | "end");
@@ -29,19 +37,25 @@ export function newObject(what: Placeable, at: Vec3): LevelObject {
   return object;
 }
 
+// a change to the objects, which undo takes back
+function change(state: EditorState, objects: Objects, selected: number | null): EditorState {
+  return { objects, selected, past: [...state.past, state.objects], future: [] };
+}
+
 // a level has one spawn and one end, so adding another moves it
 function add(state: EditorState, object: LevelObject): EditorState {
   const existing = object.kind === "box" ? -1 : state.objects.findIndex((other) => other.kind === object.kind);
   if (existing >= 0) {
     const objects = state.objects.map((other, index) => (index === existing ? object : other));
-    return { objects, selected: existing };
+    return change(state, objects, existing);
   }
-  return { objects: [...state.objects, object], selected: state.objects.length };
+  return change(state, [...state.objects, object], state.objects.length);
 }
 
-function update(state: EditorState, index: number, changes: Partial<LevelObject>): EditorState {
+// record: false for the steps of a drag, which are one change from its checkpoint
+function update(state: EditorState, index: number, changes: Partial<LevelObject>, record: boolean): EditorState {
   const objects = state.objects.map((object, objectIndex) => (objectIndex === index ? { ...object, ...changes } : object));
-  return { ...state, objects };
+  return record ? change(state, objects, state.selected) : { ...state, objects };
 }
 
 // the selection stays on the same object as others before it go
@@ -49,22 +63,50 @@ function remove(state: EditorState, index: number): EditorState {
   const objects = state.objects.filter((_, objectIndex) => objectIndex !== index);
   const { selected } = state;
   if (selected === null || selected < index) {
-    return { objects, selected };
+    return change(state, objects, selected);
   }
-  return { objects, selected: selected === index ? null : selected - 1 };
+  return change(state, objects, selected === index ? null : selected - 1);
+}
+
+// the selection, if there's still an object there
+const stillThere = (selected: number | null, objects: Objects) =>
+  selected !== null && selected < objects.length ? selected : null;
+
+function undo(state: EditorState): EditorState {
+  const objects = state.past.at(-1);
+  if (!objects) {
+    return state;
+  }
+  const selected = stillThere(state.selected, objects);
+  return { objects, selected, past: state.past.slice(0, -1), future: [...state.future, state.objects] };
+}
+
+function redo(state: EditorState): EditorState {
+  const objects = state.future.at(-1);
+  if (!objects) {
+    return state;
+  }
+  const selected = stillThere(state.selected, objects);
+  return { objects, selected, past: [...state.past, state.objects], future: state.future.slice(0, -1) };
 }
 
 export function editorReducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
     case "load":
-      return { objects: action.objects, selected: null };
+      return { ...emptyEditor, objects: action.objects };
     case "add":
       return add(state, action.object);
     case "update":
-      return update(state, action.index, action.changes);
+      return update(state, action.index, action.changes, action.record !== false);
     case "remove":
       return remove(state, action.index);
     case "select":
       return { ...state, selected: action.index };
+    case "checkpoint":
+      return { ...state, past: [...state.past, state.objects], future: [] };
+    case "undo":
+      return undo(state);
+    case "redo":
+      return redo(state);
   }
 }
