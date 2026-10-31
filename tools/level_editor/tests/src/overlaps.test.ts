@@ -60,6 +60,22 @@ describe("overlappingBoxes", () => {
     expect(overlappingBoxes([box([0, 0, 0])], SCALE, wall)).toEqual(new Set());
   });
 
+  // a pillar from (2, 2, 0) to (4, 4, 3), its top facing up (wound anticlockwise from above)
+  const pillarTop: Tri[] = [[[2, 2, 3], [4, 2, 3], [4, 4, 3]], [[2, 2, 3], [4, 4, 3], [2, 4, 3]]];
+
+  test("a box wholly inside a solid, touching none of its faces, is flagged", () => {
+    expect(overlappingBoxes([box([3, 3, 0])], SCALE, pillarTop)).toEqual(new Set([0]));
+  });
+
+  test("a box under an overhang (a face looking down at it) is fine", () => {
+    const overhang: Tri[] = pillarTop.map(([a, b, c]) => [a, c, b]);
+    expect(overlappingBoxes([box([3, 3, 0])], SCALE, overhang)).toEqual(new Set());
+  });
+
+  test("a box beside a solid is fine", () => {
+    expect(overlappingBoxes([box([6, 3, 0])], SCALE, pillarTop)).toEqual(new Set());
+  });
+
   test("the spawn and end aren't boxes", () => {
     const objects = [newObject("spawn", [0, 0, 0]), newObject("end", [0, 0, 0]), box([0, 0, 0])];
     expect(overlappingBoxes(objects, SCALE, [])).toEqual(new Set());
