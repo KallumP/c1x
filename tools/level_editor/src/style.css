@@ -178,6 +178,25 @@ input {
   cursor: default;
 }
 
+.level-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.level-actions .status {
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #aaa;
+}
+
+.level-actions .status.error {
+  color: #ff8a80;
+}
+
 .toolbar .save.unsaved {
   background: #2f6f3e;
   border-color: #3f9a55;
