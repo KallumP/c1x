@@ -1,5 +1,6 @@
 // the selected object's settings
 import type { EditorAction, EditorState } from "../editor";
+import { useShiftHeld } from "../hooks/useShiftHeld";
 import { BOX_TYPES, boxTypeName, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { ChoiceField, NumberField } from "./Fields";
 
@@ -8,6 +9,7 @@ const AXES = ["x", "y", "z"] as const;
 export default function PropertiesPanel({ state, warnings, dispatch }: {
   state: EditorState; warnings: Set<number>; dispatch: (action: EditorAction) => void;
 }) {
+  const isShiftHeld = useShiftHeld();
   const index = state.selected;
   const object = index === null ? null : state.objects[index];
 
@@ -21,8 +23,16 @@ export default function PropertiesPanel({ state, warnings, dispatch }: {
     const setAxis = (axis: number, value: number) => {
       change({ at: at.map((current, axisIndex) => (axisIndex === axis ? value : current)) as Vec3 });
     };
+    // holding shift makes z's arrows go up and down in finer steps
+    const stepFor = (axis: (typeof AXES)[number]) => (axis === "z" && isShiftHeld ? 0.01 : 0.1);
     return AXES.map((axis, axisIndex) => (
-      <NumberField key={axis} label={axis} value={at[axisIndex]} step={0.1} onChange={(value) => setAxis(axisIndex, value)} />
+      <NumberField
+        key={axis}
+        label={axis}
+        value={at[axisIndex]}
+        step={stepFor(axis)}
+        onChange={(value) => setAxis(axisIndex, value)}
+      />
     ));
   };
 
