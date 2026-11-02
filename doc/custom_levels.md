@@ -59,7 +59,9 @@ npm install
 4. Click **Select** (or press Escape), then click an object to select it. Drag it to move it, or change it on the right. Delete removes it.
 5. Click **Save** (or press Ctrl+S).
 
-Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box, so move it.
+Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box, so move it. **Drop to floor** on the right puts the selected box just above the floor below it.
+
+The **Build** and **Boot** buttons at the top right do step 3 for you: Build saves and builds the level, and Boot sets the game to start in it.
 
 ## 3. Build the level and play it
 
