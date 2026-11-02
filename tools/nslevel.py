@@ -1074,6 +1074,9 @@ def make_map(level, text, scale=MAP_SCALE, turn=0, images=None, objects=()):
     placed_boxes = []  # (subtype, zone, index in its entities, id), in order
     for o in boxes:
         x, y, z = where(o)
+        # the game draws a box half a box along +x and +z from where it's kept
+        # (seen in game), so it's kept that far back for its middle to be at at
+        x, z = x - BOX_HEIGHT // 2, z - BOX_HEIGHT // 2
         box_zone = blendmap.zone_index(spans, z)
         for k in range(o.stack):  # one after another, so the game stacks them
             box_id = next(ids)
