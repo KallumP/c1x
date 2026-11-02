@@ -20,10 +20,22 @@ export function useLevels(onError: (message: string) => void) {
   const [level, setLevel] = useState<LevelInfo | null>(null);
 
   useEffect(() => {
-    fetchLevels().then((all) => {
-      setLevels(all);
-      setLevel(all.find((l) => l.name === firstLevel()) ?? all[0] ?? null);
-    }, (e) => onError(String(e)));
+    const loadLevels = async () => {
+      try {
+        const fetchedLevels = await fetchLevels();
+        setLevels(fetchedLevels);
+        const first = firstLevel();
+        const asked = fetchedLevels.find((candidate) => candidate.name === first);
+        if (asked) {
+          setLevel(asked);
+        } else if (fetchedLevels.length > 0) {
+          setLevel(fetchedLevels[0]);
+        }
+      } catch (error) {
+        onError(String(error));
+      }
+    };
+    loadLevels();
   }, [onError]);
 
   function open(name: string) {
