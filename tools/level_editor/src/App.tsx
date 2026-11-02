@@ -15,7 +15,7 @@ import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevels } from "./hooks/useLevels";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
-import { useWarnings } from "./hooks/useWarnings";
+import { useTriangles, useWarnings } from "./hooks/useWarnings";
 import { clickedFloor, isClick } from "./three/clicks";
 
 const SELECT: Tool = { kind: "select" };
@@ -26,7 +26,9 @@ export default function App() {
   const { levels, level, open } = useLevels(showError);
   const group = useLevelGroup(level, showError);
   const { state, dispatch, unsaved, save } = useEditor(level, showError);
-  const warnings = useWarnings(state.objects, level ? level.scale : DEFAULT_SCALE, group);
+  const scale = level ? level.scale : DEFAULT_SCALE;
+  const triangles = useTriangles(group);
+  const warnings = useWarnings(state.objects, scale, triangles);
   const [tool, setTool] = useState<Tool>(SELECT);
   const [grid, setGrid] = useState(0.5);
   const orbitRef = useRef<Orbit>(null);
@@ -120,7 +122,7 @@ export default function App() {
       {renderHeader()}
       <Palette tool={tool} onTool={setTool} grid={grid} onGrid={setGrid} />
       {renderMain()}
-      <PropertiesPanel state={state} warnings={warnings} dispatch={dispatch} />
+      <PropertiesPanel state={state} warnings={warnings} scale={scale} triangles={triangles} dispatch={dispatch} />
     </div>
   );
 }

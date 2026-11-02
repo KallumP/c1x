@@ -133,6 +133,19 @@ input {
   line-height: 1.4;
 }
 
+.drop {
+  padding: 5px;
+  background: #383a40;
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.drop:hover {
+  background: #45474e;
+}
+
 .delete {
   margin-top: 8px;
   padding: 5px;

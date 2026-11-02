@@ -1,17 +1,25 @@
 // the selected object's settings
+import { useEffect, useState } from "react";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { BOX_TYPES, boxTypeName, type BoxType, type LevelObject, type Vec3 } from "../objects";
+import { dropToFloor, type Triangle } from "../overlaps";
 import { ChoiceField, NumberField } from "./Fields";
 
 const AXES = ["x", "y", "z"] as const;
 
-export default function PropertiesPanel({ state, warnings, dispatch }: {
-  state: EditorState; warnings: Set<number>; dispatch: (action: EditorAction) => void;
+export default function PropertiesPanel({ state, warnings, scale, triangles, dispatch }: {
+  state: EditorState;
+  warnings: Set<number>;
+  scale: number;
+  triangles: Triangle[]; // the level's, for dropping a box to the floor
+  dispatch: (action: EditorAction) => void;
 }) {
   const isShiftHeld = useShiftHeld();
   const index = state.selected;
   const object = index === null ? null : state.objects[index];
+  const [hasNoFloor, setHasNoFloor] = useState(false); // the last drop found no floor below the box
+  useEffect(() => setHasNoFloor(false), [object]);
 
   const change = (changes: Partial<LevelObject>) => {
     if (index !== null) {
@@ -63,6 +71,23 @@ export default function PropertiesPanel({ state, warnings, dispatch }: {
     </>
   );
 
+  // lowers the box onto the floor below it, just clear of it
+  const dropBox = (box: LevelObject) => {
+    const z = dropToFloor(box, scale, triangles);
+    if (z === null) {
+      setHasNoFloor(true);
+      return;
+    }
+    change({ at: [box.at[0], box.at[1], z] });
+  };
+
+  const renderDropButton = (box: LevelObject) => (
+    <>
+      <button className="drop" onClick={() => dropBox(box)}>Drop to floor</button>
+      {hasNoFloor && <p className="warning">There's no floor below this box.</p>}
+    </>
+  );
+
   const renderOverlapNote = () => <p className="warning">This box is in a wall or another box.</p>;
 
   const renderHint = () => (
@@ -76,6 +101,7 @@ export default function PropertiesPanel({ state, warnings, dispatch }: {
       {object && index !== null ? (
         <>
           {renderObjectFields(object)}
+          {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
           <button className="delete" onClick={() => dispatch({ type: "remove", index })}>Delete</button>
         </>
