@@ -125,3 +125,50 @@ export function overlappingBoxes(objects: LevelObject[], scale: number, triangle
   });
   return flagged;
 }
+
+const DROP_STEP = 0.01; // metres a box moves down (or up) at a time as it drops to the floor
+const FLOOR = 0.5;      // a triangle is floor if its normal points at least this much up
+
+function facesUp([cornerA, cornerB, cornerC]: Triangle): boolean {
+  const normal = cross(subtract(cornerB, cornerA), subtract(cornerC, cornerA));
+  return normal[2] > FLOOR * Math.sqrt(dot(normal, normal));
+}
+
+// the z (blender) a box drops to: lowered a step at a time until it clips the floor
+// below it, then raised a step so it doesn't, or raised until it doesn't if it starts
+// in the floor. walls are left out. null if there's no floor below it
+export function dropToFloor(box: LevelObject, scale: number, triangles: Triangle[]): number | null {
+  const column = stackBounds(box, scale);
+  column.min[2] = -Infinity;
+  column.max[2] = Infinity;
+  const floors = triangles.filter((triangle) => facesUp(triangle) && boundsTouch(column, triangleBounds(triangle)));
+  if (floors.length === 0) {
+    return null;
+  }
+
+  const clipsAt = (z: number) => {
+    const bounds = stackBounds({ ...box, at: [box.at[0], box.at[1], z] }, scale);
+    return floors.some(
+      (floor) => boundsTouch(bounds, triangleBounds(floor)) && triangleTouchesBox(floor, bounds.min, bounds.max),
+    );
+  };
+  const floorHeights = floors.flatMap((floor) => floor.map((corner) => corner[2]));
+  const lowest = Math.min(...floorHeights) - box.raise - boxSize(scale) * box.stack;
+  const highest = Math.max(...floorHeights) - box.raise;
+  // the z steps away from where the box is, rounded to the millimetre (+ 0 turns -0 into 0)
+  const zAfter = (steps: number) => Math.round((box.at[2] + steps * DROP_STEP) * 1000) / 1000 + 0;
+
+  if (clipsAt(box.at[2])) {
+    let steps = 0;
+    while (clipsAt(zAfter(steps)) && zAfter(steps) <= highest) {
+      steps++;
+    }
+    return zAfter(steps);
+  }
+  for (let steps = -1; zAfter(steps) >= lowest; steps--) {
+    if (clipsAt(zAfter(steps))) {
+      return zAfter(steps + 1);
+    }
+  }
+  return null;
+}
