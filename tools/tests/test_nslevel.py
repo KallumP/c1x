@@ -936,8 +936,10 @@ class Map(unittest.TestCase):
         level, entries, zone = self.make(scale=256, objects=[box])
         [(subtype, _, (x, y, z))] = self.boxes(zone)
         self.assertEqual(6, subtype)
-        self.assertAlmostEqual(128 + 5 * 256, x, delta=16)
-        self.assertAlmostEqual(128 + 6 * 256, z, delta=16)
+        # the game draws a box half a box along +x and +z from where it's kept
+        # (seen in game), so it's kept that far back for its middle to be at at
+        self.assertAlmostEqual(128 + 5 * 256 - nslevel.BOX_HEIGHT // 2, x, delta=16)
+        self.assertAlmostEqual(128 + 6 * 256 - nslevel.BOX_HEIGHT // 2, z, delta=16)
         self.assertEqual(128, y)
 
     def test_a_box_goes_where_it_is_not_on_the_ground(self):
