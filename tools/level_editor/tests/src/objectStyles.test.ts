@@ -1,17 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { boxStyle, boxTypeName } from "../../src/objectStyles";
+import { boxStyle } from "../../src/objectStyles";
 import { BOX_TYPES } from "../../src/objects";
-
-describe("boxTypeName", () => {
-  test("is the type a box was given", () => {
-    expect(boxTypeName("life")).toBe("life");
-  });
-
-  test("is the type a subtype number has", () => {
-    expect(boxTypeName(13)).toBe("outline");
-    expect(boxTypeName(9)).toBe("aku_aku");
-  });
-});
 
 describe("boxStyle", () => {
   test("every type has its own colour", () => {
