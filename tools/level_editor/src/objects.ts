@@ -26,80 +26,115 @@ export interface LevelObject {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 
-const isNumber = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
-const isWhole = (v: unknown): v is number => isNumber(v) && Number.isInteger(v);
+const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+const isWhole = (value: unknown): value is number => isNumber(value) && Number.isInteger(value);
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
 export function parseObjects(text: string): LevelObject[] {
-  let items: unknown;
+  let entries: unknown;
   try {
-    items = JSON.parse(text);
-  } catch (e) {
-    throw new Error(`isn't valid JSON: ${e instanceof Error ? e.message : e}`);
+    entries = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`isn't valid JSON: ${error instanceof Error ? error.message : error}`);
   }
-  if (!Array.isArray(items)) throw new Error("should be a list of objects, [{...}, ...]");
+  if (!Array.isArray(entries)) {
+    throw new Error("should be a list of objects, [{...}, ...]");
+  }
+
   const objects: LevelObject[] = [];
-  items.forEach((item: unknown, i) => {
-    const n = i + 1;
-    if (typeof item !== "object" || item === null || Array.isArray(item))
-      throw new Error(`object ${n} should be {"kind": ..., "at": [x, y, z]}`);
-    const raw = item as Record<string, unknown>; // the entry as it is in the file, not checked yet
-    const kind = raw.kind;
-    if (kind === undefined) throw new Error(`object ${n} has no kind`);
-    if (!KINDS.includes(kind as Kind))
-      throw new Error(`object ${n}: unknown kind ${kind} (it can be ${KINDS.join(", ")})`);
-    const settings = SETTINGS.concat(kind === "box" ? BOX_SETTINGS : []);
-    const unknown = Object.keys(raw).filter((k) => !settings.includes(k));
-    if (unknown.length)
-      throw new Error(`object ${n}: unknown setting ${unknown[0]} (a ${kind} takes ${settings.join(", ")})`);
-    if (ONCE.includes(kind as Kind) && objects.some((p) => p.kind === kind))
-      throw new Error(`object ${n}: there's already a ${kind} (a level has one)`);
-    const at = raw.at;
-    if (!(Array.isArray(at) && at.length === 3 && at.every(isNumber)))
-      throw new Error(`object ${n}: at should be its position in blender, [x, y, z] in metres`);
-    const raise = raw.raise ?? 0;
-    if (!isNumber(raise)) throw new Error(`object ${n}: raise should be how far to raise it off the ground, in metres`);
+  entries.forEach((entry: unknown, index) => {
+    const objectNumber = index + 1;
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+      throw new Error(`object ${objectNumber} should be {"kind": ..., "at": [x, y, z]}`);
+    }
+    const fields = entry as Record<string, unknown>; // the entry's fields, not checked yet
+
+    const kind = fields.kind;
+    if (kind === undefined) {
+      throw new Error(`object ${objectNumber} has no kind`);
+    }
+    if (!KINDS.includes(kind as Kind)) {
+      throw new Error(`object ${objectNumber}: unknown kind ${kind} (it can be ${KINDS.join(", ")})`);
+    }
+
+    const allowedSettings = SETTINGS.concat(kind === "box" ? BOX_SETTINGS : []);
+    const unknownSettings = Object.keys(fields).filter((setting) => !allowedSettings.includes(setting));
+    if (unknownSettings.length) {
+      throw new Error(
+        `object ${objectNumber}: unknown setting ${unknownSettings[0]} (a ${kind} takes ${allowedSettings.join(", ")})`,
+      );
+    }
+    if (ONCE.includes(kind as Kind) && objects.some((earlier) => earlier.kind === kind)) {
+      throw new Error(`object ${objectNumber}: there's already a ${kind} (a level has one)`);
+    }
+
+    const at = fields.at;
+    if (!(Array.isArray(at) && at.length === 3 && at.every(isNumber))) {
+      throw new Error(`object ${objectNumber}: at should be its position in blender, [x, y, z] in metres`);
+    }
+    const raise = fields.raise ?? 0;
+    if (!isNumber(raise)) {
+      throw new Error(`object ${objectNumber}: raise should be how far to raise it off the ground, in metres`);
+    }
     const object: LevelObject = { kind: kind as Kind, at: [at[0], at[1], at[2]], raise, stack: 1 };
+
     if (kind === "box") {
-      if (("type" in raw) === ("subtype" in raw))
-        throw new Error(`object ${n}: a box needs a type (${Object.keys(BOX_TYPES).join(", ")}) or a subtype number, not both`);
-      if ("type" in raw) {
-        if (!(typeof raw.type === "string" && raw.type in BOX_TYPES))
-          throw new Error(`object ${n}: unknown box type ${raw.type} (it can be ${Object.keys(BOX_TYPES).join(", ")})`);
-        object.box = raw.type as BoxType;
-      } else {
-        if (!isWhole(raw.subtype) || !BOX_SUBTYPES.includes(raw.subtype))
-          throw new Error(`object ${n}: a box's subtype should be one of ${BOX_SUBTYPES.join(", ")}`);
-        object.box = raw.subtype;
+      const boxTypes = Object.keys(BOX_TYPES).join(", ");
+      if (("type" in fields) === ("subtype" in fields)) {
+        throw new Error(`object ${objectNumber}: a box needs a type (${boxTypes}) or a subtype number, not both`);
       }
-      const stack = raw.stack ?? 1;
-      if (!isWhole(stack) || stack < 1) throw new Error(`object ${n}: stack should be how many boxes high it is, 1 or more`);
+      if ("type" in fields) {
+        if (!(typeof fields.type === "string" && fields.type in BOX_TYPES)) {
+          throw new Error(`object ${objectNumber}: unknown box type ${fields.type} (it can be ${boxTypes})`);
+        }
+        object.box = fields.type as BoxType;
+      } else {
+        if (!isWhole(fields.subtype) || !BOX_SUBTYPES.includes(fields.subtype)) {
+          throw new Error(`object ${objectNumber}: a box's subtype should be one of ${BOX_SUBTYPES.join(", ")}`);
+        }
+        object.box = fields.subtype;
+      }
+
+      const stack = fields.stack ?? 1;
+      if (!isWhole(stack) || stack < 1) {
+        throw new Error(`object ${objectNumber}: stack should be how many boxes high it is, 1 or more`);
+      }
       object.stack = stack;
     }
+
     objects.push(object);
   });
   return objects;
 }
 
-const mm = (v: number) => Math.round(v * 1000) / 1000 + 0; // + 0 turns -0 into 0
+const roundToMillimetre = (metres: number) => Math.round(metres * 1000) / 1000 + 0; // + 0 turns -0 into 0
 
-function formatObject(o: LevelObject): string {
-  const parts = [`"kind": ${JSON.stringify(o.kind)}`];
-  if (o.kind === "box" && o.box !== undefined)
-    parts.push(typeof o.box === "number" ? `"subtype": ${o.box}` : `"type": ${JSON.stringify(o.box)}`);
-  parts.push(`"at": [${o.at.map(mm).join(", ")}]`);
-  if (mm(o.raise) !== 0) parts.push(`"raise": ${mm(o.raise)}`);
-  if (o.kind === "box" && o.stack !== 1) parts.push(`"stack": ${o.stack}`);
+function formatObject(object: LevelObject): string {
+  const parts = [`"kind": ${JSON.stringify(object.kind)}`];
+  if (object.kind === "box" && object.box !== undefined) {
+    parts.push(typeof object.box === "number" ? `"subtype": ${object.box}` : `"type": ${JSON.stringify(object.box)}`);
+  }
+  parts.push(`"at": [${object.at.map(roundToMillimetre).join(", ")}]`);
+  const raise = roundToMillimetre(object.raise);
+  if (raise !== 0) {
+    parts.push(`"raise": ${raise}`);
+  }
+  if (object.kind === "box" && object.stack !== 1) {
+    parts.push(`"stack": ${object.stack}`);
+  }
   return `{${parts.join(", ")}}`;
 }
 
 // the text of an objects.json: one object a line, a blank line where the kind changes
 export function formatObjects(objects: LevelObject[]): string {
-  if (objects.length === 0) return "[]\n";
-  const lines = objects.map((o, i) => {
-    const last = i === objects.length - 1;
-    const gap = !last && objects[i + 1].kind !== o.kind ? "\n" : "";
-    return `  ${formatObject(o)}${last ? "" : ","}\n${gap}`;
+  if (objects.length === 0) {
+    return "[]\n";
+  }
+
+  const lines = objects.map((object, index) => {
+    const isLast = index === objects.length - 1;
+    const blankLine = !isLast && objects[index + 1].kind !== object.kind ? "\n" : "";
+    return `  ${formatObject(object)}${isLast ? "" : ","}\n${blankLine}`;
   });
   return `[\n${lines.join("")}]\n`;
 }
