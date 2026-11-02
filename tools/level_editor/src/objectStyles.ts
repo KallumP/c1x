@@ -1,7 +1,7 @@
-// how the editor draws objects: boxes coloured like the game's, by type
+// how the editor styles objects in the viewport: boxes coloured like the game's, by type
 import { BOX_TYPES, type BoxType, type LevelObject } from "./objects";
 
-export interface BoxLook {
+export interface BoxStyle {
   colour: string;
   wireframe: boolean; // drawn as its edges (outline boxes, until a switch fills them in)
 }
@@ -29,7 +29,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
   return (Object.keys(BOX_TYPES) as BoxType[]).find((t) => BOX_TYPES[t] === box)!;
 }
 
-export function boxLook(box: NonNullable<LevelObject["box"]>): BoxLook {
+export function boxStyle(box: NonNullable<LevelObject["box"]>): BoxStyle {
   const type = boxTypeName(box);
   return { colour: COLOURS[type], wireframe: type === "outline" };
 }

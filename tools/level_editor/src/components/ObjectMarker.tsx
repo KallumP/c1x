@@ -2,7 +2,7 @@
 import { Edges } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, stackCentres } from "../coords";
-import { boxLook, END_COLOUR, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR } from "../looks";
+import { boxStyle, END_COLOUR, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR } from "../objectStyles";
 import type { LevelObject, Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in tools/nslevel.py)
@@ -40,13 +40,13 @@ function Box({ centre, size, colour, wireframe, edges }: {
 }
 
 function BoxStack({ object, scale, selected, warning, onPointerDown }: MarkerProps) {
-  const look = boxLook(object.box!);
+  const style = boxStyle(object.box!);
   const size = boxSize(scale);
-  const edges = edgeColour(selected, warning, selected || warning ? look.colour : "#000000");
+  const edges = edgeColour(selected, warning, selected || warning ? style.colour : "#000000");
   return (
     <group onPointerDown={onPointerDown}>
       {stackCentres(object.at, object.raise, object.stack, scale).map((centre, k) => (
-        <Box key={k} centre={centre} size={size * 0.98} colour={look.colour} wireframe={look.wireframe} edges={edges} />
+        <Box key={k} centre={centre} size={size * 0.98} colour={style.colour} wireframe={style.wireframe} edges={edges} />
       ))}
     </group>
   );
