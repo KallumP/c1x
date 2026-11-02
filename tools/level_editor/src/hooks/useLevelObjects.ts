@@ -6,14 +6,24 @@ import { parseObjects, type LevelObject } from "../objects";
 export function useLevelObjects(level: LevelInfo, onError: (message: string) => void) {
   const [objects, setObjects] = useState<LevelObject[]>([]);
   useEffect(() => {
-    let current = true;
-    fetchObjects(level.name)
-      .then(parseObjects)
-      .then(
-        (read) => current && setObjects(read),
-        (e) => current && onError(`objects.json ${e instanceof Error ? e.message : e}`),
-      );
-    return () => { current = false; };
+    let isLatestLoad = true; // false once the level changes, so a late load is dropped
+    const loadObjects = async () => {
+      try {
+        const fetchedText = await fetchObjects(level.name);
+        const parsedObjects = parseObjects(fetchedText);
+        if (isLatestLoad) {
+          setObjects(parsedObjects);
+        }
+      } catch (error) {
+        if (isLatestLoad) {
+          onError(`objects.json ${error instanceof Error ? error.message : error}`);
+        }
+      }
+    };
+    loadObjects();
+    return () => {
+      isLatestLoad = false;
+    };
   }, [level, onError]);
   return objects;
 }
