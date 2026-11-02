@@ -84,7 +84,7 @@ export default function App() {
 
   const renderSaveButton = () => (
     <button className={unsaved ? "save unsaved" : "save"} disabled={!unsaved} onClick={save} title="Ctrl+S">
-      {unsaved ? "Save objects.json" : "Saved"}
+      {unsaved ? "Save" : "Saved"}
     </button>
   );
 
