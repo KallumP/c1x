@@ -37,7 +37,7 @@ BOX_TYPES = {
 
 class LevelObject:
     """an object: its kind, where it is in blender (x, y, z), how far
-    (metres) to raise it off the ground it goes on, and for a box, its
+    (metres) to raise it above at, and for a box, its
     subtype and how many high its stack is"""
     def __init__(self, kind, at, raise_by=0, subtype=None, stack=1):
         self.kind, self.at, self.raise_by = kind, at, raise_by
@@ -86,7 +86,7 @@ def read_objects(text):
             raise ValueError("object %d: at should be its position in blender, [x, y, z] in metres" % n)
         raise_by = item.get("raise", 0)
         if not is_number(raise_by):
-            raise ValueError("object %d: raise should be how far to raise it off the ground, in metres" % n)
+            raise ValueError("object %d: raise should be how far to raise it, in metres" % n)
         subtype, stack = None, 1
         if kind == "box":
             if ("type" in item) == ("subtype" in item):

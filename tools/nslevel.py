@@ -1031,9 +1031,9 @@ def with_init_flag_c(item, value):
 def make_map(level, text, scale=MAP_SCALE, turn=0, images=None, objects=()):
     """a level from a map exported from blender as .obj (its text): its
     faces as the world meshes and collision, crash, and objects
-    (levelobjects.LevelObject: a spawn object puts crash on the ground below
-    it, an end object the warp pad and its base, a box object a stack of
-    boxes); built from level (a real level such as N. Sanity Beach) for crash
+    (levelobjects.LevelObject, each where it is, raised: a spawn object puts
+    crash there, an end object the warp pad and its base, a box object a stack
+    of boxes); built from level (a real level such as N. Sanity Beach) for crash
     and the textures. faces of materials with an image in
     images ({material: PIL image}) get it, the rest the beach's textures"""
     t = Templates(level)
@@ -1053,11 +1053,14 @@ def make_map(level, text, scale=MAP_SCALE, turn=0, images=None, objects=()):
     tpag_eids, texinfos, pages = (), [b""] * len(flat), []
     if images:
         flat, (tpag_eids, texinfos, pages) = map_textures(flat, images, t.world.items[0])
-    placed = {o.kind: levelobjects.to_zone(o.at, scale, turn, fit.offset) for o in objects}
-    raised = {o.kind: int(round(o.raise_by * scale)) for o in objects}
+    def where(o):
+        """where an object goes in the level: at, raised, as the editor shows it"""
+        x, y, z = levelobjects.to_zone(o.at, scale, turn, fit.offset)
+        return int(round(x)), int(round(y + o.raise_by * scale)), int(round(z))
+
+    placed = {o.kind: where(o) for o in objects if o.kind != "box"}
     if "spawn" in placed:
-        x, y, z = blendmap.ground_below(cells, placed["spawn"], MAP_CELL, "the spawn object")
-        start = (x, y + raised["spawn"], z)
+        start = placed["spawn"]
     else:
         start = blendmap.spawn(mesh, cells, fit.size, MAP_CELL)
     spawn_zone = blendmap.zone_index(spans, start[2])
@@ -1070,9 +1073,7 @@ def make_map(level, text, scale=MAP_SCALE, turn=0, images=None, objects=()):
     ids = iter(new_entity_ids(("end" in placed) + sum(o.stack for o in boxes), {entity_id(t.crash)}))
     placed_boxes = []  # (subtype, zone, index in its entities, id), in order
     for o in boxes:
-        x, y, z = blendmap.ground_below(cells, levelobjects.to_zone(o.at, scale, turn, fit.offset), MAP_CELL,
-                                        "a box object")
-        y += int(round(o.raise_by * scale))
+        x, y, z = where(o)
         box_zone = blendmap.zone_index(spans, z)
         for k in range(o.stack):  # one after another, so the game stacks them
             box_id = next(ids)
@@ -1083,8 +1084,7 @@ def make_map(level, text, scale=MAP_SCALE, turn=0, images=None, objects=()):
             entities[box_zone].append(bytes(box))
     link_switches(entities, placed_boxes)
     if "end" in placed:
-        x, y, z = blendmap.ground_below(cells, placed["end"], MAP_CELL, "the end object")
-        y += raised["end"]
+        x, y, z = placed["end"]
         end_zone = blendmap.zone_index(spans, z)
         pad = bytearray(with_entity_id(t.entities[WARP_PAD], next(ids)))
         struct.pack_into("<3h", pad, ENTITY_POINTS, x // 4, y // 4, (z - spans[end_zone][0]) // 4)

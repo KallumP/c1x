@@ -18,7 +18,7 @@ export type Vec3 = [number, number, number];
 export interface LevelObject {
   kind: Kind;
   at: Vec3;             // in blender: x, y, z (up), metres
-  raise: number;        // metres off the ground it goes on
+  raise: number;        // metres above at
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
 }
@@ -82,7 +82,7 @@ export function parseObjects(text: string): LevelObject[] {
     }
     const raise = fields.raise ?? 0;
     if (!isNumber(raise)) {
-      throw new Error(`object ${objectNumber}: raise should be how far to raise it off the ground, in metres`);
+      throw new Error(`object ${objectNumber}: raise should be how far to raise it, in metres`);
     }
     const object: LevelObject = { kind: kind as Kind, at: [at[0], at[1], at[2]], raise, stack: 1 };
 
