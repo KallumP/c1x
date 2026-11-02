@@ -866,9 +866,9 @@ class Map(unittest.TestCase):
         self.assertEqual((0, 0), nslevel.entity_type(crash))
         return tuple(c * 4 for c in struct.unpack_from("<3h", crash, nslevel.ENTITY_POINTS))
 
-    def test_a_spawn_object_puts_crash_on_the_ground_below_it(self):
-        # blender (2, -3, 0) is the .obj's (2, 0, 3): over the floor, away from the marker
-        spawn = nslevel.levelobjects.LevelObject("spawn", (2, -3, 0.5))
+    def test_a_spawn_object_puts_crash_where_it_is(self):
+        # blender (2, -3, 0) is the .obj's (2, 0, 3): on the floor, away from the marker
+        spawn = nslevel.levelobjects.LevelObject("spawn", (2, -3, 0))
         level, entries, zone = self.make(scale=256, objects=[spawn])
         x, y, z = self.crash_at(zone)
         self.assertAlmostEqual(128 + 6 * 256, x, delta=16)
@@ -877,10 +877,10 @@ class Map(unittest.TestCase):
         self.assertLessEqual(y, 128 + 128)
 
     def test_a_spawn_object_puts_crash_where_it_is_not_on_the_ground(self):
-        spawn = nslevel.levelobjects.LevelObject("spawn", (2, -3, 1.5), raise_by=0.25)  # 1 m over the floor
+        spawn = nslevel.levelobjects.LevelObject("spawn", (2, -3, 1.5), raise_by=0.25)  # 1.75 m over the floor
         level, entries, zone = self.make(scale=256, objects=[spawn])
         x, y, z = self.crash_at(zone)
-        self.assertAlmostEqual(1.75 * 256 + 100, y, delta=8)  # crash is kept 100 up
+        self.assertAlmostEqual(128 + 1.75 * 256 + 100, y, delta=8)  # the floor's at 128; crash is kept 100 up
 
     def test_a_spawn_object_doesnt_need_ground_below_it(self):
         spawn = nslevel.levelobjects.LevelObject("spawn", (20, -3, 0.5))  # off the side of the map
@@ -898,9 +898,9 @@ class Map(unittest.TestCase):
                 for zone in entries.values() if zone.type == 7
                 for e in self.entities(zone) if nslevel.entity_type(e) == nslevel.WARP_PAD]
 
-    def test_an_end_object_puts_a_warp_pad_on_the_ground_below_it(self):
-        # blender (-2, 4, 0.5) is the .obj's (-2, 0.5, -4)
-        end = nslevel.levelobjects.LevelObject("end", (-2, 4, 0.5))
+    def test_an_end_object_puts_a_warp_pad_where_it_is(self):
+        # blender (-2, 4, 0) is the .obj's (-2, 0, -4)
+        end = nslevel.levelobjects.LevelObject("end", (-2, 4, 0))
         level, entries, zone = self.make(scale=256, objects=[end])
         [(pad_zone, (x, y, z))] = self.warp_pads(entries)
         self.assertEqual(zone.eid, pad_zone.eid)
@@ -910,7 +910,7 @@ class Map(unittest.TestCase):
         self.assertEqual((0, 0), nslevel.entity_type(self.entities(zone)[0]))  # crash stays first
 
     def test_raise_lifts_the_warp_pad_and_its_base(self):
-        end = nslevel.levelobjects.LevelObject("end", (-2, 4, 0.5), raise_by=0.25)  # 64 at scale 256
+        end = nslevel.levelobjects.LevelObject("end", (-2, 4, 0), raise_by=0.25)  # 64 at scale 256
         level, entries, zone = self.make(scale=256, objects=[end])
         [(_, (x, y, z))] = self.warp_pads(entries)
         self.assertEqual(128 + 64, y)
@@ -930,9 +930,9 @@ class Map(unittest.TestCase):
                  tuple(c * 4 for c in struct.unpack_from("<3h", e, nslevel.ENTITY_POINTS)))
                 for e in self.entities(zone) if nslevel.entity_type(e)[0] == nslevel.BOX_TYPE]
 
-    def test_a_box_goes_on_the_ground_below_it(self):
-        # blender (1, 2, 0.5) is the .obj's (1, 0.5, -2)
-        box = nslevel.levelobjects.LevelObject("box", (1, 2, 0.5), subtype=6)
+    def test_a_box_goes_where_it_is(self):
+        # blender (1, 2, 0) is the .obj's (1, 0, -2)
+        box = nslevel.levelobjects.LevelObject("box", (1, 2, 0), subtype=6)
         level, entries, zone = self.make(scale=256, objects=[box])
         [(subtype, _, (x, y, z))] = self.boxes(zone)
         self.assertEqual(6, subtype)
@@ -941,13 +941,13 @@ class Map(unittest.TestCase):
         self.assertEqual(128, y)
 
     def test_a_box_goes_where_it_is_not_on_the_ground(self):
-        box = nslevel.levelobjects.LevelObject("box", (1, 2, 1.5), subtype=2, raise_by=0.25)  # 1 m over the floor
+        box = nslevel.levelobjects.LevelObject("box", (1, 2, 1.5), subtype=2, raise_by=0.25)  # 1.75 m over the floor
         level, entries, zone = self.make(scale=256, objects=[box])
         [(_, _, (x, y, z))] = self.boxes(zone)
-        self.assertEqual(1.75 * 256, y)
+        self.assertEqual(128 + 1.75 * 256, y)
 
     def test_a_box_doesnt_need_ground_below_it(self):
-        box = nslevel.levelobjects.LevelObject("box", (-20, 2, 0.5), subtype=2)  # off the side of the map
+        box = nslevel.levelobjects.LevelObject("box", (-20, 2, 0), subtype=2)  # off the side of the map
         level, entries, zone = self.make(scale=256, objects=[box])
         [(_, _, (x, y, z))] = self.boxes(zone)
         self.assertEqual(128, y)
@@ -1020,10 +1020,10 @@ class Map(unittest.TestCase):
         self.assertEqual(0, level.nsd.ldat.box_total)
 
     def test_an_end_object_doesnt_need_ground_below_it(self):
-        end = nslevel.levelobjects.LevelObject("end", (-2, 4, 2))  # 1.5 m over the floor
+        end = nslevel.levelobjects.LevelObject("end", (-2, 4, 2))  # 2 m over the floor
         level, entries, zone = self.make(scale=256, objects=[end])
         [(_, (x, y, z))] = self.warp_pads(entries)
-        self.assertEqual(2 * 256, y)
+        self.assertEqual(128 + 2 * 256, y)
 
     def test_the_warp_pads_base_is_in_the_beachs_terrain_under_it(self):
         base = nslevel.warp_pad_base(nslevel.read_level(STREAMS, 9))
