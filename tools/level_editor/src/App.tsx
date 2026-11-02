@@ -24,15 +24,28 @@ export default function App() {
   const showError = useCallback((message: string) => setError(message), []);
   const { levels, level, open } = useLevels(showError);
 
+  const openLevel = (name: string) => {
+    setError(null);
+    open(name);
+  };
+
+  const renderHeader = () => (
+    <header className="toolbar">
+      <LevelPicker levels={levels} level={level} onOpen={openLevel} />
+      {error && <span className="error">{error}</span>}
+    </header>
+  );
+
+  const renderMain = () => (
+    <main className="viewport">
+      <Scene>{level && <LevelView key={level.name} level={level} onError={showError} />}</Scene>
+    </main>
+  );
+
   return (
     <div className="app">
-      <header className="toolbar">
-        <LevelPicker levels={levels} level={level} onOpen={(name) => { setError(null); open(name); }} />
-        {error && <span className="error">{error}</span>}
-      </header>
-      <main className="viewport">
-        <Scene>{level && <LevelView key={level.name} level={level} onError={showError} />}</Scene>
-      </main>
+      {renderHeader()}
+      {renderMain()}
     </div>
   );
 }
