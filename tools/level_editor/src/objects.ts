@@ -43,36 +43,36 @@ export function parseObjects(text: string): LevelObject[] {
     const n = i + 1;
     if (typeof item !== "object" || item === null || Array.isArray(item))
       throw new Error(`object ${n} should be {"kind": ..., "at": [x, y, z]}`);
-    const o = item as Record<string, unknown>;
-    const kind = o.kind;
+    const raw = item as Record<string, unknown>; // the entry as it is in the file, not checked yet
+    const kind = raw.kind;
     if (kind === undefined) throw new Error(`object ${n} has no kind`);
     if (!KINDS.includes(kind as Kind))
       throw new Error(`object ${n}: unknown kind ${kind} (it can be ${KINDS.join(", ")})`);
     const settings = SETTINGS.concat(kind === "box" ? BOX_SETTINGS : []);
-    const unknown = Object.keys(o).filter((k) => !settings.includes(k));
+    const unknown = Object.keys(raw).filter((k) => !settings.includes(k));
     if (unknown.length)
       throw new Error(`object ${n}: unknown setting ${unknown[0]} (a ${kind} takes ${settings.join(", ")})`);
     if (ONCE.includes(kind as Kind) && objects.some((p) => p.kind === kind))
       throw new Error(`object ${n}: there's already a ${kind} (a level has one)`);
-    const at = o.at;
+    const at = raw.at;
     if (!(Array.isArray(at) && at.length === 3 && at.every(isNumber)))
       throw new Error(`object ${n}: at should be its position in blender, [x, y, z] in metres`);
-    const raise = o.raise ?? 0;
+    const raise = raw.raise ?? 0;
     if (!isNumber(raise)) throw new Error(`object ${n}: raise should be how far to raise it off the ground, in metres`);
     const object: LevelObject = { kind: kind as Kind, at: [at[0], at[1], at[2]], raise, stack: 1 };
     if (kind === "box") {
-      if (("type" in o) === ("subtype" in o))
+      if (("type" in raw) === ("subtype" in raw))
         throw new Error(`object ${n}: a box needs a type (${Object.keys(BOX_TYPES).join(", ")}) or a subtype number, not both`);
-      if ("type" in o) {
-        if (!(typeof o.type === "string" && o.type in BOX_TYPES))
-          throw new Error(`object ${n}: unknown box type ${o.type} (it can be ${Object.keys(BOX_TYPES).join(", ")})`);
-        object.box = o.type as BoxType;
+      if ("type" in raw) {
+        if (!(typeof raw.type === "string" && raw.type in BOX_TYPES))
+          throw new Error(`object ${n}: unknown box type ${raw.type} (it can be ${Object.keys(BOX_TYPES).join(", ")})`);
+        object.box = raw.type as BoxType;
       } else {
-        if (!isWhole(o.subtype) || !BOX_SUBTYPES.includes(o.subtype))
+        if (!isWhole(raw.subtype) || !BOX_SUBTYPES.includes(raw.subtype))
           throw new Error(`object ${n}: a box's subtype should be one of ${BOX_SUBTYPES.join(", ")}`);
-        object.box = o.subtype;
+        object.box = raw.subtype;
       }
-      const stack = o.stack ?? 1;
+      const stack = raw.stack ?? 1;
       if (!isWhole(stack) || stack < 1) throw new Error(`object ${n}: stack should be how many boxes high it is, 1 or more`);
       object.stack = stack;
     }
