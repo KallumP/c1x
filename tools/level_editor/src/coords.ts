@@ -9,7 +9,7 @@ export function blenderToView([x, y, z]: Vec3): Vec3 {
 }
 
 export function viewToBlender([x, y, z]: Vec3): Vec3 {
-  return [x, -z + 0, y];
+  return [x, -z + 0, y]; // + 0 turns -0 into 0
 }
 
 // a box's size in blender metres, for a level at scale game units a metre
