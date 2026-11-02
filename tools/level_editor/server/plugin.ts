@@ -3,11 +3,15 @@
 //   GET /api/levels/<name>/files/<file> a file in a level's folder (its .obj, .mtl, images)
 //   GET /api/levels/<name>/objects      its objects.json
 //   PUT /api/levels/<name>/objects      saves its objects.json
+//   POST /api/levels/<name>/build       runs build_level.py on it (BuildResult)
+//   POST /api/levels/<name>/boot        sets settings.cfg to boot into it
 import { readFileSync } from "node:fs";
-import { extname } from "node:path";
+import { dirname, extname } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
+import { buildLevel } from "./build";
 import { levelFilePath, listLevels, readObjects, writeObjects } from "./levels";
+import { bootLevel } from "./settings";
 
 const TYPES: Record<string, string> = {
   ".obj": "text/plain", ".mtl": "text/plain", ".json": "application/json",
@@ -31,7 +35,9 @@ function body(req: IncomingMessage): Promise<string> {
   });
 }
 
+// root is level_src/, in the repo
 export function levelSourcesApi(root: string): Plugin {
+  const repo = dirname(root);
   return {
     name: "level-sources-api",
     configureServer(server) {
@@ -52,6 +58,13 @@ export function levelSourcesApi(root: string): Plugin {
               const text = await body(req);
               JSON.parse(text); // the editor checks it fully; this only refuses a broken file
               writeObjects(root, name, text);
+              return send(res, 200, "application/json", "{}");
+            }
+          }
+          if (rest.length === 0 && req.method === "POST") {
+            if (what === "build") return send(res, 200, "application/json", JSON.stringify(await buildLevel(repo, name)));
+            if (what === "boot") {
+              bootLevel(repo, name);
               return send(res, 200, "application/json", "{}");
             }
           }

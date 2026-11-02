@@ -53,7 +53,10 @@ describe("bootLevel", () => {
     mkdirSync(join(repo, "level_src", name), { recursive: true });
     writeFileSync(join(repo, "level_src", name, "map.obj"), "");
   };
-  beforeEach(() => { repo = mkdtempSync(join(tmpdir(), "repo-")); });
+  beforeEach(() => {
+    repo = mkdtempSync(join(tmpdir(), "repo-"));
+    mkdirSync(join(repo, "level_src"));
+  });
   afterEach(() => { rmSync(repo, { recursive: true, force: true }); });
 
   test("sets boot_level in the repo's settings.cfg", () => {
