@@ -876,11 +876,17 @@ class Map(unittest.TestCase):
         self.assertGreater(y, 128)
         self.assertLessEqual(y, 128 + 128)
 
-    def test_a_spawn_object_needs_ground_below_it(self):
+    def test_a_spawn_object_puts_crash_where_it_is_not_on_the_ground(self):
+        spawn = nslevel.levelobjects.LevelObject("spawn", (2, -3, 1.5), raise_by=0.25)  # 1 m over the floor
+        level, entries, zone = self.make(scale=256, objects=[spawn])
+        x, y, z = self.crash_at(zone)
+        self.assertAlmostEqual(1.75 * 256 + 100, y, delta=8)  # crash is kept 100 up
+
+    def test_a_spawn_object_doesnt_need_ground_below_it(self):
         spawn = nslevel.levelobjects.LevelObject("spawn", (20, -3, 0.5))  # off the side of the map
-        with self.assertRaises(ValueError) as e:
-            self.make(scale=256, objects=[spawn])
-        self.assertIn("spawn", str(e.exception))
+        level, entries, zone = self.make(scale=256, objects=[spawn])
+        x, y, z = self.crash_at(zone)
+        self.assertAlmostEqual(128 + 24 * 256, x, delta=16)
 
     def entities(self, zone):
         paths_idx, path_count, entity_count = struct.unpack_from("<3I", zone.items[0], nslevel.ZONE_PATHS_IDX)
@@ -932,6 +938,18 @@ class Map(unittest.TestCase):
         self.assertEqual(6, subtype)
         self.assertAlmostEqual(128 + 5 * 256, x, delta=16)
         self.assertAlmostEqual(128 + 6 * 256, z, delta=16)
+        self.assertEqual(128, y)
+
+    def test_a_box_goes_where_it_is_not_on_the_ground(self):
+        box = nslevel.levelobjects.LevelObject("box", (1, 2, 1.5), subtype=2, raise_by=0.25)  # 1 m over the floor
+        level, entries, zone = self.make(scale=256, objects=[box])
+        [(_, _, (x, y, z))] = self.boxes(zone)
+        self.assertEqual(1.75 * 256, y)
+
+    def test_a_box_doesnt_need_ground_below_it(self):
+        box = nslevel.levelobjects.LevelObject("box", (-20, 2, 0.5), subtype=2)  # off the side of the map
+        level, entries, zone = self.make(scale=256, objects=[box])
+        [(_, _, (x, y, z))] = self.boxes(zone)
         self.assertEqual(128, y)
 
     def test_a_stack_is_boxes_one_on_another_one_after_another(self):
@@ -1001,11 +1019,11 @@ class Map(unittest.TestCase):
         level, entries, zone = self.make(scale=256)
         self.assertEqual(0, level.nsd.ldat.box_total)
 
-    def test_an_end_object_needs_ground_below_it(self):
-        end = nslevel.levelobjects.LevelObject("end", (-20, 4, 0.5))
-        with self.assertRaises(ValueError) as e:
-            self.make(scale=256, objects=[end])
-        self.assertIn("end", str(e.exception))
+    def test_an_end_object_doesnt_need_ground_below_it(self):
+        end = nslevel.levelobjects.LevelObject("end", (-2, 4, 2))  # 1.5 m over the floor
+        level, entries, zone = self.make(scale=256, objects=[end])
+        [(_, (x, y, z))] = self.warp_pads(entries)
+        self.assertEqual(2 * 256, y)
 
     def test_the_warp_pads_base_is_in_the_beachs_terrain_under_it(self):
         base = nslevel.warp_pad_base(nslevel.read_level(STREAMS, 9))
