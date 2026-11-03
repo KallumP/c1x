@@ -61,7 +61,7 @@ npm install
 
 Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box, so move it. **Drop to floor** on the right puts the selected box just above the floor below it.
 
-With nothing selected, the right side shows the **Level**'s turn and scale (see [If something looks wrong](#if-something-looks-wrong)). Save writes them to the level's `level.cfg`, along with the objects. Changing the scale changes how big the boxes look on the map, as they stay the same size in the game.
+The arrow at the spawn points the way the camera faces when the level starts. With nothing selected, the right side shows the **Level**'s turn and scale (see [If something looks wrong](#if-something-looks-wrong)), and changing the turn turns the arrow. Save writes them to the level's `level.cfg`, along with the objects. Changing the scale changes how big the boxes look on the map, as they stay the same size in the game.
 
 When you're done, build and play the level from the editor too (see step 3).
 
@@ -87,7 +87,7 @@ Or press **F5**, which does steps 1 and 2 together: it saves, builds, then sets 
 
 ### If something looks wrong
 
-- **Crash faces sideways or backwards:** the route doesn't run along +Y. With nothing selected in the editor, set **turn** under **Level** to 90 (or 270), then build again.
+- **Crash faces sideways or backwards:** the route doesn't run along +Y. With nothing selected in the editor, set **turn** under **Level** so the arrow at the spawn points along the route, then build again.
 - **Crash looks too big or too small:** set **scale** under **Level** to a different number (400 is normal; bigger makes the map bigger), then build again.
 - **Faces have the wrong textures:** the build warned that an image wasn't found (hover over the build message to see it). Check the `map_Kd` lines in the `.mtl`.
 - **Parts of the map are missing:** the faces point the wrong way. Flip them in Blender.
