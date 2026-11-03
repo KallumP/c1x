@@ -184,3 +184,39 @@ UTEST(launcher_settings, saving_the_title_screen_comments_out_boot_level) {
   ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &s));
   ASSERT_STREQ("", s.boot_level);
 }
+UTEST(launcher_settings, the_same_settings_are_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  ASSERT_TRUE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, settings_differing_in_a_number_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  b.replay_speed = 4;
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, settings_differing_in_boot_level_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  strcpy(b.boot_level, "tide_ruins");
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, equal_settings_ignore_whats_after_boot_levels_end) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  strcpy(a.boot_level, "mossy_creek");
+  strcpy(a.boot_level, "tide");
+  strcpy(b.boot_level, "tide");
+  ASSERT_TRUE(AreSettingsEqual(&a, &b));
+}
