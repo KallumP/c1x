@@ -56,11 +56,13 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/ext/lib/gui.c \
 	src/util/tree.c \
 	src/util/list.c \
-	src/launcher/process.c
+	src/launcher/process.c \
+	src/launcher/paths.c
 
 # the launcher (see doc/launcher.md), plus the game sources it uses
 LAUNCHER_SRC = src/launcher/main.c \
-	src/launcher/process.c
+	src/launcher/process.c \
+	src/launcher/paths.c
 
 OBJ = $(SRC:.c=.o)
 OUT = c1
