@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import jpeg from "jpeg-js";
 import { PNG } from "pngjs";
+import UTIF from "utif";
 import { describe, expect, test } from "vitest";
 import { readImage } from "../../builder/images";
 
@@ -42,5 +43,16 @@ describe("reading images", () => {
     const path = join(folder, "picture.bmp");
     writeFileSync(path, "BM not really");
     expect(() => readImage(path)).toThrow(/picture\.bmp/);
+  });
+});
+
+describe("reading TIFF images", () => {
+  test("a TIFF, as pillow read them", () => {
+    const encoded = Buffer.from(UTIF.encodeImage(rgbaPixels(5, 3, [30, 60, 90, 255]), 5, 3));
+    const path = join(folder, "roof.tiff");
+    writeFileSync(path, encoded);
+    const image = readImage(path);
+    expect([image.width, image.height]).toEqual([5, 3]);
+    expect([...image.rgb.subarray(0, 6)]).toEqual([30, 60, 90, 30, 60, 90]);
   });
 });
