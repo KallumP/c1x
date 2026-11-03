@@ -1,0 +1,60 @@
+import { useEffect, useState } from "react";
+import { fetchLevelCfg, saveLevelCfg, type LevelCfg, type LevelInfo } from "../api";
+import { DEFAULT_SCALE } from "../coords";
+
+const sameCfg = (first: LevelCfg, second: LevelCfg) => first.turn === second.turn && first.scale === second.scale;
+
+// the level list's scale, until level.cfg is read, so boxes don't change size as it opens
+const listedCfg = (level: LevelInfo | null): LevelCfg => ({ turn: 0, scale: level ? level.scale : DEFAULT_SCALE });
+
+// the open level's turn and scale as they're edited: read from its level.cfg when it
+// opens, and written back on save. unsaved is whether they differ from the file
+export function useLevelCfg(level: LevelInfo | null, onError: (message: string) => void) {
+  const [cfg, setCfg] = useState<LevelCfg>(listedCfg(level));
+  const [savedCfg, setSavedCfg] = useState<LevelCfg>(listedCfg(level));
+
+  useEffect(() => {
+    setCfg(listedCfg(level));
+    setSavedCfg(listedCfg(level));
+    if (!level) {
+      return;
+    }
+    let isLatestLoad = true; // false once the level changes, so a late load is dropped
+    const loadCfg = async () => {
+      try {
+        const fetchedCfg = await fetchLevelCfg(level.name);
+        if (isLatestLoad) {
+          setCfg(fetchedCfg);
+          setSavedCfg(fetchedCfg);
+        }
+      } catch (error) {
+        if (isLatestLoad) {
+          onError(`level.cfg ${error instanceof Error ? error.message : error}`);
+        }
+      }
+    };
+    loadCfg();
+    return () => {
+      isLatestLoad = false;
+    };
+  }, [level, onError]);
+
+  const change = (changes: Partial<LevelCfg>) => setCfg((current) => ({ ...current, ...changes }));
+
+  // whether it saved
+  const save = async (): Promise<boolean> => {
+    if (!level) {
+      return false;
+    }
+    try {
+      await saveLevelCfg(level.name, cfg);
+      setSavedCfg(cfg);
+      return true;
+    } catch (error) {
+      onError(`couldn't save level.cfg: ${error instanceof Error ? error.message : error}`);
+      return false;
+    }
+  };
+
+  return { cfg, change, unsaved: !sameCfg(cfg, savedCfg), save };
+}

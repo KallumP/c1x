@@ -2,6 +2,7 @@
 import type { Placeable, Tool } from "../editor";
 import { BOX_TYPES, type BoxType } from "../objects";
 import { boxStyle, END_COLOUR, SPAWN_COLOUR } from "../objectStyles";
+import "./Palette.css";
 
 const GRID_SIZES = [0, 0.25, 0.5, 1];
 

@@ -2,7 +2,7 @@
 // editor's dev server: which there are, their files, and their objects.json
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
-import { DEFAULT_SCALE } from "../src/coords";
+import { parseLevelCfg } from "./levelCfg";
 
 export interface LevelInfo {
   name: string;  // its folder
@@ -14,19 +14,10 @@ function objsIn(folder: string): string[] {
   return readdirSync(folder).filter((file) => file.toLowerCase().endsWith(".obj"));
 }
 
-// scale from a level.cfg's "scale = n" line (build_level.py reads the same file)
+// scale from the folder's level.cfg (build_level.py reads the same file), or the default
 function scaleIn(folder: string): number {
   const cfg = join(folder, "level.cfg");
-  if (!existsSync(cfg)) {
-    return DEFAULT_SCALE;
-  }
-  for (const line of readFileSync(cfg, "utf8").split(/\r?\n/)) {
-    const scaleLine = /^\s*scale\s*=\s*(\d+)\s*$/.exec(line);
-    if (scaleLine) {
-      return Number(scaleLine[1]);
-    }
-  }
-  return DEFAULT_SCALE;
+  return parseLevelCfg(existsSync(cfg) ? readFileSync(cfg, "utf8") : "").scale;
 }
 
 // the level sources in root: its folders holding exactly one .obj, by name
@@ -39,7 +30,7 @@ export function listLevels(root: string): LevelInfo[] {
     .sort((first, second) => (first.name < second.name ? -1 : 1));
 }
 
-function levelFolder(root: string, name: string): string {
+export function levelFolder(root: string, name: string): string {
   if (!listLevels(root).some((level) => level.name === name)) {
     throw new Error(`no level source ${name}`);
   }

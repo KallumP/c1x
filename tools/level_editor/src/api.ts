@@ -6,6 +6,11 @@ export interface LevelInfo {
   scale: number; // game units per blender metre
 }
 
+export interface LevelCfg {
+  turn: number;  // degrees the build turns the level about the up axis: 0, 90, 180 or 270
+  scale: number; // game units per blender metre
+}
+
 export interface BuildResult {
   ok: boolean;
   output: string; // what build_level.py printed
@@ -31,6 +36,14 @@ export async function fetchObjects(name: string): Promise<string> {
 
 export async function saveObjects(name: string, text: string): Promise<void> {
   await checked(await fetch(`/api/levels/${encodeURIComponent(name)}/objects`, { method: "PUT", body: text }));
+}
+
+export async function fetchLevelCfg(name: string): Promise<LevelCfg> {
+  return (await checked(await fetch(`/api/levels/${encodeURIComponent(name)}/cfg`))).json();
+}
+
+export async function saveLevelCfg(name: string, cfg: LevelCfg): Promise<void> {
+  await checked(await fetch(`/api/levels/${encodeURIComponent(name)}/cfg`, { method: "PUT", body: JSON.stringify(cfg) }));
 }
 
 export async function buildLevel(name: string): Promise<BuildResult> {

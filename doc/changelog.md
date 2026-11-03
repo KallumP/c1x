@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-03
+
+### Added
+
+- the level editor's F5 saves, builds the level, and sets the game to boot into it if the build worked
+- the level editor sets a level's turn and scale (with nothing selected, on the right), saving them to its `level.cfg` and keeping its comments; boxes are drawn at the size the scale gives them
+- the level editor's spawn has an arrow pointing the way the game's camera faces, which turns with the level's turn
+
 ## 2026-10-30
 
 ### Added

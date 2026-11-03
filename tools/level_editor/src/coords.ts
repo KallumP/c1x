@@ -13,6 +13,15 @@ export function viewToBlender([x, y, z]: Vec3): Vec3 {
   return [x, -z + 0, y]; // + 0 turns -0 into 0
 }
 
+// the way the game's camera faces at the start (in blender), for a level the build turns by
+// turn degrees: blender +y unturned, the other way round as the level turns anticlockwise
+const FACINGS: Vec3[] = [[0, 1, 0], [1, 0, 0], [0, -1, 0], [-1, 0, 0]];
+
+export function cameraFacing(turn: number): Vec3 {
+  const quarters = Math.round(turn / 90);
+  return FACINGS[((quarters % 4) + 4) % 4];
+}
+
 // a box's size in blender metres, for a level at scale game units a metre
 export function boxSize(scale: number): number {
   return BOX_UNITS / scale;

@@ -1,19 +1,24 @@
-// the selected object's settings
+// the selected object's settings, or the level's (its level.cfg) with nothing selected
 import { useEffect, useState } from "react";
+import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { BOX_TYPES, boxTypeName, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { ChoiceField, NumberField } from "./Fields";
+import "./PropertiesPanel.css";
 
 const AXES = ["x", "y", "z"] as const;
+const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
-export default function PropertiesPanel({ state, warnings, scale, triangles, dispatch }: {
+export default function PropertiesPanel({ state, warnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
   state: EditorState;
   warnings: Set<number>;
   scale: number;
   triangles: Triangle[]; // the level's, for dropping a box to the floor
   dispatch: (action: EditorAction) => void;
+  levelCfg: LevelCfg | null; // null with no level open
+  onLevelCfg: (changes: Partial<LevelCfg>) => void;
 }) {
   const isShiftHeld = useShiftHeld();
   const index = state.selected;
@@ -90,6 +95,33 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
 
   const renderOverlapNote = () => <p className="warning">This box is in a wall or another box.</p>;
 
+  // what build_level.py builds the level with; saved to its level.cfg with the objects
+  const renderLevelFields = (cfg: LevelCfg) => {
+    const turn = String(cfg.turn) as (typeof TURNS)[number];
+    return (
+      <>
+        <h3>Level</h3>
+        <ChoiceField
+          label="turn"
+          value={TURNS.includes(turn) ? turn : "0"}
+          choices={TURNS}
+          onChange={(degrees) => onLevelCfg({ turn: Number(degrees) })}
+        />
+        <NumberField
+          label="scale"
+          value={cfg.scale}
+          step={50}
+          min={1}
+          onChange={(units) => onLevelCfg({ scale: Math.max(1, Math.round(units)) })}
+        />
+        <p className="hint">
+          Turn turns the level in the game, so its route runs the way Crash faces. Scale is the game's units a metre (400 is
+          normal): a bigger scale makes the map bigger in the game, so boxes look smaller on it.
+        </p>
+      </>
+    );
+  };
+
   const renderHint = () => (
     <p className="hint">
       Click an object to select it, then drag it across the floor. Pick something under Place and click the floor to add one.
@@ -106,7 +138,10 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
           <button className="delete" onClick={() => dispatch({ type: "remove", index })}>Delete</button>
         </>
       ) : (
-        renderHint()
+        <>
+          {levelCfg && renderLevelFields(levelCfg)}
+          {renderHint()}
+        </>
       )}
     </aside>
   );
