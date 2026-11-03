@@ -209,3 +209,15 @@ int SaveSettingsFile(const char *path, const char *example_path, const pc_settin
   SDL_free(text);
   return saved;
 }
+
+/* whether a and b set the same settings (boot_level by its text, not what's after it) */
+int AreSettingsEqual(const pc_settings *a, const pc_settings *b) {
+  return a->loading_screen == b->loading_screen
+    && a->loading_screen_min_ms == b->loading_screen_min_ms
+    && a->speed_display == b->speed_display
+    && a->skip_splash_screens == b->skip_splash_screens
+    && a->fix_model_draw_order == b->fix_model_draw_order
+    && a->replay_inputs == b->replay_inputs
+    && a->replay_speed == b->replay_speed
+    && SDL_strcmp(a->boot_level, b->boot_level) == 0;
+}
