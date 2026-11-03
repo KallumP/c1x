@@ -65,6 +65,17 @@ static void AppendSettingLine(text_builder *b, const char *name, const char *val
   AppendString(b, value);
 }
 
+/* where line's text ends (before its line ending), and where the next line starts */
+static const char *EndOfLine(const char *line, const char **next) {
+  const char *line_end;
+
+  *next = SDL_strchr(line, '\n');
+  *next = *next ? *next+1 : line + SDL_strlen(line);
+  line_end = *next;
+  while (line_end > line && (line_end[-1] == '\n' || line_end[-1] == '\r')) { line_end--; }
+  return line_end;
+}
+
 /*
  * text (a settings file's) with its line setting name changed to set it to
  * value, or a line added at the end if there isn't one. the other lines,
@@ -81,10 +92,7 @@ char *SetSettingLine(const char *text, const char *name, const char *value) {
   AppendString(&b, "");
   found = 0;
   for (line=text;*line;line=next) {
-    next = SDL_strchr(line, '\n');
-    next = next ? next+1 : line + SDL_strlen(line);
-    line_end = next;
-    while (line_end > line && (line_end[-1] == '\n' || line_end[-1] == '\r')) { line_end--; }
+    line_end = EndOfLine(line, &next);
     line_value = found ? 0 : ValueIfSetting(line, line_end - line, name, buf, sizeof(buf));
     if (line_value && SDL_strcasecmp(line_value, value) != 0) {
       AppendSettingLine(&b, name, value);
@@ -101,6 +109,34 @@ char *SetSettingLine(const char *text, const char *name, const char *value) {
     AppendString(&b, eol);
   }
   return b.data;
+}
+
+/*
+ * text (a settings file's) with its lines setting name commented out with
+ * "# ", so the setting takes its default. returns the new text, to SDL_free.
+ */
+char *CommentOutSettingLine(const char *text, const char *name) {
+  text_builder b = { 0 };
+  const char *line, *next;
+  char buf[128];
+
+  AppendString(&b, "");
+  for (line=text;*line;line=next) {
+    if (ValueIfSetting(line, EndOfLine(line, &next) - line, name, buf, sizeof(buf))) {
+      AppendString(&b, "# ");
+    }
+    AppendText(&b, line, next - line);
+  }
+  return b.data;
+}
+
+/* text with name commented out, freeing text */
+static char *CommentOutLine(char *text, const char *name) {
+  char *changed;
+
+  changed = CommentOutSettingLine(text, name);
+  SDL_free(text);
+  return changed;
 }
 
 /* text with name set to value, freeing text */
@@ -134,6 +170,9 @@ static char *SettingsTextWith(char *text, const pc_settings *s) {
   text = ReplaceNumberLine(text, "replay_speed", s->replay_speed);
   if (s->boot_level[0]) {
     text = ReplaceSettingLine(text, "boot_level", s->boot_level);
+  }
+  else {
+    text = CommentOutLine(text, "boot_level"); /* start at the title screen */
   }
   return text;
 }
