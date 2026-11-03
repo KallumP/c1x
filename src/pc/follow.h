@@ -18,12 +18,11 @@
 #define FOLLOW_CAM_HEIGHT   (1316 << 8) /* above the floor (game units; CAM_OFFSET's height in tools/level_editor/builder/route.ts) */
 
 extern int32_t follow_cam_offset;
-extern int32_t follow_cam_offset_y;
+extern int32_t follow_cam_y;
 extern int32_t follow_cam_ground_y;
 
 extern int32_t FollowCamOffset(int32_t offset, int32_t target);
 extern int32_t FollowCamGroundY(int32_t ground, int32_t crash_y, int on_floor);
-extern int32_t FollowCamHeightTarget(int32_t ground_y, int32_t path_y);
 extern int32_t FollowCamHeight(int32_t height, int32_t ground_y, int32_t path_y);
 
 #endif /* _PC_FOLLOW_H_ */
