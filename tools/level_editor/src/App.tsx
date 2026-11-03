@@ -1,17 +1,16 @@
 import { useCallback, useRef, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
-import type { LevelInfo } from "./api";
 import LevelMesh from "./components/LevelMesh";
 import LevelPicker from "./components/LevelPicker";
 import ObjectMarkers from "./components/ObjectMarkers";
 import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
 import Scene, { type Orbit } from "./components/Scene";
-import { DEFAULT_SCALE } from "./coords";
 import { newObject, type Tool } from "./editor";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
 import { useLevelActions } from "./hooks/useLevelActions";
+import { useLevelCfg } from "./hooks/useLevelCfg";
 import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevels } from "./hooks/useLevels";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
@@ -27,8 +26,11 @@ export default function App() {
   const showError = useCallback((message: string) => setError(message), []);
   const { levels, level, open } = useLevels(showError);
   const group = useLevelGroup(level, showError);
-  const { state, dispatch, unsaved, save } = useEditor(level, showError);
-  const scale = level ? level.scale : DEFAULT_SCALE;
+  const editor = useEditor(level, showError);
+  const { state, dispatch } = editor;
+  const levelCfg = useLevelCfg(level, showError);
+  const scale = levelCfg.cfg.scale; // as it's edited, so boxes follow it before it's saved
+  const unsaved = editor.unsaved || levelCfg.unsaved;
   const triangles = useTriangles(group);
   const warnings = useWarnings(state.objects, scale, triangles);
   const [tool, setTool] = useState<Tool>(SELECT);
@@ -39,6 +41,17 @@ export default function App() {
     begin: () => dispatch({ type: "checkpoint" }),
     move: (index, at) => dispatch({ type: "update", index, changes: { at }, record: false }),
   });
+  // saves the objects and level.cfg, whichever changed; whether they saved
+  const save = async (): Promise<boolean> => {
+    if (editor.unsaved && !(await editor.save())) {
+      return false;
+    }
+    if (levelCfg.unsaved && !(await levelCfg.save())) {
+      return false;
+    }
+    return true;
+  };
+
   useUnsavedWarning(unsaved);
   const levelActions = useLevelActions(level, unsaved, save);
 
@@ -118,12 +131,12 @@ export default function App() {
     </header>
   );
 
-  const renderLevel = (shownLevel: LevelInfo) => (
+  const renderLevel = () => (
     <>
       {group && <LevelMesh group={group} onClick={clickLevel} onPointerMove={drag.moveOverLevel} />}
       <ObjectMarkers
         objects={state.objects}
-        scale={shownLevel.scale}
+        scale={scale}
         selected={state.selected}
         warnings={warnings}
         onSelect={drag.start}
@@ -134,7 +147,7 @@ export default function App() {
   const renderMain = () => (
     <main className="viewport">
       <Scene orbitRef={orbitRef} onMiss={() => dispatch({ type: "select", index: null })}>
-        {level && renderLevel(level)}
+        {level && renderLevel()}
       </Scene>
     </main>
   );
@@ -144,7 +157,15 @@ export default function App() {
       {renderHeader()}
       <Palette tool={tool} onTool={setTool} grid={grid} onGrid={setGrid} />
       {renderMain()}
-      <PropertiesPanel state={state} warnings={warnings} scale={scale} triangles={triangles} dispatch={dispatch} />
+      <PropertiesPanel
+        state={state}
+        warnings={warnings}
+        scale={scale}
+        triangles={triangles}
+        dispatch={dispatch}
+        levelCfg={level ? levelCfg.cfg : null}
+        onLevelCfg={levelCfg.change}
+      />
     </div>
   );
 }
