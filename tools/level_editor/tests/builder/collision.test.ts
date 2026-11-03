@@ -49,6 +49,23 @@ describe("collision cells", () => {
     expect(kinds(wall)).toEqual(new Set(["wall"]));
   });
 
+  test("a wall's top goes to the nearest cell top, like a floor's", () => {
+    // a bank 20 units above the water: its wall would otherwise fill the whole cell above, 128 units
+    // over the floor beside it, which crash can't step over (more than 50 up, PlotQueryWalls in src/solid.c)
+    const bank = quadMesh([[512, 0, 0], [512, 276, 0], [512, 276, 256], [512, 0, 256]]); // top 20 into the third cell
+    expect(positions(bank)).toEqual(grid([3], upTo(2), upTo(2)));
+    const higher = quadMesh([[512, 0, 0], [512, 330, 0], [512, 330, 256], [512, 0, 256]]); // past the third cell's middle
+    expect(positions(higher)).toEqual(grid([3], upTo(3), upTo(2)));
+  });
+
+  test("a bank's wall is no higher than the floor beside it", () => {
+    const sand = floorMesh(0, 0, 512, 256, 276);
+    const bank = quadMesh([[512, 0, 0], [512, 276, 0], [512, 276, 256], [512, 0, 256]]);
+    const cells = cellsOf(merged(sand, bank));
+    const top = (kind: CellKind) => Math.max(...[...cells].filter((cell) => cell.kind === kind).map(({ at }) => at[1]));
+    expect(top("wall")).toBeLessThanOrEqual(top("floor"));
+  });
+
   test("floor wins where it shares a cell with a wall", () => {
     const wall = quadMesh([[512, 0, 0], [512, 512, 0], [512, 512, 256], [512, 0, 256]]);
     const cells = cellsOf(merged(wall, floorMesh(0, 0, 512, 256, 512)));
