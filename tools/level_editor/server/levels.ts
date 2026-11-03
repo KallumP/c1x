@@ -11,16 +11,20 @@ export interface LevelInfo {
 }
 
 function objsIn(folder: string): string[] {
-  return readdirSync(folder).filter((f) => f.toLowerCase().endsWith(".obj"));
+  return readdirSync(folder).filter((file) => file.toLowerCase().endsWith(".obj"));
 }
 
 // scale from a level.cfg's "scale = n" line (build_level.py reads the same file)
 function scaleIn(folder: string): number {
   const cfg = join(folder, "level.cfg");
-  if (!existsSync(cfg)) return DEFAULT_SCALE;
+  if (!existsSync(cfg)) {
+    return DEFAULT_SCALE;
+  }
   for (const line of readFileSync(cfg, "utf8").split(/\r?\n/)) {
-    const m = /^\s*scale\s*=\s*(\d+)\s*$/.exec(line);
-    if (m) return Number(m[1]);
+    const scaleLine = /^\s*scale\s*=\s*(\d+)\s*$/.exec(line);
+    if (scaleLine) {
+      return Number(scaleLine[1]);
+    }
   }
   return DEFAULT_SCALE;
 }
@@ -30,23 +34,31 @@ export function listLevels(root: string): LevelInfo[] {
   return readdirSync(root)
     .filter((name) => statSync(join(root, name)).isDirectory())
     .map((name) => ({ name, objs: objsIn(join(root, name)) }))
-    .filter((l) => l.objs.length === 1)
-    .map((l) => ({ name: l.name, obj: l.objs[0], scale: scaleIn(join(root, l.name)) }))
-    .sort((a, b) => (a.name < b.name ? -1 : 1));
+    .filter((folder) => folder.objs.length === 1)
+    .map((folder) => ({ name: folder.name, obj: folder.objs[0], scale: scaleIn(join(root, folder.name)) }))
+    .sort((first, second) => (first.name < second.name ? -1 : 1));
 }
 
 function levelFolder(root: string, name: string): string {
-  if (!listLevels(root).some((l) => l.name === name)) throw new Error(`no level source ${name}`);
+  if (!listLevels(root).some((level) => level.name === name)) {
+    throw new Error(`no level source ${name}`);
+  }
   return join(root, name);
 }
 
 // the path of file in a level's folder, or null if it isn't one (or is outside it)
 export function levelFilePath(root: string, name: string, file: string): string | null {
   let folder: string;
-  try { folder = levelFolder(root, name); } catch { return null; }
+  try {
+    folder = levelFolder(root, name);
+  } catch {
+    return null;
+  }
   const path = resolve(folder, file);
-  const rel = relative(folder, path);
-  if (rel.startsWith("..") || rel.includes(`..${sep}`) || resolve(path) === resolve(folder)) return null;
+  const fromFolder = relative(folder, path);
+  if (fromFolder.startsWith("..") || fromFolder.includes(`..${sep}`) || resolve(path) === resolve(folder)) {
+    return null;
+  }
   return existsSync(path) && statSync(path).isFile() ? path : null;
 }
 

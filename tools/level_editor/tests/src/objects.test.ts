@@ -76,7 +76,8 @@ describe("formatObjects", () => {
       { kind: "box", box: "outline", at: [2, 0, 0], raise: 0, stack: 1 },
       { kind: "spawn", at: [0, 0, 0], raise: 0, stack: 1 },
     ]);
-    expect(parseObjects(text).map((o) => o.kind + (o.box ?? ""))).toEqual(["spawn", "boxbasic", "boxoutline", "end"]);
+    const kinds = parseObjects(text).map((object) => (object.box === undefined ? object.kind : `${object.kind} ${object.box}`));
+    expect(kinds).toEqual(["spawn", "box basic", "box outline", "end"]);
   });
 
   test("rounds positions to the millimetre", () => {
