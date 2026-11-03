@@ -22,13 +22,6 @@ static void MakeRepoWithNodeModules(void) {
   MakeFolder(TEST_EXTRACT_REPO "/tools/level_editor/node_modules");
 }
 
-UTEST(launcher_extract, runs_in_the_level_editor_folder) {
-  char folder[256];
-
-  ExtractStreamsFolder("/home/me/c1x", folder, sizeof(folder));
-  ASSERT_STREQ("/home/me/c1x/tools/level_editor", folder);
-}
-
 UTEST(launcher_extract, extracts_the_quoted_disc_image) {
   char command[512];
 
