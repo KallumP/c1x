@@ -5,8 +5,16 @@ import { OrbitControls } from "@react-three/drei";
 export type Orbit = ElementRef<typeof OrbitControls>;
 
 // the 3d view: lit, orbited with the mouse. orbitRef lets the editor stop the
-// camera while an object is dragged
-export default function Scene({ orbitRef, children }: { orbitRef: RefObject<Orbit>; children: ReactNode }) {
+// camera while an object is dragged, and onMiss is a click on nothing
+export default function Scene({ orbitRef, onMiss, children }: {
+  orbitRef: RefObject<Orbit>; onMiss: () => void; children: ReactNode;
+}) {
+  const clickNothing = (event: MouseEvent) => {
+    if (event.type === "click") {
+      onMiss();
+    }
+  };
+
   const renderLights = () => (
     <>
       <hemisphereLight args={["#ffffff", "#8a8a8a", 2.2]} />
@@ -15,7 +23,7 @@ export default function Scene({ orbitRef, children }: { orbitRef: RefObject<Orbi
   );
 
   return (
-    <Canvas camera={{ fov: 60, near: 0.05, far: 2000 }}>
+    <Canvas camera={{ fov: 60, near: 0.05, far: 2000 }} onPointerMissed={clickNothing}>
       <color attach="background" args={["#2b2d31"]} />
       {renderLights()}
       {children}
