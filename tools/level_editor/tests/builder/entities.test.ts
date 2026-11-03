@@ -92,6 +92,15 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(templates.textures.length).toBeGreaterThan(1);
   });
 
+  test("every box holds nothing extra, though the level's own may hold a token", () => {
+    // the first init flag is what a box holds beyond the usual (jungle rollers' ? boxes all hold
+    // something, such as tawna's token); 0, the plain box, is what most boxes of every subtype have
+    const templates = readTemplates(base);
+    for (const subtype of [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 19]) {
+      expect(templates.entity(BOX_TYPE, subtype).readInt16LE(ENTITY_INIT_FLAGS)).toBe(0);
+    }
+  });
+
   test("a box of a subtype the level has none of is its basic box with that subtype", () => {
     const templates = readTemplates(base);
     const basic = templates.entity(BOX_TYPE, 2);
