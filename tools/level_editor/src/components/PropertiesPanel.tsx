@@ -5,7 +5,8 @@ import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { BOX_TYPES, boxTypeName, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
-import { ChoiceField, NumberField } from "./Fields";
+import { SKY_ROWS, type Sky } from "../sky";
+import { ChoiceField, ColourField, NumberField } from "./Fields";
 import "./PropertiesPanel.css";
 
 const AXES = ["x", "y", "z"] as const;
@@ -122,6 +123,38 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
     );
   };
 
+  // the two colours, split as they are on the game's screen
+  const renderSkyPreview = (sky: Sky) => (
+    <div className="sky-preview">
+      <div style={{ height: `${(100 * sky.split) / SKY_ROWS}%`, background: `rgb(${sky.top.join(",")})` }} />
+      <div style={{ flex: 1, background: `rgb(${sky.bottom.join(",")})` }} />
+    </div>
+  );
+
+  // the sky behind the level in the game; saved to its level.cfg with the turn and scale
+  const renderSkyFields = (sky: Sky) => {
+    const changeSky = (changes: Partial<Sky>) => onLevelCfg({ sky: { ...sky, ...changes } });
+    return (
+      <>
+        <h3>Sky</h3>
+        {renderSkyPreview(sky)}
+        <ColourField label="top" value={sky.top} onChange={(top) => changeSky({ top })} />
+        <ColourField label="bottom" value={sky.bottom} onChange={(bottom) => changeSky({ bottom })} />
+        <NumberField
+          label="split"
+          value={sky.split}
+          step={4}
+          min={0}
+          onChange={(rows) => changeSky({ split: Math.min(SKY_ROWS, Math.max(0, Math.round(rows))) })}
+        />
+        <p className="hint">
+          The top colour fills the game's screen down to split (of its {SKY_ROWS} rows), and the bottom colour the rest.
+          Build the level to see it in the game.
+        </p>
+      </>
+    );
+  };
+
   const renderHint = () => (
     <p className="hint">
       Click an object to select it, then drag it across the floor. Pick something under Place and click the floor to add one.
@@ -140,6 +173,7 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
       ) : (
         <>
           {levelCfg && renderLevelFields(levelCfg)}
+          {levelCfg && renderSkyFields(levelCfg.sky)}
           {renderHint()}
         </>
       )}

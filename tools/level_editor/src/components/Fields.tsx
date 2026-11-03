@@ -1,5 +1,6 @@
 // small form fields for the properties panel
 import type { ReactNode } from "react";
+import { hexToRgb, rgbToHex, type Rgb } from "../sky";
 import "./Fields.css";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -24,6 +25,16 @@ export function NumberField({ label, value, step, min, onChange }: {
   return (
     <Field label={label}>
       <input type="number" value={value} step={step} min={min} onChange={(event) => change(event.target)} />
+    </Field>
+  );
+}
+
+export function ColourField({ label, value, onChange }: {
+  label: string; value: Rgb; onChange: (value: Rgb) => void;
+}) {
+  return (
+    <Field label={label}>
+      <input type="color" value={rgbToHex(value)} onChange={(event) => onChange(hexToRgb(event.target.value))} />
     </Field>
   );
 }

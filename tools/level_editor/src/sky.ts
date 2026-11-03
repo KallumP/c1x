@@ -27,3 +27,7 @@ export const isSkySplit = (split: number) => Number.isInteger(split) && split >=
 
 export const isSameSky = (first: Sky, second: Sky) =>
   formatRgb(first.top) === formatRgb(second.top) && formatRgb(first.bottom) === formatRgb(second.bottom) && first.split === second.split;
+
+// a colour as a colour picker's "#rrggbb", and back
+export const rgbToHex = (colour: Rgb) => `#${colour.map((part) => part.toString(16).padStart(2, "0")).join("")}`;
+export const hexToRgb = (hex: string): Rgb => [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16)) as Rgb;
