@@ -1,5 +1,6 @@
 // small form fields for the properties panel
 import type { ReactNode } from "react";
+import "./Fields.css";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (

@@ -5,6 +5,7 @@ import { useShiftHeld } from "../hooks/useShiftHeld";
 import { BOX_TYPES, boxTypeName, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { ChoiceField, NumberField } from "./Fields";
+import "./PropertiesPanel.css";
 
 const AXES = ["x", "y", "z"] as const;
 
