@@ -51,6 +51,8 @@ export function entityPosition(item: Buffer): Vec3 {
   return [0, 1, 2].map((axis) => 4 * item.readInt16LE(ENTITY_POINTS + 2 * axis)) as Vec3;
 }
 
+// a box's first init flag is what it holds beyond the usual (a token, say); 0 for nothing
+export const withInitFlagA = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS));
 const withInitFlagB = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 2));
 const withInitFlagC = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 4));
 

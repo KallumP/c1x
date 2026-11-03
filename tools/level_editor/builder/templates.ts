@@ -1,7 +1,7 @@
 // what custom levels take from a real level (the base level): its spawn zone's
 // header and origin, crash, its biggest world mesh (for textures), an example of
 // each kind of entity, and the base the warp pad stands on
-import { BOX_TYPE, entityPosition, entityType, withSubtype, WARP_PAD, CRASH } from "./entities";
+import { BOX_TYPE, entityPosition, entityType, withInitFlagA, withSubtype, WARP_PAD, CRASH } from "./entities";
 import { ENTRY_ZDAT, entriesById, type Entry, type Level } from "./levelFiles";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader, readWorldPolygon, readWorldVertex, TEXINFOS_AT, type BuiltPolygon } from "./worldGeometry";
@@ -56,15 +56,16 @@ function exampleEntities(level: Level): Map<string, Buffer> {
 
 const BASIC_BOX = 2;
 
-// the level's first entity of a type and subtype; a box of a subtype the level
+// the level's first entity of a type and subtype. a box of a subtype the level
 // has none of (such as the ! box in jungle rollers) is its basic box with that
-// subtype, as boxes differ only by subtype
+// subtype, as boxes differ only by subtype; and a box holds nothing extra, as
+// the level's own may (all of jungle rollers' ? boxes hold tawna's token or the like)
 function exampleEntity(examples: Map<string, Buffer>, type: number, subtype: number): Buffer {
   const example = examples.get(`${type},${subtype}`);
-  if (example || type !== BOX_TYPE) {
+  if (type !== BOX_TYPE) {
     return example!;
   }
-  return withSubtype(examples.get(`${BOX_TYPE},${BASIC_BOX}`)!, subtype);
+  return withInitFlagA(example ?? withSubtype(examples.get(`${BOX_TYPE},${BASIC_BOX}`)!, subtype), 0);
 }
 
 export function readTemplates(level: Level): Templates {
