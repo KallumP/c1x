@@ -60,6 +60,18 @@ describe("switches", () => {
     expect([entities[0][0], entities[1][0], entities[1][1]].map(initFlags)).toEqual([[12, 12], [4, 13], [4, 0]]);
   });
 
+  test("iron outlines are in the same chain as outlines, in the order they're placed", () => {
+    // as in generator room, where the ! box's chain goes outline, iron outline, iron outline, outline, ...
+    const entities = [[entity(BOX_TYPE, 7, 10, []), entity(BOX_TYPE, 13, 11, []), entity(BOX_TYPE, 19, 12, []), entity(BOX_TYPE, 13, 13, [])]];
+    const placed: PlacedBox[] = [
+      { subtype: 7, zone: 0, index: 0, id: 10 }, { subtype: 13, zone: 0, index: 1, id: 11 },
+      { subtype: 19, zone: 0, index: 2, id: 12 }, { subtype: 13, zone: 0, index: 3, id: 13 },
+    ];
+    linkSwitches(entities, placed);
+    expect(initFlags(entities[0][0])[1]).toBe(11);
+    expect(entities[0].slice(1).map(initFlags)).toEqual([[12, 12], [4, 13], [4, 0]]);
+  });
+
   test("a switch without outline boxes links to none", () => {
     const entities = [[entity(BOX_TYPE, 7, 10, [])]];
     linkSwitches(entities, [{ subtype: 7, zone: 0, index: 0, id: 10 }]);
