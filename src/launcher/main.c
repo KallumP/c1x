@@ -93,6 +93,7 @@ int main(int argc, char *argv[]) {
   if (!FindRepoFolder(repo, sizeof(repo))) {
     SDL_strlcpy(repo, "..", sizeof(repo)); /* assume it's run from build/ */
   }
+  LoadGameSection(repo);
   LoadSettingsSection(repo);
   if (!OpenLauncherWindow()) {
     fprintf(stderr, "could not open the launcher's window: %s\n", SDL_GetError());
