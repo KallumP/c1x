@@ -1,0 +1,297 @@
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { describe, expect, test } from "vitest";
+import type { LevelObject } from "../../src/objects";
+import { readWords } from "../../builder/bytes";
+import { BOX_HEIGHT, BOX_TYPE, entityId, entityPosition, entityType, WARP_PAD } from "../../builder/entities";
+import { EID_NONE } from "../../builder/entryIds";
+import type { RgbImage } from "../../builder/images";
+import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
+import { CORE_EXEC_SLOTS } from "../../builder/cutLevel";
+import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
+import { textureWorlds } from "../../builder/mapTextures";
+import { FOLLOW_CAM_MODE } from "../../builder/paths";
+import { colour5551 } from "../../builder/tpage";
+import { readWorldHeader, readWorldPolygon, TEXINFOS_AT } from "../../builder/worldGeometry";
+import type { TileRegion, WorldMesh, WorldVertex } from "../../builder/worldMeshes";
+import { ZONE_LOADLIST, ZONE_NEIGHBORS, ZONE_PATHS_IDX, zoneEntities, zoneWorldEids } from "../../builder/zones";
+
+const STONE_RGB: [number, number, number] = [90, 90, 100];
+const stone = (): RgbImage => ({ width: 32, height: 32, rgb: new Uint8Array(32 * 32 * 3).map((_, index) => STONE_RGB[index % 3]) });
+
+describe("texturing world meshes", () => {
+  test("each mesh holds only the texture regions it uses", () => {
+    // a mesh header's texinfos are indexed by 12 bits of words, so each mesh lists its own
+    const template = Buffer.concat([Buffer.from(new Uint32Array([0, 0, 0, 0, 0, 2, 1, 0]).buffer), Buffer.alloc(32), Buffer.from("TEX!TEX?")]);
+    const a: TileRegion = { material: "stone", x: 0, y: 0, w: 32, h: 32, layout: 0 };
+    const b: TileRegion = { material: "stone", x: 32, y: 0, w: 32, h: 32, layout: 0 };
+    const vertices: WorldVertex[] = Array(3).fill({ at: [0, 0, 0], colour: [128, 128, 128] });
+    const worlds: WorldMesh[] = [
+      { vertices, polygons: [{ corners: [0, 1, 2], texture: a }, { corners: [0, 1, 2], texture: { ...a } }] },
+      { vertices, polygons: [{ corners: [0, 1, 2], texture: b }] },
+    ];
+    const textured = textureWorlds(worlds, new Map([["stone", stone()]]), template);
+    expect(textured.texinfos.map((texinfos) => texinfos.length)).toEqual([8, 8]); // one region (2 words) each
+    expect(textured.worlds[0].polygons.map(({ texinfo }) => texinfo)).toEqual([2, 2]); // after the template's 2 words
+    expect(textured.worlds[1].polygons.map(({ texinfo }) => texinfo)).toEqual([2]);
+    expect(textured.texinfos[0].equals(textured.texinfos[1])).toBe(false);
+  });
+});
+
+// a map as blender exports it: a floor 8 m by 16 m, a wall, and a spawn marker
+const MAP_OBJ = `o Floor
+v -4 0 -8
+v -4 0 8
+v 4 0 8
+v 4 0 -8
+f 1 2 3 4
+o Wall
+v 4 0 -8
+v 4 2 -8
+v 4 2 8
+v 4 0 8
+f 5 6 7 8
+o Spawn
+v 0 1 5
+v 0.1 1 5
+v 0 1.1 5
+f 9 10 11
+`;
+const TEXTURED_OBJ = MAP_OBJ.replace("o Floor\n", "o Floor\nusemtl stone\n").replace("o Wall\n", "o Wall\nusemtl plain\n");
+// a floor 100 m long: 40000 units at the default scale, so 3 zones of 16384
+const LONG_OBJ = "o Floor\nv -4 0 -50\nv -4 0 50\nv 4 0 50\nv 4 0 -50\nf 1 2 3 4\n";
+
+const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
+const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
+
+const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
+  ({ kind, at, raise: 0, stack: 1, ...more });
+const box = (at: [number, number, number], subtype: number, more: Partial<LevelObject> = {}) => object("box", at, { box: subtype, ...more });
+
+interface Built {
+  level: Level;
+  entries: Map<number, Entry>;
+  zone: Entry;
+}
+
+describe.skipIf(!hasBeach)("making a level from a map", () => {
+  const beach = hasBeach ? readLevel(STREAMS, 9) : null!;
+
+  function make(text = MAP_OBJ, options: MapOptions = {}): Built {
+    const level = makeMap(beach, text, options);
+    const entries = entriesById(level);
+    return { level, entries, zone: entries.get(level.nsd.ldat.zoneSpawn)! };
+  }
+
+  const zoneCounts = (zone: Entry) => readWords(zone.items[0], ZONE_PATHS_IDX, 4);
+  const crashAt = (zone: Entry) => entityPosition(zoneEntities(zone)[0]);
+  const zonesOf = ({ entries }: Built) => [...entries.values()].filter((entry) => entry.type === ENTRY_ZDAT)
+    .sort((first, second) => second.items[1].readInt32LE(8) - first.items[1].readInt32LE(8)); // from the start (+z)
+  const warpPads = (built: Built) => zonesOf(built).flatMap((zone) =>
+    zoneEntities(zone).filter((item) => entityType(item).join() === WARP_PAD.join()).map((item) => ({ zone, at: entityPosition(item) })));
+  const boxes = (zone: Entry) => zoneEntities(zone).filter((item) => entityType(item)[0] === BOX_TYPE)
+    .map((item) => ({ subtype: entityType(item)[1], id: entityId(item), at: entityPosition(item) }));
+  const texturePages = (level: Level) => level.pages.filter((page) => page.type === PAGE_TEXTURE);
+  const firstWorld = ({ entries, zone }: Built) => entries.get(zoneWorldEids(zone)[0])!;
+
+  test("a map is one zone with its geometry and crash only", () => {
+    const built = make();
+    const { level, zone } = built;
+    expect(level.nsd.ldat.lid).toBe(LID_TEST);
+    const [pathsIndex, pathCount, entityCount] = zoneCounts(zone);
+    expect([pathCount, entityCount]).toEqual([1, 1]);
+    expect(entityType(zone.items[pathsIndex + 1])).toEqual([0, 0]); // crash
+    expect(level.nsd.ldat.execMap.filter((eid) => eid !== EID_NONE).length).toBe(CORE_EXEC_SLOTS.length);
+    const entriesOfType = (type: number) => [...built.entries.values()].filter((entry) => entry.type === type).length;
+    expect([entriesOfType(ENTRY_ZDAT), entriesOfType(ENTRY_SLST)]).toEqual([1, 1]);
+    expect(entriesOfType(ENTRY_WGEO)).toBe(zone.items[0].readUInt32LE(0));
+  });
+
+  test("its world meshes are its faces", () => {
+    const header = readWorldHeader(firstWorld(make()).items[0]);
+    expect(header.polygonCount).toBeGreaterThan(4); // floor and wall, sliced
+  });
+
+  test("its path uses the follow camera", () => {
+    const { zone } = make();
+    expect(zone.items[zoneCounts(zone)[0]].readUInt16LE(32)).toBe(FOLLOW_CAM_MODE);
+  });
+
+  test("crash starts on the ground at the spawn marker", () => {
+    const [x, y, z] = crashAt(make(MAP_OBJ, { scale: 256 }).zone);
+    // the floor's corner is at the zone's corner plus a cell of margin
+    expect(Math.abs(x - (128 + 4 * 256))).toBeLessThanOrEqual(16); // the marker's middle, on multiples of 8
+    expect(z).toBe(128 + 5 * 256 + 8 * 256);
+    expect(y).toBeGreaterThan(128);
+    expect(y).toBeLessThanOrEqual(128 + 128);
+  });
+
+  test("a spawn object puts crash where it is", () => {
+    // blender (2, -3, 0) is the .obj's (2, 0, 3): on the floor, away from the marker
+    const [x, y, z] = crashAt(make(MAP_OBJ, { scale: 256, objects: [object("spawn", [2, -3, 0])] }).zone);
+    expect(Math.abs(x - (128 + 6 * 256))).toBeLessThanOrEqual(16);
+    expect(Math.abs(z - (128 + 11 * 256))).toBeLessThanOrEqual(16);
+    expect(y).toBeGreaterThan(128);
+    expect(y).toBeLessThanOrEqual(128 + 128);
+  });
+
+  test("a raised spawn object puts crash in the air", () => {
+    const [, y] = crashAt(make(MAP_OBJ, { scale: 256, objects: [object("spawn", [2, -3, 1.5], { raise: 0.25 })] }).zone);
+    expect(Math.abs(y - (128 + 1.75 * 256 + 100))).toBeLessThanOrEqual(8); // the floor's at 128; crash is kept 100 up
+  });
+
+  test("an end object puts a warp pad where it is, with its code", () => {
+    // blender (-2, 4, 0) is the .obj's (-2, 0, -4)
+    const built = make(MAP_OBJ, { scale: 256, objects: [object("end", [-2, 4, 0])] });
+    const [pad] = warpPads(built);
+    expect(warpPads(built).length).toBe(1);
+    expect(pad.zone.eid).toBe(built.zone.eid);
+    expect(Math.abs(pad.at[0] - (128 + 2 * 256))).toBeLessThanOrEqual(16);
+    expect(Math.abs(pad.at[2] - (128 + 4 * 256))).toBeLessThanOrEqual(16);
+    expect(pad.at[1]).toBe(128); // on the floor's top
+    expect(entityType(zoneEntities(built.zone)[0])).toEqual([0, 0]); // crash stays first
+    expect(built.entries.has(built.level.nsd.ldat.execMap[WARP_PAD[0]])).toBe(true);
+  });
+
+  test("raise lifts the warp pad", () => {
+    const [pad] = warpPads(make(MAP_OBJ, { scale: 256, objects: [object("end", [-2, 4, 0], { raise: 0.25 })] }));
+    expect(pad.at[1]).toBe(128 + 64);
+  });
+
+  test("without an end object there's no warp pad", () => {
+    expect(warpPads(make(MAP_OBJ, { scale: 256 }))).toEqual([]);
+  });
+
+  test("an end object has the warp pad's base under it", () => {
+    const built = make(MAP_OBJ, { scale: 256, objects: [object("end", [-2, 4, 0.5])] });
+    const header = readWorldHeader(firstWorld(built).items[0]);
+    const basePage = header.pages.find((page) => !readWorldHeader(firstWorld(make(MAP_OBJ, { scale: 256 })).items[0]).pages.includes(page));
+    expect(basePage).toBeDefined();
+    expect(texturePages(built.level).map(({ eid }) => eid)).toContain(basePage);
+  });
+
+  test("a box goes where it is", () => {
+    // blender (1, 2, 0) is the .obj's (1, 0, -2); the game draws a box half a box along +x and +z
+    // from where it's kept, so it's kept that far back for its middle to be at at
+    const [placed] = boxes(make(MAP_OBJ, { scale: 256, objects: [box([1, 2, 0], 6)] }).zone);
+    expect(placed.subtype).toBe(6);
+    expect(Math.abs(placed.at[0] - (128 + 5 * 256 - BOX_HEIGHT / 2))).toBeLessThanOrEqual(16);
+    expect(Math.abs(placed.at[2] - (128 + 6 * 256 - BOX_HEIGHT / 2))).toBeLessThanOrEqual(16);
+    expect(placed.at[1]).toBe(128);
+  });
+
+  test("a stack is boxes one on another, one after another", () => {
+    const stack = boxes(make(MAP_OBJ, { scale: 256, objects: [box([1, 2, 0.5], 2, { stack: 3 })] }).zone);
+    expect(stack.length).toBe(3);
+    stack.slice(1).forEach((above, index) => {
+      expect([above.at[0], above.at[2]]).toEqual([stack[index].at[0], stack[index].at[2]]);
+      expect(above.at[1]).toBe(stack[index].at[1] + BOX_HEIGHT);
+    });
+  });
+
+  test("every object has its own id", () => {
+    const objects = [box([1, 2, 0.5], 2, { stack: 2 }), box([-1, 2, 0.5], 13), object("end", [-2, 4, 0.5])];
+    const { zone } = make(MAP_OBJ, { scale: 256, objects });
+    const ids = zoneEntities(zone).map(entityId);
+    expect(ids.length).toBe(5); // crash, 3 boxes and the warp pad
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  test("the level header has how many boxes can be broken", () => {
+    const objects = [box([1, 2, 0.5], 2, { stack: 2 }), box([-1, 2, 0.5], 13), box([1, 3, 0.5], 5), box([-1, 3, 0.5], 7)];
+    expect(make(MAP_OBJ, { scale: 256, objects }).level.nsd.ldat.boxTotal).toBe(3); // not the iron or switch boxes
+    expect(make(MAP_OBJ, { scale: 256 }).level.nsd.ldat.boxTotal).toBe(0);
+  });
+
+  test("turn runs the map along z", () => {
+    // turned a quarter, the 16 m long floor runs along x
+    const rect = make(MAP_OBJ, { scale: 256, turn: 90 }).zone.items[1];
+    expect(rect.readUInt32LE(12)).toBeGreaterThan(rect.readUInt32LE(20));
+  });
+
+  test("material images become a texture page the zone loads", () => {
+    const plain = make(TEXTURED_OBJ);
+    const built = make(TEXTURED_OBJ, { images: new Map([["stone", stone()]]) });
+    expect(texturePages(built.level).length).toBe(texturePages(plain.level).length + 1);
+    const plainEids = texturePages(plain.level).map(({ eid }) => eid);
+    const added = texturePages(built.level).find(({ eid }) => !plainEids.includes(eid))!;
+    expect(readWorldHeader(firstWorld(built).items[0]).pages).toContain(added.eid);
+    expect(built.zone.items[0].readInt32LE(ZONE_LOADLIST + 4)).toBe(texturePages(built.level).length);
+  });
+
+  test("textured polygons use their material's tile", () => {
+    const built = make(TEXTURED_OBJ, { images: new Map([["stone", stone()]]) });
+    const world = firstWorld(built);
+    const header = readWorldHeader(world.items[0]);
+    const page = texturePages(built.level).find(({ eid }) => eid === header.pages[header.pageCount - 1])!;
+    const polygons = Array.from({ length: header.polygonCount }, (_, index) => readWorldPolygon(world.items[1].subarray(8 * index, 8 * index + 8)));
+    const onPage = polygons.filter((polygon) => header.pages[polygon.page] === page.eid);
+    expect(onPage.length).toBeGreaterThan(0);
+    for (const { texinfo } of onPage) {
+      expect(texinfo + 1).toBeLessThan(header.texinfoWords); // within the mesh's texture infos
+      const paletteRow = (world.items[0].readUInt32LE(TEXINFOS_AT + 4 * texinfo + 4) >> 6) & 127;
+      const palette = Array.from({ length: 16 }, (_, colour) => page.data.readUInt16LE(paletteRow * 512 + 2 * colour));
+      expect(palette).toContain(colour5551(STONE_RGB));
+    }
+  });
+
+  describe("a long map", () => {
+    const built = hasBeach ? make(LONG_OBJ) : null!;
+    const zones = hasBeach ? zonesOf(built) : [];
+    const neighbours = (zone: Entry) => readWords(zone.items[0], ZONE_NEIGHBORS, zone.items[0].readUInt32LE(ZONE_PATHS_IDX + 12));
+
+    test("is a chain of zones along the route", () => {
+      expect(zones.length).toBe(3);
+      const rects = zones.map((zone) => [0, 4, 8].map((offset) => zone.items[1].readInt32LE(offset)).concat([12, 16, 20].map((offset) => zone.items[1].readUInt32LE(offset))));
+      rects.slice(1).forEach((next, index) => {
+        const [x, y, z, w, h, d] = rects[index];
+        expect(d).toBe(16384);
+        expect(next[2]).toBe(z - 16384); // the next one along -z, touching
+        expect([next[0], next[1], next[3], next[4]]).toEqual([x, y, w, h]);
+      });
+    });
+
+    test("each zone lists itself, then the zones either side", () => {
+      const [a, b, c] = zones.map(({ eid }) => eid);
+      expect(zones.map(neighbours)).toEqual([[a, b], [b, a, c], [c, b]]);
+    });
+
+    test("its paths lead on to the next zones and back", () => {
+      const links = zones.map((zone) => {
+        const [pathsIndex] = zoneCounts(zone);
+        const path = zone.items[pathsIndex];
+        return Array.from({ length: path.readUInt32LE(8) }, (_, index) => [...path.subarray(12 + 4 * index, 16 + 4 * index)]);
+      });
+      expect(links).toEqual([[[2, 1, 0, 1]], [[1, 1, 0, 2], [2, 2, 0, 1]], [[1, 1, 0, 2]]]);
+    });
+
+    test("crash is in the zone the level spawns in", () => {
+      expect(zones.map((zone) => zoneCounts(zone)[2])).toEqual([1, 0, 0]);
+      expect(built.level.nsd.ldat.zoneSpawn).toBe(zones[0].eid);
+      const z = crashAt(zones[0])[2];
+      expect(z >= 0 && z < 16384).toBe(true); // relative to its zone
+    });
+
+    test("every zone loads the texture pages", () => {
+      for (const zone of zones) {
+        expect(zone.items[0].readInt32LE(ZONE_LOADLIST + 4)).toBe(texturePages(built.level).length);
+      }
+    });
+
+    test("a zone draws its own and the next zone's meshes", () => {
+      const worlds = zones.map(zoneWorldEids);
+      for (let index = 0; index < 2; index++) {
+        expect(worlds[index].some((eid) => worlds[index + 1].includes(eid))).toBe(true);
+      }
+      expect(Math.max(...worlds.map((listed) => listed.length))).toBeLessThanOrEqual(8);
+    });
+
+    test("an end object far along it is in the last zone", () => {
+      // blender y 45 is the .obj's z -45: 5 m from the far end, in the third zone
+      const withEnd = make(LONG_OBJ, { objects: [object("end", [0, 45, 0])] });
+      const [pad] = warpPads(withEnd);
+      expect(pad.zone.eid).toBe(zonesOf(withEnd)[2].eid);
+      expect(Math.abs(pad.at[2] - (128 + 2000))).toBeLessThanOrEqual(16);
+    });
+  });
+});
