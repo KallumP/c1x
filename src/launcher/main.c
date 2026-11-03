@@ -11,6 +11,7 @@
 #include "cimgui_impl.h"
 #include "paths.h"
 #include "game_section.h"
+#include "settings_section.h"
 
 #define WINDOW_WIDTH  720
 #define WINDOW_HEIGHT 640
@@ -67,6 +68,8 @@ static void DrawLauncher() {
     | ImGuiWindowFlags_NoSavedSettings;
   igBegin("launcher", 0, flags);
   DrawGameSection(repo);
+  igSpacing();
+  DrawSettingsSection(repo);
   igEnd();
 }
 
@@ -90,6 +93,7 @@ int main(int argc, char *argv[]) {
   if (!FindRepoFolder(repo, sizeof(repo))) {
     SDL_strlcpy(repo, "..", sizeof(repo)); /* assume it's run from build/ */
   }
+  LoadSettingsSection(repo);
   if (!OpenLauncherWindow()) {
     fprintf(stderr, "could not open the launcher's window: %s\n", SDL_GetError());
     return 1;
