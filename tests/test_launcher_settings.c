@@ -149,3 +149,38 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
   ASSERT_EQ(0u, read.replay_speed);
   ASSERT_STREQ("tide_ruins", read.boot_level);
 }
+
+/* CommentOutSettingLine's result for text, compared with expected, then freed */
+static int CommentOutGives(const char *text, const char *name, const char *expected) {
+  char *result;
+  int same;
+
+  result = CommentOutSettingLine(text, name);
+  same = strcmp(result, expected) == 0;
+  if (!same) { printf("got \"%s\"\n", result); }
+  SDL_free(result);
+  return same;
+}
+
+UTEST(launcher_settings, comment_out_comments_out_a_settings_line) {
+  ASSERT_TRUE(CommentOutGives("replay_speed = 1\nboot_level = tide_ruins\n", "boot_level",
+    "replay_speed = 1\n# boot_level = tide_ruins\n"));
+  ASSERT_TRUE(CommentOutGives("boot_level = tide_ruins\r\nreplay_speed = 1\r\n", "boot_level",
+    "# boot_level = tide_ruins\r\nreplay_speed = 1\r\n"));
+}
+
+UTEST(launcher_settings, comment_out_leaves_a_file_without_the_setting) {
+  ASSERT_TRUE(CommentOutGives("# boot_level = tide_ruins\nreplay_speed = 1\n", "boot_level",
+    "# boot_level = tide_ruins\nreplay_speed = 1\n"));
+}
+
+UTEST(launcher_settings, saving_the_title_screen_comments_out_boot_level) {
+  pc_settings s;
+
+  WriteLauncherSettings("boot_level = tide_ruins\n");
+  ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &s);
+  s.boot_level[0] = 0;
+  ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
+  ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &s));
+  ASSERT_STREQ("", s.boot_level);
+}
