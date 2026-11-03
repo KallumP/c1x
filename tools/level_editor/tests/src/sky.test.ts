@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_SKY, formatRgb, isSameSky, isSkySplit, parseRgb } from "../../src/sky";
+import { DEFAULT_SKY, formatRgb, hexToRgb, isSameSky, isSkySplit, parseRgb, rgbToHex } from "../../src/sky";
 
 describe("a level's sky", () => {
   test("reads a colour as red, green, blue", () => {
@@ -26,5 +26,12 @@ describe("a level's sky", () => {
     expect(isSameSky(DEFAULT_SKY, { top: [59, 62, 216], bottom: [54, 50, 0], split: 20 })).toBe(true);
     expect(isSameSky(DEFAULT_SKY, { ...DEFAULT_SKY, top: [59, 62, 215] })).toBe(false);
     expect(isSameSky(DEFAULT_SKY, { ...DEFAULT_SKY, split: 21 })).toBe(false);
+  });
+
+  test("a colour as a colour picker's #rrggbb, and back", () => {
+    expect(rgbToHex([59, 62, 216])).toBe("#3b3ed8");
+    expect(rgbToHex([0, 0, 0])).toBe("#000000");
+    expect(hexToRgb("#3b3ed8")).toEqual([59, 62, 216]);
+    expect(hexToRgb("#FFFFFF")).toEqual([255, 255, 255]);
   });
 });
