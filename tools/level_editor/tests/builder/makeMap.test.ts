@@ -209,6 +209,28 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(make(MAP_OBJ, { scale: 256, objects }).level.nsd.ldat.boxTotal).toBe(2);
   });
 
+  // zone_header's gfx (src/formats/zdat.h), after its 8 worlds, counts, neighbours, load list and display flags
+  const GFX = 4 + 8 * 64 + 16 + 32 + 168 + 4;
+  const skyIn = (zone: Entry) => {
+    const header = zone.items[0];
+    const rgb = (at: number) => [header[GFX + at], header[GFX + at + 1], header[GFX + at + 2]];
+    return { split: header.readUInt32LE(GFX), top: rgb(44), bottom: rgb(48), visibility: header.readUInt32LE(GFX + 8) };
+  };
+
+  test("every zone has the level's sky, and n. sanity beach's visibility depth", () => {
+    const sky = { top: [10, 20, 30] as [number, number, number], bottom: [40, 50, 60] as [number, number, number], split: 100 };
+    const built = make(LONG_OBJ, { sky });
+    const zones = [...built.entries.values()].filter((entry) => entry.type === ENTRY_ZDAT);
+    expect(zones.length).toBeGreaterThan(1);
+    for (const zone of zones) {
+      expect(skyIn(zone)).toEqual({ split: 100, top: [10, 20, 30], bottom: [40, 50, 60], visibility: 6144000 });
+    }
+  });
+
+  test("without a sky given, n. sanity beach's", () => {
+    expect(skyIn(make().zone)).toEqual({ split: 20, top: [59, 62, 216], bottom: [54, 50, 0], visibility: 6144000 });
+  });
+
   test("turn runs the map along z", () => {
     // turned a quarter, the 16 m long floor runs along x
     const rect = make(MAP_OBJ, { scale: 256, turn: 90 }).zone.items[1];
