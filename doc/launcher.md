@@ -16,6 +16,8 @@ Run `build/launcher.exe`, by double-clicking it or from any folder. It works on 
 
 If the game isn't built, the launcher says so instead of showing **Play**. Build it, then the button appears.
 
+If any of the game's files are missing from `streams/`, the launcher lists them instead of showing **Play**, with **Check again** and a way to extract them from a disc image. See [Running](running.md) for getting them.
+
 ## Settings
 
 The launcher has a field for each setting in `settings.cfg` (see [Settings](settings.md)): a checkbox for each on/off setting, and a box for each number. Hover over a field to see what it does. When it opens, the fields show what `settings.cfg` sets, or the defaults if there isn't one.

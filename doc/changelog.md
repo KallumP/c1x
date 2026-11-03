@@ -4,7 +4,7 @@
 
 ### Added
 
-- a launcher (`build/launcher.exe`, built with the game) for changing the settings and starting the game; see [Launcher](launcher.md)
+- a launcher (`build/launcher.exe`, built with the game) for checking and extracting the game's files, changing the settings and starting the game; see [Launcher](launcher.md)
 - the level editor sets a level's turn and scale, shows which way the camera faces from the spawn, and F5 builds the level and boots into it
 - textures can be TIFF images, as well as PNG and JPEG
 
