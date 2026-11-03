@@ -4,7 +4,7 @@ import { join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PNG } from "pngjs";
 import { describe, expect, test } from "vitest";
-import { buildLevel, fittingScale, levelSource, mapImages } from "../../builder/buildLevel";
+import { buildLevel, fittingScale, levelSource, levelSourcePath, mapImages } from "../../builder/buildLevel";
 import { TooBig } from "../../builder/fit";
 
 const newFolder = (name: string) => {
@@ -108,5 +108,18 @@ describe("building a level", () => {
     expect(buildLevel(folder, { streamsDir: STREAMS, levelsDir, log: (line) => lines.push(line) })).toBe(true);
     expect(lines).toEqual([`wrote ${join(levelsDir, "tiny")}`]);
     expect(existsSync(join(levelsDir, "tiny.nsd")) && existsSync(join(levelsDir, "tiny.nsf"))).toBe(true);
+  });
+});
+
+describe("the level to build", () => {
+  test("a level source's name is its folder in level_src", () => {
+    const sources = newFolder("level_src");
+    mkdirSync(join(sources, "tide_ruins"));
+    expect(levelSourcePath("tide_ruins", sources)).toBe(join(sources, "tide_ruins"));
+  });
+
+  test("a path is itself", () => {
+    const folder = newFolder("elsewhere");
+    expect(levelSourcePath(folder, newFolder("level_src"))).toBe(folder);
   });
 });
