@@ -4,6 +4,7 @@
 
 ### Added
 
+- a launcher (`build/launcher.exe`, built by `make` with the game), a window with a **Play** button that starts the game, or says it isn't built; see [Launcher](launcher.md)
 - the level editor's F5 saves, builds the level, and sets the game to boot into it if the build worked
 - the level editor sets a level's turn and scale (with nothing selected, on the right), saving them to its `level.cfg` and keeping its comments; boxes are drawn at the size the scale gives them
 - the level editor's spawn has an arrow pointing the way the game's camera faces, which turns with the level's turn
