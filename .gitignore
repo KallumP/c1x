@@ -9,6 +9,7 @@ streams/*
 level_src/*
 !level_src/tide_ruins/
 !level_src/mossy_creek/
+!level_src/sunset_canyon/
 imgui.ini
 controls.cfg
 settings.cfg
