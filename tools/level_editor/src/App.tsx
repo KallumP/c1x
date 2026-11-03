@@ -18,6 +18,7 @@ import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
 import { useTriangles, useWarnings } from "./hooks/useWarnings";
 import { clickedFloor, isClick } from "./three/clicks";
+import "./App.css";
 
 const SELECT: Tool = { kind: "select" };
 

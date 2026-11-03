@@ -1,0 +1,60 @@
+.app {
+  display: grid;
+  grid-template: "toolbar toolbar toolbar" auto "palette viewport panel" 1fr / 150px 1fr auto;
+  height: 100%;
+}
+
+.toolbar {
+  grid-area: toolbar;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  background: #2b2d31;
+  border-bottom: 1px solid #111;
+}
+
+.viewport {
+  grid-area: viewport;
+  position: relative;
+  min-height: 0;
+}
+
+.toolbar button {
+  padding: 4px 10px;
+  background: #383a40;
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.toolbar button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.level-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.level-actions .status {
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #aaa;
+}
+
+.level-actions .status.error {
+  color: #ff8a80;
+}
+
+.toolbar .save.unsaved {
+  background: #2f6f3e;
+  border-color: #3f9a55;
+  color: #fff;
+}
