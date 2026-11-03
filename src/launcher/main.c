@@ -12,6 +12,7 @@
 #include "paths.h"
 #include "game_section.h"
 #include "settings_section.h"
+#include "editor_section.h"
 
 #define WINDOW_WIDTH  720
 #define WINDOW_HEIGHT 640
@@ -64,12 +65,15 @@ static void DrawLauncher() {
   viewport = igGetMainViewport();
   igSetNextWindowPos(viewport->WorkPos, 0, (ImVec2){0,0});
   igSetNextWindowSize(viewport->WorkSize, 0);
-  flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove
-    | ImGuiWindowFlags_NoSavedSettings;
+  flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize
+    | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove
+    | ImGuiWindowFlags_NoSavedSettings; /* a scroll bar if it doesn't fit */
   igBegin("launcher", 0, flags);
   DrawGameSection(repo);
   igSpacing();
   DrawSettingsSection(repo);
+  igSpacing();
+  DrawEditorSection(repo);
   igEnd();
 }
 
@@ -95,6 +99,7 @@ int main(int argc, char *argv[]) {
   }
   LoadGameSection(repo);
   LoadSettingsSection(repo);
+  LoadEditorSection(repo);
   if (!OpenLauncherWindow()) {
     fprintf(stderr, "could not open the launcher's window: %s\n", SDL_GetError());
     return 1;
@@ -102,6 +107,7 @@ int main(int argc, char *argv[]) {
   while (HandleEvents()) {
     DrawFrame();
   }
+  CloseEditorSection();
   CloseLauncherWindow();
   return 0;
 }
