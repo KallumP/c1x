@@ -3,6 +3,8 @@
 //   GET /api/levels/<name>/files/<file> a file in a level's folder (its .obj, .mtl, images)
 //   GET /api/levels/<name>/objects      its objects.json
 //   PUT /api/levels/<name>/objects      saves its objects.json
+//   GET /api/levels/<name>/cfg          its level.cfg's turn and scale (LevelCfg)
+//   PUT /api/levels/<name>/cfg          sets them
 //   POST /api/levels/<name>/build       runs build_level.py on it (BuildResult)
 //   POST /api/levels/<name>/boot        sets settings.cfg to boot into it
 import { readFileSync } from "node:fs";
@@ -10,6 +12,7 @@ import { dirname, extname } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { buildLevel } from "./build";
+import { readLevelCfg, writeLevelCfg } from "./levelCfg";
 import { levelFilePath, listLevels, readObjects, writeObjects } from "./levels";
 import { bootLevel } from "./settings";
 
@@ -63,6 +66,16 @@ export function levelSourcesApi(root: string): Plugin {
               const text = await body(req);
               JSON.parse(text); // the editor checks it fully; this only refuses a broken file
               writeObjects(root, name, text);
+              return send(res, 200, "application/json", "{}");
+            }
+          }
+          if (what === "cfg" && rest.length === 0) {
+            if (req.method === "GET") {
+              return send(res, 200, "application/json", JSON.stringify(readLevelCfg(root, name)));
+            }
+            if (req.method === "PUT") {
+              const { turn, scale } = JSON.parse(await body(req));
+              writeLevelCfg(root, name, { turn: Number(turn), scale: Number(scale) }); // which checks them
               return send(res, 200, "application/json", "{}");
             }
           }
