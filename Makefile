@@ -57,9 +57,13 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/util/tree.c \
 	src/util/list.c
 
+# the launcher (see doc/launcher.md), plus the game sources it uses
+LAUNCHER_SRC = src/launcher/main.c
+
 OBJ = $(SRC:.c=.o)
 OUT = c1
 TEST_OUT = build/tests
+LAUNCHER_OUT = build/launcher
 
 # include dirs.
 INCLUDE = -I./src/
@@ -73,8 +77,11 @@ ifeq ($(OS),Windows_NT)
 LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lm -lstdc++
 OUT = build/c1.exe
 TEST_OUT = build/tests.exe
+LAUNCHER_OUT = build/launcher.exe
+LAUNCHER_LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lm -lstdc++ -mwindows
 else
 LDLIBS = -lSDL2 -lGL -lfluidsynth -lm -lstdc++
+LAUNCHER_LDLIBS = -lSDL2 -lGL -lm -lstdc++
 endif
 CFLAGS += $(LDLIBS) $(DEFS)
 
@@ -96,12 +103,13 @@ OBJ = $(CIMGUI_OBJ)
 # the tests use the in-game gui library but not the sdl/opengl backends
 TEST_CIMGUI_OBJ = $(filter-out $(CIMGUI_PATH)/imgui/backends/%,$(CIMGUI_OBJ))
 OBJ += $(SRC:.c=.o)
+LAUNCHER_OBJ = $(CIMGUI_OBJ) $(LAUNCHER_SRC:.c=.o)
 
-all: $(SRC) $(OUT)
+all: $(SRC) $(OUT) $(LAUNCHER_OUT)
 
 clean:
 	rm -r $(OBJ) $(OUT)
-	rm -f $(TEST_OUT)
+	rm -f $(TEST_OUT) $(LAUNCHER_OUT) $(LAUNCHER_SRC:.c=.o)
 ifeq ($(OS),Windows_NT)
 	rm -rf $(dir $(OUT))
 endif
@@ -134,6 +142,13 @@ dlls: $(OUT)
 	for d in $$seen; do cp -u "$(DLLDIR)$$d" $(dir $(OUT)); done; \
 	echo "copied dlls:$$seen"
 endif
+
+.PHONY: launcher
+launcher: $(LAUNCHER_OUT)
+
+$(LAUNCHER_OUT): $(LAUNCHER_OBJ)
+	@mkdir -p $(dir $(LAUNCHER_OUT))
+	$(CC) $(LAUNCHER_OBJ) -o $(LAUNCHER_OUT) -m32 $(LAUNCHER_LDLIBS)
 
 .PHONY: test
 test: $(TEST_OUT)
