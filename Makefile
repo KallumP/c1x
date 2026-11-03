@@ -80,6 +80,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/settings_file.c \
 	src/launcher/text_file.c \
 	src/launcher/controls_file.c \
+	src/launcher/controls_section.c \
 	src/launcher/settings_section.c \
 	src/launcher/levels.c \
 	src/launcher/streams.c \

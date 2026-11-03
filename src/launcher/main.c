@@ -13,6 +13,7 @@
 #include "game_section.h"
 #include "settings_section.h"
 #include "editor_section.h"
+#include "controls_section.h"
 #include "ui.h"
 
 #define WINDOW_WIDTH  720
@@ -54,6 +55,7 @@ static int HandleEvents() {
   SDL_Event e;
 
   while (SDL_PollEvent(&e)) {
+    if (e.type == SDL_KEYDOWN && TakeControlsKeyPress(e.key.keysym.scancode)) { continue; }
     ImGui_ImplSDL2_ProcessEvent(&e);
     if (e.type == SDL_QUIT) { return 0; }
   }
@@ -71,6 +73,7 @@ static void DrawTab(const char *name, void (*draw)(const char *repo)) {
 static void DrawTabs() {
   if (!igBeginTabBar("sections", 0)) { return; }
   DrawTab("Settings", DrawSettingsSection);
+  DrawTab("Controls", DrawControlsSection);
   DrawTab("Level editor", DrawEditorSection);
   igEndTabBar();
 }
@@ -118,6 +121,7 @@ int main(int argc, char *argv[]) {
   }
   LoadGameSection(repo);
   LoadSettingsSection(repo);
+  LoadControlsSection(repo);
   LoadEditorSection(repo);
   if (!OpenLauncherWindow()) {
     fprintf(stderr, "could not open the launcher's window: %s\n", SDL_GetError());

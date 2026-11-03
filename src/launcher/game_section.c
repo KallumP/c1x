@@ -1,6 +1,6 @@
 /*
  * the launcher's game section: the Play button, which saves the settings
- * then starts the game, or what's stopping the game from running
+ * and controls then starts the game, or what's stopping the game from running
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -9,6 +9,7 @@
 #include "game.h"
 #include "paths.h"
 #include "settings_section.h"
+#include "controls_section.h"
 #include "streams.h"
 #include "extract_section.h"
 #include "ui.h"
@@ -65,8 +66,8 @@ static void DrawPlayButton(const char *repo) {
 
   if (DrawBigButton("Play")) {
     play_problem[0] = 0;
-    if (!SaveSettingsSection(repo)) {
-      SDL_strlcpy(play_problem, "Couldn't save the settings, so the game wasn't started.",
+    if (!SaveSettingsSection(repo) || !SaveControlsSection(repo)) {
+      SDL_strlcpy(play_problem, "Couldn't save the settings or controls, so the game wasn't started.",
         sizeof(play_problem));
     }
     else if (!StartGame(repo)) {
