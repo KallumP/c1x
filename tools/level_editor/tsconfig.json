@@ -13,5 +13,5 @@
     "noEmit": true,
     "types": ["node", "@react-three/fiber"]
   },
-  "include": ["src", "server", "builder", "scripts", "tests", "vite.config.ts"]
+  "include": ["src", "server", "builder", "scripts", "tests", "vite.config.ts", "../../level_src/mossy_creek/make_map.ts"]
 }

@@ -26,7 +26,7 @@ describe("mossy creek's generator", () => {
 
   test("makes the objects.json make_map.py made", () => {
     // the committed one has since had its boxes moved in the level editor, which writes it its own way
-    const madeByPython = readFileSync(fileURLToPath(new URL("mossyCreekObjects.json", import.meta.url)), "utf8");
+    const madeByPython = readFileSync(fileURLToPath(new URL("mossyCreekObjects.json", import.meta.url)), "utf8").replace(/\r\n/g, "\n");
     expect(mossyCreekObjects()).toBe(madeByPython);
   });
 
