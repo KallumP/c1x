@@ -21,7 +21,7 @@
 
 ### Fixed
 
-- custom levels: polygons drawn untextured grey, the end warp pad not working off the floor, and stray rock slabs and a spike in `mossy_creek`
+- custom levels: polygons drawn untextured grey, invisible walls along banks and low edges, the end warp pad not working off the floor, and stray rock slabs and a spike in `mossy_creek`
 
 ## 2026-10-30
 
