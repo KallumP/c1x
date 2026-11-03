@@ -9,6 +9,7 @@ Project structure is listed below, including descriptions for each file.
 │   ├── issues.md            # project issues
 │   ├── building.md          # dependencies, compiling and tests
 │   ├── running.md           # game files and running the game
+│   ├── launcher.md          # the launcher (build/launcher.exe)
 │   ├── controls.md          # default keys and controls.cfg
 │   ├── structure.md         # project structure; this file
 │   ├── contributing.md      # commit messages and pull requests
@@ -73,6 +74,12 @@ Project structure is listed below, including descriptions for each file.
 │   ├── slst.c,h             # polygon id sort lists
 │   ├── solid.c,h            # solidity and collision detection and movement limiting
 │   ├── title.c,h            # handles title screen loading, transition between title states, and drawing of title card backdrops
+│   ├── launcher             # the launcher (a separate program, make launcher)
+│   │   ├── main.c           # its window and main loop
+│   │   ├── game.c,h         # the game: is it built, and starting it
+│   │   ├── game_section.c,h # the game section (Play)
+│   │   ├── paths.c,h        # the repo folder, from the launcher's own path
+│   │   └── process.c,h      # running programs, and commands in the background with their output
 │   ├── util                 # utilities
 │   │   ├── list.c,h         # generic linked list
 │   │   └── tree.c,h         # generic tree
@@ -97,6 +104,7 @@ Project structure is listed below, including descriptions for each file.
 │   ├── test_gui.c           # in-game GUI tree node insertion and removal
 │   ├── test_speed.c         # crash's speed measurement and tracking
 │   ├── test_follow.c        # the follow camera's sideways offset
+│   ├── test_launcher_*.c    # the launcher: its paths, running commands, and the game
 │   └── test_sf2.c           # soundfont record struct sizes
 ├── tools                    # helper scripts
 │   └── level_editor         # the level editor and the tools beside it, in typescript (npm install first)
