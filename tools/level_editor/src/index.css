@@ -1,0 +1,26 @@
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font: 14px system-ui, sans-serif;
+  background: #1e1f22;
+  color: #ddd;
+}
+
+button,
+select,
+input {
+  font: inherit;
+}
+
+.error {
+  color: #ff8a80;
+}
+
+.warning {
+  color: #ffb74d;
+}
