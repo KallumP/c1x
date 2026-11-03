@@ -12,9 +12,13 @@
 
 ### Changed
 
-- the level build, the disc image extraction and `mossy_creek`'s generator are TypeScript (`tools/level_editor/builder` and `scripts`, and `level_src/mossy_creek/make_map.ts`), so getting started and building levels need only Node, not Python and Pillow. They build the same levels, apart from texture pixels, which are resized and reduced to 16 colours a little differently
+- the level build and the disc image extraction are TypeScript (`tools/level_editor/builder` and `scripts`), so getting started and building levels need only Node, not Python and Pillow. They build the same levels, apart from texture pixels, which are resized and reduced to 16 colours a little differently
 - the level editor's build button builds the level itself, rather than running python
 - `--scale` and `--turn` are gone from the level build; a level's `level.cfg` (set in the level editor) sets them
+
+### Removed
+
+- `mossy_creek`'s generator (`make_map.py`); its `.obj`, `.mtl` and `objects.json` stay, and it's changed in the level editor and Blender like any other level source
 
 ## 2026-10-30
 
