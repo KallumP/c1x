@@ -1,20 +1,24 @@
 /*
  * the launcher's settings section: a field for each setting in
- * settings.cfg (see doc/settings.md), and Save
+ * settings.cfg (see doc/settings.md), and Save. it reloads settings.cfg when
+ * something else changes it, such as the level editor's Boot button
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "settings_section.h"
+#include "ui.h"
 #include "settings_file.h"
 #include "levels.h"
 #include "paths.h"
 
-#define PROBLEM_COLOUR ((ImVec4){1.0f, 0.45f, 0.4f, 1.0f})
 #define FIELD_WIDTH 200.0f
 #define TITLE_SCREEN "title screen"
+#define CHANGE_CHECK_MS 500 /* how often to look for settings.cfg changing */
 
 static pc_settings settings;
+static pc_settings saved;     /* what settings.cfg had when last loaded or saved */
+static Uint32 last_change_check;
 static built_levels levels;
 static char save_status[PATH_MAX_LEN + 64]; /* what Save last did, or "" */
 static int save_failed;
@@ -29,6 +33,7 @@ void LoadSettingsSection(const char *repo) {
 
   SettingsPath(repo, path, sizeof(path));
   ReadSettingsFile(path, &settings);
+  saved = settings;
   JoinPath(path, sizeof(path), repo, "build/levels");
   ListBuiltLevels(path, &levels);
   save_status[0] = 0;
@@ -41,9 +46,28 @@ int SaveSettingsSection(const char *repo) {
   SettingsPath(repo, path, sizeof(path));
   JoinPath(example_path, sizeof(example_path), repo, "settings.example.cfg");
   save_failed = !SaveSettingsFile(path, example_path, &settings);
+  if (!save_failed) { saved = settings; }
   SDL_snprintf(save_status, sizeof(save_status),
     save_failed ? "Couldn't save %s." : "Saved %s.", path);
   return !save_failed;
+}
+
+static int HasUnsavedChanges(void) {
+  return !AreSettingsEqual(&settings, &saved);
+}
+
+/* reload settings.cfg if something else changed it, unless that would lose
+   changes made here (Play or Save then writes those over it) */
+static void ReloadIfChangedElsewhere(const char *repo) {
+  char path[PATH_MAX_LEN];
+  pc_settings on_disk;
+
+  if (SDL_GetTicks() - last_change_check < CHANGE_CHECK_MS) { return; }
+  last_change_check = SDL_GetTicks();
+  if (HasUnsavedChanges()) { return; }
+  SettingsPath(repo, path, sizeof(path));
+  ReadSettingsFile(path, &on_disk);
+  if (!AreSettingsEqual(&on_disk, &saved)) { LoadSettingsSection(repo); }
 }
 
 static void DrawTooltip(const char *text) {
@@ -141,6 +165,7 @@ static void DrawButtons(const char *repo) {
 }
 
 void DrawSettingsSection(const char *repo) {
+  ReloadIfChangedElsewhere(repo);
   igText("Settings");
   igSeparator();
   DrawFields();

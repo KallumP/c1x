@@ -44,16 +44,11 @@ level_src/my_level/grass.png
 
 The level editor places Crash's start, the end of the level, and boxes.
 
-**Set it up (once):** install [Node.js](https://nodejs.org/) 18 or later, then run:
-
-```
-cd tools/level_editor
-npm install
-```
+**Set it up (once):** install [Node.js](https://nodejs.org/) 18 or later, then click **Install** in the [launcher](launcher.md#level-editor)'s Level editor section.
 
 **Use it:**
 
-1. From `tools/level_editor/`, run `npm run dev`. It opens in your browser at `http://localhost:5173/`.
+1. In the launcher, click **Open editor**. It opens in your browser.
 2. Pick your level at the top left.
 3. Pick `spawn`, `end` or a box on the left, then click the floor to place it.
 4. Click **Select** (or press Escape), then click an object to select it. Drag it to move it, or change it on the right. Delete removes it.
@@ -73,13 +68,13 @@ Then, in the level editor:
 
 1. Click **Build** at the top right. It saves your changes, then builds the level. It says `Built my_level` when it's done, or why it failed (hover over the message for the full output).
 2. Click **Boot**. It sets the game to start in this level, by writing `boot_level = my_level` in `settings.cfg`.
-3. Run `build/c1.exe`.
+3. In the launcher, click **Play**.
 
 Or press **F5**, which does steps 1 and 2 together: it saves, builds, then sets the game to boot into the level if the build worked.
 
 **After any change** to the map or objects, build again. You don't need to rebuild the game.
 
-**To stop booting into the level** and start at the title screen again, remove the `boot_level` line from `settings.cfg`, or put a `#` in front of it. The game keeps booting into the level until you do, even after you close the editor.
+**To stop booting into the level** and start at the title screen again, choose **title screen** as the launcher's **Boot level**. The game keeps booting into the level until you do, even after you close the editor.
 
 ### If something looks wrong
 
