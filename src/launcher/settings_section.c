@@ -28,12 +28,13 @@ static void SettingsPath(const char *repo, char *path, size_t size) {
   JoinPath(path, size, repo, "settings.cfg");
 }
 
-/* read settings.cfg, and list the levels built to build/levels/ */
+/* read settings.cfg, creating it from settings.example.cfg if there isn't
+   one, and list the levels built to build/levels/ */
 void LoadSettingsSection(const char *repo) {
   char path[PATH_MAX_LEN];
 
   SettingsPath(repo, path, sizeof(path));
-  ReadSettingsFile(path, &settings);
+  if (!ReadSettingsFile(path, &settings)) { SaveSettingsSection(repo); } /* the defaults */
   saved = settings;
   JoinPath(path, sizeof(path), repo, "build/levels");
   ListBuiltLevels(path, &levels);
