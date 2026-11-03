@@ -1,10 +1,11 @@
 import type { EditorAction, EditorState } from "../editor";
 import { useShortcuts } from "./useShortcuts";
 
-// the editor's keys: delete, escape, undo, redo and save
+// the editor's keys: delete, escape, undo, redo, save, and build and boot
 export function useEditorShortcuts(state: EditorState, dispatch: (action: EditorAction) => void, actions: {
   stopPlacing: () => void;
   save: () => void;
+  buildAndBoot: () => void;
 }) {
   const removeSelected = () => {
     if (state.selected !== null) {
@@ -24,5 +25,6 @@ export function useEditorShortcuts(state: EditorState, dispatch: (action: Editor
     "ctrl+y": redo,
     "ctrl+shift+z": redo,
     "ctrl+s": actions.save,
+    F5: actions.buildAndBoot, // instead of reloading the page
   });
 }
