@@ -17,7 +17,7 @@ describe("parseObjects", () => {
     ]);
   });
 
-  test("knows the same box types as levelobjects.py", () => {
+  test("knows n. sanity beach's box types, by name", () => {
     expect(BOX_TYPES).toEqual({
       basic: 2, arrow: 3, checkpoint: 4, iron: 5, slatted: 6,
       switch: 7, life: 8, aku_aku: 9, question: 10, outline: 13,
