@@ -2,8 +2,7 @@
 // editor's dev server: which there are, their files, and their objects.json
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
-
-export const DEFAULT_SCALE = 400; // MAP_SCALE in tools/nslevel.py
+import { DEFAULT_SCALE } from "../src/coords";
 
 export interface LevelInfo {
   name: string;  // its folder

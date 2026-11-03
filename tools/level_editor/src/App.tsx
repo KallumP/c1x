@@ -13,7 +13,7 @@ import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
 import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevels } from "./hooks/useLevels";
-import { useShortcuts } from "./hooks/useShortcuts";
+import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
 import { useWarnings } from "./hooks/useWarnings";
 import { clickedFloor, isClick } from "./three/clicks";
@@ -37,25 +37,7 @@ export default function App() {
   });
   useUnsavedWarning(unsaved);
 
-  const removeSelected = () => {
-    if (state.selected !== null) {
-      dispatch({ type: "remove", index: state.selected });
-    }
-  };
-  const undo = () => dispatch({ type: "undo" });
-  const redo = () => dispatch({ type: "redo" });
-  useShortcuts({
-    Delete: removeSelected,
-    Backspace: removeSelected,
-    Escape: () => {
-      setTool(SELECT);
-      dispatch({ type: "select", index: null });
-    },
-    "ctrl+z": undo,
-    "ctrl+y": redo,
-    "ctrl+shift+z": redo,
-    "ctrl+s": save,
-  });
+  useEditorShortcuts(state, dispatch, { stopPlacing: () => setTool(SELECT), save });
 
   const openLevel = (name: string) => {
     if (!confirmDiscard(unsaved)) {
@@ -91,8 +73,8 @@ export default function App() {
 
   const renderHistoryButtons = () => (
     <>
-      <button disabled={state.past.length === 0} onClick={undo} title="Ctrl+Z">Undo</button>
-      <button disabled={state.future.length === 0} onClick={redo} title="Ctrl+Y">Redo</button>
+      <button disabled={state.past.length === 0} onClick={() => dispatch({ type: "undo" })} title="Ctrl+Z">Undo</button>
+      <button disabled={state.future.length === 0} onClick={() => dispatch({ type: "redo" })} title="Ctrl+Y">Redo</button>
     </>
   );
 
