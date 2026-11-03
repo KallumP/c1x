@@ -1,8 +1,8 @@
 // zone headers (zone_header in src/formats/zdat.h): the zone's world meshes,
 // paths, entities, neighbours and load list
-import { ByteWriter } from "./bytes";
+import { ByteWriter, readWords } from "./bytes";
 import { EID_NONE } from "./entryIds";
-import { PAGE_TEXTURE, type Level } from "./levelFiles";
+import { PAGE_TEXTURE, type Entry, type Level } from "./levelFiles";
 import { pgid } from "./levelWriting";
 import type { Vec3 } from "./vectors";
 
@@ -24,6 +24,25 @@ export interface ZoneWorld {
 }
 
 export const zoneWorldAt = (index: number) => 4 + index * ZONE_WORLD_SIZE;
+
+// the eids of the world meshes a zone (its entry) lists
+export function zoneWorldEids(zone: Entry): number[] {
+  const header = zone.items[0];
+  return Array.from({ length: header.readUInt32LE(0) }, (_, index) => header.readUInt32LE(zoneWorldAt(index)));
+}
+
+// the entities a zone (its entry) holds, which come after its paths in its items
+export function zoneEntities(zone: Entry): Buffer[] {
+  const [pathsIndex, pathCount, entityCount] = readWords(zone.items[0], ZONE_PATHS_IDX, 3);
+  const first = pathsIndex + pathCount;
+  return zone.items.slice(first, first + entityCount);
+}
+
+// where a zone is, from its collision rect
+export function zoneOrigin(zone: Entry): Vec3 {
+  const rect = zone.items[1];
+  return [rect.readInt32LE(0), rect.readInt32LE(4), rect.readInt32LE(8)];
+}
 
 function writeWorlds(header: Buffer, worlds: ZoneWorld[]): void {
   header.writeUInt32LE(worlds.length, 0);
