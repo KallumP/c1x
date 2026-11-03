@@ -10,19 +10,19 @@ export interface ActionStatus {
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
 const lastLine = (output: string) => output.trim().split(/\r?\n/).pop() ?? "";
 
-// building the open level with build_level.py, and setting the game to boot into it
+// building the open level with build_level.py, and setting the game to boot into it (or both, F5)
 export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save: () => Promise<boolean>) {
   const [isBusy, setIsBusy] = useState(false);
   const [status, setStatus] = useState<ActionStatus | null>(null);
   useEffect(() => setStatus(null), [level]);
 
-  // saves first, as the build reads objects.json
-  const build = async () => {
-    if (!level) {
-      return;
+  // saves first, as the build reads objects.json; true if it built
+  const build = async (): Promise<boolean> => {
+    if (!level || isBusy) {
+      return false;
     }
     if (unsaved && !(await save())) {
-      return;
+      return false;
     }
     setIsBusy(true);
     setStatus({ text: "Building..." });
@@ -33,8 +33,10 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
       } else {
         setStatus({ text: `Build failed: ${lastLine(result.output)}`, detail: result.output, failed: true });
       }
+      return result.ok;
     } catch (error) {
       setStatus({ text: `Build failed: ${messageOf(error)}`, failed: true });
+      return false;
     } finally {
       setIsBusy(false);
     }
@@ -52,5 +54,12 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
     }
   };
 
-  return { isBusy, status, build, boot };
+  // boots only if the build worked
+  const buildAndBoot = async () => {
+    if (await build()) {
+      await boot();
+    }
+  };
+
+  return { isBusy, status, build, boot, buildAndBoot };
 }
