@@ -131,3 +131,21 @@ export function solidCells(mesh: Mesh, size: Vec3, cell: number): Cells {
   removeHangingWalls(cells);
   return cells;
 }
+
+// makes the cells under a flat floor from low to high (x, z) at height y
+// solid, as a floor face there would; for floors that aren't part of the map,
+// such as the warp pad's base
+export function addFloor(cells: Cells, low: [number, number], high: [number, number], y: number, size: Vec3, cell: number): void {
+  const [x0, z0] = low;
+  const [x1, z1] = high;
+  const vertices: Vec3[] = [[x0, y, z0], [x1, y, z0], [x1, y, z1], [x0, y, z1]];
+  const mesh: Mesh = { vertices, triangles: [], materialLibraries: [] };
+  const halves: Triangle[] = [[0, 1, 2], [0, 2, 3]].map((corners) => ({ corners: corners as [number, number, number], object: null, material: null }));
+  for (const half of halves) {
+    for (const at of cellsBehind(mesh, half, [0, 1, 0], cell)) {
+      if (isInside(at, size, cell) && RANK.floor >= RANK[cells.get(at) ?? "wall"]) {
+        cells.set(at, "floor");
+      }
+    }
+  }
+}

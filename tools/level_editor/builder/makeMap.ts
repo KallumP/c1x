@@ -5,7 +5,7 @@
 import type { LevelObject } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
-import { Cells, solidCells } from "./collision";
+import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { BOX_HEIGHT, BOX_TYPE, entityId, linkSwitches, newEntityIds, UNBREAKABLE_BOXES, WARP_PAD, withEntityId, withPosition, type PlacedBox } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
@@ -17,7 +17,7 @@ import { readObj } from "./obj";
 import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
 import { cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
-import { readTemplates, warpPadBase, type Templates } from "./templates";
+import { readTemplates, warpPadBase, type Templates, type WarpPadBase } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
@@ -131,6 +131,18 @@ function fitMap(text: string, scale: number, turn: number): FittedMap {
   return { fitted, cells: solidCells(fitted.mesh, fitted.size, MAP_CELL), spans: zoneSpans(fitted.size[2], MAP_CELL) };
 }
 
+const PAD_TOP = 32; // how far below the pad its base's top can be (the base reaches 16 above and 600 below)
+
+// the warp pad's base is solid where it stands, so a pad raised off the floor
+// can be stood on (the game ends the level when crash lands on it); on the
+// floor, the floor already is
+function addWarpPadFloor(cells: Cells, base: WarpPadBase, at: Vec3, size: Vec3): void {
+  const top = base.vertices.filter(({ at: [, y] }) => y >= -PAD_TOP).map(({ at: vertex }) => vertex);
+  const xs = top.map(([x]) => x);
+  const zs = top.map(([, , z]) => z);
+  addFloor(cells, [at[0] + Math.min(...xs), at[2] + Math.min(...zs)], [at[0] + Math.max(...xs), at[2] + Math.max(...zs)], at[1], size, MAP_CELL);
+}
+
 const boxCount = (boxes: LevelObject[]) => boxes.reduce((sum, box) => sum + box.stack, 0);
 
 // the boxes crash can break: all but the iron and switch boxes
@@ -157,10 +169,13 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
 
   let withBase = textured;
   if (end) {
-    const pad = placer.placeWarpPad(placer.positionOf(end));
+    const position = placer.positionOf(end);
+    const pad = placer.placeWarpPad(position);
     const first = zoneWorlds.slice(0, pad.zone).reduce((sum, worlds) => sum + worlds.length, 0);
     const candidates = zoneWorlds[pad.zone].map((_, index) => first + index);
-    withBase = addWarpPadBase(textured, warpPadBase(level), pad.at, template, candidates);
+    const padBase = warpPadBase(level);
+    withBase = addWarpPadBase(textured, padBase, pad.at, template, candidates);
+    addWarpPadFloor(cells, padBase, position, fitted.size);
   }
 
   const zonePlans = (step: number): ZonePlan[] => {
