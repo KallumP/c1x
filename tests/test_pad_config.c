@@ -1,6 +1,7 @@
 #include <string.h>
 #include "utest.h"
 #include "pc/pad.h"
+#include "pc/controls.h"
 
 #define CONFIG_PATH "build/test_controls.cfg"
 

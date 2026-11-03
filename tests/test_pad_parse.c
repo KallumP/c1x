@@ -1,5 +1,6 @@
 #include "utest.h"
 #include "pc/pad.h"
+#include "pc/controls.h"
 
 /* parse line, returning the result and storing what was parsed */
 static int parse(const char *line, uint32_t *bits, SDL_Scancode *code) {
