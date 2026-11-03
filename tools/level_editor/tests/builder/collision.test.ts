@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { solidCells, type CellKind } from "../../builder/collision";
+import { addFloor, solidCells, type CellKind } from "../../builder/collision";
 import type { Mesh } from "../../builder/obj";
 import type { Vec3 } from "../../builder/vectors";
 import { floorMesh, meshOf, merged, quadMesh } from "./meshes";
@@ -25,6 +25,17 @@ describe("collision cells", () => {
     const floor = floorMesh(0, 0, 512, 256, 512);
     expect(positions(floor)).toEqual(grid(upTo(4), [3], upTo(2)));
     expect(kinds(floor)).toEqual(new Set(["floor"]));
+  });
+
+  test("a floor can be added where the map has none, solid as a floor face there would be", () => {
+    // for the warp pad's base, which isn't part of the map but has to be stood on
+    const cells = cellsOf(floorMesh(0, 0, 512, 256, 0));
+    addFloor(cells, [128, 0], [384, 256], 600, SIZE, 128);
+    const added = positionsOfKind(floorMesh(128, 0, 384, 256, 600), "floor");
+    expect(added.size).toBeGreaterThan(0);
+    for (const at of added) {
+      expect(cells.get(at.split(",").map(Number) as [number, number, number])).toBe("floor");
+    }
   });
 
   test("a floor off the grid goes to the nearest cell top", () => {
