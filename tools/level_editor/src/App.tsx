@@ -41,15 +41,18 @@ export default function App() {
     begin: () => dispatch({ type: "checkpoint" }),
     move: (index, at) => dispatch({ type: "update", index, changes: { at }, record: false }),
   });
+  const [isSaving, setIsSaving] = useState(false);
   // saves the objects and level.cfg, whichever changed; whether they saved
   const save = async (): Promise<boolean> => {
-    if (editor.unsaved && !(await editor.save())) {
-      return false;
+    setIsSaving(true);
+    try {
+      if (editor.unsaved && !(await editor.save())) {
+        return false;
+      }
+      return !levelCfg.unsaved || (await levelCfg.save());
+    } finally {
+      setIsSaving(false);
     }
-    if (levelCfg.unsaved && !(await levelCfg.save())) {
-      return false;
-    }
-    return true;
   };
 
   useUnsavedWarning(unsaved);
@@ -96,9 +99,16 @@ export default function App() {
     </>
   );
 
+  const saveButtonText = () => {
+    if (isSaving) {
+      return "Saving...";
+    }
+    return unsaved ? "Save" : "Saved";
+  };
+
   const renderSaveButton = () => (
-    <button className={unsaved ? "save unsaved" : "save"} disabled={!unsaved} onClick={save} title="Ctrl+S">
-      {unsaved ? "Save" : "Saved"}
+    <button className={unsaved ? "save unsaved" : "save"} disabled={!unsaved || isSaving} onClick={save} title="Ctrl+S">
+      {saveButtonText()}
     </button>
   );
 

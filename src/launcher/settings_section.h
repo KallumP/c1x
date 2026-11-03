@@ -3,6 +3,7 @@
 
 extern void LoadSettingsSection(const char *repo);
 extern int SaveSettingsSection(const char *repo);
+extern void UpdateSettingsSection(const char *repo);
 extern void DrawSettingsSection(const char *repo);
 
 #endif /* _LAUNCHER_SETTINGS_SECTION_H_ */

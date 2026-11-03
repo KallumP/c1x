@@ -10,7 +10,7 @@ Project structure is listed below, including descriptions for each file.
 │   ├── building.md          # dependencies, compiling and tests
 │   ├── running.md           # game files and running the game
 │   ├── launcher.md          # the launcher (build/launcher.exe)
-│   ├── controls.md          # default keys and controls.cfg
+│   ├── controls.md          # default keys, and controls.cfg
 │   ├── structure.md         # project structure; this file
 │   ├── contributing.md      # commit messages and pull requests
 │   ├── coding.md            # project coding standards
@@ -50,6 +50,7 @@ Project structure is listed below, including descriptions for each file.
 │   │   │── init.c,h         # pc-specific initialization (incl. SDL)
 │   │   │── math.c,h         # fixed point implementations of math functions
 │   │   │── pad.c,h          # joypad emulation (keyboard bindings, controls.cfg loading)
+│   │   │── controls.c,h     # controls.cfg's button names, default keys and lines (shared with the launcher)
 │   │   │── config.c,h       # "name = value" file parsing shared by controls.cfg and settings.cfg
 │   │   │── settings.c,h     # game settings (settings.cfg loading)
 │   │   │── loading.c,h      # level loading screen image conversion and minimum display time
@@ -77,6 +78,8 @@ Project structure is listed below, including descriptions for each file.
 │   ├── launcher             # the launcher (a separate program, make launcher)
 │   │   ├── main.c           # its window and main loop
 │   │   ├── command.c,h      # a command run in the background, keeping its output
+│   │   ├── controls_file.c,h    # reading controls.cfg, and saving it keeping its other lines
+│   │   ├── controls_section.c,h # the controls tab (each button's keys, Save)
 │   │   ├── editor_section.c,h   # the level editor section (Node check, Install, Open editor)
 │   │   ├── extract.c,h      # the command extracting the game's files from a disc image
 │   │   ├── extract_section.c,h  # the disc image field, Browse and Extract
@@ -91,7 +94,8 @@ Project structure is listed below, including descriptions for each file.
 │   │   ├── settings_file.c,h    # reading settings.cfg, and saving it keeping its other lines
 │   │   ├── settings_section.c,h # the settings section (a field for each setting, Save)
 │   │   ├── streams.c,h      # the game's files missing from streams/
-│   │   └── ui.c,h           # the output box and problem colour the sections share
+│   │   ├── text_file.c,h    # editing a "name = value" file a line at a time
+│   │   └── ui.c,h           # the launcher's look, and the parts the sections share
 │   ├── util                 # utilities
 │   │   ├── list.c,h         # generic linked list
 │   │   └── tree.c,h         # generic tree
@@ -116,7 +120,7 @@ Project structure is listed below, including descriptions for each file.
 │   ├── test_gui.c           # in-game GUI tree node insertion and removal
 │   ├── test_speed.c         # crash's speed measurement and tracking
 │   ├── test_follow.c        # the follow camera's sideways offset
-│   ├── test_launcher_*.c    # the launcher: its paths, running commands, the game, its files in streams/ and extracting them, node, the level editor, built levels and settings.cfg
+│   ├── test_launcher_*.c    # the launcher: its paths, running commands, the game, its files in streams/ and extracting them, controls.cfg, node, the level editor, built levels and settings.cfg
 │   └── test_sf2.c           # soundfont record struct sizes
 ├── tools                    # helper scripts
 │   └── level_editor         # the level editor and the tools beside it, in typescript (npm install first)
@@ -125,8 +129,8 @@ Project structure is listed below, including descriptions for each file.
 │       ├── scripts          # extracts game assets from a disc image (npm run extract-streams -- <image>)
 │       └── tests            # their tests (npm test)
 ├── level_src                # level sources: maps modelled in blender, a folder each, to build levels from (ignored by git, apart from the included ones listed in level_src/README.md)
-├── controls.example.cfg     # example key bindings (copy to controls.cfg to change the controls)
-├── settings.example.cfg     # example settings (copy to settings.cfg to change the settings)
+├── controls.example.cfg     # default key bindings, which the launcher creates controls.cfg from
+├── settings.example.cfg     # default settings, which the launcher creates settings.cfg from
 ├── Makefile                 # project makefile
 ├── rebuild.bat              # windows rebuild script (runs make in MSYS2 MINGW32)
 └── README.md                # project overview and documentation links

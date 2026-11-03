@@ -68,7 +68,7 @@ static void DrawInstall(const char *repo) {
   igTextWrapped("The level editor's packages aren't installed yet. "
     "Install downloads them with npm install, which takes a minute or two.");
   igBeginDisabled(running);
-  if (igButton(running ? "Installing..." : "Install", (ImVec2){120, 0})) { StartInstall(repo); }
+  if (igButton(running ? "Installing..." : "Install", (ImVec2){BUTTON_WIDTH, 0})) { StartInstall(repo); }
   igEndDisabled();
   if (!running && install.exit_code != 0) {
     igTextColored(PROBLEM_COLOUR, "Installing failed; its output says why.");
@@ -100,7 +100,7 @@ static void DrawEditorRunning(void) {
   else {
     igText("Starting the level editor...");
   }
-  if (igButton("Stop", (ImVec2){120, 0})) {
+  if (igButton("Stop", (ImVec2){BUTTON_WIDTH, 0})) {
     StopBackgroundCommand(&editor);
     editor.output[0] = 0; /* stopped on purpose, so nothing to explain */
     editor_address[0] = 0;
@@ -108,14 +108,14 @@ static void DrawEditorRunning(void) {
 }
 
 static void DrawOpenEditor(const char *repo) {
-  if (igButton("Open editor", (ImVec2){120, 0})) { StartEditor(repo); }
+  igTextWrapped("Places a level's spawn, end and boxes on its map, then builds it and boots the game into it.");
+  if (igButton("Open editor", (ImVec2){BUTTON_WIDTH, 0})) { StartEditor(repo); }
   if (editor.output[0]) {
     igTextColored(PROBLEM_COLOUR, "The level editor stopped; its output says why.");
   }
 }
 
 static void DrawEditor(const char *repo) {
-  UpdateEditor();
   if (IsBackgroundCommandRunning(&editor)) { DrawEditorRunning(); }
   else { DrawOpenEditor(repo); }
   DrawCommandOutput("editor_output", &editor);
@@ -126,10 +126,14 @@ void LoadEditorSection(const char *repo) {
   packages_installed = AreLevelEditorPackagesInstalled(repo);
 }
 
-void DrawEditorSection(const char *repo) {
-  igText("Level editor");
-  igSeparator();
+/* follow its commands, whether or not the section is showing */
+void UpdateEditorSection(const char *repo) {
   UpdateNodeCheck();
+  UpdateInstall(repo);
+  UpdateEditor();
+}
+
+void DrawEditorSection(const char *repo) {
   if (IsBackgroundCommandRunning(&node_check)) {
     igText("Checking for Node.js...");
     return;
@@ -138,7 +142,6 @@ void DrawEditorSection(const char *repo) {
     DrawNodeProblem(repo);
     return;
   }
-  UpdateInstall(repo);
   if (!packages_installed) {
     DrawInstall(repo);
     return;

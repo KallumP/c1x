@@ -19,6 +19,7 @@ SRC =	src/ns.c \
 	src/pc/init.c \
 	src/pc/math.c \
 	src/pc/pad.c \
+	src/pc/controls.c \
 	src/pc/config.c \
 	src/pc/settings.c \
 	src/pc/speed.c \
@@ -45,6 +46,7 @@ SRC =	src/ns.c \
 TEST_SRC = $(wildcard tests/*.c) \
 	src/ns.c \
 	src/pc/pad.c \
+	src/pc/controls.c \
 	src/pc/config.c \
 	src/pc/settings.c \
 	src/pc/speed.c \
@@ -60,6 +62,8 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/launcher/paths.c \
 	src/launcher/game.c \
 	src/launcher/settings_file.c \
+	src/launcher/text_file.c \
+	src/launcher/controls_file.c \
 	src/launcher/levels.c \
 	src/launcher/streams.c \
 	src/launcher/extract.c \
@@ -74,6 +78,9 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/game.c \
 	src/launcher/game_section.c \
 	src/launcher/settings_file.c \
+	src/launcher/text_file.c \
+	src/launcher/controls_file.c \
+	src/launcher/controls_section.c \
 	src/launcher/settings_section.c \
 	src/launcher/levels.c \
 	src/launcher/streams.c \
@@ -86,6 +93,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/level_editor.c \
 	src/launcher/editor_section.c \
 	src/pc/settings.c \
+	src/pc/controls.c \
 	src/pc/config.c
 
 OBJ = $(SRC:.c=.o)
