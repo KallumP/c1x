@@ -66,6 +66,24 @@ describe("collision cells", () => {
     expect(top("wall")).toBeLessThanOrEqual(top("floor"));
   });
 
+  test("a wall one cell over the floor beside it is a lip crash steps onto, not a wall", () => {
+    // sand at 250 rounds to the cell top at 256, a bank wall to 330 rounds to 384: 20 cm apart in
+    // the map, a cell apart in the octree. crash can step up a floor cell (land_offset, about 244)
+    const sand = floorMesh(0, 0, 512, 256, 250);
+    const bank = quadMesh([[512, 0, 0], [512, 330, 0], [512, 330, 256], [512, 0, 256]]);
+    const cells = cellsOf(merged(sand, bank));
+    expect(cells.get([3, 2, 0])).toBe("floor");
+    expect(cells.get([3, 1, 0])).toBe("wall"); // the cells under it stay wall
+  });
+
+  test("a wall more than a cell over the floor beside it stays a wall", () => {
+    const sand = floorMesh(0, 0, 512, 256, 250);
+    const wall = quadMesh([[512, 0, 0], [512, 600, 0], [512, 600, 256], [512, 0, 256]]);
+    const cells = cellsOf(merged(sand, wall));
+    expect(cells.get([3, 4, 0])).toBe("wall");
+    expect(cells.get([3, 2, 0])).toBe("wall");
+  });
+
   test("floor wins where it shares a cell with a wall", () => {
     const wall = quadMesh([[512, 0, 0], [512, 512, 0], [512, 512, 256], [512, 0, 256]]);
     const cells = cellsOf(merged(wall, floorMesh(0, 0, 512, 256, 512)));
