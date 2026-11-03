@@ -5,6 +5,7 @@ import { ByteWriter, padTo4 } from "../../builder/bytes";
 import {
   BOX_TYPE, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityType, linkSwitches, newEntityIds, withEntityId, type PlacedBox,
 } from "../../builder/entities";
+import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readLevel } from "../../builder/levelFiles";
 import { readTemplates, warpPadBase } from "../../builder/templates";
 
@@ -67,27 +68,27 @@ describe("switches", () => {
 });
 
 const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
-const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
+const hasBase = existsSync(`${STREAMS}/${BASE_LEVEL.file}.nsd`);
 
-describe.skipIf(!hasBeach)("what custom levels take from n. sanity beach", () => {
-  const beach = hasBeach ? readLevel(STREAMS, 9) : null!;
+describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
+  const base = hasBase ? readLevel(STREAMS, BASE_LEVEL.lid) : null!;
 
   test("crash, and an entity of each type", () => {
-    const templates = readTemplates(beach);
+    const templates = readTemplates(base);
     expect(entityType(templates.crash)).toEqual([0, 0]);
     expect(entityType(templates.entity(BOX_TYPE, 2))).toEqual([BOX_TYPE, 2]);
     expect(templates.textures.length).toBeGreaterThan(1);
   });
 
-  test("the warp pad's base is in the beach's terrain under it", () => {
-    const base = warpPadBase(beach);
-    expect(base.polygons.length).toBeGreaterThan(20);
-    const [xs, ys, zs] = [0, 1, 2].map((axis) => base.vertices.map(({ at }) => at[axis]));
+  test("the warp pad's base is in the base level's terrain under it", () => {
+    const padBase = warpPadBase(base);
+    expect(padBase.polygons.length).toBeGreaterThan(20);
+    const [xs, ys, zs] = [0, 1, 2].map((axis) => padBase.vertices.map(({ at }) => at[axis]));
     // relative to the pad: around it, and from its top down
     expect(Math.max(...[...xs, ...zs].map(Math.abs))).toBeLessThanOrEqual(700);
     expect(Math.max(...ys)).toBeLessThanOrEqual(16);
     expect(Math.min(...ys)).toBeGreaterThanOrEqual(-600);
-    expect(base.polygons.every(({ texinfo }) => base.texinfos.get(texinfo)!.length === 8)).toBe(true); // 2 words each
-    expect(beach.pages.map(({ eid }) => eid)).toContain(base.page);
+    expect(padBase.polygons.every(({ texinfo }) => padBase.texinfos.get(texinfo)!.length === 8)).toBe(true); // 2 words each
+    expect(base.pages.map(({ eid }) => eid)).toContain(padBase.page);
   });
 });

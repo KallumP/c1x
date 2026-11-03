@@ -3,10 +3,11 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { BASE_LEVEL } from "../../builder/baseLevel";
 import { buildLevel } from "../../server/build";
 
-const BEACH = fileURLToPath(new URL("../../../../streams/s0000009", import.meta.url));
-const hasBeach = existsSync(`${BEACH}.nsd`);
+const BASE = fileURLToPath(new URL(`../../../../streams/${BASE_LEVEL.file}`, import.meta.url));
+const hasBase = existsSync(`${BASE}.nsd`);
 
 // a repo with a level source, lvl: a floor
 let repo: string;
@@ -18,17 +19,17 @@ beforeEach(() => {
 });
 afterEach(() => { rmSync(repo, { recursive: true, force: true }); });
 
-// n. sanity beach in the repo's streams, to build from
-function addBeach(): void {
+// the base level (jungle rollers) in the repo's streams, to build from
+function addBase(): void {
   mkdirSync(join(repo, "streams"));
   for (const extension of ["nsd", "nsf"]) {
-    copyFileSync(`${BEACH}.${extension}`, join(repo, "streams", `s0000009.${extension}`));
+    copyFileSync(`${BASE}.${extension}`, join(repo, "streams", `${BASE_LEVEL.file}.${extension}`));
   }
 }
 
 describe("buildLevel", () => {
-  test.skipIf(!hasBeach)("builds the level's folder into the repo's build/levels, and gives what it said", async () => {
-    addBeach();
+  test.skipIf(!hasBase)("builds the level's folder into the repo's build/levels, and gives what it said", async () => {
+    addBase();
     const levels = join(repo, "build", "levels");
     expect(await buildLevel(repo, "lvl")).toEqual({ ok: true, output: `wrote ${join(levels, "lvl")}\n` });
     expect(existsSync(join(levels, "lvl.nsd")) && existsSync(join(levels, "lvl.nsf"))).toBe(true);
@@ -41,10 +42,10 @@ describe("buildLevel", () => {
     expect(result.output).toMatch(/level\.cfg, line 1: scale has to be a whole number/);
   });
 
-  test("isn't ok without n. sanity beach in the repo's streams", async () => {
+  test("isn't ok without the base level in the repo's streams, saying which it is", async () => {
     const result = await buildLevel(repo, "lvl");
     expect(result.ok).toBe(false);
-    expect(result.output).toMatch(/s0000009\.nsd/);
+    expect(result.output).toMatch(/Jungle Rollers \(s000000c\.nsd\)/);
   });
 
   test("refuses a level that isn't a level source", async () => {

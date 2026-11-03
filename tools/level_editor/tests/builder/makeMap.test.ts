@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import type { LevelObject } from "../../src/objects";
+import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
 import { BOX_HEIGHT, BOX_TYPE, entityId, entityPosition, entityType, WARP_PAD } from "../../builder/entities";
 import { EID_NONE } from "../../builder/entryIds";
@@ -62,7 +63,7 @@ const TEXTURED_OBJ = MAP_OBJ.replace("o Floor\n", "o Floor\nusemtl stone\n").rep
 const LONG_OBJ = "o Floor\nv -4 0 -50\nv -4 0 50\nv 4 0 50\nv 4 0 -50\nf 1 2 3 4\n";
 
 const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
-const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
+const hasBase = existsSync(`${STREAMS}/${BASE_LEVEL.file}.nsd`);
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -74,11 +75,11 @@ interface Built {
   zone: Entry;
 }
 
-describe.skipIf(!hasBeach)("making a level from a map", () => {
-  const beach = hasBeach ? readLevel(STREAMS, 9) : null!;
+describe.skipIf(!hasBase)("making a level from a map", () => {
+  const base = hasBase ? readLevel(STREAMS, BASE_LEVEL.lid) : null!;
 
   function make(text = MAP_OBJ, options: MapOptions = {}): Built {
-    const level = makeMap(beach, text, options);
+    const level = makeMap(base, text, options);
     const entries = entriesById(level);
     return { level, entries, zone: entries.get(level.nsd.ldat.zoneSpawn)! };
   }
@@ -236,8 +237,8 @@ describe.skipIf(!hasBeach)("making a level from a map", () => {
   });
 
   describe("a long map", () => {
-    const built = hasBeach ? make(LONG_OBJ) : null!;
-    const zones = hasBeach ? zonesOf(built) : [];
+    const built = hasBase ? make(LONG_OBJ) : null!;
+    const zones = hasBase ? zonesOf(built) : [];
     const neighbours = (zone: Entry) => readWords(zone.items[0], ZONE_NEIGHBORS, zone.items[0].readUInt32LE(ZONE_PATHS_IDX + 12));
 
     test("is a chain of zones along the route", () => {
