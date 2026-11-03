@@ -36,14 +36,14 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
     const setAxis = (axis: number, value: number) => {
       change({ at: at.map((current, axisIndex) => (axisIndex === axis ? value : current)) as Vec3 });
     };
-    // holding shift makes z's arrows go up and down in finer steps
-    const stepFor = (axis: (typeof AXES)[number]) => (axis === "z" && isShiftHeld ? 0.01 : 0.1);
+    // holding shift makes the arrows step in finer steps
+    const step = isShiftHeld ? 0.01 : 0.1;
     return AXES.map((axis, axisIndex) => (
       <NumberField
         key={axis}
         label={axis}
         value={at[axisIndex]}
-        step={stepFor(axis)}
+        step={step}
         onChange={(value) => setAxis(axisIndex, value)}
       />
     ));
