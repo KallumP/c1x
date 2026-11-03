@@ -1,5 +1,6 @@
 /*
- * the launcher's game section: the Play button
+ * the launcher's game section: the Play button, which saves the settings
+ * then starts the game
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -7,6 +8,7 @@
 #include "game_section.h"
 #include "game.h"
 #include "paths.h"
+#include "settings_section.h"
 
 #define PROBLEM_COLOUR ((ImVec4){1.0f, 0.45f, 0.4f, 1.0f})
 
@@ -25,7 +27,11 @@ static void DrawPlayButton(const char *repo) {
 
   if (igButton("Play", (ImVec2){120, 0})) {
     play_problem[0] = 0;
-    if (!StartGame(repo)) {
+    if (!SaveSettingsSection(repo)) {
+      SDL_strlcpy(play_problem, "Couldn't save the settings, so the game wasn't started.",
+        sizeof(play_problem));
+    }
+    else if (!StartGame(repo)) {
       GamePath(repo, path, sizeof(path));
       SDL_snprintf(play_problem, sizeof(play_problem), "Couldn't start %s.", path);
     }
