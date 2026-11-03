@@ -18,6 +18,8 @@ If the game isn't built, the launcher says so instead of showing **Play**. Build
 
 If any of the game's files are missing from `streams/`, the launcher lists them instead of showing **Play** (see [Running](running.md) for getting them). Once they're there, click **Check again**.
 
+To extract them from a disc image (`.bin` or `.iso`) of your own copy instead, choose it with **Browse...** (or type its path) and click **Extract**. This runs `npm run extract-streams` (running `npm install` first if it's never been run), so it needs [Node.js](https://nodejs.org/) 18 or later. Its output shows below, and **Play** appears once the files are all there.
+
 ## Settings
 
 The launcher has a field for each setting in `settings.cfg` (see [Settings](settings.md)): a checkbox for each on/off setting, and a box for each number. Hover over a field to see what it does. When it opens, the fields show what `settings.cfg` sets, or the defaults if there isn't one.

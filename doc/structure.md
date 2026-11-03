@@ -76,6 +76,9 @@ Project structure is listed below, including descriptions for each file.
 │   ├── title.c,h            # handles title screen loading, transition between title states, and drawing of title card backdrops
 │   ├── launcher             # the launcher (a separate program, make launcher)
 │   │   ├── main.c           # its window and main loop
+│   │   ├── extract.c,h      # the command extracting the game's files from a disc image
+│   │   ├── extract_section.c,h  # the disc image field, Browse and Extract
+│   │   ├── file_dialog.c,h  # choosing a file with the system's dialog (windows)
 │   │   ├── game.c,h         # the game: is it built, and starting it
 │   │   ├── game_section.c,h # the game section (Play)
 │   │   ├── levels.c,h       # the levels built to build/levels/, for the boot level dropdown
@@ -108,7 +111,7 @@ Project structure is listed below, including descriptions for each file.
 │   ├── test_gui.c           # in-game GUI tree node insertion and removal
 │   ├── test_speed.c         # crash's speed measurement and tracking
 │   ├── test_follow.c        # the follow camera's sideways offset
-│   ├── test_launcher_*.c    # the launcher: its paths, running commands, the game, its files in streams/, built levels and settings.cfg
+│   ├── test_launcher_*.c    # the launcher: its paths, running commands, the game, its files in streams/ and extracting them, built levels and settings.cfg
 │   └── test_sf2.c           # soundfont record struct sizes
 ├── tools                    # helper scripts
 │   └── level_editor         # the level editor and the tools beside it, in typescript (npm install first)
