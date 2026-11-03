@@ -54,7 +54,7 @@ The level editor places Crash's start, the end of the level, and boxes.
 4. Click **Select** (or press Escape), then click an object to select it. Drag it to move it, or change it on the right. Delete removes it.
 5. Click **Save** (or press Ctrl+S).
 
-Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box, so move it. **Drop to floor** on the right puts the selected box just above the floor below it.
+Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box, so move it. **Drop to floor** on the right puts the selected box just above the floor below it. To lift an object off the floor, set its **raise**: it stays that high above the floor as you drag it about.
 
 The arrow at the spawn points the way the camera faces when the level starts. With nothing selected, the right side shows the **Level**'s turn and scale (see [If something looks wrong](#if-something-looks-wrong)), and changing the turn turns the arrow. Save writes them to the level's `level.cfg`, along with the objects. Changing the scale changes how big the boxes look on the map, as they stay the same size in the game.
 

@@ -9,7 +9,7 @@ import { SKY_ROWS, type Sky } from "../sky";
 import { ChoiceField, ColourField, NumberField } from "./Fields";
 import "./PropertiesPanel.css";
 
-const AXES = ["x", "y", "z"] as const;
+const AXES = ["x", "y"] as const; // z is the floor's height under the object, set by placing, dragging and Drop to floor
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
 export default function PropertiesPanel({ state, warnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
@@ -68,12 +68,13 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
     </>
   );
 
+  // raise is its height above the floor, kept as it's dragged about
   const renderObjectFields = (selected: LevelObject) => (
     <>
       <h3>{selected.kind}</h3>
       {selected.kind === "box" && renderBoxFields(selected)}
       {renderPositionFields(selected.at)}
-      <NumberField label="raise" value={selected.raise} step={0.1} onChange={(raise) => change({ raise })} />
+      <NumberField label="raise" value={selected.raise} step={isShiftHeld ? 0.01 : 0.1} onChange={(raise) => change({ raise })} />
     </>
   );
 
