@@ -11,12 +11,14 @@ export function setBootLevel(text: string, name: string): string {
   const eol = text.includes("\r\n") ? "\r\n" : "\n";
   const lines = text.split(/\r?\n/);
   const line = `boot_level = ${name}`;
-  const at = lines.findIndex((l) => BOOT_LEVEL.test(l));
-  if (at >= 0) {
-    lines[at] = line;
+  const bootLine = lines.findIndex((existing) => BOOT_LEVEL.test(existing));
+  if (bootLine >= 0) {
+    lines[bootLine] = line;
     return lines.join(eol);
   }
-  if (lines[lines.length - 1] === "") lines.pop();
+  if (lines[lines.length - 1] === "") {
+    lines.pop(); // the newline at the end, which goes back after the new line
+  }
   return [...lines, line, ""].join(eol);
 }
 
@@ -29,7 +31,11 @@ const BOOTABLE = /^[A-Za-z0-9_-]+$/; // the names boot_level takes (doc/settings
 
 // sets the game in repo to boot into the level built from level_src/<name>
 export function bootLevel(repo: string, name: string): void {
-  if (!listLevels(join(repo, "level_src")).some((l) => l.name === name)) throw new Error(`no level source ${name}`);
-  if (!BOOTABLE.test(name)) throw new Error(`the game can only boot a level named with letters, digits, _ and -, not ${name}`);
+  if (!listLevels(join(repo, "level_src")).some((level) => level.name === name)) {
+    throw new Error(`no level source ${name}`);
+  }
+  if (!BOOTABLE.test(name)) {
+    throw new Error(`the game can only boot a level named with letters, digits, _ and -, not ${name}`);
+  }
   writeBootLevel(join(repo, "settings.cfg"), name);
 }

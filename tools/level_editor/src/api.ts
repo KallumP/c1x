@@ -13,27 +13,30 @@ export interface BuildResult {
 
 export const levelFilesUrl = (name: string) => `/api/levels/${encodeURIComponent(name)}/files/`;
 
-async function ok(res: Response): Promise<Response> {
-  if (!res.ok) throw new Error(await res.text());
-  return res;
+// the response, or its text as an error if the server refused
+async function checked(response: Response): Promise<Response> {
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response;
 }
 
 export async function fetchLevels(): Promise<LevelInfo[]> {
-  return (await ok(await fetch("/api/levels"))).json();
+  return (await checked(await fetch("/api/levels"))).json();
 }
 
 export async function fetchObjects(name: string): Promise<string> {
-  return (await ok(await fetch(`/api/levels/${encodeURIComponent(name)}/objects`))).text();
+  return (await checked(await fetch(`/api/levels/${encodeURIComponent(name)}/objects`))).text();
 }
 
 export async function saveObjects(name: string, text: string): Promise<void> {
-  await ok(await fetch(`/api/levels/${encodeURIComponent(name)}/objects`, { method: "PUT", body: text }));
+  await checked(await fetch(`/api/levels/${encodeURIComponent(name)}/objects`, { method: "PUT", body: text }));
 }
 
 export async function buildLevel(name: string): Promise<BuildResult> {
-  return (await ok(await fetch(`/api/levels/${encodeURIComponent(name)}/build`, { method: "POST" }))).json();
+  return (await checked(await fetch(`/api/levels/${encodeURIComponent(name)}/build`, { method: "POST" }))).json();
 }
 
 export async function bootLevel(name: string): Promise<void> {
-  await ok(await fetch(`/api/levels/${encodeURIComponent(name)}/boot`, { method: "POST" }));
+  await checked(await fetch(`/api/levels/${encodeURIComponent(name)}/boot`, { method: "POST" }));
 }

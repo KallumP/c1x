@@ -44,16 +44,21 @@ export function levelSourcesApi(root: string): Plugin {
       server.middlewares.use("/api/levels", async (req, res) => {
         try {
           const parts = decodeURIComponent((req.url ?? "/").split("?")[0]).split("/").filter(Boolean);
-          if (parts.length === 0 && req.method === "GET")
+          if (parts.length === 0 && req.method === "GET") {
             return send(res, 200, "application/json", JSON.stringify(listLevels(root)));
+          }
           const [name, what, ...rest] = parts;
           if (what === "files" && req.method === "GET") {
             const path = levelFilePath(root, name, rest.join("/"));
-            if (!path) return send(res, 404, "text/plain", "not found");
+            if (!path) {
+              return send(res, 404, "text/plain", "not found");
+            }
             return send(res, 200, TYPES[extname(path).toLowerCase()] ?? "application/octet-stream", readFileSync(path));
           }
           if (what === "objects" && rest.length === 0) {
-            if (req.method === "GET") return send(res, 200, "application/json", readObjects(root, name));
+            if (req.method === "GET") {
+              return send(res, 200, "application/json", readObjects(root, name));
+            }
             if (req.method === "PUT") {
               const text = await body(req);
               JSON.parse(text); // the editor checks it fully; this only refuses a broken file
@@ -62,15 +67,17 @@ export function levelSourcesApi(root: string): Plugin {
             }
           }
           if (rest.length === 0 && req.method === "POST") {
-            if (what === "build") return send(res, 200, "application/json", JSON.stringify(await buildLevel(repo, name)));
+            if (what === "build") {
+              return send(res, 200, "application/json", JSON.stringify(await buildLevel(repo, name)));
+            }
             if (what === "boot") {
               bootLevel(repo, name);
               return send(res, 200, "application/json", "{}");
             }
           }
           send(res, 404, "text/plain", "not found");
-        } catch (e) {
-          send(res, 400, "text/plain", e instanceof Error ? e.message : String(e));
+        } catch (error) {
+          send(res, 400, "text/plain", error instanceof Error ? error.message : String(error));
         }
       });
     },

@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 
 // whether shift is held down, cleared when the window loses focus
 export function useShiftHeld(): boolean {
-  const [held, setHeld] = useState(false);
+  const [isHeld, setIsHeld] = useState(false);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => setHeld(e.shiftKey);
-    const onBlur = () => setHeld(false);
+    const onKey = (event: KeyboardEvent) => setIsHeld(event.shiftKey);
+    const onBlur = () => setIsHeld(false);
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", onKey);
     window.addEventListener("blur", onBlur);
@@ -17,5 +17,5 @@ export function useShiftHeld(): boolean {
     };
   }, []);
 
-  return held;
+  return isHeld;
 }

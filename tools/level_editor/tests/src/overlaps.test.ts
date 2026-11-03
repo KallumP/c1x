@@ -84,15 +84,15 @@ describe("overlappingBoxes", () => {
 
 describe("dropToFloor", () => {
   const floor: Tri[] = [[[-50, -50, 0], [50, -50, 0], [-50, 50, 0]], [[50, -50, 0], [50, 50, 0], [-50, 50, 0]]];
-  const clips = (o: LevelObject, z: number, triangles: Tri[]) =>
-    overlappingBoxes([{ ...o, at: [o.at[0], o.at[1], z] }], SCALE, triangles).size > 0;
+  const clips = (object: LevelObject, z: number, triangles: Tri[]) =>
+    overlappingBoxes([{ ...object, at: [object.at[0], object.at[1], z] }], SCALE, triangles).size > 0;
 
   // the z it lands at doesn't clip, and 0.01 m lower does
-  function expectJustAbove(o: LevelObject, triangles: Tri[]) {
-    const z = dropToFloor(o, SCALE, triangles);
+  function expectJustAbove(object: LevelObject, triangles: Tri[]) {
+    const z = dropToFloor(object, SCALE, triangles);
     expect(z).not.toBeNull();
-    expect(clips(o, z!, triangles)).toBe(false);
-    expect(clips(o, z! - 0.01, triangles)).toBe(true);
+    expect(clips(object, z!, triangles)).toBe(false);
+    expect(clips(object, z! - 0.01, triangles)).toBe(true);
     return z!;
   }
 
