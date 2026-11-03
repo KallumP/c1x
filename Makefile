@@ -81,6 +81,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/file_dialog.c \
 	src/launcher/node.c \
 	src/launcher/command.c \
+	src/launcher/ui.c \
 	src/pc/settings.c \
 	src/pc/config.c
 

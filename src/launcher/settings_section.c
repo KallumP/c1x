@@ -6,11 +6,11 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "settings_section.h"
+#include "ui.h"
 #include "settings_file.h"
 #include "levels.h"
 #include "paths.h"
 
-#define PROBLEM_COLOUR ((ImVec4){1.0f, 0.45f, 0.4f, 1.0f})
 #define FIELD_WIDTH 200.0f
 #define TITLE_SCREEN "title screen"
 

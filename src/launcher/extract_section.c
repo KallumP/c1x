@@ -9,14 +9,11 @@
 #include "extract.h"
 #include "file_dialog.h"
 #include "paths.h"
-#include "process.h"
-
-#define PROBLEM_COLOUR ((ImVec4){1.0f, 0.45f, 0.4f, 1.0f})
-#define OUTPUT_HEIGHT 160
+#include "command.h"
+#include "ui.h"
 
 static char image[PATH_MAX_LEN];
-static process *extraction; /* while it runs */
-static char output[PROCESS_OUTPUT_MAX];
+static background_command extraction;
 static char problem[PATH_MAX_LEN + 64]; /* why the last extraction failed, or "" */
 
 static void StartExtraction(const char *repo) {
@@ -24,31 +21,22 @@ static void StartExtraction(const char *repo) {
   char folder[PATH_MAX_LEN];
 
   problem[0] = 0;
-  output[0] = 0;
   if (!ExtractStreamsCommand(repo, image, command, sizeof(command))) {
     SDL_strlcpy(problem, image[0] ? "That disc image's path has a quote in it."
       : "Choose a disc image first.", sizeof(problem));
     return;
   }
   ExtractStreamsFolder(repo, folder, sizeof(folder));
-  extraction = ProcessRun(folder, command);
-  if (!extraction) { SDL_snprintf(problem, sizeof(problem), "Couldn't run npm in %s.", folder); }
+  if (!StartBackgroundCommand(&extraction, folder, command)) { SDL_snprintf(problem, sizeof(problem), "Couldn't run npm in %s.", folder); }
 }
 
 /* returns 1 on the frame the extraction finishes having worked */
 static int UpdateExtraction(void) {
-  int exit_code;
-
-  if (!extraction) { return 0; }
-  ProcessCopyOutput(extraction, output, sizeof(output));
-  if (ProcessIsRunning(extraction)) { return 0; }
-  exit_code = ProcessExitCode(extraction);
-  ProcessFree(extraction);
-  extraction = 0;
-  if (exit_code != 0) {
+  if (!UpdateBackgroundCommand(&extraction)) { return 0; }
+  if (extraction.exit_code != 0) {
     SDL_strlcpy(problem, "The extraction failed; its output says why.", sizeof(problem));
   }
-  return exit_code == 0;
+  return extraction.exit_code == 0;
 }
 
 static void DrawImageField(void) {
@@ -62,19 +50,13 @@ static void DrawImageField(void) {
 }
 
 static void DrawExtractButton(const char *repo) {
-  igBeginDisabled(extraction != 0);
-  if (igButton(extraction ? "Extracting..." : "Extract", (ImVec2){120, 0})) {
+  int running = IsBackgroundCommandRunning(&extraction);
+
+  igBeginDisabled(running);
+  if (igButton(running ? "Extracting..." : "Extract", (ImVec2){120, 0})) {
     StartExtraction(repo);
   }
   igEndDisabled();
-}
-
-static void DrawOutput(void) {
-  if (!output[0]) { return; }
-  igBeginChild_Str("extract_output", (ImVec2){0, OUTPUT_HEIGHT}, true, 0);
-  igTextUnformatted(output, 0);
-  if (extraction) { igSetScrollHereY(1.0f); }
-  igEndChild();
 }
 
 /* returns 1 when an extraction has just finished, so the files can be checked again */
@@ -86,6 +68,6 @@ int DrawExtractStreams(const char *repo) {
   DrawExtractButton(repo);
   finished = UpdateExtraction();
   if (problem[0]) { igTextColored(PROBLEM_COLOUR, "%s", problem); }
-  DrawOutput();
+  DrawCommandOutput("extract_output", &extraction);
   return finished;
 }

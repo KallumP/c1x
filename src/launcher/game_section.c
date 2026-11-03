@@ -11,8 +11,8 @@
 #include "settings_section.h"
 #include "streams.h"
 #include "extract_section.h"
+#include "ui.h"
 
-#define PROBLEM_COLOUR ((ImVec4){1.0f, 0.45f, 0.4f, 1.0f})
 #define MISSING_FILES_SHOWN 8
 
 static char play_problem[PATH_MAX_LEN + 64]; /* why Play last failed, or "" */
