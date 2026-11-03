@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03
+
+### Added
+
+- the level editor's F5 saves, builds the level, and sets the game to boot into it if the build worked
+
 ## 2026-10-30
 
 ### Added

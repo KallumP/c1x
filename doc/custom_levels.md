@@ -77,6 +77,8 @@ pip install pillow
 2. Click **Boot**. It sets the game to start in this level, by writing `boot_level = my_level` in `settings.cfg`.
 3. Run `build/c1.exe`.
 
+Or press **F5**, which does steps 1 and 2 together: it saves, builds, then sets the game to boot into the level if the build worked.
+
 **Or from the command line:** from the project folder, run:
 
 ```
