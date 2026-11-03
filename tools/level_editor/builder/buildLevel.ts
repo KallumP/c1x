@@ -29,6 +29,12 @@ export interface BuildOptions {
 
 const isFolder = (path: string) => existsSync(path) && statSync(path).isDirectory();
 
+// the level source to build: a level's name (its folder in sourcesDir), or a path to one
+export function levelSourcePath(nameOrPath: string, sourcesDir = LEVEL_SOURCES_DIR): string {
+  const named = join(sourcesDir, nameOrPath);
+  return !existsSync(nameOrPath) && isFolder(named) ? named : nameOrPath;
+}
+
 // the .obj to build a level from, and the level's name, for path: a level
 // source's folder (holding its one .obj, named after the folder) or a .obj (named after the file)
 export function levelSource(path: string): { objPath: string; name: string } {
