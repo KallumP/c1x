@@ -1,5 +1,5 @@
-// a level source's objects.json (see doc/custom_levels.md): the same rules
-// and messages as tools/levelobjects.py, which build_level.py reads it with
+// a level source's objects.json (see doc/custom_levels.md), read and written
+// here for the editor, and read for the level build too (builder/levelObjects.ts)
 
 export const KINDS = ["spawn", "end", "box"] as const;
 export type Kind = (typeof KINDS)[number];

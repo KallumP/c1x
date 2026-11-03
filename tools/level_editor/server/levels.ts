@@ -14,7 +14,7 @@ function objsIn(folder: string): string[] {
   return readdirSync(folder).filter((file) => file.toLowerCase().endsWith(".obj"));
 }
 
-// scale from the folder's level.cfg (build_level.py reads the same file), or the default
+// scale from the folder's level.cfg (the level build reads the same file), or the default
 function scaleIn(folder: string): number {
   const cfg = join(folder, "level.cfg");
   return parseLevelCfg(existsSync(cfg) ? readFileSync(cfg, "utf8") : "").scale;

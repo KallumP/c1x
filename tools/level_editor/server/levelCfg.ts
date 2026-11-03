@@ -1,5 +1,5 @@
 // a level source's level.cfg (see doc/custom_levels.md): the turn and scale
-// build_level.py builds it with, read and set by the editor
+// the level is built with (builder/levelCfg.ts reads it for the build), read and set by the editor
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { DEFAULT_SCALE } from "../src/coords";

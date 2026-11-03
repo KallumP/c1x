@@ -5,7 +5,7 @@
 //   PUT /api/levels/<name>/objects      saves its objects.json
 //   GET /api/levels/<name>/cfg          its level.cfg's turn and scale (LevelCfg)
 //   PUT /api/levels/<name>/cfg          sets them
-//   POST /api/levels/<name>/build       runs build_level.py on it (BuildResult)
+//   POST /api/levels/<name>/build       builds it (BuildResult)
 //   POST /api/levels/<name>/boot        sets settings.cfg to boot into it
 import { readFileSync } from "node:fs";
 import { dirname, extname } from "node:path";

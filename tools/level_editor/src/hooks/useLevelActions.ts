@@ -10,7 +10,7 @@ export interface ActionStatus {
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
 const lastLine = (output: string) => output.trim().split(/\r?\n/).pop() ?? "";
 
-// building the open level with build_level.py, and setting the game to boot into it (or both, F5)
+// building the open level, and setting the game to boot into it (or both, F5)
 export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save: () => Promise<boolean>) {
   const [isBusy, setIsBusy] = useState(false);
   const [status, setStatus] = useState<ActionStatus | null>(null);

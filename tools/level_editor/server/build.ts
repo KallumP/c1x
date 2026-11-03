@@ -1,22 +1,24 @@
-// runs tools/build_level.py on a level source (see doc/custom_levels.md), for the editor's build button
-import { execFile } from "node:child_process";
+// builds a level source (see doc/custom_levels.md) with the level build in
+// builder/, for the editor's build button
 import { join } from "node:path";
+import { buildLevel as buildLevelSource } from "../builder/buildLevel";
 import { listLevels } from "./levels";
 
 export interface BuildResult {
   ok: boolean;
-  output: string; // what it printed: its stdout, then its stderr
+  output: string; // what it said: warnings, then what it wrote or why it failed, a line each
 }
 
-// builds level_src/<name> in repo with python (PYTHON, or python on the path)
-export function buildLevel(repo: string, name: string, python = process.env.PYTHON ?? "python"): Promise<BuildResult> {
+// builds level_src/<name> in repo into its build/levels, from n. sanity beach in its streams
+export async function buildLevel(repo: string, name: string): Promise<BuildResult> {
   if (!listLevels(join(repo, "level_src")).some((level) => level.name === name)) {
-    return Promise.reject(new Error(`no level source ${name}`));
+    throw new Error(`no level source ${name}`);
   }
-  return new Promise((done) => {
-    execFile(python, ["tools/build_level.py", `level_src/${name}`], { cwd: repo }, (error, stdout, stderr) => {
-      const output = stdout + stderr;
-      done({ ok: !error, output: output || (error ? error.message : "") });
-    });
+  const lines: string[] = [];
+  const ok = buildLevelSource(join(repo, "level_src", name), {
+    streamsDir: join(repo, "streams"),
+    levelsDir: join(repo, "build", "levels"),
+    log: (line) => lines.push(line),
   });
+  return { ok, output: lines.map((line) => `${line}\n`).join("") };
 }
