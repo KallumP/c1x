@@ -14,7 +14,7 @@ describe("boxStyle", () => {
     expect(boxStyle("basic").wireframe).toBe(false);
   });
 
-  test("a subtype looks like its type", () => {
+  test("a box given as a subtype number is styled the same as its type name", () => {
     expect(boxStyle(8)).toEqual(boxStyle("life"));
   });
 });
