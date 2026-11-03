@@ -24,3 +24,6 @@ export function parseRgb(text: string): Rgb | null {
 export const formatRgb = ([red, green, blue]: Rgb) => `${red}, ${green}, ${blue}`;
 
 export const isSkySplit = (split: number) => Number.isInteger(split) && split >= 0 && split <= SKY_ROWS;
+
+export const isSameSky = (first: Sky, second: Sky) =>
+  formatRgb(first.top) === formatRgb(second.top) && formatRgb(first.bottom) === formatRgb(second.bottom) && first.split === second.split;

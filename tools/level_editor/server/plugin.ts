@@ -74,8 +74,9 @@ export function levelSourcesApi(root: string): Plugin {
               return send(res, 200, "application/json", JSON.stringify(readLevelCfg(root, name)));
             }
             if (req.method === "PUT") {
-              const { turn, scale } = JSON.parse(await body(req));
-              writeLevelCfg(root, name, { turn: Number(turn), scale: Number(scale) }); // which checks them
+              const { turn, scale, sky } = JSON.parse(await body(req));
+              // which checks them; a request without a sky keeps the level's
+              writeLevelCfg(root, name, { turn: Number(turn), scale: Number(scale), sky: sky ?? readLevelCfg(root, name).sky });
               return send(res, 200, "application/json", "{}");
             }
           }
