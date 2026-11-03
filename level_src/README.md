@@ -8,6 +8,7 @@ Some level sources are included in the repository, made for c1x, listed below. O
 |---|---|
 | `tide_ruins/` | Made for c1x, with procedural textures. |
 | `mossy_creek/` | Made for c1x, with procedural textures: a more organic map, its shores and ledges curves rather than straight lines. |
+| `sunset_canyon/` | Made for c1x in Blender (its `.blend` is included), with procedural textures: a long, winding desert canyon at sunset, about twice mossy creek's length, with boxes laid out as in the game's own levels. |
 
 ## Objects
 
