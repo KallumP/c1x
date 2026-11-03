@@ -2,6 +2,9 @@
   {"kind": "spawn", "at": [0.5, 3.5, 0.3]},
 
   {"kind": "box", "type": "aku_aku", "at": [0.5, 6.5, 0]},
+  {"kind": "box", "type": "tnt", "at": [-1.5, 6.5, 0]},
+  {"kind": "box", "type": "enemy_tnt", "at": [-3, 6.5, 0]},
+  {"kind": "box", "type": "iron_arrow", "at": [2.5, 6.5, 0]},
   {"kind": "box", "type": "life", "at": [-6, 9, 0]},
   {"kind": "box", "type": "question", "at": [6, 9, 0]},
   {"kind": "box", "type": "basic", "at": [-7.5, 10.5, 0]},
@@ -32,8 +35,8 @@
   {"kind": "box", "type": "iron", "at": [0.5, 37.5, 0.6]},
   {"kind": "box", "type": "switch", "at": [0, 42, 1.2]},
   {"kind": "box", "type": "outline", "at": [-1.5, 39.5, 0.9]},
-  {"kind": "box", "type": "outline", "at": [-0.5, 39.5, 0.9]},
-  {"kind": "box", "type": "outline", "at": [0.5, 39.5, 0.9]},
+  {"kind": "box", "type": "iron_outline", "at": [-0.5, 39.5, 0.9]},
+  {"kind": "box", "type": "iron_outline", "at": [0.5, 39.5, 0.9]},
   {"kind": "box", "type": "outline", "at": [1.5, 39.5, 0.9]},
 
   {"kind": "box", "type": "aku_aku", "at": [8, 33.5, 0]},
