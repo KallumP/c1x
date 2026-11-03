@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { newObject } from "../../src/editor";
 import type { LevelObject, Vec3 } from "../../src/objects";
-import { overlappingBoxes, triangleTouchesBox } from "../../src/overlaps";
+import { dropToFloor, overlappingBoxes, triangleTouchesBox } from "../../src/overlaps";
 
 const SCALE = 400; // 1 m boxes
 const box = (at: Vec3, extra: Partial<LevelObject> = {}): LevelObject => ({ ...newObject("basic", at), ...extra });
@@ -79,5 +79,52 @@ describe("overlappingBoxes", () => {
   test("the spawn and end aren't boxes", () => {
     const objects = [newObject("spawn", [0, 0, 0]), newObject("end", [0, 0, 0]), box([0, 0, 0])];
     expect(overlappingBoxes(objects, SCALE, [])).toEqual(new Set());
+  });
+});
+
+describe("dropToFloor", () => {
+  const floor: Tri[] = [[[-50, -50, 0], [50, -50, 0], [-50, 50, 0]], [[50, -50, 0], [50, 50, 0], [-50, 50, 0]]];
+  const clips = (object: LevelObject, z: number, triangles: Tri[]) =>
+    overlappingBoxes([{ ...object, at: [object.at[0], object.at[1], z] }], SCALE, triangles).size > 0;
+
+  // the z it lands at doesn't clip, and 0.01 m lower does
+  function expectJustAbove(object: LevelObject, triangles: Tri[]) {
+    const z = dropToFloor(object, SCALE, triangles);
+    expect(z).not.toBeNull();
+    expect(clips(object, z!, triangles)).toBe(false);
+    expect(clips(object, z! - 0.01, triangles)).toBe(true);
+    return z!;
+  }
+
+  test("lowers a box above the floor until it's just above it", () => {
+    expect(expectJustAbove(box([0, 0, 2]), floor)).toBeCloseTo(0, 1);
+  });
+
+  test("raises a box in the floor until it's just above it", () => {
+    expect(expectJustAbove(box([0, 0, -0.5]), floor)).toBeCloseTo(0, 1);
+  });
+
+  test("lands on the highest floor below it", () => {
+    const step: Tri[] = [[[-1, -1, 1], [1, -1, 1], [-1, 1, 1]], [[1, -1, 1], [1, 1, 1], [-1, 1, 1]]];
+    expect(expectJustAbove(box([0, 0, 3]), [...floor, ...step])).toBeCloseTo(1, 1);
+  });
+
+  test("counts raise", () => {
+    expect(expectJustAbove(box([0, 0, 2], { raise: 0.5 }), floor)).toBeCloseTo(-0.5, 1);
+  });
+
+  test("goes past a wall through the box", () => {
+    const wall: Tri[] = [[[0, -5, -5], [0, 5, -5], [0, -5, 5]], [[0, 5, -5], [0, 5, 5], [0, -5, 5]]];
+    const z = dropToFloor(box([0, 0, 2]), SCALE, [...floor, ...wall]);
+    expect(z).toBeCloseTo(0, 1);
+  });
+
+  test("is null with no floor below it", () => {
+    expect(dropToFloor(box([100, 100, 2]), SCALE, floor)).toBeNull();
+  });
+
+  test("is rounded to the millimetre", () => {
+    const z = dropToFloor(box([0, 0, 1.2345]), SCALE, floor)!;
+    expect(Math.round(z * 1000) / 1000).toBe(z);
   });
 });

@@ -11,11 +11,12 @@ import { DEFAULT_SCALE } from "./coords";
 import { newObject, type Tool } from "./editor";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
+import { useLevelActions } from "./hooks/useLevelActions";
 import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevels } from "./hooks/useLevels";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
-import { useWarnings } from "./hooks/useWarnings";
+import { useTriangles, useWarnings } from "./hooks/useWarnings";
 import { clickedFloor, isClick } from "./three/clicks";
 
 const SELECT: Tool = { kind: "select" };
@@ -26,7 +27,9 @@ export default function App() {
   const { levels, level, open } = useLevels(showError);
   const group = useLevelGroup(level, showError);
   const { state, dispatch, unsaved, save } = useEditor(level, showError);
-  const warnings = useWarnings(state.objects, level ? level.scale : DEFAULT_SCALE, group);
+  const scale = level ? level.scale : DEFAULT_SCALE;
+  const triangles = useTriangles(group);
+  const warnings = useWarnings(state.objects, scale, triangles);
   const [tool, setTool] = useState<Tool>(SELECT);
   const [grid, setGrid] = useState(0.5);
   const orbitRef = useRef<Orbit>(null);
@@ -36,6 +39,7 @@ export default function App() {
     move: (index, at) => dispatch({ type: "update", index, changes: { at }, record: false }),
   });
   useUnsavedWarning(unsaved);
+  const levelActions = useLevelActions(level, unsaved, save);
 
   useEditorShortcuts(state, dispatch, { stopPlacing: () => setTool(SELECT), save });
 
@@ -80,9 +84,27 @@ export default function App() {
 
   const renderSaveButton = () => (
     <button className={unsaved ? "save unsaved" : "save"} disabled={!unsaved} onClick={save} title="Ctrl+S">
-      {unsaved ? "Save objects.json" : "Saved"}
+      {unsaved ? "Save" : "Saved"}
     </button>
   );
+
+  // build and boot, on the right
+  const renderLevelActions = () => {
+    const { isBusy, status, build, boot } = levelActions;
+    return (
+      <div className="level-actions">
+        {status && (
+          <span className={status.failed ? "status error" : "status"} title={status.detail}>{status.text}</span>
+        )}
+        <button disabled={!level || isBusy} onClick={build} title="Run build_level.py on this level (saves first)">
+          Build
+        </button>
+        <button disabled={!level || isBusy} onClick={boot} title="Set boot_level in settings.cfg to this level">
+          Boot
+        </button>
+      </div>
+    );
+  };
 
   const renderHeader = () => (
     <header className="toolbar">
@@ -91,6 +113,7 @@ export default function App() {
       {renderSaveButton()}
       {renderWarningCount()}
       {error && <span className="error">{error}</span>}
+      {renderLevelActions()}
     </header>
   );
 
@@ -120,7 +143,7 @@ export default function App() {
       {renderHeader()}
       <Palette tool={tool} onTool={setTool} grid={grid} onGrid={setGrid} />
       {renderMain()}
-      <PropertiesPanel state={state} warnings={warnings} dispatch={dispatch} />
+      <PropertiesPanel state={state} warnings={warnings} scale={scale} triangles={triangles} dispatch={dispatch} />
     </div>
   );
 }

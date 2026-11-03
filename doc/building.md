@@ -40,4 +40,4 @@ Run `make test` to build and run the unit tests in `tests/`. They use the [utest
 
 `tools/build_level.py`, `tools/nslevel.py`, `tools/blendmap.py` and `tools/tpage.py`, which build [custom levels](custom_levels.md), have their own Python tests: `python -m unittest discover -s tools/tests`. They need [Pillow](https://pypi.org/project/pillow/) (`pip install pillow`) for map textures.
 
-The [level editor](custom_levels.md#placing-objects-in-3d) in `tools/level_editor/` has its own tests: `npm test` there (after `npm install`), and `npm run typecheck` for its types.
+The [level editor](custom_levels.md#2-place-objects-in-the-level-editor) in `tools/level_editor/` has its own tests: `npm test` there (after `npm install`), and `npm run typecheck` for its types.

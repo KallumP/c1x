@@ -18,7 +18,7 @@ export function boxSize(scale: number): number {
   return BOX_UNITS / scale;
 }
 
-// the middles (in blender) of a stack of boxes on the ground at at, raised by raise
+// the middles (in blender) of a stack of boxes standing at at, raised by raise
 export function stackCentres(at: Vec3, raise: number, stack: number, scale: number): Vec3[] {
   const size = boxSize(scale);
   return Array.from({ length: stack }, (_, k) => [at[0], at[1], at[2] + raise + size * k + size / 2] as Vec3);

@@ -15,8 +15,8 @@ const snap = (metres: number, grid: number) => (grid > 0 ? Math.round(metres / g
 const roundToMillimetre = (metres: number) => Math.round(metres * 1000) / 1000 + 0; // + 0 turns -0 into 0
 
 // the blender position for a click that hit the level at point (viewport), on a
-// face with normal (viewport, unit); null off the floor, as the build puts objects
-// on the ground below them, not where a wall was clicked. grid snaps x and y (0: none)
+// face with normal (viewport, unit); null off the floor, so objects go on floors,
+// not in walls. grid snaps x and y (0: none)
 export function placeOnFloor(point: Vec3, normal: Vec3, grid: number): Vec3 | null {
   if (normal[1] < FLOOR) {
     return null;

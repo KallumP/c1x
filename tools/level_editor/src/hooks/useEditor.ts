@@ -37,15 +37,18 @@ export function useEditor(level: LevelInfo | null, onError: (message: string) =>
     };
   }, [level, onError]);
 
-  const save = async () => {
+  // whether it saved
+  const save = async (): Promise<boolean> => {
     if (!level) {
-      return;
+      return false;
     }
     try {
       await saveObjects(level.name, text);
       setSavedText(text);
+      return true;
     } catch (error) {
       onError(`couldn't save: ${error instanceof Error ? error.message : error}`);
+      return false;
     }
   };
 
