@@ -20,8 +20,8 @@ describe("entry ids", () => {
     expect(eidToString(EID_NONE)).toBe("NONE!");
   });
 
-  test("names use the high bits too", () => {
-    expect(stringToEid("!!!!!")).toBeGreaterThan(2 ** 31);
+  test("names use all 31 bits", () => {
+    expect(stringToEid("!!!!!")).toBe(2 ** 31 - 1);
     expect(eidToString(stringToEid("!!!!!"))).toBe("!!!!!");
   });
 });
