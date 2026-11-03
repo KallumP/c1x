@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build-level": "tsx builder/buildLevelCli.ts"
+    "build-level": "tsx builder/buildLevelCli.ts",
+    "extract-streams": "tsx scripts/extractStreamsCli.ts"
   },
   "dependencies": {
     "@react-three/drei": "9.114.0",
