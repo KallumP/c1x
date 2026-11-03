@@ -16,9 +16,7 @@ Run `build/launcher.exe`, by double-clicking it or from any folder. It works on 
 
 If the game isn't built, the launcher says so instead of showing **Play**. Build it, then the button appears.
 
-If any of the game's files are missing from `streams/`, the launcher lists them instead of showing **Play** (see [Running](running.md) for getting them). Once they're there, click **Check again**.
-
-To extract them from a disc image (`.bin` or `.iso`) of your own copy instead, choose it with **Browse...** (or type its path) and click **Extract**. This runs `npm run extract-streams` (running `npm install` first if it's never been run), so it needs [Node.js](https://nodejs.org/) 18 or later. Its output shows below, and **Play** appears once the files are all there.
+If any of the game's files are missing from `streams/`, the launcher lists them instead of showing **Play**, with **Check again** and a way to extract them from a disc image. See [Running](running.md) for getting them.
 
 ## Settings
 
