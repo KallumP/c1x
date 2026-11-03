@@ -75,10 +75,13 @@ export interface PlacedBox {
   id: number;
 }
 
-// chains the outline boxes and points every switch at the first, so any
-// switch makes them all solid; in place, in entities (a list per zone)
+const OUTLINES: number[] = [BOX_TYPES.outline, BOX_TYPES.iron_outline]; // what a switch fills in
+
+// chains the outline boxes (iron ones too, in the order they're placed, as in
+// generator room) and points every switch at the first, so any switch makes
+// them all solid; in place, in entities (a list per zone)
 export function linkSwitches(entities: Buffer[][], placedBoxes: PlacedBox[]): void {
-  const outlines = placedBoxes.filter((box) => box.subtype === BOX_TYPES.outline);
+  const outlines = placedBoxes.filter((box) => OUTLINES.includes(box.subtype));
   const switches = placedBoxes.filter((box) => box.subtype === BOX_TYPES.switch);
   const firstOutline = outlines.length ? outlines[0].id : 0;
   for (const { zone, index } of switches) {
