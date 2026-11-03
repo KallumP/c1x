@@ -73,7 +73,7 @@ describe("collision cells", () => {
     const bank = quadMesh([[512, 0, 0], [512, 330, 0], [512, 330, 256], [512, 0, 256]]);
     const cells = cellsOf(merged(sand, bank));
     expect(cells.get([3, 2, 0])).toBe("floor");
-    expect(cells.get([3, 1, 0])).toBe("wall"); // the cells under it stay wall
+    expect(cells.get([3, 0, 0])).toBe("wall"); // the bank's cells under the sand stay wall
   });
 
   test("a wall more than a cell over the floor beside it stays a wall", () => {

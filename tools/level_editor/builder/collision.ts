@@ -84,6 +84,25 @@ const isInside = (at: CellPosition, size: Vec3, cell: number) =>
   at.every((index, axis) => index >= 0 && index < floorDivide(size[axis], cell));
 
 // whether there's a floor or pit in the column under (i, j, k), more than a cell below it
+const SIDES: [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+// whether the column at (i, k) has a floor cell at j with nothing above it
+const isFloorTop = (cells: Cells, [i, j, k]: CellPosition) => cells.get([i, j, k]) === "floor" && !cells.has([i, j + 1, k]);
+
+// a wall cell that tops its column one cell over the floor beside it is a lip,
+// not a wall: a small rise across a cell's middle puts the floor and the wall
+// a cell apart, though they're a few centimetres apart in the map. the game lets
+// crash step up onto a floor cell (by up to land_offset in src/solid.c, about
+// 244), but not a wall more than 50 over his feet, so it's made floor. decided
+// from the cells as they were, so a wall's cells don't become a stair
+function stepOntoLips(cells: Cells): void {
+  const lips = [...cells].filter(({ at: [i, j, k], kind }) =>
+    kind === "wall" && !cells.has([i, j + 1, k]) && SIDES.some(([di, dk]) => isFloorTop(cells, [i + di, j - 1, k + dk])));
+  for (const { at } of lips) {
+    cells.set(at, "floor");
+  }
+}
+
 function hasGroundWellBelow(cells: Cells, [i, j, k]: CellPosition): boolean {
   for (let below = 0; below < j - 1; below++) {
     const kind = cells.get([i, below, k]);
@@ -120,7 +139,8 @@ const reachesMiddle = ([, j]: CellPosition, top: number, cell: number) => top >=
 // down: the game never stops a jump at a ceiling in the octree (see FindCeilY in
 // src/solid.c), so crash would jump through it and land on top. pit wins over
 // floor, and floor over wall, where they share a cell. a wall's top goes to
-// the nearest cell top, as a floor's does (reachesMiddle). cells outside the zone
+// the nearest cell top, as a floor's does (reachesMiddle), and a wall a cell
+// over the floor beside it is a lip crash steps onto (stepOntoLips). cells outside the zone
 // (size w, h, d) are left out
 export function solidCells(mesh: Mesh, size: Vec3, cell: number): Cells {
   const cells = new Cells();
@@ -138,6 +158,7 @@ export function solidCells(mesh: Mesh, size: Vec3, cell: number): Cells {
     }
   }
   removeHangingWalls(cells);
+  stepOntoLips(cells);
   return cells;
 }
 
