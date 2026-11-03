@@ -5,6 +5,7 @@
 ### Added
 
 - the level editor's F5 saves, builds the level, and sets the game to boot into it if the build worked
+- the level editor sets a level's turn and scale (with nothing selected, on the right), saving them to its `level.cfg` and keeping its comments; boxes are drawn at the size the scale gives them
 
 ## 2026-10-30
 

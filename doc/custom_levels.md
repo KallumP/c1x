@@ -61,6 +61,8 @@ npm install
 
 Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box, so move it. **Drop to floor** on the right puts the selected box just above the floor below it.
 
+With nothing selected, the right side shows the **Level**'s turn and scale (see [If something looks wrong](#if-something-looks-wrong)). Save writes them to the level's `level.cfg`, along with the objects. Changing the scale changes how big the boxes look on the map, as they stay the same size in the game.
+
 When you're done, build and play the level from the editor too (see step 3).
 
 ## 3. Build the level and play it
@@ -102,7 +104,7 @@ boot_level = my_level
 - **Faces have the wrong textures:** the build printed a warning that an image wasn't found. Check the `map_Kd` lines in the `.mtl`.
 - **Parts of the map are missing:** the faces point the wrong way. Flip them in Blender.
 
-To keep a `--turn` or `--scale`, put it in a `level.cfg` file in the level's folder:
+To keep a `--turn` or `--scale`, set it under **Level** in the level editor, or put it in a `level.cfg` file in the level's folder:
 
 ```
 turn = 90
