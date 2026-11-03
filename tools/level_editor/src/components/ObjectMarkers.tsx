@@ -1,7 +1,8 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges } from "@react-three/drei";
+import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, stackCentres } from "../coords";
-import { boxStyle, END_COLOUR, SPAWN_COLOUR, type BoxStyle } from "../objectStyles";
+import { boxStyle, END_COLOUR, SELECTED_COLOUR, SPAWN_COLOUR, type BoxStyle } from "../objectStyles";
 import type { LevelObject, Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in tools/nslevel.py)
@@ -14,48 +15,60 @@ function base(object: LevelObject): Vec3 {
   return blenderToView([x, y, z + object.raise]);
 }
 
-export default function ObjectMarkers({ objects, scale }: { objects: LevelObject[]; scale: number }) {
-  const renderBox = (centre: Vec3, style: BoxStyle, key: number) => {
+export default function ObjectMarkers({ objects, scale, selected, onSelect }: {
+  objects: LevelObject[]; scale: number; selected: number | null; onSelect: (index: number) => void;
+}) {
+  // the selected object has white edges, the rest their own colour
+  const edgeColour = (index: number, colour: string) => (index === selected ? SELECTED_COLOUR : colour);
+
+  // pressing on an object selects it, and not the level behind it
+  const select = (index: number) => (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation();
+    onSelect(index);
+  };
+
+  const renderBox = (centre: Vec3, style: BoxStyle, edges: string, key: number) => {
     const size = boxSize(scale) * 0.98;
     return (
       <mesh key={key} position={blenderToView(centre)}>
         <boxGeometry args={[size, size, size]} />
         <meshLambertMaterial color={style.colour} transparent={style.wireframe} opacity={style.wireframe ? 0.15 : 1} />
-        <Edges color={BOX_EDGE_COLOUR} lineWidth={style.wireframe ? 2 : 1.5} />
+        <Edges color={edges} lineWidth={style.wireframe ? 2 : 1.5} />
       </mesh>
     );
   };
 
-  const renderBoxStack = (object: LevelObject, key: number) => {
+  const renderBoxStack = (object: LevelObject, index: number) => {
     const style = boxStyle(object.box!);
     const centres = stackCentres(object.at, object.raise, object.stack, scale);
+    const edges = edgeColour(index, BOX_EDGE_COLOUR);
     return (
-      <group key={key}>
-        {centres.map((centre, boxIndex) => renderBox(centre, style, boxIndex))}
+      <group key={index} onPointerDown={select(index)}>
+        {centres.map((centre, boxIndex) => renderBox(centre, style, edges, boxIndex))}
       </group>
     );
   };
 
-  const renderSpawn = (object: LevelObject, key: number) => {
+  const renderSpawn = (object: LevelObject, index: number) => {
     const height = CRASH_UNITS / scale;
     const [x, y, z] = base(object);
     return (
-      <mesh key={key} position={[x, y + height / 2, z]}>
+      <mesh key={index} position={[x, y + height / 2, z]} onPointerDown={select(index)}>
         <capsuleGeometry args={[height / 5, height * 0.6, 4, 12]} />
         <meshLambertMaterial color={SPAWN_COLOUR} />
-        <Edges color={SPAWN_COLOUR} />
+        <Edges color={edgeColour(index, SPAWN_COLOUR)} />
       </mesh>
     );
   };
 
-  const renderEnd = (object: LevelObject, key: number) => {
+  const renderEnd = (object: LevelObject, index: number) => {
     const radius = PAD_UNITS / scale;
     const [x, y, z] = base(object);
     return (
-      <mesh key={key} position={[x, y + radius / 20, z]}>
+      <mesh key={index} position={[x, y + radius / 20, z]} onPointerDown={select(index)}>
         <cylinderGeometry args={[radius, radius, radius / 10, 24]} />
         <meshLambertMaterial color={END_COLOUR} />
-        <Edges color={END_COLOUR} />
+        <Edges color={edgeColour(index, END_COLOUR)} />
       </mesh>
     );
   };

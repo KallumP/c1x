@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { fetchObjects, type LevelInfo } from "../api";
-import { parseObjects, type LevelObject } from "../objects";
+import { editorReducer, emptyEditor } from "../editor";
+import { parseObjects } from "../objects";
 
-// a level's objects.json, read when the level opens (none with no level, or until it's read)
-export function useLevelObjects(level: LevelInfo | null, onError: (message: string) => void) {
-  const [objects, setObjects] = useState<LevelObject[]>([]);
+// the open level's objects as they're edited, read from its objects.json when it opens
+export function useEditor(level: LevelInfo | null, onError: (message: string) => void) {
+  const [state, dispatch] = useReducer(editorReducer, emptyEditor);
+
   useEffect(() => {
-    setObjects([]); // so the last level's objects don't show over this one's map
+    dispatch({ type: "load", objects: [] }); // so the last level's objects don't show over this one's map
     if (!level) {
       return;
     }
@@ -16,7 +18,7 @@ export function useLevelObjects(level: LevelInfo | null, onError: (message: stri
         const fetchedText = await fetchObjects(level.name);
         const parsedObjects = parseObjects(fetchedText);
         if (isLatestLoad) {
-          setObjects(parsedObjects);
+          dispatch({ type: "load", objects: parsedObjects });
         }
       } catch (error) {
         if (isLatestLoad) {
@@ -29,5 +31,6 @@ export function useLevelObjects(level: LevelInfo | null, onError: (message: stri
       isLatestLoad = false;
     };
   }, [level, onError]);
-  return objects;
+
+  return { state, dispatch };
 }
