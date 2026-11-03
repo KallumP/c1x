@@ -7,6 +7,7 @@
 #include "cimgui.h"
 #include "extract_section.h"
 #include "extract.h"
+#include "level_editor.h"
 #include "file_dialog.h"
 #include "paths.h"
 #include "command.h"
@@ -26,7 +27,7 @@ static void StartExtraction(const char *repo) {
       : "Choose a disc image first.", sizeof(problem));
     return;
   }
-  ExtractStreamsFolder(repo, folder, sizeof(folder));
+  LevelEditorFolder(repo, folder, sizeof(folder));
   if (!StartBackgroundCommand(&extraction, folder, command)) { SDL_snprintf(problem, sizeof(problem), "Couldn't run npm in %s.", folder); }
 }
 

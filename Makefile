@@ -64,7 +64,8 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/launcher/streams.c \
 	src/launcher/extract.c \
 	src/launcher/node.c \
-	src/launcher/command.c
+	src/launcher/command.c \
+	src/launcher/level_editor.c
 
 # the launcher (see doc/launcher.md), plus the game sources it uses
 LAUNCHER_SRC = src/launcher/main.c \
@@ -82,6 +83,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/node.c \
 	src/launcher/command.c \
 	src/launcher/ui.c \
+	src/launcher/level_editor.c \
 	src/pc/settings.c \
 	src/pc/config.c
 
