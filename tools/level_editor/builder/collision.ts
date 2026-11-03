@@ -108,11 +108,19 @@ function removeHangingWalls(cells: Cells): void {
   }
 }
 
+// whether a face whose top is top reaches the middle of the cell at, so its
+// top rounds up to that cell's top. otherwise a wall only just reaching into a
+// cell would fill it: a bank 20 units over the water would be a wall 128 units
+// over the floor beside it, more than crash can step over (50 units, in
+// PlotQueryWalls in src/solid.c), an invisible wall along the bank's edge
+const reachesMiddle = ([, j]: CellPosition, top: number, cell: number) => top >= j * cell + cell / 2;
+
 // the cells just behind each face: floor behind faces facing up, pit behind the
 // faces of objects named pit..., and wall behind the rest, except faces facing
 // down: the game never stops a jump at a ceiling in the octree (see FindCeilY in
 // src/solid.c), so crash would jump through it and land on top. pit wins over
-// floor, and floor over wall, where they share a cell. cells outside the zone
+// floor, and floor over wall, where they share a cell. a wall's top goes to
+// the nearest cell top, as a floor's does (reachesMiddle). cells outside the zone
 // (size w, h, d) are left out
 export function solidCells(mesh: Mesh, size: Vec3, cell: number): Cells {
   const cells = new Cells();
@@ -122,8 +130,9 @@ export function solidCells(mesh: Mesh, size: Vec3, cell: number): Cells {
       continue;
     }
     const kind = faceKind(triangle, facing);
+    const top = kind === "floor" ? Infinity : Math.max(...cornersOf(mesh, triangle).map(([, y]) => y));
     for (const at of cellsBehind(mesh, triangle, facing, cell)) {
-      if (isInside(at, size, cell) && RANK[kind] >= RANK[cells.get(at) ?? "wall"]) {
+      if (isInside(at, size, cell) && reachesMiddle(at, top, cell) && RANK[kind] >= RANK[cells.get(at) ?? "wall"]) {
         cells.set(at, kind);
       }
     }
