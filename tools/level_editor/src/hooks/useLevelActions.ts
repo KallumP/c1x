@@ -16,17 +16,30 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
   const [status, setStatus] = useState<ActionStatus | null>(null);
   useEffect(() => setStatus(null), [level]);
 
-  // saves first, as the build reads objects.json; true if it built
+  // saves first, as the build reads objects.json; whether it saved
+  const saveFirst = async (): Promise<boolean> => {
+    if (!unsaved) {
+      return true;
+    }
+    setStatus({ text: "Saving..." });
+    if (await save()) {
+      return true;
+    }
+    setStatus({ text: "Save failed, so it wasn't built", failed: true });
+    return false;
+  };
+
+  // true if it built; busy (and saying so) from saving until the build is done
   const build = async (): Promise<boolean> => {
     if (!level || isBusy) {
       return false;
     }
-    if (unsaved && !(await save())) {
-      return false;
-    }
     setIsBusy(true);
-    setStatus({ text: "Building..." });
     try {
+      if (!(await saveFirst())) {
+        return false;
+      }
+      setStatus({ text: `Building ${level.name}...` });
       const result = await buildLevel(level.name);
       if (result.ok) {
         setStatus({ text: `Built ${level.name}`, detail: result.output });
@@ -46,6 +59,7 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
     if (!level) {
       return;
     }
+    setStatus({ text: "Setting the game to boot into it..." });
     try {
       await bootLevel(level.name);
       setStatus({ text: `The game boots into ${level.name}` });
