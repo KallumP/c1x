@@ -13,6 +13,7 @@
 #include "game_section.h"
 #include "settings_section.h"
 #include "editor_section.h"
+#include "ui.h"
 
 #define WINDOW_WIDTH  720
 #define WINDOW_HEIGHT 640
@@ -32,6 +33,8 @@ static int OpenLauncherWindow() {
   SDL_GL_SetSwapInterval(1);
   igCreateContext(0);
   igGetIO()->IniFilename = 0; /* don't write an imgui.ini */
+  LoadLauncherFonts();
+  SetLauncherStyle();
   ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
   ImGui_ImplOpenGL2_Init();
   return 1;
@@ -57,6 +60,21 @@ static int HandleEvents() {
   return 1;
 }
 
+static void DrawTab(const char *name, void (*draw)(const char *repo)) {
+  if (!igBeginTabItem(name, 0, 0)) { return; }
+  igSpacing();
+  draw(repo);
+  igEndTabItem();
+}
+
+/* the sections beside the game's, a tab each */
+static void DrawTabs() {
+  if (!igBeginTabBar("sections", 0)) { return; }
+  DrawTab("Settings", DrawSettingsSection);
+  DrawTab("Level editor", DrawEditorSection);
+  igEndTabBar();
+}
+
 /* the launcher's one imgui window, filling the sdl window */
 static void DrawLauncher() {
   ImGuiViewport *viewport;
@@ -71,9 +89,8 @@ static void DrawLauncher() {
   igBegin("launcher", 0, flags);
   DrawGameSection(repo);
   igSpacing();
-  DrawSettingsSection(repo);
   igSpacing();
-  DrawEditorSection(repo);
+  DrawTabs();
   igEnd();
 }
 
@@ -83,6 +100,8 @@ static void DrawFrame() {
   ImGui_ImplOpenGL2_NewFrame();
   ImGui_ImplSDL2_NewFrame();
   igNewFrame();
+  UpdateSettingsSection(repo);
+  UpdateEditorSection(repo);
   DrawLauncher();
   igRender();
   io = igGetIO();

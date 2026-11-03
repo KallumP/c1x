@@ -12,7 +12,8 @@
 #include "levels.h"
 #include "paths.h"
 
-#define FIELD_WIDTH 200.0f
+#define NUMBER_WIDTH 160.0f
+#define BOOT_LEVEL_WIDTH 240.0f
 #define TITLE_SCREEN "title screen"
 #define CHANGE_CHECK_MS 500 /* how often to look for settings.cfg changing */
 
@@ -58,7 +59,7 @@ static int HasUnsavedChanges(void) {
 
 /* reload settings.cfg if something else changed it, unless that would lose
    changes made here (Play or Save then writes those over it) */
-static void ReloadIfChangedElsewhere(const char *repo) {
+void UpdateSettingsSection(const char *repo) {
   char path[PATH_MAX_LEN];
   pc_settings on_disk;
 
@@ -70,15 +71,14 @@ static void ReloadIfChangedElsewhere(const char *repo) {
   if (!AreSettingsEqual(&on_disk, &saved)) { LoadSettingsSection(repo); }
 }
 
-static void DrawTooltip(const char *text) {
-  if (igIsItemHovered(0)) { igSetTooltip("%s", text); }
-}
-
 static void DrawOnOff(const char *label, int *setting, const char *tooltip) {
   bool on;
 
+  BeginFieldRow(label, tooltip);
   on = *setting != 0;
-  if (igCheckbox(label, &on)) { *setting = on; }
+  igPushID_Str(label);
+  if (igCheckbox("##on", &on)) { *setting = on; }
+  igPopID();
   DrawTooltip(tooltip);
 }
 
@@ -86,12 +86,14 @@ static void DrawNumber(const char *label, uint32_t *setting, uint32_t step,
   uint32_t max, const char *tooltip) {
   uint32_t step_fast;
 
+  BeginFieldRow(label, tooltip);
   step_fast = step * 10;
-  igPushItemWidth(FIELD_WIDTH);
-  if (igInputScalar(label, ImGuiDataType_U32, setting, &step, &step_fast, "%u", 0)) {
+  igSetNextItemWidth(NUMBER_WIDTH);
+  igPushID_Str(label);
+  if (igInputScalar("##number", ImGuiDataType_U32, setting, &step, &step_fast, "%u", 0)) {
     if (*setting > max) { *setting = max; }
   }
-  igPopItemWidth();
+  igPopID();
   DrawTooltip(tooltip);
 }
 
@@ -118,24 +120,27 @@ static void BootLevelPreview(char *preview, size_t size) {
   }
 }
 
+#define BOOT_LEVEL_TOOLTIP "Start in a level built to build/levels/ instead of the title screen."
+
 static void DrawBootLevel() {
   char preview[64];
   int i;
 
+  BeginFieldRow("Boot level", BOOT_LEVEL_TOOLTIP);
   BootLevelPreview(preview, sizeof(preview));
-  igPushItemWidth(FIELD_WIDTH);
-  if (igBeginCombo("Boot level", preview, 0)) {
+  igSetNextItemWidth(BOOT_LEVEL_WIDTH);
+  if (igBeginCombo("##boot_level", preview, 0)) {
     DrawBootLevelChoice(TITLE_SCREEN, "");
     for (i=0;i<levels.count;i++) {
       DrawBootLevelChoice(levels.names[i], levels.names[i]);
     }
     igEndCombo();
   }
-  igPopItemWidth();
-  DrawTooltip("Start in a level built to build/levels/ instead of the title screen.");
+  DrawTooltip(BOOT_LEVEL_TOOLTIP);
 }
 
 static void DrawFields() {
+  if (!BeginFieldRows("settings_fields")) { return; }
   DrawOnOff("Loading screen", &settings.loading_screen,
     "Show each level's loading screen while it loads.");
   DrawNumber("Minimum loading screen time (ms)", &settings.loading_screen_min_ms,
@@ -152,12 +157,13 @@ static void DrawFields() {
   DrawNumber("Replay speed", &settings.replay_speed, 1, SETTINGS_REPLAY_SPEED_MAX,
     "How many times normal speed replays play at, or 0 for as fast as possible.");
   DrawBootLevel();
+  EndFieldRows();
 }
 
 static void DrawButtons(const char *repo) {
-  if (igButton("Save", (ImVec2){120, 0})) { SaveSettingsSection(repo); }
+  if (igButton("Save", (ImVec2){BUTTON_WIDTH, 0})) { SaveSettingsSection(repo); }
   igSameLine(0, -1);
-  if (igButton("Reload", (ImVec2){120, 0})) { LoadSettingsSection(repo); }
+  if (igButton("Reload", (ImVec2){BUTTON_WIDTH, 0})) { LoadSettingsSection(repo); }
   DrawTooltip("Read settings.cfg again, and look for newly built levels.");
   if (!save_status[0]) { return; }
   if (save_failed) { igTextColored(PROBLEM_COLOUR, "%s", save_status); }
@@ -165,9 +171,6 @@ static void DrawButtons(const char *repo) {
 }
 
 void DrawSettingsSection(const char *repo) {
-  ReloadIfChangedElsewhere(repo);
-  igText("Settings");
-  igSeparator();
   DrawFields();
   igSpacing();
   DrawButtons(repo);

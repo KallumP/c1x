@@ -63,7 +63,7 @@ static void DrawStreamsMissing(const char *repo) {
 static void DrawPlayButton(const char *repo) {
   char path[PATH_MAX_LEN];
 
-  if (igButton("Play", (ImVec2){120, 0})) {
+  if (DrawBigButton("Play")) {
     play_problem[0] = 0;
     if (!SaveSettingsSection(repo)) {
       SDL_strlcpy(play_problem, "Couldn't save the settings, so the game wasn't started.",
@@ -78,8 +78,7 @@ static void DrawPlayButton(const char *repo) {
 }
 
 void DrawGameSection(const char *repo) {
-  igText("Game");
-  igSeparator();
+  DrawHeading("Game");
   if (!IsGameBuilt(repo)) {
     DrawNotBuilt(repo);
     return;
