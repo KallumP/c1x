@@ -73,7 +73,7 @@ When you're done, build and play the level from the editor too (see step 3).
 pip install pillow
 ```
 
-**From the level editor:**
+Then, in the level editor:
 
 1. Click **Build** at the top right. It saves your changes, then builds the level. It says `Built my_level` when it's done, or why it failed (hover over the message for the full output).
 2. Click **Boot**. It sets the game to start in this level, by writing `boot_level = my_level` in `settings.cfg`.
@@ -81,32 +81,13 @@ pip install pillow
 
 Or press **F5**, which does steps 1 and 2 together: it saves, builds, then sets the game to boot into the level if the build worked.
 
-**Or from the command line:** from the project folder, run:
-
-```
-python tools/build_level.py level_src/my_level
-```
-
-It prints `wrote …` when it's done. Then add this line to `settings.cfg`, and run `build/c1.exe`:
-
-```
-boot_level = my_level
-```
-
 **After any change** to the map or objects, build again. You don't need to rebuild the game.
 
 **To stop booting into the level** and start at the title screen again, remove the `boot_level` line from `settings.cfg`, or put a `#` in front of it. The game keeps booting into the level until you do, even after you close the editor.
 
 ### If something looks wrong
 
-- **Crash faces sideways or backwards:** the route doesn't run along +Y. Add `--turn 90` (or `--turn 270`) to the build command.
-- **Crash looks too big or too small:** add `--scale 400` with a different number (400 is normal; bigger makes the map bigger).
-- **Faces have the wrong textures:** the build printed a warning that an image wasn't found. Check the `map_Kd` lines in the `.mtl`.
+- **Crash faces sideways or backwards:** the route doesn't run along +Y. With nothing selected in the editor, set **turn** under **Level** to 90 (or 270), then build again.
+- **Crash looks too big or too small:** set **scale** under **Level** to a different number (400 is normal; bigger makes the map bigger), then build again.
+- **Faces have the wrong textures:** the build warned that an image wasn't found (hover over the build message to see it). Check the `map_Kd` lines in the `.mtl`.
 - **Parts of the map are missing:** the faces point the wrong way. Flip them in Blender.
-
-To keep a `--turn` or `--scale`, set it under **Level** in the level editor, or put it in a `level.cfg` file in the level's folder:
-
-```
-turn = 90
-scale = 400
-```
