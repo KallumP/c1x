@@ -16,6 +16,8 @@ extern void ResetControls(launcher_controls *c);
 extern int ReadControlsFile(const char *path, launcher_controls *c);
 extern char *SetButtonLines(const char *text, const char *name, const SDL_Scancode *keys,
   int count);
+extern int SaveControlsFile(const char *path, const char *example_path,
+  const launcher_controls *c);
 extern int AreControlsEqual(const launcher_controls *a, const launcher_controls *b);
 
 #endif /* _LAUNCHER_CONTROLS_FILE_H_ */

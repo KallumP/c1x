@@ -127,3 +127,52 @@ UTEST(launcher_controls, set_keeps_windows_line_endings) {
   ASSERT_TRUE(SetButtonGives("start = Space\r\nselect = Tab\r\n", "start", keys, 2,
     "start = Return\r\nstart = Keypad Enter\r\nselect = Tab\r\n"));
 }
+
+#define LAUNCHER_CONTROLS_EXAMPLE_PATH "build/test_launcher_controls.example.cfg"
+
+UTEST(launcher_controls, saved_controls_read_back_the_same) {
+  launcher_controls c, read;
+  int cross;
+
+  remove(LAUNCHER_CONTROLS_PATH);
+  ResetControls(&c);
+  cross = FindPadButton("cross");
+  c.keys[cross][0] = SDL_SCANCODE_LSHIFT;
+  c.keys[cross][1] = SDL_SCANCODE_KP_2;
+  c.key_count[cross] = 2;
+  ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, "no_such_example.cfg", &c));
+  ReadControlsFile(LAUNCHER_CONTROLS_PATH, &read);
+  ASSERT_TRUE(AreControlsEqual(&c, &read));
+}
+
+UTEST(launcher_controls, save_starts_from_the_example_without_a_controls_file) {
+  launcher_controls c;
+  char *text;
+
+  remove(LAUNCHER_CONTROLS_PATH);
+  {
+    FILE *file = fopen(LAUNCHER_CONTROLS_EXAMPLE_PATH, "wb");
+    fputs("# example keys\ncross    = Z\n", file);
+    fclose(file);
+  }
+  ResetControls(&c);
+  c.keys[FindPadButton("cross")][0] = SDL_SCANCODE_K;
+  ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, LAUNCHER_CONTROLS_EXAMPLE_PATH, &c));
+  text = SDL_LoadFile(LAUNCHER_CONTROLS_PATH, 0);
+  ASSERT_TRUE(text != 0);
+  ASSERT_TRUE(strstr(text, "# example keys\ncross    = K\n") == text);
+  SDL_free(text);
+}
+
+UTEST(launcher_controls, save_keeps_the_controls_files_other_lines) {
+  launcher_controls c;
+  char *text;
+
+  WriteLauncherControls("# mine\nstart = Return\n\nselect = Space\n");
+  ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c);
+  c.keys[FindPadButton("select")][0] = SDL_SCANCODE_BACKSPACE;
+  ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, "no_such_example.cfg", &c));
+  text = SDL_LoadFile(LAUNCHER_CONTROLS_PATH, 0);
+  ASSERT_TRUE(strstr(text, "# mine\nstart = Return\n\nselect = Backspace\n") == text);
+  SDL_free(text);
+}
