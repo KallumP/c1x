@@ -58,6 +58,8 @@ Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or ano
 
 The arrow at the spawn points the way the camera faces when the level starts. With nothing selected, the right side shows the **Level**'s turn and scale (see [If something looks wrong](#if-something-looks-wrong)), and changing the turn turns the arrow. Save writes them to the level's `level.cfg`, along with the objects. Changing the scale changes how big the boxes look on the map, as they stay the same size in the game.
 
+Below it, **Sky** sets the sky behind the level: a top colour filling the screen down to **split**, and a bottom colour below it, with a preview. It's N. Sanity Beach's blue over olive unless you change it, and it's saved to `level.cfg` too.
+
 When you're done, build and play the level from the editor too (see step 3).
 
 ## 3. Build the level and play it
