@@ -80,6 +80,17 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(templates.textures.length).toBeGreaterThan(1);
   });
 
+  test("a box of a subtype the level has none of is its basic box with that subtype", () => {
+    const templates = readTemplates(base);
+    const basic = templates.entity(BOX_TYPE, 2);
+    for (const subtype of [7, 13, 19]) {
+      const box = templates.entity(BOX_TYPE, subtype);
+      expect(entityType(box)).toEqual([BOX_TYPE, subtype]);
+      expect(box.length).toBe(basic.length);
+    }
+    expect(entityType(templates.entity(BOX_TYPE, 2))).toEqual([BOX_TYPE, 2]); // the basic box itself is unchanged
+  });
+
   test("the warp pad's base is in the base level's terrain under it", () => {
     const padBase = warpPadBase(base);
     expect(padBase.polygons.length).toBeGreaterThan(20);
