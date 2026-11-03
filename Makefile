@@ -64,7 +64,8 @@ TEST_SRC = $(wildcard tests/*.c) \
 LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/process.c \
 	src/launcher/paths.c \
-	src/launcher/game.c
+	src/launcher/game.c \
+	src/launcher/game_section.c
 
 OBJ = $(SRC:.c=.o)
 OUT = c1

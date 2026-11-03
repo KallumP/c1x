@@ -9,12 +9,15 @@
 #define CIMGUI_USE_OPENGL2
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include "paths.h"
+#include "game_section.h"
 
 #define WINDOW_WIDTH  720
 #define WINDOW_HEIGHT 640
 
 static SDL_Window *window;
 static SDL_GLContext gl_context;
+static char repo[PATH_MAX_LEN]; /* the repo folder, above the launcher's build folder */
 
 static int OpenLauncherWindow() {
   if (SDL_Init(SDL_INIT_VIDEO) != 0) { return 0; }
@@ -63,7 +66,7 @@ static void DrawLauncher() {
   flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove
     | ImGuiWindowFlags_NoSavedSettings;
   igBegin("launcher", 0, flags);
-  igText("c1x launcher");
+  DrawGameSection(repo);
   igEnd();
 }
 
@@ -84,6 +87,9 @@ static void DrawFrame() {
 }
 
 int main(int argc, char *argv[]) {
+  if (!FindRepoFolder(repo, sizeof(repo))) {
+    SDL_strlcpy(repo, "..", sizeof(repo)); /* assume it's run from build/ */
+  }
   if (!OpenLauncherWindow()) {
     fprintf(stderr, "could not open the launcher's window: %s\n", SDL_GetError());
     return 1;
