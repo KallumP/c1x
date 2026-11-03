@@ -2,7 +2,7 @@
 import { Edges } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, stackCentres } from "../coords";
-import { boxStyle, END_COLOUR, SELECTED_COLOUR, SPAWN_COLOUR, type BoxStyle } from "../objectStyles";
+import { boxStyle, END_COLOUR, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import type { LevelObject, Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in tools/nslevel.py)
@@ -15,11 +15,20 @@ function base(object: LevelObject): Vec3 {
   return blenderToView([x, y, z + object.raise]);
 }
 
-export default function ObjectMarkers({ objects, scale, selected, onSelect }: {
-  objects: LevelObject[]; scale: number; selected: number | null; onSelect: (index: number) => void;
+export default function ObjectMarkers({ objects, scale, selected, warnings, onSelect }: {
+  objects: LevelObject[];
+  scale: number;
+  selected: number | null;
+  warnings: Set<number>; // the boxes in a wall or another box
+  onSelect: (index: number) => void;
 }) {
-  // the selected object has white edges, the rest their own colour
-  const edgeColour = (index: number, colour: string) => (index === selected ? SELECTED_COLOUR : colour);
+  // a box in a wall or another box has red edges, the selected object white, the rest their own colour
+  const edgeColour = (index: number, colour: string) => {
+    if (warnings.has(index)) {
+      return WARNING_COLOUR;
+    }
+    return index === selected ? SELECTED_COLOUR : colour;
+  };
 
   // pressing on an object selects it, and not the level behind it
   const select = (index: number) => (event: ThreeEvent<PointerEvent>) => {
