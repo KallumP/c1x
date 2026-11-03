@@ -15,7 +15,7 @@ export const CRASH: [number, number] = [0, 0];
 export const WARP_PAD: [number, number] = [32, 1]; // WarpC: the warp pad that ends a level, as on n. sanity beach
 export const BOX_TYPE = 34;      // BoxsC: boxes, by subtype
 export const BOX_HEIGHT = 400;   // a box on top of another is this much higher (GoolObjectSpawn in src/gool.c)
-export const UNBREAKABLE_BOXES = [BOX_TYPES.iron, BOX_TYPES.switch]; // not in the level's total
+export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch]; // not in the level's total
 
 // a switch (! box) makes the outline boxes solid along a chain of ids in their
 // entities' init_flags_c: the switch's is the first outline box's id, each
