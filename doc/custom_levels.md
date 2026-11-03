@@ -61,7 +61,7 @@ npm install
 
 Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box, so move it. **Drop to floor** on the right puts the selected box just above the floor below it.
 
-The **Build** and **Boot** buttons at the top right do step 3 for you: Build saves and builds the level, and Boot sets the game to start in it.
+When you're done, build and play the level from the editor too (see step 3).
 
 ## 3. Build the level and play it
 
@@ -71,23 +71,27 @@ The **Build** and **Boot** buttons at the top right do step 3 for you: Build sav
 pip install pillow
 ```
 
-**Build the level.** From the project folder, run:
+**From the level editor:**
+
+1. Click **Build** at the top right. It saves your changes, then builds the level. It says `Built my_level` when it's done, or why it failed (hover over the message for the full output).
+2. Click **Boot**. It sets the game to start in this level, by writing `boot_level = my_level` in `settings.cfg`.
+3. Run `build/c1.exe`.
+
+**Or from the command line:** from the project folder, run:
 
 ```
 python tools/build_level.py level_src/my_level
 ```
 
-It prints `wrote …` when it's done.
-
-**Boot into it.** Add this line to `settings.cfg`:
+It prints `wrote …` when it's done. Then add this line to `settings.cfg`, and run `build/c1.exe`:
 
 ```
 boot_level = my_level
 ```
 
-Then run `build/c1.exe`. To go back to the title screen, remove the line.
+**After any change** to the map or objects, build again. You don't need to rebuild the game.
 
-**After any change** to the map or objects, run `build_level.py` again. You don't need to rebuild the game.
+**To stop booting into the level** and start at the title screen again, remove the `boot_level` line from `settings.cfg`, or put a `#` in front of it. The game keeps booting into the level until you do, even after you close the editor.
 
 ### If something looks wrong
 
