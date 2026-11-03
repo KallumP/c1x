@@ -1,4 +1,5 @@
 #include "utest.h"
+#include <SDL2/SDL.h>
 #include "launcher/settings_file.h"
 
 #define LAUNCHER_SETTINGS_PATH "build/test_launcher_settings.cfg"
@@ -41,4 +42,110 @@ UTEST(launcher_settings, skips_invalid_lines) {
   ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &s));
   ASSERT_EQ(0, s.speed_display);
   ASSERT_EQ(2u, s.replay_speed);
+}
+
+/* SetSettingLine's result for text, compared with expected, then freed */
+static int SetLineGives(const char *text, const char *name, const char *value,
+  const char *expected) {
+  char *result;
+  int same;
+
+  result = SetSettingLine(text, name, value);
+  same = strcmp(result, expected) == 0;
+  if (!same) { printf("got \"%s\"\n", result); }
+  SDL_free(result);
+  return same;
+}
+
+UTEST(launcher_settings, set_changes_a_settings_line_and_keeps_the_rest) {
+  ASSERT_TRUE(SetLineGives("# speed\nspeed_display = off\nreplay_speed = 1\n",
+    "speed_display", "on",
+    "# speed\nspeed_display = on\nreplay_speed = 1\n"));
+}
+
+UTEST(launcher_settings, set_adds_a_line_for_a_setting_not_in_the_file) {
+  ASSERT_TRUE(SetLineGives("# settings\nreplay_speed = 1\n", "boot_level", "tide_ruins",
+    "# settings\nreplay_speed = 1\nboot_level = tide_ruins\n"));
+  ASSERT_TRUE(SetLineGives("replay_speed = 1", "boot_level", "tide_ruins",
+    "replay_speed = 1\nboot_level = tide_ruins\n"));
+  ASSERT_TRUE(SetLineGives("", "boot_level", "tide_ruins", "boot_level = tide_ruins\n"));
+}
+
+UTEST(launcher_settings, set_leaves_commented_out_lines) {
+  ASSERT_TRUE(SetLineGives("# boot_level = mossy_creek\n", "boot_level", "tide_ruins",
+    "# boot_level = mossy_creek\nboot_level = tide_ruins\n"));
+}
+
+UTEST(launcher_settings, set_keeps_windows_line_endings) {
+  ASSERT_TRUE(SetLineGives("# speed\r\nspeed_display = off\r\n", "replay_speed", "4",
+    "# speed\r\nspeed_display = off\r\nreplay_speed = 4\r\n"));
+}
+
+UTEST(launcher_settings, set_leaves_a_line_already_set_to_the_value) {
+  ASSERT_TRUE(SetLineGives("Speed_Display = ON\n", "speed_display", "on",
+    "Speed_Display = ON\n"));
+}
+
+UTEST(launcher_settings, save_keeps_the_settings_files_other_lines) {
+  pc_settings s;
+  char text[512];
+  FILE *file;
+  size_t len;
+
+  WriteLauncherSettings("# mine\nspeed_display = off\nfavourite = crash\n");
+  SettingsReset(&s);
+  s.speed_display = 1;
+  s.replay_speed = 3;
+  ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
+  file = fopen(LAUNCHER_SETTINGS_PATH, "rb");
+  len = fread(text, 1, sizeof(text)-1, file);
+  fclose(file);
+  text[len] = 0;
+  ASSERT_TRUE(strstr(text, "# mine\nspeed_display = on\nfavourite = crash\n") == text);
+  ASSERT_TRUE(strstr(text, "replay_speed = 3\n") != 0);
+  ASSERT_TRUE(strstr(text, "loading_screen = on\n") != 0);
+}
+
+UTEST(launcher_settings, save_starts_from_the_example_without_a_settings_file) {
+  pc_settings s;
+  char text[512];
+  FILE *file;
+  size_t len;
+
+  remove(LAUNCHER_SETTINGS_PATH);
+  file = fopen("build/test_launcher_settings.example.cfg", "wb");
+  fputs("# example\nspeed_display = off\n", file);
+  fclose(file);
+  SettingsReset(&s);
+  ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH,
+    "build/test_launcher_settings.example.cfg", &s));
+  file = fopen(LAUNCHER_SETTINGS_PATH, "rb");
+  len = fread(text, 1, sizeof(text)-1, file);
+  fclose(file);
+  text[len] = 0;
+  ASSERT_TRUE(strstr(text, "# example\nspeed_display = off\n") == text);
+}
+
+UTEST(launcher_settings, saved_settings_read_back_the_same) {
+  pc_settings s, read;
+
+  remove(LAUNCHER_SETTINGS_PATH);
+  SettingsReset(&s);
+  s.loading_screen = 0;
+  s.loading_screen_min_ms = 500;
+  s.skip_splash_screens = 1;
+  s.fix_model_draw_order = 1;
+  s.replay_inputs = 1;
+  s.replay_speed = 0;
+  strcpy(s.boot_level, "tide_ruins");
+  ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
+  ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &read));
+  ASSERT_EQ(0, read.loading_screen);
+  ASSERT_EQ(500u, read.loading_screen_min_ms);
+  ASSERT_EQ(0, read.speed_display);
+  ASSERT_EQ(1, read.skip_splash_screens);
+  ASSERT_EQ(1, read.fix_model_draw_order);
+  ASSERT_EQ(1, read.replay_inputs);
+  ASSERT_EQ(0u, read.replay_speed);
+  ASSERT_STREQ("tide_ruins", read.boot_level);
 }
