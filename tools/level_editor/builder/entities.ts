@@ -36,6 +36,7 @@ function withField(item: Buffer, write: (copy: Buffer) => void): Buffer {
 }
 
 export const withEntityId = (item: Buffer, id: number) => withField(item, (copy) => copy.writeUInt16LE(id, ENTITY_ID));
+export const withSubtype = (item: Buffer, subtype: number) => withField(item, (copy) => { copy[ENTITY_TYPE + 1] = subtype; });
 
 // the entity with its first point at (x, y, z), zone units relative to its zone
 export function withPosition(item: Buffer, [x, y, z]: Vec3): Buffer {

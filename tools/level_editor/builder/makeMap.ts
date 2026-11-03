@@ -1,7 +1,7 @@
 // a custom level from a map modelled in blender (its .obj's text): its faces
 // as the level's world meshes and collision, crash, and the objects placed in
-// it; built from a real level (n. sanity beach) for crash, the objects and
-// textures. faces of materials with an image get it, the rest the beach's textures
+// it; built from a real level (the base level) for crash, the objects and
+// textures. faces of materials with an image get it, the rest the base level's textures
 import type { LevelObject } from "../src/objects";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { Cells, solidCells } from "./collision";
