@@ -137,6 +137,7 @@ export default function App() {
       <ObjectMarkers
         objects={state.objects}
         scale={scale}
+        turn={levelCfg.cfg.turn}
         selected={state.selected}
         warnings={warnings}
         onSelect={drag.start}
