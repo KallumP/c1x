@@ -82,7 +82,8 @@ Project structure is listed below, including descriptions for each file.
 │   │   ├── paths.c,h        # the repo folder, from the launcher's own path
 │   │   ├── process.c,h      # running programs, and commands in the background with their output
 │   │   ├── settings_file.c,h    # reading settings.cfg, and saving it keeping its other lines
-│   │   └── settings_section.c,h # the settings section (a field for each setting, Save)
+│   │   ├── settings_section.c,h # the settings section (a field for each setting, Save)
+│   │   └── streams.c,h      # the game's files missing from streams/
 │   ├── util                 # utilities
 │   │   ├── list.c,h         # generic linked list
 │   │   └── tree.c,h         # generic tree
@@ -107,7 +108,7 @@ Project structure is listed below, including descriptions for each file.
 │   ├── test_gui.c           # in-game GUI tree node insertion and removal
 │   ├── test_speed.c         # crash's speed measurement and tracking
 │   ├── test_follow.c        # the follow camera's sideways offset
-│   ├── test_launcher_*.c    # the launcher: its paths, running commands, the game, built levels and settings.cfg
+│   ├── test_launcher_*.c    # the launcher: its paths, running commands, the game, its files in streams/, built levels and settings.cfg
 │   └── test_sf2.c           # soundfont record struct sizes
 ├── tools                    # helper scripts
 │   └── level_editor         # the level editor and the tools beside it, in typescript (npm install first)
