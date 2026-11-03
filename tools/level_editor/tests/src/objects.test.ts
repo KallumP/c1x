@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BOX_TYPES, formatObjects, parseObjects } from "../../src/objects";
+import { BOX_TYPES, boxTypeName, formatObjects, parseObjects } from "../../src/objects";
 
 describe("parseObjects", () => {
   test("reads spawn, end and boxes with their settings", () => {
@@ -81,5 +81,16 @@ describe("formatObjects", () => {
   test("reads back what it writes", () => {
     const objects = parseObjects(`[{"kind": "box", "type": "arrow", "at": [8, 35.5, 0], "raise": 2.5, "stack": 3}]`);
     expect(parseObjects(formatObjects(objects))).toEqual(objects);
+  });
+});
+
+describe("boxTypeName", () => {
+  test("is the type a box was given", () => {
+    expect(boxTypeName("life")).toBe("life");
+  });
+
+  test("is the type a subtype number has", () => {
+    expect(boxTypeName(13)).toBe("outline");
+    expect(boxTypeName(9)).toBe("aku_aku");
   });
 });

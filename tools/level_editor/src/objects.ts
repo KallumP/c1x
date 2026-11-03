@@ -23,6 +23,14 @@ export interface LevelObject {
   box?: BoxType | number; // a box's type, or its subtype number
 }
 
+// a box's type name, from its type or its subtype number
+export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
+  if (typeof box === "string") {
+    return box;
+  }
+  return (Object.keys(BOX_TYPES) as BoxType[]).find((type) => BOX_TYPES[type] === box)!;
+}
+
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 

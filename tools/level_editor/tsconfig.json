@@ -11,7 +11,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": ["node", "@react-three/fiber"]
   },
   "include": ["src", "server", "tests", "vite.config.ts"]
 }
