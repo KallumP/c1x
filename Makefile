@@ -75,6 +75,8 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/levels.c \
 	src/launcher/streams.c \
 	src/launcher/extract.c \
+	src/launcher/extract_section.c \
+	src/launcher/file_dialog.c \
 	src/pc/settings.c \
 	src/pc/config.c
 
@@ -96,7 +98,7 @@ LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lm -lstdc++
 OUT = build/c1.exe
 TEST_OUT = build/tests.exe
 LAUNCHER_OUT = build/launcher.exe
-LAUNCHER_LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lm -lstdc++ -mwindows
+LAUNCHER_LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lcomdlg32 -lm -lstdc++ -mwindows
 else
 LDLIBS = -lSDL2 -lGL -lfluidsynth -lm -lstdc++
 LAUNCHER_LDLIBS = -lSDL2 -lGL -lm -lstdc++

@@ -10,6 +10,7 @@
 #include "paths.h"
 #include "settings_section.h"
 #include "streams.h"
+#include "extract_section.h"
 
 #define PROBLEM_COLOUR ((ImVec4){1.0f, 0.45f, 0.4f, 1.0f})
 #define MISSING_FILES_SHOWN 8
@@ -52,9 +53,11 @@ static void DrawStreamsMissing(const char *repo) {
       missing_streams.count, STREAM_FILE_COUNT, folder);
     DrawMissingFileNames();
   }
-  igTextWrapped("Copy them from your game disc, or extract them from a disc image with "
-    "npm run extract-streams (see doc/running.md).");
+  igTextWrapped("Copy them from your game disc (see doc/running.md) and click Check again, "
+    "or extract them from a disc image of your own copy.");
   if (igButton("Check again", (ImVec2){0, 0})) { LoadGameSection(repo); }
+  igSpacing();
+  if (DrawExtractStreams(repo)) { LoadGameSection(repo); }
 }
 
 static void DrawPlayButton(const char *repo) {
