@@ -8,21 +8,12 @@ import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevelObjects } from "./hooks/useLevelObjects";
 import { useLevels } from "./hooks/useLevels";
 
-function LevelView({ level, onError }: { level: LevelInfo; onError: (message: string) => void }) {
-  const group = useLevelGroup(level, onError);
-  const objects = useLevelObjects(level, onError);
-  return (
-    <>
-      {group && <LevelMesh group={group} />}
-      <ObjectMarkers objects={objects} scale={level.scale} />
-    </>
-  );
-}
-
 export default function App() {
   const [error, setError] = useState<string | null>(null);
   const showError = useCallback((message: string) => setError(message), []);
   const { levels, level, open } = useLevels(showError);
+  const group = useLevelGroup(level, showError);
+  const objects = useLevelObjects(level, showError);
 
   const openLevel = (name: string) => {
     setError(null);
@@ -36,9 +27,16 @@ export default function App() {
     </header>
   );
 
+  const renderLevel = (shownLevel: LevelInfo) => (
+    <>
+      {group && <LevelMesh group={group} />}
+      <ObjectMarkers objects={objects} scale={shownLevel.scale} />
+    </>
+  );
+
   const renderMain = () => (
     <main className="viewport">
-      <Scene>{level && <LevelView key={level.name} level={level} onError={showError} />}</Scene>
+      <Scene>{level && renderLevel(level)}</Scene>
     </main>
   );
 
