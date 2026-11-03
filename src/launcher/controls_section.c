@@ -10,11 +10,12 @@
 #include "paths.h"
 #include "ui.h"
 
-#define KEY_WIDTH 96.0f
-#define LABEL_WIDTH 80.0f
+#define KEY_MIN_WIDTH 72.0f /* so one letter keys are still easy to click */
+#define LABEL_WIDTH 100.0f
+#define ROW_SPACING ((ImVec2){6, 4})
 #define NOT_CAPTURING -1
 
-/* the buttons in the order they're shown, a pair to a row */
+/* the buttons in the order they're shown, one to a row */
 static const struct {
   const char *name;  /* in controls.cfg */
   const char *label;
@@ -102,26 +103,34 @@ static int IsCapturing(int button, int key) {
   return capturing_button == button && capturing_key == key;
 }
 
+/* a button wide enough for name, and at least KEY_MIN_WIDTH */
+static int DrawKeyButton(const char *name) {
+  ImVec2 text_size;
+
+  igCalcTextSize(&text_size, name, 0, false, -1);
+  return igButton(name, (ImVec2){SDL_max(text_size.x + 2 * igGetStyle()->FramePadding.x, KEY_MIN_WIDTH), 0});
+}
+
 static void DrawKey(int button, int key) {
   const char *name;
 
   name = IsCapturing(button, key) ? "Press a key" : SDL_GetScancodeName(controls.keys[button][key]);
   igPushID_Int(key);
-  if (igButton(name, (ImVec2){KEY_WIDTH, 0})) { StartCapture(button, key); }
+  if (DrawKeyButton(name)) { StartCapture(button, key); }
   if (controls.key_count[button] > 1) {
-    igSameLine(0, 2);
+    igSameLine(0, 1);
     if (igButton("x", (ImVec2){0, 0})) { RemoveKey(button, key); }
     DrawTooltip("Remove this key");
   }
   igPopID();
-  igSameLine(0, -1);
+  igSameLine(0, 12); /* a gap between one key and the next */
 }
 
 static void DrawAddKey(int button) {
   int count = controls.key_count[button];
 
   if (IsCapturing(button, count)) {
-    igButton("Press a key", (ImVec2){KEY_WIDTH, 0});
+    DrawKeyButton("Press a key");
     return;
   }
   if (count == BUTTON_KEYS_MAX) { return; }
@@ -133,6 +142,7 @@ static void DrawButtonKeys(int shown) {
   int button, key;
 
   button = FindPadButton(shown_buttons[shown].name);
+  igTableNextRow(0, 0);
   igTableNextColumn();
   igAlignTextToFramePadding();
   igText("%s", shown_buttons[shown].label);
@@ -146,16 +156,14 @@ static void DrawButtonKeys(int shown) {
 static void DrawKeyTable(void) {
   int shown;
 
-  if (!igBeginTable("controls_keys", 4, ImGuiTableFlags_SizingFixedFit, (ImVec2){0, 0}, 0)) { return; }
-  igTableSetupColumn("label", ImGuiTableColumnFlags_WidthFixed, LABEL_WIDTH, 0);
-  igTableSetupColumn("keys", ImGuiTableColumnFlags_WidthStretch, 0, 0);
-  igTableSetupColumn("label2", ImGuiTableColumnFlags_WidthFixed, LABEL_WIDTH, 0);
-  igTableSetupColumn("keys2", ImGuiTableColumnFlags_WidthStretch, 0, 0);
-  for (shown = 0; shown < PAD_BUTTON_COUNT; shown++) {
-    if (shown % 2 == 0) { igTableNextRow(0, 0); }
-    DrawButtonKeys(shown);
+  igPushStyleVar_Vec2(ImGuiStyleVar_ItemSpacing, ROW_SPACING); /* 16 rows, kept close */
+  if (igBeginTable("controls_keys", 2, ImGuiTableFlags_SizingFixedFit, (ImVec2){0, 0}, 0)) {
+    igTableSetupColumn("label", ImGuiTableColumnFlags_WidthFixed, LABEL_WIDTH, 0);
+    igTableSetupColumn("keys", ImGuiTableColumnFlags_WidthStretch, 0, 0);
+    for (shown = 0; shown < PAD_BUTTON_COUNT; shown++) { DrawButtonKeys(shown); }
+    igEndTable();
   }
-  igEndTable();
+  igPopStyleVar(1);
 }
 
 static void DrawButtons(const char *repo) {
