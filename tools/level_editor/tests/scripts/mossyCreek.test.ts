@@ -9,7 +9,7 @@ const committed = (file: string) =>
 describe("python's numbers, for the same files", () => {
   test("round(x, n) rounds the exact value, halves to even", () => {
     expect(pythonRound(0.03125, 4)).toBe(0.0312); // exactly a half: to even
-    expect(pythonRound(0.03135, 4)).toBe(0.0313); // just under a half, as a double
+    expect(pythonRound(0.03135, 4)).toBe(0.0314); // just over a half, as a double
     expect(pythonRound(2.675, 2)).toBe(2.67);
     expect(Object.is(pythonRound(-0.00001, 4), -0)).toBe(true);
   });
@@ -24,8 +24,10 @@ describe("mossy creek's generator", () => {
     expect(mossyCreekMtl()).toBe(committed("mossy_creek.mtl"));
   });
 
-  test("makes the committed objects.json", () => {
-    expect(mossyCreekObjects()).toBe(committed("objects.json"));
+  test("makes the objects.json make_map.py made", () => {
+    // the committed one has since had its boxes moved in the level editor, which writes it its own way
+    const madeByPython = readFileSync(fileURLToPath(new URL("mossyCreekObjects.json", import.meta.url)), "utf8");
+    expect(mossyCreekObjects()).toBe(madeByPython);
   });
 
   test("makes the committed .obj", () => {
