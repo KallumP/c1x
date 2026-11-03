@@ -204,6 +204,11 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(make(MAP_OBJ, { scale: 256 }).level.nsd.ldat.boxTotal).toBe(0);
   });
 
+  test("both tnts count towards the total, but not the iron arrow or iron outline", () => {
+    const objects = [box([1, 2, 0.5], 0), box([-1, 2, 0.5], 11), box([1, 3, 0.5], 15), box([-1, 3, 0.5], 19)];
+    expect(make(MAP_OBJ, { scale: 256, objects }).level.nsd.ldat.boxTotal).toBe(2);
+  });
+
   test("turn runs the map along z", () => {
     // turned a quarter, the 16 m long floor runs along x
     const rect = make(MAP_OBJ, { scale: 256, turn: 90 }).zone.items[1];
