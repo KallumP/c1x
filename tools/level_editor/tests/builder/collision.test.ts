@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { solidCells, type CellKind } from "../../builder/collision";
+import { addFloor, solidCells, type CellKind } from "../../builder/collision";
 import type { Mesh } from "../../builder/obj";
 import type { Vec3 } from "../../builder/vectors";
 import { floorMesh, meshOf, merged, quadMesh } from "./meshes";
@@ -27,6 +27,17 @@ describe("collision cells", () => {
     expect(kinds(floor)).toEqual(new Set(["floor"]));
   });
 
+  test("a floor can be added where the map has none, solid as a floor face there would be", () => {
+    // for the warp pad's base, which isn't part of the map but has to be stood on
+    const cells = cellsOf(floorMesh(0, 0, 512, 256, 0));
+    addFloor(cells, [128, 0], [384, 256], 600, SIZE, 128);
+    const added = positionsOfKind(floorMesh(128, 0, 384, 256, 600), "floor");
+    expect(added.size).toBeGreaterThan(0);
+    for (const at of added) {
+      expect(cells.get(at.split(",").map(Number) as [number, number, number])).toBe("floor");
+    }
+  });
+
   test("a floor off the grid goes to the nearest cell top", () => {
     expect(positions(floorMesh(0, 0, 512, 256, 488))).toEqual(positions(floorMesh(0, 0, 512, 256, 512)));
     expect(positions(floorMesh(0, 0, 512, 256, 600))).toEqual(grid(upTo(4), [4], upTo(2)));
@@ -36,6 +47,41 @@ describe("collision cells", () => {
     const wall = quadMesh([[512, 0, 0], [512, 256, 0], [512, 256, 256], [512, 0, 256]]); // facing +x
     expect(positions(wall)).toEqual(grid([3], upTo(2), upTo(2)));
     expect(kinds(wall)).toEqual(new Set(["wall"]));
+  });
+
+  test("a wall's top goes to the nearest cell top, like a floor's", () => {
+    // a bank 20 units above the water: its wall would otherwise fill the whole cell above, 128 units
+    // over the floor beside it, which crash can't step over (more than 50 up, PlotQueryWalls in src/solid.c)
+    const bank = quadMesh([[512, 0, 0], [512, 276, 0], [512, 276, 256], [512, 0, 256]]); // top 20 into the third cell
+    expect(positions(bank)).toEqual(grid([3], upTo(2), upTo(2)));
+    const higher = quadMesh([[512, 0, 0], [512, 330, 0], [512, 330, 256], [512, 0, 256]]); // past the third cell's middle
+    expect(positions(higher)).toEqual(grid([3], upTo(3), upTo(2)));
+  });
+
+  test("a bank's wall is no higher than the floor beside it", () => {
+    const sand = floorMesh(0, 0, 512, 256, 276);
+    const bank = quadMesh([[512, 0, 0], [512, 276, 0], [512, 276, 256], [512, 0, 256]]);
+    const cells = cellsOf(merged(sand, bank));
+    const top = (kind: CellKind) => Math.max(...[...cells].filter((cell) => cell.kind === kind).map(({ at }) => at[1]));
+    expect(top("wall")).toBeLessThanOrEqual(top("floor"));
+  });
+
+  test("a wall one cell over the floor beside it is a lip crash steps onto, not a wall", () => {
+    // sand at 250 rounds to the cell top at 256, a bank wall to 330 rounds to 384: 20 cm apart in
+    // the map, a cell apart in the octree. crash can step up a floor cell (land_offset, about 244)
+    const sand = floorMesh(0, 0, 512, 256, 250);
+    const bank = quadMesh([[512, 0, 0], [512, 330, 0], [512, 330, 256], [512, 0, 256]]);
+    const cells = cellsOf(merged(sand, bank));
+    expect(cells.get([3, 2, 0])).toBe("floor");
+    expect(cells.get([3, 0, 0])).toBe("wall"); // the bank's cells under the sand stay wall
+  });
+
+  test("a wall more than a cell over the floor beside it stays a wall", () => {
+    const sand = floorMesh(0, 0, 512, 256, 250);
+    const wall = quadMesh([[512, 0, 0], [512, 600, 0], [512, 600, 256], [512, 0, 256]]);
+    const cells = cellsOf(merged(sand, wall));
+    expect(cells.get([3, 4, 0])).toBe("wall");
+    expect(cells.get([3, 2, 0])).toBe("wall");
   });
 
   test("floor wins where it shares a cell with a wall", () => {

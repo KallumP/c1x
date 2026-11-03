@@ -19,6 +19,10 @@
 
 - `mossy_creek`'s generator (`make_map.py`); it's now edited like any other level source
 
+### Fixed
+
+- custom levels: polygons drawn untextured grey, invisible walls along banks and low edges, the end warp pad not working off the floor, and stray rock slabs and a spike in `mossy_creek`
+
 ## 2026-10-30
 
 ### Added

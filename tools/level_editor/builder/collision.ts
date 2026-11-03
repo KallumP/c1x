@@ -84,6 +84,25 @@ const isInside = (at: CellPosition, size: Vec3, cell: number) =>
   at.every((index, axis) => index >= 0 && index < floorDivide(size[axis], cell));
 
 // whether there's a floor or pit in the column under (i, j, k), more than a cell below it
+const SIDES: [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+// whether the column at (i, k) has a floor cell at j with nothing above it
+const isFloorTop = (cells: Cells, [i, j, k]: CellPosition) => cells.get([i, j, k]) === "floor" && !cells.has([i, j + 1, k]);
+
+// a wall cell that tops its column one cell over the floor beside it is a lip,
+// not a wall: a small rise across a cell's middle puts the floor and the wall
+// a cell apart, though they're a few centimetres apart in the map. the game lets
+// crash step up onto a floor cell (by up to land_offset in src/solid.c, about
+// 244), but not a wall more than 50 over his feet, so it's made floor. decided
+// from the cells as they were, so a wall's cells don't become a stair
+function stepOntoLips(cells: Cells): void {
+  const lips = [...cells].filter(({ at: [i, j, k], kind }) =>
+    kind === "wall" && !cells.has([i, j + 1, k]) && SIDES.some(([di, dk]) => isFloorTop(cells, [i + di, j - 1, k + dk])));
+  for (const { at } of lips) {
+    cells.set(at, "floor");
+  }
+}
+
 function hasGroundWellBelow(cells: Cells, [i, j, k]: CellPosition): boolean {
   for (let below = 0; below < j - 1; below++) {
     const kind = cells.get([i, below, k]);
@@ -108,11 +127,20 @@ function removeHangingWalls(cells: Cells): void {
   }
 }
 
+// whether a face whose top is top reaches the middle of the cell at, so its
+// top rounds up to that cell's top. otherwise a wall only just reaching into a
+// cell would fill it: a bank 20 units over the water would be a wall 128 units
+// over the floor beside it, more than crash can step over (50 units, in
+// PlotQueryWalls in src/solid.c), an invisible wall along the bank's edge
+const reachesMiddle = ([, j]: CellPosition, top: number, cell: number) => top >= j * cell + cell / 2;
+
 // the cells just behind each face: floor behind faces facing up, pit behind the
 // faces of objects named pit..., and wall behind the rest, except faces facing
 // down: the game never stops a jump at a ceiling in the octree (see FindCeilY in
 // src/solid.c), so crash would jump through it and land on top. pit wins over
-// floor, and floor over wall, where they share a cell. cells outside the zone
+// floor, and floor over wall, where they share a cell. a wall's top goes to
+// the nearest cell top, as a floor's does (reachesMiddle), and a wall a cell
+// over the floor beside it is a lip crash steps onto (stepOntoLips). cells outside the zone
 // (size w, h, d) are left out
 export function solidCells(mesh: Mesh, size: Vec3, cell: number): Cells {
   const cells = new Cells();
@@ -122,12 +150,32 @@ export function solidCells(mesh: Mesh, size: Vec3, cell: number): Cells {
       continue;
     }
     const kind = faceKind(triangle, facing);
+    const top = kind === "floor" ? Infinity : Math.max(...cornersOf(mesh, triangle).map(([, y]) => y));
     for (const at of cellsBehind(mesh, triangle, facing, cell)) {
-      if (isInside(at, size, cell) && RANK[kind] >= RANK[cells.get(at) ?? "wall"]) {
+      if (isInside(at, size, cell) && reachesMiddle(at, top, cell) && RANK[kind] >= RANK[cells.get(at) ?? "wall"]) {
         cells.set(at, kind);
       }
     }
   }
   removeHangingWalls(cells);
+  stepOntoLips(cells);
   return cells;
+}
+
+// makes the cells under a flat floor from low to high (x, z) at height y
+// solid, as a floor face there would; for floors that aren't part of the map,
+// such as the warp pad's base
+export function addFloor(cells: Cells, low: [number, number], high: [number, number], y: number, size: Vec3, cell: number): void {
+  const [x0, z0] = low;
+  const [x1, z1] = high;
+  const vertices: Vec3[] = [[x0, y, z0], [x1, y, z0], [x1, y, z1], [x0, y, z1]];
+  const mesh: Mesh = { vertices, triangles: [], materialLibraries: [] };
+  const halves: Triangle[] = [[0, 1, 2], [0, 2, 3]].map((corners) => ({ corners: corners as [number, number, number], object: null, material: null }));
+  for (const half of halves) {
+    for (const at of cellsBehind(mesh, half, [0, 1, 0], cell)) {
+      if (isInside(at, size, cell) && RANK.floor >= RANK[cells.get(at) ?? "wall"]) {
+        cells.set(at, "floor");
+      }
+    }
+  }
 }

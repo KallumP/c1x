@@ -12,7 +12,7 @@ extern quad28_t uv_map[600];
 #define TEX_TPAGE_GLOBAL_COUNT 8
 #define TEX_TPAGE_COUNT        (TEX_TPAGE_LOCAL_COUNT+TEX_TPAGE_GLOBAL_COUNT)
 #define TEX_TPAGE_MEMSIZE      TEX_TPAGE_COUNT*((1024+512+256)*128)*2*sizeof(uint32_t)
-#define TEX_CACHE_BUCKETSIZE   0x100
+#define TEX_CACHE_BUCKETSIZE   0x8000 /* the whole table: custom levels use thousands of texture regions */
 
 typedef struct _tex_cache_entry {
   int valid;
