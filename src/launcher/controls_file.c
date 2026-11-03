@@ -172,3 +172,48 @@ char *SetButtonLines(const char *text, const char *name, const SDL_Scancode *key
   if (!found) { AppendNewButtonLines(&b, name, keys, count, eol); }
   return b.data;
 }
+
+/* whether text needs lines for button: not if it has none and the button keeps its default */
+static int NeedsButtonLines(const char *text, const launcher_controls *c,
+  const launcher_controls *defaults, int button) {
+  SDL_Scancode current[BUTTON_KEYS_MAX];
+
+  if (ButtonKeysInText(text, pad_button_names[button].name, current) > 0) { return 1; }
+  return !AreButtonKeysEqual(c, defaults, button);
+}
+
+/* text (a controls file's, to SDL_free) with every button bound to its keys in c */
+static char *ControlsTextWith(char *text, const launcher_controls *c) {
+  launcher_controls defaults;
+  char *changed;
+  int button;
+
+  ResetControls(&defaults);
+  for (button = 0; button < PAD_BUTTON_COUNT; button++) {
+    if (!NeedsButtonLines(text, c, &defaults, button)) { continue; }
+    changed = SetButtonLines(text, pad_button_names[button].name, c->keys[button],
+      c->key_count[button]);
+    SDL_free(text);
+    text = changed;
+  }
+  return text;
+}
+
+/*
+ * save c to the controls file at path, keeping its other lines. without
+ * one, it starts from the example controls file at example_path (if there
+ * is one), keeping its comments. returns 0 if it can't be written.
+ */
+int SaveControlsFile(const char *path, const char *example_path,
+  const launcher_controls *c) {
+  char *text;
+  int saved;
+
+  text = ReadWholeFile(path);
+  if (!text) { text = ReadWholeFile(example_path); }
+  if (!text) { text = SDL_strdup(""); }
+  text = ControlsTextWith(text, c);
+  saved = WriteWholeFile(path, text);
+  SDL_free(text);
+  return saved;
+}
