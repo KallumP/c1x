@@ -1,6 +1,6 @@
 /*
- * the launcher's level editor section: checks node is installed, then
- * starts the level editor
+ * the launcher's level editor section: checks node is installed, installs
+ * the editor's packages, then starts the level editor
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -8,12 +8,16 @@
 #include "editor_section.h"
 #include "command.h"
 #include "node.h"
+#include "level_editor.h"
+#include "paths.h"
 #include "ui.h"
 
 #define NODE_DOWNLOAD_URL "https://nodejs.org/"
 
 static background_command node_check;
 static int node_major_version; /* 0 if node wasn't found */
+static background_command install;
+static int packages_installed;
 
 static void CheckNode(const char *repo) {
   node_major_version = 0;
@@ -41,8 +45,37 @@ static void DrawNodeProblem(const char *repo) {
   igTextWrapped("Once it's installed, close and reopen the launcher if Check again doesn't find it.");
 }
 
+static void StartInstall(const char *repo) {
+  char folder[PATH_MAX_LEN];
+
+  LevelEditorFolder(repo, folder, sizeof(folder));
+  StartBackgroundCommand(&install, folder, "npm install");
+}
+
+static void UpdateInstall(const char *repo) {
+  if (UpdateBackgroundCommand(&install)) {
+    /* a failed install can leave node_modules half there */
+    packages_installed = install.exit_code == 0 && AreLevelEditorPackagesInstalled(repo);
+  }
+}
+
+static void DrawInstall(const char *repo) {
+  int running = IsBackgroundCommandRunning(&install);
+
+  igTextWrapped("The level editor's packages aren't installed yet. "
+    "Install downloads them with npm install, which takes a minute or two.");
+  igBeginDisabled(running);
+  if (igButton(running ? "Installing..." : "Install", (ImVec2){120, 0})) { StartInstall(repo); }
+  igEndDisabled();
+  if (!running && install.exit_code != 0) {
+    igTextColored(PROBLEM_COLOUR, "Installing failed; its output says why.");
+  }
+  DrawCommandOutput("install_output", &install);
+}
+
 void LoadEditorSection(const char *repo) {
   CheckNode(repo);
+  packages_installed = AreLevelEditorPackagesInstalled(repo);
 }
 
 void DrawEditorSection(const char *repo) {
@@ -57,9 +90,15 @@ void DrawEditorSection(const char *repo) {
     DrawNodeProblem(repo);
     return;
   }
+  UpdateInstall(repo);
+  if (!packages_installed) {
+    DrawInstall(repo);
+    return;
+  }
   igText("Node.js %d is installed.", node_major_version);
 }
 
 void CloseEditorSection(void) {
   StopBackgroundCommand(&node_check);
+  StopBackgroundCommand(&install);
 }
