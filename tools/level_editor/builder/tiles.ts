@@ -1,5 +1,5 @@
-// an image as a texture page tile (tile() in tools/tpage.py, which used
-// pillow): TILE x TILE pixels of at most COLOURS colours. a smaller image is
+// an image as a texture page tile: TILE x TILE pixels of at most COLOURS
+// colours, as pillow made them for the python build. a smaller image is
 // scaled up without blurring, a bigger one scaled down smoothly (lanczos);
 // more than COLOURS colours are reduced to COLOURS (median cut)
 import type { RgbImage } from "./images";

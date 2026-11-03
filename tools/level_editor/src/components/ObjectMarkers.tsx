@@ -5,7 +5,7 @@ import { blenderToView, boxSize, cameraFacing, stackCentres } from "../coords";
 import { boxStyle, END_COLOUR, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import type { LevelObject, Vec3 } from "../objects";
 
-const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in tools/nslevel.py)
+const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
 const PAD_UNITS = 400;   // the warp pad's radius, about
 const BOX_EDGE_COLOUR = "#000000";
 

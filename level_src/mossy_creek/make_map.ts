@@ -11,7 +11,7 @@
 //
 // blender coordinates: x across, y along the route, z up; the .obj is written as
 // blender's default export (x, z, -y). numbers are rounded and written as python
-// did, so the files come out as make_map.py made them
+// does, as this was first written in python: it makes the same files that did
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -436,7 +436,7 @@ class ObjWriter {
   }
 
   lines(): string[] {
-    const lines = [`# ${NAME}, made for c1x by make_map.py`, `mtllib ${NAME}.mtl`];
+    const lines = [`# ${NAME}, made for c1x by make_map.ts`, `mtllib ${NAME}.mtl`];
     lines.push(...this.vertices.map(([x, y, z]) => `v ${fixed4(x)} ${fixed4(z)} ${fixed4(-y)}`));
     const groups = [...this.faces.values()].sort((first, second) =>
       (first.object === second.object ? (first.material < second.material ? -1 : 1) : first.object < second.object ? -1 : 1));

@@ -24,7 +24,7 @@ describe("mossy creek's generator", () => {
     expect(mossyCreekMtl()).toBe(committed("mossy_creek.mtl"));
   });
 
-  test("makes the objects.json make_map.py made", () => {
+  test("makes the objects.json the python version made", () => {
     // the committed one has since had its boxes moved in the level editor, which writes it its own way
     const madeByPython = readFileSync(fileURLToPath(new URL("mossyCreekObjects.json", import.meta.url)), "utf8").replace(/\r\n/g, "\n");
     expect(mossyCreekObjects()).toBe(madeByPython);
