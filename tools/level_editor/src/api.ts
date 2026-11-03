@@ -13,7 +13,7 @@ export interface LevelCfg {
 
 export interface BuildResult {
   ok: boolean;
-  output: string; // what build_level.py printed
+  output: string; // what the build said
 }
 
 export const levelFilesUrl = (name: string) => `/api/levels/${encodeURIComponent(name)}/files/`;

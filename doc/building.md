@@ -38,6 +38,4 @@ As of 30 October 2026, c1x no longer supports building for the PS1, and the `PSX
 
 Run `make test` to build and run the unit tests in `tests/`. They use the [utest.h](https://github.com/sheredom/utest.h) single-header framework (vendored in `tests/`), build to `build/tests` (`build/tests.exe` on Windows) and only need SDL 2. Tests are plain C files in `tests/`; each `UTEST(group, name)` registers itself, so adding a file there is enough for `make test` to pick it up.
 
-`tools/build_level.py`, `tools/nslevel.py`, `tools/blendmap.py` and `tools/tpage.py`, which build [custom levels](custom_levels.md), have their own Python tests: `python -m unittest discover -s tools/tests`. They need [Pillow](https://pypi.org/project/pillow/) (`pip install pillow`) for map textures.
-
-The [level editor](custom_levels.md#2-place-objects-in-the-level-editor) in `tools/level_editor/` has its own tests: `npm test` there (after `npm install`), and `npm run typecheck` for its types.
+The [level editor](custom_levels.md#2-place-objects-in-the-level-editor) in `tools/level_editor/`, with the level build (`builder/`) and the disc image extraction (`scripts/`) beside it, has its own tests: `npm test` there (after `npm install`), and `npm run typecheck` for its types. The tests that build a level from N. Sanity Beach are skipped without it in `streams/`.

@@ -1,0 +1,125 @@
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+import { PNG } from "pngjs";
+import { describe, expect, test } from "vitest";
+import { buildLevel, fittingScale, levelSource, levelSourcePath, mapImages } from "../../builder/buildLevel";
+import { TooBig } from "../../builder/fit";
+
+const newFolder = (name: string) => {
+  const folder = join(mkdtempSync(join(tmpdir(), "build-level-")), name);
+  mkdirSync(folder);
+  return folder;
+};
+
+function writePng(path: string, rgb: [number, number, number]): void {
+  const png = new PNG({ width: 4, height: 4 });
+  for (let pixel = 0; pixel < 16; pixel++) {
+    png.data.set([...rgb, 255], pixel * 4);
+  }
+  writeFileSync(path, PNG.sync.write(png));
+}
+
+describe("a level source", () => {
+  test("a folder gives its .obj, and the folder's name", () => {
+    const folder = newFolder("my_level");
+    writeFileSync(join(folder, "level.obj"), "");
+    writeFileSync(join(folder, "level.mtl"), "");
+    expect(levelSource(folder)).toEqual({ objPath: join(folder, "level.obj"), name: "my_level" });
+    expect(levelSource(folder + sep)).toEqual({ objPath: join(folder, "level.obj"), name: "my_level" });
+  });
+
+  test("a .obj gives itself, and its name", () => {
+    const path = join("level_src", "x", "level.obj");
+    expect(levelSource(path)).toEqual({ objPath: path, name: "level" });
+  });
+
+  test("a folder needs one .obj", () => {
+    const two = newFolder("two");
+    writeFileSync(join(two, "a.obj"), "");
+    writeFileSync(join(two, "b.obj"), "");
+    expect(() => levelSource(two)).toThrow(/2 \.obj files/);
+    expect(() => levelSource(newFolder("none"))).toThrow(/0 \.obj files/);
+  });
+});
+
+describe("a map's images", () => {
+  test("are read from the .mtl next to the .obj", () => {
+    const folder = newFolder("textured");
+    mkdirSync(join(folder, "textures"));
+    writePng(join(folder, "textures", "stone.png"), [90, 90, 100]);
+    writeFileSync(join(folder, "level.mtl"), "newmtl stone\nmap_Kd textures/stone.png\nnewmtl plain\nKd 1 1 1\n");
+    const images = mapImages(join(folder, "level.obj"), "mtllib level.mtl\no Floor\nusemtl stone\n", () => {});
+    expect([...images.keys()]).toEqual(["stone"]);
+    expect([...images.get("stone")!.rgb.subarray(0, 3)]).toEqual([90, 90, 100]);
+  });
+
+  test("missing ones are warned about and left out", () => {
+    const folder = newFolder("missing");
+    writeFileSync(join(folder, "level.mtl"), "newmtl stone\nmap_Kd stone.png\n");
+    const warnings: string[] = [];
+    const images = mapImages(join(folder, "level.obj"), "mtllib level.mtl\nmtllib other.mtl\n", (line) => warnings.push(line));
+    expect(images.size).toBe(0);
+    expect(warnings).toEqual([
+      expect.stringMatching(/stone\.png \(material stone\) not found, so it is untextured/),
+      expect.stringMatching(/other\.mtl not found, so its materials are untextured/),
+    ]);
+  });
+});
+
+describe("building a level", () => {
+  test("too big says the largest scale that fits", () => {
+    // 20000 long at scale 1000 with a 256 margin that doesn't scale: (16384 - 256) / (20000 - 256) of 1000, rounded down to a 10
+    expect(fittingScale(1000, new TooBig(2, 20000, 16384, 256))).toBe(810);
+  });
+
+  const quietBuild = (source: string, streamsDir = "streams") => {
+    const lines: string[] = [];
+    const ok = buildLevel(source, { streamsDir, levelsDir: newFolder("levels"), log: (line) => lines.push(line) });
+    return { ok, output: lines.join("\n") };
+  };
+
+  test("a bad level.cfg stops it with a message", () => {
+    const folder = newFolder("bad_cfg");
+    writeFileSync(join(folder, "x.obj"), "");
+    writeFileSync(join(folder, "level.cfg"), "scale = big\n");
+    expect(quietBuild(folder)).toEqual({ ok: false, output: expect.stringMatching(/level\.cfg, line 1: scale has to be a whole number/) });
+  });
+
+  test("a bad objects.json stops it with a message naming it", () => {
+    const folder = newFolder("bad_objects");
+    writeFileSync(join(folder, "x.obj"), "");
+    writeFileSync(join(folder, "objects.json"), '[{"kind": "crate", "at": [0, 0, 0]}]');
+    expect(quietBuild(folder)).toEqual({ ok: false, output: expect.stringMatching(/objects\.json.*crate/) });
+  });
+
+  test("a folder without one .obj stops it with a message", () => {
+    expect(quietBuild(newFolder("empty"))).toEqual({ ok: false, output: expect.stringMatching(/0 \.obj files/) });
+  });
+
+  const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
+
+  test.skipIf(!existsSync(join(STREAMS, "s0000009.nsd")))("a level source is written to the levels folder", () => {
+    const folder = newFolder("tiny");
+    writeFileSync(join(folder, "tiny.obj"), "o Floor\nv -4 0 -8\nv -4 0 8\nv 4 0 8\nv 4 0 -8\nf 1 2 3 4\n");
+    const levelsDir = newFolder("levels");
+    const lines: string[] = [];
+    expect(buildLevel(folder, { streamsDir: STREAMS, levelsDir, log: (line) => lines.push(line) })).toBe(true);
+    expect(lines).toEqual([`wrote ${join(levelsDir, "tiny")}`]);
+    expect(existsSync(join(levelsDir, "tiny.nsd")) && existsSync(join(levelsDir, "tiny.nsf"))).toBe(true);
+  });
+});
+
+describe("the level to build", () => {
+  test("a level source's name is its folder in level_src", () => {
+    const sources = newFolder("level_src");
+    mkdirSync(join(sources, "tide_ruins"));
+    expect(levelSourcePath("tide_ruins", sources)).toBe(join(sources, "tide_ruins"));
+  });
+
+  test("a path is itself", () => {
+    const folder = newFolder("elsewhere");
+    expect(levelSourcePath(folder, newFolder("level_src"))).toBe(folder);
+  });
+});

@@ -7,6 +7,18 @@
 - the level editor's F5 saves, builds the level, and sets the game to boot into it if the build worked
 - the level editor sets a level's turn and scale (with nothing selected, on the right), saving them to its `level.cfg` and keeping its comments; boxes are drawn at the size the scale gives them
 - the level editor's spawn has an arrow pointing the way the game's camera faces, which turns with the level's turn
+- `npm run build-level -- <name>` (in `tools/level_editor`) builds a level source, and `npm run extract-streams -- <image>` extracts the game's files from a disc image
+- textures can be TIFF images, as well as PNG and JPEG
+
+### Changed
+
+- the level build and the disc image extraction are TypeScript (`tools/level_editor/builder` and `scripts`), so getting started and building levels need only Node, not Python and Pillow. They build the same levels, apart from texture pixels, which are resized and reduced to 16 colours a little differently
+- the level editor's build button builds the level itself, rather than running python
+- `--scale` and `--turn` are gone from the level build; a level's `level.cfg` (set in the level editor) sets them
+
+### Removed
+
+- `mossy_creek`'s generator (`make_map.py`); its `.obj`, `.mtl` and `objects.json` stay, and it's changed in the level editor and Blender like any other level source
 
 ## 2026-10-30
 

@@ -7,7 +7,7 @@ Some level sources are included in the repository, made for c1x, listed below. O
 | Source | Origin |
 |---|---|
 | `tide_ruins/` | Made for c1x, with procedural textures. |
-| `mossy_creek/` | Made for c1x, with procedural textures: a more organic map, its shores and ledges curves rather than straight lines. Its `make_map.py` generates its `.obj`, `.mtl` and `objects.json`; to change the map, change it and run it (`python level_src/mossy_creek/make_map.py`) before building. Running it overwrites objects placed in the editor. |
+| `mossy_creek/` | Made for c1x, with procedural textures: a more organic map, its shores and ledges curves rather than straight lines. |
 
 ## Objects
 

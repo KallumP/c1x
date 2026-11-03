@@ -3,7 +3,7 @@ import { viewToBlender } from "../coords";
 import type { Vec3 } from "../objects";
 import type { Triangle } from "../overlaps";
 
-// a spawn object in the map only marks where crash starts (blendmap.is_spawn)
+// a spawn object in the map only marks where crash starts (isSpawn in builder/faces.ts)
 const isMarker = (mesh: THREE.Object3D) => mesh.name.toLowerCase().startsWith("spawn");
 
 function meshTriangles(mesh: THREE.Mesh): Triangle[] {

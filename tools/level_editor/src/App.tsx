@@ -110,7 +110,7 @@ export default function App() {
         {status && (
           <span className={status.failed ? "status error" : "status"} title={status.detail}>{status.text}</span>
         )}
-        <button disabled={!level || isBusy} onClick={build} title="Run build_level.py on this level (saves first). F5 builds and boots">
+        <button disabled={!level || isBusy} onClick={build} title="Build this level (saves first). F5 builds and boots">
           Build
         </button>
         <button disabled={!level || isBusy} onClick={boot} title="Set boot_level in settings.cfg to this level">

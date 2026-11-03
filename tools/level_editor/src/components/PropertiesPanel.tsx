@@ -95,7 +95,7 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
 
   const renderOverlapNote = () => <p className="warning">This box is in a wall or another box.</p>;
 
-  // what build_level.py builds the level with; saved to its level.cfg with the objects
+  // the scale and turn the level is built with; saved to its level.cfg with the objects
   const renderLevelFields = (cfg: LevelCfg) => {
     const turn = String(cfg.turn) as (typeof TURNS)[number];
     return (

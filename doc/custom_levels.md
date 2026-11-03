@@ -67,11 +67,7 @@ When you're done, build and play the level from the editor too (see step 3).
 
 ## 3. Build the level and play it
 
-**Set it up (once):** build the game (see [Building](building.md)), put its files in `streams/` (see [Running](running.md)), and install Python 3 and Pillow:
-
-```
-pip install pillow
-```
+**Set it up (once):** build the game (see [Building](building.md)), and put its files in `streams/` (see [Running](running.md)). The level editor builds levels itself, so there's nothing else to install.
 
 Then, in the level editor:
 

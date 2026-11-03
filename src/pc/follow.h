@@ -14,7 +14,7 @@
 #define FOLLOW_CAM_EASE     8      /* moves this fraction of the way each frame */
 #define FOLLOW_CAM_STEP_MAX 64000  /* and at most this far (game units, 250 zone units) */
 #define FOLLOW_CAM_NO_GROUND INT32_MAX /* follow_cam_ground_y before crash has been seen */
-#define FOLLOW_CAM_HEIGHT   (1316 << 8) /* above the floor (game units; CAM_OFFSET's height in tools/blendmap.py) */
+#define FOLLOW_CAM_HEIGHT   (1316 << 8) /* above the floor (game units; CAM_OFFSET's height in tools/level_editor/builder/route.ts) */
 
 extern int32_t follow_cam_offset;
 extern int32_t follow_cam_offset_y;

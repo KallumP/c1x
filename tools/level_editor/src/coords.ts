@@ -2,8 +2,8 @@
 // shows the .obj as it's written, which has blender's (x, z, -y), y up
 import type { Vec3 } from "./objects";
 
-export const BOX_UNITS = 400;     // a box's size in game units (BOX_HEIGHT in tools/nslevel.py)
-export const DEFAULT_SCALE = 400; // game units a blender metre without a level.cfg (MAP_SCALE in tools/nslevel.py)
+export const BOX_UNITS = 400;     // a box's size in game units (BOX_HEIGHT in builder/entities.ts)
+export const DEFAULT_SCALE = 400; // game units a blender metre without a level.cfg (MAP_SCALE in builder/makeMap.ts)
 
 export function blenderToView([x, y, z]: Vec3): Vec3 {
   return [x, z, -y];
