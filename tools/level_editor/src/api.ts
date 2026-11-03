@@ -1,4 +1,5 @@
 // the dev server's api (server/plugin.ts)
+import type { Sky } from "./sky";
 
 export interface LevelInfo {
   name: string;  // its folder in level_src/
@@ -9,6 +10,7 @@ export interface LevelInfo {
 export interface LevelCfg {
   turn: number;  // degrees the build turns the level about the up axis: 0, 90, 180 or 270
   scale: number; // game units per blender metre
+  sky: Sky;
 }
 
 export interface BuildResult {

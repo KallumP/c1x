@@ -5,6 +5,11 @@
   gap: 6px;
 }
 
+.field input[type="color"] {
+  height: 24px;
+  padding: 1px 2px;
+}
+
 .field input,
 .field select {
   min-width: 0;

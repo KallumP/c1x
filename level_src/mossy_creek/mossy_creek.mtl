@@ -26,6 +26,7 @@ map_Kd rock.png
 
 newmtl sand
 Kd 1.0 1.0 1.0
+map_Kd sand.png
 
 newmtl stone
 Kd 1.0 1.0 1.0

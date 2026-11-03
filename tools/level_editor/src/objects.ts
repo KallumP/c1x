@@ -5,13 +5,17 @@ export const KINDS = ["spawn", "end", "box"] as const;
 export type Kind = (typeof KINDS)[number];
 const ONCE: Kind[] = ["spawn", "end"]; // a level has at most one of these
 
-// n. sanity beach's boxes by name, as they look in the game (the level build places them by these too)
+// every box the game has, by name: its subtype, which the level build places
+// it by. the base level (jungle rollers, see builder/baseLevel.ts) has all
+// their models. enemy_tnt is a tnt set up for an enemy to be spun into, and a
+// switch fills an iron_outline in as an iron box
 export const BOX_TYPES = {
   basic: 2, arrow: 3, checkpoint: 4, iron: 5, slatted: 6,
   switch: 7, life: 8, aku_aku: 9, question: 10, outline: 13,
+  tnt: 0, enemy_tnt: 11, iron_arrow: 15, iron_outline: 19,
 } as const;
 export type BoxType = keyof typeof BOX_TYPES;
-export const BOX_SUBTYPES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 13];
+export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 
 export type Vec3 = [number, number, number];
 

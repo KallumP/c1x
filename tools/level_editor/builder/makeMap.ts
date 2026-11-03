@@ -1,8 +1,9 @@
 // a custom level from a map modelled in blender (its .obj's text): its faces
 // as the level's world meshes and collision, crash, and the objects placed in
-// it; built from a real level (n. sanity beach) for crash, the objects and
-// textures. faces of materials with an image get it, the rest the beach's textures
+// it; built from a real level (the base level) for crash, the objects and
+// textures. faces of materials with an image get it, the rest the base level's textures
 import type { LevelObject } from "../src/objects";
+import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
@@ -20,6 +21,7 @@ import { readTemplates, warpPadBase, type Templates } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
+import { withSky } from "./zones";
 
 export { LID_TEST } from "./assembleLevel";
 
@@ -36,6 +38,7 @@ export interface MapOptions {
   turn?: number;
   images?: Map<string, RgbImage>; // each material's image
   objects?: LevelObject[];
+  sky?: Sky;                      // n. sanity beach's without one
 }
 
 // collision blocks for cells
@@ -134,8 +137,9 @@ const boxCount = (boxes: LevelObject[]) => boxes.reduce((sum, box) => sum + box.
 const breakableBoxes = (boxes: LevelObject[]) => boxCount(boxes.filter((box) => !UNBREAKABLE_BOXES.includes(boxSubtype(box))));
 
 export function makeMap(level: Level, text: string, options: MapOptions = {}): Level {
-  const { scale = MAP_SCALE, turn = 0, images = new Map(), objects = [] } = options;
-  const templates = readTemplates(level);
+  const { scale = MAP_SCALE, turn = 0, images = new Map(), objects = [], sky = DEFAULT_SKY } = options;
+  const base = readTemplates(level);
+  const templates = { ...base, header: withSky(base.header, sky) }; // every zone's header is made from this one
   const map = fitMap(text, scale, turn);
   const { fitted, cells, spans } = map;
   const zoneWorlds = zoneWorldMeshes(map, templates, new Set(images.keys()));

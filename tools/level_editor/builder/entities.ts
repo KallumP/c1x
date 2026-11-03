@@ -15,7 +15,8 @@ export const CRASH: [number, number] = [0, 0];
 export const WARP_PAD: [number, number] = [32, 1]; // WarpC: the warp pad that ends a level, as on n. sanity beach
 export const BOX_TYPE = 34;      // BoxsC: boxes, by subtype
 export const BOX_HEIGHT = 400;   // a box on top of another is this much higher (GoolObjectSpawn in src/gool.c)
-export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch]; // not in the level's total
+// not in the level's total (an iron outline fills in as an iron box)
+export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch, BOX_TYPES.iron_arrow, BOX_TYPES.iron_outline];
 
 // a switch (! box) makes the outline boxes solid along a chain of ids in their
 // entities' init_flags_c: the switch's is the first outline box's id, each
@@ -36,6 +37,7 @@ function withField(item: Buffer, write: (copy: Buffer) => void): Buffer {
 }
 
 export const withEntityId = (item: Buffer, id: number) => withField(item, (copy) => copy.writeUInt16LE(id, ENTITY_ID));
+export const withSubtype = (item: Buffer, subtype: number) => withField(item, (copy) => { copy[ENTITY_TYPE + 1] = subtype; });
 
 // the entity with its first point at (x, y, z), zone units relative to its zone
 export function withPosition(item: Buffer, [x, y, z]: Vec3): Buffer {
@@ -49,6 +51,8 @@ export function entityPosition(item: Buffer): Vec3 {
   return [0, 1, 2].map((axis) => 4 * item.readInt16LE(ENTITY_POINTS + 2 * axis)) as Vec3;
 }
 
+// a box's first init flag is what it holds beyond the usual (a token, say); 0 for nothing
+export const withInitFlagA = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS));
 const withInitFlagB = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 2));
 const withInitFlagC = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 4));
 
@@ -74,10 +78,13 @@ export interface PlacedBox {
   id: number;
 }
 
-// chains the outline boxes and points every switch at the first, so any
-// switch makes them all solid; in place, in entities (a list per zone)
+const OUTLINES: number[] = [BOX_TYPES.outline, BOX_TYPES.iron_outline]; // what a switch fills in
+
+// chains the outline boxes (iron ones too, in the order they're placed, as in
+// generator room) and points every switch at the first, so any switch makes
+// them all solid; in place, in entities (a list per zone)
 export function linkSwitches(entities: Buffer[][], placedBoxes: PlacedBox[]): void {
-  const outlines = placedBoxes.filter((box) => box.subtype === BOX_TYPES.outline);
+  const outlines = placedBoxes.filter((box) => OUTLINES.includes(box.subtype));
   const switches = placedBoxes.filter((box) => box.subtype === BOX_TYPES.switch);
   const firstOutline = outlines.length ? outlines[0].id : 0;
   for (const { zone, index } of switches) {

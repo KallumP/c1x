@@ -1,11 +1,12 @@
 // building a level from its source, a map modelled in blender (see
 // doc/custom_levels.md): its faces as the level's geometry and collision,
-// crash, and the objects its objects.json places, from n. sanity beach. the
+// crash, and the objects its objects.json places, from the base level. the
 // level goes to build/levels/<name>, next to the game
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { LevelObject } from "../src/objects";
+import { BASE_LEVEL } from "./baseLevel";
 import { TooBig } from "./fit";
 import { readImage, type RgbImage } from "./images";
 import { levelOptions, type LevelOptions } from "./levelCfg";
@@ -19,7 +20,6 @@ const REPO = fileURLToPath(new URL("../../..", import.meta.url));
 export const LEVEL_SOURCES_DIR = join(REPO, "level_src");
 export const STREAMS_DIR = join(REPO, "streams");
 export const LEVELS_DIR = join(REPO, "build", "levels"); // next to the game; see LEVELS_DIR in src/pc/settings.h
-const BEACH_LID = 9; // n. sanity beach, which custom levels are made from
 
 export interface BuildOptions {
   streamsDir: string;
@@ -124,15 +124,15 @@ export function buildLevel(source: string, { streamsDir, levelsDir, log }: Build
     log(messageOf(error));
     return false;
   }
-  if (!existsSync(join(streamsDir, "s0000009.nsd"))) {
-    log(`N. Sanity Beach (s0000009.nsd) isn't in ${streamsDir}, so there's nothing to build the level from (see doc/running.md)`);
+  if (!existsSync(join(streamsDir, `${BASE_LEVEL.file}.nsd`))) {
+    log(`${BASE_LEVEL.name} (${BASE_LEVEL.file}.nsd) isn't in ${streamsDir}, so there's nothing to build the level from (see doc/running.md)`);
     return false;
   }
   const { objPath, name, options, objects } = level;
   try {
     const text = readFileSync(objPath, "utf8");
     const images = mapImages(objPath, text, log);
-    writeLevel(makeMap(readLevel(streamsDir, BEACH_LID), text, { ...options, images, objects }), levelsDir, name);
+    writeLevel(makeMap(readLevel(streamsDir, BASE_LEVEL.lid), text, { ...options, images, objects }), levelsDir, name);
   } catch (error) {
     log(failureMessage(error, source, options.scale));
     return false;

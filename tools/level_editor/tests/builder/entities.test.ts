@@ -5,6 +5,7 @@ import { ByteWriter, padTo4 } from "../../builder/bytes";
 import {
   BOX_TYPE, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityType, linkSwitches, newEntityIds, withEntityId, type PlacedBox,
 } from "../../builder/entities";
+import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readLevel } from "../../builder/levelFiles";
 import { readTemplates, warpPadBase } from "../../builder/templates";
 
@@ -59,6 +60,18 @@ describe("switches", () => {
     expect([entities[0][0], entities[1][0], entities[1][1]].map(initFlags)).toEqual([[12, 12], [4, 13], [4, 0]]);
   });
 
+  test("iron outlines are in the same chain as outlines, in the order they're placed", () => {
+    // as in generator room, where the ! box's chain goes outline, iron outline, iron outline, outline, ...
+    const entities = [[entity(BOX_TYPE, 7, 10, []), entity(BOX_TYPE, 13, 11, []), entity(BOX_TYPE, 19, 12, []), entity(BOX_TYPE, 13, 13, [])]];
+    const placed: PlacedBox[] = [
+      { subtype: 7, zone: 0, index: 0, id: 10 }, { subtype: 13, zone: 0, index: 1, id: 11 },
+      { subtype: 19, zone: 0, index: 2, id: 12 }, { subtype: 13, zone: 0, index: 3, id: 13 },
+    ];
+    linkSwitches(entities, placed);
+    expect(initFlags(entities[0][0])[1]).toBe(11);
+    expect(entities[0].slice(1).map(initFlags)).toEqual([[12, 12], [4, 13], [4, 0]]);
+  });
+
   test("a switch without outline boxes links to none", () => {
     const entities = [[entity(BOX_TYPE, 7, 10, [])]];
     linkSwitches(entities, [{ subtype: 7, zone: 0, index: 0, id: 10 }]);
@@ -67,27 +80,47 @@ describe("switches", () => {
 });
 
 const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
-const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
+const hasBase = existsSync(`${STREAMS}/${BASE_LEVEL.file}.nsd`);
 
-describe.skipIf(!hasBeach)("what custom levels take from n. sanity beach", () => {
-  const beach = hasBeach ? readLevel(STREAMS, 9) : null!;
+describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
+  const base = hasBase ? readLevel(STREAMS, BASE_LEVEL.lid) : null!;
 
   test("crash, and an entity of each type", () => {
-    const templates = readTemplates(beach);
+    const templates = readTemplates(base);
     expect(entityType(templates.crash)).toEqual([0, 0]);
     expect(entityType(templates.entity(BOX_TYPE, 2))).toEqual([BOX_TYPE, 2]);
     expect(templates.textures.length).toBeGreaterThan(1);
   });
 
-  test("the warp pad's base is in the beach's terrain under it", () => {
-    const base = warpPadBase(beach);
-    expect(base.polygons.length).toBeGreaterThan(20);
-    const [xs, ys, zs] = [0, 1, 2].map((axis) => base.vertices.map(({ at }) => at[axis]));
+  test("every box holds nothing extra, though the level's own may hold a token", () => {
+    // the first init flag is what a box holds beyond the usual (jungle rollers' ? boxes all hold
+    // something, such as tawna's token); 0, the plain box, is what most boxes of every subtype have
+    const templates = readTemplates(base);
+    for (const subtype of [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 19]) {
+      expect(templates.entity(BOX_TYPE, subtype).readInt16LE(ENTITY_INIT_FLAGS)).toBe(0);
+    }
+  });
+
+  test("a box of a subtype the level has none of is its basic box with that subtype", () => {
+    const templates = readTemplates(base);
+    const basic = templates.entity(BOX_TYPE, 2);
+    for (const subtype of [7, 13, 19]) {
+      const box = templates.entity(BOX_TYPE, subtype);
+      expect(entityType(box)).toEqual([BOX_TYPE, subtype]);
+      expect(box.length).toBe(basic.length);
+    }
+    expect(entityType(templates.entity(BOX_TYPE, 2))).toEqual([BOX_TYPE, 2]); // the basic box itself is unchanged
+  });
+
+  test("the warp pad's base is in the base level's terrain under it", () => {
+    const padBase = warpPadBase(base);
+    expect(padBase.polygons.length).toBeGreaterThan(20);
+    const [xs, ys, zs] = [0, 1, 2].map((axis) => padBase.vertices.map(({ at }) => at[axis]));
     // relative to the pad: around it, and from its top down
     expect(Math.max(...[...xs, ...zs].map(Math.abs))).toBeLessThanOrEqual(700);
     expect(Math.max(...ys)).toBeLessThanOrEqual(16);
     expect(Math.min(...ys)).toBeGreaterThanOrEqual(-600);
-    expect(base.polygons.every(({ texinfo }) => base.texinfos.get(texinfo)!.length === 8)).toBe(true); // 2 words each
-    expect(beach.pages.map(({ eid }) => eid)).toContain(base.page);
+    expect(padBase.polygons.every(({ texinfo }) => padBase.texinfos.get(texinfo)!.length === 8)).toBe(true); // 2 words each
+    expect(base.pages.map(({ eid }) => eid)).toContain(padBase.page);
   });
 });

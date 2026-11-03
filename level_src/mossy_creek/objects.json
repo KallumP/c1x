@@ -8,7 +8,6 @@
   {"kind": "box", "type": "question", "at": [7.2, 6.5, 0.87]},
   {"kind": "box", "type": "life", "at": [-7.825, 35.61, 0.29]},
   {"kind": "box", "type": "basic", "at": [1.044, 44.889, 1.183], "stack": 2},
-  {"kind": "box", "type": "slatted", "at": [-7.843, 36.702, 0.285]},
   {"kind": "box", "type": "basic", "at": [2.704, 53.374, 1.233]},
   {"kind": "box", "type": "basic", "at": [1.769, 55.004, 0.856], "raise": 0.3},
   {"kind": "box", "type": "basic", "at": [3.859, 53.273, 1.309]},
@@ -29,6 +28,10 @@
   {"kind": "box", "type": "aku_aku", "at": [-7.701, 39.951, 1.534]},
   {"kind": "box", "type": "arrow", "at": [-4, 48.5, 1.296]},
   {"kind": "box", "type": "slatted", "at": [-4, 48.5, 1.116], "raise": 4},
+  {"kind": "box", "type": "iron_outline", "at": [5.5, 26, -1]},
+  {"kind": "box", "type": "tnt", "at": [-7.9, 36.8, 0.191]},
+  {"kind": "box", "type": "enemy_tnt", "at": [-9, 56, 7]},
+  {"kind": "box", "type": "iron_arrow", "at": [-9, 56, 2.184]},
 
   {"kind": "end", "at": [-4.32, 108, 1.35], "raise": 0.15}
 ]

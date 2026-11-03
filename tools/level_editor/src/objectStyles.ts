@@ -3,7 +3,7 @@ import { boxTypeName, type BoxType, type LevelObject } from "./objects";
 
 export interface BoxStyle {
   colour: string;
-  wireframe: boolean; // drawn as its edges (outline boxes, until a switch fills them in)
+  wireframe: boolean; // drawn as its edges (outline boxes, iron ones too, until a switch fills them in)
 }
 
 const COLOURS: Record<BoxType, string> = {
@@ -17,7 +17,13 @@ const COLOURS: Record<BoxType, string> = {
   aku_aku: "#c040c0",
   question: "#f2d230",
   outline: "#64b5f6",
+  tnt: "#d81b1b",
+  enemy_tnt: "#7f1d1d",
+  iron_arrow: "#c8cdd2",
+  iron_outline: "#b0bec5",
 };
+
+const WIREFRAMES: BoxType[] = ["outline", "iron_outline"];
 
 export const SPAWN_COLOUR = "#ff9a1f";
 export const END_COLOUR = "#7c4dff";
@@ -26,5 +32,5 @@ export const WARNING_COLOUR = "#ff3b30";
 
 export function boxStyle(box: NonNullable<LevelObject["box"]>): BoxStyle {
   const type = boxTypeName(box);
-  return { colour: COLOURS[type], wireframe: type === "outline" };
+  return { colour: COLOURS[type], wireframe: WIREFRAMES.includes(type) };
 }

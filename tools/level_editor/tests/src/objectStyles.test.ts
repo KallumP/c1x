@@ -8,10 +8,12 @@ describe("boxStyle", () => {
     expect(new Set(colours).size).toBe(colours.length);
   });
 
-  test("only outline boxes are drawn as their edges", () => {
+  test("only outline boxes are drawn as their edges, iron outlines included", () => {
     expect(boxStyle("outline").wireframe).toBe(true);
     expect(boxStyle(13).wireframe).toBe(true);
+    expect(boxStyle("iron_outline").wireframe).toBe(true);
     expect(boxStyle("basic").wireframe).toBe(false);
+    expect(boxStyle("iron_arrow").wireframe).toBe(false);
   });
 
   test("a box given as a subtype number is styled the same as its type name", () => {

@@ -1,7 +1,7 @@
-// what custom levels take from a real level (n. sanity beach): its spawn zone's
+// what custom levels take from a real level (the base level): its spawn zone's
 // header and origin, crash, its biggest world mesh (for textures), an example of
 // each kind of entity, and the base the warp pad stands on
-import { entityPosition, entityType, WARP_PAD, CRASH } from "./entities";
+import { BOX_TYPE, entityPosition, entityType, withInitFlagA, withSubtype, WARP_PAD, CRASH } from "./entities";
 import { ENTRY_ZDAT, entriesById, type Entry, type Level } from "./levelFiles";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader, readWorldPolygon, readWorldVertex, TEXINFOS_AT, type BuiltPolygon } from "./worldGeometry";
@@ -14,7 +14,7 @@ export interface Templates {
   world: Entry;               // its biggest world mesh that isn't a backdrop
   textures: PageTexture[];    // the textures that mesh uses, most used first
   crash: Buffer;
-  entity(type: number, subtype: number): Buffer; // an example of each kind of entity
+  entity(type: number, subtype: number): Buffer; // an example of each kind of entity (see exampleEntity)
 }
 
 const zonesOf = (level: Level) => [...entriesById(level).values()].filter((entry) => entry.type === ENTRY_ZDAT);
@@ -54,6 +54,20 @@ function exampleEntities(level: Level): Map<string, Buffer> {
   return examples;
 }
 
+const BASIC_BOX = 2;
+
+// the level's first entity of a type and subtype. a box of a subtype the level
+// has none of (such as the ! box in jungle rollers) is its basic box with that
+// subtype, as boxes differ only by subtype; and a box holds nothing extra, as
+// the level's own may (all of jungle rollers' ? boxes hold tawna's token or the like)
+function exampleEntity(examples: Map<string, Buffer>, type: number, subtype: number): Buffer {
+  const example = examples.get(`${type},${subtype}`);
+  if (type !== BOX_TYPE) {
+    return example!;
+  }
+  return withInitFlagA(example ?? withSubtype(examples.get(`${BOX_TYPE},${BASIC_BOX}`)!, subtype), 0);
+}
+
 export function readTemplates(level: Level): Templates {
   const entries = entriesById(level);
   const zone = entries.get(level.nsd.ldat.zoneSpawn)!;
@@ -65,7 +79,7 @@ export function readTemplates(level: Level): Templates {
     world,
     textures: usedTextures(world),
     crash: examples.get(CRASH.join())!,
-    entity: (type, subtype) => examples.get(`${type},${subtype}`)!,
+    entity: (type, subtype) => exampleEntity(examples, type, subtype),
   };
 }
 
@@ -124,7 +138,7 @@ function worldWarpPadBase(world: Entry, pad: Vec3): WarpPadBase | null {
   };
 }
 
-// the warp pad's base in level (n. sanity beach): the polygons of the world
+// the warp pad's base in level (the base level): the polygons of the world
 // mesh under its warp pad on the texture pages only the base uses, which are
 // those all around the pad
 export function warpPadBase(level: Level): WarpPadBase {

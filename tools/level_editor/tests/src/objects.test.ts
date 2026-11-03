@@ -17,11 +17,24 @@ describe("parseObjects", () => {
     ]);
   });
 
-  test("knows n. sanity beach's box types, by name", () => {
+  test("knows every box type, by name", () => {
     expect(BOX_TYPES).toEqual({
       basic: 2, arrow: 3, checkpoint: 4, iron: 5, slatted: 6,
       switch: 7, life: 8, aku_aku: 9, question: 10, outline: 13,
+      tnt: 0, enemy_tnt: 11, iron_arrow: 15, iron_outline: 19,
     });
+  });
+
+  test("reads the boxes beyond n. sanity beach's, by type or subtype", () => {
+    const objects = parseObjects(`[
+      {"kind": "box", "type": "tnt", "at": [0, 0, 0]},
+      {"kind": "box", "type": "iron_arrow", "at": [1, 0, 0]},
+      {"kind": "box", "subtype": 19, "at": [2, 0, 0]},
+      {"kind": "box", "subtype": 11, "at": [3, 0, 0]}
+    ]`);
+    expect(objects.map((object) => object.box)).toEqual(["tnt", "iron_arrow", 19, 11]);
+    expect(boxTypeName(19)).toBe("iron_outline");
+    expect(boxTypeName(0)).toBe("tnt");
   });
 
   test.each([
@@ -35,8 +48,9 @@ describe("parseObjects", () => {
     ['[{"kind": "spawn", "at": [0, 0]}]', "object 1: at should be"],
     ['[{"kind": "spawn", "at": [0, 0, 0], "raise": "up"}]', "object 1: raise should be"],
     ['[{"kind": "box", "at": [0, 0, 0]}]', "object 1: a box needs a type"],
-    ['[{"kind": "box", "type": "tnt", "at": [0, 0, 0]}]', "object 1: unknown box type tnt"],
+    ['[{"kind": "box", "type": "nitro", "at": [0, 0, 0]}]', "object 1: unknown box type nitro"],
     ['[{"kind": "box", "subtype": 1, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
+    ['[{"kind": "box", "subtype": 12, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "stack": 0}]', "object 1: stack should be"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "stack": 1.5}]', "object 1: stack should be"],
   ])("refuses %s", (text, message) => {

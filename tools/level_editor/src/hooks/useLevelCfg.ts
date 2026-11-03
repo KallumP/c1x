@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { fetchLevelCfg, saveLevelCfg, type LevelCfg, type LevelInfo } from "../api";
 import { DEFAULT_SCALE } from "../coords";
+import { DEFAULT_SKY, isSameSky } from "../sky";
 
-const sameCfg = (first: LevelCfg, second: LevelCfg) => first.turn === second.turn && first.scale === second.scale;
+const sameCfg = (first: LevelCfg, second: LevelCfg) =>
+  first.turn === second.turn && first.scale === second.scale && isSameSky(first.sky, second.sky);
 
 // the level list's scale, until level.cfg is read, so boxes don't change size as it opens
-const listedCfg = (level: LevelInfo | null): LevelCfg => ({ turn: 0, scale: level ? level.scale : DEFAULT_SCALE });
+const listedCfg = (level: LevelInfo | null): LevelCfg => ({ turn: 0, scale: level ? level.scale : DEFAULT_SCALE, sky: DEFAULT_SKY });
 
-// the open level's turn and scale as they're edited: read from its level.cfg when it
+// the open level's turn, scale and sky as they're edited: read from its level.cfg when it
 // opens, and written back on save. unsaved is whether they differ from the file
 export function useLevelCfg(level: LevelInfo | null, onError: (message: string) => void) {
   const [cfg, setCfg] = useState<LevelCfg>(listedCfg(level));

@@ -1,9 +1,10 @@
 // zone headers (zone_header in src/formats/zdat.h): the zone's world meshes,
-// paths, entities, neighbours and load list
+// paths, entities, neighbours, load list and sky
 import { ByteWriter, readWords } from "./bytes";
 import { EID_NONE } from "./entryIds";
 import { PAGE_TEXTURE, type Entry, type Level } from "./levelFiles";
 import { pgid } from "./levelWriting";
+import type { Rgb, Sky } from "../src/sky";
 import type { Vec3 } from "./vectors";
 
 const ZONE_WORLD_SIZE = 64;   // eid, trans, 4 pointers, 8 tpages
@@ -14,8 +15,33 @@ const ZONE_NEIGHBORS_MAX = 8;
 export const ZONE_LOADLIST = ZONE_NEIGHBORS + 32;
 const ZONE_DISPLAY_FLAGS = ZONE_LOADLIST + 168;
 export const ZONE_MIDI = ZONE_DISPLAY_FLAGS + 4 + 36;
+// zone_gfx, after the display flags: the sky's split (vram_fill_height), how
+// far away objects are drawn (visibility_depth), and its top (unknown_h) and
+// bottom (vram_fill) colours
+const ZONE_GFX = ZONE_DISPLAY_FLAGS + 4;
+const ZONE_SKY_SPLIT = ZONE_GFX;
+const ZONE_VISIBILITY_DEPTH = ZONE_GFX + 8;
+const ZONE_SKY_TOP = ZONE_GFX + 44;
+const ZONE_SKY_BOTTOM = ZONE_GFX + 48;
+const VISIBILITY_DEPTH = 6144000; // n. sanity beach's (jungle rollers' start zone has 0)
 export const ZONE_HEADER_SIZE = 888;
 export const ZONE_LOADLIST_PAGES_MAX = 32;
+
+function writeRgb(header: Buffer, [red, green, blue]: Rgb, at: number): void {
+  header[at] = red;
+  header[at + 1] = green;
+  header[at + 2] = blue;
+}
+
+// header with the sky, and how far away objects are drawn as on n. sanity beach
+export function withSky(header: Buffer, sky: Sky): Buffer {
+  const copy = Buffer.from(header);
+  copy.writeUInt32LE(sky.split, ZONE_SKY_SPLIT);
+  copy.writeUInt32LE(VISIBILITY_DEPTH, ZONE_VISIBILITY_DEPTH);
+  writeRgb(copy, sky.top, ZONE_SKY_TOP);
+  writeRgb(copy, sky.bottom, ZONE_SKY_BOTTOM);
+  return copy;
+}
 
 // a world mesh as a zone lists it: its entry and where it is
 export interface ZoneWorld {

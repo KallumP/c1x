@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import type { LevelObject } from "../../src/objects";
+import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
 import { BOX_HEIGHT, BOX_TYPE, entityId, entityPosition, entityType, WARP_PAD } from "../../builder/entities";
 import { EID_NONE } from "../../builder/entryIds";
@@ -62,7 +63,7 @@ const TEXTURED_OBJ = MAP_OBJ.replace("o Floor\n", "o Floor\nusemtl stone\n").rep
 const LONG_OBJ = "o Floor\nv -4 0 -50\nv -4 0 50\nv 4 0 50\nv 4 0 -50\nf 1 2 3 4\n";
 
 const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
-const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
+const hasBase = existsSync(`${STREAMS}/${BASE_LEVEL.file}.nsd`);
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -74,11 +75,11 @@ interface Built {
   zone: Entry;
 }
 
-describe.skipIf(!hasBeach)("making a level from a map", () => {
-  const beach = hasBeach ? readLevel(STREAMS, 9) : null!;
+describe.skipIf(!hasBase)("making a level from a map", () => {
+  const base = hasBase ? readLevel(STREAMS, BASE_LEVEL.lid) : null!;
 
   function make(text = MAP_OBJ, options: MapOptions = {}): Built {
-    const level = makeMap(beach, text, options);
+    const level = makeMap(base, text, options);
     const entries = entriesById(level);
     return { level, entries, zone: entries.get(level.nsd.ldat.zoneSpawn)! };
   }
@@ -203,6 +204,33 @@ describe.skipIf(!hasBeach)("making a level from a map", () => {
     expect(make(MAP_OBJ, { scale: 256 }).level.nsd.ldat.boxTotal).toBe(0);
   });
 
+  test("both tnts count towards the total, but not the iron arrow or iron outline", () => {
+    const objects = [box([1, 2, 0.5], 0), box([-1, 2, 0.5], 11), box([1, 3, 0.5], 15), box([-1, 3, 0.5], 19)];
+    expect(make(MAP_OBJ, { scale: 256, objects }).level.nsd.ldat.boxTotal).toBe(2);
+  });
+
+  // zone_header's gfx (src/formats/zdat.h), after its 8 worlds, counts, neighbours, load list and display flags
+  const GFX = 4 + 8 * 64 + 16 + 32 + 168 + 4;
+  const skyIn = (zone: Entry) => {
+    const header = zone.items[0];
+    const rgb = (at: number) => [header[GFX + at], header[GFX + at + 1], header[GFX + at + 2]];
+    return { split: header.readUInt32LE(GFX), top: rgb(44), bottom: rgb(48), visibility: header.readUInt32LE(GFX + 8) };
+  };
+
+  test("every zone has the level's sky, and n. sanity beach's visibility depth", () => {
+    const sky = { top: [10, 20, 30] as [number, number, number], bottom: [40, 50, 60] as [number, number, number], split: 100 };
+    const built = make(LONG_OBJ, { sky });
+    const zones = [...built.entries.values()].filter((entry) => entry.type === ENTRY_ZDAT);
+    expect(zones.length).toBeGreaterThan(1);
+    for (const zone of zones) {
+      expect(skyIn(zone)).toEqual({ split: 100, top: [10, 20, 30], bottom: [40, 50, 60], visibility: 6144000 });
+    }
+  });
+
+  test("without a sky given, n. sanity beach's", () => {
+    expect(skyIn(make().zone)).toEqual({ split: 20, top: [59, 62, 216], bottom: [54, 50, 0], visibility: 6144000 });
+  });
+
   test("turn runs the map along z", () => {
     // turned a quarter, the 16 m long floor runs along x
     const rect = make(MAP_OBJ, { scale: 256, turn: 90 }).zone.items[1];
@@ -236,8 +264,8 @@ describe.skipIf(!hasBeach)("making a level from a map", () => {
   });
 
   describe("a long map", () => {
-    const built = hasBeach ? make(LONG_OBJ) : null!;
-    const zones = hasBeach ? zonesOf(built) : [];
+    const built = hasBase ? make(LONG_OBJ) : null!;
+    const zones = hasBase ? zonesOf(built) : [];
     const neighbours = (zone: Entry) => readWords(zone.items[0], ZONE_NEIGHBORS, zone.items[0].readUInt32LE(ZONE_PATHS_IDX + 12));
 
     test("is a chain of zones along the route", () => {
