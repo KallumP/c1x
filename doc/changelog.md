@@ -9,6 +9,7 @@
 - textures can be TIFF images, as well as PNG and JPEG
 - custom levels can have every box the game has: TNT, enemy TNT, iron arrow and iron outline as well
 - the level editor sets a level's sky: its top and bottom colours, and where they split
+- a third level source, `sunset_canyon`: a long desert canyon with an oasis, a chasm, a slot canyon, quicksand and hoodoos, and a full level's worth of boxes
 
 ### Changed
 
