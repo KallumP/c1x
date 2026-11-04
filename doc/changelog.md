@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-04
+
+### Fixed
+
+- sounds far ahead of or behind the camera sometimes playing at full volume, such as a custom level's end warp pad heard from 70 m away
+
 ## 2026-11-03
 
 ### Added
