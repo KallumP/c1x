@@ -34,14 +34,6 @@ static rgba Rgb8ToA32(rgb8 c) {
   return res;
 }
 
-uint32_t SwSqrMagnitude2(int32_t a, int32_t b) {
-  return ((int64_t)a*a+b*b) >> 13;
-}
-
-uint32_t SwSqrMagnitude3(int32_t a, int32_t b, int32_t c) {
-  return ((int64_t)a*a+b*b+c*c) >> 20;
-}
-
 int SwRot(vec *in, vec *out, mat16 *m_rot) {
   vec r_vert;
   int res;
