@@ -80,6 +80,52 @@ describe("overlappingBoxes", () => {
     const objects = [newObject("spawn", [0, 0, 0]), newObject("end", [0, 0, 0]), box([0, 0, 0])];
     expect(overlappingBoxes(objects, SCALE, [])).toEqual(new Set());
   });
+
+  test("a box in the middle of a long wall is flagged", () => {
+    const longWall: Tri[] = [[[0.2, -100, -1], [0.2, 100, -1], [0.2, 100, 3]], [[0.2, -100, -1], [0.2, 100, 3], [0.2, -100, 3]]];
+    expect(overlappingBoxes([box([0, 0, 0]), box([0, 60, 0]), box([3, 60, 0])], SCALE, longWall)).toEqual(new Set([0, 1]));
+  });
+
+  test("a box deep inside a wide solid, far from its top's corners, is flagged", () => {
+    const wideTop: Tri[] = [[[-100, -100, 3], [100, -100, 3], [100, 100, 3]], [[-100, -100, 3], [100, 100, 3], [-100, 100, 3]]];
+    expect(overlappingBoxes([box([0, 0, 0]), box([40, -70, 0])], SCALE, wideTop)).toEqual(new Set([0, 1]));
+  });
+});
+
+// a rolling floor of small triangles, 30 m across and 250 m along, and a box every 2.5 m along it
+function bigLevel(): { triangles: Tri[]; boxes: LevelObject[] } {
+  const height = (x: number, y: number) => 0.3 * Math.sin(x * 0.7) + 0.3 * Math.cos(y * 0.4);
+  const point = (x: number, y: number): Vec3 => [x, y, height(x, y)];
+  const triangles: Tri[] = [];
+  for (let y = 0; y < 250; y += 1.28) {
+    for (let x = -15; x < 15; x += 0.64) {
+      const [a, b, c, d] = [point(x, y), point(x + 0.64, y), point(x + 0.64, y + 1.28), point(x, y + 1.28)];
+      triangles.push([a, b, c], [a, c, d]);
+    }
+  }
+  const boxes = Array.from({ length: 100 }, (_, k) => box([(k % 5) * 2 - 4, k * 2.5, 1]));
+  return { triangles, boxes };
+}
+
+describe("overlappingBoxes on a big level", () => {
+  const { triangles, boxes } = bigLevel();
+
+  test("is the size of sunset_canyon", () => {
+    expect(triangles.length).toBeGreaterThan(18000);
+  });
+
+  test("checks every box fast enough to keep up with a drag", () => {
+    overlappingBoxes(boxes, SCALE, triangles); // the level's triangles are worked out once, as they load
+    const start = performance.now();
+    const flagged = overlappingBoxes(boxes, SCALE, triangles);
+    expect(performance.now() - start).toBeLessThan(50);
+    expect(flagged).toEqual(new Set());
+  });
+
+  test("still flags boxes sunk into its floor", () => {
+    const sunk = boxes.map((object, k) => (k % 10 === 0 ? { ...object, at: [object.at[0], object.at[1], -0.5] as Vec3 } : object));
+    expect(overlappingBoxes(sunk, SCALE, triangles)).toEqual(new Set(Array.from({ length: 10 }, (_, k) => k * 10)));
+  });
 });
 
 describe("dropToFloor", () => {

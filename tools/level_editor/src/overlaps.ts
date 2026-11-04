@@ -83,11 +83,67 @@ function aboveHit(point: Vec3, [cornerA, cornerB, cornerC]: Triangle): UpwardHit
   return height > 0 ? { height, facesUp: total > 0 } : null;
 }
 
+// a level's triangles with their bounds, filed under each square of the floor
+// plan (x, y) they cover, so a box only has to be checked against those near it
+interface BoundedTriangle { triangle: Triangle; bounds: Bounds }
+type TriangleGrid = Map<string, BoundedTriangle[]>;
+
+const GRID_SQUARE = 2; // metres
+
+const squareOf = (coordinate: number) => Math.floor(coordinate / GRID_SQUARE);
+
+// the keys of the grid squares that bounds cover, seen from above
+function squaresUnder({ min, max }: Bounds): string[] {
+  const keys = [];
+  for (let i = squareOf(min[0]); i <= squareOf(max[0]); i++) {
+    for (let j = squareOf(min[1]); j <= squareOf(max[1]); j++) {
+      keys.push(`${i},${j}`);
+    }
+  }
+  return keys;
+}
+
+function gridOf(triangles: Triangle[]): TriangleGrid {
+  const grid: TriangleGrid = new Map();
+  for (const triangle of triangles) {
+    const bounded = { triangle, bounds: triangleBounds(triangle) };
+    for (const key of squaresUnder(bounded.bounds)) {
+      const square = grid.get(key) ?? [];
+      square.push(bounded);
+      grid.set(key, square);
+    }
+  }
+  return grid;
+}
+
+// each level's grid, made the first time its triangles are checked against
+const grids = new WeakMap<Triangle[], TriangleGrid>();
+
+function triangleGrid(triangles: Triangle[]): TriangleGrid {
+  let grid = grids.get(triangles);
+  if (!grid) {
+    grid = gridOf(triangles);
+    grids.set(triangles, grid);
+  }
+  return grid;
+}
+
+// the triangles in the grid squares under bounds, each once
+function trianglesNear(grid: TriangleGrid, bounds: Bounds): BoundedTriangle[] {
+  const near = new Set<BoundedTriangle>();
+  for (const key of squaresUnder(bounds)) {
+    for (const bounded of grid.get(key) ?? []) {
+      near.add(bounded);
+    }
+  }
+  return [...near];
+}
+
 // whether point is inside a solid: the first face straight above it is seen from behind
 // (faces point out of the solids they bound, as blender exports them)
-function insideSolid(point: Vec3, triangles: Triangle[]): boolean {
+function insideSolid(point: Vec3, grid: TriangleGrid): boolean {
   let nearest: UpwardHit | null = null;
-  for (const triangle of triangles) {
+  for (const { triangle } of trianglesNear(grid, { min: point, max: point })) {
     const hit = aboveHit(point, triangle);
     if (hit && (!nearest || hit.height < nearest.height)) {
       nearest = hit;
@@ -99,21 +155,22 @@ function insideSolid(point: Vec3, triangles: Triangle[]): boolean {
 const middle = (bounds: Bounds): Vec3 => AXIS_INDICES.map((axis) => (bounds.min[axis] + bounds.max[axis]) / 2) as Vec3;
 
 // whether bounds reach into the level: through one of its faces, or wholly inside a solid
-function inLevel(bounds: Bounds, triangles: Triangle[]): boolean {
-  const throughAFace = triangles.some(
-    (triangle) => boundsTouch(bounds, triangleBounds(triangle)) && triangleTouchesBox(triangle, bounds.min, bounds.max),
+function inLevel(bounds: Bounds, grid: TriangleGrid): boolean {
+  const throughAFace = trianglesNear(grid, bounds).some(
+    ({ triangle, bounds: faceBounds }) => boundsTouch(bounds, faceBounds) && triangleTouchesBox(triangle, bounds.min, bounds.max),
   );
-  return throughAFace || insideSolid(middle(bounds), triangles);
+  return throughAFace || insideSolid(middle(bounds), grid);
 }
 
 // the indices of the boxes in a wall (the level's triangles, in blender) or in another box
 export function overlappingBoxes(objects: LevelObject[], scale: number, triangles: Triangle[]): Set<number> {
+  const grid = triangleGrid(triangles);
   const boxes = objects.flatMap((object, index) =>
     object.kind === "box" ? [{ index, bounds: stackBounds(object, scale) }] : [],
   );
   const flagged = new Set<number>();
   boxes.forEach((box, boxNumber) => {
-    if (inLevel(box.bounds, triangles)) {
+    if (inLevel(box.bounds, grid)) {
       flagged.add(box.index);
     }
     for (const other of boxes.slice(boxNumber + 1)) {
