@@ -1,7 +1,7 @@
 #include "follow.h"
 
 int32_t follow_cam_offset = 0; /* the camera's x less its path's (game units) */
-int32_t follow_cam_offset_y = 0; /* the camera's y less its path's (game units) */
+int32_t follow_cam_y = FOLLOW_CAM_NO_HEIGHT; /* the camera's height (game units) */
 int32_t follow_cam_ground_y = FOLLOW_CAM_NO_GROUND; /* height of the floor crash was last on */
 
 /*
@@ -32,9 +32,13 @@ int32_t FollowCamGroundY(int32_t ground, int32_t crash_y, int on_floor) {
 }
 
 /*
- * the follow camera's height offset from its path (at path_y) to keep it
- * FOLLOW_CAM_HEIGHT above crash's floor (at ground_y)
+ * the follow camera's next height, from height towards FOLLOW_CAM_HEIGHT
+ * above crash's floor (at ground_y). it starts at its path's height (path_y),
+ * then leaves it be: the path's height is the ground under one straight line,
+ * so it jumps where the line crosses a ledge, rock or wall crash isn't on
  */
-int32_t FollowCamHeightTarget(int32_t ground_y, int32_t path_y) {
-  return ground_y + FOLLOW_CAM_HEIGHT - path_y;
+int32_t FollowCamHeight(int32_t height, int32_t ground_y, int32_t path_y) {
+  if (height == FOLLOW_CAM_NO_HEIGHT)
+    height = path_y;
+  return FollowCamOffset(height, ground_y + FOLLOW_CAM_HEIGHT);
 }

@@ -22,6 +22,7 @@
 ### Fixed
 
 - custom levels: polygons drawn untextured grey, invisible walls along banks and low edges, the end warp pad not working off the floor, and stray rock slabs and a spike in `mossy_creek`
+- custom levels: the camera jumping up or down and settling back where the ground under its path changes height but Crash's doesn't, such as at ledges and rocks off to the side; it now keeps to the height of the floor Crash is on
 - the level editor: dragging a box lagging on big levels, as every move rechecked every box against every face of the map
 
 ## 2026-10-30
