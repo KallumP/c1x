@@ -197,6 +197,10 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(mesh.triangles.length).toBe(track.polygons.length);
     expect(mesh.vertices[track.polygons[0].corners[1]]).toEqual(track.vertices[track.polygons[0].corners[1]].at.map((value, axis) => value + [1000, 2000, 3000][axis]));
     expect(mesh.triangles.every(({ object, material }) => object === null && material === null)).toBe(true);
+    // faces up, so the collision makes the groove's floor a floor whichever way the base level winds its corners
+    const facingUp = mesh.triangles.map(({ corners }) => corners.map((corner) => mesh.vertices[corner])).map(([p, q, r]) =>
+      (q[2] - p[2]) * (r[0] - p[0]) - (q[0] - p[0]) * (r[2] - p[2]));
+    expect(facingUp.every((y) => y >= 0)).toBe(true);
   });
 
   test("the track's floor under the middle of its path, where the stone rolls, is its highest flat face there", () => {
