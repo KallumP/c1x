@@ -289,6 +289,8 @@ int AudioVoiceCreate(gool_object *obj, eid_t *eid, int vol) {
   size = adio->items[1]-adio->items[0];
   SwLoadSample(idx, adio->items[0], size);
   voice->params = voice_params;
+  if (voice->case7val) /* pc: keyed on by frame (AudioControl op 7)? */
+    voice->flags |= VOICE_KEYED_ON_BY_FRAME; /* then it plays to the end of its sample */
   voice->amplitude = (vol*init_vol) >> 14;
   if (voice->flags & 0x40)
     voice->ramp_step = (voice->tgt_amplitude-voice->amplitude)/voice->ramp_counter;
@@ -515,7 +517,7 @@ void AudioUpdate() {
       continue; /* pc: keyed on after the key status was read; it's read again next update */
     }
     if (keys_status[i] == KEYS_STATUS_ON) {
-      if (--voice->sustain_counter != 0) {/* decrement sustain; still sustaining? */
+      if (!VoiceSustainEnded(voice->flags & VOICE_KEYED_ON_BY_FRAME, &voice->sustain_counter)) { /* decrement sustain; still sustaining? (pc: or keyed on by frame) */
       }
       else {
         SwNoteOff(i);
