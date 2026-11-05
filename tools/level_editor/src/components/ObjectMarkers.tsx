@@ -1,7 +1,7 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { blenderToView, boxSize, cameraFacing, stackCentres, STONE_RADIUS_UNITS } from "../coords";
+import { blenderToView, boxSize, cameraFacing, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import type { LevelObject, Vec3 } from "../objects";
 
@@ -9,8 +9,7 @@ const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in
 const PAD_UNITS = 400;   // the warp pad's radius, about
 const PLANT_UNITS = 560; // the plant's height, about
 const STONE_THICKNESS = 0.35; // of the rolling stone's radius
-const WAYPOINT_SIZE = 0.15;   // of a box, the dots on an enemy's path
-const SELECTED_WAYPOINT_GROWTH = 1.4; // how much bigger the selected waypoint's dot is
+const TRACK_OPACITY = 0.25;   // of the outline of a rolling stone's track
 const BOX_EDGE_COLOUR = "#000000";
 
 // where an object's base is in the viewport, raised as it is in the game
@@ -19,15 +18,13 @@ function base(object: LevelObject): Vec3 {
   return blenderToView([x, y, z + object.raise]);
 }
 
-export default function ObjectMarkers({ objects, scale, turn, selected, selectedWaypoint, warnings, onGrab, onGrabWaypoint }: {
+export default function ObjectMarkers({ objects, scale, turn, selected, warnings, onSelect }: {
   objects: LevelObject[];
   scale: number;
   turn: number; // the level's, which sets the way the spawn's arrow points
   selected: number | null;
-  selectedWaypoint: number | null; // of the selected enemy's path
   warnings: Set<number>; // the boxes in a wall or another box
-  onGrab: (index: number) => void;
-  onGrabWaypoint: (index: number, waypoint: number) => void;
+  onSelect: (index: number) => void;
 }) {
   // a box in a wall or another box has red edges, the selected object white, the rest their own colour
   const edgeColour = (index: number, colour: string) => {
@@ -41,12 +38,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   // the level behind it (which would clear the selection, or place an object)
   const grab = (index: number) => (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
-    onGrab(index);
-  };
-  // a waypoint is grabbed on its own, not with the enemy it's on
-  const grabWaypoint = (index: number, waypoint: number) => (event: ThreeEvent<PointerEvent>) => {
-    event.stopPropagation();
-    onGrabWaypoint(index, waypoint);
+    onSelect(index);
   };
   const stopClick = (event: ThreeEvent<MouseEvent>) => event.stopPropagation();
 
@@ -130,13 +122,13 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // the rolling stone: a wheel standing on its spot, turned to roll along its path
+  // the rolling stone: a wheel standing on its spot, turned to roll across the map as the game rolls it
   const renderStone = (object: LevelObject, index: number) => {
-    const radius = STONE_RADIUS_UNITS / scale;
+    const radius = STONE_TRACK.radius / scale;
     const [x, y, z] = base(object);
-    const [nextX, , nextZ] = object.path?.length ? blenderToView(object.path[0]) : [x + 1, y, z];
+    const [rollX, , rollZ] = blenderToView(stoneRolling(turn));
     return (
-      <mesh position={[x, y + radius, z]} rotation={[0, Math.atan2(nextX - x, nextZ - z), Math.PI / 2]}>
+      <mesh position={[x, y + radius, z]} rotation={[0, Math.atan2(rollX, rollZ), Math.PI / 2]}>
         <cylinderGeometry args={[radius, radius, radius * STONE_THICKNESS, 20]} />
         <meshLambertMaterial color={ENEMY_COLOURS.rolling_stone} />
         <Edges color={edgeColour(index, ENEMY_COLOURS.rolling_stone)} />
@@ -144,39 +136,35 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // a dot to drag a waypoint by, white and bigger when it's selected
-  const renderWaypoint = (point: Vec3, radius: number, colour: string, index: number, waypoint: number) => {
-    const isSelected = index === selected && waypoint === selectedWaypoint;
-    return (
-      <mesh key={waypoint} position={point} onPointerDown={grabWaypoint(index, waypoint)} onClick={stopClick}>
-        <sphereGeometry args={[isSelected ? radius * SELECTED_WAYPOINT_GROWTH : radius, 10, 8]} />
-        <meshBasicMaterial color={isSelected ? SELECTED_COLOUR : colour} />
-      </mesh>
-    );
-  };
-
-  // where an enemy moves: a line from its spot through its path, a dot at each point
-  const renderEnemyPath = (object: LevelObject, index: number) => {
-    const lift = WAYPOINT_SIZE * boxSize(scale);
-    const points = [object.at, ...(object.path ?? [])].map((point) => {
-      const [x, y, z] = blenderToView([point[0], point[1], point[2] + object.raise]);
-      return [x, y + lift, z] as Vec3;
-    });
-    const colour = ENEMY_COLOURS[object.enemy!];
+  // the track a rolling stone comes with: its outline on the floor, and the line its middle rolls along
+  const renderStoneTrack = (object: LevelObject) => {
+    const [rollX, , rollZ] = blenderToView(stoneRolling(turn));
+    const [x, y, z] = base(object);
+    const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
+    const path = stonePath(object.at, object.raise, turn, scale).map(blenderToView);
+    const colour = ENEMY_COLOURS.rolling_stone;
     return (
       <>
-        <Line points={points} color={colour} lineWidth={2} />
-        {points.slice(1).map((point, waypoint) => renderWaypoint(point, lift, colour, index, waypoint))}
+        <mesh position={[x, y + lift, z]} rotation={[0, Math.atan2(rollX, rollZ), 0]}>
+          <boxGeometry args={[STONE_TRACK.width / scale, lift, STONE_TRACK.length / scale]} />
+          <meshBasicMaterial color={colour} transparent opacity={TRACK_OPACITY} />
+        </mesh>
+        <Line points={path} color={colour} lineWidth={2} />
       </>
     );
   };
 
-  const renderEnemy = (object: LevelObject, index: number) => (
-    <>
-      {object.enemy === "plant" ? renderPlant(object, index) : renderStone(object, index)}
-      {object.path?.length ? renderEnemyPath(object, index) : null}
-    </>
-  );
+  const renderEnemy = (object: LevelObject, index: number) => {
+    if (object.enemy !== "rolling_stone") {
+      return renderPlant(object, index);
+    }
+    return (
+      <>
+        {renderStone(object, index)}
+        {renderStoneTrack(object)}
+      </>
+    );
+  };
 
   const renderShape = (object: LevelObject, index: number) => {
     switch (object.kind) {

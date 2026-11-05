@@ -55,12 +55,3 @@
 .delete:hover {
   background: #8a3434;
 }
-
-.drop:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.drop:disabled:hover {
-  background: #383a40;
-}

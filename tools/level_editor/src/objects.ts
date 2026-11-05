@@ -32,7 +32,6 @@ export interface LevelObject {
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
   enemy?: EnemyType;    // an enemy's type
-  path?: Vec3[];        // where an enemy moves to from at, in order (blender, metres)
 }
 
 // a box's type name, from its type or its subtype number
@@ -146,7 +145,6 @@ export function parseObjects(text: string): LevelObject[] {
 }
 
 const roundToMillimetre = (metres: number) => Math.round(metres * 1000) / 1000 + 0; // + 0 turns -0 into 0
-const formatPosition = (position: Vec3) => `[${position.map(roundToMillimetre).join(", ")}]`;
 
 function formatObject(object: LevelObject): string {
   const parts = [`"kind": ${JSON.stringify(object.kind)}`];
@@ -156,16 +154,13 @@ function formatObject(object: LevelObject): string {
   if (object.kind === "enemy" && object.enemy !== undefined) {
     parts.push(`"type": ${JSON.stringify(object.enemy)}`);
   }
-  parts.push(`"at": ${formatPosition(object.at)}`);
+  parts.push(`"at": [${object.at.map(roundToMillimetre).join(", ")}]`);
   const raise = roundToMillimetre(object.raise);
   if (raise !== 0) {
     parts.push(`"raise": ${raise}`);
   }
   if (object.kind === "box" && object.stack !== 1) {
     parts.push(`"stack": ${object.stack}`);
-  }
-  if (object.path) {
-    parts.push(`"path": [${object.path.map(formatPosition).join(", ")}]`);
   }
   return `{${parts.join(", ")}}`;
 }

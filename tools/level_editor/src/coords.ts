@@ -4,7 +4,18 @@ import type { Vec3 } from "./objects";
 
 export const BOX_UNITS = 400;     // a box's size in game units (BOX_HEIGHT in builder/entities.ts)
 export const DEFAULT_SCALE = 400; // game units a blender metre without a level.cfg (MAP_SCALE in builder/makeMap.ts)
-export const STONE_RADIUS_UNITS = 360; // a rolling stone's radius in game units (STONE_RADIUS in builder/enemyPaths.ts)
+
+// jungle rollers' rolling stone and its track, in game units (stoneTrack in
+// builder/templates.ts): the stone's radius, over the track's floor under the
+// middle of its path; the track's length along the path and its width across;
+// and the path, from its first point (along -x, and up), dipping in the middle
+export const STONE_TRACK = {
+  radius: 705,
+  length: 5670,
+  width: 810,
+  path: [[0, 0], [-128, -48], [-460, -168], [-908, -308], [-1384, -424], [-1800, -472],
+    [-2216, -424], [-2692, -308], [-3140, -168], [-3472, -48], [-3600, 0]] as [number, number][],
+};
 
 export function blenderToView([x, y, z]: Vec3): Vec3 {
   return [x, z, -y];
@@ -21,6 +32,28 @@ const FACINGS: Vec3[] = [[0, 1, 0], [1, 0, 0], [0, -1, 0], [-1, 0, 0]];
 export function cameraFacing(turn: number): Vec3 {
   const quarters = Math.round(turn / 90);
   return FACINGS[((quarters % 4) + 4) % 4];
+}
+
+// the way a rolling stone rolls (in blender): along the game's x, which is
+// across the map, blender +x unturned, turning with the level as the camera does
+const ROLLINGS: Vec3[] = [[1, 0, 0], [0, -1, 0], [-1, 0, 0], [0, 1, 0]];
+
+export function stoneRolling(turn: number): Vec3 {
+  const quarters = Math.round(turn / 90);
+  return ROLLINGS[((quarters % 4) + 4) % 4];
+}
+
+// the middle of a rolling stone at each point of its path (in blender), for a
+// stone at at, raised by raise: jungle rollers' path, its middle a stone's radius
+// over the stone's spot, across the map
+export function stonePath(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
+  const [rollX, rollY] = stoneRolling(turn);
+  const [middleAlong, middleUp] = STONE_TRACK.path[Math.floor(STONE_TRACK.path.length / 2)];
+  return STONE_TRACK.path.map(([along, up]) => {
+    const across = (along - middleAlong) / scale;
+    const height = (up - middleUp + STONE_TRACK.radius) / scale;
+    return [at[0] + rollX * across, at[1] + rollY * across, at[2] + raise + height] as Vec3;
+  });
 }
 
 // a box's size in blender metres, for a level at scale game units a metre

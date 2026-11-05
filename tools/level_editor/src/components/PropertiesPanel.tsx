@@ -1,7 +1,7 @@
 // the selected object's settings, or the level's (its level.cfg) with nothing selected
 import { useEffect, useState } from "react";
 import type { LevelCfg } from "../api";
-import { canRemoveWaypoint, type EditorAction, type EditorState } from "../editor";
+import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { BOX_TYPES, boxTypeName, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
@@ -95,25 +95,6 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
     </>
   );
 
-  // a rolling stone's path: add a waypoint after the last, or remove the selected one
-  const renderPathFields = (path: Vec3[]) => (
-    <>
-      <h3>Path</h3>
-      <p className="hint">
-        {path.length} {path.length === 1 ? "point" : "points"}
-        {state.waypoint !== null && `, point ${state.waypoint + 1} selected`}
-      </p>
-      <button className="drop" onClick={() => dispatch({ type: "addWaypoint" })}>Add point</button>
-      <button className="drop" disabled={!canRemoveWaypoint(state)} onClick={() => dispatch({ type: "removeWaypoint" })}>
-        Remove point
-      </button>
-      <p className="hint">
-        Drag a point on the path to move it. The stone rolls from its spot through the points and back. Delete removes the
-        selected point; the last one stays.
-      </p>
-    </>
-  );
-
   const renderOverlapNote = () => <p className="warning">This box is in a wall or another box.</p>;
 
   // the scale and turn the level is built with; saved to its level.cfg with the objects
@@ -187,7 +168,6 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
         <>
           {renderObjectFields(object)}
           {object.kind === "box" && renderDropButton(object)}
-          {object.enemy === "rolling_stone" && renderPathFields(object.path ?? [])}
           {warnings.has(index) && renderOverlapNote()}
           <button className="delete" onClick={() => dispatch({ type: "remove", index })}>Delete</button>
         </>

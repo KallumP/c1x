@@ -7,11 +7,8 @@ export function useEditorShortcuts(state: EditorState, dispatch: (action: Editor
   save: () => void;
   buildAndBoot: () => void;
 }) {
-  // the selected waypoint, if there is one, or else the selected object
   const removeSelected = () => {
-    if (state.waypoint !== null) {
-      dispatch({ type: "removeWaypoint" });
-    } else if (state.selected !== null) {
+    if (state.selected !== null) {
       dispatch({ type: "remove", index: state.selected });
     }
   };
