@@ -49,3 +49,13 @@ UTEST(voice, a_sound_stops_when_its_sustain_runs_out) {
 UTEST(voice, a_voice_keyed_on_by_frame_plays_to_the_end_of_its_sample) {
   ASSERT_EQ(-1, UpdatesUntilStopped(1, (int8_t)128)); /* the intro's lines run past 128 frames */
 }
+
+UTEST(voice, the_intros_first_line_starts_about_300_ms_sooner) {
+  ASSERT_EQ(6, VoiceKeyOnFrames(LID_INTRO, 15)); /* 9 frames at 30 fps */
+}
+
+UTEST(voice, every_other_key_on_frame_is_kept) {
+  ASSERT_EQ(147, VoiceKeyOnFrames(LID_INTRO, 147));
+  ASSERT_EQ(15, VoiceKeyOnFrames(LID_TITLE, 15));
+  ASSERT_EQ(0, VoiceKeyOnFrames(LID_INTRO, 0));
+}
