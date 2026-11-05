@@ -14,7 +14,7 @@
 - a spun plant in a custom level breaking every box in a long row behind it; it now only breaks boxes within about 3 m of where it stood
 - the game freezing when a plant ate Crash: when it found no free spot to move Crash to, it searched for one forever
 - the lab intro (shown when the title is left idle) playing all its voice lines at once and cutting the longer ones short; they now play in turn, in full
-- the lab intro running about a fifth too fast; it now slows down where the PS1 did, so its voice lines start when they did there
+- the lab intro running about a fifth too fast; it now runs at the pace the PS1 managed (24 fps), taking 45 s as there
 
 ## 2026-11-04
 

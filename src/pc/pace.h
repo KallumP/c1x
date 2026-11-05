@@ -7,11 +7,10 @@
 /*
  * how long a frame lasts, in ticks (pc). the game draws a frame every two
  * vblanks (30 fps). the PS1 couldn't keep that up in the lab intro, a heavy
- * scene, and the intro (its voice lines too) moves on a step a frame, so at
- * a steady 30 fps it ran fast and its lines came too close together. the
- * intro is drawn here at the pace the PS1 managed, section by section, as
- * measured from a recording of it: its lines (keyed on at frames 147, 450,
- * 585 and 816) start there at about 6, 23, 33 and 41 s
+ * scene, and the intro moves on a step a frame, so at a steady 30 fps it
+ * ran a fifth fast: 36 s, against 45 s in a recording of the PS1's intro.
+ * it's drawn here at the pace the PS1 managed, in sections (one for now:
+ * a frame every two and three vblanks in turn, 24 fps)
  */
 #define FRAME_TICKS  34 /* two vblanks */
 #define VBLANK_TICKS 17
@@ -23,10 +22,7 @@ typedef struct {
 } pace_section;
 
 static const pace_section intro_pace[] = {
-  { 147, 5, 2 },  /* 2.5 vblanks a frame (24 fps) */
-  { 450, 10, 3 }, /* 3.3 (18 fps) */
-  { 585, 9, 2 },  /* 4.5 (13 fps) */
-  { 816, 13, 6 }, /* 2.2 (28 fps) */
+  { 0xFFFFFFFF, 5, 2 }, /* 2.5 vblanks a frame (24 fps), all the way through */
 };
 
 /* vblanks the first n frames of a section take */
