@@ -89,6 +89,10 @@
 
   {"kind": "enemy", "type": "plant", "at": [1.5, 34, 0.109]},
   {"kind": "enemy", "type": "plant", "at": [-0.2, 52, 0.011]},
+  {"kind": "enemy", "type": "rolling_stone", "at": [-8.5, 64, 1.727], "path": [[-3.5, 64, 1.46], [1.5, 64, 1.493], [8.5, 64, 1.793]]},
+  {"kind": "enemy", "type": "rolling_stone", "at": [-6, 85.5, 2.643], "path": [[3, 85.5, 2.235], [10, 85.5, 2.604]]},
+  {"kind": "enemy", "type": "rolling_stone", "at": [-10.5, 116.5, 2.29], "path": [[-9, 116.5, 2.191], [-1.5, 116.5, 2.399]]},
+  {"kind": "enemy", "type": "rolling_stone", "at": [-5.5, 128, 2.314], "path": [[0, 128, 2.221], [2.5, 128, 2.314]]},
   {"kind": "enemy", "type": "plant", "at": [-0.5, 208, -0.019]},
   {"kind": "enemy", "type": "plant", "at": [4.5, 208, 0.032]},
   {"kind": "enemy", "type": "plant", "at": [-1, 226.5, 0.763]},
