@@ -122,13 +122,13 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
     );
   };
 
-  // the rolling stone: a wheel standing on its spot, turned to roll across the map as the game rolls it
+  // the rolling stone: a wheel on its track's floor, a box's height over its spot, turned to roll across the map as the game rolls it
   const renderStone = (object: LevelObject, index: number) => {
     const radius = STONE_TRACK.radius / scale;
     const [x, y, z] = base(object);
     const [rollX, , rollZ] = blenderToView(stoneRolling(turn));
     return (
-      <mesh position={[x, y + radius, z]} rotation={[0, Math.atan2(rollX, rollZ), Math.PI / 2]}>
+      <mesh position={[x, y + STONE_TRACK.lift / scale + radius, z]} rotation={[0, Math.atan2(rollX, rollZ), Math.PI / 2]}>
         <cylinderGeometry args={[radius, radius, radius * STONE_THICKNESS, 20]} />
         <meshLambertMaterial color={ENEMY_COLOURS.rolling_stone} />
         <Edges color={edgeColour(index, ENEMY_COLOURS.rolling_stone)} />

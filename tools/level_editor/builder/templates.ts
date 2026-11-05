@@ -236,6 +236,22 @@ function floorUnderMiddle(track: MapPiece, path: Vec3[]): number {
   return Math.max(...under.map(([, y]) => y));
 }
 
+// how far over a rolling stone's spot its track's floor stands: a box's height
+// (BOX_HEIGHT in entities.ts), more than crash steps up (about 244, land_offset
+// in src/solid.c), so he has to jump up to it
+export const STONE_TRACK_LIFT = 400;
+
+// the track with its skirts reaching lift further down, for a track lifted by
+// lift: its corners below its floor (the skirts' feet, in the ground) go lower,
+// so the skirts still reach the floor under it
+export function withLongerSkirts(track: StoneTrack, lift: number): StoneTrack {
+  const vertices = track.vertices.map((vertex) => {
+    const [x, y, z] = vertex.at;
+    return y < track.floor ? { ...vertex, at: [x, y - lift, z] as Vec3 } : vertex;
+  });
+  return { ...track, vertices };
+}
+
 // the polygons of a world mesh in the box around a path's first point (zone units)
 function worldTrack(world: Entry, start: Vec3): MapPiece {
   const vertices = verticesRelativeTo(world, start);

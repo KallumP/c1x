@@ -20,7 +20,7 @@ import { readObj, type Mesh } from "./obj";
 import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
 import { cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
-import { pieceMesh, readTemplates, stoneTrack, warpPadBase, type MapPiece, type StoneTrack, type Templates } from "./templates";
+import { pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type StoneTrack, type Templates } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
@@ -147,11 +147,11 @@ class ObjectPlacer {
   }
 
   // where a rolling stone's track goes in the level (where its path starts):
-  // its floor under the middle of its path on the floor at the stone
+  // its floor under the middle of its path a box's height over the stone's spot
   trackStart(stone: LevelObject, track: StoneTrack): Vec3 {
     const [x, y, z] = this.positionOf(stone);
     const middle = track.path[Math.floor(track.path.length / 2)];
-    return [x - middle[0], y - track.floor, z - middle[2]];
+    return [x - middle[0], y + STONE_TRACK_LIFT - track.floor, z - middle[2]];
   }
 
   // where a rolling stone's track goes relative to the zone the stone's in, and which zone
@@ -229,7 +229,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const enemies = objects.filter((object) => object.kind === "enemy");
   const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
   const placer = new ObjectPlacer(map, templates, scale, turn, (end ? 1 : 0) + boxCount(boxes) + enemies.length);
-  const track = stones.length ? stoneTrack(level) : null;
+  const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
   const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
 
   const zoneWorlds = zoneWorldMeshes(map, templates, new Set(images.keys()), new Set(stones.map((stone) => placer.zoneOf(stone))));
