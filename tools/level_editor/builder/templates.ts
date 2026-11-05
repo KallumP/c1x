@@ -3,6 +3,7 @@
 // each kind of entity, the base the warp pad stands on, and a rolling stone's track
 import { BOX_TYPE, CRASH, ENEMY_ENTITIES, entityPath, entityPosition, entityType, WARP_PAD, withInitFlagA, withSubtype } from "./entities";
 import { ENTRY_ZDAT, entriesById, type Entry, type Level } from "./levelFiles";
+import type { Mesh } from "./obj";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader, readWorldPolygon, readWorldVertex, TEXINFOS_AT, type BuiltPolygon } from "./worldGeometry";
 import type { PageTexture, WorldVertex } from "./worldMeshes";
@@ -122,6 +123,21 @@ function pieceOf(world: Entry, vertices: WorldVertex[], chosen: BuiltPolygon[]):
     })),
     texinfos: new Map(chosen.map(({ texinfo }) => [texinfo, header.subarray(TEXINFOS_AT + 4 * texinfo, TEXINFOS_AT + 4 * texinfo + 8)])),
   };
+}
+
+// a triangle's corners turned to face up (the corners' order sets which way it faces)
+function facingUp(corners: [number, number, number], vertices: Vec3[]): [number, number, number] {
+  const [a, b, c] = corners.map((corner) => vertices[corner]);
+  const upness = (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]); // the y of (b - a) x (c - a)
+  return upness < 0 ? [corners[0], corners[2], corners[1]] : corners;
+}
+
+// a piece as a mesh moved to at, for the collision: its faces up, so a floor is
+// a floor whichever way the base level winds its corners
+export function pieceMesh(piece: MapPiece, at: Vec3): Mesh {
+  const vertices = piece.vertices.map(({ at: vertex }) => vertex.map((value, axis) => value + at[axis]) as Vec3);
+  const triangles = piece.polygons.map(({ corners }) => ({ corners: facingUp(corners, vertices), object: null, material: null }));
+  return { vertices, triangles, materialLibraries: [] };
 }
 
 // a box around a piece's point (zone units)

@@ -5,7 +5,7 @@
 import type { LevelObject } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
-import { addFloor, Cells, solidCells } from "./collision";
+import { addFaces, addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { enemyPath } from "./enemyPaths";
 import {
@@ -21,7 +21,7 @@ import { readObj } from "./obj";
 import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
 import { cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
-import { readTemplates, stoneTrack, warpPadBase, type MapPiece, type StoneTrack, type Templates } from "./templates";
+import { pieceMesh, readTemplates, stoneTrack, warpPadBase, type MapPiece, type StoneTrack, type Templates } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
@@ -132,13 +132,19 @@ class ObjectPlacer {
     this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
   }
 
-  // where a rolling stone's track goes, relative to its zone, and which zone: its
-  // floor under the middle of its path on the floor at the stone
-  trackPlace(stone: LevelObject, track: StoneTrack): { zone: number; at: Vec3 } {
+  // where a rolling stone's track goes in the level (where its path starts):
+  // its floor under the middle of its path on the floor at the stone
+  trackStart(stone: LevelObject, track: StoneTrack): Vec3 {
     const [x, y, z] = this.positionOf(stone);
     const middle = track.path[Math.floor(track.path.length / 2)];
-    const { zone } = this.inZone([x, y, z]);
-    return { zone, at: this.inZone([x - middle[0], y - track.floor, z - middle[2]]).at };
+    return [x - middle[0], y - track.floor, z - middle[2]];
+  }
+
+  // where a rolling stone's track goes relative to the zone the stone's in, and which zone
+  trackPlace(stone: LevelObject, track: StoneTrack): { zone: number; at: Vec3 } {
+    const { zone } = this.inZone(this.positionOf(stone));
+    const start = this.trackStart(stone, track);
+    return { zone, at: [start[0], start[1], start[2] - this.map.spans[zone][0]] };
   }
 
   // the warp pad that ends the level; where it stands in its zone, and which zone
@@ -176,15 +182,18 @@ function meshesInZone(zoneWorlds: WorldMesh[][], zone: number): number[] {
 }
 
 // the worlds with jungle rollers' track under each rolling stone
-function withStoneTracks(worlds: Worlds, stones: LevelObject[], level: Level, placer: ObjectPlacer, zoneWorlds: WorldMesh[][], template: Buffer): Worlds {
-  if (stones.length === 0) {
-    return worlds;
-  }
-  const track = stoneTrack(level);
+function withStoneTracks(worlds: Worlds, stones: LevelObject[], track: StoneTrack, placer: ObjectPlacer, zoneWorlds: WorldMesh[][], template: Buffer): Worlds {
   return stones.reduce((built, stone) => {
     const { zone, at } = placer.trackPlace(stone, track);
     return addMapPiece(built, track, at, template, meshesInZone(zoneWorlds, zone), "a rolling stone's track");
   }, worlds);
+}
+
+// each rolling stone's track in the collision, so crash stands in its groove and can't walk through its sides
+function addStoneTrackCells(cells: Cells, stones: LevelObject[], track: StoneTrack, placer: ObjectPlacer, size: Vec3): void {
+  for (const stone of stones) {
+    addFaces(cells, pieceMesh(track, placer.trackStart(stone, track)), size, MAP_CELL);
+  }
 }
 
 const boxCount = (boxes: LevelObject[]) => boxes.reduce((sum, box) => sum + box.stack, 0);
@@ -214,7 +223,11 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   enemies.forEach((enemy) => placer.placeEnemy(enemy));
 
   const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
-  let withBase = withStoneTracks(textured, stones, level, placer, zoneWorlds, template);
+  const track = stones.length ? stoneTrack(level) : null;
+  let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
+  if (track) {
+    addStoneTrackCells(cells, stones, track, placer, fitted.size);
+  }
   if (end) {
     const position = placer.positionOf(end);
     const pad = placer.placeWarpPad(position);
