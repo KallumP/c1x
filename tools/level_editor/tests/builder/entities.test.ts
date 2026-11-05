@@ -8,7 +8,8 @@ import {
 } from "../../builder/entities";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readLevel } from "../../builder/levelFiles";
-import { readTemplates, warpPadBase } from "../../builder/templates";
+import { STONE_RADIUS } from "../../builder/enemyPaths";
+import { readTemplates, stoneTrack, warpPadBase, type MapPiece } from "../../builder/templates";
 
 // an entity as a zone stores it: parent zone, spawn flags, group, id, point count,
 // 3 init flags, type, subtype, then the points (units of 4)
@@ -148,7 +149,54 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(Math.max(...[...xs, ...zs].map(Math.abs))).toBeLessThanOrEqual(700);
     expect(Math.max(...ys)).toBeLessThanOrEqual(16);
     expect(Math.min(...ys)).toBeGreaterThanOrEqual(-600);
-    expect(padBase.polygons.every(({ texinfo }) => padBase.texinfos.get(texinfo)!.length === 8)).toBe(true); // 2 words each
-    expect(base.pages.map(({ eid }) => eid)).toContain(padBase.page);
+    expectTexturedFromBase(padBase);
+  });
+
+  // each polygon's texinfo (2 words) and texture page, from the base level
+  function expectTexturedFromBase(piece: MapPiece) {
+    expect(piece.polygons.every(({ texinfo }) => piece.texinfos.get(texinfo)!.length === 8)).toBe(true);
+    const pageEids = base.pages.map(({ eid }) => eid);
+    expect(piece.polygons.every(({ page }) => pageEids.includes(page))).toBe(true);
+  }
+
+  // a polygon's corners, if it lies more flat than upright (the groove's floor, not its skirts)
+  const flatCorners = (piece: MapPiece) => piece.polygons.map(({ corners }) => corners.map((corner) => piece.vertices[corner].at))
+    .filter(([a, b, c]) => {
+      const [u, v] = [b.map((value, axis) => value - a[axis]), c.map((value, axis) => value - a[axis])];
+      const normal = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+      return Math.abs(normal[1]) > 0.7 * Math.hypot(...normal);
+    });
+
+  test("a rolling stone's track is the groove in the base level's terrain along its path", () => {
+    const track = stoneTrack(base);
+    expect(track.polygons.length).toBeGreaterThan(40);
+    expect(track.polygons.length).toBeLessThan(400);
+    const [xs, ys, zs] = [0, 1, 2].map((axis) => track.vertices.map(({ at }) => at[axis]));
+    // relative to the path's first point: along the path (-x) and a little past its ends, across it, and down
+    expect(Math.min(...xs)).toBeLessThan(-3600);
+    expect(Math.max(...xs)).toBeGreaterThan(0);
+    expect(Math.min(...xs)).toBeGreaterThanOrEqual(-4640);
+    expect(Math.max(...xs)).toBeLessThanOrEqual(1030);
+    expect(Math.min(...zs)).toBeGreaterThanOrEqual(-350);
+    expect(Math.max(...zs)).toBeLessThanOrEqual(460);
+    expect(Math.min(...ys)).toBeGreaterThanOrEqual(-1900);
+    expect(Math.max(...ys)).toBeLessThanOrEqual(100);
+    expectTexturedFromBase(track);
+  });
+
+  test("a rolling stone's track comes with its path, from its first point, rolling -x and dipping in the middle", () => {
+    const { path } = stoneTrack(base);
+    expect(path.length).toBe(11);
+    expect(path[0]).toEqual([0, 0, 0]);
+    expect(path[10]).toEqual([-3600, 0, 0]);
+    expect(path[5]).toEqual([-1800, -472, 0]);
+  });
+
+  test("the groove's floor under the middle of the path is a stone's radius below it", () => {
+    const track = stoneTrack(base);
+    const middle = track.path[5];
+    const floorUnderMiddle = flatCorners(track).flat().filter(([x, , z]) => Math.abs(x - middle[0]) <= 300 && Math.abs(z) <= 300);
+    const bottom = Math.min(...floorUnderMiddle.map(([, y]) => y));
+    expect(Math.abs(bottom - (middle[1] - STONE_RADIUS))).toBeLessThanOrEqual(64);
   });
 });
