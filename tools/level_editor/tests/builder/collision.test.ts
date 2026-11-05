@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { addFaces, addFloor, solidCells, type CellKind } from "../../builder/collision";
+import { addFloor, solidCells, type CellKind } from "../../builder/collision";
 import type { Mesh } from "../../builder/obj";
 import type { Vec3 } from "../../builder/vectors";
 import { floorMesh, meshOf, merged, quadMesh } from "./meshes";
@@ -38,21 +38,17 @@ describe("collision cells", () => {
     }
   });
 
-  test("faces can be added where the map has none, solid as they would be in the map", () => {
-    // for a rolling stone's track, which isn't part of the map but has to be stood in and walked into
-    const cells = cellsOf(floorMesh(0, 0, 512, 256, 256));
-    const raised = floorMesh(128, 0, 384, 256, 600);
-    const wall = quadMesh([[512, 768, 0], [512, 1024, 0], [512, 1024, 256], [512, 768, 256]]); // facing +x, clear of the floors
-    addFaces(cells, merged(raised, wall), SIZE, 128);
-    for (const [mesh, kind] of [[raised, "floor"], [wall, "wall"]] as const) {
-      for (const at of positionsOfKind(mesh, kind)) {
-        expect(cells.get(at.split(",").map(Number) as [number, number, number])).toBe(kind);
-      }
-    }
-    expect(positionsOfKind(floorMesh(0, 0, 512, 256, 256), "floor").size).toBeGreaterThan(0);
-    for (const at of positionsOfKind(floorMesh(0, 0, 512, 256, 256), "floor")) {
-      expect(cells.get(at.split(",").map(Number) as [number, number, number])).toBe("floor"); // the map's own stay
-    }
+  test("pieces added to the map are solid just as if they were part of it", () => {
+    // for rolling stones' tracks, which aren't part of the map but have to be stood in and walked into,
+    // and stepped up onto where they meet it, as the map's own lips are
+    const floor = floorMesh(0, 0, 256, 256, 256);
+    const step = merged(
+      floorMesh(256, 0, 512, 256, 384),
+      quadMesh([[256, 256, 0], [256, 256, 256], [256, 384, 256], [256, 384, 0]]), // facing -x, a cell over the floor
+    );
+    const asPiece = [...solidCells(floor, SIZE, 128, [step])].map(({ at, kind }) => `${at.join()}:${kind}`).sort();
+    const asMap = [...cellsOf(merged(floor, step))].map(({ at, kind }) => `${at.join()}:${kind}`).sort();
+    expect(asPiece).toEqual(asMap);
   });
 
   test("a floor off the grid goes to the nearest cell top", () => {
