@@ -141,18 +141,16 @@ const reachesMiddle = ([, j]: CellPosition, top: number, cell: number) => top >=
 // floor, and floor over wall, where they share a cell. a wall's top goes to
 // the nearest cell top, as a floor's does (reachesMiddle), and a wall a cell
 // over the floor beside it is a lip crash steps onto (stepOntoLips). cells outside the zone
-// (size w, h, d) are left out
-export function solidCells(mesh: Mesh, size: Vec3, cell: number): Cells {
+// (size w, h, d) are left out. pieces added to the map (rolling stones' tracks)
+// are solid just as if they were part of it
+export function solidCells(mesh: Mesh, size: Vec3, cell: number, pieces: Mesh[] = []): Cells {
   const cells = new Cells();
-  markFaces(cells, mesh, size, cell);
+  for (const faces of [mesh, ...pieces]) {
+    markFaces(cells, faces, size, cell);
+  }
   removeHangingWalls(cells);
   stepOntoLips(cells);
   return cells;
-}
-
-// faces that aren't part of the map, such as a rolling stone's track, solid as the map's faces are
-export function addFaces(cells: Cells, mesh: Mesh, size: Vec3, cell: number): void {
-  markFaces(cells, mesh, size, cell);
 }
 
 // the cells just behind each face (see solidCells), marked in cells

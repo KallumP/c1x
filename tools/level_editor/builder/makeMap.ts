@@ -5,7 +5,7 @@
 import type { LevelObject } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
-import { addFaces, addFloor, Cells, solidCells } from "./collision";
+import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import {
   BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, UNBREAKABLE_BOXES, WARP_PAD, withEntityId, withPath,
@@ -16,7 +16,7 @@ import type { RgbImage } from "./images";
 import { ENTRY_SLST, type Level } from "./levelFiles";
 import { boxSubtype, toZone } from "./levelObjects";
 import { addMapPiece, TEXINFO_WORDS_MAX, textureWorlds } from "./mapTextures";
-import { readObj } from "./obj";
+import { readObj, type Mesh } from "./obj";
 import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
 import { cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
@@ -57,7 +57,6 @@ export function cellBlocks(cells: Cells, cell: number): Block[] {
 // the map, fitted into zones, with its collision
 interface FittedMap {
   fitted: Fit;
-  cells: Cells;
   spans: Span[];
 }
 
@@ -173,7 +172,7 @@ class ObjectPlacer {
 
 function fitMap(text: string, scale: number, turn: number): FittedMap {
   const fitted = fit(readObj(text, scale, turn), MAP_CELL, MAP_HEADROOM, MAP_CELL, true);
-  return { fitted, cells: solidCells(fitted.mesh, fitted.size, MAP_CELL), spans: zoneSpans(fitted.size[2], MAP_CELL) };
+  return { fitted, spans: zoneSpans(fitted.size[2], MAP_CELL) };
 }
 
 const PAD_TOP = 32; // how far below the pad its base's top can be (the base reaches 16 above and 600 below)
@@ -206,11 +205,11 @@ function withStoneTracks(worlds: Worlds, stones: LevelObject[], track: StoneTrac
   }, worlds);
 }
 
-// each rolling stone's track in the collision, so crash stands in its groove and can't walk through its sides
-function addStoneTrackCells(cells: Cells, stones: LevelObject[], track: StoneTrack, placer: ObjectPlacer, size: Vec3): void {
-  for (const stone of stones) {
-    addFaces(cells, pieceMesh(track, placer.trackStart(stone, track)), size, MAP_CELL);
-  }
+// each rolling stone's track as a mesh where it goes, for the collision, so
+// crash stands in its groove, can't walk through its sides, and steps onto it
+// where it meets the map as he does the map's own lips
+function stoneTrackMeshes(stones: LevelObject[], track: StoneTrack | null, placer: ObjectPlacer): Mesh[] {
+  return track ? stones.map((stone) => pieceMesh(track, placer.trackStart(stone, track))) : [];
 }
 
 const boxCount = (boxes: LevelObject[]) => boxes.reduce((sum, box) => sum + box.stack, 0);
@@ -223,13 +222,15 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const base = readTemplates(level);
   const templates = { ...base, header: withSky(base.header, sky) }; // every zone's header is made from this one
   const map = fitMap(text, scale, turn);
-  const { fitted, cells, spans } = map;
+  const { fitted, spans } = map;
   const spawn = objects.find((object) => object.kind === "spawn");
   const end = objects.find((object) => object.kind === "end");
   const boxes = objects.filter((object) => object.kind === "box");
   const enemies = objects.filter((object) => object.kind === "enemy");
   const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
   const placer = new ObjectPlacer(map, templates, scale, turn, (end ? 1 : 0) + boxCount(boxes) + enemies.length);
+  const track = stones.length ? stoneTrack(level) : null;
+  const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
 
   const zoneWorlds = zoneWorldMeshes(map, templates, new Set(images.keys()), new Set(stones.map((stone) => placer.zoneOf(stone))));
   const template = templates.world.items[0];
@@ -240,13 +241,9 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   boxes.forEach((box) => placer.placeBoxStack(box));
   linkSwitches(placer.entities, placer.placedBoxes);
 
-  const track = stones.length ? stoneTrack(level) : null;
   enemies.filter((enemy) => enemy.enemy === "plant").forEach((plant) => placer.placePlant(plant));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
-  if (track) {
-    addStoneTrackCells(cells, stones, track, placer, fitted.size);
-  }
   if (end) {
     const position = placer.positionOf(end);
     const pad = placer.placeWarpPad(position);
