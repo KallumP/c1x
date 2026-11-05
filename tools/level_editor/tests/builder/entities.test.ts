@@ -177,16 +177,15 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(Math.min(...xs)).toBeGreaterThanOrEqual(-4640);
     expect(Math.max(...xs)).toBeLessThanOrEqual(1030);
     expect(Math.min(...zs)).toBeGreaterThanOrEqual(-350);
-    expect(Math.max(...zs)).toBeLessThanOrEqual(460);
+    expect(Math.max(...zs)).toBeLessThanOrEqual(60);
     expect(Math.min(...ys)).toBeGreaterThanOrEqual(-1900);
     expect(Math.max(...ys)).toBeLessThanOrEqual(100);
     expectTexturedFromBase(track);
   });
 
-  test("a rolling stone's track leaves out the moss growing on it, drawn half see-through (mode 0) unlike its stone", () => {
+  test("a rolling stone's track stops at its groove's side wall, leaving out the grassy banks beside it", () => {
     const track = stoneTrack(base);
-    const semiTransparency = (texinfo: number) => (track.texinfos.get(texinfo)![3] >> 5) & 3;
-    expect(track.polygons.filter(({ texinfo }) => semiTransparency(texinfo) === 0)).toEqual([]);
+    expect(Math.max(...track.vertices.map(({ at }) => at[2]))).toBe(58);
   });
 
   test("a rolling stone's track comes with its path, from its first point, rolling -x and dipping in the middle", () => {
