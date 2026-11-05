@@ -21,7 +21,7 @@ import { readObj } from "./obj";
 import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
 import { cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
-import { readTemplates, warpPadBase, type MapPiece, type Templates } from "./templates";
+import { readTemplates, stoneTrack, warpPadBase, type MapPiece, type StoneTrack, type Templates } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
@@ -132,6 +132,15 @@ class ObjectPlacer {
     this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
   }
 
+  // where a rolling stone's track goes, relative to its zone, and which zone: its
+  // floor under the middle of its path on the floor at the stone
+  trackPlace(stone: LevelObject, track: StoneTrack): { zone: number; at: Vec3 } {
+    const [x, y, z] = this.positionOf(stone);
+    const middle = track.path[Math.floor(track.path.length / 2)];
+    const { zone } = this.inZone([x, y, z]);
+    return { zone, at: this.inZone([x - middle[0], y - track.floor, z - middle[2]]).at };
+  }
+
   // the warp pad that ends the level; where it stands in its zone, and which zone
   placeWarpPad(position: Vec3): { zone: number; at: Vec3 } {
     const placed = this.inZone(position);
@@ -156,6 +165,26 @@ function addWarpPadFloor(cells: Cells, base: MapPiece, at: Vec3, size: Vec3): vo
   const xs = top.map(([x]) => x);
   const zs = top.map(([, , z]) => z);
   addFloor(cells, [at[0] + Math.min(...xs), at[2] + Math.min(...zs)], [at[0] + Math.max(...xs), at[2] + Math.max(...zs)], at[1], size, MAP_CELL);
+}
+
+type Worlds = ReturnType<typeof addMapPiece>;
+
+// the world meshes of a zone, by their index among all the zones' meshes
+function meshesInZone(zoneWorlds: WorldMesh[][], zone: number): number[] {
+  const first = zoneWorlds.slice(0, zone).reduce((sum, worlds) => sum + worlds.length, 0);
+  return zoneWorlds[zone].map((_, index) => first + index);
+}
+
+// the worlds with jungle rollers' track under each rolling stone
+function withStoneTracks(worlds: Worlds, stones: LevelObject[], level: Level, placer: ObjectPlacer, zoneWorlds: WorldMesh[][], template: Buffer): Worlds {
+  if (stones.length === 0) {
+    return worlds;
+  }
+  const track = stoneTrack(level);
+  return stones.reduce((built, stone) => {
+    const { zone, at } = placer.trackPlace(stone, track);
+    return addMapPiece(built, track, at, template, meshesInZone(zoneWorlds, zone), "a rolling stone's track");
+  }, worlds);
 }
 
 const boxCount = (boxes: LevelObject[]) => boxes.reduce((sum, box) => sum + box.stack, 0);
@@ -184,14 +213,13 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   linkSwitches(placer.entities, placer.placedBoxes);
   enemies.forEach((enemy) => placer.placeEnemy(enemy));
 
-  let withBase = textured;
+  const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
+  let withBase = withStoneTracks(textured, stones, level, placer, zoneWorlds, template);
   if (end) {
     const position = placer.positionOf(end);
     const pad = placer.placeWarpPad(position);
-    const first = zoneWorlds.slice(0, pad.zone).reduce((sum, worlds) => sum + worlds.length, 0);
-    const candidates = zoneWorlds[pad.zone].map((_, index) => first + index);
     const padBase = warpPadBase(level);
-    withBase = addMapPiece(textured, padBase, pad.at, template, candidates, "the warp pad's base");
+    withBase = addMapPiece(withBase, padBase, pad.at, template, meshesInZone(zoneWorlds, pad.zone), "the warp pad's base");
     addWarpPadFloor(cells, padBase, position, fitted.size);
   }
 
