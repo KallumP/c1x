@@ -16,12 +16,12 @@ import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
 import { ENTRY_SLST, type Level } from "./levelFiles";
 import { boxSubtype, toZone } from "./levelObjects";
-import { addWarpPadBase, TEXINFO_WORDS_MAX, textureWorlds } from "./mapTextures";
+import { addMapPiece, TEXINFO_WORDS_MAX, textureWorlds } from "./mapTextures";
 import { readObj } from "./obj";
 import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
 import { cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
-import { readTemplates, warpPadBase, type Templates, type WarpPadBase } from "./templates";
+import { readTemplates, warpPadBase, type MapPiece, type Templates } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
@@ -151,7 +151,7 @@ const PAD_TOP = 32; // how far below the pad its base's top can be (the base rea
 // the warp pad's base is solid where it stands, so a pad raised off the floor
 // can be stood on (the game ends the level when crash lands on it); on the
 // floor, the floor already is
-function addWarpPadFloor(cells: Cells, base: WarpPadBase, at: Vec3, size: Vec3): void {
+function addWarpPadFloor(cells: Cells, base: MapPiece, at: Vec3, size: Vec3): void {
   const top = base.vertices.filter(({ at: [, y] }) => y >= -PAD_TOP).map(({ at: vertex }) => vertex);
   const xs = top.map(([x]) => x);
   const zs = top.map(([, , z]) => z);
@@ -191,7 +191,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     const first = zoneWorlds.slice(0, pad.zone).reduce((sum, worlds) => sum + worlds.length, 0);
     const candidates = zoneWorlds[pad.zone].map((_, index) => first + index);
     const padBase = warpPadBase(level);
-    withBase = addWarpPadBase(textured, padBase, pad.at, template, candidates);
+    withBase = addMapPiece(textured, padBase, pad.at, template, candidates, "the warp pad's base");
     addWarpPadFloor(cells, padBase, position, fitted.size);
   }
 

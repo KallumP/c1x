@@ -1,9 +1,9 @@
 // a map's textures: texture pages for the materials' images, each tile region
-// as a texinfo in the header of the mesh that uses it, and the warp pad's base
+// as a texinfo in the header of the mesh that uses it, and pieces of the base level's terrain
 import { stringToEid } from "./entryIds";
 import type { RgbImage } from "./images";
 import { texturePage as texturePageEntry, type Page } from "./levelFiles";
-import type { WarpPadBase } from "./templates";
+import type { MapPiece } from "./templates";
 import { tileFromImage } from "./tiles";
 import { texinfoBytes, texturePage, TILES_PER_PAGE, type Place } from "./tpage";
 import type { Vec3 } from "./vectors";
@@ -100,51 +100,61 @@ export function textureWorlds(worlds: WorldMesh[], images: Map<string, RgbImage>
   };
 }
 
-// the mesh header's texture page slots with the base's page, and the slot it's in
-function slotsWithPage(template: Buffer, pageEids: number[], page: number): { slots: number[]; slot: number } {
+type Worlds = Omit<TexturedWorlds, "pages">;
+
+// the mesh header's texture page slots (the template's, then pageEids) with
+// pages added to them; what's added is named for the error when they're full
+function slotsWithPages(template: Buffer, pageEids: number[], pages: number[], name: string): number[] {
   const header = readWorldHeader(template);
   const slots = [...header.pages.slice(0, header.pageCount), ...pageEids];
-  if (!slots.includes(page)) {
+  for (const page of [...new Set(pages)].filter((page) => !slots.includes(page))) {
     if (slots.length >= WGEO_PAGES) {
-      throw new Error("no texture page slot left for the warp pad's base");
+      throw new Error(`no texture page slot left for ${name}`);
     }
     slots.push(page);
   }
-  return { slots, slot: slots.indexOf(page) };
+  return slots;
 }
 
-// the textured worlds with the warp pad's base added where the pad stands (at,
-// relative to its zone), to whichever of the candidate meshes has the fewest
-// polygons, with its texinfos and texture page
-export function addWarpPadBase(
-  textured: Omit<TexturedWorlds, "pages">, base: WarpPadBase, at: Vec3, template: Buffer, candidates: number[],
-): Omit<TexturedWorlds, "pages"> {
+// a mesh's texinfos with the piece's after its own, and the word each of the piece's is at
+function withPieceTexinfos(own: Buffer, piece: MapPiece, template: Buffer, name: string) {
   const header = readWorldHeader(template);
-  const { slots, slot } = slotsWithPage(template, textured.pageEids, base.page);
+  const pieceTexinfos = [...piece.texinfos.keys()].sort((first, second) => first - second);
+  const ownWords = own.length / 4;
+  const wordOf = new Map(pieceTexinfos.map((texinfo, index) => [texinfo, header.texinfoWords + ownWords + 2 * index]));
+  const texinfos = Buffer.concat([own, ...pieceTexinfos.map((texinfo) => piece.texinfos.get(texinfo)!)]);
+  if (header.texinfoWords + texinfos.length / 4 > TEXINFO_WORDS_MAX) {
+    throw new Error(`no room in the mesh's texinfos for ${name}`);
+  }
+  return { texinfos, wordOf };
+}
+
+// the mesh with the piece's vertices (moved by at, on the 8 unit grid vertices are kept on) and polygons added
+function withPieceGeometry(world: BuiltWorld, piece: MapPiece, at: Vec3, wordOf: Map<number, number>, slots: number[]): BuiltWorld {
+  const [dx, dy, dz] = at.map((coordinate) => Math.floor(Math.trunc(coordinate) / 8) * 8);
+  const moved = piece.vertices.map(({ at: [x, y, z], colour }) => ({ at: [x + dx, y + dy, z + dz] as Vec3, colour }));
+  const polygons = piece.polygons.map(({ corners, texinfo, page }): BuiltPolygon => ({
+    corners: corners.map((corner) => corner + world.vertices.length) as [number, number, number],
+    texinfo: wordOf.get(texinfo)!,
+    page: slots.indexOf(page),
+  }));
+  return { vertices: [...world.vertices, ...moved], polygons: [...world.polygons, ...polygons] };
+}
+
+// the textured worlds with a piece of the base level's terrain (the warp pad's
+// base, or a rolling stone's track, named for errors) added at at (relative to
+// its zone), to whichever of the candidate meshes has the fewest polygons, with
+// its texinfos and texture pages
+export function addMapPiece(textured: Worlds, piece: MapPiece, at: Vec3, template: Buffer, candidates: number[], name: string): Worlds {
+  const header = readWorldHeader(template);
+  const slots = slotsWithPages(template, textured.pageEids, piece.polygons.map(({ page }) => page), name);
   const target = candidates.reduce((fewest, index) =>
     (textured.worlds[index].polygons.length < textured.worlds[fewest].polygons.length ? index : fewest));
-  const { vertices, polygons } = textured.worlds[target];
-
-  const baseTexinfos = [...base.texinfos.keys()].sort((first, second) => first - second);
-  const ownWords = textured.texinfos[target].length / 4;
-  const texinfoIndex = new Map(baseTexinfos.map((texinfo, index) => [texinfo, header.texinfoWords + ownWords + 2 * index]));
-  const texinfos = Buffer.concat([textured.texinfos[target], ...baseTexinfos.map((texinfo) => base.texinfos.get(texinfo)!)]);
-  if (header.texinfoWords + texinfos.length / 4 > TEXINFO_WORDS_MAX) {
-    throw new Error("no room in the mesh's texinfos for the warp pad's base");
-  }
-
-  const [dx, dy, dz] = at.map((coordinate) => Math.floor(Math.trunc(coordinate) / 8) * 8);
-  const movedVertices = base.vertices.map(({ at: [x, y, z], colour }) => ({ at: [x + dx, y + dy, z + dz] as Vec3, colour }));
-  const basePolygons = base.polygons.map(({ corners, texinfo }): BuiltPolygon => ({
-    corners: corners.map((corner) => corner + vertices.length) as [number, number, number],
-    texinfo: texinfoIndex.get(texinfo)!,
-    page: slot,
-  }));
-  const world = { vertices: [...vertices, ...movedVertices], polygons: [...polygons, ...basePolygons] };
+  const { texinfos, wordOf } = withPieceTexinfos(textured.texinfos[target], piece, template, name);
+  const world = withPieceGeometry(textured.worlds[target], piece, at, wordOf, slots);
   if (world.vertices.length > WGEO_MAX || world.polygons.length > WGEO_MAX) {
-    throw new Error("no room in the mesh for the warp pad's base");
+    throw new Error(`no room in the mesh for ${name}`);
   }
-
   const worlds = [...textured.worlds];
   const allTexinfos = [...textured.texinfos];
   worlds[target] = world;
