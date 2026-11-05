@@ -7,9 +7,10 @@ import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
+import { enemyPath } from "./enemyPaths";
 import {
-  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, UNBREAKABLE_BOXES, WARP_PAD, withEntityId, withPosition,
-  type PlacedBox,
+  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, linkSwitches, newEntityIds, UNBREAKABLE_BOXES, WARP_PAD, withEntityId, withPath,
+  withPosition, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
@@ -120,12 +121,15 @@ class ObjectPlacer {
     }
   }
 
-  // an enemy, at its spot in the zone it's in
+  // an enemy, in the zone its spot is in, moving along its path (relative to that zone)
   placeEnemy(object: LevelObject): void {
-    const { zone, at } = this.inZone(this.positionOf(object));
+    const points = [object.at, ...(object.path ?? [])].map((at) => this.positionOf({ ...object, at }));
+    const { zone } = this.inZone(points[0]);
+    const zoneStart = this.map.spans[zone][0];
     const [type, subtype] = ENEMY_ENTITIES[object.enemy!];
-    const enemy = withEntityId(this.templates.entity(type, subtype), this.ids.shift()!);
-    this.entities[zone].push(withPosition(enemy, at));
+    const example = this.templates.entity(type, subtype);
+    const path = enemyPath(object.enemy!, points.map(([x, y, z]): Vec3 => [x, y, z - zoneStart]), entityPath(example));
+    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
   }
 
   // the warp pad that ends the level; where it stands in its zone, and which zone

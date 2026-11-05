@@ -18,8 +18,9 @@ export type BoxType = keyof typeof BOX_TYPES;
 export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 
 // the enemies custom levels can have, by name: the base level's own (jungle
-// rollers' biting plant). the level build places them by their entity (builder/entities.ts)
-export const ENEMY_TYPES = ["plant"] as const;
+// rollers' biting plant, and its stone wheel that rolls back and forth along
+// its path). the level build places them by their entity (builder/entities.ts)
+export const ENEMY_TYPES = ["plant", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
@@ -31,6 +32,7 @@ export interface LevelObject {
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
   enemy?: EnemyType;    // an enemy's type
+  path?: Vec3[];        // where an enemy moves to from at, in order (blender, metres)
 }
 
 // a box's type name, from its type or its subtype number
@@ -43,15 +45,15 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type"];
+const ENEMY_SETTINGS = ["type", "path"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 const isWhole = (value: unknown): value is number => isNumber(value) && Number.isInteger(value);
 const isPosition = (value: unknown): value is Vec3 => Array.isArray(value) && value.length === 3 && value.every(isNumber);
 
-// an enemy's type, from its fields in objects.json
-function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<LevelObject, "enemy"> {
+// an enemy's type and path, from its fields in objects.json
+function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<LevelObject, "enemy" | "path"> {
   const enemyTypes = ENEMY_TYPES.join(", ");
   if (!("type" in fields)) {
     throw new Error(`object ${objectNumber}: an enemy needs a type (${enemyTypes})`);
@@ -59,7 +61,14 @@ function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<
   if (!ENEMY_TYPES.includes(fields.type as EnemyType)) {
     throw new Error(`object ${objectNumber}: unknown enemy type ${fields.type} (it can be ${enemyTypes})`);
   }
-  return { enemy: fields.type as EnemyType };
+  if (!("path" in fields)) {
+    return { enemy: fields.type as EnemyType };
+  }
+  const path = fields.path;
+  if (!(Array.isArray(path) && path.every(isPosition))) {
+    throw new Error(`object ${objectNumber}: path should be where it moves to, [[x, y, z], ...] in metres`);
+  }
+  return { enemy: fields.type as EnemyType, path: path.map(([x, y, z]) => [x, y, z]) };
 }
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
@@ -144,6 +153,7 @@ export function parseObjects(text: string): LevelObject[] {
 }
 
 const roundToMillimetre = (metres: number) => Math.round(metres * 1000) / 1000 + 0; // + 0 turns -0 into 0
+const formatPosition = (position: Vec3) => `[${position.map(roundToMillimetre).join(", ")}]`;
 
 function formatObject(object: LevelObject): string {
   const parts = [`"kind": ${JSON.stringify(object.kind)}`];
@@ -153,13 +163,16 @@ function formatObject(object: LevelObject): string {
   if (object.kind === "enemy" && object.enemy !== undefined) {
     parts.push(`"type": ${JSON.stringify(object.enemy)}`);
   }
-  parts.push(`"at": [${object.at.map(roundToMillimetre).join(", ")}]`);
+  parts.push(`"at": ${formatPosition(object.at)}`);
   const raise = roundToMillimetre(object.raise);
   if (raise !== 0) {
     parts.push(`"raise": ${raise}`);
   }
   if (object.kind === "box" && object.stack !== 1) {
     parts.push(`"stack": ${object.stack}`);
+  }
+  if (object.path) {
+    parts.push(`"path": [${object.path.map(formatPosition).join(", ")}]`);
   }
   return `{${parts.join(", ")}}`;
 }
