@@ -8,7 +8,6 @@ import {
 } from "../../builder/entities";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readLevel } from "../../builder/levelFiles";
-import { STONE_RADIUS } from "../../builder/enemyPaths";
 import { readTemplates, stoneTrack, warpPadBase, type MapPiece } from "../../builder/templates";
 
 // an entity as a zone stores it: parent zone, spawn flags, group, id, point count,
@@ -192,11 +191,11 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(path[5]).toEqual([-1800, -472, 0]);
   });
 
-  test("the groove's floor under the middle of the path is a stone's radius below it", () => {
+  test("the track's floor under the middle of its path, where the stone rolls, is its highest flat face there", () => {
     const track = stoneTrack(base);
     const middle = track.path[5];
     const floorUnderMiddle = flatCorners(track).flat().filter(([x, , z]) => Math.abs(x - middle[0]) <= 300 && Math.abs(z) <= 300);
-    const bottom = Math.min(...floorUnderMiddle.map(([, y]) => y));
-    expect(Math.abs(bottom - (middle[1] - STONE_RADIUS))).toBeLessThanOrEqual(64);
+    expect(track.floor).toBe(Math.max(...floorUnderMiddle.map(([, y]) => y)));
+    expect(track.floor).toBe(-1177); // the ground beside the groove is lower, at -1385
   });
 });
