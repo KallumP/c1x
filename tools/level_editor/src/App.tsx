@@ -6,7 +6,7 @@ import ObjectMarkers from "./components/ObjectMarkers";
 import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
 import Scene, { type Orbit } from "./components/Scene";
-import { newObject, type Tool } from "./editor";
+import { movedTo, newObject, waypointMovedTo, type Tool } from "./editor";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
 import { useLevelActions } from "./hooks/useLevelActions";
@@ -20,6 +20,12 @@ import { clickedFloor, isClick } from "./three/clicks";
 import "./App.css";
 
 const SELECT: Tool = { kind: "select" };
+
+// what a drag moves: an object, or one waypoint of its path
+interface DragTarget {
+  index: number;
+  waypoint: number | null;
+}
 
 export default function App() {
   const [error, setError] = useState<string | null>(null);
@@ -36,10 +42,17 @@ export default function App() {
   const [tool, setTool] = useState<Tool>(SELECT);
   const [grid, setGrid] = useState(0.5);
   const orbitRef = useRef<Orbit>(null);
-  const drag = useDrag(orbitRef, grid, {
-    grab: (index) => dispatch({ type: "select", index }),
+  const drag = useDrag<DragTarget>(orbitRef, grid, {
+    grab: ({ index, waypoint }) => {
+      dispatch({ type: "select", index });
+      dispatch({ type: "selectWaypoint", waypoint });
+    },
     begin: () => dispatch({ type: "checkpoint" }),
-    move: (index, at) => dispatch({ type: "update", index, changes: { at }, record: false }),
+    move: ({ index, waypoint }, at) => {
+      const object = state.objects[index];
+      const changes = waypoint === null ? movedTo(object, at) : waypointMovedTo(object, waypoint, at);
+      dispatch({ type: "update", index, changes, record: false });
+    },
   });
   const [isSaving, setIsSaving] = useState(false);
   // saves the objects and level.cfg, whichever changed; whether they saved
@@ -149,8 +162,10 @@ export default function App() {
         scale={scale}
         turn={levelCfg.cfg.turn}
         selected={state.selected}
+        selectedWaypoint={state.waypoint}
         warnings={warnings}
-        onSelect={drag.start}
+        onGrab={(index) => drag.start({ index, waypoint: null })}
+        onGrabWaypoint={(index, waypoint) => drag.start({ index, waypoint })}
       />
     </>
   );

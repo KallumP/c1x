@@ -4,6 +4,7 @@ import type { Vec3 } from "./objects";
 
 export const BOX_UNITS = 400;     // a box's size in game units (BOX_HEIGHT in builder/entities.ts)
 export const DEFAULT_SCALE = 400; // game units a blender metre without a level.cfg (MAP_SCALE in builder/makeMap.ts)
+export const STONE_RADIUS_UNITS = 360; // a rolling stone's radius in game units (STONE_RADIUS in builder/enemyPaths.ts)
 
 export function blenderToView([x, y, z]: Vec3): Vec3 {
   return [x, z, -y];
