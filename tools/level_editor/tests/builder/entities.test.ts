@@ -8,7 +8,7 @@ import {
 } from "../../builder/entities";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readLevel } from "../../builder/levelFiles";
-import { pieceMesh, readTemplates, stoneTrack, warpPadBase, type MapPiece } from "../../builder/templates";
+import { pieceMesh, readTemplates, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece } from "../../builder/templates";
 
 // an entity as a zone stores it: parent zone, spawn flags, group, id, point count,
 // 3 init flags, type, subtype, then the points (units of 4)
@@ -186,6 +186,16 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
   test("a rolling stone's track stops at its groove's side wall, leaving out the grassy banks beside it", () => {
     const track = stoneTrack(base);
     expect(Math.max(...track.vertices.map(({ at }) => at[2]))).toBe(58);
+  });
+
+  test("a lifted track's skirts reach down as far again: only its corners below its floor, in the ground, go lower", () => {
+    const track = stoneTrack(base);
+    const lifted = withLongerSkirts(track, 400);
+    expect(lifted.polygons).toEqual(track.polygons);
+    expect([lifted.floor, lifted.path]).toEqual([track.floor, track.path]);
+    track.vertices.forEach(({ at: [x, y, z] }, index) =>
+      expect(lifted.vertices[index].at).toEqual([x, y < track.floor ? y - 400 : y, z]));
+    expect(track.vertices.some(({ at }) => at[1] < track.floor)).toBe(true);
   });
 
   test("a rolling stone's track comes with its path, from its first point, rolling -x and dipping in the middle", () => {

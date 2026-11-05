@@ -13,7 +13,7 @@ import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
 import { textureWorlds } from "../../builder/mapTextures";
 import { FOLLOW_CAM_MODE } from "../../builder/paths";
 import { colour5551 } from "../../builder/tpage";
-import { stoneTrack } from "../../builder/templates";
+import { STONE_TRACK_LIFT, stoneTrack } from "../../builder/templates";
 import { readWorldHeader, readWorldPolygon, readWorldVertex, TEXINFOS_AT } from "../../builder/worldGeometry";
 import type { TileRegion, WorldMesh, WorldVertex } from "../../builder/worldMeshes";
 import { ZONE_LOADLIST, ZONE_NEIGHBORS, ZONE_PATHS_IDX, zoneEntities, zoneOrigin, zoneWorldEids } from "../../builder/zones";
@@ -208,12 +208,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(tracksMesh.polygonCount).toBe(2 * track.polygons.length);
   });
 
-  test("a rolling stone rolls jungle rollers' path along its track, its middle over the stone's spot", () => {
+  test("a rolling stone rolls jungle rollers' path along its track, its middle over the stone's spot, lifted a box's height", () => {
     const track = stoneTrack(base);
     const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "rolling_stone" })] }).zone);
     expect(placed.type).toEqual(ENEMY_ENTITIES.rolling_stone);
-    // blender (1, 2, 0) is (1408, 128, 1664) in the zone; the track's floor is there, under the path's middle
-    const start = [1408 - track.path[5][0], 128 - track.floor, 1664 - track.path[5][2]];
+    // blender (1, 2, 0) is (1408, 128, 1664) in the zone; the track's floor is a box's height over it, under the path's middle
+    expect(STONE_TRACK_LIFT).toBe(BOX_HEIGHT);
+    const start = [1408 - track.path[5][0], 128 + STONE_TRACK_LIFT - track.floor, 1664 - track.path[5][2]];
     expect(placed.path.length).toBe(track.path.length);
     placed.path.forEach((point, index) => point.forEach((value, axis) =>
       expect(Math.abs(value - (start[axis] + track.path[index][axis]))).toBeLessThanOrEqual(8)));
@@ -229,15 +230,15 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       readWorldVertex(world.items[2].subarray(8 * index, 8 * index + 8)).at.map((value, axis) => value + header.origin[axis] - origin[axis]));
   });
 
-  test("a rolling stone comes with jungle rollers' track, its floor under the middle of the path on the floor at the stone", () => {
+  test("a rolling stone comes with jungle rollers' track, its floor under the middle of the path a box's height over the stone's spot", () => {
     const track = stoneTrack(base);
     const withStone = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "rolling_stone" })] });
     const withPlant = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "plant" })] });
     expect(polygonCount(withStone) - polygonCount(withPlant)).toBe(track.polygons.length);
     // blender (1, 2, 0) is (1408, 128, 1664) in the zone. the track's floor under the middle of its
-    // path has a corner 58 across (+z) from it, at the floor
+    // path has a corner 58 across (+z) from it, a box's height over the floor, so crash jumps up to it
     const middle = track.path[5];
-    const corner = [1408, 128, 1664 + 58];
+    const corner = [1408, 128 + BOX_HEIGHT, 1664 + 58];
     expect(worldVertices(withStone).some((vertex) => vertex.every((value, axis) => Math.abs(value - corner[axis]) <= 16))).toBe(true);
     expect(track.vertices.some(({ at }) => at[0] === middle[0] && at[1] === track.floor && at[2] === 58)).toBe(true);
   });
