@@ -11,6 +11,7 @@
 
 - `sunset_canyon`'s skinniest cacti, now as thick as the others
 - a spun plant in a custom level breaking every box in a long row behind it; it now only breaks boxes within about 3 m of where it stood
+- the game freezing when a plant ate Crash: when it found no free spot to move Crash to, it searched for one forever
 
 ## 2026-11-04
 

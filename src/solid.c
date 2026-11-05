@@ -883,7 +883,7 @@ int StopAtWalls(vec *trans, int x, int z, int *adj_x, int *adj_z, gool_object *o
       break; /* shouldn't expect to find any non-solid bits, so break */
     for (i=0;i<32;i++) {
       if (wall_bitmap[i] != 0xFFFFFFFF) { /* found a row with non-solid bit? */
-        x += 16; z += 16; /* offset */
+        x = 16; z = 16; /* pc: redo it from the origin (x += 16 never reached 16 from most points, so it looped forever) */
         done = 0; /* redo check at new location to ensure that rest of 32x32 points are tested */
         break;
       }
