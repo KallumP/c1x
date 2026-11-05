@@ -198,6 +198,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(plant.id).not.toBe(boxes(built.zone)[0].id);
   });
 
+  test("rolling stones' tracks have a world mesh of their own in their zone, so they fit however full the map's meshes are", () => {
+    const track = stoneTrack(base);
+    const stones = [object("enemy", [1, 2, 0], { enemy: "rolling_stone" }), object("enemy", [-1, 4, 0], { enemy: "rolling_stone" })];
+    const withStones = make(MAP_OBJ, { scale: 256, objects: stones });
+    const without = make(MAP_OBJ, { scale: 256 });
+    expect(worldsOf(withStones).length).toBe(worldsOf(without).length + 1);
+    const tracksMesh = readWorldHeader(worldsOf(withStones).at(-1)!.items[0]);
+    expect(tracksMesh.polygonCount).toBe(2 * track.polygons.length);
+  });
+
   test("a rolling stone rolls jungle rollers' path along its track, its middle over the stone's spot", () => {
     const track = stoneTrack(base);
     const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "rolling_stone" })] }).zone);
