@@ -5,6 +5,7 @@
 ### Added
 
 - custom levels can have enemies, starting with Jungle Rollers' biting plant, placed in the level editor
+- custom levels can have Jungle Rollers' rolling stone, which rolls back and forth along a path you draw in the level editor (drag its points, add and remove them)
 
 ## 2026-11-04
 

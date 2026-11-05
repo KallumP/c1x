@@ -58,7 +58,7 @@ Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or ano
 
 The arrow at the spawn points the way the camera faces when the level starts. With nothing selected, the right side shows the **Level**'s turn and scale (see [If something looks wrong](#if-something-looks-wrong)), and changing the turn turns the arrow. Save writes them to the level's `level.cfg`, along with the objects. Changing the scale changes how big the boxes look on the map, as they stay the same size in the game.
 
-**Enemies:** a `plant` bites Crash if he walks into it, and stays where it is.
+**Enemies:** a `plant` bites Crash if he walks into it, and stays where it is. A `rolling stone` rolls back and forth along its path: the line from it through the dots. Select the stone, then drag a dot to move that point, or click **Add point** on the right to add one past the last. Delete (or **Remove point**) removes the selected point, but a stone always keeps at least one. Dragging the stone moves its whole path with it.
 
 Below it, **Sky** sets the sky behind the level: a top colour filling the screen down to **split**, and a bottom colour below it, with a preview. It's N. Sanity Beach's blue over olive unless you change it, and it's saved to `level.cfg` too.
 
