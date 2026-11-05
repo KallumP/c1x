@@ -16,5 +16,4 @@ settings.cfg
 !README.MD
 
 # claude code plans and project skills
-.claude/plans/
-.claude/skills/
+.claude/
