@@ -1,25 +1,46 @@
 #include "utest.h"
 #include "pc/pace.h"
 
+#define TICKS_A_SECOND (34000000.0 / 0x8000)
+
+/* seconds from the first frame of lid to the start of frame */
+static double SecondsToFrame(lid_t lid, uint32_t frame) {
+  int32_t ticks;
+  uint32_t i;
+
+  ticks = 0;
+  for (i = 0; i < frame; i++)
+    ticks += FrameTicks(lid, i);
+  return ticks / TICKS_A_SECOND;
+}
+
 UTEST(pace, a_frame_is_two_vblanks_long) {
   ASSERT_EQ(34, FrameTicks(LID_TITLE, 0));
-  ASSERT_EQ(34, FrameTicks(LID_TITLE, 1));
+  ASSERT_EQ(34, FrameTicks(LID_TITLE, 500));
   ASSERT_EQ(34, FrameTicks(LID_TEST, 7));
 }
 
-UTEST(pace, the_intro_draws_a_frame_every_two_and_three_vblanks_in_turn) {
-  ASSERT_EQ(34, FrameTicks(LID_INTRO, 0));
-  ASSERT_EQ(51, FrameTicks(LID_INTRO, 1));
-  ASSERT_EQ(34, FrameTicks(LID_INTRO, 2));
-  ASSERT_EQ(51, FrameTicks(LID_INTRO, 3));
+UTEST(pace, every_intro_frame_is_a_whole_number_of_vblanks) {
+  uint32_t frame;
+  int32_t ticks;
+
+  for (frame = 0; frame < 1000; frame++) {
+    ticks = FrameTicks(LID_INTRO, frame);
+    ASSERT_EQ(0, ticks % VBLANK_TICKS);
+    ASSERT_GE(ticks, FRAME_TICKS);
+  }
 }
 
-UTEST(pace, so_the_intro_runs_at_four_fifths_of_full_speed) {
-  int32_t ticks;
-  int frame;
+UTEST(pace, the_intros_voice_lines_start_when_they_do_on_the_ps1) {
+  /* the frames the intro keys its lines on, and when they start in a
+     recording of the PS1's intro, give or take a second's rounding */
+  ASSERT_NEAR(6.0, SecondsToFrame(LID_INTRO, 147), 0.5);
+  ASSERT_NEAR(23.0, SecondsToFrame(LID_INTRO, 450), 0.5);
+  ASSERT_NEAR(33.0, SecondsToFrame(LID_INTRO, 585), 0.5);
+  ASSERT_NEAR(41.0, SecondsToFrame(LID_INTRO, 816), 0.5);
+}
 
-  ticks = 0;
-  for (frame = 0; frame < 100; frame++)
-    ticks += FrameTicks(LID_INTRO, frame);
-  ASSERT_EQ(100 * 34 * 5 / 4, ticks); /* 36 s of the scene takes 45 s */
+UTEST(pace, after_its_last_line_the_intro_runs_at_full_speed) {
+  ASSERT_EQ(34, FrameTicks(LID_INTRO, 816));
+  ASSERT_EQ(34, FrameTicks(LID_INTRO, 2000));
 }

@@ -1,25 +1,15 @@
 #include "utest.h"
 #include "pc/voice.h"
 
-/* how many updates a delayed voice waits before it's due, with frames
-   alternately first_ticks and second_ticks long */
-static int UpdatesUntilDueAlternating(uint16_t key_on_frames, int8_t delay,
-  int32_t first_ticks, int32_t second_ticks) {
-  int32_t waited;
+/* how many updates a delayed voice waits before it's due */
+static int UpdatesUntilDue(uint16_t key_on_frames, int8_t delay) {
   int updates;
 
-  waited = 0;
   for (updates = 1; updates < 10000; updates++) {
-    if (VoiceDelayElapsed(waited, key_on_frames, &delay))
+    if (VoiceDelayElapsed(&key_on_frames, &delay))
       return updates;
-    waited += (updates & 1) ? first_ticks : second_ticks;
   }
   return -1;
-}
-
-/* the same, at 30 fps */
-static int UpdatesUntilDue(uint16_t key_on_frames, int8_t delay) {
-  return UpdatesUntilDueAlternating(key_on_frames, delay, VOICE_FRAME_TICKS, VOICE_FRAME_TICKS);
 }
 
 UTEST(voice, a_delayed_voice_with_no_key_on_frame_is_due_once_its_delay_runs_out) {
@@ -30,12 +20,6 @@ UTEST(voice, a_delayed_voice_with_no_key_on_frame_is_due_once_its_delay_runs_out
 UTEST(voice, a_delayed_voice_waits_out_its_key_on_frame_first) {
   ASSERT_EQ(16, UpdatesUntilDue(15, 1));
   ASSERT_EQ(817, UpdatesUntilDue(816, 1));
-}
-
-UTEST(voice, a_key_on_frame_is_a_30_fps_frame_of_game_time_however_long_frames_take) {
-  /* drawing a frame every 2 and 3 vblanks in turn (34 and 51 ticks), 147
-     30 fps frames (4998 ticks) have passed after 118 frames */
-  ASSERT_EQ(119, UpdatesUntilDueAlternating(147, 1, 34, 51));
 }
 
 UTEST(voice, the_intros_voice_lines_start_in_turn) {
