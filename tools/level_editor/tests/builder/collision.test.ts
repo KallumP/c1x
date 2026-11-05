@@ -40,17 +40,17 @@ describe("collision cells", () => {
 
   test("faces can be added where the map has none, solid as they would be in the map", () => {
     // for a rolling stone's track, which isn't part of the map but has to be stood in and walked into
-    const cells = cellsOf(floorMesh(0, 0, 512, 256, 0));
+    const cells = cellsOf(floorMesh(0, 0, 512, 256, 256));
     const raised = floorMesh(128, 0, 384, 256, 600);
-    const wall = quadMesh([[512, 0, 0], [512, 256, 0], [512, 256, 256], [512, 0, 256]]); // facing +x
+    const wall = quadMesh([[512, 768, 0], [512, 1024, 0], [512, 1024, 256], [512, 768, 256]]); // facing +x, clear of the floors
     addFaces(cells, merged(raised, wall), SIZE, 128);
     for (const [mesh, kind] of [[raised, "floor"], [wall, "wall"]] as const) {
       for (const at of positionsOfKind(mesh, kind)) {
         expect(cells.get(at.split(",").map(Number) as [number, number, number])).toBe(kind);
       }
     }
-    expect(positionsOfKind(floorMesh(0, 0, 512, 256, 0), "floor").size).toBeGreaterThan(0);
-    for (const at of positionsOfKind(floorMesh(0, 0, 512, 256, 0), "floor")) {
+    expect(positionsOfKind(floorMesh(0, 0, 512, 256, 256), "floor").size).toBeGreaterThan(0);
+    for (const at of positionsOfKind(floorMesh(0, 0, 512, 256, 256), "floor")) {
       expect(cells.get(at.split(",").map(Number) as [number, number, number])).toBe("floor"); // the map's own stay
     }
   });
