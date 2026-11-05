@@ -54,7 +54,7 @@ describe("rolling stones", () => {
     expect(stoneRolling(270)).toEqual([0, 1, 0]);
     for (const turn of [0, 90, 180, 270]) {
       const [a, b] = [stoneRolling(turn), cameraFacing(turn)];
-      expect(a[0] * b[0] + a[1] * b[1]).toBe(0); // across the way the camera faces
+      expect(a[0] * b[0] + a[1] * b[1] + 0).toBe(0); // across the way the camera faces (+ 0 turns -0 into 0)
     }
   });
 
