@@ -122,19 +122,25 @@ describe("boxTypeName", () => {
 
 describe("enemies", () => {
   test("knows the enemies custom levels can have, by name", () => {
-    expect(ENEMY_TYPES).toEqual(["plant"]);
+    expect(ENEMY_TYPES).toEqual(["plant", "rolling_stone"]);
   });
 
-  test("reads an enemy", () => {
-    const objects = parseObjects(`[{"kind": "enemy", "type": "plant", "at": [1, 10, 0], "raise": 0.5}]`);
-    expect(objects).toEqual([{ kind: "enemy", enemy: "plant", at: [1, 10, 0], raise: 0.5, stack: 1 }]);
+  test("reads an enemy by its type and spot (a rolling stone's path comes with its track)", () => {
+    const objects = parseObjects(`[
+      {"kind": "enemy", "type": "plant", "at": [1, 10, 0]},
+      {"kind": "enemy", "type": "rolling_stone", "at": [-4, 20, 0.5]}
+    ]`);
+    expect(objects).toEqual([
+      { kind: "enemy", enemy: "plant", at: [1, 10, 0], raise: 0, stack: 1 },
+      { kind: "enemy", enemy: "rolling_stone", at: [-4, 20, 0.5], raise: 0, stack: 1 },
+    ]);
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant)"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, rolling_stone)"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0]}]', "object 1: unknown enemy type crab"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: unknown setting path"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: unknown setting path"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -142,14 +148,14 @@ describe("enemies", () => {
   test("writes an enemy's type, after the boxes and before the end", () => {
     const text = formatObjects([
       { kind: "end", at: [0, 9, 0], raise: 0, stack: 1 },
-      { kind: "enemy", enemy: "plant", at: [1, 2.00004, 0], raise: 0, stack: 1 },
+      { kind: "enemy", enemy: "rolling_stone", at: [1, 2.00004, 0], raise: 0, stack: 1 },
       { kind: "box", box: "basic", at: [1, 0, 0], raise: 0, stack: 1 },
     ]);
     expect(text).toBe([
       "[",
       '  {"kind": "box", "type": "basic", "at": [1, 0, 0]},',
       "",
-      '  {"kind": "enemy", "type": "plant", "at": [1, 2, 0]},',
+      '  {"kind": "enemy", "type": "rolling_stone", "at": [1, 2, 0]},',
       "",
       '  {"kind": "end", "at": [0, 9, 0]}',
       "]",
@@ -158,7 +164,7 @@ describe("enemies", () => {
   });
 
   test("reads back what it writes", () => {
-    const objects = parseObjects(`[{"kind": "enemy", "type": "plant", "at": [8, 35.5, 0], "raise": 0.5}]`);
+    const objects = parseObjects(`[{"kind": "enemy", "type": "rolling_stone", "at": [8, 35.5, 0], "raise": 0.5}]`);
     expect(parseObjects(formatObjects(objects))).toEqual(objects);
   });
 });

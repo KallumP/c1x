@@ -27,6 +27,7 @@ const WIREFRAMES: BoxType[] = ["outline", "iron_outline"];
 
 export const ENEMY_COLOURS: Record<EnemyType, string> = {
   plant: "#3fa34d",
+  rolling_stone: "#8d8a5f",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";

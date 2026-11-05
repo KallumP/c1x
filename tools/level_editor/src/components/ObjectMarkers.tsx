@@ -1,13 +1,15 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
-import { Edges } from "@react-three/drei";
+import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { blenderToView, boxSize, cameraFacing, stackCentres } from "../coords";
+import { blenderToView, boxSize, cameraFacing, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import type { LevelObject, Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
 const PAD_UNITS = 400;   // the warp pad's radius, about
 const PLANT_UNITS = 560; // the plant's height, about
+const STONE_THICKNESS = 0.35; // of the rolling stone's radius
+const TRACK_OPACITY = 0.25;   // of the outline of a rolling stone's track
 const BOX_EDGE_COLOUR = "#000000";
 
 // where an object's base is in the viewport, raised as it is in the game
@@ -120,6 +122,50 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
     );
   };
 
+  // the rolling stone: a wheel on its track's floor, a box's height over its spot, turned to roll across the map as the game rolls it
+  const renderStone = (object: LevelObject, index: number) => {
+    const radius = STONE_TRACK.radius / scale;
+    const [x, y, z] = base(object);
+    const [rollX, , rollZ] = blenderToView(stoneRolling(turn));
+    return (
+      <mesh position={[x, y + STONE_TRACK.lift / scale + radius, z]} rotation={[0, Math.atan2(rollX, rollZ), Math.PI / 2]}>
+        <cylinderGeometry args={[radius, radius, radius * STONE_THICKNESS, 20]} />
+        <meshLambertMaterial color={ENEMY_COLOURS.rolling_stone} />
+        <Edges color={edgeColour(index, ENEMY_COLOURS.rolling_stone)} />
+      </mesh>
+    );
+  };
+
+  // the track a rolling stone comes with: its outline on the floor, and the line its middle rolls along
+  const renderStoneTrack = (object: LevelObject) => {
+    const [rollX, , rollZ] = blenderToView(stoneRolling(turn));
+    const [x, y, z] = base(object);
+    const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
+    const path = stonePath(object.at, object.raise, turn, scale).map(blenderToView);
+    const colour = ENEMY_COLOURS.rolling_stone;
+    return (
+      <>
+        <mesh position={[x, y + lift, z]} rotation={[0, Math.atan2(rollX, rollZ), 0]}>
+          <boxGeometry args={[STONE_TRACK.width / scale, lift, STONE_TRACK.length / scale]} />
+          <meshBasicMaterial color={colour} transparent opacity={TRACK_OPACITY} />
+        </mesh>
+        <Line points={path} color={colour} lineWidth={2} />
+      </>
+    );
+  };
+
+  const renderEnemy = (object: LevelObject, index: number) => {
+    if (object.enemy !== "rolling_stone") {
+      return renderPlant(object, index);
+    }
+    return (
+      <>
+        {renderStone(object, index)}
+        {renderStoneTrack(object)}
+      </>
+    );
+  };
+
   const renderShape = (object: LevelObject, index: number) => {
     switch (object.kind) {
       case "spawn":
@@ -129,7 +175,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
       case "box":
         return renderBoxStack(object, index);
       case "enemy":
-        return renderPlant(object, index);
+        return renderEnemy(object, index);
     }
   };
 

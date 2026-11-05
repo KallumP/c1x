@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
-import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPosition, entityType, WARP_PAD } from "../../builder/entities";
+import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, entityPosition, entityType, WARP_PAD } from "../../builder/entities";
 import { EID_NONE } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
@@ -13,9 +13,10 @@ import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
 import { textureWorlds } from "../../builder/mapTextures";
 import { FOLLOW_CAM_MODE } from "../../builder/paths";
 import { colour5551 } from "../../builder/tpage";
-import { readWorldHeader, readWorldPolygon, TEXINFOS_AT } from "../../builder/worldGeometry";
+import { STONE_TRACK_LIFT, stoneTrack } from "../../builder/templates";
+import { readWorldHeader, readWorldPolygon, readWorldVertex, TEXINFOS_AT } from "../../builder/worldGeometry";
 import type { TileRegion, WorldMesh, WorldVertex } from "../../builder/worldMeshes";
-import { ZONE_LOADLIST, ZONE_NEIGHBORS, ZONE_PATHS_IDX, zoneEntities, zoneWorldEids } from "../../builder/zones";
+import { ZONE_LOADLIST, ZONE_NEIGHBORS, ZONE_PATHS_IDX, zoneEntities, zoneOrigin, zoneWorldEids } from "../../builder/zones";
 
 const STONE_RGB: [number, number, number] = [90, 90, 100];
 const stone = (): RgbImage => ({ width: 32, height: 32, rgb: new Uint8Array(32 * 32 * 3).map((_, index) => STONE_RGB[index % 3]) });
@@ -183,17 +184,63 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   const enemies = (zone: Entry) => zoneEntities(zone)
     .filter((item) => Object.values(ENEMY_ENTITIES).some((entity) => entity.join() === entityType(item).join()))
-    .map((item) => ({ type: entityType(item), id: entityId(item), at: entityPosition(item) }));
+    .map((item) => ({ type: entityType(item), id: entityId(item), path: entityPath(item) }));
 
   test("an enemy goes where it is, as its entity, with an id of its own", () => {
     // blender (1, 2, 0) is the .obj's (1, 0, -2)
     const built = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "plant" }), box([2, 2, 0], 2)] });
     const [plant] = enemies(built.zone);
     expect(plant.type).toEqual(ENEMY_ENTITIES.plant);
-    expect(Math.abs(plant.at[0] - (128 + 5 * 256))).toBeLessThanOrEqual(16);
-    expect(Math.abs(plant.at[2] - (128 + 6 * 256))).toBeLessThanOrEqual(16);
-    expect(plant.at[1]).toBe(128);
+    expect(plant.path.length).toBe(1);
+    expect(Math.abs(plant.path[0][0] - (128 + 5 * 256))).toBeLessThanOrEqual(16);
+    expect(Math.abs(plant.path[0][2] - (128 + 6 * 256))).toBeLessThanOrEqual(16);
+    expect(plant.path[0][1]).toBe(128);
     expect(plant.id).not.toBe(boxes(built.zone)[0].id);
+  });
+
+  test("rolling stones' tracks have a world mesh of their own in their zone, so they fit however full the map's meshes are", () => {
+    const track = stoneTrack(base);
+    const stones = [object("enemy", [1, 2, 0], { enemy: "rolling_stone" }), object("enemy", [-1, 4, 0], { enemy: "rolling_stone" })];
+    const withStones = make(MAP_OBJ, { scale: 256, objects: stones });
+    const without = make(MAP_OBJ, { scale: 256 });
+    expect(worldsOf(withStones).length).toBe(worldsOf(without).length + 1);
+    const tracksMesh = readWorldHeader(worldsOf(withStones).at(-1)!.items[0]);
+    expect(tracksMesh.polygonCount).toBe(2 * track.polygons.length);
+  });
+
+  test("a rolling stone rolls jungle rollers' path along its track, its middle over the stone's spot, lifted a box's height", () => {
+    const track = stoneTrack(base);
+    const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "rolling_stone" })] }).zone);
+    expect(placed.type).toEqual(ENEMY_ENTITIES.rolling_stone);
+    // blender (1, 2, 0) is (1408, 128, 1664) in the zone; the track's floor is a box's height over it, under the path's middle
+    expect(STONE_TRACK_LIFT).toBe(BOX_HEIGHT);
+    const start = [1408 - track.path[5][0], 128 + STONE_TRACK_LIFT - track.floor, 1664 - track.path[5][2]];
+    expect(placed.path.length).toBe(track.path.length);
+    placed.path.forEach((point, index) => point.forEach((value, axis) =>
+      expect(Math.abs(value - (start[axis] + track.path[index][axis]))).toBeLessThanOrEqual(8)));
+  });
+
+  const worldsOf = ({ entries, zone }: Built) => zoneWorldEids(zone).map((eid) => entries.get(eid)!);
+  const polygonCount = (built: Built) => worldsOf(built).reduce((sum, world) => sum + readWorldHeader(world.items[0]).polygonCount, 0);
+  // every world vertex, relative to the zone
+  const worldVertices = (built: Built) => worldsOf(built).flatMap((world) => {
+    const header = readWorldHeader(world.items[0]);
+    const origin = zoneOrigin(built.zone);
+    return Array.from({ length: header.vertexCount }, (_, index) =>
+      readWorldVertex(world.items[2].subarray(8 * index, 8 * index + 8)).at.map((value, axis) => value + header.origin[axis] - origin[axis]));
+  });
+
+  test("a rolling stone comes with jungle rollers' track, its floor under the middle of the path a box's height over the stone's spot", () => {
+    const track = stoneTrack(base);
+    const withStone = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "rolling_stone" })] });
+    const withPlant = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "plant" })] });
+    expect(polygonCount(withStone) - polygonCount(withPlant)).toBe(track.polygons.length);
+    // blender (1, 2, 0) is (1408, 128, 1664) in the zone. the track's floor under the middle of its
+    // path has a corner 58 across (+z) from it, a box's height over the floor, so crash jumps up to it
+    const middle = track.path[5];
+    const corner = [1408, 128 + BOX_HEIGHT, 1664 + 58];
+    expect(worldVertices(withStone).some((vertex) => vertex.every((value, axis) => Math.abs(value - corner[axis]) <= 16))).toBe(true);
+    expect(track.vertices.some(({ at }) => at[0] === middle[0] && at[1] === track.floor && at[2] === 58)).toBe(true);
   });
 
   test("a stack is boxes one on another, one after another", () => {
