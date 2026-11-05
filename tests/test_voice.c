@@ -50,8 +50,8 @@ UTEST(voice, a_voice_keyed_on_by_frame_plays_to_the_end_of_its_sample) {
   ASSERT_EQ(-1, UpdatesUntilStopped(1, (int8_t)128)); /* the intro's lines run past 128 frames */
 }
 
-UTEST(voice, the_intros_first_line_starts_about_300_ms_sooner) {
-  ASSERT_EQ(6, VoiceKeyOnFrames(LID_INTRO, 15)); /* 9 frames at 30 fps */
+UTEST(voice, the_intros_first_line_starts_about_370_ms_sooner) {
+  ASSERT_EQ(4, VoiceKeyOnFrames(LID_INTRO, 15)); /* 11 frames at 30 fps */
 }
 
 UTEST(voice, every_other_key_on_frame_is_kept) {
