@@ -14,6 +14,7 @@
 #include "pc/time.h"
 #include "pc/settings.h"
 #include "pc/replay.h"
+#include "pc/boot.h"
 
 #define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 768
@@ -132,12 +133,17 @@ lid_t boot_lid = LID_BOOTLEVEL; /* level the game starts in */
 
 /*
  * boot into levels/<boot_level> next to the executable (as the test level)
- * if boot_level is set and the level's files are there
+ * if boot_level is set and the level's files are there, or into the lab
+ * intro if it's intro
  */
 static void InitBootLevel() {
   char level[900], path[1024], *base;
 
   if (!game_settings.boot_level[0]) { return; }
+  if (BootLevelIsIntro(game_settings.boot_level)) {
+    boot_lid = BOOT_INTRO_LID;
+    return;
+  }
   base = SDL_GetBasePath();
   snprintf(level, sizeof(level), "%s%s/%s", base ? base : "", LEVELS_DIR,
     game_settings.boot_level);
