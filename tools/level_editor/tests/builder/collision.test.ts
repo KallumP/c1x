@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { addFloor, solidCells, type CellKind } from "../../builder/collision";
+import { addFaces, addFloor, solidCells, type CellKind } from "../../builder/collision";
 import type { Mesh } from "../../builder/obj";
 import type { Vec3 } from "../../builder/vectors";
 import { floorMesh, meshOf, merged, quadMesh } from "./meshes";
@@ -35,6 +35,23 @@ describe("collision cells", () => {
     expect(added.size).toBeGreaterThan(0);
     for (const at of added) {
       expect(cells.get(at.split(",").map(Number) as [number, number, number])).toBe("floor");
+    }
+  });
+
+  test("faces can be added where the map has none, solid as they would be in the map", () => {
+    // for a rolling stone's track, which isn't part of the map but has to be stood in and walked into
+    const cells = cellsOf(floorMesh(0, 0, 512, 256, 0));
+    const raised = floorMesh(128, 0, 384, 256, 600);
+    const wall = quadMesh([[512, 0, 0], [512, 256, 0], [512, 256, 256], [512, 0, 256]]); // facing +x
+    addFaces(cells, merged(raised, wall), SIZE, 128);
+    for (const [mesh, kind] of [[raised, "floor"], [wall, "wall"]] as const) {
+      for (const at of positionsOfKind(mesh, kind)) {
+        expect(cells.get(at.split(",").map(Number) as [number, number, number])).toBe(kind);
+      }
+    }
+    expect(positionsOfKind(floorMesh(0, 0, 512, 256, 0), "floor").size).toBeGreaterThan(0);
+    for (const at of positionsOfKind(floorMesh(0, 0, 512, 256, 0), "floor")) {
+      expect(cells.get(at.split(",").map(Number) as [number, number, number])).toBe("floor"); // the map's own stay
     }
   });
 

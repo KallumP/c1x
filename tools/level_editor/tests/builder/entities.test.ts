@@ -8,7 +8,7 @@ import {
 } from "../../builder/entities";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readLevel } from "../../builder/levelFiles";
-import { readTemplates, stoneTrack, warpPadBase, type MapPiece } from "../../builder/templates";
+import { pieceMesh, readTemplates, stoneTrack, warpPadBase, type MapPiece } from "../../builder/templates";
 
 // an entity as a zone stores it: parent zone, spawn flags, group, id, point count,
 // 3 init flags, type, subtype, then the points (units of 4)
@@ -189,6 +189,14 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(path[0]).toEqual([0, 0, 0]);
     expect(path[10]).toEqual([-3600, 0, 0]);
     expect(path[5]).toEqual([-1800, -472, 0]);
+  });
+
+  test("a piece of terrain as a mesh, moved to where it goes, for the collision", () => {
+    const track = stoneTrack(base);
+    const mesh = pieceMesh(track, [1000, 2000, 3000]);
+    expect(mesh.triangles.length).toBe(track.polygons.length);
+    expect(mesh.vertices[track.polygons[0].corners[1]]).toEqual(track.vertices[track.polygons[0].corners[1]].at.map((value, axis) => value + [1000, 2000, 3000][axis]));
+    expect(mesh.triangles.every(({ object, material }) => object === null && material === null)).toBe(true);
   });
 
   test("the track's floor under the middle of its path, where the stone rolls, is its highest flat face there", () => {
