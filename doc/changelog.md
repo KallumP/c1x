@@ -7,6 +7,10 @@
 - custom levels can have enemies, starting with Jungle Rollers' biting plant, placed in the level editor
 - custom levels can have Jungle Rollers' rolling stone, which comes with its stone track and rolls back and forth along it
 
+### Fixed
+
+- `sunset_canyon`'s skinniest cacti, now as thick as the others
+
 ## 2026-11-04
 
 ### Fixed
