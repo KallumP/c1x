@@ -60,6 +60,20 @@ extern int32_t fade_vol_step;
 extern int max_midi_voices;
 extern uint32_t seq2_vol;
 
+/* reset voice_params (the params for the next voice created) to the defaults */
+static void AudioVoiceParamsReset() {
+  voice_params.delay_counter = 1;
+  voice_params.sustain_counter = 128;
+  voice_params.amplitude = 0x3FFF;
+  voice_params.pitch = 0x1000;
+  voice_params.obj = 0;
+  voice_params.case7val = 0;
+  voice_params.r_trans.x = 0;
+  voice_params.r_trans.y = 0;
+  voice_params.r_trans.z = 0;
+  voice_params.flags = (voice_params.flags & 0xFFFFF000) | 0x600;
+}
+
 /* note: return types for AudioInit and AudioKill are void in orig impl;
  *       made int for subsys map compatibility */
 //----- (8002FDE0) --------------------------------------------------------
@@ -73,17 +87,7 @@ int AudioInit() {
   SwVoiceSetCallback(0, SwMidiProcess);
   /* set gain to that of 8 simultaneously sounded voices */
   SwVoiceSetGain(0, 8.0f);
-  /* set inital values for master voice */
-  master_voice.delay_counter = 1;
-  master_voice.sustain_counter = 128;
-  master_voice.amplitude = 0x3FFF;
-  master_voice.pitch = 0x1000;
-  master_voice.obj = 0;
-  master_voice.case7val = 0;
-  master_voice.r_trans.x = 0;
-  master_voice.r_trans.y = 0;
-  master_voice.r_trans.z = 0;
-  master_voice.flags = (voice_params.flags & 0xFFFFF000) | 0x600;
+  AudioVoiceParamsReset(); /* pc: these were set on voices[23] (master_voice), not voice_params, so the first voice created had no defaults */
   /* set reverb mode for levels with reverb */
   switch (cur_lid) {
   case LID_GENERATORROOM:
@@ -293,17 +297,7 @@ int AudioVoiceCreate(gool_object *obj, eid_t *eid, int vol) {
     voice->trans = obj->trans;
     GoolTransform2(&obj->trans, &voice->r_trans, 1);
   }
-  /* reset voice_params to the defaults in case they were changed by AudioControl */
-  voice_params.delay_counter = 1;
-  voice_params.sustain_counter = 128;
-  voice_params.amplitude = 0x3FFF;
-  voice_params.pitch = 0x1000;
-  voice_params.obj = 0;
-  voice_params.case7val = 0;
-  voice_params.r_trans.x = 0;
-  voice_params.r_trans.y = 0;
-  voice_params.r_trans.z = 0;
-  voice_params.flags = (voice_params.flags & 0xFFFFF000) | 0x600;
+  AudioVoiceParamsReset(); /* in case they were changed by AudioControl */
   /* bugfix: orig impl did not test voice->obj before accessing it here */
   if (voice->obj && voice->obj->status_b & 0x200) { /* no spatialization? */
     volume.left  = voice->amplitude;
