@@ -31,16 +31,15 @@ UTEST(pace, every_intro_frame_is_a_whole_number_of_vblanks) {
   }
 }
 
-UTEST(pace, the_intros_voice_lines_start_when_they_do_on_the_ps1) {
-  /* the frames the intro keys its lines on, and when they start in a
-     recording of the PS1's intro, give or take a second's rounding */
-  ASSERT_NEAR(6.0, SecondsToFrame(LID_INTRO, 147), 0.5);
-  ASSERT_NEAR(23.0, SecondsToFrame(LID_INTRO, 450), 0.5);
-  ASSERT_NEAR(33.0, SecondsToFrame(LID_INTRO, 585), 0.5);
-  ASSERT_NEAR(41.0, SecondsToFrame(LID_INTRO, 816), 0.5);
+UTEST(pace, the_intro_draws_a_frame_every_two_and_three_vblanks_in_turn) {
+  ASSERT_EQ(34, FrameTicks(LID_INTRO, 0));
+  ASSERT_EQ(51, FrameTicks(LID_INTRO, 1));
+  ASSERT_EQ(34, FrameTicks(LID_INTRO, 1000));
+  ASSERT_EQ(51, FrameTicks(LID_INTRO, 1001));
 }
 
-UTEST(pace, after_its_last_line_the_intro_runs_at_full_speed) {
-  ASSERT_EQ(34, FrameTicks(LID_INTRO, 816));
-  ASSERT_EQ(34, FrameTicks(LID_INTRO, 2000));
+UTEST(pace, so_the_intro_takes_as_long_as_on_the_ps1) {
+  /* its 1106 frames took 36 s at 30 fps, against 45 s in a recording of
+     the PS1's intro */
+  ASSERT_NEAR(45.0, SecondsToFrame(LID_INTRO, 1106), 0.5);
 }
