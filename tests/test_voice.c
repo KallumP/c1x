@@ -29,3 +29,23 @@ UTEST(voice, the_intros_voice_lines_start_in_turn) {
   for (i = 1; i < 5; i++)
     ASSERT_LT(UpdatesUntilDue(frames[i-1], 1), UpdatesUntilDue(frames[i], 1));
 }
+
+/* how many updates a playing voice lasts before its sustain stops it, or -1 if it doesn't */
+static int UpdatesUntilStopped(int keyed_on_by_frame, int8_t sustain) {
+  int updates;
+
+  for (updates = 1; updates < 10000; updates++) {
+    if (VoiceSustainEnded(keyed_on_by_frame, &sustain))
+      return updates;
+  }
+  return -1;
+}
+
+UTEST(voice, a_sound_stops_when_its_sustain_runs_out) {
+  ASSERT_EQ(96, UpdatesUntilStopped(0, 96));
+  ASSERT_EQ(128, UpdatesUntilStopped(0, (int8_t)128)); /* the default, -128 as a signed byte */
+}
+
+UTEST(voice, a_voice_keyed_on_by_frame_plays_to_the_end_of_its_sample) {
+  ASSERT_EQ(-1, UpdatesUntilStopped(1, (int8_t)128)); /* the intro's lines run past 128 frames */
+}
