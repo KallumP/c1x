@@ -12,7 +12,7 @@ export const DEFAULT_SCALE = 400; // game units a blender metre without a level.
 export const STONE_TRACK = {
   radius: 705,
   length: 5670,
-  width: 810,
+  width: 400,
   path: [[0, 0], [-128, -48], [-460, -168], [-908, -308], [-1384, -424], [-1800, -472],
     [-2216, -424], [-2692, -308], [-3140, -168], [-3472, -48], [-3600, 0]] as [number, number][],
 };

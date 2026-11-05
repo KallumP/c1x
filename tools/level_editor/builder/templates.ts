@@ -206,9 +206,10 @@ export function warpPadBase(level: Level): MapPiece {
 
 // the track around a rolling stone's path, relative to its first point: the
 // groove's floor across the walkway, from a little past one end of the path to
-// the other (the path runs 3600 along -x), with the skirts under it. it shares
-// its texture pages with the ground around it, so it's cut out by this box
-const AROUND_TRACK: Box = { low: [-4640, -1900, -350], high: [1030, 100, 460] };
+// the other (the path runs 3600 along -x), with the skirts under it, up to its
+// side wall at z 58 (past that are the grassy banks and walkway beside it). it
+// shares its texture pages with the ground around it, so it's cut out by this box
+const AROUND_TRACK: Box = { low: [-4640, -1900, -350], high: [1030, 100, 60] };
 
 // the groove a rolling stone rolls in, its path, and the height of its floor
 // under the middle of the path (where the stone rolls), all relative to the path's first point
