@@ -34,11 +34,11 @@ static inline int VoiceSustainEnded(int keyed_on_by_frame, int8_t *sustain) {
 
 /*
  * the frame a voice keys on (pc), with the lab intro's first line brought
- * to start straight away, as tuned by ear against the scene; the rest keep the
- * frames the intro gives them
+ * forward to start about 300 ms in (frame 7 at 24 fps), as tuned by eye and
+ * ear against the scene; the rest keep the frames the intro gives them
  */
 #define INTRO_FIRST_LINE_FRAME 15
-#define INTRO_FIRST_LINE_LEAD  15 /* frames at 30 fps */
+#define INTRO_FIRST_LINE_LEAD  8 /* frames */
 
 static inline uint16_t VoiceKeyOnFrames(lid_t lid, uint16_t frames) {
   if (lid == LID_INTRO && frames == INTRO_FIRST_LINE_FRAME)
