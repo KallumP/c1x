@@ -2,6 +2,7 @@
 #define _PC_VOICE_H_
 
 #include "common.h"
+#include "ns.h"
 
 /*
  * when a delayed audio voice keys on (pc). a voice created with AudioControl
@@ -29,6 +30,20 @@ static inline int VoiceDelayElapsed(uint16_t *key_on_frames, int8_t *delay) {
 static inline int VoiceSustainEnded(int keyed_on_by_frame, int8_t *sustain) {
   if (keyed_on_by_frame) { return 0; }
   return --*sustain == 0;
+}
+
+/*
+ * the frame a voice keys on (pc), with the lab intro's first line brought
+ * about 300 ms sooner, as tuned by ear against the scene; the rest keep the
+ * frames the intro gives them
+ */
+#define INTRO_FIRST_LINE_FRAME 15
+#define INTRO_FIRST_LINE_LEAD  9 /* frames at 30 fps */
+
+static inline uint16_t VoiceKeyOnFrames(lid_t lid, uint16_t frames) {
+  if (lid == LID_INTRO && frames == INTRO_FIRST_LINE_FRAME)
+    return frames - INTRO_FIRST_LINE_LEAD;
+  return frames;
 }
 
 #endif /* _PC_VOICE_H_ */

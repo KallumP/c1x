@@ -289,6 +289,7 @@ int AudioVoiceCreate(gool_object *obj, eid_t *eid, int vol) {
   size = adio->items[1]-adio->items[0];
   SwLoadSample(idx, adio->items[0], size);
   voice->params = voice_params;
+  voice->case7val = VoiceKeyOnFrames(ns.ldat->lid, voice->case7val); /* pc: as tuned for the intro */
   if (voice->case7val) /* pc: keyed on by frame (AudioControl op 7)? */
     voice->flags |= VOICE_KEYED_ON_BY_FRAME; /* then it plays to the end of its sample */
   voice->amplitude = (vol*init_vol) >> 14;
