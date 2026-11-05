@@ -183,6 +183,12 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expectTexturedFromBase(track);
   });
 
+  test("a rolling stone's track leaves out the moss growing on it, drawn half see-through (mode 0) unlike its stone", () => {
+    const track = stoneTrack(base);
+    const semiTransparency = (texinfo: number) => (track.texinfos.get(texinfo)![3] >> 5) & 3;
+    expect(track.polygons.filter(({ texinfo }) => semiTransparency(texinfo) === 0)).toEqual([]);
+  });
+
   test("a rolling stone's track comes with its path, from its first point, rolling -x and dipping in the middle", () => {
     const { path } = stoneTrack(base);
     expect(path.length).toBe(11);
