@@ -3,11 +3,12 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { ByteWriter, padTo4 } from "../../builder/bytes";
 import {
-  BOX_TYPE, ENEMY_ENTITIES, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityType, linkSwitches, newEntityIds, withEntityId, type PlacedBox,
+  BOX_TYPE, ENEMY_ENTITIES, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityPath, entityType, linkSwitches, newEntityIds, withEntityId,
+  withPath, type PlacedBox,
 } from "../../builder/entities";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readLevel } from "../../builder/levelFiles";
-import { readTemplates, warpPadBase } from "../../builder/templates";
+import { pieceMesh, readTemplates, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece } from "../../builder/templates";
 
 // an entity as a zone stores it: parent zone, spawn flags, group, id, point count,
 // 3 init flags, type, subtype, then the points (units of 4)
@@ -45,8 +46,29 @@ describe("entities", () => {
 });
 
 describe("enemies", () => {
-  test("are jungle rollers' plant", () => {
-    expect(ENEMY_ENTITIES).toEqual({ plant: [25, 0] });
+  test("are jungle rollers' plant and rolling stone", () => {
+    expect(ENEMY_ENTITIES).toEqual({ plant: [25, 0], rolling_stone: [22, 6] });
+  });
+});
+
+describe("entity paths", () => {
+  test("are their points, in zone units", () => {
+    expect(entityPath(entity(25, 0, 1, [[1, 2, 3], [4, 5, -6]]))).toEqual([[4, 8, 12], [16, 20, -24]]);
+  });
+
+  test("written into an entity, replace its points and keep the rest", () => {
+    const written = withPath(entity(22, 6, 7, [[0, 0, 0], [1, 1, 1], [2, 2, 2]]), [[400, 800, -1200], [804, 0, 0]]);
+    expect(entityPath(written)).toEqual([[400, 800, -1200], [804, 0, 0]]);
+    expect(entityType(written)).toEqual([22, 6]);
+    expect(entityId(written)).toBe(7);
+    expect(written.readInt16LE(ENTITY_INIT_FLAGS)).toBe(1);
+    expect(written.length).toBe(32); // 20, then 6 a point
+  });
+
+  test("are kept on units of 4, and padded to a multiple of 4 bytes as the game's", () => {
+    const written = withPath(entity(25, 0, 1, [[0, 0, 0], [1, 1, 1]]), [[5, -5, 9]]);
+    expect(entityPath(written)).toEqual([[4, -8, 8]]);
+    expect(written.length).toBe(28);
   });
 });
 
@@ -126,7 +148,81 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(Math.max(...[...xs, ...zs].map(Math.abs))).toBeLessThanOrEqual(700);
     expect(Math.max(...ys)).toBeLessThanOrEqual(16);
     expect(Math.min(...ys)).toBeGreaterThanOrEqual(-600);
-    expect(padBase.polygons.every(({ texinfo }) => padBase.texinfos.get(texinfo)!.length === 8)).toBe(true); // 2 words each
-    expect(base.pages.map(({ eid }) => eid)).toContain(padBase.page);
+    expectTexturedFromBase(padBase);
+  });
+
+  // each polygon's texinfo (2 words) and texture page, from the base level
+  function expectTexturedFromBase(piece: MapPiece) {
+    expect(piece.polygons.every(({ texinfo }) => piece.texinfos.get(texinfo)!.length === 8)).toBe(true);
+    const pageEids = base.pages.map(({ eid }) => eid);
+    expect(piece.polygons.every(({ page }) => pageEids.includes(page))).toBe(true);
+  }
+
+  // a polygon's corners, if it lies more flat than upright (the groove's floor, not its skirts)
+  const flatCorners = (piece: MapPiece) => piece.polygons.map(({ corners }) => corners.map((corner) => piece.vertices[corner].at))
+    .filter(([a, b, c]) => {
+      const [u, v] = [b.map((value, axis) => value - a[axis]), c.map((value, axis) => value - a[axis])];
+      const normal = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+      return Math.abs(normal[1]) > 0.7 * Math.hypot(...normal);
+    });
+
+  test("a rolling stone's track is the groove in the base level's terrain along its path", () => {
+    const track = stoneTrack(base);
+    expect(track.polygons.length).toBeGreaterThan(40);
+    expect(track.polygons.length).toBeLessThan(400);
+    const [xs, ys, zs] = [0, 1, 2].map((axis) => track.vertices.map(({ at }) => at[axis]));
+    // relative to the path's first point: along the path (-x) and a little past its ends, across it, and down
+    expect(Math.min(...xs)).toBeLessThan(-3600);
+    expect(Math.max(...xs)).toBeGreaterThan(0);
+    expect(Math.min(...xs)).toBeGreaterThanOrEqual(-4640);
+    expect(Math.max(...xs)).toBeLessThanOrEqual(1030);
+    expect(Math.min(...zs)).toBeGreaterThanOrEqual(-350);
+    expect(Math.max(...zs)).toBeLessThanOrEqual(60);
+    expect(Math.min(...ys)).toBeGreaterThanOrEqual(-1900);
+    expect(Math.max(...ys)).toBeLessThanOrEqual(100);
+    expectTexturedFromBase(track);
+  });
+
+  test("a rolling stone's track stops at its groove's side wall, leaving out the grassy banks beside it", () => {
+    const track = stoneTrack(base);
+    expect(Math.max(...track.vertices.map(({ at }) => at[2]))).toBe(58);
+  });
+
+  test("a lifted track's skirts reach down as far again: only its corners below its floor, in the ground, go lower", () => {
+    const track = stoneTrack(base);
+    const lifted = withLongerSkirts(track, 400);
+    expect(lifted.polygons).toEqual(track.polygons);
+    expect([lifted.floor, lifted.path]).toEqual([track.floor, track.path]);
+    track.vertices.forEach(({ at: [x, y, z] }, index) =>
+      expect(lifted.vertices[index].at).toEqual([x, y < track.floor ? y - 400 : y, z]));
+    expect(track.vertices.some(({ at }) => at[1] < track.floor)).toBe(true);
+  });
+
+  test("a rolling stone's track comes with its path, from its first point, rolling -x and dipping in the middle", () => {
+    const { path } = stoneTrack(base);
+    expect(path.length).toBe(11);
+    expect(path[0]).toEqual([0, 0, 0]);
+    expect(path[10]).toEqual([-3600, 0, 0]);
+    expect(path[5]).toEqual([-1800, -472, 0]);
+  });
+
+  test("a piece of terrain as a mesh, moved to where it goes, for the collision", () => {
+    const track = stoneTrack(base);
+    const mesh = pieceMesh(track, [1000, 2000, 3000]);
+    expect(mesh.triangles.length).toBe(track.polygons.length);
+    expect(mesh.vertices[track.polygons[0].corners[1]]).toEqual(track.vertices[track.polygons[0].corners[1]].at.map((value, axis) => value + [1000, 2000, 3000][axis]));
+    expect(mesh.triangles.every(({ object, material }) => object === null && material === null)).toBe(true);
+    // faces up, so the collision makes the groove's floor a floor whichever way the base level winds its corners
+    const facingUp = mesh.triangles.map(({ corners }) => corners.map((corner) => mesh.vertices[corner])).map(([p, q, r]) =>
+      (q[2] - p[2]) * (r[0] - p[0]) - (q[0] - p[0]) * (r[2] - p[2]));
+    expect(facingUp.every((y) => y >= 0)).toBe(true);
+  });
+
+  test("the track's floor under the middle of its path, where the stone rolls, is its highest flat face there", () => {
+    const track = stoneTrack(base);
+    const middle = track.path[5];
+    const floorUnderMiddle = flatCorners(track).flat().filter(([x, , z]) => Math.abs(x - middle[0]) <= 300 && Math.abs(z) <= 300);
+    expect(track.floor).toBe(Math.max(...floorUnderMiddle.map(([, y]) => y)));
+    expect(track.floor).toBe(-1177); // the ground beside the groove is lower, at -1385
   });
 });

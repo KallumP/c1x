@@ -38,6 +38,19 @@ describe("collision cells", () => {
     }
   });
 
+  test("pieces added to the map are solid just as if they were part of it", () => {
+    // for rolling stones' tracks, which aren't part of the map but have to be stood in and walked into,
+    // and stepped up onto where they meet it, as the map's own lips are
+    const floor = floorMesh(0, 0, 256, 256, 256);
+    const step = merged(
+      floorMesh(256, 0, 512, 256, 384),
+      quadMesh([[256, 256, 0], [256, 256, 256], [256, 384, 256], [256, 384, 0]]), // facing -x, a cell over the floor
+    );
+    const asPiece = [...solidCells(floor, SIZE, 128, [step])].map(({ at, kind }) => `${at.join()}:${kind}`).sort();
+    const asMap = [...cellsOf(merged(floor, step))].map(({ at, kind }) => `${at.join()}:${kind}`).sort();
+    expect(asPiece).toEqual(asMap);
+  });
+
   test("a floor off the grid goes to the nearest cell top", () => {
     expect(positions(floorMesh(0, 0, 512, 256, 488))).toEqual(positions(floorMesh(0, 0, 512, 256, 512)));
     expect(positions(floorMesh(0, 0, 512, 256, 600))).toEqual(grid(upTo(4), [4], upTo(2)));

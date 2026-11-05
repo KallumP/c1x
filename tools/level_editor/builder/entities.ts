@@ -2,12 +2,15 @@
 // group, id, point count, 3 init flags, type, subtype, then the points, in
 // units of 4 zone units relative to the zone
 import { BOX_TYPES, type EnemyType } from "../src/objects";
+import { padTo4 } from "./bytes";
 import type { Vec3 } from "./vectors";
 
 const ENTITY_ID = 8;
+const ENTITY_PATH_LENGTH = 10;
 export const ENTITY_INIT_FLAGS = 12; // init_flags_a, _b, _c (int16 each)
 const ENTITY_TYPE = 18;
 const ENTITY_POINTS = 20;
+const POINT_BYTES = 6; // x, y, z (int16 each), in units of 4 zone units
 export const ENTITY_IDS_MAX = 303;  // ids index spawns[GOOL_SPAWN_COUNT] in src/gool.c
 const ENTITY_MAIN_IDS = [1, 2, 3, 4]; // ids that make the main object (crash): GoolObjectSpawn in src/gool.c
 
@@ -15,8 +18,9 @@ export const CRASH: [number, number] = [0, 0];
 export const WARP_PAD: [number, number] = [32, 1]; // WarpC: the warp pad that ends a level, as on n. sanity beach
 export const BOX_TYPE = 34;      // BoxsC: boxes, by subtype
 export const BOX_HEIGHT = 400;   // a box on top of another is this much higher (GoolObjectSpawn in src/gool.c)
-// each enemy's entity type and subtype in the base level: jungle rollers' biting plant (PlanC)
-export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0] };
+// each enemy's entity type and subtype in the base level: jungle rollers' biting
+// plant (PlanC) and its rolling stone wheel (JunOC), which rolls back and forth along its path
+export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6] };
 // not in the level's total (an iron outline fills in as an iron box)
 export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch, BOX_TYPES.iron_arrow, BOX_TYPES.iron_outline];
 
@@ -51,6 +55,22 @@ export function withPosition(item: Buffer, [x, y, z]: Vec3): Buffer {
 // where an entity's first point is, zone units relative to its zone
 export function entityPosition(item: Buffer): Vec3 {
   return [0, 1, 2].map((axis) => 4 * item.readInt16LE(ENTITY_POINTS + 2 * axis)) as Vec3;
+}
+
+// all of an entity's points: where it moves along (an enemy) or each place it is, zone units relative to its zone
+export function entityPath(item: Buffer): Vec3[] {
+  return Array.from({ length: item.readUInt16LE(ENTITY_PATH_LENGTH) }, (_, index) =>
+    [0, 1, 2].map((axis) => 4 * item.readInt16LE(ENTITY_POINTS + index * POINT_BYTES + 2 * axis)) as Vec3);
+}
+
+// the entity with points (zone units relative to its zone) as its path, in place of its own
+export function withPath(item: Buffer, points: Vec3[]): Buffer {
+  const header = Buffer.from(item.subarray(0, ENTITY_POINTS));
+  header.writeUInt16LE(points.length, ENTITY_PATH_LENGTH);
+  const body = Buffer.alloc(points.length * POINT_BYTES);
+  points.forEach((point, index) => point.forEach((coordinate, axis) =>
+    body.writeInt16LE(Math.floor(coordinate / 4), index * POINT_BYTES + 2 * axis)));
+  return padTo4(Buffer.concat([header, body]));
 }
 
 // a box's first init flag is what it holds beyond the usual (a token, say); 0 for nothing

@@ -21,5 +21,8 @@
   {"kind": "box", "type": "question", "at": [7.5, 42.5, 0.9]},
   {"kind": "box", "type": "outline", "at": [0.5, 2, 0]},
 
+  {"kind": "enemy", "type": "plant", "at": [-7, 31, 3.6]},
+  {"kind": "enemy", "type": "plant", "at": [7, 31, 3.6]},
+
   {"kind": "end", "at": [0, 50, 1.2], "raise": 0.15}
 ]
