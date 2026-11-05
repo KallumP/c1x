@@ -6,6 +6,7 @@
 #include "level.h"
 
 #include "pc/gfx/soft.h"
+#include "pc/voice.h"
 typedef struct {
   int left;
   int right;
@@ -513,10 +514,11 @@ void AudioUpdate() {
     voice = &voices[i];
     if (!(voice->flags & 8)) { continue; } /* skip inactive/free voices */
     if (voice->flags & 0x10) { /* delayed voice? */
-      if (--voice->delay_counter == 0) { /* decrement delay; has countdown finished? */
-        voice->flags &= ~0x10; /* clear key triggered status */
-        SwNoteOn(i);
-      }
+      if (!VoiceDelayElapsed(&voice->case7val, &voice->delay_counter)) /* pc: waits out its key-on frame too */
+        continue; /* pc: still waiting to key on, so not off yet either */
+      voice->flags &= ~0x10; /* clear key triggered status */
+      SwNoteOn(i);
+      continue; /* pc: keyed on after the key status was read; it's read again next update */
     }
     if (keys_status[i] == KEYS_STATUS_ON) {
       if (--voice->sustain_counter != 0) {/* decrement sustain; still sustaining? */
