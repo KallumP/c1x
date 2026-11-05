@@ -16,7 +16,29 @@ An object in `objects.json` has a `kind`:
 
 - `spawn`: where Crash starts (one at most)
 - `end`: the warp pad that ends the level (one at most)
-- `box`: a box, by its `type`; `stack` makes a stack of them. The types are `basic`, `question`, `life`, `aku_aku`, `checkpoint`, `arrow`, `slatted`, `iron`, `switch`, `outline` (filled in as a crate by a switch), `tnt`, `enemy_tnt` (a TNT for an enemy to be knocked into), `iron_arrow` (an iron box that bounces Crash) and `iron_outline` (filled in as an iron box by a switch)
-- `enemy`: an enemy, by its `type`: `plant` (a biting plant that stays where it is) or `rolling_stone` (a stone wheel that comes with Jungle Rollers' track, its middle a box's height over the floor at `at`, and rolls back and forth along it across the map)
+- `box`: a box, by its `type` (see [Boxes](#boxes)); `stack` makes a stack of them
+- `enemy`: an enemy, by its `type` (see [Enemies](#enemies))
 
 Each object also has `at`, where it is in Blender, and can have `raise`, how far above that it is. The [level editor](../doc/custom_levels.md#2-place-objects-in-the-level-editor) writes all of these for you. Custom levels are built from Jungle Rollers, which has every kind of box, and its plant and rolling stone.
+
+### Boxes
+
+- `basic`
+- `question`
+- `life`
+- `aku_aku`
+- `checkpoint`
+- `arrow`
+- `slatted`
+- `iron`
+- `switch`
+- `outline`: filled in as a crate by a switch
+- `tnt`
+- `enemy_tnt`: a TNT for an enemy to be knocked into
+- `iron_arrow`: an iron box that bounces Crash
+- `iron_outline`: filled in as an iron box by a switch
+
+### Enemies
+
+- `plant`: a biting plant that bites Crash if he walks into it, and stays where it is. Spun, it's flung straight back, away from the camera, and breaks the boxes it passes within about 3 m of where it stood (at scale 400); boxes further back are safe.
+- `rolling_stone`: a stone wheel that comes with Jungle Rollers' stone track, set on the floor at `at`, and rolls back and forth along it, across the map: at right angles to the way the spawn's arrow points. The track is about 14 m long (at scale 400), and its middle, where the stone dips lowest, stands a box's height over the floor at `at`, so Crash has to jump up into it. Put it somewhere flat and wide enough.
