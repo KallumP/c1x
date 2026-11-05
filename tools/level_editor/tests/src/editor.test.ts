@@ -16,6 +16,12 @@ describe("newObject", () => {
   });
 });
 
+describe("new enemies", () => {
+  test("a plant stands where it's put", () => {
+    expect(newObject("plant", [1, 2, 3])).toEqual({ kind: "enemy", enemy: "plant", at: [1, 2, 3], raise: 0, stack: 1 });
+  });
+});
+
 describe("load", () => {
   test("opens a level's objects with nothing selected", () => {
     const state = withObjects([box(1)]);

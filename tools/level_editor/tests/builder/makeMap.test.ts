@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
-import { BOX_HEIGHT, BOX_TYPE, entityId, entityPosition, entityType, WARP_PAD } from "../../builder/entities";
+import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPosition, entityType, WARP_PAD } from "../../builder/entities";
 import { EID_NONE } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
@@ -179,6 +179,21 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(Math.abs(placed.at[0] - (128 + 5 * 256 - BOX_HEIGHT / 2))).toBeLessThanOrEqual(16);
     expect(Math.abs(placed.at[2] - (128 + 6 * 256 - BOX_HEIGHT / 2))).toBeLessThanOrEqual(16);
     expect(placed.at[1]).toBe(128);
+  });
+
+  const enemies = (zone: Entry) => zoneEntities(zone)
+    .filter((item) => Object.values(ENEMY_ENTITIES).some((entity) => entity.join() === entityType(item).join()))
+    .map((item) => ({ type: entityType(item), id: entityId(item), at: entityPosition(item) }));
+
+  test("an enemy goes where it is, as its entity, with an id of its own", () => {
+    // blender (1, 2, 0) is the .obj's (1, 0, -2)
+    const built = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "plant" }), box([2, 2, 0], 2)] });
+    const [plant] = enemies(built.zone);
+    expect(plant.type).toEqual(ENEMY_ENTITIES.plant);
+    expect(Math.abs(plant.at[0] - (128 + 5 * 256))).toBeLessThanOrEqual(16);
+    expect(Math.abs(plant.at[2] - (128 + 6 * 256))).toBeLessThanOrEqual(16);
+    expect(plant.at[1]).toBe(128);
+    expect(plant.id).not.toBe(boxes(built.zone)[0].id);
   });
 
   test("a stack is boxes one on another, one after another", () => {

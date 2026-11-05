@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { ByteWriter, padTo4 } from "../../builder/bytes";
 import {
-  BOX_TYPE, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityType, linkSwitches, newEntityIds, withEntityId, type PlacedBox,
+  BOX_TYPE, ENEMY_ENTITIES, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityType, linkSwitches, newEntityIds, withEntityId, type PlacedBox,
 } from "../../builder/entities";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readLevel } from "../../builder/levelFiles";
@@ -41,6 +41,12 @@ describe("entities", () => {
   test("there are only so many ids", () => {
     expect(Math.max(...newEntityIds(ENTITY_IDS_MAX - 4, new Set()))).toBe(ENTITY_IDS_MAX);
     expect(() => newEntityIds(ENTITY_IDS_MAX - 3, new Set())).toThrow(/objects/);
+  });
+});
+
+describe("enemies", () => {
+  test("are jungle rollers' plant", () => {
+    expect(ENEMY_ENTITIES).toEqual({ plant: [25, 0] });
   });
 });
 
