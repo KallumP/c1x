@@ -8,7 +8,7 @@ import { tileFromImage } from "./tiles";
 import { texinfoBytes, texturePage, TILES_PER_PAGE, type Place } from "./tpage";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader, WGEO_PAGES, type BuiltPolygon } from "./worldGeometry";
-import { isTileRegion, WGEO_MAX, type TileRegion, type WorldMesh, type WorldVertex } from "./worldMeshes";
+import { isTileRegion, WGEO_ITEMS_MAX, WGEO_MAX, type TileRegion, type WorldMesh, type WorldVertex } from "./worldMeshes";
 
 export const TEXINFO_WORDS_MAX = 4096; // polygons' texinfo indices (in words) are 12 bits
 
@@ -152,7 +152,8 @@ export function addMapPiece(textured: Worlds, piece: MapPiece, at: Vec3, templat
     (textured.worlds[index].polygons.length < textured.worlds[fewest].polygons.length ? index : fewest));
   const { texinfos, wordOf } = withPieceTexinfos(textured.texinfos[target], piece, template, name);
   const world = withPieceGeometry(textured.worlds[target], piece, at, wordOf, slots);
-  if (world.vertices.length > WGEO_MAX || world.polygons.length > WGEO_MAX) {
+  const items = world.vertices.length + world.polygons.length + texinfos.length / 8; // 8 bytes each, filling a page
+  if (world.vertices.length > WGEO_MAX || world.polygons.length > WGEO_MAX || items > WGEO_ITEMS_MAX) {
     throw new Error(`no room in the mesh for ${name}`);
   }
   const worlds = [...textured.worlds];

@@ -61,8 +61,10 @@ interface FittedMap {
   spans: Span[];
 }
 
-// each zone's world meshes; with more than one zone, each lists the next's too, so half as many
-function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, textured: Set<string>): WorldMesh[][] {
+// each zone's world meshes; with more than one zone, each lists the next's too,
+// so half as many. a zone with rolling stones (trackZones) ends with an empty
+// one, kept for their tracks, so they fit however full the map's meshes are
+function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, textured: Set<string>, trackZones: Set<number>): WorldMesh[][] {
   const texinfoWords = readWorldHeader(templates.world.items[0]).texinfoWords;
   const options = {
     piece: MAP_PIECE,
@@ -73,7 +75,12 @@ function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, tex
     regionsMax: Math.floor((TEXINFO_WORDS_MAX - texinfoWords) / 2),
     worldsMax: spans.length === 1 ? WORLDS_MAX : WORLDS_MAX / 2,
   };
-  return spans.map((span) => worldMeshes(fitted.mesh, { ...options, span }));
+  return spans.map((span, zone) => {
+    if (!trackZones.has(zone)) {
+      return worldMeshes(fitted.mesh, { ...options, span });
+    }
+    return [...worldMeshes(fitted.mesh, { ...options, span, worldsMax: options.worldsMax - 1 }), { vertices: [], polygons: [] }];
+  });
 }
 
 // places objects in the level: where they are in it, which zone they're in, and their entities
@@ -135,6 +142,11 @@ class ObjectPlacer {
     this.entities[zone].push(withPath(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), path));
   }
 
+  // the zone an object's in
+  zoneOf(object: LevelObject): number {
+    return this.inZone(this.positionOf(object)).zone;
+  }
+
   // where a rolling stone's track goes in the level (where its path starts):
   // its floor under the middle of its path on the floor at the stone
   trackStart(stone: LevelObject, track: StoneTrack): Vec3 {
@@ -184,11 +196,13 @@ function meshesInZone(zoneWorlds: WorldMesh[][], zone: number): number[] {
   return zoneWorlds[zone].map((_, index) => first + index);
 }
 
-// the worlds with jungle rollers' track under each rolling stone
+// the worlds with jungle rollers' track under each rolling stone, in the mesh
+// kept for them at the end of the stone's zone's meshes (see zoneWorldMeshes)
 function withStoneTracks(worlds: Worlds, stones: LevelObject[], track: StoneTrack, placer: ObjectPlacer, zoneWorlds: WorldMesh[][], template: Buffer): Worlds {
   return stones.reduce((built, stone) => {
     const { zone, at } = placer.trackPlace(stone, track);
-    return addMapPiece(built, track, at, template, meshesInZone(zoneWorlds, zone), "a rolling stone's track");
+    const tracksMesh = meshesInZone(zoneWorlds, zone).at(-1)!;
+    return addMapPiece(built, track, at, template, [tracksMesh], "a rolling stone's track");
   }, worlds);
 }
 
@@ -210,21 +224,22 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const templates = { ...base, header: withSky(base.header, sky) }; // every zone's header is made from this one
   const map = fitMap(text, scale, turn);
   const { fitted, cells, spans } = map;
-  const zoneWorlds = zoneWorldMeshes(map, templates, new Set(images.keys()));
-  const template = templates.world.items[0];
-  const { pages, ...textured } = textureWorlds(zoneWorlds.flat(), images, template);
-
   const spawn = objects.find((object) => object.kind === "spawn");
   const end = objects.find((object) => object.kind === "end");
   const boxes = objects.filter((object) => object.kind === "box");
   const enemies = objects.filter((object) => object.kind === "enemy");
+  const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
   const placer = new ObjectPlacer(map, templates, scale, turn, (end ? 1 : 0) + boxCount(boxes) + enemies.length);
+
+  const zoneWorlds = zoneWorldMeshes(map, templates, new Set(images.keys()), new Set(stones.map((stone) => placer.zoneOf(stone))));
+  const template = templates.world.items[0];
+  const { pages, ...textured } = textureWorlds(zoneWorlds.flat(), images, template);
+
   const start = spawn ? placer.positionOf(spawn) : spawnPoint(fitted.mesh, cells, MAP_CELL);
   const spawnZone = placer.placeCrash(start);
   boxes.forEach((box) => placer.placeBoxStack(box));
   linkSwitches(placer.entities, placer.placedBoxes);
 
-  const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
   const track = stones.length ? stoneTrack(level) : null;
   enemies.filter((enemy) => enemy.enemy === "plant").forEach((plant) => placer.placePlant(plant));
   stones.forEach((stone) => placer.placeStone(stone, track!));
