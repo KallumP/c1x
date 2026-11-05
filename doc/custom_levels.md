@@ -42,7 +42,7 @@ level_src/my_level/grass.png
 
 ## 2. Place objects in the level editor
 
-The level editor places Crash's start, the end of the level, and boxes.
+The level editor places Crash's start, the end of the level, boxes and enemies.
 
 **Set it up (once):** install [Node.js](https://nodejs.org/) 18 or later, then click **Install** in the [launcher](launcher.md#level-editor)'s Level editor section.
 
@@ -50,13 +50,15 @@ The level editor places Crash's start, the end of the level, and boxes.
 
 1. In the launcher, click **Open editor**. It opens in your browser.
 2. Pick your level at the top left.
-3. Pick `spawn`, `end` or a box on the left, then click the floor to place it.
+3. Pick `spawn`, `end`, a box or an enemy on the left, then click the floor to place it.
 4. Click **Select** (or press Escape), then click an object to select it. Drag it to move it, or change it on the right. Delete removes it.
 5. Click **Save** (or press Ctrl+S).
 
 Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box, so move it. **Drop to floor** on the right puts the selected box just above the floor below it. To lift an object off the floor, set its **raise**: it stays that high above the floor as you drag it about.
 
 The arrow at the spawn points the way the camera faces when the level starts. With nothing selected, the right side shows the **Level**'s turn and scale (see [If something looks wrong](#if-something-looks-wrong)), and changing the turn turns the arrow. Save writes them to the level's `level.cfg`, along with the objects. Changing the scale changes how big the boxes look on the map, as they stay the same size in the game.
+
+**Enemies:** a `plant` bites Crash if he walks into it, and stays where it is.
 
 Below it, **Sky** sets the sky behind the level: a top colour filling the screen down to **split**, and a bottom colour below it, with a preview. It's N. Sanity Beach's blue over olive unless you change it, and it's saved to `level.cfg` too.
 
