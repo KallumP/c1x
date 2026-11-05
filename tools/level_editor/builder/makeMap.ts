@@ -7,9 +7,8 @@ import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFaces, addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
-import { enemyPath } from "./enemyPaths";
 import {
-  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, linkSwitches, newEntityIds, UNBREAKABLE_BOXES, WARP_PAD, withEntityId, withPath,
+  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, UNBREAKABLE_BOXES, WARP_PAD, withEntityId, withPath,
   withPosition, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
@@ -121,15 +120,19 @@ class ObjectPlacer {
     }
   }
 
-  // an enemy, in the zone its spot is in, moving along its path (relative to that zone)
-  placeEnemy(object: LevelObject): void {
-    const points = [object.at, ...(object.path ?? [])].map((at) => this.positionOf({ ...object, at }));
-    const { zone } = this.inZone(points[0]);
-    const zoneStart = this.map.spans[zone][0];
-    const [type, subtype] = ENEMY_ENTITIES[object.enemy!];
-    const example = this.templates.entity(type, subtype);
-    const path = enemyPath(object.enemy!, points.map(([x, y, z]): Vec3 => [x, y, z - zoneStart]), entityPath(example));
-    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
+  // a plant, at its spot in the zone it's in
+  placePlant(plant: LevelObject): void {
+    const { zone, at } = this.inZone(this.positionOf(plant));
+    const [type, subtype] = ENEMY_ENTITIES.plant;
+    this.entities[zone].push(withPosition(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), at));
+  }
+
+  // a rolling stone, in the zone its spot is in, rolling jungle rollers' path along its track
+  placeStone(stone: LevelObject, track: StoneTrack): void {
+    const { zone, at } = this.trackPlace(stone, track);
+    const path = track.path.map((point) => point.map((value, axis) => value + at[axis]) as Vec3);
+    const [type, subtype] = ENEMY_ENTITIES.rolling_stone;
+    this.entities[zone].push(withPath(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), path));
   }
 
   // where a rolling stone's track goes in the level (where its path starts):
@@ -220,10 +223,11 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const spawnZone = placer.placeCrash(start);
   boxes.forEach((box) => placer.placeBoxStack(box));
   linkSwitches(placer.entities, placer.placedBoxes);
-  enemies.forEach((enemy) => placer.placeEnemy(enemy));
 
   const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
   const track = stones.length ? stoneTrack(level) : null;
+  enemies.filter((enemy) => enemy.enemy === "plant").forEach((plant) => placer.placePlant(plant));
+  stones.forEach((stone) => placer.placeStone(stone, track!));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
   if (track) {
     addStoneTrackCells(cells, stones, track, placer, fitted.size);

@@ -18,8 +18,8 @@ export type BoxType = keyof typeof BOX_TYPES;
 export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 
 // the enemies custom levels can have, by name: the base level's own (jungle
-// rollers' biting plant, and its stone wheel that rolls back and forth along
-// its path). the level build places them by their entity (builder/entities.ts)
+// rollers' biting plant, and its stone wheel, which comes with its track and
+// rolls back and forth along it). the level build places them by their entity (builder/entities.ts)
 export const ENEMY_TYPES = ["plant", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
@@ -45,15 +45,15 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type", "path"];
+const ENEMY_SETTINGS = ["type"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 const isWhole = (value: unknown): value is number => isNumber(value) && Number.isInteger(value);
 const isPosition = (value: unknown): value is Vec3 => Array.isArray(value) && value.length === 3 && value.every(isNumber);
 
-// an enemy's type and path, from its fields in objects.json
-function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<LevelObject, "enemy" | "path"> {
+// an enemy's type, from its fields in objects.json
+function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<LevelObject, "enemy"> {
   const enemyTypes = ENEMY_TYPES.join(", ");
   if (!("type" in fields)) {
     throw new Error(`object ${objectNumber}: an enemy needs a type (${enemyTypes})`);
@@ -61,14 +61,7 @@ function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<
   if (!ENEMY_TYPES.includes(fields.type as EnemyType)) {
     throw new Error(`object ${objectNumber}: unknown enemy type ${fields.type} (it can be ${enemyTypes})`);
   }
-  if (!("path" in fields)) {
-    return { enemy: fields.type as EnemyType };
-  }
-  const path = fields.path;
-  if (!(Array.isArray(path) && path.every(isPosition))) {
-    throw new Error(`object ${objectNumber}: path should be where it moves to, [[x, y, z], ...] in metres`);
-  }
-  return { enemy: fields.type as EnemyType, path: path.map(([x, y, z]) => [x, y, z]) };
+  return { enemy: fields.type as EnemyType };
 }
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
