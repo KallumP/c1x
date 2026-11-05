@@ -3,7 +3,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { ByteWriter, padTo4 } from "../../builder/bytes";
 import {
-  BOX_TYPE, ENEMY_ENTITIES, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityType, linkSwitches, newEntityIds, withEntityId, type PlacedBox,
+  BOX_TYPE, ENEMY_ENTITIES, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityPath, entityType, linkSwitches, newEntityIds, withEntityId,
+  withPath, type PlacedBox,
 } from "../../builder/entities";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readLevel } from "../../builder/levelFiles";
@@ -45,8 +46,29 @@ describe("entities", () => {
 });
 
 describe("enemies", () => {
-  test("are jungle rollers' plant", () => {
-    expect(ENEMY_ENTITIES).toEqual({ plant: [25, 0] });
+  test("are jungle rollers' plant and rolling stone", () => {
+    expect(ENEMY_ENTITIES).toEqual({ plant: [25, 0], rolling_stone: [22, 6] });
+  });
+});
+
+describe("entity paths", () => {
+  test("are their points, in zone units", () => {
+    expect(entityPath(entity(25, 0, 1, [[1, 2, 3], [4, 5, -6]]))).toEqual([[4, 8, 12], [16, 20, -24]]);
+  });
+
+  test("written into an entity, replace its points and keep the rest", () => {
+    const written = withPath(entity(22, 6, 7, [[0, 0, 0], [1, 1, 1], [2, 2, 2]]), [[400, 800, -1200], [804, 0, 0]]);
+    expect(entityPath(written)).toEqual([[400, 800, -1200], [804, 0, 0]]);
+    expect(entityType(written)).toEqual([22, 6]);
+    expect(entityId(written)).toBe(7);
+    expect(written.readInt16LE(ENTITY_INIT_FLAGS)).toBe(1);
+    expect(written.length).toBe(32); // 20, then 6 a point
+  });
+
+  test("are kept on units of 4, and padded to a multiple of 4 bytes as the game's", () => {
+    const written = withPath(entity(25, 0, 1, [[0, 0, 0], [1, 1, 1]]), [[5, -5, 9]]);
+    expect(entityPath(written)).toEqual([[4, -8, 8]]);
+    expect(written.length).toBe(28);
   });
 });
 
