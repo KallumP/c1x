@@ -2,11 +2,12 @@
 import { Edges } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, cameraFacing, stackCentres } from "../coords";
-import { boxStyle, END_COLOUR, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
+import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import type { LevelObject, Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
 const PAD_UNITS = 400;   // the warp pad's radius, about
+const PLANT_UNITS = 560; // the plant's height, about
 const BOX_EDGE_COLOUR = "#000000";
 
 // where an object's base is in the viewport, raised as it is in the game
@@ -106,6 +107,19 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
     );
   };
 
+  // the plant: a cone as tall as it stands
+  const renderPlant = (object: LevelObject, index: number) => {
+    const height = PLANT_UNITS / scale;
+    const [x, y, z] = base(object);
+    return (
+      <mesh position={[x, y + height / 2, z]}>
+        <coneGeometry args={[height / 3, height, 12]} />
+        <meshLambertMaterial color={ENEMY_COLOURS.plant} />
+        <Edges color={edgeColour(index, ENEMY_COLOURS.plant)} />
+      </mesh>
+    );
+  };
+
   const renderShape = (object: LevelObject, index: number) => {
     switch (object.kind) {
       case "spawn":
@@ -114,6 +128,8 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
         return renderEnd(object, index);
       case "box":
         return renderBoxStack(object, index);
+      case "enemy":
+        return renderPlant(object, index);
     }
   };
 

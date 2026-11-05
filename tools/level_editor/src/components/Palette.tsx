@@ -1,7 +1,7 @@
 // what clicking on the level does: select, or place an object
 import type { Placeable, Tool } from "../editor";
-import { BOX_TYPES, type BoxType } from "../objects";
-import { boxStyle, END_COLOUR, SPAWN_COLOUR } from "../objectStyles";
+import { BOX_TYPES, ENEMY_TYPES, type BoxType } from "../objects";
+import { boxStyle, END_COLOUR, ENEMY_COLOURS, SPAWN_COLOUR } from "../objectStyles";
 import "./Palette.css";
 
 const GRID_SIZES = [0, 0.25, 0.5, 1];
@@ -41,6 +41,8 @@ export default function Palette({ tool, onTool, grid, onGrid }: {
       {renderPlaceButton("end", "end", END_COLOUR)}
       <h3>Boxes</h3>
       {boxTypes.map((boxType) => renderPlaceButton(boxType, boxType.replace("_", " "), boxStyle(boxType).colour))}
+      <h3>Enemies</h3>
+      {ENEMY_TYPES.map((enemy) => renderPlaceButton(enemy, enemy.replace("_", " "), ENEMY_COLOURS[enemy]))}
       {renderGridPicker()}
     </aside>
   );

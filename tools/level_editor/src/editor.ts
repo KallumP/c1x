@@ -1,8 +1,8 @@
 // what's being edited: a level's objects, which one is selected, and the
 // changes that can be undone and redone
-import { BOX_TYPES, type BoxType, type LevelObject, type Vec3 } from "./objects";
+import { BOX_TYPES, ENEMY_TYPES, type BoxType, type EnemyType, type LevelObject, type Vec3 } from "./objects";
 
-export type Placeable = "spawn" | "end" | BoxType;
+export type Placeable = "spawn" | "end" | BoxType | EnemyType;
 
 // what clicking on the level does: select, or place an object
 export type Tool = { kind: "select" } | { kind: "place"; what: Placeable };
@@ -28,7 +28,12 @@ export type EditorAction =
 
 export const emptyEditor: EditorState = { objects: [], selected: null, past: [], future: [] };
 
+const isEnemyType = (what: Placeable): what is EnemyType => (ENEMY_TYPES as readonly string[]).includes(what);
+
 export function newObject(what: Placeable, at: Vec3): LevelObject {
+  if (isEnemyType(what)) {
+    return { kind: "enemy", enemy: what, at, raise: 0, stack: 1 };
+  }
   const kind = what in BOX_TYPES ? "box" : (what as "spawn" | "end");
   const object: LevelObject = { kind, at, raise: 0, stack: 1 };
   if (kind === "box") {
@@ -44,7 +49,8 @@ function change(state: EditorState, objects: Objects, selected: number | null): 
 
 // a level has one spawn and one end, so adding another moves it
 function add(state: EditorState, object: LevelObject): EditorState {
-  const existing = object.kind === "box" ? -1 : state.objects.findIndex((other) => other.kind === object.kind);
+  const isOnce = object.kind === "spawn" || object.kind === "end";
+  const existing = isOnce ? state.objects.findIndex((other) => other.kind === object.kind) : -1;
   if (existing >= 0) {
     const objects = state.objects.map((other, index) => (index === existing ? object : other));
     return change(state, objects, existing);
