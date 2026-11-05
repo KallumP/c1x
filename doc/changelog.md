@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-05
+
+### Added
+
+- custom levels can have enemies, starting with Jungle Rollers' biting plant, placed in the level editor
+
 ## 2026-11-04
 
 ### Fixed

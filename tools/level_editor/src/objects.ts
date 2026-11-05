@@ -1,7 +1,7 @@
 // a level source's objects.json (see doc/custom_levels.md), read and written
 // here for the editor, and read for the level build too (builder/levelObjects.ts)
 
-export const KINDS = ["spawn", "end", "box"] as const;
+export const KINDS = ["spawn", "end", "box", "enemy"] as const;
 export type Kind = (typeof KINDS)[number];
 const ONCE: Kind[] = ["spawn", "end"]; // a level has at most one of these
 
@@ -17,6 +17,11 @@ export const BOX_TYPES = {
 export type BoxType = keyof typeof BOX_TYPES;
 export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 
+// the enemies custom levels can have, by name: the base level's own (jungle
+// rollers' biting plant). the level build places them by their entity (builder/entities.ts)
+export const ENEMY_TYPES = ["plant"] as const;
+export type EnemyType = (typeof ENEMY_TYPES)[number];
+
 export type Vec3 = [number, number, number];
 
 export interface LevelObject {
@@ -25,6 +30,7 @@ export interface LevelObject {
   raise: number;        // metres above at
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
+  enemy?: EnemyType;    // an enemy's type
 }
 
 // a box's type name, from its type or its subtype number
@@ -37,9 +43,24 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
+const ENEMY_SETTINGS = ["type"];
+const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 const isWhole = (value: unknown): value is number => isNumber(value) && Number.isInteger(value);
+const isPosition = (value: unknown): value is Vec3 => Array.isArray(value) && value.length === 3 && value.every(isNumber);
+
+// an enemy's type, from its fields in objects.json
+function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<LevelObject, "enemy"> {
+  const enemyTypes = ENEMY_TYPES.join(", ");
+  if (!("type" in fields)) {
+    throw new Error(`object ${objectNumber}: an enemy needs a type (${enemyTypes})`);
+  }
+  if (!ENEMY_TYPES.includes(fields.type as EnemyType)) {
+    throw new Error(`object ${objectNumber}: unknown enemy type ${fields.type} (it can be ${enemyTypes})`);
+  }
+  return { enemy: fields.type as EnemyType };
+}
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
 export function parseObjects(text: string): LevelObject[] {
@@ -69,7 +90,7 @@ export function parseObjects(text: string): LevelObject[] {
       throw new Error(`object ${objectNumber}: unknown kind ${kind} (it can be ${KINDS.join(", ")})`);
     }
 
-    const allowedSettings = SETTINGS.concat(kind === "box" ? BOX_SETTINGS : []);
+    const allowedSettings = SETTINGS.concat(KIND_SETTINGS[kind as Kind] ?? []);
     const unknownSettings = Object.keys(fields).filter((setting) => !allowedSettings.includes(setting));
     if (unknownSettings.length) {
       throw new Error(
@@ -81,7 +102,7 @@ export function parseObjects(text: string): LevelObject[] {
     }
 
     const at = fields.at;
-    if (!(Array.isArray(at) && at.length === 3 && at.every(isNumber))) {
+    if (!isPosition(at)) {
       throw new Error(`object ${objectNumber}: at should be its position in blender, [x, y, z] in metres`);
     }
     const raise = fields.raise ?? 0;
@@ -113,6 +134,9 @@ export function parseObjects(text: string): LevelObject[] {
       }
       object.stack = stack;
     }
+    if (kind === "enemy") {
+      Object.assign(object, readEnemy(fields, objectNumber));
+    }
 
     objects.push(object);
   });
@@ -126,6 +150,9 @@ function formatObject(object: LevelObject): string {
   if (object.kind === "box" && object.box !== undefined) {
     parts.push(typeof object.box === "number" ? `"subtype": ${object.box}` : `"type": ${JSON.stringify(object.box)}`);
   }
+  if (object.kind === "enemy" && object.enemy !== undefined) {
+    parts.push(`"type": ${JSON.stringify(object.enemy)}`);
+  }
   parts.push(`"at": [${object.at.map(roundToMillimetre).join(", ")}]`);
   const raise = roundToMillimetre(object.raise);
   if (raise !== 0) {
@@ -137,9 +164,9 @@ function formatObject(object: LevelObject): string {
   return `{${parts.join(", ")}}`;
 }
 
-const KIND_ORDER: Record<Kind, number> = { spawn: 0, box: 1, end: 2 };
+const KIND_ORDER: Record<Kind, number> = { spawn: 0, box: 1, enemy: 2, end: 3 };
 
-// the text of an objects.json: the spawn, the boxes in their order, then the end;
+// the text of an objects.json: the spawn, the boxes in their order, the enemies, then the end;
 // one object a line, with a blank line between kinds
 export function formatObjects(unordered: LevelObject[]): string {
   if (unordered.length === 0) {

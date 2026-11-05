@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BOX_TYPES, boxTypeName, formatObjects, parseObjects } from "../../src/objects";
+import { BOX_TYPES, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects } from "../../src/objects";
 
 describe("parseObjects", () => {
   test("reads spawn, end and boxes with their settings", () => {
@@ -117,5 +117,48 @@ describe("boxTypeName", () => {
   test("is the type a subtype number has", () => {
     expect(boxTypeName(13)).toBe("outline");
     expect(boxTypeName(9)).toBe("aku_aku");
+  });
+});
+
+describe("enemies", () => {
+  test("knows the enemies custom levels can have, by name", () => {
+    expect(ENEMY_TYPES).toEqual(["plant"]);
+  });
+
+  test("reads an enemy", () => {
+    const objects = parseObjects(`[{"kind": "enemy", "type": "plant", "at": [1, 10, 0], "raise": 0.5}]`);
+    expect(objects).toEqual([{ kind: "enemy", enemy: "plant", at: [1, 10, 0], raise: 0.5, stack: 1 }]);
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0]}]', "object 1: unknown enemy type crab"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: unknown setting path"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+
+  test("writes an enemy's type, after the boxes and before the end", () => {
+    const text = formatObjects([
+      { kind: "end", at: [0, 9, 0], raise: 0, stack: 1 },
+      { kind: "enemy", enemy: "plant", at: [1, 2.00004, 0], raise: 0, stack: 1 },
+      { kind: "box", box: "basic", at: [1, 0, 0], raise: 0, stack: 1 },
+    ]);
+    expect(text).toBe([
+      "[",
+      '  {"kind": "box", "type": "basic", "at": [1, 0, 0]},',
+      "",
+      '  {"kind": "enemy", "type": "plant", "at": [1, 2, 0]},',
+      "",
+      '  {"kind": "end", "at": [0, 9, 0]}',
+      "]",
+      "",
+    ].join("\n"));
+  });
+
+  test("reads back what it writes", () => {
+    const objects = parseObjects(`[{"kind": "enemy", "type": "plant", "at": [8, 35.5, 0], "raise": 0.5}]`);
+    expect(parseObjects(formatObjects(objects))).toEqual(objects);
   });
 });

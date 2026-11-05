@@ -1,5 +1,5 @@
-// how the editor styles objects in the viewport: boxes coloured like the game's, by type
-import { boxTypeName, type BoxType, type LevelObject } from "./objects";
+// how the editor styles objects in the viewport: boxes coloured like the game's, by type, and enemies
+import { boxTypeName, type BoxType, type EnemyType, type LevelObject } from "./objects";
 
 export interface BoxStyle {
   colour: string;
@@ -24,6 +24,10 @@ const COLOURS: Record<BoxType, string> = {
 };
 
 const WIREFRAMES: BoxType[] = ["outline", "iron_outline"];
+
+export const ENEMY_COLOURS: Record<EnemyType, string> = {
+  plant: "#3fa34d",
+};
 
 export const SPAWN_COLOUR = "#ff9a1f";
 export const END_COLOUR = "#7c4dff";

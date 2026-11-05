@@ -7,7 +7,10 @@ import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
-import { BOX_HEIGHT, BOX_TYPE, entityId, linkSwitches, newEntityIds, UNBREAKABLE_BOXES, WARP_PAD, withEntityId, withPosition, type PlacedBox } from "./entities";
+import {
+  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, UNBREAKABLE_BOXES, WARP_PAD, withEntityId, withPosition,
+  type PlacedBox,
+} from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
 import { ENTRY_SLST, type Level } from "./levelFiles";
@@ -117,6 +120,14 @@ class ObjectPlacer {
     }
   }
 
+  // an enemy, at its spot in the zone it's in
+  placeEnemy(object: LevelObject): void {
+    const { zone, at } = this.inZone(this.positionOf(object));
+    const [type, subtype] = ENEMY_ENTITIES[object.enemy!];
+    const enemy = withEntityId(this.templates.entity(type, subtype), this.ids.shift()!);
+    this.entities[zone].push(withPosition(enemy, at));
+  }
+
   // the warp pad that ends the level; where it stands in its zone, and which zone
   placeWarpPad(position: Vec3): { zone: number; at: Vec3 } {
     const placed = this.inZone(position);
@@ -161,11 +172,13 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const spawn = objects.find((object) => object.kind === "spawn");
   const end = objects.find((object) => object.kind === "end");
   const boxes = objects.filter((object) => object.kind === "box");
-  const placer = new ObjectPlacer(map, templates, scale, turn, (end ? 1 : 0) + boxCount(boxes));
+  const enemies = objects.filter((object) => object.kind === "enemy");
+  const placer = new ObjectPlacer(map, templates, scale, turn, (end ? 1 : 0) + boxCount(boxes) + enemies.length);
   const start = spawn ? placer.positionOf(spawn) : spawnPoint(fitted.mesh, cells, MAP_CELL);
   const spawnZone = placer.placeCrash(start);
   boxes.forEach((box) => placer.placeBoxStack(box));
   linkSwitches(placer.entities, placer.placedBoxes);
+  enemies.forEach((enemy) => placer.placeEnemy(enemy));
 
   let withBase = textured;
   if (end) {

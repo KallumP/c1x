@@ -16,6 +16,17 @@ describe("newObject", () => {
   });
 });
 
+describe("new enemies", () => {
+  test("a plant stands where it's put", () => {
+    expect(newObject("plant", [1, 2, 3])).toEqual({ kind: "enemy", enemy: "plant", at: [1, 2, 3], raise: 0, stack: 1 });
+  });
+
+  test("a level can have many, so adding one keeps the rest", () => {
+    const state = editorReducer(withObjects([newObject("plant", [0, 0, 0])]), { type: "add", object: newObject("plant", [5, 0, 0]) });
+    expect(state.objects).toEqual([newObject("plant", [0, 0, 0]), newObject("plant", [5, 0, 0])]);
+  });
+});
+
 describe("load", () => {
   test("opens a level's objects with nothing selected", () => {
     const state = withObjects([box(1)]);

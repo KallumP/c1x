@@ -1,7 +1,7 @@
 // entities (zone_entity in src/formats/zdat.h): parent zone, spawn flags,
 // group, id, point count, 3 init flags, type, subtype, then the points, in
 // units of 4 zone units relative to the zone
-import { BOX_TYPES } from "../src/objects";
+import { BOX_TYPES, type EnemyType } from "../src/objects";
 import type { Vec3 } from "./vectors";
 
 const ENTITY_ID = 8;
@@ -15,6 +15,8 @@ export const CRASH: [number, number] = [0, 0];
 export const WARP_PAD: [number, number] = [32, 1]; // WarpC: the warp pad that ends a level, as on n. sanity beach
 export const BOX_TYPE = 34;      // BoxsC: boxes, by subtype
 export const BOX_HEIGHT = 400;   // a box on top of another is this much higher (GoolObjectSpawn in src/gool.c)
+// each enemy's entity type and subtype in the base level: jungle rollers' biting plant (PlanC)
+export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0] };
 // not in the level's total (an iron outline fills in as an iron box)
 export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch, BOX_TYPES.iron_arrow, BOX_TYPES.iron_outline];
 
