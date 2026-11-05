@@ -87,5 +87,12 @@
   {"kind": "box", "type": "tnt", "at": [-3.163, 241.836, 2.277]},
   {"kind": "box", "type": "life", "at": [-3.179, 241.832, 2.267], "raise": 1, "stack": 2},
 
+  {"kind": "enemy", "type": "plant", "at": [1.5, 34, 0.109]},
+  {"kind": "enemy", "type": "plant", "at": [-0.2, 52, 0.011]},
+  {"kind": "enemy", "type": "plant", "at": [-0.5, 208, -0.019]},
+  {"kind": "enemy", "type": "plant", "at": [4.5, 208, 0.032]},
+  {"kind": "enemy", "type": "plant", "at": [-1, 226.5, 0.763]},
+  {"kind": "enemy", "type": "plant", "at": [5, 226.5, 0.728]},
+
   {"kind": "end", "at": [-1.829, 247, 2.7], "raise": 0.15}
 ]
