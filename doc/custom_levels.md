@@ -42,7 +42,7 @@ level_src/my_level/grass.png
 
 ## 2. Place objects in the level editor
 
-The level editor places Crash's start, the end of the level, boxes and enemies.
+The level editor allows you to place Crash's spawn, the end of the level, boxes and enemies.
 
 **Set it up (once):** install [Node.js](https://nodejs.org/) 18 or later, then click **Install** in the [launcher](launcher.md#level-editor)'s Level editor section.
 
