@@ -12,6 +12,7 @@
 #include "pc/gfx/soft.h"
 #include "pc/gfx/gte.h"
 #include "pc/levelend.h"
+#include "pc/fling.h"
 int CardControl(int op, int part_idx) { return 1; }
 
 /* forward declarations for unexported funcs */
@@ -3260,6 +3261,35 @@ static inline void GoolOpReactSolidSurfaces(gool_object *obj, uint32_t instructi
   }
 }
 
+/* pc: an object's gool category */
+static uint32_t GoolObjectCategory(gool_object *obj) {
+  return obj->global ? ((gool_header*)obj->global->items[0])->category : 0;
+}
+
+/* pc: where an object stood, at the first point of its entity's path (as GoolObjectOrientOnPath) */
+static int GoolObjectStood(gool_object *obj, vec *stood) {
+  zone_entity *entity;
+  zone_rect *rect;
+
+  entity = obj->entity;
+  if (!entity || entity->parent_zone->type != 7) { return 0; }
+  rect = (zone_rect*)entity->parent_zone->items[1];
+  stood->x = ((entity->path_points[0].x << 2) + rect->x) << 8;
+  stood->y = ((entity->path_points[0].y << 2) + rect->y) << 8;
+  stood->z = ((entity->path_points[0].z << 2) + rect->z) << 8;
+  return 1;
+}
+
+/* pc: whether event is a flung enemy passing a box too far from where it stood to break it (FlingBreaksBox) */
+static int GoolFlungPastReach(gool_object *sender, gool_object *recipient, uint32_t event) {
+  vec stood;
+
+  if (event != GOOL_EVENT_FLING || !sender) { return 0; }
+  if (GoolObjectCategory(sender) != FLING_ENEMY || GoolObjectCategory(recipient) != FLING_BOX) { return 0; }
+  if (!GoolObjectStood(sender, &stood)) { return 0; }
+  return !FlingBreaksBox(ns.ldat->lid, &stood, &sender->trans);
+}
+
 int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event, int argc, uint32_t *argv) {
   entry *exec;
   gool_header *header;
@@ -3271,6 +3301,8 @@ int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event, i
   uint32_t *code, flags;
   int res, test, i;
 
+  if (recipient && GoolFlungPastReach(sender, recipient, event))
+    recipient = 0; /* pc: it flies on through the box, as if it weren't there */
   if (sender)
     sender->misc_flag = !!recipient;
   if (!recipient) { return SUCCESS; }
