@@ -17,6 +17,6 @@ An object in `objects.json` has a `kind`:
 - `spawn`: where Crash starts (one at most)
 - `end`: the warp pad that ends the level (one at most)
 - `box`: a box, by its `type`; `stack` makes a stack of them. The types are `basic`, `question`, `life`, `aku_aku`, `checkpoint`, `arrow`, `slatted`, `iron`, `switch`, `outline` (filled in as a crate by a switch), `tnt`, `enemy_tnt` (a TNT for an enemy to be knocked into), `iron_arrow` (an iron box that bounces Crash) and `iron_outline` (filled in as an iron box by a switch)
-- `enemy`: an enemy, by its `type`: `plant` (a biting plant that stays where it is) or `rolling_stone` (a stone wheel that rolls back and forth along its `path`: a list of points on the floor, `[x, y, z]` in Blender like `at`, which it rolls between `at` and the path's end. Without a path, it rolls along Jungle Rollers' own, from `at`)
+- `enemy`: an enemy, by its `type`: `plant` (a biting plant that stays where it is) or `rolling_stone` (a stone wheel that comes with Jungle Rollers' track, its middle on the floor at `at`, and rolls back and forth along it across the map)
 
-Each object also has `at`, where it is in Blender, and can have `raise`, how far above that it is. The [level editor](../doc/custom_levels.md#2-place-objects-in-the-level-editor) writes all of these for you. `raise` lifts an enemy's whole path too. Custom levels are built from Jungle Rollers, which has every kind of box, and its plant and rolling stone.
+Each object also has `at`, where it is in Blender, and can have `raise`, how far above that it is. The [level editor](../doc/custom_levels.md#2-place-objects-in-the-level-editor) writes all of these for you. Custom levels are built from Jungle Rollers, which has every kind of box, and its plant and rolling stone.
