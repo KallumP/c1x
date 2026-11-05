@@ -198,14 +198,15 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(plant.id).not.toBe(boxes(built.zone)[0].id);
   });
 
-  test("a rolling stone rolls along its path", () => {
-    const stone = object("enemy", [1, 2, 0], { enemy: "rolling_stone", path: [[5, 2, 0]] });
-    const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [stone] }).zone);
+  test("a rolling stone rolls jungle rollers' path along its track, its middle over the stone's spot", () => {
+    const track = stoneTrack(base);
+    const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "rolling_stone" })] }).zone);
     expect(placed.type).toEqual(ENEMY_ENTITIES.rolling_stone);
-    const [first, last] = [placed.path[0], placed.path[placed.path.length - 1]];
-    expect(Math.abs(Math.abs(last[0] - first[0]) - 4 * 256)).toBeLessThanOrEqual(16); // either way along it
-    expect([last[1], last[2]]).toEqual([first[1], first[2]]);
-    expect(placed.path.length).toBeGreaterThan(2);
+    // blender (1, 2, 0) is (1408, 128, 1664) in the zone; the track's floor is there, under the path's middle
+    const start = [1408 - track.path[5][0], 128 - track.floor, 1664 - track.path[5][2]];
+    expect(placed.path.length).toBe(track.path.length);
+    placed.path.forEach((point, index) => point.forEach((value, axis) =>
+      expect(Math.abs(value - (start[axis] + track.path[index][axis]))).toBeLessThanOrEqual(8)));
   });
 
   const worldsOf = ({ entries, zone }: Built) => zoneWorldEids(zone).map((eid) => entries.get(eid)!);
