@@ -28,11 +28,11 @@ export class EntryTooBig extends Error {
   }
 }
 
-// entry pages holding entries, in order, starting a new page when one is full.
+// pages (entry pages, or as makePage makes them) holding entries, in order, starting a new page when one is full.
 // each page lists its entries in bucket order, since the loader
 // (NSPageUpdateEntries) finds them by scanning the page table forward from the
 // bucket of the page's first entry
-export function packEntries(entries: Entry[]): Page[] {
+export function packEntries(entries: Entry[], makePage: (entries: Entry[]) => Page = entryPage): Page[] {
   const pages: Entry[][] = [];
   let current: Entry[] = [];
   let currentBytes = 0;
@@ -52,7 +52,7 @@ export function packEntries(entries: Entry[]): Page[] {
   if (current.length) {
     pages.push(current);
   }
-  return pages.map((page) => entryPage([...page].sort((first, second) => eidBucket(first.eid) - eidBucket(second.eid))));
+  return pages.map((page) => makePage([...page].sort((first, second) => eidBucket(first.eid) - eidBucket(second.eid))));
 }
 
 // the pages that aren't entry pages (texture and audio), by the eids in them

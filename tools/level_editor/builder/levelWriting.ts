@@ -36,8 +36,8 @@ export function entryBytes(entry: Entry): Buffer {
   return writer.toBuffer();
 }
 
-// a 64 KB page holding entries; it's an error if they don't fit
-export function entryPageBytes(entries: Entry[], index: number): Buffer {
+// a 64 KB page holding entries (an entry page, or a sound page made here); it's an error if they don't fit
+export function entryPageBytes(entries: Entry[], index: number, type = PAGE_ENTRIES): Buffer {
   const blobs = entries.map(entryBytes);
   const offsets: number[] = [];
   let offset = 16 + 4 * (blobs.length + 1);
@@ -49,14 +49,17 @@ export function entryPageBytes(entries: Entry[], index: number): Buffer {
   if (offset > PAGE_SIZE) {
     throw new Error(`entries take ${offset} bytes, more than a page`);
   }
-  const writer = new ByteWriter().u16(MAGIC_PAGE).u16(PAGE_ENTRIES).u32(pgid(index)).u32(blobs.length).u32(0);
+  const writer = new ByteWriter().u16(MAGIC_PAGE).u16(type).u32(pgid(index)).u32(blobs.length).u32(0);
   offsets.forEach((entryOffset) => writer.u32(entryOffset));
   blobs.forEach((blob) => writer.bytes(blob));
   return writer.padTo(PAGE_SIZE).toBuffer();
 }
 
+// texture and audio pages read from a level are written as they are
+const isReadWhole = (page: Page) => page.type !== PAGE_ENTRIES && page.data.length > 0;
+
 function pageBytes(page: Page, index: number): Buffer {
-  return page.type === PAGE_ENTRIES ? entryPageBytes(page.entries, index) : page.data; // texture and audio pages as they are
+  return isReadWhole(page) ? page.data : entryPageBytes(page.entries, index, page.type);
 }
 
 // (pgid, eid) for every entry and texture page, grouped by bucket, and where

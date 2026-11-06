@@ -72,6 +72,11 @@ export function entryPage(entries: Entry[]): Page {
   return { type: PAGE_ENTRIES, pgid: 0, eid: 0, entries, data: Buffer.alloc(0) };
 }
 
+// a sound page made here, from its entries (as entryPage), rather than read whole from a level
+export function soundPage(entries: Entry[]): Page {
+  return { type: PAGE_SOUNDS, pgid: 0, eid: 0, entries, data: Buffer.alloc(0) };
+}
+
 export function texturePage(eid: number, data: Buffer): Page {
   return { type: PAGE_TEXTURE, pgid: 0, eid, entries: [], data };
 }
