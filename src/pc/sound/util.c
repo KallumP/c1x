@@ -234,6 +234,20 @@ int16_t VabVolumeToAttenuation(uint8_t tone_vol, uint8_t prog_vol) {
   return (int16_t)lround(centibels);
 }
 
+#define FLUIDSYNTH_ATTENUATION_SCALE 0.4 /* as the emu8000 applied it */
+
+/*
+ * the initialAttenuation to write for fluidsynth to attenuate by centibels,
+ * as it applies only FLUIDSYNTH_ATTENUATION_SCALE of the value
+ */
+int16_t FluidSynthAttenuation(int16_t centibels) {
+  long scaled;
+
+  scaled = lround(centibels / FLUIDSYNTH_ATTENUATION_SCALE);
+  if (scaled > SF2_MAX_ATTENUATION) { return SF2_MAX_ATTENUATION; }
+  return (int16_t)scaled;
+}
+
 size_t VabToSf2(uint8_t *vab, uint8_t *sf2) {
   VabProg *prog, progs[128];
   VagBody *wave;
@@ -433,7 +447,8 @@ size_t VabToSf2(uint8_t *vab, uint8_t *sf2) {
       hrc.igen->genAmount.shAmount = ((atr->pan-64)*500)/64;
       Sf2Next(sf2, sfInstGenList, hrc.igen);
       hrc.igen->sfGenOper = initialAttenuation;
-      hrc.igen->genAmount.shAmount = VabVolumeToAttenuation(atr->vol, prog->atr->mvol);
+      hrc.igen->genAmount.shAmount =
+        FluidSynthAttenuation(VabVolumeToAttenuation(atr->vol, prog->atr->mvol));
       Sf2Next(sf2, sfInstGenList, hrc.igen);
       hrc.igen->sfGenOper = overridingRootKey;
       hrc.igen->genAmount.shAmount = atr->center;
