@@ -21,6 +21,23 @@ describe("enemy shapes", () => {
     expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
   });
 
+  test("the turtle stands on the floor, as big as the game's (Tu19G): about 725 across, 370 tall and 1180 long", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.turtle);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeCloseTo(370, -1);
+    expect(max[0] - min[0]).toBeGreaterThan(650);
+    expect(max[0] - min[0]).toBeLessThan(800);
+    expect(max[2] - min[2]).toBeGreaterThan(1080);
+    expect(max[2] - min[2]).toBeLessThan(1280);
+    expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
+  });
+
+  test("the turtle faces +z too: its head is in front of its middle", () => {
+    const heads = ENEMY_SHAPES.turtle.filter((part) => part.name === "head");
+    expect(heads.length).toBeGreaterThan(0);
+    expect(heads.every((part) => part.at[2] > 0)).toBe(true);
+  });
+
   test("both face +z: the plant's jaws and the crab's eyes are in front of their middles", () => {
     const frontOf = (parts: typeof ENEMY_SHAPES.crab, name: string) =>
       parts.filter((part) => part.name === name).every((part) => part.at[2] > 0);
