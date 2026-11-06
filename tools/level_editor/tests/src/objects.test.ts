@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BOX_TYPES, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects, PATH_NODES_MAX, type Vec3 } from "../../src/objects";
+import { BOX_TYPES, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type Vec3 } from "../../src/objects";
 
 describe("parseObjects", () => {
   test("reads spawn, end and boxes with their settings", () => {
@@ -209,5 +209,39 @@ describe("enemy paths", () => {
     expect(PATH_NODES_MAX).toBe(20);
     const nodes = Array.from({ length: PATH_NODES_MAX + 1 }, (_, index) => [index, 0, 0]);
     expect(() => parseObjects(JSON.stringify([{ kind: "enemy", type: "turtle", at: [0, 0, 0], path: nodes }]))).toThrow("2 to 20 nodes");
+  });
+});
+
+describe("enemy speeds", () => {
+  test("a crab or turtle can have a speed: how many times the game's own pace it walks at", () => {
+    const objects = parseObjects(`[
+      {"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 2},
+      {"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "speed": 0.5},
+      {"kind": "enemy", "type": "turtle", "at": [0, 0, 0]}
+    ]`);
+    expect(objects.map(({ speed }) => speed)).toEqual([2, 0.5, undefined]);
+  });
+
+  test("writes a speed after the rest, and leaves out the game's own (1)", () => {
+    const turtle = { kind: "enemy" as const, enemy: "turtle" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1 };
+    expect(formatObjects([{ ...turtle, speed: 1.5 }])).toContain('"at": [1, 2, 0], "speed": 1.5}');
+    expect(formatObjects([{ ...turtle, speed: 1 }])).toContain('"at": [1, 2, 0]}');
+    const withPath = formatObjects([{ ...turtle, path: [[0, 0, 0], [1, 0, 0]], speed: 2 }]);
+    expect(withPath).toContain('"path": [[0, 0, 0], [1, 0, 0]], "speed": 2}');
+    expect(parseObjects(withPath)).toEqual([{ ...turtle, path: [[0, 0, 0], [1, 0, 0]], speed: 2 }]);
+  });
+
+  test(`a speed is ${0.25} to ${3}`, () => {
+    expect([SPEED_MIN, SPEED_MAX]).toEqual([0.25, 3]);
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs and turtles do)"],
+    ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 4}]', "object 1: speed should be 0.25 to 3 (times the game's own pace)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 0.1}]', "object 1: speed should be 0.25 to 3"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": "fast"}]', "object 1: speed should be 0.25 to 3"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
   });
 });
