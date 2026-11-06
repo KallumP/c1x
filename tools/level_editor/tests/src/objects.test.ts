@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BOX_TYPES, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects } from "../../src/objects";
+import { BOX_TYPES, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects, PATH_NODES_MAX, type Vec3 } from "../../src/objects";
 
 describe("parseObjects", () => {
   test("reads spawn, end and boxes with their settings", () => {
@@ -144,7 +144,7 @@ describe("enemies", () => {
     ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, rolling_stone, crab, turtle)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
-    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: unknown setting path"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs and turtles do)"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -170,5 +170,44 @@ describe("enemies", () => {
   test("reads back what it writes", () => {
     const objects = parseObjects(`[{"kind": "enemy", "type": "rolling_stone", "at": [8, 35.5, 0], "raise": 0.5}]`);
     expect(parseObjects(formatObjects(objects))).toEqual(objects);
+  });
+});
+
+describe("enemy paths", () => {
+  test("a crab or turtle can have a path: its nodes, each from where the enemy stands, in metres", () => {
+    const objects = parseObjects(`[
+      {"kind": "enemy", "type": "crab", "at": [2, 30, 0], "path": [[-2, 0, 0], [0, 1, 0], [2, 0, 0]]},
+      {"kind": "enemy", "type": "turtle", "at": [3, 40, 0], "path": [[0, -2.5, 0], [0, 2.5, 0.5]]},
+      {"kind": "enemy", "type": "turtle", "at": [3, 50, 0]}
+    ]`);
+    expect(objects.map(({ path }) => path)).toEqual([[[-2, 0, 0], [0, 1, 0], [2, 0, 0]], [[0, -2.5, 0], [0, 2.5, 0.5]], undefined]);
+  });
+
+  test("writes a path after the rest, to the millimetre, and reads it back", () => {
+    const crab = { kind: "enemy" as const, enemy: "crab" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1, path: [[-2.00004, 0, 0], [2, 0.5, 0]] as Vec3[] };
+    const text = formatObjects([crab]);
+    expect(text).toBe([
+      "[",
+      '  {"kind": "enemy", "type": "crab", "at": [1, 2, 0], "path": [[-2, 0, 0], [2, 0.5, 0]]}',
+      "]",
+      "",
+    ].join("\n"));
+    expect(parseObjects(text)).toEqual([{ ...crab, path: [[-2, 0, 0], [2, 0.5, 0]] }]);
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a plant has no path (crabs and turtles do)"],
+    ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: unknown setting path"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', `object 1: a path should be 2 to ${PATH_NODES_MAX} nodes`],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0]]}]', "object 1: a path's nodes should each be [x, y, z] in metres"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": "across"}]', "object 1: a path should be 2 to"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+
+  test(`a path can have up to ${20} nodes`, () => {
+    expect(PATH_NODES_MAX).toBe(20);
+    const nodes = Array.from({ length: PATH_NODES_MAX + 1 }, (_, index) => [index, 0, 0]);
+    expect(() => parseObjects(JSON.stringify([{ kind: "enemy", type: "turtle", at: [0, 0, 0], path: nodes }]))).toThrow("2 to 20 nodes");
   });
 });
