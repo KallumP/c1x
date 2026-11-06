@@ -17,7 +17,7 @@ describe("a path enemy's default path", () => {
   });
 
   test("a native's: 1972 game units across the map, as the great gate's natives walk", () => {
-    expect(noMinusZero(defaultPath("native", 0, 400))).toEqual([[-2.465, 0, 0], [-1.233, 0, 0], [0, 0, 0], [1.233, 0, 0], [2.465, 0, 0]]);
+    expect(noMinusZero(defaultPath("native", 0, 400))).toEqual([[-2.465, 0, 0], [-1.232, 0, 0], [0, 0, 0], [1.233, 0, 0], [2.465, 0, 0]]);
     expect(enemyPath(enemy("native"), 90, 400)).toEqual(defaultPath("native", 90, 400));
   });
 

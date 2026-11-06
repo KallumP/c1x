@@ -1,6 +1,6 @@
-// the paths crabs and turtles walk back and forth along: nodes, in metres from
-// where the enemy stands, set in the editor or their defaults (as n. sanity beach's)
-import { cameraFacing, CRAB_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+// the paths crabs, turtles and natives walk back and forth along: nodes, in metres
+// from where the enemy stands, set in the editor or their defaults (as their donor levels')
+import { cameraFacing, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 5;
@@ -10,7 +10,7 @@ export const DEFAULT_PATH_NODES = 5;
 // so this keeps it walking at its own speed
 export const PATH_STEP = 100;
 
-type PathEnemy = "crab" | "turtle";
+type PathEnemy = "crab" | "turtle" | "native";
 
 const plus = (first: Vec3, second: Vec3): Vec3 => [first[0] + second[0], first[1] + second[1], first[2] + second[2]];
 const scaled = (vector: Vec3, factor: number): Vec3 => [vector[0] * factor, vector[1] * factor, vector[2] * factor];
@@ -24,13 +24,16 @@ function straightNodes(start: Vec3, end: Vec3, count: number): Vec3[] {
   });
 }
 
-// the way an enemy walks without a path of its own (in blender): a crab across
-// the map, as the game walks it; a turtle along the route, the way the camera faces
+// the way an enemy walks without a path of its own (in blender): a crab or native
+// across the map, as the game walks them; a turtle along the route, the way the camera faces
 function defaultWay(enemy: PathEnemy, turn: number): { way: Vec3; walk: number } {
-  return enemy === "crab" ? { way: stoneRolling(turn), walk: CRAB_WALK } : { way: cameraFacing(turn), walk: TURTLE_WALK };
+  if (enemy === "turtle") {
+    return { way: cameraFacing(turn), walk: TURTLE_WALK };
+  }
+  return { way: stoneRolling(turn), walk: enemy === "crab" ? CRAB_WALK : NATIVE_WALK };
 }
 
-// a crab's or turtle's path without one of its own: n. sanity beach's length,
+// a path enemy's path without one of its own: its donor level's length,
 // straight, its middle where it stands, in equal steps
 export function defaultPath(enemy: PathEnemy, turn: number, scale: number): Vec3[] {
   const { way, walk } = defaultWay(enemy, turn);
