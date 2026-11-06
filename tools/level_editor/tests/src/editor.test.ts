@@ -142,3 +142,36 @@ describe("select", () => {
     expect(editorReducer(state, { type: "select", index: null }).selected).toBeNull();
   });
 });
+
+describe("a path's nodes", () => {
+  const crab = newObject("crab", [0, 0, 0]);
+  const withCrabSelected = () => editorReducer(withObjects([box(1), crab]), { type: "select", index: 1 });
+
+  test("selecting a node selects its enemy and the node", () => {
+    const state = editorReducer(withObjects([box(1), crab]), { type: "selectNode", index: 1, node: 2 });
+    expect([state.selected, state.selectedNode]).toEqual([1, 2]);
+  });
+
+  test("nothing has a node selected to start with, or after selecting an object", () => {
+    expect(withObjects([crab]).selectedNode).toBeNull();
+    const nodeSelected = editorReducer(withCrabSelected(), { type: "selectNode", index: 1, node: 2 });
+    expect(editorReducer(nodeSelected, { type: "select", index: 1 }).selectedNode).toBeNull();
+    expect(editorReducer(nodeSelected, { type: "select", index: null }).selectedNode).toBeNull();
+  });
+
+  test("removing the enemy lets go of its node", () => {
+    const nodeSelected = editorReducer(withCrabSelected(), { type: "selectNode", index: 1, node: 2 });
+    expect(editorReducer(nodeSelected, { type: "remove", index: 1 }).selectedNode).toBeNull();
+  });
+
+  test("undoing keeps the node selected while the path still has it, else lets go of it", () => {
+    const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0], [2, 0, 0]];
+    const withPath = editorReducer(withCrabSelected(), { type: "update", index: 1, changes: { path } });
+    const thirdSelected = editorReducer(withPath, { type: "selectNode", index: 1, node: 2 });
+    const shortened = editorReducer(thirdSelected, { type: "update", index: 1, changes: { path: path.slice(0, 2) } });
+    expect(editorReducer(shortened, { type: "undo" }).selectedNode).toBe(2);
+    const twoNodes = editorReducer(withObjects([box(1), { ...crab, path: path.slice(0, 2) }]), { type: "update", index: 1, changes: { path } });
+    const third = editorReducer(twoNodes, { type: "selectNode", index: 1, node: 2 });
+    expect(editorReducer(third, { type: "undo" }).selectedNode).toBeNull();
+  });
+});

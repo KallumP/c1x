@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, respaced } from "../../src/enemyPaths";
+import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, respaced, withNodeAt } from "../../src/enemyPaths";
 import type { LevelObject, Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
@@ -50,5 +50,17 @@ describe("respacing a path's nodes", () => {
 
   test("a path with no length (all its nodes in one place) keeps them there", () => {
     expect(respaced([[1, 1, 0], [1, 1, 0]], 3)).toEqual([[1, 1, 0], [1, 1, 0], [1, 1, 0]]);
+  });
+});
+
+describe("moving a node", () => {
+  test("puts it at a place in blender, from where the enemy stands (raised), the rest of its path as it was", () => {
+    const turtle = enemy("turtle", { raise: 0.5, path: [[0, -1, 0], [0, 1, 0]] });
+    expect(withNodeAt(turtle, 1, [4, 5, 3.5], 0, 400)).toEqual([[0, -1, 0], [3, 3, 0]]);
+  });
+
+  test("an enemy without a path of its own gets its default path, with that node moved", () => {
+    const moved = withNodeAt(enemy("crab"), 0, [1, 4, 3], 0, 400);
+    expect(noMinusZero(moved)).toEqual([[0, 2, 0], [-1, 0, 0], [0, 0, 0], [1, 0, 0], [2, 0, 0]]);
   });
 });
