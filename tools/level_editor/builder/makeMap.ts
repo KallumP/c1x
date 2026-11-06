@@ -3,14 +3,14 @@
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { inEvenSteps, PATH_STEP, pathPositions } from "../src/enemyPaths";
-import type { LevelObject } from "../src/objects";
+import { PATH_ENEMIES, type LevelObject } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
-  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA,
+  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA,
   WARP_PAD, withEntityId, withPath, withPosition, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
@@ -149,6 +149,16 @@ class ObjectPlacer {
     this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
   }
 
+  // an enemy taken from another level that keeps its example's own path (a
+  // native), in the zone its spot is in: the path moved so its middle is there
+  placeWithDonorPath(enemy: LevelObject, example: Buffer): void {
+    const { zone, at } = this.inZone(this.positionOf(enemy));
+    const donorPath = entityPath(example);
+    const middle = donorPath[Math.floor(donorPath.length / 2)];
+    const path = donorPath.map((point) => point.map((value, axis) => at[axis] + value - middle[axis]) as Vec3);
+    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
+  }
+
   // a rolling stone, in the zone its spot is in, rolling jungle rollers' path along its track
   placeStone(stone: LevelObject, track: StoneTrack): void {
     const { zone, at } = this.trackPlace(stone, track);
@@ -262,7 +272,12 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   enemies.filter((enemy) => enemy.enemy === "plant").forEach((plant) => placer.placePlant(plant));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   for (const enemy of enemies.filter(({ enemy: type }) => donorLevels.has(type!))) {
-    placer.placeOnPath(enemy, levelEntity(donorLevels.get(enemy.enemy!)!, ...ENEMY_ENTITIES[enemy.enemy!]));
+    const example = levelEntity(donorLevels.get(enemy.enemy!)!, ...ENEMY_ENTITIES[enemy.enemy!]);
+    if (PATH_ENEMIES.includes(enemy.enemy!)) {
+      placer.placeOnPath(enemy, example);
+    } else {
+      placer.placeWithDonorPath(enemy, example);
+    }
   }
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
   if (end) {
