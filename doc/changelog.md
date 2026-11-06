@@ -7,7 +7,7 @@
 - custom levels can have N. Sanity Beach's crab, which walks back and forth across the map; it's the first enemy taken from a level other than Jungle Rollers, with its code, model, textures and sounds
 - custom levels can have N. Sanity Beach's turtle, which walks back and forth along the route; jump on it to bounce and flip it, then stand on it
 - the level editor draws plants and crabs as little plants and crabs, facing the player, as big as the game's, instead of a cone and a block; a crab is drawn at both ends of the path it walks, where it turns round in the game; turtles are drawn the same way
-- crabs and turtles walk paths you set in the level editor: drag the nodes they walk through, on all three axes, and slide how many there are, and how fast they walk; the editor warns about a path that leaves the floor or runs through a wall
+- crabs and turtles walk paths you set in the level editor: drag the nodes they walk through, on all three axes, and slide how many there are, how fast they walk, and which end they start at; the editor warns about a path that leaves the floor or runs through a wall
 
 ### Fixed
 
