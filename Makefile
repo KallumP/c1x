@@ -34,6 +34,7 @@ SRC =	src/ns.c \
 	src/pc/sound/util.c \
 	src/pc/sound/midi.c \
 	src/pc/sound/audio.c \
+	src/pc/sound/mix.c \
 	src/util/list.c \
 	src/util/tree.c \
 	src/ext/lib/gui.c \
@@ -55,6 +56,8 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/replay.c \
 	src/pc/follow.c \
 	src/pc/levelend.c \
+	src/pc/sound/mix.c \
+	src/pc/sound/util.c \
 	src/ext/lib/gui.c \
 	src/util/tree.c \
 	src/util/list.c \

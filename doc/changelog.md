@@ -6,6 +6,12 @@
 
 - custom levels can have N. Sanity Beach's crab, which walks back and forth across the map; it's the first enemy taken from a level other than Jungle Rollers, with its code, model, textures and sounds
 
+### Fixed
+
+- all sound and music playing far too quietly: the mixer divided every sound by the 24 voices it can play at once; it's now about 8 times louder, with music and sound effects in the same balance
+- some music instruments playing too loudly, such as Native Fortress's gong: each instrument's volume from the game's sound bank was dropped, so all of them played at full volume
+- softly played music notes coming out far quieter than on the PS1 (a note played at a quarter strength was 25 dB down rather than 12.5), leaving hard-hit notes like Native Fortress's gong standing out over the rest
+
 ## 2026-11-05
 
 ### Added

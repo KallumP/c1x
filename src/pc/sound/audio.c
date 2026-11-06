@@ -1,5 +1,6 @@
 #include "audio.h"
 #include "util.h"
+#include "mix.h"
 
 #include <SDL2/SDL.h>
 #include <math.h>
@@ -118,8 +119,8 @@ static void AudioCallback(void *userdata, uint8_t *stream, size_t size) {
   p32 = buf32;
   p16 = (int16_t*)stream; 
   for (i=0;i<len;i++) {
-    *(p16++) = *(p32++) / 24;
-    *(p16++) = *(p32++) / 24;
+    *(p16++) = SwMixToSample(*(p32++));
+    *(p16++) = SwMixToSample(*(p32++));
   }
 }
 

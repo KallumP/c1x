@@ -6,6 +6,10 @@
 #include "formats/smf.h"
 #include "formats/sf2.h"
 
+/* <math.h> would find the game's own src/math.h, so use the builtins */
+#define log10 __builtin_log10
+#define lround __builtin_lround
+
 static inline int _setnc(char *dst, char *src, int slen) {
   int i;
 
@@ -213,6 +217,53 @@ typedef struct {
   VagBody *waves[16];
 } VabProg;
 
+#define SF2_MAX_ATTENUATION 1440 /* centibels; silent */
+
+/*
+ * the soundfont initialAttenuation (in centibels) for a vab tone, whose
+ * amplitude the ps1 scales by both its tone volume and its program volume
+ * (each 0-127)
+ */
+int16_t VabVolumeToAttenuation(uint8_t tone_vol, uint8_t prog_vol) {
+  double amplitude, centibels;
+
+  amplitude = ((double)tone_vol / 127) * ((double)prog_vol / 127);
+  if (amplitude <= 0) { return SF2_MAX_ATTENUATION; }
+  centibels = -200 * log10(amplitude);
+  if (centibels > SF2_MAX_ATTENUATION) { return SF2_MAX_ATTENUATION; }
+  return (int16_t)lround(centibels);
+}
+
+#define FLUIDSYNTH_ATTENUATION_SCALE 0.4 /* as the emu8000 applied it */
+
+/*
+ * the initialAttenuation to write for fluidsynth to attenuate by centibels,
+ * as it applies only FLUIDSYNTH_ATTENUATION_SCALE of the value
+ */
+int16_t FluidSynthAttenuation(int16_t centibels) {
+  long scaled;
+
+  scaled = lround(centibels / FLUIDSYNTH_ATTENUATION_SCALE);
+  if (scaled > SF2_MAX_ATTENUATION) { return SF2_MAX_ATTENUATION; }
+  return (int16_t)scaled;
+}
+
+#define LINEAR_VELOCITY_ATTENUATION 480 /* centibels; half fluidsynth's default 960 */
+
+/*
+ * replace fluidsynth's default velocity-to-attenuation modulator (same
+ * source, destination and amount source) with half its amount: its 960 cB
+ * on a concave curve squares velocity, where the ps1 scales amplitude by it
+ */
+static void SetLinearVelocityModulator(sfInstModList *mod) {
+  zeromem(mod, sizeof(sfInstModList));
+  setsfm(mod->sfModSrcOper, noteOnVel, 0, 1, 0, concave); /* max to min, unipolar */
+  mod->sfModDestOper = initialAttenuation;
+  mod->modAmount = LINEAR_VELOCITY_ATTENUATION;
+  setsfm(mod->sfModAmtSrcOper, noController, 0, 0, 0, linear);
+  mod->sfModTransOper = _linear;
+}
+
 size_t VabToSf2(uint8_t *vab, uint8_t *sf2) {
   VabProg *prog, progs[128];
   VagBody *wave;
@@ -363,6 +414,8 @@ size_t VabToSf2(uint8_t *vab, uint8_t *sf2) {
     for (j=0;j<prog->atr->tones;j++) {
       atr = prog->vagatr[j];
       ibags[i][j]->wInstModNdx = ((sf2 - (uint8_t*)ck2) - 8) / sizeof(sfInstModList);
+      Sf2Next(sf2, sfInstModList, hrc.imod);
+      SetLinearVelocityModulator(hrc.imod);
       /* pbmin 0-127, 127=1 octave
          1 = 12/127 semitone
          (pbmin*12)/127 = semitones
@@ -410,6 +463,10 @@ size_t VabToSf2(uint8_t *vab, uint8_t *sf2) {
       Sf2Next(sf2, sfInstGenList, hrc.igen);
       hrc.igen->sfGenOper = pan;
       hrc.igen->genAmount.shAmount = ((atr->pan-64)*500)/64;
+      Sf2Next(sf2, sfInstGenList, hrc.igen);
+      hrc.igen->sfGenOper = initialAttenuation;
+      hrc.igen->genAmount.shAmount =
+        FluidSynthAttenuation(VabVolumeToAttenuation(atr->vol, prog->atr->mvol));
       Sf2Next(sf2, sfInstGenList, hrc.igen);
       hrc.igen->sfGenOper = overridingRootKey;
       hrc.igen->genAmount.shAmount = atr->center;
