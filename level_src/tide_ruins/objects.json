@@ -23,10 +23,10 @@
 
   {"kind": "enemy", "type": "plant", "at": [-7, 31, 3.6]},
   {"kind": "enemy", "type": "plant", "at": [7, 31, 3.6]},
-  {"kind": "enemy", "type": "crab", "at": [-7, 10, 0]},
-  {"kind": "enemy", "type": "crab", "at": [8, 34.5, 0]},
-  {"kind": "enemy", "type": "crab", "at": [-7.5, 40.5, 0]},
-  {"kind": "enemy", "type": "turtle", "at": [3, 42, 0.9]},
+  {"kind": "enemy", "type": "crab", "at": [0, 9.5, 0], "path": [[-4.5, 0, 0], [-1.301, -1.699, 0], [1.301, -1.699, 0], [4.5, 0, 0]], "speed": 2.25},
+  {"kind": "enemy", "type": "crab", "at": [8, 33.5, 0], "path": [[-2, 0, 0], [2, 0, 0]], "speed": 1.5},
+  {"kind": "enemy", "type": "crab", "at": [-7.5, 40.5, 0], "path": [[2, 0, 0], [1, 0, 0], [0, 0, 0], [-1, 0, 0], [-2, 0, 0]]},
+  {"kind": "enemy", "type": "turtle", "at": [3, 42, 0.9], "path": [[0, 2.5, 0], [0, 1.25, 0], [0, 0, 0], [0, -1.25, 0], [0, -2.5, 0]]},
   {"kind": "enemy", "type": "turtle", "at": [-3, 42, 0.9]},
 
   {"kind": "end", "at": [0, 50, 1.2], "raise": 0.15}
