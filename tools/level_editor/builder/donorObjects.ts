@@ -1,10 +1,24 @@
 // objects custom levels take from a real level other than the base level (their
 // donor), such as an enemy jungle rollers doesn't have: its code and what that
 // uses there (models, animations, sounds and texture pages), and any object it spawns
+import type { EnemyType, LevelObject } from "../src/objects";
 import { packEntries, rawPagesById, reachableEids } from "./cutLevel";
+import { ENEMY_ENTITIES } from "./entities";
 import { EID_NONE, eidToString } from "./entryIds";
 import { ENTRY_GOOL, entriesById, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, soundPage, type Entry, type Level, type Page } from "./levelFiles";
 import { entryBytes } from "./levelWriting";
+
+// a real level an enemy is taken from: its id, name, and its files in streams/
+export interface DonorLevel {
+  lid: number;
+  name: string;
+  file: string;
+}
+
+const N_SANITY_BEACH: DonorLevel = { lid: 0x9, name: "N. Sanity Beach", file: "s0000009" };
+
+// the level each enemy jungle rollers doesn't have is taken from
+export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = { crab: N_SANITY_BEACH };
 
 export interface DonorObject {
   code: [slot: number, eid: number][]; // each piece of code it brings, in its exec slot in the donor
@@ -89,3 +103,34 @@ export function withDonorObjects(level: Level, donors: DonorObject[]): Level {
     pages: [...level.pages, ...packEntries(entries), ...packEntries(sounds, soundPage), ...texturePages],
   };
 }
+
+const enemyName = (type: EnemyType) => type.replace("_", " ");
+
+function readDonorLevel(type: EnemyType, donor: DonorLevel, readOtherLevel?: (lid: number) => Level): Level {
+  const what = `${donor.name} (${donor.file}.nsd)`;
+  if (!readOtherLevel) {
+    throw new Error(`the level's ${enemyName(type)}s come from ${what}, but there are no other levels to read`);
+  }
+  try {
+    return readOtherLevel(donor.lid);
+  } catch (error) {
+    throw new Error(`${what} couldn't be read, and the level's ${enemyName(type)}s come from it: ${error instanceof Error ? error.message : error}`);
+  }
+}
+
+// the level each kind of enemy among objects is taken from, read with
+// readOtherLevel, for the kinds that come from another level
+export function enemyDonorLevels(objects: LevelObject[], readOtherLevel?: (lid: number) => Level): Map<EnemyType, Level> {
+  const levels = new Map<EnemyType, Level>();
+  for (const type of new Set(objects.flatMap((object) => (object.kind === "enemy" && object.enemy ? [object.enemy] : [])))) {
+    const donor = ENEMY_DONORS[type];
+    if (donor) {
+      levels.set(type, readDonorLevel(type, donor, readOtherLevel));
+    }
+  }
+  return levels;
+}
+
+// each kind of enemy's object, from the level it's taken from
+export const enemyDonorObjects = (levels: Map<EnemyType, Level>): DonorObject[] =>
+  [...levels].map(([type, level]) => donorObject(level, ENEMY_ENTITIES[type][0]));

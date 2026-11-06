@@ -2,6 +2,7 @@
 // route, each with its world meshes, collision, camera path, sort list and
 // entities, and the code and textures they need from the real level
 import { CORE_EXEC_SLOTS, cutLevel, packEntries } from "./cutLevel";
+import { withDonorObjects, type DonorObject } from "./donorObjects";
 import { entityType } from "./entities";
 import { stringToEid } from "./entryIds";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, type Entry, type Level, type Page } from "./levelFiles";
@@ -43,6 +44,7 @@ export interface Assembly {
   spawnZone: number;       // the zone crash (its first entity) starts in
   pageEids: number[];      // texture pages for the meshes' texinfos
   texturePages: Page[];
+  donors: DonorObject[];   // objects taken from other levels, such as enemies jungle rollers doesn't have
 }
 
 const zonePrefix = (index: number) => `Bm${String(index).padStart(2, "0")}`; // a zone's entries are this and Z, S, W, 1, 2, 3
@@ -130,11 +132,11 @@ function keptEids({ level, templates, zones, pageEids }: Assembly): number[] {
 }
 
 export function assembleLevel(assembly: Assembly): Level {
-  const { templates, zones, spawnZone, texturePages } = assembly;
+  const { templates, zones, spawnZone, texturePages, donors } = assembly;
   const [x0, y0, z0] = templates.origin;
   const origins = zones.map((zone): Vec3 => [x0, y0, z0 + zone.zOffset]);
   const entries = [...worldEntries(assembly, origins), ...zones.flatMap((_, index) => zoneEntries(assembly, index, origins))];
-  const out = cutLevel(assembly.level, keptEids(assembly));
+  const out = withDonorObjects(cutLevel(assembly.level, keptEids(assembly)), donors);
   out.pages = [...packEntries(entries), ...out.pages, ...texturePages];
   out.nsd.ldat.lid = LID_TEST;
   out.nsd.ldat.zoneSpawn = zoneEid(spawnZone);

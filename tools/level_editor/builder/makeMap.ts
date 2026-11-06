@@ -7,8 +7,9 @@ import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
+import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
-  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, UNBREAKABLE_BOXES, WARP_PAD, withEntityId, withPath,
+  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, linkSwitches, newEntityIds, UNBREAKABLE_BOXES, WARP_PAD, withEntityId, withPath,
   withPosition, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
@@ -20,7 +21,7 @@ import { readObj, type Mesh } from "./obj";
 import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
 import { cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
-import { pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type StoneTrack, type Templates } from "./templates";
+import { levelEntity, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type StoneTrack, type Templates } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
@@ -42,6 +43,7 @@ export interface MapOptions {
   images?: Map<string, RgbImage>; // each material's image
   objects?: LevelObject[];
   sky?: Sky;                      // n. sanity beach's without one
+  readOtherLevel?: (lid: number) => Level; // the real levels enemies are taken from (see ENEMY_DONORS)
 }
 
 // collision blocks for cells
@@ -133,6 +135,16 @@ class ObjectPlacer {
     this.entities[zone].push(withPosition(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), at));
   }
 
+  // an enemy that walks the path of its example from another level (such as
+  // a crab), in the zone its spot is in, the path's middle at its spot
+  placeOnExamplePath(enemy: LevelObject, example: Buffer): void {
+    const { zone, at } = this.inZone(this.positionOf(enemy));
+    const path = entityPath(example);
+    const middle = path[Math.floor(path.length / 2)];
+    const moved = path.map((point) => point.map((value, axis) => at[axis] + value - middle[axis]) as Vec3);
+    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), moved));
+  }
+
   // a rolling stone, in the zone its spot is in, rolling jungle rollers' path along its track
   placeStone(stone: LevelObject, track: StoneTrack): void {
     const { zone, at } = this.trackPlace(stone, track);
@@ -218,7 +230,7 @@ const boxCount = (boxes: LevelObject[]) => boxes.reduce((sum, box) => sum + box.
 const breakableBoxes = (boxes: LevelObject[]) => boxCount(boxes.filter((box) => !UNBREAKABLE_BOXES.includes(boxSubtype(box))));
 
 export function makeMap(level: Level, text: string, options: MapOptions = {}): Level {
-  const { scale = MAP_SCALE, turn = 0, images = new Map(), objects = [], sky = DEFAULT_SKY } = options;
+  const { scale = MAP_SCALE, turn = 0, images = new Map(), objects = [], sky = DEFAULT_SKY, readOtherLevel } = options;
   const base = readTemplates(level);
   const templates = { ...base, header: withSky(base.header, sky) }; // every zone's header is made from this one
   const map = fitMap(text, scale, turn);
@@ -228,6 +240,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const boxes = objects.filter((object) => object.kind === "box");
   const enemies = objects.filter((object) => object.kind === "enemy");
   const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
+  const donorLevels = enemyDonorLevels(enemies, readOtherLevel);
   const placer = new ObjectPlacer(map, templates, scale, turn, (end ? 1 : 0) + boxCount(boxes) + enemies.length);
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
   const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
@@ -243,6 +256,9 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
 
   enemies.filter((enemy) => enemy.enemy === "plant").forEach((plant) => placer.placePlant(plant));
   stones.forEach((stone) => placer.placeStone(stone, track!));
+  for (const enemy of enemies.filter(({ enemy: type }) => donorLevels.has(type!))) {
+    placer.placeOnExamplePath(enemy, levelEntity(donorLevels.get(enemy.enemy!)!, ...ENEMY_ENTITIES[enemy.enemy!]));
+  }
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
   if (end) {
     const position = placer.positionOf(end);
@@ -271,10 +287,11 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   };
 
   const size: Vec3 = [fitted.size[0], fitted.size[1], spans[0][1] - spans[0][0]];
+  const donors = enemyDonorObjects(donorLevels);
   for (let step = MAP_PATH_STEP; ; step *= 2) {
     try {
       const out = assembleLevel({
-        level, templates, size, zones: zonePlans(step), step, spawnZone, pageEids: withBase.pageEids, texturePages: pages,
+        level, templates, size, zones: zonePlans(step), step, spawnZone, pageEids: withBase.pageEids, texturePages: pages, donors,
       });
       out.nsd.ldat.boxTotal = breakableBoxes(boxes);
       return out;
