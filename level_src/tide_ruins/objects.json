@@ -1,5 +1,5 @@
 [
-  {"kind": "spawn", "at": [-1.5, 1.5, 0]},
+  {"kind": "spawn", "at": [0.5, 3.5, 0]},
 
   {"kind": "box", "type": "basic", "at": [-6, 13, 0]},
   {"kind": "box", "type": "outline", "at": [-6, 7, 3.6]},
