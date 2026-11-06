@@ -6,7 +6,7 @@ import ObjectMarkers from "./components/ObjectMarkers";
 import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
 import Scene, { type Orbit } from "./components/Scene";
-import { newObject, type Tool } from "./editor";
+import { draggedTo, newObject, type Tool } from "./editor";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
 import { useLevelActions } from "./hooks/useLevelActions";
@@ -36,10 +36,14 @@ export default function App() {
   const [tool, setTool] = useState<Tool>(SELECT);
   const [grid, setGrid] = useState(0.5);
   const orbitRef = useRef<Orbit>(null);
+  const turn = levelCfg.cfg.turn;
   const drag = useDrag(orbitRef, grid, {
-    grab: (index) => dispatch({ type: "select", index }),
+    grab: ({ index, node }) => dispatch(node === null ? { type: "select", index } : { type: "selectNode", index, node }),
     begin: () => dispatch({ type: "checkpoint" }),
-    move: (index, at) => dispatch({ type: "update", index, changes: { at }, record: false }),
+    move: ({ index, node }, at) => {
+      const changes = draggedTo(state.objects[index], node, at, turn, scale);
+      dispatch({ type: "update", index, changes, record: false });
+    },
   });
   const [isSaving, setIsSaving] = useState(false);
   // saves the objects and level.cfg, whichever changed; whether they saved
@@ -147,12 +151,12 @@ export default function App() {
       <ObjectMarkers
         objects={state.objects}
         scale={scale}
-        turn={levelCfg.cfg.turn}
+        turn={turn}
         selected={state.selected}
         selectedNode={state.selectedNode}
         warnings={warnings}
         onSelect={drag.start}
-        onSelectNode={(index, node) => dispatch({ type: "selectNode", index, node })}
+        onSelectNode={drag.startNode}
       />
     </>
   );

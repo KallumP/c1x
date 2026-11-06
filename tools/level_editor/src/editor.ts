@@ -1,6 +1,6 @@
 // what's being edited: a level's objects, which one is selected, and the
 // changes that can be undone and redone
-import { nodeCount } from "./enemyPaths";
+import { nodeCount, withNodeAt } from "./enemyPaths";
 import { BOX_TYPES, ENEMY_TYPES, type BoxType, type EnemyType, type LevelObject, type Vec3 } from "./objects";
 
 export type Placeable = "spawn" | "end" | BoxType | EnemyType;
@@ -51,6 +51,14 @@ function nodeStillThere(selectedNode: number | null, selected: number | null, ob
     return null;
   }
   return selectedNode < nodeCount(objects[selected]) ? selectedNode : null;
+}
+
+// what dragging an object, or a node of its path (node not null), to at (in blender) changes
+export function draggedTo(object: LevelObject, node: number | null, at: Vec3, turn: number, scale: number): Partial<LevelObject> {
+  if (node === null) {
+    return { at };
+  }
+  return { path: withNodeAt(object, node, at, turn, scale) };
 }
 
 // a change to the objects, which undo takes back
