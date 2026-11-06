@@ -401,6 +401,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(everyEid.length).toBe(new Set(everyEid).size);
     });
 
+    test.skipIf(!hasBeach)("a native adds no texture pages (its model is untextured): a crab, a turtle and a native have the crab's and turtle's", () => {
+      const texturePages = (objects: LevelObject[]) =>
+        make(MAP_OBJ, { scale: 256, objects, readOtherLevel }).level.pages.filter((page) => page.type === PAGE_TEXTURE).map(({ eid }) => eid);
+      const crabAndTurtle = [object("enemy", [-1, 4, 0], { enemy: "crab" }), object("enemy", [0, 3, 0], { enemy: "turtle" })];
+      expect(texturePages([...crabAndTurtle, native()])).toEqual(texturePages(crabAndTurtle));
+    });
+
     test("a native, with no other levels to take it from, is an error saying so", () => {
       expect(() => withNative({ readOtherLevel: undefined })).toThrow(/native/);
     });
