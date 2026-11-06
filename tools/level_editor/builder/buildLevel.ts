@@ -132,7 +132,8 @@ export function buildLevel(source: string, { streamsDir, levelsDir, log }: Build
   try {
     const text = readFileSync(objPath, "utf8");
     const images = mapImages(objPath, text, log);
-    writeLevel(makeMap(readLevel(streamsDir, BASE_LEVEL.lid), text, { ...options, images, objects }), levelsDir, name);
+    const readOtherLevel = (lid: number) => readLevel(streamsDir, lid);
+    writeLevel(makeMap(readLevel(streamsDir, BASE_LEVEL.lid), text, { ...options, images, objects, readOtherLevel }), levelsDir, name);
   } catch (error) {
     log(failureMessage(error, source, options.scale));
     return false;

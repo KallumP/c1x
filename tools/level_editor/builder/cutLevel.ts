@@ -28,11 +28,11 @@ export class EntryTooBig extends Error {
   }
 }
 
-// entry pages holding entries, in order, starting a new page when one is full.
+// pages (entry pages, or as makePage makes them) holding entries, in order, starting a new page when one is full.
 // each page lists its entries in bucket order, since the loader
 // (NSPageUpdateEntries) finds them by scanning the page table forward from the
 // bucket of the page's first entry
-export function packEntries(entries: Entry[]): Page[] {
+export function packEntries(entries: Entry[], makePage: (entries: Entry[]) => Page = entryPage): Page[] {
   const pages: Entry[][] = [];
   let current: Entry[] = [];
   let currentBytes = 0;
@@ -52,11 +52,11 @@ export function packEntries(entries: Entry[]): Page[] {
   if (current.length) {
     pages.push(current);
   }
-  return pages.map((page) => entryPage([...page].sort((first, second) => eidBucket(first.eid) - eidBucket(second.eid))));
+  return pages.map((page) => makePage([...page].sort((first, second) => eidBucket(first.eid) - eidBucket(second.eid))));
 }
 
 // the pages that aren't entry pages (texture and audio), by the eids in them
-function rawPagesById(level: Level): Map<number, Page> {
+export function rawPagesById(level: Level): Map<number, Page> {
   const pages = new Map<number, Page>();
   for (const page of level.pages) {
     if (page.type === PAGE_TEXTURE) {
@@ -69,7 +69,7 @@ function rawPagesById(level: Level): Map<number, Page> {
 }
 
 // the eids reachable from keep, through the eids each entry mentions
-function reachableEids(level: Level, keep: number[]): Set<number> {
+export function reachableEids(level: Level, keep: number[]): Set<number> {
   const entries = entriesById(level);
   const allEids = new Set([...entries.keys(), ...rawPagesById(level).keys()]);
   const kept = new Set<number>();

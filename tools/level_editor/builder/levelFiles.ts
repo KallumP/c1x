@@ -12,11 +12,13 @@ export const SECTOR_SIZE = 0x800;
 
 export const PAGE_ENTRIES = 0;
 export const PAGE_TEXTURE = 1;
+export const PAGE_SOUNDS = 3; // sound effects (4 is music's instruments)
 
 // entry types (the subsystem table in src/main.c)
 export const ENTRY_WGEO = 3; // world meshes
 export const ENTRY_SLST = 4; // sort lists: many of their items are the same, and none is empty
 export const ENTRY_ZDAT = 7; // zones
+export const ENTRY_GOOL = 11; // object code
 
 export const NSD_PTB_COUNT = 256;
 export const NSD_COMPRESSED_PAGE_COUNT = 64;
@@ -68,6 +70,11 @@ export interface Level {
 
 export function entryPage(entries: Entry[]): Page {
   return { type: PAGE_ENTRIES, pgid: 0, eid: 0, entries, data: Buffer.alloc(0) };
+}
+
+// a sound page made here, from its entries (as entryPage), rather than read whole from a level
+export function soundPage(entries: Entry[]): Page {
+  return { type: PAGE_SOUNDS, pgid: 0, eid: 0, entries, data: Buffer.alloc(0) };
 }
 
 export function texturePage(eid: number, data: Buffer): Page {

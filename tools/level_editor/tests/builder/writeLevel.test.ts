@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { stringToEid } from "../../builder/entryIds";
-import { PAGE_SIZE, readEntry, readLevelFiles, readNsd, readPages, type Entry, type Level, type Nsd } from "../../builder/levelFiles";
+import { PAGE_SIZE, PAGE_SOUNDS, readEntry, soundPage, readLevelFiles, readNsd, readPages, type Entry, type Level, type Nsd } from "../../builder/levelFiles";
 import { entryBytes, entryPageBytes, writeLevel } from "../../builder/levelWriting";
 import { entryData, nsdData, pageData, texturePageData } from "./levelFiles";
 
@@ -51,6 +51,16 @@ describe("writing a level", () => {
     expect(probe(nsd, WILLC)).toBe((0 << 1) | 1);
     expect(probe(nsd, ZONE)).toBe((0 << 1) | 1);
     expect(probe(nsd, TPAG)).toBe((1 << 1) | 1);
+  });
+
+  test("a sound page made from entries is written as a sound page holding them", () => {
+    const sound = { eid: stringToEid("CC19A"), type: 12, items: [text("snip")] };
+    const level = smallLevel();
+    level.pages.push(soundPage([sound]));
+    const back = writtenAndReadBack(level);
+    expect(back.pages[2].type).toBe(PAGE_SOUNDS);
+    expect(contents(back)[2]).toEqual([[sound.eid, sound.type, sound.items]]);
+    expect(probe(back.nsd, sound.eid)).toBe((2 << 1) | 1);
   });
 
   test("too many entries for a page is an error", () => {

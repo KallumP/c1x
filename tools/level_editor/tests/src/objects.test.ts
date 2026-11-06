@@ -122,23 +122,25 @@ describe("boxTypeName", () => {
 
 describe("enemies", () => {
   test("knows the enemies custom levels can have, by name", () => {
-    expect(ENEMY_TYPES).toEqual(["plant", "rolling_stone"]);
+    expect(ENEMY_TYPES).toEqual(["plant", "rolling_stone", "crab"]);
   });
 
   test("reads an enemy by its type and spot (a rolling stone's path comes with its track)", () => {
     const objects = parseObjects(`[
       {"kind": "enemy", "type": "plant", "at": [1, 10, 0]},
-      {"kind": "enemy", "type": "rolling_stone", "at": [-4, 20, 0.5]}
+      {"kind": "enemy", "type": "rolling_stone", "at": [-4, 20, 0.5]},
+      {"kind": "enemy", "type": "crab", "at": [2, 30, 0]}
     ]`);
     expect(objects).toEqual([
       { kind: "enemy", enemy: "plant", at: [1, 10, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "rolling_stone", at: [-4, 20, 0.5], raise: 0, stack: 1 },
+      { kind: "enemy", enemy: "crab", at: [2, 30, 0], raise: 0, stack: 1 },
     ]);
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, rolling_stone)"],
-    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0]}]', "object 1: unknown enemy type crab"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, rolling_stone, crab)"],
+    ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: unknown setting path"],
   ])("refuses %s", (text, message) => {

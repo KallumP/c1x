@@ -86,3 +86,5 @@ Or press **F5**, which does steps 1 and 2 together: it saves, builds, then sets 
 - **Crash looks too big or too small:** set **scale** under **Level** to a different number (400 is normal; bigger makes the map bigger), then build again.
 - **Faces have the wrong textures:** the build warned that an image wasn't found (hover over the build message to see it). Check the `map_Kd` lines in the `.mtl`.
 - **Parts of the map are missing:** the faces point the wrong way. Flip them in Blender.
+- **The build says a level couldn't be read, and an enemy comes from it:** some enemies are taken from the game's own levels, such as the crab from N. Sanity Beach. Extract all the game's files into `streams/` (see [Running](running.md)).
+- **The build says there are more texture pages than the game holds:** each image on the map and each kind of enemy from another level takes room for textures. Use fewer images or fewer kinds of enemy.

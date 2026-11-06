@@ -19,7 +19,7 @@ An object in `objects.json` has a `kind`:
 - `box`: a box, by its `type` (see [Boxes](#boxes)); `stack` makes a stack of them
 - `enemy`: an enemy, by its `type` (see [Enemies](#enemies))
 
-Each object also has `at`, where it is in Blender, and can have `raise`, how far above that it is. The [level editor](../doc/custom_levels.md#2-place-objects-in-the-level-editor) writes all of these for you. Custom levels are built from Jungle Rollers, which has every kind of box, and its plant and rolling stone.
+Each object also has `at`, where it is in Blender, and can have `raise`, how far above that it is. The [level editor](../doc/custom_levels.md#2-place-objects-in-the-level-editor) writes all of these for you. Custom levels are built from Jungle Rollers, which has every kind of box, and its plant and rolling stone. Other enemies are taken from the level they're in, such as the crab from N. Sanity Beach, so the game's files for that level have to be in `streams/` too.
 
 ### Boxes
 
@@ -42,3 +42,4 @@ Each object also has `at`, where it is in Blender, and can have `raise`, how far
 
 - `plant`: a biting plant that bites Crash if he walks into it, and stays where it is. Spun, it's flung straight back, away from the camera, and breaks the boxes it passes within about 3 m of where it stood (at scale 400); boxes further back are safe.
 - `rolling_stone`: a stone wheel that comes with Jungle Rollers' stone track, set on the floor at `at`, and rolls back and forth along it, across the map: at right angles to the way the spawn's arrow points. The track is about 14 m long (at scale 400), and its middle, where the stone dips lowest, stands a box's height over the floor at `at`, so Crash has to jump up into it. Put it somewhere flat and wide enough.
+- `crab`: N. Sanity Beach's crab, which walks back and forth along a straight line 4 m long (at scale 400) with its middle at `at`, across the map like the rolling stone. Crash dies if it walks into him; spun, it's flung away. Give it a flat floor that long.

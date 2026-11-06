@@ -55,6 +55,16 @@ function exampleEntities(level: Level): Map<string, Buffer> {
   return examples;
 }
 
+// the level's first entity of a type and subtype, from any level (such as an
+// enemy's, from the level it's taken from). an error if it has none
+export function levelEntity(level: Level, type: number, subtype: number): Buffer {
+  const example = exampleEntities(level).get(`${type},${subtype}`);
+  if (!example) {
+    throw new Error(`the level (${level.nsd.ldat.lid.toString(16)}) has no entity of type ${type}, subtype ${subtype}`);
+  }
+  return example;
+}
+
 const BASIC_BOX = 2;
 
 // the level's first entity of a type and subtype. a box of a subtype the level

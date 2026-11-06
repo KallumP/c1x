@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, CRAB_WALK, crabPath, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -75,5 +75,18 @@ describe("rolling stones", () => {
     expect(path[0][0]).toBeCloseTo(0);
     expect(path[0][1]).toBeCloseTo(-1800 / 400);
     expect(path[5][2]).toBeCloseTo(1 + (STONE_TRACK.radius + STONE_TRACK.lift) / 400);
+  });
+});
+
+describe("crabs", () => {
+  test("walk n. sanity beach's crab's path: 1600 game units across the map, its middle at the crab's spot", () => {
+    expect(CRAB_WALK).toBe(1600);
+    expect(crabPath([1, 2, 3], 0, 0, 400)).toEqual([[-1, 2, 3], [3, 2, 3]]);
+  });
+
+  test("a crab's path turns with the level, as a rolling stone's does, and lifts with raise", () => {
+    const [start, end] = crabPath([0, 0, 0], 1, 90, 400);
+    expect(start.map((value) => value + 0)).toEqual([0, 2, 1]);
+    expect(end.map((value) => value + 0)).toEqual([0, -2, 1]);
   });
 });

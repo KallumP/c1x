@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -108,6 +108,24 @@ describe("building a level", () => {
     expect(buildLevel(folder, { streamsDir: STREAMS, levelsDir, log: (line) => lines.push(line) })).toBe(true);
     expect(lines).toEqual([`wrote ${join(levelsDir, "tiny")}`]);
     expect(existsSync(join(levelsDir, "tiny.nsd")) && existsSync(join(levelsDir, "tiny.nsf"))).toBe(true);
+  });
+
+  const crabLevel = () => {
+    const folder = newFolder("crabby");
+    writeFileSync(join(folder, "crabby.obj"), "o Floor\nv -4 0 -8\nv -4 0 8\nv 4 0 8\nv 4 0 -8\nf 1 2 3 4\n");
+    writeFileSync(join(folder, "objects.json"), '[{"kind": "enemy", "type": "crab", "at": [0, 0, 0]}]');
+    return folder;
+  };
+  const hasStreams = ["s0000009", "s000000c"].every((file) => existsSync(join(STREAMS, `${file}.nsd`)));
+
+  test.skipIf(!hasStreams)("a level with a crab takes it from n. sanity beach in the streams folder", () => {
+    expect(quietBuild(crabLevel(), STREAMS)).toEqual({ ok: true, output: expect.stringMatching(/^wrote /) });
+  });
+
+  test.skipIf(!hasStreams)("a level with a crab, without n. sanity beach in the streams folder, stops with a message saying so", () => {
+    const streams = newFolder("streams");
+    ["nsd", "nsf"].forEach((extension) => copyFileSync(join(STREAMS, `s000000c.${extension}`), join(streams, `s000000c.${extension}`)));
+    expect(quietBuild(crabLevel(), streams)).toEqual({ ok: false, output: expect.stringMatching(/N\. Sanity Beach \(s0000009\.nsd\).*crab/) });
   });
 });
 
