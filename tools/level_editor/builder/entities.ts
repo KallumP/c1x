@@ -20,8 +20,9 @@ export const BOX_TYPE = 34;      // BoxsC: boxes, by subtype
 export const BOX_HEIGHT = 400;   // a box on top of another is this much higher (GoolObjectSpawn in src/gool.c)
 // each enemy's entity type and subtype: jungle rollers' biting plant (PlanC) and
 // its rolling stone wheel (JunOC), which rolls back and forth along its path,
-// and n. sanity beach's crab (CrabC), which walks back and forth along its path
-export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0] };
+// and n. sanity beach's crab (CrabC), which walks back and forth along its path,
+// and turtle (TurtC), which does too
+export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0] };
 // not in the level's total (an iron outline fills in as an iron box)
 export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch, BOX_TYPES.iron_arrow, BOX_TYPES.iron_outline];
 
