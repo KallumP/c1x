@@ -199,3 +199,20 @@ describe("dragging", () => {
     expect(editorReducer(state, { type: "undo" }).objects[0].path).toEqual(path);
   });
 });
+
+describe("sliding a path's node count down", () => {
+  test("lets go of a selected node the path no longer has, though the slide isn't recorded yet", () => {
+    const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0], [2, 0, 0], [3, 0, 0]];
+    let state = editorReducer(withObjects([{ ...newObject("turtle", [0, 0, 0]), path }]), { type: "selectNode", index: 0, node: 3 });
+    state = editorReducer(state, { type: "checkpoint" });
+    state = editorReducer(state, { type: "update", index: 0, changes: { path: path.slice(0, 3) }, record: false });
+    expect(state.selectedNode).toBeNull();
+  });
+
+  test("keeps a selected node the path still has", () => {
+    const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0], [2, 0, 0]];
+    let state = editorReducer(withObjects([{ ...newObject("turtle", [0, 0, 0]), path }]), { type: "selectNode", index: 0, node: 1 });
+    state = editorReducer(state, { type: "update", index: 0, changes: { path: path.slice(0, 2) }, record: false });
+    expect(state.selectedNode).toBe(1);
+  });
+});
