@@ -5,15 +5,15 @@ import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
 import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, entityPosition, entityType, WARP_PAD } from "../../builder/entities";
-import { EID_NONE } from "../../builder/entryIds";
+import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
-import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
+import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_SOUNDS, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
 import { CORE_EXEC_SLOTS } from "../../builder/cutLevel";
 import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
 import { textureWorlds } from "../../builder/mapTextures";
 import { FOLLOW_CAM_MODE } from "../../builder/paths";
 import { colour5551 } from "../../builder/tpage";
-import { STONE_TRACK_LIFT, stoneTrack } from "../../builder/templates";
+import { levelEntity, STONE_TRACK_LIFT, stoneTrack } from "../../builder/templates";
 import { readWorldHeader, readWorldPolygon, readWorldVertex, TEXINFOS_AT } from "../../builder/worldGeometry";
 import type { TileRegion, WorldMesh, WorldVertex } from "../../builder/worldMeshes";
 import { ZONE_LOADLIST, ZONE_NEIGHBORS, ZONE_PATHS_IDX, zoneEntities, zoneOrigin, zoneWorldEids } from "../../builder/zones";
@@ -65,6 +65,8 @@ const LONG_OBJ = "o Floor\nv -4 0 -50\nv -4 0 50\nv 4 0 50\nv 4 0 -50\nf 1 2 3 4
 
 const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
 const hasBase = existsSync(`${STREAMS}/${BASE_LEVEL.file}.nsd`);
+const N_SANITY_BEACH = 0x9;
+const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -218,6 +220,48 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(placed.path.length).toBe(track.path.length);
     placed.path.forEach((point, index) => point.forEach((value, axis) =>
       expect(Math.abs(value - (start[axis] + track.path[index][axis]))).toBeLessThanOrEqual(8)));
+  });
+
+  describe.skipIf(!hasBeach)("crabs, from n. sanity beach", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const crab = () => object("enemy", [1, 2, 0], { enemy: "crab" });
+    const withCrab = (more: Partial<MapOptions> = {}) => make(MAP_OBJ, { scale: 256, objects: [crab()], readOtherLevel, ...more });
+
+    test("a crab walks n. sanity beach's first crab's path, its middle at the crab's spot", () => {
+      const beachPath = entityPath(levelEntity(readLevel(STREAMS, N_SANITY_BEACH), ...ENEMY_ENTITIES.crab));
+      const middle = beachPath[Math.floor(beachPath.length / 2)];
+      const [placed] = enemies(withCrab().zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.crab);
+      expect(placed.path.length).toBe(beachPath.length);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      const spot = [1408, 128, 1664];
+      placed.path.forEach((point, index) => point.forEach((value, axis) =>
+        expect(Math.abs(value - (spot[axis] + beachPath[index][axis] - middle[axis]))).toBeLessThanOrEqual(8)));
+    });
+
+    test("a level with a crab has its code, model, texture page and sounds", () => {
+      const { level, entries } = withCrab();
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.crab[0]]).toBe(stringToEid("CrabC"));
+      expect(entries.has(stringToEid("Cr19G"))).toBe(true);
+      expect(level.pages.some((page) => page.type === PAGE_TEXTURE && page.eid === stringToEid("Ju49T"))).toBe(true);
+      const sounds = level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
+      expect(sounds).toContain(stringToEid("CC19A"));
+    });
+
+    test("crabs bring their code once, however many there are", () => {
+      const twoCrabs = make(MAP_OBJ, { scale: 256, objects: [crab(), object("enemy", [-1, 4, 0], { enemy: "crab" })], readOtherLevel });
+      expect(enemies(twoCrabs.zone).length).toBe(2);
+      const everyEid = twoCrabs.level.pages.flatMap((page) => (page.type === PAGE_TEXTURE ? [page.eid] : page.entries.map(({ eid }) => eid)));
+      expect(everyEid.length).toBe(new Set(everyEid).size);
+    });
+
+    test("a level without crabs has none of their code", () => {
+      expect(make(MAP_OBJ, { scale: 256, readOtherLevel }).level.nsd.ldat.execMap[ENEMY_ENTITIES.crab[0]]).toBe(EID_NONE);
+    });
+
+    test("a crab, with no other levels to take it from, is an error saying so", () => {
+      expect(() => withCrab({ readOtherLevel: undefined })).toThrow(/crab/);
+    });
   });
 
   const worldsOf = ({ entries, zone }: Built) => zoneWorldEids(zone).map((eid) => entries.get(eid)!);
