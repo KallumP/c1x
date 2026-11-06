@@ -1,7 +1,7 @@
 // the paths crabs and turtles walk back and forth along: nodes, in metres from
 // where the enemy stands, set in the editor or their defaults (as n. sanity beach's)
 import { cameraFacing, CRAB_WALK, stoneRolling, TURTLE_WALK } from "./coords";
-import type { LevelObject, Vec3 } from "./objects";
+import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 5;
 
@@ -59,6 +59,16 @@ export function withNodeAt(object: LevelObject, node: number, position: Vec3, tu
   const [x, y, z] = object.at;
   const offset: Vec3 = [position[0] - x, position[1] - y, position[2] - z - object.raise];
   return enemyPath(object, turn, scale).map((other, index) => (index === node ? offset : other));
+}
+
+// a path's nodes respaced to count of them (2 to PATH_NODES_MAX), evenly along it from its first to its last
+export function inNodes(path: Vec3[], count: number): Vec3[] {
+  return respaced(path, Math.min(PATH_NODES_MAX, Math.max(2, Math.round(count))));
+}
+
+// an enemy's path (its default if it has none) with count nodes, evenly along it
+export function withNodeCount(object: LevelObject, count: number, turn: number, scale: number): Vec3[] {
+  return inNodes(enemyPath(object, turn, scale), count);
 }
 
 // how long a path is, along all its nodes

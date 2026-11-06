@@ -29,6 +29,26 @@ export function NumberField({ label, value, step, min, onChange }: {
   );
 }
 
+// a slider for a whole number; onGrab runs as it's pressed or keyed, before it changes
+export function SliderField({ label, value, min, max, onGrab, onChange }: {
+  label: string; value: number; min: number; max: number; onGrab: () => void; onChange: (value: number) => void;
+}) {
+  return (
+    <Field label={`${label} (${value})`}>
+      <input
+        type="range"
+        value={value}
+        min={min}
+        max={max}
+        step={1}
+        onPointerDown={onGrab}
+        onKeyDown={onGrab}
+        onChange={(event) => onChange(event.target.valueAsNumber)}
+      />
+    </Field>
+  );
+}
+
 export function ColourField({ label, value, onChange }: {
   label: string; value: Rgb; onChange: (value: Rgb) => void;
 }) {

@@ -1,13 +1,13 @@
 // the selected object's settings, or the level's (its level.cfg) with nothing selected
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
-import { nodeCount, pathPositions, withNodeAt } from "../enemyPaths";
-import { BOX_TYPES, boxTypeName, PATH_ENEMIES, type BoxType, type LevelObject, type Vec3 } from "../objects";
+import { enemyPath, inNodes, nodeCount, pathPositions, withNodeAt } from "../enemyPaths";
+import { BOX_TYPES, boxTypeName, PATH_ENEMIES, PATH_NODES_MAX, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { SKY_ROWS, type Sky } from "../sky";
-import { ChoiceField, ColourField, NumberField } from "./Fields";
+import { ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
 import "./PropertiesPanel.css";
 
 const AXES = ["x", "y"] as const;
@@ -28,6 +28,7 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
   const object = index === null ? null : state.objects[index];
   const [hasNoFloor, setHasNoFloor] = useState(false); // the last drop found no floor below the box
   useEffect(() => setHasNoFloor(false), [object]);
+  const grabbedPath = useRef<Vec3[] | null>(null); // the path as it was when its node slider was grabbed
 
   const change = (changes: Partial<LevelObject>) => {
     if (index !== null) {
@@ -87,6 +88,24 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
         ))}
       </>
     );
+  };
+
+  // how many nodes a crab's or turtle's path has: each count respaces the path
+  // as it was when the slider was grabbed, so sliding down and back keeps its
+  // shape, and the whole slide is one change to undo
+  const renderNodeSlider = (enemy: LevelObject) => {
+    const turn = levelCfg ? levelCfg.turn : 0;
+    const grab = () => {
+      grabbedPath.current = enemyPath(enemy, turn, scale);
+      dispatch({ type: "checkpoint" });
+    };
+    const changeCount = (count: number) => {
+      const path = inNodes(grabbedPath.current ?? enemyPath(enemy, turn, scale), count);
+      if (index !== null) {
+        dispatch({ type: "update", index, changes: { path }, record: false });
+      }
+    };
+    return <SliderField label="nodes" value={nodeCount(enemy)} min={2} max={PATH_NODES_MAX} onGrab={grab} onChange={changeCount} />;
   };
 
   const hasPath = (selected: LevelObject) => selected.kind === "enemy" && PATH_ENEMIES.includes(selected.enemy!);
@@ -190,6 +209,7 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
       {object && index !== null ? (
         <>
           {renderObjectFields(object)}
+          {hasPath(object) && renderNodeSlider(object)}
           {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
