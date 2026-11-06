@@ -11,6 +11,7 @@ import { ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
 import "./PropertiesPanel.css";
 
 const AXES = ["x", "y"] as const;
+const STONE_START_STEP = 0.05; // the stone start slider's steps, of its track
 const SPEED_STEP = 0.25; // the speed slider's steps, times the game's own pace
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
@@ -146,9 +147,29 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     );
   };
 
-  // starts a rolling stone at the other end of its track (its path stays as it is, so it spins the right way)
+  // where along its track a rolling stone starts, 0 (its first end) to 1 (its far end); the whole slide is one change to undo
+  const renderStoneStartSlider = (stone: LevelObject) => {
+    const changeStart = (start: number) => {
+      if (index !== null) {
+        dispatch({ type: "update", index, changes: { start }, record: false });
+      }
+    };
+    return (
+      <SliderField
+        label="start"
+        value={stone.start ?? 0}
+        min={0}
+        max={1}
+        step={STONE_START_STEP}
+        onGrab={() => dispatch({ type: "checkpoint" })}
+        onChange={changeStart}
+      />
+    );
+  };
+
+  // which way a rolling stone rolls first from where it starts: on along its track, or back
   const renderStoneReverseButton = (stone: LevelObject) => (
-    <button className="drop" onClick={() => change({ reverse: stone.reverse ? undefined : true })} title="It starts at the end with the dot">
+    <button className="drop" onClick={() => change({ reverse: stone.reverse ? undefined : true })} title="The arrow at the dot shows which way it rolls first">
       Reverse direction
     </button>
   );
@@ -258,6 +279,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {hasPath(object) && renderNodeSlider(object)}
           {hasPath(object) && renderSpeedSlider(object)}
           {hasPath(object) && renderTurnRoundButton(object)}
+          {isStone(object) && renderStoneStartSlider(object)}
           {isStone(object) && renderStoneReverseButton(object)}
           {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}

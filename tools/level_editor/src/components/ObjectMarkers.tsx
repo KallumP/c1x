@@ -4,7 +4,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
-import { nodesUnderEnds, pathPositions } from "../enemyPaths";
+import { nodesUnderEnds, pathPositions, pointAlongShare } from "../enemyPaths";
 import type { LevelObject, Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
@@ -174,20 +174,42 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // the track a rolling stone comes with: its outline on the floor, and the line its middle rolls along
-  // and a dot at the end of the line it starts from: its first point, or its last if it's reversed
+  // where along its line a rolling stone starts, and an arrow the way it rolls first:
+  // on towards its last point, or back towards its first if it's reversed (only
+  // back from its last point, and only on from its first)
+  const renderStoneStart = (object: LevelObject, path: Vec3[], colour: string) => {
+    const start = object.start ?? 0;
+    const isRollingBack = start >= 1 || (start > 0 && object.reverse === true);
+    const at = pointAlongShare(path, start);
+    const ahead = pointAlongShare(path, isRollingBack ? start - 0.05 : start + 0.05);
+    const [dx, , dz] = [ahead[0] - at[0], 0, ahead[2] - at[2]];
+    const size = boxSize(scale);
+    return (
+      <group position={at}>
+        <mesh>
+          <sphereGeometry args={[size * HANDLE_SIZE, 12, 8]} />
+          <meshBasicMaterial color={colour} />
+        </mesh>
+        <group rotation={[0, Math.atan2(-dx, -dz), 0]}>
+          <mesh position={[0, 0, -size * 0.4]} rotation={[-Math.PI / 2, 0, 0]}>
+            <coneGeometry args={[size * 0.12, size * 0.3, 12]} />
+            <meshBasicMaterial color={colour} />
+          </mesh>
+        </group>
+      </group>
+    );
+  };
+
+  // and where along it the stone starts
   const renderStoneTrack = (object: LevelObject) => {
     const [rollX, , rollZ] = blenderToView(stoneRolling(turn));
     const [x, y, z] = base(object);
     const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
     const path = stonePath(object.at, object.raise, turn, scale).map(blenderToView);
     const colour = ENEMY_COLOURS.rolling_stone;
-    const start = object.reverse ? path[path.length - 1] : path[0];
     return (
       <>
-        <mesh position={start}>
-          <sphereGeometry args={[boxSize(scale) * HANDLE_SIZE, 12, 8]} />
-          <meshBasicMaterial color={colour} />
-        </mesh>
+        {renderStoneStart(object, path, colour)}
         <mesh position={[x, y + lift, z]} rotation={[0, Math.atan2(rollX, rollZ), 0]}>
           <boxGeometry args={[STONE_TRACK.width / scale, lift, STONE_TRACK.length / scale]} />
           <meshBasicMaterial color={colour} transparent opacity={TRACK_OPACITY} />

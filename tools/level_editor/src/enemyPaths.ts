@@ -108,6 +108,9 @@ function pointAlong(nodes: Vec3[], wanted: number): Vec3 {
   return nodes[nodes.length - 1];
 }
 
+// the point share (0 to 1) of the way along a path, from its first node
+export const pointAlongShare = (nodes: Vec3[], share: number): Vec3 => pointAlong(nodes, pathLength(nodes) * share);
+
 // a path in steps as near step long as fit evenly, from its first node to its last
 export function inEvenSteps(nodes: Vec3[], step: number): Vec3[] {
   return respaced(nodes, Math.max(1, Math.round(pathLength(nodes) / step)) + 1);
