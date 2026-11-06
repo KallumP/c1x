@@ -295,6 +295,15 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(soundsOf(level)).toEqual(expect.arrayContaining(["Tbo9A", "Tup9A", "Tfl9A"].map(stringToEid)));
     });
 
+    test("a level with a crab and a turtle has both, and what they share (texture page, sound) once", () => {
+      const both = make(MAP_OBJ, { scale: 256, objects: [turtle(), object("enemy", [-1, 4, 0], { enemy: "crab" })], readOtherLevel });
+      expect(enemies(both.zone).map(({ type }) => type)).toEqual(expect.arrayContaining([ENEMY_ENTITIES.turtle, ENEMY_ENTITIES.crab]));
+      const everyEid = both.level.pages.flatMap((page) => (page.type === PAGE_TEXTURE ? [page.eid] : page.entries.map(({ eid }) => eid)));
+      expect(everyEid.filter((eid) => eid === stringToEid("Ju49T")).length).toBe(1);
+      expect(everyEid.filter((eid) => eid === stringToEid("fli0A")).length).toBe(1);
+      expect(everyEid.length).toBe(new Set(everyEid).size);
+    });
+
     test("a turtle, with no other levels to take it from, is an error saying so", () => {
       expect(() => withTurtle({ readOtherLevel: undefined })).toThrow(/turtle/);
     });
