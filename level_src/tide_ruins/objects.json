@@ -1,5 +1,5 @@
 [
-  {"kind": "spawn", "at": [0.5, 3.5, 0]},
+  {"kind": "spawn", "at": [-1.5, 1.5, 0]},
 
   {"kind": "box", "type": "basic", "at": [-6, 13, 0]},
   {"kind": "box", "type": "outline", "at": [-6, 7, 3.6]},
@@ -28,6 +28,7 @@
   {"kind": "enemy", "type": "crab", "at": [-7.5, 40.5, 0], "path": [[2, 0, 0], [1, 0, 0], [0, 0, 0], [-1, 0, 0], [-2, 0, 0]]},
   {"kind": "enemy", "type": "turtle", "at": [3, 42, 0.9], "path": [[0, 2.5, 0], [0, 1.25, 0], [0, 0, 0], [0, -1.25, 0], [0, -2.5, 0]]},
   {"kind": "enemy", "type": "turtle", "at": [-3, 42, 0.9]},
+  {"kind": "enemy", "type": "rolling_stone", "at": [-0.5, 5, 0], "start": 0.75},
 
   {"kind": "end", "at": [0, 50, 1.2], "raise": 0.15}
 ]
