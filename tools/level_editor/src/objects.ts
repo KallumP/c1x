@@ -28,6 +28,10 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
 
+// the enemies that walk back and forth along a path of nodes, and how many nodes it can have
+export const PATH_ENEMIES: EnemyType[] = ["crab", "turtle"];
+export const PATH_NODES_MAX = 20;
+
 export interface LevelObject {
   kind: Kind;
   at: Vec3;             // in blender: x, y, z (up), metres
@@ -35,6 +39,7 @@ export interface LevelObject {
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
   enemy?: EnemyType;    // an enemy's type
+  path?: Vec3[];        // a crab's or turtle's path: its nodes, in metres from where it stands (at, raised)
 }
 
 // a box's type name, from its type or its subtype number
@@ -47,7 +52,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type"];
+const ENEMY_SETTINGS = ["type", "path"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
@@ -64,6 +69,24 @@ function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<
     throw new Error(`object ${objectNumber}: unknown enemy type ${fields.type} (it can be ${enemyTypes})`);
   }
   return { enemy: fields.type as EnemyType };
+}
+
+// a crab's or turtle's path, from its fields in objects.json (none if it hasn't one)
+function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "path"> {
+  if (!("path" in fields)) {
+    return {};
+  }
+  if (!PATH_ENEMIES.includes(enemy)) {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no path (crabs and turtles do)`);
+  }
+  const nodes = fields.path;
+  if (!Array.isArray(nodes) || nodes.length < 2 || nodes.length > PATH_NODES_MAX) {
+    throw new Error(`object ${objectNumber}: a path should be 2 to ${PATH_NODES_MAX} nodes, [[x, y, z], ...]`);
+  }
+  if (!nodes.every(isPosition)) {
+    throw new Error(`object ${objectNumber}: a path's nodes should each be [x, y, z] in metres from where the enemy stands`);
+  }
+  return { path: nodes.map(([x, y, z]): Vec3 => [x, y, z]) };
 }
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
@@ -140,6 +163,7 @@ export function parseObjects(text: string): LevelObject[] {
     }
     if (kind === "enemy") {
       Object.assign(object, readEnemy(fields, objectNumber));
+      Object.assign(object, readPath(fields, object.enemy!, objectNumber));
     }
 
     objects.push(object);
@@ -164,6 +188,10 @@ function formatObject(object: LevelObject): string {
   }
   if (object.kind === "box" && object.stack !== 1) {
     parts.push(`"stack": ${object.stack}`);
+  }
+  if (object.path) {
+    const nodes = object.path.map((node) => `[${node.map(roundToMillimetre).join(", ")}]`);
+    parts.push(`"path": [${nodes.join(", ")}]`);
   }
   return `{${parts.join(", ")}}`;
 }
