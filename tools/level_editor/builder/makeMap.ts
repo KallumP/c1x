@@ -138,12 +138,14 @@ class ObjectPlacer {
 
   // an enemy taken from another level that walks back and forth along a path (a
   // crab or turtle), in the zone its spot is in: its path's nodes (or its default
-  // path's) in the level, in steps as long as its example's
+  // path's) in the level, in steps as long as its example's, times its speed (the
+  // game moves it a step at a time, so longer steps are faster)
   placeOnPath(enemy: LevelObject, example: Buffer): void {
     const position = this.positionOf(enemy);
     const { zone, at } = this.inZone(position);
     const nodes = pathPositions(enemy, this.turn, this.scale).map((node) => this.positionOf({ ...enemy, at: node, raise: 0 }));
-    const path = inEvenSteps(nodes, PATH_STEP).map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
+    const step = PATH_STEP * (enemy.speed ?? 1);
+    const path = inEvenSteps(nodes, step).map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
     this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
   }
 
