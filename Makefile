@@ -57,6 +57,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/follow.c \
 	src/pc/levelend.c \
 	src/pc/sound/mix.c \
+	src/pc/sound/util.c \
 	src/ext/lib/gui.c \
 	src/util/tree.c \
 	src/util/list.c \
