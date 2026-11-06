@@ -366,15 +366,27 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const native = () => object("enemy", [1, 2, 0], { enemy: "native" });
     const withNative = (more: Partial<MapOptions> = {}) => make(MAP_OBJ, { scale: 256, objects: [native()], readOtherLevel, ...more });
 
-    test("a native walks the great gate's first native's path, its middle at the native's spot", () => {
-      const gatePath = entityPath(levelEntity(readLevel(STREAMS, THE_GREAT_GATE), ...ENEMY_ENTITIES.native));
-      const middle = gatePath[Math.floor(gatePath.length / 2)];
+    const steps = (points: Vec3[]) => points.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - points[index][axis])));
+
+    test("a native walks the great gate's natives' path by default: 1972 across the map, its middle at the native's spot, in its steps (493)", () => {
       const [placed] = enemies(withNative().zone);
-      expect(placed.path.length).toBe(gatePath.length);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.native);
+      expect(placed.path.length).toBe(5);
       // blender (1, 2, 0) is (1408, 128, 1664) in the zone
-      const spot = [1408, 128, 1664];
-      placed.path.forEach((point, index) => point.forEach((value, axis) =>
-        expect(Math.abs(value - (spot[axis] + gatePath[index][axis] - middle[axis]))).toBeLessThanOrEqual(8)));
+      const middle = placed.path[2];
+      [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(middle[axis] - value)).toBeLessThanOrEqual(8));
+      placed.path.forEach((point) => [1, 2].forEach((axis) => expect(Math.abs(point[axis] - middle[axis])).toBeLessThanOrEqual(8)));
+      steps(placed.path).forEach((step) => expect(Math.abs(step - 493)).toBeLessThanOrEqual(8));
+    });
+
+    test("a native walks its own path in steps about as long as the great gate's (1972 over 4), longer the faster it is", () => {
+      const path: Vec3[] = [[0, 0, 0], [8, 0, 0]]; // 8 m across: 2048 units at scale 256
+      const placedAt = (speed?: number) =>
+        enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "native", path, speed })], readOtherLevel }).zone)[0].path;
+      const [normal, fast] = [placedAt(), placedAt(2)];
+      expect([normal.length, fast.length]).toEqual([5, 3]); // steps of 512 and 1024
+      steps(normal).forEach((step) => expect(Math.abs(step - 512)).toBeLessThanOrEqual(8));
+      steps(fast).forEach((step) => expect(Math.abs(step - 1024)).toBeLessThanOrEqual(8));
     });
 
     test("a level with a native has the great gate's native code, model and animations", () => {
