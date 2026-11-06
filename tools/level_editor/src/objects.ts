@@ -32,6 +32,10 @@ export type Vec3 = [number, number, number];
 export const PATH_ENEMIES: EnemyType[] = ["crab", "turtle"];
 export const PATH_NODES_MAX = 20;
 
+// how many times the game's own pace a crab or turtle can walk at (seen working in the game)
+export const SPEED_MIN = 0.25;
+export const SPEED_MAX = 3;
+
 export interface LevelObject {
   kind: Kind;
   at: Vec3;             // in blender: x, y, z (up), metres
@@ -40,6 +44,7 @@ export interface LevelObject {
   box?: BoxType | number; // a box's type, or its subtype number
   enemy?: EnemyType;    // an enemy's type
   path?: Vec3[];        // a crab's or turtle's path: its nodes, in metres from where it stands (at, raised)
+  speed?: number;       // how many times the game's own pace a crab or turtle walks at (1 without one)
 }
 
 // a box's type name, from its type or its subtype number
@@ -52,7 +57,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type", "path"];
+const ENEMY_SETTINGS = ["type", "path", "speed"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
@@ -87,6 +92,21 @@ function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumbe
     throw new Error(`object ${objectNumber}: a path's nodes should each be [x, y, z] in metres from where the enemy stands`);
   }
   return { path: nodes.map(([x, y, z]): Vec3 => [x, y, z]) };
+}
+
+// a crab's or turtle's speed, from its fields in objects.json (none if it hasn't one)
+function readSpeed(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "speed"> {
+  if (!("speed" in fields)) {
+    return {};
+  }
+  if (!PATH_ENEMIES.includes(enemy)) {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no speed (crabs and turtles do)`);
+  }
+  const speed = fields.speed;
+  if (!isNumber(speed) || speed < SPEED_MIN || speed > SPEED_MAX) {
+    throw new Error(`object ${objectNumber}: speed should be ${SPEED_MIN} to ${SPEED_MAX} (times the game's own pace)`);
+  }
+  return { speed };
 }
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
@@ -164,6 +184,7 @@ export function parseObjects(text: string): LevelObject[] {
     if (kind === "enemy") {
       Object.assign(object, readEnemy(fields, objectNumber));
       Object.assign(object, readPath(fields, object.enemy!, objectNumber));
+      Object.assign(object, readSpeed(fields, object.enemy!, objectNumber));
     }
 
     objects.push(object);
@@ -192,6 +213,9 @@ function formatObject(object: LevelObject): string {
   if (object.path) {
     const nodes = object.path.map((node) => `[${node.map(roundToMillimetre).join(", ")}]`);
     parts.push(`"path": [${nodes.join(", ")}]`);
+  }
+  if (object.speed !== undefined && object.speed !== 1) {
+    parts.push(`"speed": ${object.speed}`);
   }
   return `{${parts.join(", ")}}`;
 }
