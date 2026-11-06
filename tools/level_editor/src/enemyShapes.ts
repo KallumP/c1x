@@ -45,8 +45,8 @@ function plantLeaves(): ShapePart[] {
   const leafCount = 5;
   return Array.from({ length: leafCount }, (_, leafIndex) => {
     const angle = (leafIndex / leafCount) * Math.PI * 2;
-    const at: Vec3 = [Math.sin(angle) * 90, 30, Math.cos(angle) * 90];
-    return ball(1, at, PLANT_COLOURS.leaf, { stretch: [45, 14, 110], turn: [-0.35, angle, 0] });
+    const at: Vec3 = [Math.sin(angle) * 140, 30, Math.cos(angle) * 140];
+    return ball(1, at, PLANT_COLOURS.leaf, { stretch: [55, 14, 180], turn: [-0.25, angle, 0] });
   });
 }
 
@@ -55,7 +55,7 @@ function plantTeeth(height: number, pointingUp: boolean): ShapePart[] {
   const toothCount = 5;
   return Array.from({ length: toothCount }, (_, toothIndex) => {
     const angle = ((toothIndex / (toothCount - 1)) - 0.5) * 2.2;
-    const at: Vec3 = [Math.sin(angle) * 85, height, 40 + Math.cos(angle) * 85];
+    const at: Vec3 = [Math.sin(angle) * 115, height, 40 + Math.cos(angle) * 100];
     return rod(0, 12, 34, at, PLANT_COLOURS.tooth, { turn: [pointingUp ? 0 : Math.PI, 0, 0] });
   });
 }
@@ -63,9 +63,9 @@ function plantTeeth(height: number, pointingUp: boolean): ShapePart[] {
 // the plant's head: two jaws open towards the player, red inside, with teeth
 function plantHead(): ShapePart[] {
   return [
-    ball(1, [0, 470, 40], PLANT_COLOURS.jaw, { name: "jaw", stretch: [115, 55, 120], turn: [-0.3, 0, 0] }),
-    ball(1, [0, 375, 40], PLANT_COLOURS.jaw, { name: "jaw", stretch: [105, 45, 110], turn: [0.25, 0, 0] }),
-    ball(1, [0, 420, 60], PLANT_COLOURS.mouth, { stretch: [85, 40, 85] }),
+    ball(1, [0, 470, 40], PLANT_COLOURS.jaw, { name: "jaw", stretch: [150, 60, 130], turn: [-0.3, 0, 0] }),
+    ball(1, [0, 375, 40], PLANT_COLOURS.jaw, { name: "jaw", stretch: [140, 50, 120], turn: [0.25, 0, 0] }),
+    ball(1, [0, 420, 60], PLANT_COLOURS.mouth, { stretch: [115, 40, 95] }),
     ...plantTeeth(445, false),
     ...plantTeeth(395, true),
   ];
@@ -83,9 +83,9 @@ function plant(): ShapePart[] {
 // one of the crab's eyes, on its stalk
 function crabEye(): ShapePart[] {
   return [
-    rod(10, 12, 90, [55, 200, 95], CRAB_COLOURS.shell),
-    ball(28, [55, 248, 100], CRAB_COLOURS.eye, { name: "eye" }),
-    ball(11, [55, 251, 125], CRAB_COLOURS.pupil),
+    rod(10, 12, 110, [55, 235, 95], CRAB_COLOURS.shell),
+    ball(30, [55, 300, 100], CRAB_COLOURS.eye, { name: "eye" }),
+    ball(12, [55, 303, 127], CRAB_COLOURS.pupil),
   ];
 }
 
@@ -107,7 +107,7 @@ function crabLegs(): ShapePart[] {
 
 function crab(): ShapePart[] {
   return [
-    ball(1, [0, 120, 0], CRAB_COLOURS.shell, { stretch: [215, 85, 160] }),
+    ball(1, [0, 140, 0], CRAB_COLOURS.shell, { stretch: [215, 120, 160] }),
     ...bothSides([...crabEye(), ...crabClaw(), ...crabLegs()]),
   ];
 }
@@ -149,13 +149,30 @@ export function shapeBounds(parts: ShapePart[]): { min: Vec3; max: Vec3 } {
   return { min: bounds.min.toArray(), max: bounds.max.toArray() };
 }
 
+// the parts made bigger or smaller (all of them, about the shape's foot), so the shape is height tall
+function scaledToHeight(parts: ShapePart[], height: number): ShapePart[] {
+  const factor = height / shapeBounds(parts).max[1];
+  return parts.map((part) => {
+    const [stretchX, stretchY, stretchZ] = part.stretch ?? [1, 1, 1];
+    return {
+      ...part,
+      at: part.at.map((value) => value * factor) as Vec3,
+      stretch: [stretchX * factor, stretchY * factor, stretchZ * factor],
+    };
+  });
+}
+
 // the parts moved up or down so the lowest of them is on the floor
 function standingOnFloor(parts: ShapePart[]): ShapePart[] {
   const lowest = shapeBounds(parts).min[1];
   return parts.map((part) => ({ ...part, at: [part.at[0], part.at[1] - lowest, part.at[2]] }));
 }
 
+// how tall the game's models are, in game units: jungle rollers' plant (JuPcG) and
+// n. sanity beach's crab (Cr19G), each vertex times 4, times its tgeo's scale / 4096
+const GAME_HEIGHTS: Record<ModelledEnemy, number> = { plant: 720, crab: 480 };
+
 export const ENEMY_SHAPES: Record<ModelledEnemy, ShapePart[]> = {
-  plant: standingOnFloor(plant()),
-  crab: standingOnFloor(crab()),
+  plant: scaledToHeight(standingOnFloor(plant()), GAME_HEIGHTS.plant),
+  crab: scaledToHeight(standingOnFloor(crab()), GAME_HEIGHTS.crab),
 };
