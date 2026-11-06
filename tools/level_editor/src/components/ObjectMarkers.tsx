@@ -13,6 +13,7 @@ const STONE_THICKNESS = 0.35; // of the rolling stone's radius
 const TRACK_OPACITY = 0.25;   // of the outline of a rolling stone's track
 const BOX_EDGE_COLOUR = "#000000";
 const HANDLE_SIZE = 0.15;   // a path node's handle's radius, of a box's size
+const FAR_END_OPACITY = 0.4; // the enemy drawn at the far end of its path, faded: it starts at the other
 const SELECTED_GLOW = 0.35; // how much brighter the selected enemy's model is
 
 // how big a crab's and turtle's models are, in game units: how tall, and how
@@ -131,19 +132,26 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  const renderShapePart = (part: ShapePart, partIndex: number, glow: number) => (
+  const renderShapePart = (part: ShapePart, partIndex: number, glow: number, opacity: number) => (
     <mesh key={partIndex} geometry={partGeometry(part)}>
-      <meshLambertMaterial color={part.colour} emissive={SELECTED_COLOUR} emissiveIntensity={glow} />
+      <meshLambertMaterial
+        color={part.colour}
+        emissive={SELECTED_COLOUR}
+        emissiveIntensity={glow}
+        transparent={opacity < 1}
+        opacity={opacity}
+      />
     </mesh>
   );
 
   // an enemy's model standing at at (in the viewport), facing the player, sized by the level's
   // scale; the selected one glows
-  const renderEnemyModel = (parts: ShapePart[], at: Vec3, index: number, key?: number, facing = enemyTurn(turn)) => {
+  // opacity below 1 fades it: the far end of a crab's or turtle's path, where it turns round
+  const renderEnemyModel = (parts: ShapePart[], at: Vec3, index: number, key?: number, facing = enemyTurn(turn), opacity = 1) => {
     const glow = index === selected ? SELECTED_GLOW : 0;
     return (
       <group key={key} position={at} rotation={[0, facing, 0]} scale={1 / scale}>
-        {parts.map((part, partIndex) => renderShapePart(part, partIndex, glow))}
+        {parts.map((part, partIndex) => renderShapePart(part, partIndex, glow, opacity))}
       </group>
     );
   };
@@ -228,7 +236,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     return (
       <>
         {ends.map(({ end, next }, endIndex) =>
-          renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next)))}
+          renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next), endIndex === 0 ? 1 : FAR_END_OPACITY))}
         <Line points={line} color={pathWarnings.has(index) ? WARNING_COLOUR : colour} lineWidth={2} />
         {index === selected && renderPathHandles(positions, index, enemy, colour)}
       </>

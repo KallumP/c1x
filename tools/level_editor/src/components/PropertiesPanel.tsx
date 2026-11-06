@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
-import { enemyPath, inNodes, nodeCount, pathPositions, withNodeAt } from "../enemyPaths";
+import { enemyPath, inNodes, nodeCount, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
 import { BOX_TYPES, boxTypeName, PATH_ENEMIES, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { SKY_ROWS, type Sky } from "../sky";
@@ -130,6 +130,22 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     );
   };
 
+  // turns a crab's or turtle's path round, so it starts at the other end; a selected node stays selected
+  const renderTurnRoundButton = (enemy: LevelObject) => {
+    const turnRound = () => {
+      const turn = levelCfg ? levelCfg.turn : 0;
+      change({ path: turnedRound(enemy, turn, scale) });
+      if (index !== null && state.selectedNode !== null) {
+        dispatch({ type: "selectNode", index, node: nodeTurnedRound(state.selectedNode, nodeCount(enemy)) });
+      }
+    };
+    return (
+      <button className="drop" onClick={turnRound} title="It starts at the solid end, and turns round at the faded one">
+        Start at the other end
+      </button>
+    );
+  };
+
   const hasPath = (selected: LevelObject) => selected.kind === "enemy" && PATH_ENEMIES.includes(selected.enemy!);
 
   // raise is its height above the floor, kept as it's dragged about
@@ -233,6 +249,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {renderObjectFields(object)}
           {hasPath(object) && renderNodeSlider(object)}
           {hasPath(object) && renderSpeedSlider(object)}
+          {hasPath(object) && renderTurnRoundButton(object)}
           {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
