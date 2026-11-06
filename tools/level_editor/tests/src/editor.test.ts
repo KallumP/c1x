@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { editorReducer, emptyEditor, newObject, type EditorAction, type EditorState } from "../../src/editor";
+import { draggedTo, editorReducer, emptyEditor, newObject, type EditorAction, type EditorState } from "../../src/editor";
 import type { LevelObject } from "../../src/objects";
 
 const box = (x: number): LevelObject => newObject("basic", [x, 0, 0]);
@@ -173,5 +173,29 @@ describe("a path's nodes", () => {
     const twoNodes = editorReducer(withObjects([box(1), { ...crab, path: path.slice(0, 2) }]), { type: "update", index: 1, changes: { path } });
     const third = editorReducer(twoNodes, { type: "selectNode", index: 1, node: 2 });
     expect(editorReducer(third, { type: "undo" }).selectedNode).toBeNull();
+  });
+});
+
+describe("dragging", () => {
+  const crab = newObject("crab", [1, 2, 3]);
+
+  test("an object is moved to where it's dragged", () => {
+    expect(draggedTo(crab, null, [4, 5, 6], 0, 400)).toEqual({ at: [4, 5, 6] });
+  });
+
+  test("a path's node is moved to where it's dragged, the enemy staying put", () => {
+    const changes = draggedTo({ ...crab, path: [[0, 0, 0], [1, 0, 0]] }, 1, [4, 5, 3], 0, 400);
+    expect(changes).toEqual({ path: [[0, 0, 0], [3, 3, 0]] });
+  });
+
+  test("a node's drag is undone in one go, back to the path before it", () => {
+    const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0]];
+    let state = editorReducer(withObjects([{ ...crab, path }]), { type: "selectNode", index: 0, node: 1 });
+    state = editorReducer(state, { type: "checkpoint" });
+    for (const x of [2, 3, 4]) {
+      state = editorReducer(state, { type: "update", index: 0, changes: draggedTo(state.objects[0], 1, [x, 2, 3], 0, 400), record: false });
+    }
+    expect(state.objects[0].path).toEqual([[0, 0, 0], [3, 0, 0]]);
+    expect(editorReducer(state, { type: "undo" }).objects[0].path).toEqual(path);
   });
 });
