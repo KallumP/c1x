@@ -1,9 +1,10 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { blenderToView, boxSize, cameraFacing, crabPath, enemyTurn, turtlePath, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { blenderToView, boxSize, cameraFacing, enemyTurn, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, type ShapePart } from "../enemyShapes";
+import { pathPositions } from "../enemyPaths";
 import type { LevelObject, Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
@@ -11,6 +12,7 @@ const PAD_UNITS = 400;   // the warp pad's radius, about
 const STONE_THICKNESS = 0.35; // of the rolling stone's radius
 const TRACK_OPACITY = 0.25;   // of the outline of a rolling stone's track
 const BOX_EDGE_COLOUR = "#000000";
+const HANDLE_SIZE = 0.15;   // a path node's handle's radius, of a box's size
 const SELECTED_GLOW = 0.35; // how much brighter the selected enemy's model is
 
 // where an object's base is in the viewport, raised as it is in the game
@@ -162,40 +164,40 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
     );
   };
 
-  // the crab: at both ends of the line it walks back and forth along (sideways, across the
-  // map, as the game walks it), where it turns round
-  const renderCrab = (object: LevelObject, index: number) => {
-    const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
-    const ends = crabPath(object.at, object.raise, turn, scale).map(blenderToView);
-    const path = ends.map(([x, y, z]): Vec3 => [x, y + lift, z]);
+  // a handle on one of a path's nodes, a little above the floor there
+  const renderPathHandle = (position: Vec3, nodeIndex: number, colour: string) => {
+    const radius = boxSize(scale) * HANDLE_SIZE;
+    const [x, y, z] = blenderToView(position);
     return (
-      <>
-        {ends.map((end, endIndex) => renderEnemyModel(ENEMY_SHAPES.crab, end, index, endIndex))}
-        <Line points={path} color={ENEMY_COLOURS.crab} lineWidth={2} />
-      </>
+      <mesh key={`node ${nodeIndex}`} position={[x, y + radius, z]}>
+        <sphereGeometry args={[radius, 12, 8]} />
+        <meshBasicMaterial color={colour} />
+      </mesh>
     );
   };
 
-  // the turtle: at both ends of the line it walks back and forth along (the
-  // route, as the game walks it), where it turns round
-  const renderTurtle = (object: LevelObject, index: number) => {
+  // a crab or turtle: at the first and last nodes of the path it walks back and
+  // forth along, where it turns round, with the line through its nodes, and a
+  // handle on each node while it's selected
+  const renderPathWalker = (object: LevelObject, index: number) => {
+    const enemy = object.enemy as "crab" | "turtle";
+    const colour = ENEMY_COLOURS[enemy];
     const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
-    const ends = turtlePath(object.at, object.raise, turn, scale).map(blenderToView);
-    const path = ends.map(([x, y, z]): Vec3 => [x, y + lift, z]);
+    const positions = pathPositions(object, turn, scale);
+    const ends = [positions[0], positions[positions.length - 1]].map(blenderToView);
+    const line = positions.map(blenderToView).map(([x, y, z]): Vec3 => [x, y + lift, z]);
     return (
       <>
-        {ends.map((end, endIndex) => renderEnemyModel(ENEMY_SHAPES.turtle, end, index, endIndex))}
-        <Line points={path} color={ENEMY_COLOURS.turtle} lineWidth={2} />
+        {ends.map((end, endIndex) => renderEnemyModel(ENEMY_SHAPES[enemy], end, index, endIndex))}
+        <Line points={line} color={colour} lineWidth={2} />
+        {index === selected && positions.map((position, nodeIndex) => renderPathHandle(position, nodeIndex, colour))}
       </>
     );
   };
 
   const renderEnemy = (object: LevelObject, index: number) => {
-    if (object.enemy === "crab") {
-      return renderCrab(object, index);
-    }
-    if (object.enemy === "turtle") {
-      return renderTurtle(object, index);
+    if (object.enemy === "crab" || object.enemy === "turtle") {
+      return renderPathWalker(object, index);
     }
     if (object.enemy !== "rolling_stone") {
       return renderPlant(object, index);

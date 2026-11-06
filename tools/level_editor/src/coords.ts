@@ -70,27 +70,9 @@ export function stonePath(at: Vec3, raise: number, turn: number, scale: number):
 // crab's path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const CRAB_WALK = 1600;
 
-// the ends of a crab's path (in blender), for a crab at at, raised by raise: its
-// middle at the crab's spot, across the map as a rolling stone rolls
-export function crabPath(at: Vec3, raise: number, turn: number, scale: number): [Vec3, Vec3] {
-  const [acrossX, acrossY] = stoneRolling(turn);
-  const half = CRAB_WALK / 2 / scale;
-  const end = (side: number): Vec3 => [at[0] + side * acrossX * half, at[1] + side * acrossY * half, at[2] + raise];
-  return [end(-1), end(1)];
-}
-
 // how far a turtle walks back and forth, in game units: n. sanity beach's first
 // turtle's path, along the game's z (the route), straightened (its default path, src/enemyPaths.ts)
 export const TURTLE_WALK = 2000;
-
-// the ends of a turtle's path (in blender), for a turtle at at, raised by raise:
-// its middle at the turtle's spot, along the route, the way the camera faces
-export function turtlePath(at: Vec3, raise: number, turn: number, scale: number): [Vec3, Vec3] {
-  const [alongX, alongY] = cameraFacing(turn);
-  const half = TURTLE_WALK / 2 / scale;
-  const end = (side: number): Vec3 => [at[0] + side * alongX * half, at[1] + side * alongY * half, at[2] + raise];
-  return [end(-1), end(1)];
-}
 
 // a box's size in blender metres, for a level at scale game units a metre
 export function boxSize(scale: number): number {
