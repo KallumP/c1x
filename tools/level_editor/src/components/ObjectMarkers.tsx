@@ -176,12 +176,18 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
     );
   };
 
-  // the turtle: the line it walks back and forth along (the route, as the game walks it)
-  const renderTurtle = (object: LevelObject) => {
+  // the turtle: at both ends of the line it walks back and forth along (the
+  // route, as the game walks it), where it turns round
+  const renderTurtle = (object: LevelObject, index: number) => {
     const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
     const ends = turtlePath(object.at, object.raise, turn, scale).map(blenderToView);
     const path = ends.map(([x, y, z]): Vec3 => [x, y + lift, z]);
-    return <Line points={path} color={ENEMY_COLOURS.turtle} lineWidth={2} />;
+    return (
+      <>
+        {ends.map((end, endIndex) => renderEnemyModel(ENEMY_SHAPES.turtle, end, index, endIndex))}
+        <Line points={path} color={ENEMY_COLOURS.turtle} lineWidth={2} />
+      </>
+    );
   };
 
   const renderEnemy = (object: LevelObject, index: number) => {
@@ -189,7 +195,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
       return renderCrab(object, index);
     }
     if (object.enemy === "turtle") {
-      return renderTurtle(object);
+      return renderTurtle(object, index);
     }
     if (object.enemy !== "rolling_stone") {
       return renderPlant(object, index);
