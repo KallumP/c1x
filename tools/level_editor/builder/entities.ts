@@ -24,6 +24,19 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // and turtle (TurtC), which does too
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0] };
 // not in the level's total (an iron outline fills in as an iron box)
+// a rolling stone's first init flag is where in its cycle along its path and
+// back it starts (its script's, seen in the game): 0 at its first point rolling
+// forward, this at its last, twice this back at its first. a stone starts
+// elsewhere this way, not by turning its path round, which spins it backwards
+export const STONE_FAR_END = 128;
+
+// a rolling stone's first init flag for starting start of the way along its path
+// (0 to 1), rolling forward, or back towards its first point if reverse
+export function stoneStartFlag(start: number, reverse: boolean): number {
+  const along = Math.round(STONE_FAR_END * start);
+  return reverse ? (2 * STONE_FAR_END - along) % (2 * STONE_FAR_END) : along;
+}
+
 export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch, BOX_TYPES.iron_arrow, BOX_TYPES.iron_outline];
 
 // a switch (! box) makes the outline boxes solid along a chain of ids in their
@@ -63,17 +76,6 @@ export function entityPosition(item: Buffer): Vec3 {
 export function entityPath(item: Buffer): Vec3[] {
   return Array.from({ length: item.readUInt16LE(ENTITY_PATH_LENGTH) }, (_, index) =>
     [0, 1, 2].map((axis) => 4 * item.readInt16LE(ENTITY_POINTS + index * POINT_BYTES + 2 * axis)) as Vec3);
-}
-
-// the enemies whose example path, from a level with sloping floors, is
-// straightened for custom levels' flat ones: n. sanity beach's turtles curve
-// and rise and fall with the beach as they walk along the route (z)
-export const STRAIGHTENED_PATHS: EnemyType[] = ["turtle"];
-
-// a path straightened: along z as it was, at its middle's x and height
-export function straightened(path: Vec3[]): Vec3[] {
-  const [middleX, middleY] = path[Math.floor(path.length / 2)];
-  return path.map(([, , z]) => [middleX, middleY, z]);
 }
 
 // the entity with points (zone units relative to its zone) as its path, in place of its own

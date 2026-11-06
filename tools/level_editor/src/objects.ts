@@ -28,6 +28,14 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
 
+// the enemies that walk back and forth along a path of nodes, and how many nodes it can have
+export const PATH_ENEMIES: EnemyType[] = ["crab", "turtle"];
+export const PATH_NODES_MAX = 20;
+
+// how many times the game's own pace a crab or turtle can walk at (seen working in the game)
+export const SPEED_MIN = 0.25;
+export const SPEED_MAX = 3;
+
 export interface LevelObject {
   kind: Kind;
   at: Vec3;             // in blender: x, y, z (up), metres
@@ -35,6 +43,10 @@ export interface LevelObject {
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
   enemy?: EnemyType;    // an enemy's type
+  path?: Vec3[];        // a crab's or turtle's path: its nodes, in metres from where it stands (at, raised)
+  speed?: number;       // how many times the game's own pace a crab or turtle walks at (1 without one)
+  start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
+  reverse?: boolean;    // a rolling stone that rolls back towards its first end first (true, or none)
 }
 
 // a box's type name, from its type or its subtype number
@@ -47,7 +59,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type"];
+const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
@@ -64,6 +76,68 @@ function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<
     throw new Error(`object ${objectNumber}: unknown enemy type ${fields.type} (it can be ${enemyTypes})`);
   }
   return { enemy: fields.type as EnemyType };
+}
+
+// a crab's or turtle's path, from its fields in objects.json (none if it hasn't one)
+function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "path"> {
+  if (!("path" in fields)) {
+    return {};
+  }
+  if (!PATH_ENEMIES.includes(enemy)) {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no path (crabs and turtles do)`);
+  }
+  const nodes = fields.path;
+  if (!Array.isArray(nodes) || nodes.length < 2 || nodes.length > PATH_NODES_MAX) {
+    throw new Error(`object ${objectNumber}: a path should be 2 to ${PATH_NODES_MAX} nodes, [[x, y, z], ...]`);
+  }
+  if (!nodes.every(isPosition)) {
+    throw new Error(`object ${objectNumber}: a path's nodes should each be [x, y, z] in metres from where the enemy stands`);
+  }
+  return { path: nodes.map(([x, y, z]): Vec3 => [x, y, z]) };
+}
+
+// a crab's or turtle's speed, from its fields in objects.json (none if it hasn't one)
+function readSpeed(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "speed"> {
+  if (!("speed" in fields)) {
+    return {};
+  }
+  if (!PATH_ENEMIES.includes(enemy)) {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no speed (crabs and turtles do)`);
+  }
+  const speed = fields.speed;
+  if (!isNumber(speed) || speed < SPEED_MIN || speed > SPEED_MAX) {
+    throw new Error(`object ${objectNumber}: speed should be ${SPEED_MIN} to ${SPEED_MAX} (times the game's own pace)`);
+  }
+  return { speed };
+}
+
+// how far along its track a rolling stone starts, from its fields in objects.json (none if it hasn't a start)
+function readStart(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "start"> {
+  if (!("start" in fields)) {
+    return {};
+  }
+  if (enemy !== "rolling_stone") {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no start (rolling stones do)`);
+  }
+  const start = fields.start;
+  if (!isNumber(start) || start < 0 || start > 1) {
+    throw new Error(`object ${objectNumber}: start should be 0 to 1 (how far along its track it starts)`);
+  }
+  return { start };
+}
+
+// whether a rolling stone rolls back towards its first end first, from its fields in objects.json
+function readReverse(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "reverse"> {
+  if (!("reverse" in fields)) {
+    return {};
+  }
+  if (enemy !== "rolling_stone") {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no reverse (rolling stones do; reverse a ${enemy}'s path instead)`);
+  }
+  if (typeof fields.reverse !== "boolean") {
+    throw new Error(`object ${objectNumber}: reverse should be true or false`);
+  }
+  return fields.reverse ? { reverse: true } : {};
 }
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
@@ -140,6 +214,10 @@ export function parseObjects(text: string): LevelObject[] {
     }
     if (kind === "enemy") {
       Object.assign(object, readEnemy(fields, objectNumber));
+      Object.assign(object, readPath(fields, object.enemy!, objectNumber));
+      Object.assign(object, readSpeed(fields, object.enemy!, objectNumber));
+      Object.assign(object, readStart(fields, object.enemy!, objectNumber));
+      Object.assign(object, readReverse(fields, object.enemy!, objectNumber));
     }
 
     objects.push(object);
@@ -164,6 +242,19 @@ function formatObject(object: LevelObject): string {
   }
   if (object.kind === "box" && object.stack !== 1) {
     parts.push(`"stack": ${object.stack}`);
+  }
+  if (object.path) {
+    const nodes = object.path.map((node) => `[${node.map(roundToMillimetre).join(", ")}]`);
+    parts.push(`"path": [${nodes.join(", ")}]`);
+  }
+  if (object.speed !== undefined && object.speed !== 1) {
+    parts.push(`"speed": ${object.speed}`);
+  }
+  if (object.start !== undefined && object.start !== 0) {
+    parts.push(`"start": ${object.start}`);
+  }
+  if (object.reverse) {
+    parts.push(`"reverse": true`);
   }
   return `{${parts.join(", ")}}`;
 }

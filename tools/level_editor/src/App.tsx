@@ -6,7 +6,7 @@ import ObjectMarkers from "./components/ObjectMarkers";
 import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
 import Scene, { type Orbit } from "./components/Scene";
-import { newObject, type Tool } from "./editor";
+import { draggedTo, newObject, type Tool } from "./editor";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
 import { useLevelActions } from "./hooks/useLevelActions";
@@ -15,7 +15,7 @@ import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevels } from "./hooks/useLevels";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
-import { useTriangles, useWarnings } from "./hooks/useWarnings";
+import { usePathWarnings, useTriangles, useWarnings } from "./hooks/useWarnings";
 import { clickedFloor, isClick } from "./three/clicks";
 import "./App.css";
 
@@ -33,13 +33,18 @@ export default function App() {
   const unsaved = editor.unsaved || levelCfg.unsaved;
   const triangles = useTriangles(group);
   const warnings = useWarnings(state.objects, scale, triangles);
+  const pathWarnings = usePathWarnings(state.objects, levelCfg.cfg.turn, scale, triangles);
   const [tool, setTool] = useState<Tool>(SELECT);
   const [grid, setGrid] = useState(0.5);
   const orbitRef = useRef<Orbit>(null);
+  const turn = levelCfg.cfg.turn;
   const drag = useDrag(orbitRef, grid, {
-    grab: (index) => dispatch({ type: "select", index }),
+    grab: ({ index, node }) => dispatch(node === null ? { type: "select", index } : { type: "selectNode", index, node }),
     begin: () => dispatch({ type: "checkpoint" }),
-    move: (index, at) => dispatch({ type: "update", index, changes: { at }, record: false }),
+    move: ({ index, node }, at) => {
+      const changes = draggedTo(state.objects[index], node, at, turn, scale);
+      dispatch({ type: "update", index, changes, record: false });
+    },
   });
   const [isSaving, setIsSaving] = useState(false);
   // saves the objects and level.cfg, whichever changed; whether they saved
@@ -84,12 +89,20 @@ export default function App() {
     }
   };
 
-  const renderWarningCount = () => {
+  const renderBoxWarningCount = () => {
     if (warnings.size === 0) {
       return null;
     }
     const boxes = warnings.size === 1 ? "box is" : "boxes are";
     return <span className="warning">{warnings.size} {boxes} in a wall or another box</span>;
+  };
+
+  const renderPathWarningCount = () => {
+    if (pathWarnings.size === 0) {
+      return null;
+    }
+    const paths = pathWarnings.size === 1 ? "path leaves" : "paths leave";
+    return <span className="warning">{pathWarnings.size} {paths} the floor or run{pathWarnings.size === 1 ? "s" : ""} through a wall</span>;
   };
 
   const renderHistoryButtons = () => (
@@ -135,7 +148,8 @@ export default function App() {
       <LevelPicker levels={levels} level={level} onOpen={openLevel} />
       {renderHistoryButtons()}
       {renderSaveButton()}
-      {renderWarningCount()}
+      {renderBoxWarningCount()}
+      {renderPathWarningCount()}
       {error && <span className="error">{error}</span>}
       {renderLevelActions()}
     </header>
@@ -147,10 +161,13 @@ export default function App() {
       <ObjectMarkers
         objects={state.objects}
         scale={scale}
-        turn={levelCfg.cfg.turn}
+        turn={turn}
         selected={state.selected}
+        selectedNode={state.selectedNode}
         warnings={warnings}
+        pathWarnings={pathWarnings}
         onSelect={drag.start}
+        onSelectNode={drag.startNode}
       />
     </>
   );
@@ -171,6 +188,7 @@ export default function App() {
       <PropertiesPanel
         state={state}
         warnings={warnings}
+        pathWarnings={pathWarnings}
         scale={scale}
         triangles={triangles}
         dispatch={dispatch}

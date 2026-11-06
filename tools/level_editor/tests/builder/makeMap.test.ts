@@ -4,11 +4,12 @@ import { describe, expect, test } from "vitest";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
-import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, entityPosition, entityType, WARP_PAD } from "../../builder/entities";
+import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, ENTITY_INIT_FLAGS, entityId, entityPath, entityPosition, entityType, STONE_FAR_END, WARP_PAD } from "../../builder/entities";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_SOUNDS, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
 import { CORE_EXEC_SLOTS } from "../../builder/cutLevel";
+import type { Vec3 } from "../../builder/vectors";
 import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
 import { textureWorlds } from "../../builder/mapTextures";
 import { FOLLOW_CAM_MODE } from "../../builder/paths";
@@ -186,7 +187,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   const enemies = (zone: Entry) => zoneEntities(zone)
     .filter((item) => Object.values(ENEMY_ENTITIES).some((entity) => entity.join() === entityType(item).join()))
-    .map((item) => ({ type: entityType(item), id: entityId(item), path: entityPath(item) }));
+    .map((item) => ({ type: entityType(item), id: entityId(item), path: entityPath(item), initFlagA: item.readInt16LE(ENTITY_INIT_FLAGS) }));
+
+  test("a rolling stone starts along its track by its init flag a, which counts through its cycle there and back (seen in the game): 128 x start rolling forward, 256 - 128 x start rolling back; its path the same (rolling -x, so it spins the right way)", () => {
+    const stone = (more: Partial<LevelObject>) => object("enemy", [1, 2, 0], { enemy: "rolling_stone", ...more });
+    const placed = (more: Partial<LevelObject>) => enemies(make(MAP_OBJ, { scale: 256, objects: [stone(more)] }).zone)[0];
+    expect(STONE_FAR_END).toBe(128);
+    const flags = [{}, { start: 1 }, { start: 0.5 }, { start: 0.5, reverse: true }, { start: 1, reverse: true }, { reverse: true }]
+      .map((more) => placed(more).initFlagA);
+    expect(flags).toEqual([0, 128, 64, 192, 128, 0]);
+    expect(placed({ start: 0.5, reverse: true }).path).toEqual(placed({}).path);
+  });
 
   test("an enemy goes where it is, as its entity, with an id of its own", () => {
     // blender (1, 2, 0) is the .obj's (1, 0, -2)
@@ -259,6 +270,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(make(MAP_OBJ, { scale: 256, readOtherLevel }).level.nsd.ldat.execMap[ENEMY_ENTITIES.crab[0]]).toBe(EID_NONE);
     });
 
+    test("a crab walks its own path, raised with it, in equal steps about 100 apart", () => {
+      const built = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "crab", raise: 0.5, path: [[0, 0, 0], [2, 0, 0.25]] })], readOtherLevel });
+      const [placed] = enemies(built.zone);
+      const steps = placed.path.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - placed.path[index][axis])));
+      expect(placed.path.length).toBe(6); // 516 units (2 m across, 0.25 m up) in 5 steps
+      steps.forEach((step) => expect(Math.abs(step - 103.2)).toBeLessThanOrEqual(8));
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone; raised 0.5 m is 128 higher, its end 64 higher again
+      [1408, 256, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(8));
+      [1920, 320, 1664].forEach((value, axis) => expect(Math.abs(placed.path[5][axis] - value)).toBeLessThanOrEqual(8));
+    });
+
     test("a crab, with no other levels to take it from, is an error saying so", () => {
       expect(() => withCrab({ readOtherLevel: undefined })).toThrow(/crab/);
     });
@@ -270,15 +292,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const withTurtle = (more: Partial<MapOptions> = {}) => make(MAP_OBJ, { scale: 256, objects: [turtle()], readOtherLevel, ...more });
     const soundsOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
 
-    test("a turtle walks n. sanity beach's first turtle's path straightened, along the route (z) and flat, its middle at the turtle's spot", () => {
+    test("without a path of its own, a turtle walks n. sanity beach's first turtle's path straightened, along the route (z) and flat, its middle at the turtle's spot", () => {
       const beachPath = entityPath(levelEntity(readLevel(STREAMS, N_SANITY_BEACH), ...ENEMY_ENTITIES.turtle));
       const middle = beachPath[Math.floor(beachPath.length / 2)];
       const [placed] = enemies(withTurtle().zone);
       expect(placed.type).toEqual(ENEMY_ENTITIES.turtle);
       expect(placed.path.length).toBe(beachPath.length);
-      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone; it walks back and forth, so either way round
       const [x, y, z] = [1408, 128, 1664];
-      placed.path.forEach((point, index) => {
+      const alongTheRoute = [...placed.path].sort((first, second) => first[2] - second[2]);
+      alongTheRoute.forEach((point, index) => {
         expect(point[0]).toBe(placed.path[0][0]);
         expect(point[1]).toBe(placed.path[0][1]);
         expect(Math.abs(point[0] - x)).toBeLessThanOrEqual(8);
@@ -302,6 +325,33 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(everyEid.filter((eid) => eid === stringToEid("Ju49T")).length).toBe(1);
       expect(everyEid.filter((eid) => eid === stringToEid("fli0A")).length).toBe(1);
       expect(everyEid.length).toBe(new Set(everyEid).size);
+    });
+
+    test("a turtle walks its own path: through its nodes, in equal steps about as long as n. sanity beach's (100)", () => {
+      const lPath: Vec3[] = [[0, 0, 0], [0, 2, 0], [2, 2, 0]]; // 2 m along the route, then 2 m across: 1024 units at scale 256
+      const built = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "turtle", path: lPath })], readOtherLevel });
+      const [placed] = enemies(built.zone);
+      expect(placed.path.length).toBe(11); // 10 steps of 102.4
+      const [start, corner, end] = [placed.path[0], placed.path[5], placed.path[10]];
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(start[axis] - value)).toBeLessThanOrEqual(8));
+      expect(Math.abs(corner[0] - start[0])).toBeLessThanOrEqual(8);
+      expect(Math.abs(Math.abs(corner[2] - start[2]) - 512)).toBeLessThanOrEqual(8);
+      expect(Math.abs(Math.abs(end[0] - corner[0]) - 512)).toBeLessThanOrEqual(8);
+      expect(Math.abs(end[2] - corner[2])).toBeLessThanOrEqual(8);
+      placed.path.forEach((point) => expect(Math.abs(point[1] - 128)).toBeLessThanOrEqual(8));
+    });
+
+    test("a turtle's speed spaces its path's points: twice as fast, twice as far apart, the same distance along", () => {
+      const path: Vec3[] = [[0, 0, 0], [4, 0, 0]]; // 4 m across: 1024 units at scale 256
+      const placedAt = (speed?: number) =>
+        enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "turtle", path, speed })], readOtherLevel }).zone)[0].path;
+      const steps = (points: Vec3[]) => points.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - points[index][axis])));
+      const [normal, fast, slow] = [placedAt(), placedAt(2), placedAt(0.5)];
+      expect([normal.length, fast.length, slow.length]).toEqual([11, 6, 21]); // steps of 102.4, 204.8 and 51.2
+      steps(fast).forEach((step) => expect(Math.abs(step - 204.8)).toBeLessThanOrEqual(8));
+      steps(slow).forEach((step) => expect(Math.abs(step - 51.2)).toBeLessThanOrEqual(8));
+      expect(Math.abs(fast[5][0] - normal[10][0])).toBeLessThanOrEqual(8);
     });
 
     test("a turtle, with no other levels to take it from, is an error saying so", () => {

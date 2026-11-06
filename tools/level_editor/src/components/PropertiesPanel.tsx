@@ -1,20 +1,25 @@
 // the selected object's settings, or the level's (its level.cfg) with nothing selected
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
-import { BOX_TYPES, boxTypeName, type BoxType, type LevelObject, type Vec3 } from "../objects";
+import { enemyPath, inNodes, nodeCount, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
+import { BOX_TYPES, boxTypeName, PATH_ENEMIES, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { SKY_ROWS, type Sky } from "../sky";
-import { ChoiceField, ColourField, NumberField } from "./Fields";
+import { ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
 import "./PropertiesPanel.css";
 
-const AXES = ["x", "y"] as const; // z is the floor's height under the object, set by placing, dragging and Drop to floor
+const AXES = ["x", "y"] as const;
+const STONE_START_STEP = 0.05; // the stone start slider's steps, of its track
+const SPEED_STEP = 0.25; // the speed slider's steps, times the game's own pace
+const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
-export default function PropertiesPanel({ state, warnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
+export default function PropertiesPanel({ state, warnings, pathWarnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
   state: EditorState;
   warnings: Set<number>;
+  pathWarnings: Set<number>; // the crabs and turtles whose paths leave the floor or run through a wall
   scale: number;
   triangles: Triangle[]; // the level's, for dropping a box to the floor
   dispatch: (action: EditorAction) => void;
@@ -26,6 +31,7 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
   const object = index === null ? null : state.objects[index];
   const [hasNoFloor, setHasNoFloor] = useState(false); // the last drop found no floor below the box
   useEffect(() => setHasNoFloor(false), [object]);
+  const grabbedPath = useRef<Vec3[] | null>(null); // the path as it was when its node slider was grabbed
 
   const change = (changes: Partial<LevelObject>) => {
     if (index !== null) {
@@ -67,6 +73,109 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
       />
     </>
   );
+
+  // the selected node of a crab's or turtle's path: where it is in blender
+  const renderNodeFields = (enemy: LevelObject, node: number) => {
+    const turn = levelCfg ? levelCfg.turn : 0;
+    const position = pathPositions(enemy, turn, scale)[node];
+    const setAxis = (axis: number, value: number) => {
+      const moved = position.map((current, axisIndex) => (axisIndex === axis ? value : current)) as Vec3;
+      change({ path: withNodeAt(enemy, node, moved, turn, scale) });
+    };
+    const step = isShiftHeld ? 0.01 : 0.1;
+    return (
+      <>
+        <h3>node {node + 1} of {nodeCount(enemy)}</h3>
+        {NODE_AXES.map((axis, axisIndex) => (
+          <NumberField key={axis} label={axis} value={position[axisIndex]} step={step} onChange={(value) => setAxis(axisIndex, value)} />
+        ))}
+      </>
+    );
+  };
+
+  // how many nodes a crab's or turtle's path has: each count respaces the path
+  // as it was when the slider was grabbed, so sliding down and back keeps its
+  // shape, and the whole slide is one change to undo
+  const renderNodeSlider = (enemy: LevelObject) => {
+    const turn = levelCfg ? levelCfg.turn : 0;
+    const grab = () => {
+      grabbedPath.current = enemyPath(enemy, turn, scale);
+      dispatch({ type: "checkpoint" });
+    };
+    const changeCount = (count: number) => {
+      const path = inNodes(grabbedPath.current ?? enemyPath(enemy, turn, scale), count);
+      if (index !== null) {
+        dispatch({ type: "update", index, changes: { path }, record: false });
+      }
+    };
+    return <SliderField label="nodes" value={nodeCount(enemy)} min={2} max={PATH_NODES_MAX} onGrab={grab} onChange={changeCount} />;
+  };
+
+  // how fast a crab or turtle walks, times the game's own pace; the whole slide is one change to undo
+  const renderSpeedSlider = (enemy: LevelObject) => {
+    const changeSpeed = (speed: number) => {
+      if (index !== null) {
+        dispatch({ type: "update", index, changes: { speed }, record: false });
+      }
+    };
+    return (
+      <SliderField
+        label="speed ×"
+        value={enemy.speed ?? 1}
+        min={SPEED_MIN}
+        max={SPEED_MAX}
+        step={SPEED_STEP}
+        onGrab={() => dispatch({ type: "checkpoint" })}
+        onChange={changeSpeed}
+      />
+    );
+  };
+
+  // turns a crab's or turtle's path round, so it starts at the other end; a selected node stays selected
+  const renderTurnRoundButton = (enemy: LevelObject) => {
+    const turnRound = () => {
+      const turn = levelCfg ? levelCfg.turn : 0;
+      change({ path: turnedRound(enemy, turn, scale) });
+      if (index !== null && state.selectedNode !== null) {
+        dispatch({ type: "selectNode", index, node: nodeTurnedRound(state.selectedNode, nodeCount(enemy)) });
+      }
+    };
+    return (
+      <button className="drop" onClick={turnRound} title="It starts at the solid end, and turns round at the faded one">
+        Reverse direction
+      </button>
+    );
+  };
+
+  // where along its track a rolling stone starts, 0 (its first end) to 1 (its far end); the whole slide is one change to undo
+  const renderStoneStartSlider = (stone: LevelObject) => {
+    const changeStart = (start: number) => {
+      if (index !== null) {
+        dispatch({ type: "update", index, changes: { start }, record: false });
+      }
+    };
+    return (
+      <SliderField
+        label="start"
+        value={stone.start ?? 0}
+        min={0}
+        max={1}
+        step={STONE_START_STEP}
+        onGrab={() => dispatch({ type: "checkpoint" })}
+        onChange={changeStart}
+      />
+    );
+  };
+
+  // which way a rolling stone rolls first from where it starts: on along its track, or back
+  const renderStoneReverseButton = (stone: LevelObject) => (
+    <button className="drop" onClick={() => change({ reverse: stone.reverse ? undefined : true })} title="The arrow at the dot shows which way it rolls first">
+      Reverse direction
+    </button>
+  );
+
+  const hasPath = (selected: LevelObject) => selected.kind === "enemy" && PATH_ENEMIES.includes(selected.enemy!);
+  const isStone = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy === "rolling_stone";
 
   // raise is its height above the floor, kept as it's dragged about
   const renderObjectFields = (selected: LevelObject) => (
@@ -167,8 +276,15 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
       {object && index !== null ? (
         <>
           {renderObjectFields(object)}
+          {hasPath(object) && renderNodeSlider(object)}
+          {hasPath(object) && renderSpeedSlider(object)}
+          {hasPath(object) && renderTurnRoundButton(object)}
+          {isStone(object) && renderStoneStartSlider(object)}
+          {isStone(object) && renderStoneReverseButton(object)}
+          {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
+          {pathWarnings.has(index) && <p className="warning">This path leaves the floor or runs through a wall.</p>}
           <button className="delete" onClick={() => dispatch({ type: "remove", index })}>Delete</button>
         </>
       ) : (

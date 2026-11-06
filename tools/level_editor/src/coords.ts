@@ -53,6 +53,17 @@ export function enemyTurn(turn: number): number {
   return Math.atan2(-facingX, -facingZ) + 0; // + 0 turns -0 into 0
 }
 
+// how far to turn an enemy's model about the viewport's y, so its front (+z)
+// faces level from one place (in blender) towards another: the way a turtle
+// walks. facing the player (at the level's turn) if they're in one place
+export function facingFrom(from: Vec3, to: Vec3, turn = 0): number {
+  const [x, , z] = blenderToView([to[0] - from[0], to[1] - from[1], 0]);
+  if (Math.hypot(x, z) < 1e-9) {
+    return enemyTurn(turn);
+  }
+  return Math.atan2(x, z) + 0; // + 0 turns -0 into 0
+}
+
 // the middle of a rolling stone at each point of its path (in blender), for a
 // stone at at, raised by raise: jungle rollers' path, its middle a stone's radius
 // over the track's floor, which stands a box's height over the stone's spot, across the map
@@ -67,30 +78,12 @@ export function stonePath(at: Vec3, raise: number, turn: number, scale: number):
 }
 
 // how far a crab walks back and forth, in game units: n. sanity beach's first
-// crab's path, a straight line along the game's x (the level build's placeOnExamplePath)
+// crab's path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const CRAB_WALK = 1600;
 
-// the ends of a crab's path (in blender), for a crab at at, raised by raise: its
-// middle at the crab's spot, across the map as a rolling stone rolls
-export function crabPath(at: Vec3, raise: number, turn: number, scale: number): [Vec3, Vec3] {
-  const [acrossX, acrossY] = stoneRolling(turn);
-  const half = CRAB_WALK / 2 / scale;
-  const end = (side: number): Vec3 => [at[0] + side * acrossX * half, at[1] + side * acrossY * half, at[2] + raise];
-  return [end(-1), end(1)];
-}
-
 // how far a turtle walks back and forth, in game units: n. sanity beach's first
-// turtle's path, along the game's z (the route), straightened by the level build
+// turtle's path, along the game's z (the route), straightened (its default path, src/enemyPaths.ts)
 export const TURTLE_WALK = 2000;
-
-// the ends of a turtle's path (in blender), for a turtle at at, raised by raise:
-// its middle at the turtle's spot, along the route, the way the camera faces
-export function turtlePath(at: Vec3, raise: number, turn: number, scale: number): [Vec3, Vec3] {
-  const [alongX, alongY] = cameraFacing(turn);
-  const half = TURTLE_WALK / 2 / scale;
-  const end = (side: number): Vec3 => [at[0] + side * alongX * half, at[1] + side * alongY * half, at[2] + raise];
-  return [end(-1), end(1)];
-}
 
 // a box's size in blender metres, for a level at scale game units a metre
 export function boxSize(scale: number): number {

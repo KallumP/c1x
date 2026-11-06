@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BOX_TYPES, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects } from "../../src/objects";
+import { BOX_TYPES, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type Vec3 } from "../../src/objects";
 
 describe("parseObjects", () => {
   test("reads spawn, end and boxes with their settings", () => {
@@ -144,7 +144,7 @@ describe("enemies", () => {
     ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, rolling_stone, crab, turtle)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
-    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: unknown setting path"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs and turtles do)"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -170,5 +170,132 @@ describe("enemies", () => {
   test("reads back what it writes", () => {
     const objects = parseObjects(`[{"kind": "enemy", "type": "rolling_stone", "at": [8, 35.5, 0], "raise": 0.5}]`);
     expect(parseObjects(formatObjects(objects))).toEqual(objects);
+  });
+});
+
+describe("enemy paths", () => {
+  test("a crab or turtle can have a path: its nodes, each from where the enemy stands, in metres", () => {
+    const objects = parseObjects(`[
+      {"kind": "enemy", "type": "crab", "at": [2, 30, 0], "path": [[-2, 0, 0], [0, 1, 0], [2, 0, 0]]},
+      {"kind": "enemy", "type": "turtle", "at": [3, 40, 0], "path": [[0, -2.5, 0], [0, 2.5, 0.5]]},
+      {"kind": "enemy", "type": "turtle", "at": [3, 50, 0]}
+    ]`);
+    expect(objects.map(({ path }) => path)).toEqual([[[-2, 0, 0], [0, 1, 0], [2, 0, 0]], [[0, -2.5, 0], [0, 2.5, 0.5]], undefined]);
+  });
+
+  test("writes a path after the rest, to the millimetre, and reads it back", () => {
+    const crab = { kind: "enemy" as const, enemy: "crab" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1, path: [[-2.00004, 0, 0], [2, 0.5, 0]] as Vec3[] };
+    const text = formatObjects([crab]);
+    expect(text).toBe([
+      "[",
+      '  {"kind": "enemy", "type": "crab", "at": [1, 2, 0], "path": [[-2, 0, 0], [2, 0.5, 0]]}',
+      "]",
+      "",
+    ].join("\n"));
+    expect(parseObjects(text)).toEqual([{ ...crab, path: [[-2, 0, 0], [2, 0.5, 0]] }]);
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a plant has no path (crabs and turtles do)"],
+    ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: unknown setting path"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', `object 1: a path should be 2 to ${PATH_NODES_MAX} nodes`],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0]]}]', "object 1: a path's nodes should each be [x, y, z] in metres"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": "across"}]', "object 1: a path should be 2 to"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+
+  test(`a path can have up to ${20} nodes`, () => {
+    expect(PATH_NODES_MAX).toBe(20);
+    const nodes = Array.from({ length: PATH_NODES_MAX + 1 }, (_, index) => [index, 0, 0]);
+    expect(() => parseObjects(JSON.stringify([{ kind: "enemy", type: "turtle", at: [0, 0, 0], path: nodes }]))).toThrow("2 to 20 nodes");
+  });
+});
+
+describe("enemy speeds", () => {
+  test("a crab or turtle can have a speed: how many times the game's own pace it walks at", () => {
+    const objects = parseObjects(`[
+      {"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 2},
+      {"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "speed": 0.5},
+      {"kind": "enemy", "type": "turtle", "at": [0, 0, 0]}
+    ]`);
+    expect(objects.map(({ speed }) => speed)).toEqual([2, 0.5, undefined]);
+  });
+
+  test("writes a speed after the rest, and leaves out the game's own (1)", () => {
+    const turtle = { kind: "enemy" as const, enemy: "turtle" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1 };
+    expect(formatObjects([{ ...turtle, speed: 1.5 }])).toContain('"at": [1, 2, 0], "speed": 1.5}');
+    expect(formatObjects([{ ...turtle, speed: 1 }])).toContain('"at": [1, 2, 0]}');
+    const withPath = formatObjects([{ ...turtle, path: [[0, 0, 0], [1, 0, 0]], speed: 2 }]);
+    expect(withPath).toContain('"path": [[0, 0, 0], [1, 0, 0]], "speed": 2}');
+    expect(parseObjects(withPath)).toEqual([{ ...turtle, path: [[0, 0, 0], [1, 0, 0]], speed: 2 }]);
+  });
+
+  test(`a speed is ${0.25} to ${3}`, () => {
+    expect([SPEED_MIN, SPEED_MAX]).toEqual([0.25, 3]);
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs and turtles do)"],
+    ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 4}]', "object 1: speed should be 0.25 to 3 (times the game's own pace)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 0.1}]', "object 1: speed should be 0.25 to 3"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": "fast"}]', "object 1: speed should be 0.25 to 3"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+});
+
+describe("a rolling stone's direction", () => {
+  test("a rolling stone can be reversed, to start at the other end of its track", () => {
+    const objects = parseObjects(`[
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": true},
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": false},
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0]}
+    ]`);
+    expect(objects.map(({ reverse }) => reverse)).toEqual([true, undefined, undefined]);
+  });
+
+  test("writes it when it's reversed, and reads it back", () => {
+    const stone = { kind: "enemy" as const, enemy: "rolling_stone" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1 };
+    const text = formatObjects([{ ...stone, reverse: true }]);
+    expect(text).toContain('"at": [1, 2, 0], "reverse": true}');
+    expect(parseObjects(text)).toEqual([{ ...stone, reverse: true }]);
+    expect(formatObjects([stone])).toContain('"at": [1, 2, 0]}');
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "reverse": true}]', "object 1: a crab has no reverse (rolling stones do; reverse a crab's path instead)"],
+    ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "reverse": true}]', "object 1: unknown setting reverse"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": "yes"}]', "object 1: reverse should be true or false"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+});
+
+describe("a rolling stone's start", () => {
+  test("a rolling stone can start partway along its track: 0 its first end, 1 its far end", () => {
+    const objects = parseObjects(`[
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 0.5},
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 1, "reverse": true},
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0]}
+    ]`);
+    expect(objects.map(({ start, reverse }) => [start, reverse])).toEqual([[0.5, undefined], [1, true], [undefined, undefined]]);
+  });
+
+  test("writes it when it isn't 0, before reverse, and reads it back", () => {
+    const stone = { kind: "enemy" as const, enemy: "rolling_stone" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1 };
+    const text = formatObjects([{ ...stone, start: 0.25, reverse: true }]);
+    expect(text).toContain('"at": [1, 2, 0], "start": 0.25, "reverse": true}');
+    expect(parseObjects(text)).toEqual([{ ...stone, start: 0.25, reverse: true }]);
+    expect(formatObjects([{ ...stone, start: 0 }])).toContain('"at": [1, 2, 0]}');
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "start": 0.5}]', "object 1: a turtle has no start (rolling stones do)"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 1.5}]', "object 1: start should be 0 to 1 (how far along its track it starts)"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": "middle"}]', "object 1: start should be 0 to 1"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
   });
 });

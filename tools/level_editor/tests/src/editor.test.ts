@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { editorReducer, emptyEditor, newObject, type EditorAction, type EditorState } from "../../src/editor";
+import { draggedTo, editorReducer, emptyEditor, newObject, type EditorAction, type EditorState } from "../../src/editor";
 import type { LevelObject } from "../../src/objects";
 
 const box = (x: number): LevelObject => newObject("basic", [x, 0, 0]);
@@ -140,5 +140,79 @@ describe("select", () => {
     const state = editorReducer(withObjects([box(1), box(2)]), { type: "select", index: 1 });
     expect(state.selected).toBe(1);
     expect(editorReducer(state, { type: "select", index: null }).selected).toBeNull();
+  });
+});
+
+describe("a path's nodes", () => {
+  const crab = newObject("crab", [0, 0, 0]);
+  const withCrabSelected = () => editorReducer(withObjects([box(1), crab]), { type: "select", index: 1 });
+
+  test("selecting a node selects its enemy and the node", () => {
+    const state = editorReducer(withObjects([box(1), crab]), { type: "selectNode", index: 1, node: 2 });
+    expect([state.selected, state.selectedNode]).toEqual([1, 2]);
+  });
+
+  test("nothing has a node selected to start with, or after selecting an object", () => {
+    expect(withObjects([crab]).selectedNode).toBeNull();
+    const nodeSelected = editorReducer(withCrabSelected(), { type: "selectNode", index: 1, node: 2 });
+    expect(editorReducer(nodeSelected, { type: "select", index: 1 }).selectedNode).toBeNull();
+    expect(editorReducer(nodeSelected, { type: "select", index: null }).selectedNode).toBeNull();
+  });
+
+  test("removing the enemy lets go of its node", () => {
+    const nodeSelected = editorReducer(withCrabSelected(), { type: "selectNode", index: 1, node: 2 });
+    expect(editorReducer(nodeSelected, { type: "remove", index: 1 }).selectedNode).toBeNull();
+  });
+
+  test("undoing keeps the node selected while the path still has it, else lets go of it", () => {
+    const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0], [2, 0, 0]];
+    const withPath = editorReducer(withCrabSelected(), { type: "update", index: 1, changes: { path } });
+    const secondSelected = editorReducer(withPath, { type: "selectNode", index: 1, node: 1 });
+    const shortened = editorReducer(secondSelected, { type: "update", index: 1, changes: { path: path.slice(0, 2) } });
+    expect(editorReducer(shortened, { type: "undo" }).selectedNode).toBe(1);
+    const twoNodes = editorReducer(withObjects([box(1), { ...crab, path: path.slice(0, 2) }]), { type: "update", index: 1, changes: { path } });
+    const third = editorReducer(twoNodes, { type: "selectNode", index: 1, node: 2 });
+    expect(editorReducer(third, { type: "undo" }).selectedNode).toBeNull();
+  });
+});
+
+describe("dragging", () => {
+  const crab = newObject("crab", [1, 2, 3]);
+
+  test("an object is moved to where it's dragged", () => {
+    expect(draggedTo(crab, null, [4, 5, 6], 0, 400)).toEqual({ at: [4, 5, 6] });
+  });
+
+  test("a path's node is moved to where it's dragged, the enemy staying put", () => {
+    const changes = draggedTo({ ...crab, path: [[0, 0, 0], [1, 0, 0]] }, 1, [4, 5, 3], 0, 400);
+    expect(changes).toEqual({ path: [[0, 0, 0], [3, 3, 0]] });
+  });
+
+  test("a node's drag is undone in one go, back to the path before it", () => {
+    const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0]];
+    let state = editorReducer(withObjects([{ ...crab, path }]), { type: "selectNode", index: 0, node: 1 });
+    state = editorReducer(state, { type: "checkpoint" });
+    for (const x of [2, 3, 4]) {
+      state = editorReducer(state, { type: "update", index: 0, changes: draggedTo(state.objects[0], 1, [x, 2, 3], 0, 400), record: false });
+    }
+    expect(state.objects[0].path).toEqual([[0, 0, 0], [3, 0, 0]]);
+    expect(editorReducer(state, { type: "undo" }).objects[0].path).toEqual(path);
+  });
+});
+
+describe("sliding a path's node count down", () => {
+  test("lets go of a selected node the path no longer has, though the slide isn't recorded yet", () => {
+    const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0], [2, 0, 0], [3, 0, 0]];
+    let state = editorReducer(withObjects([{ ...newObject("turtle", [0, 0, 0]), path }]), { type: "selectNode", index: 0, node: 3 });
+    state = editorReducer(state, { type: "checkpoint" });
+    state = editorReducer(state, { type: "update", index: 0, changes: { path: path.slice(0, 3) }, record: false });
+    expect(state.selectedNode).toBeNull();
+  });
+
+  test("keeps a selected node the path still has", () => {
+    const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0], [2, 0, 0]];
+    let state = editorReducer(withObjects([{ ...newObject("turtle", [0, 0, 0]), path }]), { type: "selectNode", index: 0, node: 1 });
+    state = editorReducer(state, { type: "update", index: 0, changes: { path: path.slice(0, 2) }, record: false });
+    expect(state.selectedNode).toBe(1);
   });
 });

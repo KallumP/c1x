@@ -2,6 +2,7 @@
 // as the level's world meshes and collision, crash, and the objects placed in
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
+import { inEvenSteps, PATH_STEP, pathPositions } from "../src/enemyPaths";
 import type { LevelObject } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
@@ -9,7 +10,7 @@ import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
-  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, linkSwitches, newEntityIds, STRAIGHTENED_PATHS, straightened, UNBREAKABLE_BOXES,
+  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA,
   WARP_PAD, withEntityId, withPath, withPosition, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
@@ -135,16 +136,17 @@ class ObjectPlacer {
     this.entities[zone].push(withPosition(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), at));
   }
 
-  // an enemy that walks the path of its example from another level (such as
-  // a crab), in the zone its spot is in, the path's middle at its spot; a
-  // turtle's straightened, as it follows the slopes of its beach
-  placeOnExamplePath(enemy: LevelObject, example: Buffer): void {
-    const { zone, at } = this.inZone(this.positionOf(enemy));
-    const examplePath = entityPath(example);
-    const path = STRAIGHTENED_PATHS.includes(enemy.enemy!) ? straightened(examplePath) : examplePath;
-    const middle = path[Math.floor(path.length / 2)];
-    const moved = path.map((point) => point.map((value, axis) => at[axis] + value - middle[axis]) as Vec3);
-    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), moved));
+  // an enemy taken from another level that walks back and forth along a path (a
+  // crab or turtle), in the zone its spot is in: its path's nodes (or its default
+  // path's) in the level, in steps as long as its example's, times its speed (the
+  // game moves it a step at a time, so longer steps are faster)
+  placeOnPath(enemy: LevelObject, example: Buffer): void {
+    const position = this.positionOf(enemy);
+    const { zone, at } = this.inZone(position);
+    const nodes = pathPositions(enemy, this.turn, this.scale).map((node) => this.positionOf({ ...enemy, at: node, raise: 0 }));
+    const step = PATH_STEP * (enemy.speed ?? 1);
+    const path = inEvenSteps(nodes, step).map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
+    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
   }
 
   // a rolling stone, in the zone its spot is in, rolling jungle rollers' path along its track
@@ -152,7 +154,8 @@ class ObjectPlacer {
     const { zone, at } = this.trackPlace(stone, track);
     const path = track.path.map((point) => point.map((value, axis) => value + at[axis]) as Vec3);
     const [type, subtype] = ENEMY_ENTITIES.rolling_stone;
-    this.entities[zone].push(withPath(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), path));
+    const placed = withPath(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), path);
+    this.entities[zone].push(withInitFlagA(placed, stoneStartFlag(stone.start ?? 0, stone.reverse === true)));
   }
 
   // the zone an object's in
@@ -259,7 +262,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   enemies.filter((enemy) => enemy.enemy === "plant").forEach((plant) => placer.placePlant(plant));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   for (const enemy of enemies.filter(({ enemy: type }) => donorLevels.has(type!))) {
-    placer.placeOnExamplePath(enemy, levelEntity(donorLevels.get(enemy.enemy!)!, ...ENEMY_ENTITIES[enemy.enemy!]));
+    placer.placeOnPath(enemy, levelEntity(donorLevels.get(enemy.enemy!)!, ...ENEMY_ENTITIES[enemy.enemy!]));
   }
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
   if (end) {
