@@ -45,7 +45,8 @@ export interface LevelObject {
   enemy?: EnemyType;    // an enemy's type
   path?: Vec3[];        // a crab's or turtle's path: its nodes, in metres from where it stands (at, raised)
   speed?: number;       // how many times the game's own pace a crab or turtle walks at (1 without one)
-  reverse?: boolean;    // a rolling stone that starts at the other end of its track (true, or none)
+  start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
+  reverse?: boolean;    // a rolling stone that rolls back towards its first end first (true, or none)
 }
 
 // a box's type name, from its type or its subtype number
@@ -58,7 +59,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type", "path", "speed", "reverse"];
+const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
@@ -110,7 +111,22 @@ function readSpeed(fields: Record<string, unknown>, enemy: EnemyType, objectNumb
   return { speed };
 }
 
-// whether a rolling stone starts at the other end of its track, from its fields in objects.json
+// how far along its track a rolling stone starts, from its fields in objects.json (none if it hasn't a start)
+function readStart(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "start"> {
+  if (!("start" in fields)) {
+    return {};
+  }
+  if (enemy !== "rolling_stone") {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no start (rolling stones do)`);
+  }
+  const start = fields.start;
+  if (!isNumber(start) || start < 0 || start > 1) {
+    throw new Error(`object ${objectNumber}: start should be 0 to 1 (how far along its track it starts)`);
+  }
+  return { start };
+}
+
+// whether a rolling stone rolls back towards its first end first, from its fields in objects.json
 function readReverse(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "reverse"> {
   if (!("reverse" in fields)) {
     return {};
@@ -200,6 +216,7 @@ export function parseObjects(text: string): LevelObject[] {
       Object.assign(object, readEnemy(fields, objectNumber));
       Object.assign(object, readPath(fields, object.enemy!, objectNumber));
       Object.assign(object, readSpeed(fields, object.enemy!, objectNumber));
+      Object.assign(object, readStart(fields, object.enemy!, objectNumber));
       Object.assign(object, readReverse(fields, object.enemy!, objectNumber));
     }
 
@@ -232,6 +249,9 @@ function formatObject(object: LevelObject): string {
   }
   if (object.speed !== undefined && object.speed !== 1) {
     parts.push(`"speed": ${object.speed}`);
+  }
+  if (object.start !== undefined && object.start !== 0) {
+    parts.push(`"start": ${object.start}`);
   }
   if (object.reverse) {
     parts.push(`"reverse": true`);
