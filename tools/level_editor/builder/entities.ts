@@ -21,8 +21,8 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // each enemy's entity type and subtype: jungle rollers' biting plant (PlanC) and
 // its rolling stone wheel (JunOC), which rolls back and forth along its path,
 // and n. sanity beach's crab (CrabC), which walks back and forth along its path,
-// and turtle (TurtC), which does too
-export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0] };
+// and turtle (TurtC), which does too, and the great gate's native (SheNC)
+export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0] };
 // not in the level's total (an iron outline fills in as an iron box)
 // a rolling stone's first init flag is where in its cycle along its path and
 // back it starts (its script's, seen in the game): 0 at its first point rolling

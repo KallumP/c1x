@@ -30,6 +30,7 @@ export const ENEMY_COLOURS: Record<EnemyType, string> = {
   rolling_stone: "#8d8a5f",
   crab: "#f06a3c",
   turtle: "#2aa198",
+  native: "#c98a3b",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";

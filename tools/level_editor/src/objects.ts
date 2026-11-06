@@ -21,9 +21,9 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // rollers' biting plant, and its stone wheel, which comes with its track and
 // rolls back and forth along it), and those taken from other levels (n. sanity
 // beach's crab, which walks back and forth across the map, and its turtle, which
-// walks back and forth along the route). the level build places them by their
+// walks back and forth along the route, and the great gate's native). the level build places them by their
 // entity (builder/entities.ts)
-export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle"] as const;
+export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
