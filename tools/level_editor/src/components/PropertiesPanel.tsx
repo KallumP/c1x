@@ -4,13 +4,14 @@ import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, pathPositions, withNodeAt } from "../enemyPaths";
-import { BOX_TYPES, boxTypeName, PATH_ENEMIES, PATH_NODES_MAX, type BoxType, type LevelObject, type Vec3 } from "../objects";
+import { BOX_TYPES, boxTypeName, PATH_ENEMIES, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { SKY_ROWS, type Sky } from "../sky";
 import { ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
 import "./PropertiesPanel.css";
 
 const AXES = ["x", "y"] as const;
+const SPEED_STEP = 0.25; // the speed slider's steps, times the game's own pace
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
@@ -107,6 +108,26 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
       }
     };
     return <SliderField label="nodes" value={nodeCount(enemy)} min={2} max={PATH_NODES_MAX} onGrab={grab} onChange={changeCount} />;
+  };
+
+  // how fast a crab or turtle walks, times the game's own pace; the whole slide is one change to undo
+  const renderSpeedSlider = (enemy: LevelObject) => {
+    const changeSpeed = (speed: number) => {
+      if (index !== null) {
+        dispatch({ type: "update", index, changes: { speed }, record: false });
+      }
+    };
+    return (
+      <SliderField
+        label="speed ×"
+        value={enemy.speed ?? 1}
+        min={SPEED_MIN}
+        max={SPEED_MAX}
+        step={SPEED_STEP}
+        onGrab={() => dispatch({ type: "checkpoint" })}
+        onChange={changeSpeed}
+      />
+    );
   };
 
   const hasPath = (selected: LevelObject) => selected.kind === "enemy" && PATH_ENEMIES.includes(selected.enemy!);
@@ -211,6 +232,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
         <>
           {renderObjectFields(object)}
           {hasPath(object) && renderNodeSlider(object)}
+          {hasPath(object) && renderSpeedSlider(object)}
           {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
