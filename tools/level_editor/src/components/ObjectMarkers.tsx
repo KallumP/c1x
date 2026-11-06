@@ -4,7 +4,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
-import { pathPositions } from "../enemyPaths";
+import { nodesUnderEnds, pathPositions } from "../enemyPaths";
 import type { LevelObject, Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
@@ -15,13 +15,15 @@ const BOX_EDGE_COLOUR = "#000000";
 const HANDLE_SIZE = 0.15;   // a path node's handle's radius, of a box's size
 const SELECTED_GLOW = 0.35; // how much brighter the selected enemy's model is
 
-// how tall a crab's and turtle's models are, in game units: the handles on the
-// ends of their paths float this far up (and a little more), clear of the
-// models standing there, so they can be clicked
-const WALKER_HEIGHTS = {
-  crab: shapeBounds(ENEMY_SHAPES.crab).max[1],
-  turtle: shapeBounds(ENEMY_SHAPES.turtle).max[1],
+// how big a crab's and turtle's models are, in game units: how tall, and how
+// far they reach out from their middles, whichever way they're turned. the
+// handles of the nodes under the models at the ends of their paths float
+// above them (and a little more), so they can be clicked
+const walkerSize = (parts: ShapePart[]) => {
+  const { min, max } = shapeBounds(parts);
+  return { height: max[1], reach: Math.max(-min[0], max[0], -min[2], max[2]) };
 };
+const WALKER_SIZES = { crab: walkerSize(ENEMY_SHAPES.crab), turtle: walkerSize(ENEMY_SHAPES.turtle) };
 
 // where an object's base is in the viewport, raised as it is in the game
 function base(object: LevelObject): Vec3 {
@@ -199,12 +201,13 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // the handles on a path's nodes: those on its ends above the enemy standing there
-  const renderPathHandles = (positions: Vec3[], index: number, enemy: "crab" | "turtle", colour: string) =>
-    positions.map((position, nodeIndex) => {
-      const isEnd = nodeIndex === 0 || nodeIndex === positions.length - 1;
-      return renderPathHandle(position, index, nodeIndex, colour, isEnd ? WALKER_HEIGHTS[enemy] : 0);
-    });
+  // the handles on a path's nodes: those under the enemy at either end above it
+  const renderPathHandles = (positions: Vec3[], index: number, enemy: "crab" | "turtle", colour: string) => {
+    const { height, reach } = WALKER_SIZES[enemy];
+    const underEnds = nodesUnderEnds(positions, reach / scale);
+    return positions.map((position, nodeIndex) =>
+      renderPathHandle(position, index, nodeIndex, colour, underEnds[nodeIndex] ? height : 0));
+  };
 
   // which way an enemy at an end of its path faces: a turtle back into its path
   // (it turns to face the way it walks, seen in the game); a crab the player

@@ -71,6 +71,14 @@ export function withNodeCount(object: LevelObject, count: number, turn: number, 
   return inNodes(enemyPath(object, turn, scale), count);
 }
 
+// which of a path's nodes (in blender) are under the enemy drawn at either end:
+// the ends, and any node within reach of one, seen from above
+export function nodesUnderEnds(positions: Vec3[], reach: number): boolean[] {
+  const ends = [positions[0], positions[positions.length - 1]];
+  const flatDistance = (first: Vec3, second: Vec3) => Math.hypot(first[0] - second[0], first[1] - second[1]);
+  return positions.map((position) => ends.some((end) => flatDistance(position, end) <= reach));
+}
+
 // how long a path is, along all its nodes
 export function pathLength(nodes: Vec3[]): number {
   return nodes.slice(1).reduce((sum, node, index) => sum + distance(nodes[index], node), 0);
