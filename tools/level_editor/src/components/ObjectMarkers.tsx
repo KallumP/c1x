@@ -156,8 +156,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  const renderPlant = (object: LevelObject, index: number) =>
-    renderEnemyModel(ENEMY_SHAPES.plant, base(object), index);
+  // an enemy that stands where it's placed: a plant, or a native
+  const renderStanding = (object: LevelObject, index: number, enemy: "plant" | "native") =>
+    renderEnemyModel(ENEMY_SHAPES[enemy], base(object), index);
 
   // the rolling stone: a wheel where it starts along its track, turned to roll across the map as the game rolls it
   const renderStone = (object: LevelObject, index: number) => {
@@ -271,8 +272,8 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     if (object.enemy === "crab" || object.enemy === "turtle") {
       return renderPathWalker(object, index);
     }
-    if (object.enemy !== "rolling_stone") {
-      return renderPlant(object, index);
+    if (object.enemy === "plant" || object.enemy === "native") {
+      return renderStanding(object, index, object.enemy);
     }
     return (
       <>
