@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, nodesUnderEnds, respaced, withNodeAt, withNodeCount } from "../../src/enemyPaths";
+import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
@@ -86,5 +86,20 @@ describe("nodes under the enemy at an end of its path", () => {
 
   test("whatever their height", () => {
     expect(nodesUnderEnds([[0, 0, 0], [0.2, 0, 5], [3, 0, 0]], 0.5)).toEqual([true, true, true]);
+  });
+});
+
+describe("turning a path round", () => {
+  test("reverses its nodes, so the enemy starts at the other end", () => {
+    const bent = enemy("turtle", { path: [[0, 0, 0], [0, 2, 0], [2, 2, 0]] });
+    expect(turnedRound(bent, 0, 400)).toEqual([[2, 2, 0], [0, 2, 0], [0, 0, 0]]);
+  });
+
+  test("an enemy without a path of its own gets its default path, turned round", () => {
+    expect(noMinusZero(turnedRound(enemy("crab"), 0, 400))).toEqual([[2, 0, 0], [1, 0, 0], [0, 0, 0], [-1, 0, 0], [-2, 0, 0]]);
+  });
+
+  test("a node is the same node after, counted from the other end", () => {
+    expect([0, 1, 4].map((node) => nodeTurnedRound(node, 5))).toEqual([4, 3, 0]);
   });
 });
