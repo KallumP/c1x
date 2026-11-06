@@ -98,12 +98,12 @@ typedef enum {
 
 typedef enum {
   noController   = 0,
-  noteOnVel      = 1,
-  noteOnKeynum   = 2,
+  noteOnVel      = 2,
+  noteOnKeynum   = 3,
   polyPressure   = 10,
   chanPressure   = 13,
   pitchWheel     = 14,
-  pitchWheelSens = 18,
+  pitchWheelSens = 16,
   link           = 127
 } __attribute__((packed)) SFCtrlPalette;
 
