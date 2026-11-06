@@ -376,6 +376,19 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(make(MAP_OBJ, { scale: 256, readOtherLevel }).level.nsd.ldat.execMap[ENEMY_ENTITIES.native[0]]).toBe(EID_NONE);
     });
 
+    test.skipIf(!hasBeach)("a level with a crab and a native reads each's level, has both, and nothing twice", () => {
+      const read: number[] = [];
+      const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
+      const both = make(MAP_OBJ, { scale: 256, objects: [native(), object("enemy", [-1, 4, 0], { enemy: "crab" })], readOtherLevel: readEach });
+      expect(read.sort((first, second) => first - second)).toEqual([0x9, 0x12]);
+      expect(enemies(both.zone).map(({ type }) => type)).toEqual(expect.arrayContaining([ENEMY_ENTITIES.native, ENEMY_ENTITIES.crab]));
+      const { execMap } = both.level.nsd.ldat;
+      expect([execMap[ENEMY_ENTITIES.native[0]], execMap[ENEMY_ENTITIES.crab[0]]]).toEqual([stringToEid("SheNC"), stringToEid("CrabC")]);
+      const everyEid = both.level.pages.flatMap((page) => (page.type === PAGE_TEXTURE ? [page.eid] : page.entries.map(({ eid }) => eid)));
+      expect(everyEid.filter((eid) => eid === stringToEid("fli0A")).length).toBe(1);
+      expect(everyEid.length).toBe(new Set(everyEid).size);
+    });
+
     test("a native, with no other levels to take it from, is an error saying so", () => {
       expect(() => withNative({ readOtherLevel: undefined })).toThrow(/native/);
     });
