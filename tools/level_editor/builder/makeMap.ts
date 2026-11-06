@@ -10,7 +10,7 @@ import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
-  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, UNBREAKABLE_BOXES,
+  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, STONE_FAR_END, UNBREAKABLE_BOXES, withInitFlagA,
   WARP_PAD, withEntityId, withPath, withPosition, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
@@ -154,7 +154,8 @@ class ObjectPlacer {
     const { zone, at } = this.trackPlace(stone, track);
     const path = track.path.map((point) => point.map((value, axis) => value + at[axis]) as Vec3);
     const [type, subtype] = ENEMY_ENTITIES.rolling_stone;
-    this.entities[zone].push(withPath(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), path));
+    const placed = withPath(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), path);
+    this.entities[zone].push(stone.reverse ? withInitFlagA(placed, STONE_FAR_END) : placed);
   }
 
   // the zone an object's in

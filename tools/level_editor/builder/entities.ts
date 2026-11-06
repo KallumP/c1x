@@ -24,6 +24,11 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // and turtle (TurtC), which does too
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0] };
 // not in the level's total (an iron outline fills in as an iron box)
+// a rolling stone's first init flag is how far along its path it starts (its
+// script's, seen in the game): 0 its first point, this its last. a stone starts
+// at the other end this way, not by turning its path round, which spins it backwards
+export const STONE_FAR_END = 128;
+
 export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch, BOX_TYPES.iron_arrow, BOX_TYPES.iron_outline];
 
 // a switch (! box) makes the outline boxes solid along a chain of ids in their
