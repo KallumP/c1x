@@ -162,7 +162,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   // the rolling stone: a wheel where it starts along its track, turned to roll across the map as the game rolls it
   const renderStone = (object: LevelObject, index: number) => {
     const radius = STONE_TRACK.radius / scale;
-    const path = stonePath(object.at, object.raise, turn, scale).map(blenderToView);
+    // stonePath runs the other way round from the game's path (seen in the game: start 0 is at
+    // the other end); the track looks the same either way, so only where the stone starts shows it
+    const path = [...stonePath(object.at, object.raise, turn, scale)].reverse().map(blenderToView);
     const [rollX, , rollZ] = blenderToView(stoneRolling(turn));
     return (
       <group position={pointAlongShare(path, object.start ?? 0)}>
