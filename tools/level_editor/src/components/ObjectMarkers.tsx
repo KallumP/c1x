@@ -174,14 +174,20 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // the track a rolling stone comes with: its outline on the floor, and the line its middle rolls along
+  // and a dot at the end of the line it starts from: its first point, or its last if it's reversed
   const renderStoneTrack = (object: LevelObject) => {
     const [rollX, , rollZ] = blenderToView(stoneRolling(turn));
     const [x, y, z] = base(object);
     const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
     const path = stonePath(object.at, object.raise, turn, scale).map(blenderToView);
     const colour = ENEMY_COLOURS.rolling_stone;
+    const start = object.reverse ? path[path.length - 1] : path[0];
     return (
       <>
+        <mesh position={start}>
+          <sphereGeometry args={[boxSize(scale) * HANDLE_SIZE, 12, 8]} />
+          <meshBasicMaterial color={colour} />
+        </mesh>
         <mesh position={[x, y + lift, z]} rotation={[0, Math.atan2(rollX, rollZ), 0]}>
           <boxGeometry args={[STONE_TRACK.width / scale, lift, STONE_TRACK.length / scale]} />
           <meshBasicMaterial color={colour} transparent opacity={TRACK_OPACITY} />

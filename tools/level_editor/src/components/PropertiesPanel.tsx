@@ -146,7 +146,15 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     );
   };
 
+  // starts a rolling stone at the other end of its track (its path stays as it is, so it spins the right way)
+  const renderStoneReverseButton = (stone: LevelObject) => (
+    <button className="drop" onClick={() => change({ reverse: stone.reverse ? undefined : true })} title="It starts at the end with the dot">
+      Reverse direction
+    </button>
+  );
+
   const hasPath = (selected: LevelObject) => selected.kind === "enemy" && PATH_ENEMIES.includes(selected.enemy!);
+  const isStone = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy === "rolling_stone";
 
   // raise is its height above the floor, kept as it's dragged about
   const renderObjectFields = (selected: LevelObject) => (
@@ -250,6 +258,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {hasPath(object) && renderNodeSlider(object)}
           {hasPath(object) && renderSpeedSlider(object)}
           {hasPath(object) && renderTurnRoundButton(object)}
+          {isStone(object) && renderStoneReverseButton(object)}
           {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
