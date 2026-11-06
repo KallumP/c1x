@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-06
+
+### Fixed
+
+- all sound and music playing far too quietly: the mixer divided every sound by the 24 voices it can play at once; it's now about 8 times louder, with music and sound effects in the same balance
+- some music instruments playing too loudly, such as Native Fortress's gong: each instrument's volume from the game's sound bank was dropped, so all of them played at full volume
+
 ## 2026-11-05
 
 ### Added
