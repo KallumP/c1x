@@ -8,7 +8,6 @@ import type { LevelObject, Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
 const PAD_UNITS = 400;   // the warp pad's radius, about
-const CRAB_SIZE = [700, 250]; // the crab's width (along the way it walks, sideways) and height, about
 const STONE_THICKNESS = 0.35; // of the rolling stone's radius
 const TRACK_OPACITY = 0.25;   // of the outline of a rolling stone's track
 const BOX_EDGE_COLOUR = "#000000";
@@ -163,20 +162,15 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
     );
   };
 
-  // the crab: a low block, wide along the way it walks (sideways, across the map, as the game walks it), and the line it walks along
+  // the crab: at both ends of the line it walks back and forth along (sideways, across the
+  // map, as the game walks it), where it turns round
   const renderCrab = (object: LevelObject, index: number) => {
-    const [width, height] = [CRAB_SIZE[0] / scale, CRAB_SIZE[1] / scale];
-    const [x, y, z] = base(object);
-    const [acrossX, , acrossZ] = blenderToView(stoneRolling(turn));
     const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
-    const path = crabPath(object.at, object.raise, turn, scale).map(blenderToView).map(([px, py, pz]): Vec3 => [px, py + lift, pz]);
+    const ends = crabPath(object.at, object.raise, turn, scale).map(blenderToView);
+    const path = ends.map(([x, y, z]): Vec3 => [x, y + lift, z]);
     return (
       <>
-        <mesh position={[x, y + height / 2, z]} rotation={[0, Math.atan2(acrossX, acrossZ), 0]}>
-          <boxGeometry args={[width / 2, height, width]} />
-          <meshLambertMaterial color={ENEMY_COLOURS.crab} />
-          <Edges color={edgeColour(index, ENEMY_COLOURS.crab)} />
-        </mesh>
+        {ends.map((end, endIndex) => renderEnemyModel(ENEMY_SHAPES.crab, end, index, endIndex))}
         <Line points={path} color={ENEMY_COLOURS.crab} lineWidth={2} />
       </>
     );

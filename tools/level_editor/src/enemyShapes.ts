@@ -83,9 +83,9 @@ function plant(): ShapePart[] {
 // one of the crab's eyes, on its stalk
 function crabEye(): ShapePart[] {
   return [
-    rod(10, 12, 70, [55, 185, 95], CRAB_COLOURS.shell),
-    ball(28, [55, 225, 100], CRAB_COLOURS.eye, { name: "eye" }),
-    ball(11, [55, 228, 125], CRAB_COLOURS.pupil),
+    rod(10, 12, 90, [55, 200, 95], CRAB_COLOURS.shell),
+    ball(28, [55, 248, 100], CRAB_COLOURS.eye, { name: "eye" }),
+    ball(11, [55, 251, 125], CRAB_COLOURS.pupil),
   ];
 }
 
