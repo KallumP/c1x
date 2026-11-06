@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, CRAB_WALK, enemyTurn, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, CRAB_WALK, enemyTurn, facingFrom, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -102,5 +102,19 @@ describe("enemies facing the player", () => {
 
   test("unturned, it isn't turned", () => {
     expect(enemyTurn(0)).toBe(0);
+  });
+});
+
+describe("an enemy facing the way it walks", () => {
+  const front = (yaw: number) => [Math.sin(yaw), 0, Math.cos(yaw)].map((value) => Math.round(value * 1000) / 1000 + 0);
+
+  test("turns its front (+z) from one place (in blender) towards another", () => {
+    expect(front(facingFrom([0, 0, 0], [0, 1, 0]))).toEqual(blenderToView([0, 1, 0]).map((value) => value + 0));
+    expect(front(facingFrom([0, 0, 0], [-1, 0, 0]))).toEqual([-1, 0, 0]);
+    expect(front(facingFrom([1, 1, 0], [2, 2, 5]))).toEqual([0.707, 0, -0.707]); // level, whatever the height
+  });
+
+  test("faces the player when it isn't going anywhere", () => {
+    expect(facingFrom([1, 1, 0], [1, 1, 0], 90)).toBe(enemyTurn(90));
   });
 });
