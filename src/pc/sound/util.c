@@ -248,6 +248,22 @@ int16_t FluidSynthAttenuation(int16_t centibels) {
   return (int16_t)scaled;
 }
 
+#define LINEAR_VELOCITY_ATTENUATION 480 /* centibels; half fluidsynth's default 960 */
+
+/*
+ * replace fluidsynth's default velocity-to-attenuation modulator (same
+ * source, destination and amount source) with half its amount: its 960 cB
+ * on a concave curve squares velocity, where the ps1 scales amplitude by it
+ */
+static void SetLinearVelocityModulator(sfInstModList *mod) {
+  zeromem(mod, sizeof(sfInstModList));
+  setsfm(mod->sfModSrcOper, noteOnVel, 0, 1, 0, concave); /* max to min, unipolar */
+  mod->sfModDestOper = initialAttenuation;
+  mod->modAmount = LINEAR_VELOCITY_ATTENUATION;
+  setsfm(mod->sfModAmtSrcOper, noController, 0, 0, 0, linear);
+  mod->sfModTransOper = _linear;
+}
+
 size_t VabToSf2(uint8_t *vab, uint8_t *sf2) {
   VabProg *prog, progs[128];
   VagBody *wave;
@@ -398,6 +414,8 @@ size_t VabToSf2(uint8_t *vab, uint8_t *sf2) {
     for (j=0;j<prog->atr->tones;j++) {
       atr = prog->vagatr[j];
       ibags[i][j]->wInstModNdx = ((sf2 - (uint8_t*)ck2) - 8) / sizeof(sfInstModList);
+      Sf2Next(sf2, sfInstModList, hrc.imod);
+      SetLinearVelocityModulator(hrc.imod);
       /* pbmin 0-127, 127=1 octave
          1 = 12/127 semitone
          (pbmin*12)/127 = semitones
