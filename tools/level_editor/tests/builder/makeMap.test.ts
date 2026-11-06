@@ -68,6 +68,8 @@ const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
 const hasBase = existsSync(`${STREAMS}/${BASE_LEVEL.file}.nsd`);
 const N_SANITY_BEACH = 0x9;
 const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
+const THE_GREAT_GATE = 0x12;
+const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`);
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -356,6 +358,27 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a turtle, with no other levels to take it from, is an error saying so", () => {
       expect(() => withTurtle({ readOtherLevel: undefined })).toThrow(/turtle/);
+    });
+  });
+
+  describe.skipIf(!hasGreatGate)("natives, from the great gate", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const native = () => object("enemy", [1, 2, 0], { enemy: "native" });
+    const withNative = (more: Partial<MapOptions> = {}) => make(MAP_OBJ, { scale: 256, objects: [native()], readOtherLevel, ...more });
+
+    test("a level with a native has the great gate's native code, model and animations", () => {
+      const { level, entries, zone } = withNative();
+      expect(enemies(zone).map(({ type }) => type)).toEqual([ENEMY_ENTITIES.native]);
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.native[0]]).toBe(stringToEid("SheNC"));
+      expect(["Na1iG", "Na1iV", "Na2iV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
+
+    test("a level without natives has none of their code", () => {
+      expect(make(MAP_OBJ, { scale: 256, readOtherLevel }).level.nsd.ldat.execMap[ENEMY_ENTITIES.native[0]]).toBe(EID_NONE);
+    });
+
+    test("a native, with no other levels to take it from, is an error saying so", () => {
+      expect(() => withNative({ readOtherLevel: undefined })).toThrow(/native/);
     });
   });
 
