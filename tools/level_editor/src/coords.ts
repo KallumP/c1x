@@ -53,6 +53,17 @@ export function enemyTurn(turn: number): number {
   return Math.atan2(-facingX, -facingZ) + 0; // + 0 turns -0 into 0
 }
 
+// how far to turn an enemy's model about the viewport's y, so its front (+z)
+// faces level from one place (in blender) towards another: the way a turtle
+// walks. facing the player (at the level's turn) if they're in one place
+export function facingFrom(from: Vec3, to: Vec3, turn = 0): number {
+  const [x, , z] = blenderToView([to[0] - from[0], to[1] - from[1], 0]);
+  if (Math.hypot(x, z) < 1e-9) {
+    return enemyTurn(turn);
+  }
+  return Math.atan2(x, z) + 0; // + 0 turns -0 into 0
+}
+
 // the middle of a rolling stone at each point of its path (in blender), for a
 // stone at at, raised by raise: jungle rollers' path, its middle a stone's radius
 // over the track's floor, which stands a box's height over the stone's spot, across the map

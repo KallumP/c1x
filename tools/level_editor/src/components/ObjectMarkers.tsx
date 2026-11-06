@@ -1,7 +1,7 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { blenderToView, boxSize, cameraFacing, enemyTurn, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, type ShapePart } from "../enemyShapes";
 import { pathPositions } from "../enemyPaths";
@@ -128,10 +128,10 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
 
   // an enemy's model standing at at (in the viewport), facing the player, sized by the level's
   // scale; the selected one glows
-  const renderEnemyModel = (parts: ShapePart[], at: Vec3, index: number, key?: number) => {
+  const renderEnemyModel = (parts: ShapePart[], at: Vec3, index: number, key?: number, facing = enemyTurn(turn)) => {
     const glow = index === selected ? SELECTED_GLOW : 0;
     return (
-      <group key={key} position={at} rotation={[0, enemyTurn(turn), 0]} scale={1 / scale}>
+      <group key={key} position={at} rotation={[0, facing, 0]} scale={1 / scale}>
         {parts.map((part, partIndex) => renderShapePart(part, partIndex, glow))}
       </group>
     );
@@ -184,6 +184,11 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
+  // which way an enemy at an end of its path faces: a turtle back into its path
+  // (it turns to face the way it walks, seen in the game); a crab the player
+  const endFacing = (enemy: "crab" | "turtle", end: Vec3, next: Vec3) =>
+    enemy === "turtle" ? facingFrom(end, next, turn) : enemyTurn(turn);
+
   // a crab or turtle: at the first and last nodes of the path it walks back and
   // forth along, where it turns round, with the line through its nodes, and a
   // handle on each node while it's selected
@@ -192,11 +197,13 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     const colour = ENEMY_COLOURS[enemy];
     const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
     const positions = pathPositions(object, turn, scale);
-    const ends = [positions[0], positions[positions.length - 1]].map(blenderToView);
+    const last = positions.length - 1;
+    const ends = [{ end: positions[0], next: positions[1] }, { end: positions[last], next: positions[last - 1] }];
     const line = positions.map(blenderToView).map(([x, y, z]): Vec3 => [x, y + lift, z]);
     return (
       <>
-        {ends.map((end, endIndex) => renderEnemyModel(ENEMY_SHAPES[enemy], end, index, endIndex))}
+        {ends.map(({ end, next }, endIndex) =>
+          renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next)))}
         <Line points={line} color={colour} lineWidth={2} />
         {index === selected && positions.map((position, nodeIndex) => renderPathHandle(position, index, nodeIndex, colour))}
       </>
