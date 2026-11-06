@@ -1,7 +1,7 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { blenderToView, boxSize, cameraFacing, crabPath, enemyTurn, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { blenderToView, boxSize, cameraFacing, crabPath, enemyTurn, turtlePath, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, type ShapePart } from "../enemyShapes";
 import type { LevelObject, Vec3 } from "../objects";
@@ -176,9 +176,20 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
     );
   };
 
+  // the turtle: the line it walks back and forth along (the route, as the game walks it)
+  const renderTurtle = (object: LevelObject) => {
+    const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
+    const ends = turtlePath(object.at, object.raise, turn, scale).map(blenderToView);
+    const path = ends.map(([x, y, z]): Vec3 => [x, y + lift, z]);
+    return <Line points={path} color={ENEMY_COLOURS.turtle} lineWidth={2} />;
+  };
+
   const renderEnemy = (object: LevelObject, index: number) => {
     if (object.enemy === "crab") {
       return renderCrab(object, index);
+    }
+    if (object.enemy === "turtle") {
+      return renderTurtle(object);
     }
     if (object.enemy !== "rolling_stone") {
       return renderPlant(object, index);
