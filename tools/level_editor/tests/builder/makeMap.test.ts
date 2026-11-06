@@ -68,6 +68,7 @@ const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
 const hasBase = existsSync(`${STREAMS}/${BASE_LEVEL.file}.nsd`);
 const N_SANITY_BEACH = 0x9;
 const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
+const THE_GREAT_GATE = 0x12;
 const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`);
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
@@ -364,6 +365,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
     const native = () => object("enemy", [1, 2, 0], { enemy: "native" });
     const withNative = (more: Partial<MapOptions> = {}) => make(MAP_OBJ, { scale: 256, objects: [native()], readOtherLevel, ...more });
+
+    test("a native walks the great gate's first native's path, its middle at the native's spot", () => {
+      const gatePath = entityPath(levelEntity(readLevel(STREAMS, THE_GREAT_GATE), ...ENEMY_ENTITIES.native));
+      const middle = gatePath[Math.floor(gatePath.length / 2)];
+      const [placed] = enemies(withNative().zone);
+      expect(placed.path.length).toBe(gatePath.length);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      const spot = [1408, 128, 1664];
+      placed.path.forEach((point, index) => point.forEach((value, axis) =>
+        expect(Math.abs(value - (spot[axis] + gatePath[index][axis] - middle[axis]))).toBeLessThanOrEqual(8)));
+    });
 
     test("a level with a native has the great gate's native code, model and animations", () => {
       const { level, entries, zone } = withNative();
