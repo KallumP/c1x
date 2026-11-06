@@ -5,6 +5,7 @@
 ### Added
 
 - custom levels can have N. Sanity Beach's crab, which walks back and forth across the map; it's the first enemy taken from a level other than Jungle Rollers, with its code, model, textures and sounds
+- the level editor draws plants and crabs as little plants and crabs, facing the player, instead of a cone and a block; a crab is drawn at both ends of the path it walks, where it turns round in the game
 
 ### Fixed
 
