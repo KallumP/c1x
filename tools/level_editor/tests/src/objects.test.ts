@@ -272,3 +272,30 @@ describe("a rolling stone's direction", () => {
     expect(() => parseObjects(text)).toThrow(message);
   });
 });
+
+describe("a rolling stone's start", () => {
+  test("a rolling stone can start partway along its track: 0 its first end, 1 its far end", () => {
+    const objects = parseObjects(`[
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 0.5},
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 1, "reverse": true},
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0]}
+    ]`);
+    expect(objects.map(({ start, reverse }) => [start, reverse])).toEqual([[0.5, undefined], [1, true], [undefined, undefined]]);
+  });
+
+  test("writes it when it isn't 0, before reverse, and reads it back", () => {
+    const stone = { kind: "enemy" as const, enemy: "rolling_stone" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1 };
+    const text = formatObjects([{ ...stone, start: 0.25, reverse: true }]);
+    expect(text).toContain('"at": [1, 2, 0], "start": 0.25, "reverse": true}');
+    expect(parseObjects(text)).toEqual([{ ...stone, start: 0.25, reverse: true }]);
+    expect(formatObjects([{ ...stone, start: 0 }])).toContain('"at": [1, 2, 0]}');
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "start": 0.5}]', "object 1: a turtle has no start (rolling stones do)"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 1.5}]', "object 1: start should be 0 to 1 (how far along its track it starts)"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": "middle"}]', "object 1: start should be 0 to 1"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+});
