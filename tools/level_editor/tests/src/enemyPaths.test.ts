@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, respaced, withNodeAt, withNodeCount } from "../../src/enemyPaths";
+import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, nodesUnderEnds, respaced, withNodeAt, withNodeCount } from "../../src/enemyPaths";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
@@ -75,5 +75,16 @@ describe("changing how many nodes a path has", () => {
   test(`keeps to 2 to ${PATH_NODES_MAX} nodes`, () => {
     expect(withNodeCount(enemy("crab"), 1, 0, 400).length).toBe(2);
     expect(withNodeCount(enemy("crab"), 50, 0, 400).length).toBe(PATH_NODES_MAX);
+  });
+});
+
+describe("nodes under the enemy at an end of its path", () => {
+  test("are the ends, and any node within reach of one, seen from above", () => {
+    const positions: Vec3[] = [[0, 0, 0], [0.4, 0, 0], [1, 0, 0], [2, 0, 0], [2.3, 0.3, 0], [3, 0, 0]];
+    expect(nodesUnderEnds(positions, 0.5)).toEqual([true, true, false, false, true, true]);
+  });
+
+  test("whatever their height", () => {
+    expect(nodesUnderEnds([[0, 0, 0], [0.2, 0, 5], [3, 0, 0]], 0.5)).toEqual([true, true, true]);
   });
 });
