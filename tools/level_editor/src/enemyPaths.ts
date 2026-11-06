@@ -50,6 +50,17 @@ export function pathPositions(object: LevelObject, turn: number, scale: number):
   return enemyPath(object, turn, scale).map((node) => plus(standing, node));
 }
 
+// how many nodes an enemy's path has: its own, or its default's
+export const nodeCount = (object: LevelObject) => object.path?.length ?? DEFAULT_PATH_NODES;
+
+// an enemy's path with one of its nodes moved to position (in blender), the rest
+// as they were; an enemy without a path of its own gets its default path
+export function withNodeAt(object: LevelObject, node: number, position: Vec3, turn: number, scale: number): Vec3[] {
+  const [x, y, z] = object.at;
+  const offset: Vec3 = [position[0] - x, position[1] - y, position[2] - z - object.raise];
+  return enemyPath(object, turn, scale).map((other, index) => (index === node ? offset : other));
+}
+
 // how long a path is, along all its nodes
 export function pathLength(nodes: Vec3[]): number {
   return nodes.slice(1).reduce((sum, node, index) => sum + distance(nodes[index], node), 0);

@@ -1,5 +1,6 @@
 // what's being edited: a level's objects, which one is selected, and the
 // changes that can be undone and redone
+import { nodeCount } from "./enemyPaths";
 import { BOX_TYPES, ENEMY_TYPES, type BoxType, type EnemyType, type LevelObject, type Vec3 } from "./objects";
 
 export type Placeable = "spawn" | "end" | BoxType | EnemyType;
@@ -12,6 +13,7 @@ type Objects = LevelObject[];
 export interface EditorState {
   objects: Objects;
   selected: number | null;
+  selectedNode: number | null; // a node of the selected crab's or turtle's path
   past: Objects[];   // what the objects were before each change, last change last
   future: Objects[]; // what undoing took back, last undone last
 }
@@ -22,11 +24,12 @@ export type EditorAction =
   | { type: "update"; index: number; changes: Partial<LevelObject>; record?: boolean }
   | { type: "remove"; index: number }
   | { type: "select"; index: number | null }
+  | { type: "selectNode"; index: number; node: number } // an enemy, and a node of its path
   | { type: "checkpoint" } // remember the objects now, as one change (a drag's start)
   | { type: "undo" }
   | { type: "redo" };
 
-export const emptyEditor: EditorState = { objects: [], selected: null, past: [], future: [] };
+export const emptyEditor: EditorState = { objects: [], selected: null, selectedNode: null, past: [], future: [] };
 
 const isEnemyType = (what: Placeable): what is EnemyType => (ENEMY_TYPES as readonly string[]).includes(what);
 
@@ -42,9 +45,18 @@ export function newObject(what: Placeable, at: Vec3): LevelObject {
   return object;
 }
 
+// the selected node, if its enemy is still selected and its path still has it
+function nodeStillThere(selectedNode: number | null, selected: number | null, objects: Objects): number | null {
+  if (selectedNode === null || selected === null || selected >= objects.length) {
+    return null;
+  }
+  return selectedNode < nodeCount(objects[selected]) ? selectedNode : null;
+}
+
 // a change to the objects, which undo takes back
 function change(state: EditorState, objects: Objects, selected: number | null): EditorState {
-  return { objects, selected, past: [...state.past, state.objects], future: [] };
+  const selectedNode = selected === state.selected ? nodeStillThere(state.selectedNode, selected, objects) : null;
+  return { objects, selected, selectedNode, past: [...state.past, state.objects], future: [] };
 }
 
 // a level has one spawn and one end, so adding another moves it
@@ -84,7 +96,8 @@ function undo(state: EditorState): EditorState {
     return state;
   }
   const selected = stillThere(state.selected, objects);
-  return { objects, selected, past: state.past.slice(0, -1), future: [...state.future, state.objects] };
+  const selectedNode = nodeStillThere(state.selectedNode, selected, objects);
+  return { objects, selected, selectedNode, past: state.past.slice(0, -1), future: [...state.future, state.objects] };
 }
 
 function redo(state: EditorState): EditorState {
@@ -93,7 +106,8 @@ function redo(state: EditorState): EditorState {
     return state;
   }
   const selected = stillThere(state.selected, objects);
-  return { objects, selected, past: [...state.past, state.objects], future: state.future.slice(0, -1) };
+  const selectedNode = nodeStillThere(state.selectedNode, selected, objects);
+  return { objects, selected, selectedNode, past: [...state.past, state.objects], future: state.future.slice(0, -1) };
 }
 
 export function editorReducer(state: EditorState, action: EditorAction): EditorState {
@@ -107,7 +121,9 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
     case "remove":
       return remove(state, action.index);
     case "select":
-      return { ...state, selected: action.index };
+      return { ...state, selected: action.index, selectedNode: null };
+    case "selectNode":
+      return { ...state, selected: action.index, selectedNode: action.node };
     case "checkpoint":
       return { ...state, past: [...state.past, state.objects], future: [] };
     case "undo":

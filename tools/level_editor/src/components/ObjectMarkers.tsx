@@ -21,13 +21,15 @@ function base(object: LevelObject): Vec3 {
   return blenderToView([x, y, z + object.raise]);
 }
 
-export default function ObjectMarkers({ objects, scale, turn, selected, warnings, onSelect }: {
+export default function ObjectMarkers({ objects, scale, turn, selected, selectedNode, warnings, onSelect, onSelectNode }: {
   objects: LevelObject[];
   scale: number;
   turn: number; // the level's, which sets the way the spawn's arrow points
   selected: number | null;
+  selectedNode: number | null; // a node of the selected crab's or turtle's path
   warnings: Set<number>; // the boxes in a wall or another box
   onSelect: (index: number) => void;
+  onSelectNode: (index: number, node: number) => void;
 }) {
   // a box in a wall or another box has red edges, the selected object white, the rest their own colour
   const edgeColour = (index: number, colour: string) => {
@@ -44,6 +46,12 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
     onSelect(index);
   };
   const stopClick = (event: ThreeEvent<MouseEvent>) => event.stopPropagation();
+
+  // pressing on a path's node's handle grabs the node, not its enemy
+  const grabNode = (index: number, node: number) => (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation();
+    onSelectNode(index, node);
+  };
 
   const renderBox = (centre: Vec3, style: BoxStyle, edges: string, key: number) => {
     const size = boxSize(scale) * 0.98;
@@ -164,14 +172,14 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
     );
   };
 
-  // a handle on one of a path's nodes, a little above the floor there
-  const renderPathHandle = (position: Vec3, nodeIndex: number, colour: string) => {
+  // a handle on one of a path's nodes, a little above the floor there; white if it's selected
+  const renderPathHandle = (position: Vec3, index: number, nodeIndex: number, colour: string) => {
     const radius = boxSize(scale) * HANDLE_SIZE;
     const [x, y, z] = blenderToView(position);
     return (
-      <mesh key={`node ${nodeIndex}`} position={[x, y + radius, z]}>
+      <mesh key={`node ${nodeIndex}`} position={[x, y + radius, z]} onPointerDown={grabNode(index, nodeIndex)}>
         <sphereGeometry args={[radius, 12, 8]} />
-        <meshBasicMaterial color={colour} />
+        <meshBasicMaterial color={nodeIndex === selectedNode ? SELECTED_COLOUR : colour} />
       </mesh>
     );
   };
@@ -190,7 +198,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
       <>
         {ends.map((end, endIndex) => renderEnemyModel(ENEMY_SHAPES[enemy], end, index, endIndex))}
         <Line points={line} color={colour} lineWidth={2} />
-        {index === selected && positions.map((position, nodeIndex) => renderPathHandle(position, nodeIndex, colour))}
+        {index === selected && positions.map((position, nodeIndex) => renderPathHandle(position, index, nodeIndex, colour))}
       </>
     );
   };

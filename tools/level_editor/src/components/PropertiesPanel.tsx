@@ -3,13 +3,15 @@ import { useEffect, useState } from "react";
 import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
-import { BOX_TYPES, boxTypeName, type BoxType, type LevelObject, type Vec3 } from "../objects";
+import { nodeCount, pathPositions, withNodeAt } from "../enemyPaths";
+import { BOX_TYPES, boxTypeName, PATH_ENEMIES, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { SKY_ROWS, type Sky } from "../sky";
 import { ChoiceField, ColourField, NumberField } from "./Fields";
 import "./PropertiesPanel.css";
 
-const AXES = ["x", "y"] as const; // z is the floor's height under the object, set by placing, dragging and Drop to floor
+const AXES = ["x", "y"] as const;
+const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
 export default function PropertiesPanel({ state, warnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
@@ -67,6 +69,27 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
       />
     </>
   );
+
+  // the selected node of a crab's or turtle's path: where it is in blender
+  const renderNodeFields = (enemy: LevelObject, node: number) => {
+    const turn = levelCfg ? levelCfg.turn : 0;
+    const position = pathPositions(enemy, turn, scale)[node];
+    const setAxis = (axis: number, value: number) => {
+      const moved = position.map((current, axisIndex) => (axisIndex === axis ? value : current)) as Vec3;
+      change({ path: withNodeAt(enemy, node, moved, turn, scale) });
+    };
+    const step = isShiftHeld ? 0.01 : 0.1;
+    return (
+      <>
+        <h3>node {node + 1} of {nodeCount(enemy)}</h3>
+        {NODE_AXES.map((axis, axisIndex) => (
+          <NumberField key={axis} label={axis} value={position[axisIndex]} step={step} onChange={(value) => setAxis(axisIndex, value)} />
+        ))}
+      </>
+    );
+  };
+
+  const hasPath = (selected: LevelObject) => selected.kind === "enemy" && PATH_ENEMIES.includes(selected.enemy!);
 
   // raise is its height above the floor, kept as it's dragged about
   const renderObjectFields = (selected: LevelObject) => (
@@ -167,6 +190,7 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
       {object && index !== null ? (
         <>
           {renderObjectFields(object)}
+          {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
           <button className="delete" onClick={() => dispatch({ type: "remove", index })}>Delete</button>

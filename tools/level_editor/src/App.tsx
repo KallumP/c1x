@@ -149,8 +149,10 @@ export default function App() {
         scale={scale}
         turn={levelCfg.cfg.turn}
         selected={state.selected}
+        selectedNode={state.selectedNode}
         warnings={warnings}
         onSelect={drag.start}
+        onSelectNode={(index, node) => dispatch({ type: "selectNode", index, node })}
       />
     </>
   );

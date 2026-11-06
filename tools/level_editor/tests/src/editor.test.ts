@@ -167,9 +167,9 @@ describe("a path's nodes", () => {
   test("undoing keeps the node selected while the path still has it, else lets go of it", () => {
     const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0], [2, 0, 0]];
     const withPath = editorReducer(withCrabSelected(), { type: "update", index: 1, changes: { path } });
-    const thirdSelected = editorReducer(withPath, { type: "selectNode", index: 1, node: 2 });
-    const shortened = editorReducer(thirdSelected, { type: "update", index: 1, changes: { path: path.slice(0, 2) } });
-    expect(editorReducer(shortened, { type: "undo" }).selectedNode).toBe(2);
+    const secondSelected = editorReducer(withPath, { type: "selectNode", index: 1, node: 1 });
+    const shortened = editorReducer(secondSelected, { type: "update", index: 1, changes: { path: path.slice(0, 2) } });
+    expect(editorReducer(shortened, { type: "undo" }).selectedNode).toBe(1);
     const twoNodes = editorReducer(withObjects([box(1), { ...crab, path: path.slice(0, 2) }]), { type: "update", index: 1, changes: { path } });
     const third = editorReducer(twoNodes, { type: "selectNode", index: 1, node: 2 });
     expect(editorReducer(third, { type: "undo" }).selectedNode).toBeNull();
