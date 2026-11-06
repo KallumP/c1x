@@ -26,6 +26,7 @@ const ZONE_SKY_BOTTOM = ZONE_GFX + 48;
 const VISIBILITY_DEPTH = 6144000; // n. sanity beach's (jungle rollers' start zone has 0)
 export const ZONE_HEADER_SIZE = 888;
 export const ZONE_LOADLIST_PAGES_MAX = 32;
+const TEXTURE_PAGES_MAX = 16; // the game holds this many at once (texture_pages in src/ns.c)
 
 function writeRgb(header: Buffer, [red, green, blue]: Rgb, at: number): void {
   header[at] = red;
@@ -106,8 +107,8 @@ export function zoneHeaderBytes(
 // depend on where pages are, so this is done once they're laid out
 export function loadTexturePages(level: Level, zoneEid: number): void {
   const pageIds = level.pages.flatMap((page, index) => (page.type === PAGE_TEXTURE ? [pgid(index)] : []));
-  if (pageIds.length > ZONE_LOADLIST_PAGES_MAX) {
-    throw new Error(`${pageIds.length} texture pages, more than a load list holds`);
+  if (pageIds.length > TEXTURE_PAGES_MAX) {
+    throw new Error(`${pageIds.length} texture pages, more than the game holds at once (${TEXTURE_PAGES_MAX}): use fewer images on the map, or fewer kinds of enemy`);
   }
   const zone = level.pages.flatMap((page) => page.entries).find((entry) => entry.eid === zoneEid)!;
   const header = Buffer.from(zone.items[0]);
