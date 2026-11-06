@@ -4,8 +4,8 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
-import { nodesUnderEnds, pathPositions, pointAlongShare } from "../enemyPaths";
-import type { LevelObject, Vec3 } from "../objects";
+import { canTurnRound, nodesUnderEnds, pathPositions, pointAlongShare, type PathEnemy } from "../enemyPaths";
+import { PATH_ENEMIES, type LevelObject, type Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
 const PAD_UNITS = 400;   // the warp pad's radius, about
@@ -24,7 +24,7 @@ const walkerSize = (parts: ShapePart[]) => {
   const { min, max } = shapeBounds(parts);
   return { height: max[1], reach: Math.max(-min[0], max[0], -min[2], max[2]) };
 };
-const WALKER_SIZES = { crab: walkerSize(ENEMY_SHAPES.crab), turtle: walkerSize(ENEMY_SHAPES.turtle) };
+const WALKER_SIZES = { crab: walkerSize(ENEMY_SHAPES.crab), turtle: walkerSize(ENEMY_SHAPES.turtle), native: walkerSize(ENEMY_SHAPES.native) };
 
 // where an object's base is in the viewport, raised as it is in the game
 function base(object: LevelObject): Vec3 {
@@ -39,7 +39,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   selected: number | null;
   selectedNode: number | null; // a node of the selected crab's or turtle's path
   warnings: Set<number>; // the boxes in a wall or another box
-  pathWarnings: Set<number>; // the crabs and turtles whose paths leave the floor or run through a wall
+  pathWarnings: Set<number>; // the path enemies whose paths leave the floor or run through a wall
   onSelect: (index: number) => void;
   onSelectNode: (index: number, node: number) => void;
 }) {
@@ -157,8 +157,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // an enemy that stands where it's placed: a plant, or a native
-  const renderStanding = (object: LevelObject, index: number, enemy: "plant" | "native") =>
-    renderEnemyModel(ENEMY_SHAPES[enemy], base(object), index);
+  const renderPlant = (object: LevelObject, index: number) => renderEnemyModel(ENEMY_SHAPES.plant, base(object), index);
 
   // the rolling stone: a wheel where it starts along its track, turned to roll across the map as the game rolls it
   const renderStone = (object: LevelObject, index: number) => {
@@ -235,7 +234,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // the handles on a path's nodes: those under the enemy at either end above it
-  const renderPathHandles = (positions: Vec3[], index: number, enemy: "crab" | "turtle", colour: string) => {
+  const renderPathHandles = (positions: Vec3[], index: number, enemy: PathEnemy, colour: string) => {
     const { height, reach } = WALKER_SIZES[enemy];
     const underEnds = nodesUnderEnds(positions, reach / scale);
     return positions.map((position, nodeIndex) =>
@@ -243,15 +242,16 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // which way an enemy at an end of its path faces: a turtle back into its path
-  // (it turns to face the way it walks, seen in the game); a crab the player
-  const endFacing = (enemy: "crab" | "turtle", end: Vec3, next: Vec3) =>
+  // (it turns to face the way it walks, seen in the game); a crab or native the player
+  const endFacing = (enemy: PathEnemy, end: Vec3, next: Vec3) =>
     enemy === "turtle" ? facingFrom(end, next, turn) : enemyTurn(turn);
 
-  // a crab or turtle: at the first and last nodes of the path it walks back and
-  // forth along, where it turns round, with the line through its nodes, and a
-  // handle on each node while it's selected
+  // a crab, turtle or native: at the first and last nodes of the path it walks
+  // back and forth along, where it turns round, with the line through its nodes,
+  // and a handle on each node while it's selected. the far end is faded, as it
+  // starts at the other, but not a native's: it starts at the end nearest crash
   const renderPathWalker = (object: LevelObject, index: number) => {
-    const enemy = object.enemy as "crab" | "turtle";
+    const enemy = object.enemy as PathEnemy;
     const colour = ENEMY_COLOURS[enemy];
     const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
     const positions = pathPositions(object, turn, scale);
@@ -261,7 +261,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     return (
       <>
         {ends.map(({ end, next }, endIndex) =>
-          renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next), endIndex === 0 ? 1 : FAR_END_OPACITY))}
+          renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next), endIndex === 0 || !canTurnRound(enemy) ? 1 : FAR_END_OPACITY))}
         <Line points={line} color={pathWarnings.has(index) ? WARNING_COLOUR : colour} lineWidth={2} />
         {index === selected && renderPathHandles(positions, index, enemy, colour)}
       </>
@@ -269,11 +269,11 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   const renderEnemy = (object: LevelObject, index: number) => {
-    if (object.enemy === "crab" || object.enemy === "turtle") {
+    if (PATH_ENEMIES.includes(object.enemy!)) {
       return renderPathWalker(object, index);
     }
-    if (object.enemy === "plant" || object.enemy === "native") {
-      return renderStanding(object, index, object.enemy);
+    if (object.enemy === "plant") {
+      return renderPlant(object, index);
     }
     return (
       <>

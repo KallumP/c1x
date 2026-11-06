@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
-import { enemyPath, inNodes, nodeCount, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
+import { canTurnRound, enemyPath, inNodes, nodeCount, nodeTurnedRound, pathPositions, turnedRound, withNodeAt, type PathEnemy } from "../enemyPaths";
 import { BOX_TYPES, boxTypeName, PATH_ENEMIES, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { SKY_ROWS, type Sky } from "../sky";
@@ -19,7 +19,7 @@ const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the buil
 export default function PropertiesPanel({ state, warnings, pathWarnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
   state: EditorState;
   warnings: Set<number>;
-  pathWarnings: Set<number>; // the crabs and turtles whose paths leave the floor or run through a wall
+  pathWarnings: Set<number>; // the path enemies whose paths leave the floor or run through a wall
   scale: number;
   triangles: Triangle[]; // the level's, for dropping a box to the floor
   dispatch: (action: EditorAction) => void;
@@ -74,7 +74,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     </>
   );
 
-  // the selected node of a crab's or turtle's path: where it is in blender
+  // the selected node of a path enemy's path: where it is in blender
   const renderNodeFields = (enemy: LevelObject, node: number) => {
     const turn = levelCfg ? levelCfg.turn : 0;
     const position = pathPositions(enemy, turn, scale)[node];
@@ -93,7 +93,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     );
   };
 
-  // how many nodes a crab's or turtle's path has: each count respaces the path
+  // how many nodes a path enemy's path has: each count respaces the path
   // as it was when the slider was grabbed, so sliding down and back keeps its
   // shape, and the whole slide is one change to undo
   const renderNodeSlider = (enemy: LevelObject) => {
@@ -111,7 +111,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     return <SliderField label="nodes" value={nodeCount(enemy)} min={2} max={PATH_NODES_MAX} onGrab={grab} onChange={changeCount} />;
   };
 
-  // how fast a crab or turtle walks, times the game's own pace; the whole slide is one change to undo
+  // how fast a path enemy walks, times the game's own pace; the whole slide is one change to undo
   const renderSpeedSlider = (enemy: LevelObject) => {
     const changeSpeed = (speed: number) => {
       if (index !== null) {
@@ -131,7 +131,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     );
   };
 
-  // turns a crab's or turtle's path round, so it starts at the other end; a selected node stays selected
+  // turns a crab's or turtle's path round, so it starts at the other end (not a native's: it starts at the end nearest crash); a selected node stays selected
   const renderTurnRoundButton = (enemy: LevelObject) => {
     const turnRound = () => {
       const turn = levelCfg ? levelCfg.turn : 0;
@@ -278,7 +278,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {renderObjectFields(object)}
           {hasPath(object) && renderNodeSlider(object)}
           {hasPath(object) && renderSpeedSlider(object)}
-          {hasPath(object) && renderTurnRoundButton(object)}
+          {hasPath(object) && canTurnRound(object.enemy as PathEnemy) && renderTurnRoundButton(object)}
           {isStone(object) && renderStoneStartSlider(object)}
           {isStone(object) && renderStoneReverseButton(object)}
           {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}

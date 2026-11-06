@@ -35,7 +35,7 @@ export const PATH_NODES_MAX = 20;
 // the enemies with a path, for messages: "crabs, turtles and natives"
 const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map((enemy) => `${enemy}s`).join(", ")} and ${PATH_ENEMIES.at(-1)}s`;
 
-// how many times the game's own pace a crab or turtle can walk at (seen working in the game)
+// how many times the game's own pace a path enemy can walk at (seen working in the game with crabs and turtles)
 export const SPEED_MIN = 0.25;
 export const SPEED_MAX = 3;
 
@@ -81,7 +81,7 @@ function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<
   return { enemy: fields.type as EnemyType };
 }
 
-// a crab's or turtle's path, from its fields in objects.json (none if it hasn't one)
+// a path enemy's path, from its fields in objects.json (none if it hasn't one)
 function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "path"> {
   if (!("path" in fields)) {
     return {};
@@ -99,7 +99,7 @@ function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumbe
   return { path: nodes.map(([x, y, z]): Vec3 => [x, y, z]) };
 }
 
-// a crab's or turtle's speed, from its fields in objects.json (none if it hasn't one)
+// a path enemy's speed, from its fields in objects.json (none if it hasn't one)
 function readSpeed(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "speed"> {
   if (!("speed" in fields)) {
     return {};
