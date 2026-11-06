@@ -141,7 +141,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     };
     return (
       <button className="drop" onClick={turnRound} title="It starts at the solid end, and turns round at the faded one">
-        Start at the other end
+        Reverse direction
       </button>
     );
   };
