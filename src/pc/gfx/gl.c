@@ -21,6 +21,7 @@ static PFNGLBLENDEQUATIONPROC pglBlendEquation;
 #include "pc/settings.h"
 #include "pc/time.h"
 #include "pc/replay.h"
+#include "pc/pace.h"
 
 #ifdef CFLAGS_GUI
 #include "ext/gui.h"
@@ -515,11 +516,24 @@ void GLClear() {
   }
 }
 
+/* pc: how long this frame lasts (see pc/pace.h), counting frames from when the level changed */
+static int32_t GLFrameTicks() {
+  static lid_t lid = -1;
+  static uint32_t frame = 0;
+
+  if (!ns.ldat) { return FRAME_TICKS; }
+  if (ns.ldat->lid != lid) {
+    lid = ns.ldat->lid;
+    frame = 0;
+  }
+  return FrameTicks(lid, frame++);
+}
+
 void GLUpdate() {
   zone_header *header;
   rgb8 fill;
   int fh;
-  int ticks_elapsed, elapsed_since;
+  int ticks_elapsed, elapsed_since, frame_ticks;
   gl_input gl_input;
 
   if (callbacks.pre_update)
@@ -542,10 +556,11 @@ void GLUpdate() {
     ticks_cur_frame = ticks_elapsed - context.draw_stamp; /* time elapsed between current sync and previous draw  */
   else
     ticks_cur_frame = 17; /* default to 17 */
+  frame_ticks = GLFrameTicks(); /* pc: 34, unless drawing at the PS1's pace */
   if (TimeIsFixed()) /* recording or replaying inputs? */
-    TimeWaitFrame(34);
+    TimeWaitFrame(frame_ticks);
   else {
-    while (ticks_elapsed - context.draw_stamp < 34) {
+    while (ticks_elapsed - context.draw_stamp < frame_ticks) {
       ticks_elapsed = GetTicksElapsed();
     }
   }
