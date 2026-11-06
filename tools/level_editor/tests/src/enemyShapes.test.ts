@@ -2,21 +2,22 @@ import { describe, expect, test } from "vitest";
 import { ENEMY_SHAPES, shapeBounds } from "../../src/enemyShapes";
 
 describe("enemy shapes", () => {
-  test("the plant stands on the floor, about 560 game units tall, on its spot", () => {
+  // the sizes of the game's models, in game units (jungle rollers' JuPcG, n. sanity beach's Cr19G)
+  test("the plant stands on the floor, as big as the game's: about 830 across and 720 tall", () => {
     const { min, max } = shapeBounds(ENEMY_SHAPES.plant);
     expect(min[1]).toBeCloseTo(0);
-    expect(max[1]).toBeGreaterThan(520);
-    expect(max[1]).toBeLessThan(600);
-    expect(Math.abs(min[0] + max[0])).toBeLessThan(40); // about as far out each side
+    expect(max[1]).toBeCloseTo(720, -1);
+    expect(max[0] - min[0]).toBeGreaterThan(760);
+    expect(max[0] - min[0]).toBeLessThan(900);
+    expect(Math.abs(min[0] + max[0])).toBeLessThan(60); // about as far out each side
   });
 
-  test("the crab stands on the floor, about 700 wide (sideways, along x) and 250 tall", () => {
+  test("the crab stands on the floor, as big as the game's: about 980 across (sideways, along x) and 480 tall", () => {
     const { min, max } = shapeBounds(ENEMY_SHAPES.crab);
     expect(min[1]).toBeCloseTo(0);
-    expect(max[1]).toBeGreaterThan(220);
-    expect(max[1]).toBeLessThan(290);
-    expect(max[0] - min[0]).toBeGreaterThan(640);
-    expect(max[0] - min[0]).toBeLessThan(760);
+    expect(max[1]).toBeCloseTo(480, -1);
+    expect(max[0] - min[0]).toBeGreaterThan(900);
+    expect(max[0] - min[0]).toBeLessThan(1060);
     expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
   });
 
