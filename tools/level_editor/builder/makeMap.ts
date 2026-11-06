@@ -9,8 +9,8 @@ import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
-  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, linkSwitches, newEntityIds, UNBREAKABLE_BOXES, WARP_PAD, withEntityId, withPath,
-  withPosition, type PlacedBox,
+  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, linkSwitches, newEntityIds, STRAIGHTENED_PATHS, straightened, UNBREAKABLE_BOXES,
+  WARP_PAD, withEntityId, withPath, withPosition, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
@@ -136,10 +136,12 @@ class ObjectPlacer {
   }
 
   // an enemy that walks the path of its example from another level (such as
-  // a crab), in the zone its spot is in, the path's middle at its spot
+  // a crab), in the zone its spot is in, the path's middle at its spot; a
+  // turtle's straightened, as it follows the slopes of its beach
   placeOnExamplePath(enemy: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(enemy));
-    const path = entityPath(example);
+    const examplePath = entityPath(example);
+    const path = STRAIGHTENED_PATHS.includes(enemy.enemy!) ? straightened(examplePath) : examplePath;
     const middle = path[Math.floor(path.length / 2)];
     const moved = path.map((point) => point.map((value, axis) => at[axis] + value - middle[axis]) as Vec3);
     this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), moved));
