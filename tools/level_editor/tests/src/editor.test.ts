@@ -29,6 +29,10 @@ describe("new enemies", () => {
     expect(newObject("crab", [1, 2, 3])).toEqual({ kind: "enemy", enemy: "crab", at: [1, 2, 3], raise: 0, stack: 1 });
   });
 
+  test("a turtle stands where it's put; its path comes from n. sanity beach's", () => {
+    expect(newObject("turtle", [1, 2, 3])).toEqual({ kind: "enemy", enemy: "turtle", at: [1, 2, 3], raise: 0, stack: 1 });
+  });
+
   test("a level can have many, so adding one keeps the rest", () => {
     const state = editorReducer(withObjects([newObject("plant", [0, 0, 0])]), { type: "add", object: newObject("plant", [5, 0, 0]) });
     expect(state.objects).toEqual([newObject("plant", [0, 0, 0]), newObject("plant", [5, 0, 0])]);

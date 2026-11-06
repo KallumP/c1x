@@ -19,6 +19,7 @@ export type ShapePart = Primitive & {
 type ModelledEnemy = Exclude<EnemyType, "rolling_stone">;
 
 const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth: "#b0233a", tooth: "#f4f1e0", soil: "#6b4a2b" };
+const TURTLE_COLOURS = { shell: "#b8282a", spot: "#2fa58c", skin: "#b5a35a", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
 const ball = (radius: number, at: Vec3, colour: string, extra: Partial<ShapePart> = {}): ShapePart =>
@@ -112,6 +113,48 @@ function crab(): ShapePart[] {
   ];
 }
 
+const TURTLE_SHELL = { at: [0, 175, -20] as Vec3, stretch: [330, 165, 470] as Vec3 };
+
+// a green spot on the turtle's shell, set into it where a line from its middle,
+// leaning by up (from flat) and round (from +z), comes out
+function turtleSpot(up: number, round: number): ShapePart {
+  const { at, stretch } = TURTLE_SHELL;
+  const way = [Math.cos(up) * Math.sin(round), Math.sin(up), Math.cos(up) * Math.cos(round)];
+  const onShell = at.map((value, axis) => value + 0.96 * stretch[axis] * way[axis]) as Vec3;
+  return ball(1, onShell, TURTLE_COLOURS.spot, { stretch: [70, 70, 70] });
+}
+
+function turtleShell(): ShapePart[] {
+  const ring = [0, 1, 2, 3, 4, 5].map((spotIndex) => turtleSpot(0.55, (spotIndex / 6) * Math.PI * 2 + Math.PI / 6));
+  return [ball(1, TURTLE_SHELL.at, TURTLE_COLOURS.shell, { stretch: TURTLE_SHELL.stretch }), turtleSpot(Math.PI / 2, 0), ...ring];
+}
+
+// the turtle's head, poking out of the front of its shell, with its eyes
+function turtleHead(): ShapePart[] {
+  return [
+    rod(55, 65, 170, [0, 150, 455], TURTLE_COLOURS.skin, { turn: [Math.PI / 2 - 0.3, 0, 0] }),
+    ball(1, [0, 185, 560], TURTLE_COLOURS.skin, { name: "head", stretch: [85, 75, 100] }),
+    ...bothSides([
+      ball(24, [40, 215, 630], TURTLE_COLOURS.eye),
+      ball(10, [42, 218, 652], TURTLE_COLOURS.pupil),
+    ]),
+  ];
+}
+
+// the turtle's legs on one side, front and back, splayed out under its shell
+function turtleLegs(): ShapePart[] {
+  return [250, -260].map((legZ) => ball(1, [290, 55, legZ], TURTLE_COLOURS.skin, { stretch: [130, 55, 80], turn: [0, legZ > 0 ? -0.5 : 0.5, 0] }));
+}
+
+function turtle(): ShapePart[] {
+  return [
+    ...turtleShell(),
+    ...turtleHead(),
+    ...bothSides(turtleLegs()),
+    rod(0, 30, 110, [0, 90, -520], TURTLE_COLOURS.skin, { turn: [-Math.PI / 2, 0, 0] }),
+  ];
+}
+
 function primitiveGeometry(part: ShapePart): BufferGeometry {
   switch (part.kind) {
     case "box":
@@ -169,10 +212,11 @@ function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 }
 
 // how tall the game's models are, in game units: jungle rollers' plant (JuPcG) and
-// n. sanity beach's crab (Cr19G), each vertex times 4, times its tgeo's scale / 4096
-const GAME_HEIGHTS: Record<ModelledEnemy, number> = { plant: 720, crab: 480 };
+// n. sanity beach's crab (Cr19G) and turtle (Tu19G), each vertex times 4, times its tgeo's scale / 4096
+const GAME_HEIGHTS: Record<ModelledEnemy, number> = { plant: 720, crab: 480, turtle: 370 };
 
 export const ENEMY_SHAPES: Record<ModelledEnemy, ShapePart[]> = {
   plant: scaledToHeight(standingOnFloor(plant()), GAME_HEIGHTS.plant),
   crab: scaledToHeight(standingOnFloor(crab()), GAME_HEIGHTS.crab),
+  turtle: scaledToHeight(standingOnFloor(turtle()), GAME_HEIGHTS.turtle),
 };

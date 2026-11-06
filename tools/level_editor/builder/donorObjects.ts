@@ -18,7 +18,7 @@ export interface DonorLevel {
 const N_SANITY_BEACH: DonorLevel = { lid: 0x9, name: "N. Sanity Beach", file: "s0000009" };
 
 // the level each enemy jungle rollers doesn't have is taken from
-export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = { crab: N_SANITY_BEACH };
+export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = { crab: N_SANITY_BEACH, turtle: N_SANITY_BEACH };
 
 export interface DonorObject {
   code: [slot: number, eid: number][]; // each piece of code it brings, in its exec slot in the donor

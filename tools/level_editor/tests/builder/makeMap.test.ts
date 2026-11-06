@@ -264,6 +264,51 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasBeach)("turtles, from n. sanity beach", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const turtle = () => object("enemy", [1, 2, 0], { enemy: "turtle" });
+    const withTurtle = (more: Partial<MapOptions> = {}) => make(MAP_OBJ, { scale: 256, objects: [turtle()], readOtherLevel, ...more });
+    const soundsOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
+
+    test("a turtle walks n. sanity beach's first turtle's path straightened, along the route (z) and flat, its middle at the turtle's spot", () => {
+      const beachPath = entityPath(levelEntity(readLevel(STREAMS, N_SANITY_BEACH), ...ENEMY_ENTITIES.turtle));
+      const middle = beachPath[Math.floor(beachPath.length / 2)];
+      const [placed] = enemies(withTurtle().zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.turtle);
+      expect(placed.path.length).toBe(beachPath.length);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      const [x, y, z] = [1408, 128, 1664];
+      placed.path.forEach((point, index) => {
+        expect(point[0]).toBe(placed.path[0][0]);
+        expect(point[1]).toBe(placed.path[0][1]);
+        expect(Math.abs(point[0] - x)).toBeLessThanOrEqual(8);
+        expect(Math.abs(point[1] - y)).toBeLessThanOrEqual(8);
+        expect(Math.abs(point[2] - (z + beachPath[index][2] - middle[2]))).toBeLessThanOrEqual(8);
+      });
+    });
+
+    test("a level with a turtle has its code, models, texture page and sounds", () => {
+      const { level, entries } = withTurtle();
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.turtle[0]]).toBe(stringToEid("TurtC"));
+      expect(["Tu19G", "Tu49G", "Tu19V", "Tu59V"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(level.pages.some((page) => page.type === PAGE_TEXTURE && page.eid === stringToEid("Ju49T"))).toBe(true);
+      expect(soundsOf(level)).toEqual(expect.arrayContaining(["Tbo9A", "Tup9A", "Tfl9A"].map(stringToEid)));
+    });
+
+    test("a level with a crab and a turtle has both, and what they share (texture page, sound) once", () => {
+      const both = make(MAP_OBJ, { scale: 256, objects: [turtle(), object("enemy", [-1, 4, 0], { enemy: "crab" })], readOtherLevel });
+      expect(enemies(both.zone).map(({ type }) => type)).toEqual(expect.arrayContaining([ENEMY_ENTITIES.turtle, ENEMY_ENTITIES.crab]));
+      const everyEid = both.level.pages.flatMap((page) => (page.type === PAGE_TEXTURE ? [page.eid] : page.entries.map(({ eid }) => eid)));
+      expect(everyEid.filter((eid) => eid === stringToEid("Ju49T")).length).toBe(1);
+      expect(everyEid.filter((eid) => eid === stringToEid("fli0A")).length).toBe(1);
+      expect(everyEid.length).toBe(new Set(everyEid).size);
+    });
+
+    test("a turtle, with no other levels to take it from, is an error saying so", () => {
+      expect(() => withTurtle({ readOtherLevel: undefined })).toThrow(/turtle/);
+    });
+  });
+
   const worldsOf = ({ entries, zone }: Built) => zoneWorldEids(zone).map((eid) => entries.get(eid)!);
   const polygonCount = (built: Built) => worldsOf(built).reduce((sum, world) => sum + readWorldHeader(world.items[0]).polygonCount, 0);
   // every world vertex, relative to the zone

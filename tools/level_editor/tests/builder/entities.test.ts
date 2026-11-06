@@ -46,8 +46,8 @@ describe("entities", () => {
 });
 
 describe("enemies", () => {
-  test("are jungle rollers' plant and rolling stone, and n. sanity beach's crab", () => {
-    expect(ENEMY_ENTITIES).toEqual({ plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0] });
+  test("are jungle rollers' plant and rolling stone, and n. sanity beach's crab and turtle", () => {
+    expect(ENEMY_ENTITIES).toEqual({ plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0] });
   });
 });
 
