@@ -68,7 +68,6 @@ const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
 const hasBase = existsSync(`${STREAMS}/${BASE_LEVEL.file}.nsd`);
 const N_SANITY_BEACH = 0x9;
 const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
-const THE_GREAT_GATE = 0x12;
 const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`);
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
