@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
-import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, entityPosition, entityType, WARP_PAD } from "../../builder/entities";
+import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, ENTITY_INIT_FLAGS, entityId, entityPath, entityPosition, entityType, STONE_FAR_END, WARP_PAD } from "../../builder/entities";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_SOUNDS, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
@@ -187,7 +187,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   const enemies = (zone: Entry) => zoneEntities(zone)
     .filter((item) => Object.values(ENEMY_ENTITIES).some((entity) => entity.join() === entityType(item).join()))
-    .map((item) => ({ type: entityType(item), id: entityId(item), path: entityPath(item) }));
+    .map((item) => ({ type: entityType(item), id: entityId(item), path: entityPath(item), initFlagA: item.readInt16LE(ENTITY_INIT_FLAGS) }));
+
+  test("a reversed rolling stone starts at the other end of its track: the same path (rolling -x, so it spins the right way), its init flag a at its far end (128, seen in the game)", () => {
+    const stone = (reverse?: boolean) => object("enemy", [1, 2, 0], { enemy: "rolling_stone", reverse });
+    const [asItWas] = enemies(make(MAP_OBJ, { scale: 256, objects: [stone()] }).zone);
+    const [reversed] = enemies(make(MAP_OBJ, { scale: 256, objects: [stone(true)] }).zone);
+    expect(STONE_FAR_END).toBe(128);
+    expect([asItWas.initFlagA, reversed.initFlagA]).toEqual([0, STONE_FAR_END]);
+    expect(reversed.path).toEqual(asItWas.path);
+  });
 
   test("an enemy goes where it is, as its entity, with an id of its own", () => {
     // blender (1, 2, 0) is the .obj's (1, 0, -2)
