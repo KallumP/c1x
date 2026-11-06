@@ -79,6 +79,15 @@ export function nodesUnderEnds(positions: Vec3[], reach: number): boolean[] {
   return positions.map((position) => ends.some((end) => flatDistance(position, end) <= reach));
 }
 
+// an enemy's path turned round (its nodes reversed, its default's if it has
+// none), so it starts at the other end: the game starts it at its first node
+export function turnedRound(object: LevelObject, turn: number, scale: number): Vec3[] {
+  return [...enemyPath(object, turn, scale)].reverse();
+}
+
+// which node a node is once its path, of count nodes, is turned round
+export const nodeTurnedRound = (node: number, count: number) => count - 1 - node;
+
 // how long a path is, along all its nodes
 export function pathLength(nodes: Vec3[]): number {
   return nodes.slice(1).reduce((sum, node, index) => sum + distance(nodes[index], node), 0);
