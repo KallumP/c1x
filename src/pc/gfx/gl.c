@@ -58,7 +58,9 @@ void GLUpdateTexture(int texid, rect2 rect, uint8_t *buf) {
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-gl_context context = { 0 };
+/* a frame's worth of ticks before the first frame is timed, so objects that
+ * scale a speed by it when they spawn (a native near the spawn) don't get 0 */
+gl_context context = { .ticks_per_frame = 34 };
 gl_callbacks callbacks = { 0 };
 rect2 screen = { .x = -256, .y = -120, .w = 512, .h = 240 };
 prim_struct prim_links[2048];
