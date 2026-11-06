@@ -49,4 +49,14 @@ describe("load lists", () => {
     expect([header.readInt32LE(ZONE_LOADLIST), header.readInt32LE(ZONE_LOADLIST + 4)]).toEqual([0, 2]);
     expect(readWords(header, ZONE_LOADLIST + 8 + 32, 2)).toEqual([pgid(1), pgid(3)]);
   });
+
+  test("more texture pages than the game holds at once is an error saying so", () => {
+    // the game keeps 16 texture pages (texture_pages in src/ns.c)
+    const zoneEid = stringToEid("Flr0Z");
+    const zone = { eid: zoneEid, type: 7, items: [zoneHeaderBytes(EMPTY_HEADER, zoneEid, [], 0, 0)] };
+    const texturePages = (count: number) => Array.from({ length: count }, (_, index) => texturePage(index + 1, Buffer.alloc(0)));
+    const levelWith = (count: number) => ({ nsd: null, pages: [entryPage([zone]), ...texturePages(count)] }) as unknown as Level;
+    expect(() => loadTexturePages(levelWith(16), zoneEid)).not.toThrow();
+    expect(() => loadTexturePages(levelWith(17), zoneEid)).toThrow(/17 texture pages.*16/);
+  });
 });
