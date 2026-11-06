@@ -6,6 +6,10 @@
 #include "formats/smf.h"
 #include "formats/sf2.h"
 
+/* <math.h> would find the game's own src/math.h, so use the builtins */
+#define log10 __builtin_log10
+#define lround __builtin_lround
+
 static inline int _setnc(char *dst, char *src, int slen) {
   int i;
 
@@ -212,6 +216,23 @@ typedef struct {
   VagAtr *vagatr[16];
   VagBody *waves[16];
 } VabProg;
+
+#define SF2_MAX_ATTENUATION 1440 /* centibels; silent */
+
+/*
+ * the soundfont initialAttenuation (in centibels) for a vab tone, whose
+ * amplitude the ps1 scales by both its tone volume and its program volume
+ * (each 0-127)
+ */
+int16_t VabVolumeToAttenuation(uint8_t tone_vol, uint8_t prog_vol) {
+  double amplitude, centibels;
+
+  amplitude = ((double)tone_vol / 127) * ((double)prog_vol / 127);
+  if (amplitude <= 0) { return SF2_MAX_ATTENUATION; }
+  centibels = -200 * log10(amplitude);
+  if (centibels > SF2_MAX_ATTENUATION) { return SF2_MAX_ATTENUATION; }
+  return (int16_t)lround(centibels);
+}
 
 size_t VabToSf2(uint8_t *vab, uint8_t *sf2) {
   VabProg *prog, progs[128];
