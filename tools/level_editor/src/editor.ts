@@ -78,10 +78,14 @@ function add(state: EditorState, object: LevelObject): EditorState {
   return change(state, [...state.objects, object], state.objects.length);
 }
 
-// record: false for the steps of a drag, which are one change from its checkpoint
+// record: false for the steps of a drag or a slide, which are one change from its
+// checkpoint. either way, a selected node the path no longer has is let go of
 function update(state: EditorState, index: number, changes: Partial<LevelObject>, record: boolean): EditorState {
   const objects = state.objects.map((object, objectIndex) => (objectIndex === index ? { ...object, ...changes } : object));
-  return record ? change(state, objects, state.selected) : { ...state, objects };
+  if (record) {
+    return change(state, objects, state.selected);
+  }
+  return { ...state, objects, selectedNode: nodeStillThere(state.selectedNode, state.selected, objects) };
 }
 
 // the selection stays on the same object as others before it go
