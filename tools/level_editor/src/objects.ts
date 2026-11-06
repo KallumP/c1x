@@ -19,8 +19,10 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 
 // the enemies custom levels can have, by name: the base level's own (jungle
 // rollers' biting plant, and its stone wheel, which comes with its track and
-// rolls back and forth along it). the level build places them by their entity (builder/entities.ts)
-export const ENEMY_TYPES = ["plant", "rolling_stone"] as const;
+// rolls back and forth along it), and those taken from other levels (n. sanity
+// beach's crab, which walks back and forth). the level build places them by
+// their entity (builder/entities.ts)
+export const ENEMY_TYPES = ["plant", "rolling_stone", "crab"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
