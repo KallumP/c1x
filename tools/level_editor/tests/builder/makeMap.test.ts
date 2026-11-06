@@ -189,13 +189,14 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     .filter((item) => Object.values(ENEMY_ENTITIES).some((entity) => entity.join() === entityType(item).join()))
     .map((item) => ({ type: entityType(item), id: entityId(item), path: entityPath(item), initFlagA: item.readInt16LE(ENTITY_INIT_FLAGS) }));
 
-  test("a reversed rolling stone starts at the other end of its track: the same path (rolling -x, so it spins the right way), its init flag a at its far end (128, seen in the game)", () => {
-    const stone = (reverse?: boolean) => object("enemy", [1, 2, 0], { enemy: "rolling_stone", reverse });
-    const [asItWas] = enemies(make(MAP_OBJ, { scale: 256, objects: [stone()] }).zone);
-    const [reversed] = enemies(make(MAP_OBJ, { scale: 256, objects: [stone(true)] }).zone);
+  test("a rolling stone starts along its track by its init flag a, which counts through its cycle there and back (seen in the game): 128 x start rolling forward, 256 - 128 x start rolling back; its path the same (rolling -x, so it spins the right way)", () => {
+    const stone = (more: Partial<LevelObject>) => object("enemy", [1, 2, 0], { enemy: "rolling_stone", ...more });
+    const placed = (more: Partial<LevelObject>) => enemies(make(MAP_OBJ, { scale: 256, objects: [stone(more)] }).zone)[0];
     expect(STONE_FAR_END).toBe(128);
-    expect([asItWas.initFlagA, reversed.initFlagA]).toEqual([0, STONE_FAR_END]);
-    expect(reversed.path).toEqual(asItWas.path);
+    const flags = [{}, { start: 1 }, { start: 0.5 }, { start: 0.5, reverse: true }, { start: 1, reverse: true }, { reverse: true }]
+      .map((more) => placed(more).initFlagA);
+    expect(flags).toEqual([0, 128, 64, 192, 128, 0]);
+    expect(placed({ start: 0.5, reverse: true }).path).toEqual(placed({}).path);
   });
 
   test("an enemy goes where it is, as its entity, with an id of its own", () => {
