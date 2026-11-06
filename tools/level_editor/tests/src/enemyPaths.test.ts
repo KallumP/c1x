@@ -80,7 +80,7 @@ describe("changing how many nodes a path has", () => {
 
 describe("nodes under the enemy at an end of its path", () => {
   test("are the ends, and any node within reach of one, seen from above", () => {
-    const positions: Vec3[] = [[0, 0, 0], [0.4, 0, 0], [1, 0, 0], [2, 0, 0], [2.3, 0.3, 0], [3, 0, 0]];
+    const positions: Vec3[] = [[0, 0, 0], [0.4, 0, 0], [1, 0, 0], [2, 0, 0], [2.7, 0.2, 0], [3, 0, 0]];
     expect(nodesUnderEnds(positions, 0.5)).toEqual([true, true, false, false, true, true]);
   });
 
