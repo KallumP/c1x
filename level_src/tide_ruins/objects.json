@@ -23,6 +23,9 @@
 
   {"kind": "enemy", "type": "plant", "at": [-7, 31, 3.6]},
   {"kind": "enemy", "type": "plant", "at": [7, 31, 3.6]},
+  {"kind": "enemy", "type": "crab", "at": [0, 9, 0]},
+  {"kind": "enemy", "type": "crab", "at": [6, 28, 0]},
+  {"kind": "enemy", "type": "crab", "at": [-7.5, 40, 0]},
 
   {"kind": "end", "at": [0, 50, 1.2], "raise": 0.15}
 ]
