@@ -15,7 +15,7 @@ import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevels } from "./hooks/useLevels";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
-import { useTriangles, useWarnings } from "./hooks/useWarnings";
+import { usePathWarnings, useTriangles, useWarnings } from "./hooks/useWarnings";
 import { clickedFloor, isClick } from "./three/clicks";
 import "./App.css";
 
@@ -33,6 +33,7 @@ export default function App() {
   const unsaved = editor.unsaved || levelCfg.unsaved;
   const triangles = useTriangles(group);
   const warnings = useWarnings(state.objects, scale, triangles);
+  const pathWarnings = usePathWarnings(state.objects, levelCfg.cfg.turn, scale, triangles);
   const [tool, setTool] = useState<Tool>(SELECT);
   const [grid, setGrid] = useState(0.5);
   const orbitRef = useRef<Orbit>(null);
@@ -88,12 +89,20 @@ export default function App() {
     }
   };
 
-  const renderWarningCount = () => {
+  const renderBoxWarningCount = () => {
     if (warnings.size === 0) {
       return null;
     }
     const boxes = warnings.size === 1 ? "box is" : "boxes are";
     return <span className="warning">{warnings.size} {boxes} in a wall or another box</span>;
+  };
+
+  const renderPathWarningCount = () => {
+    if (pathWarnings.size === 0) {
+      return null;
+    }
+    const paths = pathWarnings.size === 1 ? "path leaves" : "paths leave";
+    return <span className="warning">{pathWarnings.size} {paths} the floor or run{pathWarnings.size === 1 ? "s" : ""} through a wall</span>;
   };
 
   const renderHistoryButtons = () => (
@@ -139,7 +148,8 @@ export default function App() {
       <LevelPicker levels={levels} level={level} onOpen={openLevel} />
       {renderHistoryButtons()}
       {renderSaveButton()}
-      {renderWarningCount()}
+      {renderBoxWarningCount()}
+      {renderPathWarningCount()}
       {error && <span className="error">{error}</span>}
       {renderLevelActions()}
     </header>
@@ -155,6 +165,7 @@ export default function App() {
         selected={state.selected}
         selectedNode={state.selectedNode}
         warnings={warnings}
+        pathWarnings={pathWarnings}
         onSelect={drag.start}
         onSelectNode={drag.startNode}
       />
@@ -177,6 +188,7 @@ export default function App() {
       <PropertiesPanel
         state={state}
         warnings={warnings}
+        pathWarnings={pathWarnings}
         scale={scale}
         triangles={triangles}
         dispatch={dispatch}

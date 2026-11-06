@@ -14,9 +14,10 @@ const AXES = ["x", "y"] as const;
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
-export default function PropertiesPanel({ state, warnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
+export default function PropertiesPanel({ state, warnings, pathWarnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
   state: EditorState;
   warnings: Set<number>;
+  pathWarnings: Set<number>; // the crabs and turtles whose paths leave the floor or run through a wall
   scale: number;
   triangles: Triangle[]; // the level's, for dropping a box to the floor
   dispatch: (action: EditorAction) => void;
@@ -213,6 +214,7 @@ export default function PropertiesPanel({ state, warnings, scale, triangles, dis
           {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
+          {pathWarnings.has(index) && <p className="warning">This path leaves the floor or runs through a wall.</p>}
           <button className="delete" onClick={() => dispatch({ type: "remove", index })}>Delete</button>
         </>
       ) : (

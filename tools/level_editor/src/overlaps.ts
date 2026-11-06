@@ -162,6 +162,31 @@ function inLevel(bounds: Bounds, grid: TriangleGrid): boolean {
   return throughAFace || insideSolid(middle(bounds), grid);
 }
 
+// whether a box from min to max (blender) reaches into the level's triangles: through a face, or inside a solid
+export function reachesIntoLevel(min: Vec3, max: Vec3, triangles: Triangle[]): boolean {
+  return inLevel({ min, max }, triangleGrid(triangles));
+}
+
+// how far straight down from point a triangle is, and whether its front faces up (null if the ray down misses it)
+function belowHit(point: Vec3, triangle: Triangle): UpwardHit | null {
+  const flipped = (corner: Vec3): Vec3 => [corner[0], corner[1], -corner[2]];
+  // seen from above, flipping heights keeps which way round a face is
+  return aboveHit(flipped(point), [flipped(triangle[0]), flipped(triangle[1]), flipped(triangle[2])]);
+}
+
+// how far below point the floor is: the nearest face straight below it, if that
+// faces up. null if there's nothing below, or the nearest face is the underside of something
+export function floorBelow(point: Vec3, triangles: Triangle[]): number | null {
+  let nearest: UpwardHit | null = null;
+  for (const { triangle } of trianglesNear(triangleGrid(triangles), { min: point, max: point })) {
+    const hit = belowHit(point, triangle);
+    if (hit && (!nearest || hit.height < nearest.height)) {
+      nearest = hit;
+    }
+  }
+  return nearest && nearest.facesUp ? nearest.height : null;
+}
+
 // the indices of the boxes in a wall (the level's triangles, in blender) or in another box
 export function overlappingBoxes(objects: LevelObject[], scale: number, triangles: Triangle[]): Set<number> {
   const grid = triangleGrid(triangles);

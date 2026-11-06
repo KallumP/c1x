@@ -21,13 +21,14 @@ function base(object: LevelObject): Vec3 {
   return blenderToView([x, y, z + object.raise]);
 }
 
-export default function ObjectMarkers({ objects, scale, turn, selected, selectedNode, warnings, onSelect, onSelectNode }: {
+export default function ObjectMarkers({ objects, scale, turn, selected, selectedNode, warnings, pathWarnings, onSelect, onSelectNode }: {
   objects: LevelObject[];
   scale: number;
   turn: number; // the level's, which sets the way the spawn's arrow points
   selected: number | null;
   selectedNode: number | null; // a node of the selected crab's or turtle's path
   warnings: Set<number>; // the boxes in a wall or another box
+  pathWarnings: Set<number>; // the crabs and turtles whose paths leave the floor or run through a wall
   onSelect: (index: number) => void;
   onSelectNode: (index: number, node: number) => void;
 }) {
@@ -204,7 +205,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
       <>
         {ends.map(({ end, next }, endIndex) =>
           renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next)))}
-        <Line points={line} color={colour} lineWidth={2} />
+        <Line points={line} color={pathWarnings.has(index) ? WARNING_COLOUR : colour} lineWidth={2} />
         {index === selected && positions.map((position, nodeIndex) => renderPathHandle(position, index, nodeIndex, colour))}
       </>
     );
