@@ -45,6 +45,7 @@ export interface LevelObject {
   enemy?: EnemyType;    // an enemy's type
   path?: Vec3[];        // a crab's or turtle's path: its nodes, in metres from where it stands (at, raised)
   speed?: number;       // how many times the game's own pace a crab or turtle walks at (1 without one)
+  reverse?: boolean;    // a rolling stone that starts at the other end of its track (true, or none)
 }
 
 // a box's type name, from its type or its subtype number
@@ -57,7 +58,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type", "path", "speed"];
+const ENEMY_SETTINGS = ["type", "path", "speed", "reverse"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
@@ -107,6 +108,20 @@ function readSpeed(fields: Record<string, unknown>, enemy: EnemyType, objectNumb
     throw new Error(`object ${objectNumber}: speed should be ${SPEED_MIN} to ${SPEED_MAX} (times the game's own pace)`);
   }
   return { speed };
+}
+
+// whether a rolling stone starts at the other end of its track, from its fields in objects.json
+function readReverse(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "reverse"> {
+  if (!("reverse" in fields)) {
+    return {};
+  }
+  if (enemy !== "rolling_stone") {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no reverse (rolling stones do; reverse a ${enemy}'s path instead)`);
+  }
+  if (typeof fields.reverse !== "boolean") {
+    throw new Error(`object ${objectNumber}: reverse should be true or false`);
+  }
+  return fields.reverse ? { reverse: true } : {};
 }
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
@@ -185,6 +200,7 @@ export function parseObjects(text: string): LevelObject[] {
       Object.assign(object, readEnemy(fields, objectNumber));
       Object.assign(object, readPath(fields, object.enemy!, objectNumber));
       Object.assign(object, readSpeed(fields, object.enemy!, objectNumber));
+      Object.assign(object, readReverse(fields, object.enemy!, objectNumber));
     }
 
     objects.push(object);
@@ -216,6 +232,9 @@ function formatObject(object: LevelObject): string {
   }
   if (object.speed !== undefined && object.speed !== 1) {
     parts.push(`"speed": ${object.speed}`);
+  }
+  if (object.reverse) {
+    parts.push(`"reverse": true`);
   }
   return `{${parts.join(", ")}}`;
 }
