@@ -245,3 +245,30 @@ describe("enemy speeds", () => {
     expect(() => parseObjects(text)).toThrow(message);
   });
 });
+
+describe("a rolling stone's direction", () => {
+  test("a rolling stone can be reversed, to start at the other end of its track", () => {
+    const objects = parseObjects(`[
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": true},
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": false},
+      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0]}
+    ]`);
+    expect(objects.map(({ reverse }) => reverse)).toEqual([true, undefined, undefined]);
+  });
+
+  test("writes it when it's reversed, and reads it back", () => {
+    const stone = { kind: "enemy" as const, enemy: "rolling_stone" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1 };
+    const text = formatObjects([{ ...stone, reverse: true }]);
+    expect(text).toContain('"at": [1, 2, 0], "reverse": true}');
+    expect(parseObjects(text)).toEqual([{ ...stone, reverse: true }]);
+    expect(formatObjects([stone])).toContain('"at": [1, 2, 0]}');
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "reverse": true}]', "object 1: a crab has no reverse (rolling stones do; reverse a crab's path instead)"],
+    ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "reverse": true}]', "object 1: unknown setting reverse"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": "yes"}]', "object 1: reverse should be true or false"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+});
