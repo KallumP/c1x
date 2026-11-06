@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, CRAB_WALK, crabPath, enemyTurn, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, CRAB_WALK, crabPath, enemyTurn, TURTLE_WALK, turtlePath, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -88,6 +88,19 @@ describe("crabs", () => {
     const [start, end] = crabPath([0, 0, 0], 1, 90, 400);
     expect(start.map((value) => value + 0)).toEqual([0, 2, 1]);
     expect(end.map((value) => value + 0)).toEqual([0, -2, 1]);
+  });
+});
+
+describe("turtles", () => {
+  test("walk n. sanity beach's turtle's path, straightened: 2000 game units along the route, its middle at the turtle's spot", () => {
+    expect(TURTLE_WALK).toBe(2000);
+    expect(turtlePath([1, 2, 3], 0, 0, 400)).toEqual([[1, -0.5, 3], [1, 4.5, 3]]);
+  });
+
+  test("a turtle's path turns with the level, as the camera does, and lifts with raise", () => {
+    const [start, end] = turtlePath([0, 0, 0], 1, 90, 400);
+    expect(start.map((value) => value + 0)).toEqual([-2.5, 0, 1]);
+    expect(end.map((value) => value + 0)).toEqual([2.5, 0, 1]);
   });
 });
 
