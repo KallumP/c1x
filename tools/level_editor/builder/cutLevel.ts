@@ -56,7 +56,7 @@ export function packEntries(entries: Entry[]): Page[] {
 }
 
 // the pages that aren't entry pages (texture and audio), by the eids in them
-function rawPagesById(level: Level): Map<number, Page> {
+export function rawPagesById(level: Level): Map<number, Page> {
   const pages = new Map<number, Page>();
   for (const page of level.pages) {
     if (page.type === PAGE_TEXTURE) {
@@ -69,7 +69,7 @@ function rawPagesById(level: Level): Map<number, Page> {
 }
 
 // the eids reachable from keep, through the eids each entry mentions
-function reachableEids(level: Level, keep: number[]): Set<number> {
+export function reachableEids(level: Level, keep: number[]): Set<number> {
   const entries = entriesById(level);
   const allEids = new Set([...entries.keys(), ...rawPagesById(level).keys()]);
   const kept = new Set<number>();
