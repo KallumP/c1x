@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-06
+
+### Added
+
+- custom levels can have N. Sanity Beach's crab, which walks back and forth across the map; it's the first enemy taken from a level other than Jungle Rollers, with its code, model, textures and sounds
+
 ## 2026-11-05
 
 ### Added
