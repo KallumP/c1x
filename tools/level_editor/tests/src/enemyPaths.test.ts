@@ -3,10 +3,10 @@ import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, 
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
-const enemy = (type: "crab" | "turtle", more: Partial<LevelObject> = {}): LevelObject =>
+const enemy = (type: "crab" | "turtle" | "native", more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind: "enemy", enemy: type, at: [1, 2, 3], raise: 0, stack: 1, ...more });
 
-describe("a crab's or turtle's default path", () => {
+describe("a path enemy's default path", () => {
   test("a crab's: 1600 game units across the map, its middle where it stands, in equal steps", () => {
     expect(DEFAULT_PATH_NODES).toBe(5);
     expect(noMinusZero(defaultPath("crab", 0, 400))).toEqual([[-2, 0, 0], [-1, 0, 0], [0, 0, 0], [1, 0, 0], [2, 0, 0]]);
@@ -14,6 +14,11 @@ describe("a crab's or turtle's default path", () => {
 
   test("a turtle's: 2000 game units along the route, the way the camera faces", () => {
     expect(noMinusZero(defaultPath("turtle", 0, 400))).toEqual([[0, -2.5, 0], [0, -1.25, 0], [0, 0, 0], [0, 1.25, 0], [0, 2.5, 0]]);
+  });
+
+  test("a native's: 1972 game units across the map, as the great gate's natives walk", () => {
+    expect(noMinusZero(defaultPath("native", 0, 400))).toEqual([[-2.465, 0, 0], [-1.233, 0, 0], [0, 0, 0], [1.233, 0, 0], [2.465, 0, 0]]);
+    expect(enemyPath(enemy("native"), 90, 400)).toEqual(defaultPath("native", 90, 400));
   });
 
   test("turns with the level, and is longer in metres at a smaller scale", () => {

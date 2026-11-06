@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, CRAB_WALK, enemyTurn, facingFrom, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -78,10 +78,14 @@ describe("rolling stones", () => {
   });
 });
 
-describe("crabs and turtles", () => {
+describe("crabs, turtles and natives", () => {
   test("walk n. sanity beach's paths' lengths by default: a crab 1600 game units, a turtle 2000", () => {
     expect(CRAB_WALK).toBe(1600);
     expect(TURTLE_WALK).toBe(2000);
+  });
+
+  test("a native walks the great gate's natives' path's length by default: 1972 game units", () => {
+    expect(NATIVE_WALK).toBe(1972);
   });
 });
 
