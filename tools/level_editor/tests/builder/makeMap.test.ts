@@ -282,15 +282,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const withTurtle = (more: Partial<MapOptions> = {}) => make(MAP_OBJ, { scale: 256, objects: [turtle()], readOtherLevel, ...more });
     const soundsOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
 
-    test("a turtle walks n. sanity beach's first turtle's path straightened, along the route (z) and flat, its middle at the turtle's spot", () => {
+    test("without a path of its own, a turtle walks n. sanity beach's first turtle's path straightened, along the route (z) and flat, its middle at the turtle's spot", () => {
       const beachPath = entityPath(levelEntity(readLevel(STREAMS, N_SANITY_BEACH), ...ENEMY_ENTITIES.turtle));
       const middle = beachPath[Math.floor(beachPath.length / 2)];
       const [placed] = enemies(withTurtle().zone);
       expect(placed.type).toEqual(ENEMY_ENTITIES.turtle);
       expect(placed.path.length).toBe(beachPath.length);
-      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone; it walks back and forth, so either way round
       const [x, y, z] = [1408, 128, 1664];
-      placed.path.forEach((point, index) => {
+      const alongTheRoute = [...placed.path].sort((first, second) => first[2] - second[2]);
+      alongTheRoute.forEach((point, index) => {
         expect(point[0]).toBe(placed.path[0][0]);
         expect(point[1]).toBe(placed.path[0][1]);
         expect(Math.abs(point[0] - x)).toBeLessThanOrEqual(8);
