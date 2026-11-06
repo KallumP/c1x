@@ -432,6 +432,9 @@ size_t VabToSf2(uint8_t *vab, uint8_t *sf2) {
       hrc.igen->sfGenOper = pan;
       hrc.igen->genAmount.shAmount = ((atr->pan-64)*500)/64;
       Sf2Next(sf2, sfInstGenList, hrc.igen);
+      hrc.igen->sfGenOper = initialAttenuation;
+      hrc.igen->genAmount.shAmount = VabVolumeToAttenuation(atr->vol, prog->atr->mvol);
+      Sf2Next(sf2, sfInstGenList, hrc.igen);
       hrc.igen->sfGenOper = overridingRootKey;
       hrc.igen->genAmount.shAmount = atr->center;
       Sf2Next(sf2, sfInstGenList, hrc.igen);
