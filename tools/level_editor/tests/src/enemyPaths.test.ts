@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, respaced, withNodeAt } from "../../src/enemyPaths";
-import type { LevelObject, Vec3 } from "../../src/objects";
+import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, respaced, withNodeAt, withNodeCount } from "../../src/enemyPaths";
+import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
 const enemy = (type: "crab" | "turtle", more: Partial<LevelObject> = {}): LevelObject =>
@@ -62,5 +62,18 @@ describe("moving a node", () => {
   test("an enemy without a path of its own gets its default path, with that node moved", () => {
     const moved = withNodeAt(enemy("crab"), 0, [1, 4, 3], 0, 400);
     expect(noMinusZero(moved)).toEqual([[0, 2, 0], [-1, 0, 0], [0, 0, 0], [1, 0, 0], [2, 0, 0]]);
+  });
+});
+
+describe("changing how many nodes a path has", () => {
+  test("respaces its nodes evenly along it, its default if it has none", () => {
+    expect(noMinusZero(withNodeCount(enemy("crab"), 3, 0, 400))).toEqual([[-2, 0, 0], [0, 0, 0], [2, 0, 0]]);
+    const bent = enemy("turtle", { path: [[0, 0, 0], [0, 2, 0], [2, 2, 0]] });
+    expect(noMinusZero(withNodeCount(bent, 5, 0, 400))).toEqual([[0, 0, 0], [0, 1, 0], [0, 2, 0], [1, 2, 0], [2, 2, 0]]);
+  });
+
+  test(`keeps to 2 to ${PATH_NODES_MAX} nodes`, () => {
+    expect(withNodeCount(enemy("crab"), 1, 0, 400).length).toBe(2);
+    expect(withNodeCount(enemy("crab"), 50, 0, 400).length).toBe(PATH_NODES_MAX);
   });
 });
