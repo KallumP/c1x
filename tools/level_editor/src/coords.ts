@@ -46,6 +46,13 @@ export function stoneRolling(turn: number): Vec3 {
   return ROLLINGS[((quarters % 4) + 4) % 4];
 }
 
+// how far to turn an enemy's model about the viewport's y, so its front (+z) faces
+// the player, back along the camera's facing; its side (+x) is then across the map
+export function enemyTurn(turn: number): number {
+  const [facingX, , facingZ] = blenderToView(cameraFacing(turn));
+  return Math.atan2(-facingX, -facingZ) + 0; // + 0 turns -0 into 0
+}
+
 // the middle of a rolling stone at each point of its path (in blender), for a
 // stone at at, raised by raise: jungle rollers' path, its middle a stone's radius
 // over the track's floor, which stands a box's height over the stone's spot, across the map

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, CRAB_WALK, crabPath, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, CRAB_WALK, crabPath, enemyTurn, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -88,5 +88,25 @@ describe("crabs", () => {
     const [start, end] = crabPath([0, 0, 0], 1, 90, 400);
     expect(start.map((value) => value + 0)).toEqual([0, 2, 1]);
     expect(end.map((value) => value + 0)).toEqual([0, -2, 1]);
+  });
+});
+
+describe("enemies facing the player", () => {
+  const turned = (yaw: number): { front: number[]; side: number[] } => ({
+    front: [Math.sin(yaw), 0, Math.cos(yaw)].map((value) => Math.round(value) + 0),
+    side: [Math.cos(yaw), 0, -Math.sin(yaw)].map((value) => Math.round(value) + 0),
+  });
+
+  test.each([0, 90, 180, 270])("at a turn of %i, an enemy's front (+z) faces back along the camera's facing", (turn) => {
+    const [dx, dy, dz] = blenderToView(cameraFacing(turn));
+    expect(turned(enemyTurn(turn)).front).toEqual([-dx + 0, dy, -dz + 0]);
+  });
+
+  test.each([0, 90, 180, 270])("at a turn of %i, its side (+x) lies along the way a crab walks", (turn) => {
+    expect(turned(enemyTurn(turn)).side).toEqual(blenderToView(stoneRolling(turn)).map((value) => value + 0));
+  });
+
+  test("unturned, it isn't turned", () => {
+    expect(enemyTurn(0)).toBe(0);
   });
 });
