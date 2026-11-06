@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
+import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
@@ -101,5 +101,13 @@ describe("turning a path round", () => {
 
   test("a node is the same node after, counted from the other end", () => {
     expect([0, 1, 4].map((node) => nodeTurnedRound(node, 5))).toEqual([4, 3, 0]);
+  });
+});
+
+describe("a point along a path", () => {
+  test("is a share of the way along it, from its first node", () => {
+    const bent: Vec3[] = [[0, 0, 0], [2, 0, 0], [2, 2, 0]];
+    expect([0, 0.25, 0.5, 0.75, 1].map((share) => noMinusZero([pointAlongShare(bent, share)])[0]))
+      .toEqual([[0, 0, 0], [1, 0, 0], [2, 0, 0], [2, 1, 0], [2, 2, 0]]);
   });
 });
