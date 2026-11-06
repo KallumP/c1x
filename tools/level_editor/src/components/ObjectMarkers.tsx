@@ -3,7 +3,7 @@ import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
-import { ENEMY_SHAPES, partGeometry, type ShapePart } from "../enemyShapes";
+import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { pathPositions } from "../enemyPaths";
 import type { LevelObject, Vec3 } from "../objects";
 
@@ -14,6 +14,14 @@ const TRACK_OPACITY = 0.25;   // of the outline of a rolling stone's track
 const BOX_EDGE_COLOUR = "#000000";
 const HANDLE_SIZE = 0.15;   // a path node's handle's radius, of a box's size
 const SELECTED_GLOW = 0.35; // how much brighter the selected enemy's model is
+
+// how tall a crab's and turtle's models are, in game units: the handles on the
+// ends of their paths float this far up (and a little more), clear of the
+// models standing there, so they can be clicked
+const WALKER_HEIGHTS = {
+  crab: shapeBounds(ENEMY_SHAPES.crab).max[1],
+  turtle: shapeBounds(ENEMY_SHAPES.turtle).max[1],
+};
 
 // where an object's base is in the viewport, raised as it is in the game
 function base(object: LevelObject): Vec3 {
@@ -174,16 +182,29 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // a handle on one of a path's nodes, a little above the floor there; white if it's selected
-  const renderPathHandle = (position: Vec3, index: number, nodeIndex: number, colour: string) => {
+  // floating above units (game units) clear of the enemy standing there, on a thin line down to the node
+  const renderPathHandle = (position: Vec3, index: number, nodeIndex: number, colour: string, above = 0) => {
     const radius = boxSize(scale) * HANDLE_SIZE;
     const [x, y, z] = blenderToView(position);
+    const height = above > 0 ? above / scale + 2 * radius : 0;
+    const handleColour = nodeIndex === selectedNode ? SELECTED_COLOUR : colour;
     return (
-      <mesh key={`node ${nodeIndex}`} position={[x, y + radius, z]} onPointerDown={grabNode(index, nodeIndex)}>
-        <sphereGeometry args={[radius, 12, 8]} />
-        <meshBasicMaterial color={nodeIndex === selectedNode ? SELECTED_COLOUR : colour} />
-      </mesh>
+      <group key={`node ${nodeIndex}`}>
+        <mesh position={[x, y + height + radius, z]} onPointerDown={grabNode(index, nodeIndex)}>
+          <sphereGeometry args={[radius, 12, 8]} />
+          <meshBasicMaterial color={handleColour} />
+        </mesh>
+        {height > 0 && <Line points={[[x, y, z], [x, y + height, z]]} color={handleColour} lineWidth={1} />}
+      </group>
     );
   };
+
+  // the handles on a path's nodes: those on its ends above the enemy standing there
+  const renderPathHandles = (positions: Vec3[], index: number, enemy: "crab" | "turtle", colour: string) =>
+    positions.map((position, nodeIndex) => {
+      const isEnd = nodeIndex === 0 || nodeIndex === positions.length - 1;
+      return renderPathHandle(position, index, nodeIndex, colour, isEnd ? WALKER_HEIGHTS[enemy] : 0);
+    });
 
   // which way an enemy at an end of its path faces: a turtle back into its path
   // (it turns to face the way it walks, seen in the game); a crab the player
@@ -206,7 +227,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
         {ends.map(({ end, next }, endIndex) =>
           renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next)))}
         <Line points={line} color={pathWarnings.has(index) ? WARNING_COLOUR : colour} lineWidth={2} />
-        {index === selected && positions.map((position, nodeIndex) => renderPathHandle(position, index, nodeIndex, colour))}
+        {index === selected && renderPathHandles(positions, index, enemy, colour)}
       </>
     );
   };
