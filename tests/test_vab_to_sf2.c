@@ -79,9 +79,9 @@ UTEST(vab_to_sf2, a_full_volume_tone_is_not_attenuated) {
 }
 
 UTEST(vab_to_sf2, a_quieter_tone_is_attenuated_by_its_volume) {
-  ASSERT_EQ(VabVolumeToAttenuation(75, 127), ToneAttenuation(75, 127));
+  ASSERT_EQ(FluidSynthAttenuation(VabVolumeToAttenuation(75, 127)), ToneAttenuation(75, 127));
 }
 
 UTEST(vab_to_sf2, a_quieter_program_attenuates_its_tones) {
-  ASSERT_EQ(VabVolumeToAttenuation(127, 30), ToneAttenuation(127, 30));
+  ASSERT_EQ(FluidSynthAttenuation(VabVolumeToAttenuation(127, 30)), ToneAttenuation(127, 30));
 }

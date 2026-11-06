@@ -28,3 +28,18 @@ UTEST(vab_volume, zero_volume_is_fully_attenuated) {
   ASSERT_EQ(1440, VabVolumeToAttenuation(0, 127));
   ASSERT_EQ(1440, VabVolumeToAttenuation(127, 0));
 }
+
+/* fluidsynth applies 0.4 of an initialAttenuation (as the emu8000 did), so
+   the soundfont carries it scaled up to come out as the given centibels */
+
+UTEST(vab_volume, no_attenuation_stays_none_for_fluidsynth) {
+  ASSERT_EQ(0, FluidSynthAttenuation(0));
+}
+
+UTEST(vab_volume, fluidsynth_attenuation_is_scaled_up_by_2_5) {
+  ASSERT_EQ(115, FluidSynthAttenuation(46));
+}
+
+UTEST(vab_volume, fluidsynth_attenuation_stops_at_the_soundfont_maximum) {
+  ASSERT_EQ(1440, FluidSynthAttenuation(600));
+}
