@@ -9,6 +9,7 @@ import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_SOUNDS, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
 import { CORE_EXEC_SLOTS } from "../../builder/cutLevel";
+import type { Vec3 } from "../../builder/vectors";
 import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
 import { textureWorlds } from "../../builder/mapTextures";
 import { FOLLOW_CAM_MODE } from "../../builder/paths";
@@ -259,6 +260,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(make(MAP_OBJ, { scale: 256, readOtherLevel }).level.nsd.ldat.execMap[ENEMY_ENTITIES.crab[0]]).toBe(EID_NONE);
     });
 
+    test("a crab walks its own path, raised with it, in equal steps about 100 apart", () => {
+      const built = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "crab", raise: 0.5, path: [[0, 0, 0], [2, 0, 0.25]] })], readOtherLevel });
+      const [placed] = enemies(built.zone);
+      const steps = placed.path.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - placed.path[index][axis])));
+      expect(placed.path.length).toBe(6); // 516 units (2 m across, 0.25 m up) in 5 steps
+      steps.forEach((step) => expect(Math.abs(step - 103.2)).toBeLessThanOrEqual(8));
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone; raised 0.5 m is 128 higher, its end 64 higher again
+      [1408, 256, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(8));
+      [1920, 320, 1664].forEach((value, axis) => expect(Math.abs(placed.path[5][axis] - value)).toBeLessThanOrEqual(8));
+    });
+
     test("a crab, with no other levels to take it from, is an error saying so", () => {
       expect(() => withCrab({ readOtherLevel: undefined })).toThrow(/crab/);
     });
@@ -302,6 +314,21 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(everyEid.filter((eid) => eid === stringToEid("Ju49T")).length).toBe(1);
       expect(everyEid.filter((eid) => eid === stringToEid("fli0A")).length).toBe(1);
       expect(everyEid.length).toBe(new Set(everyEid).size);
+    });
+
+    test("a turtle walks its own path: through its nodes, in equal steps about as long as n. sanity beach's (100)", () => {
+      const lPath: Vec3[] = [[0, 0, 0], [0, 2, 0], [2, 2, 0]]; // 2 m along the route, then 2 m across: 1024 units at scale 256
+      const built = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "turtle", path: lPath })], readOtherLevel });
+      const [placed] = enemies(built.zone);
+      expect(placed.path.length).toBe(11); // 10 steps of 102.4
+      const [start, corner, end] = [placed.path[0], placed.path[5], placed.path[10]];
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(start[axis] - value)).toBeLessThanOrEqual(8));
+      expect(Math.abs(corner[0] - start[0])).toBeLessThanOrEqual(8);
+      expect(Math.abs(Math.abs(corner[2] - start[2]) - 512)).toBeLessThanOrEqual(8);
+      expect(Math.abs(Math.abs(end[0] - corner[0]) - 512)).toBeLessThanOrEqual(8);
+      expect(Math.abs(end[2] - corner[2])).toBeLessThanOrEqual(8);
+      placed.path.forEach((point) => expect(Math.abs(point[1] - 128)).toBeLessThanOrEqual(8));
     });
 
     test("a turtle, with no other levels to take it from, is an error saying so", () => {
