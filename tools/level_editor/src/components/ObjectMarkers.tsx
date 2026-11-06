@@ -159,48 +159,43 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   const renderPlant = (object: LevelObject, index: number) =>
     renderEnemyModel(ENEMY_SHAPES.plant, base(object), index);
 
-  // the rolling stone: a wheel on its track's floor, a box's height over its spot, turned to roll across the map as the game rolls it
+  // the rolling stone: a wheel where it starts along its track, turned to roll across the map as the game rolls it
   const renderStone = (object: LevelObject, index: number) => {
     const radius = STONE_TRACK.radius / scale;
-    const [x, y, z] = base(object);
+    const path = stonePath(object.at, object.raise, turn, scale).map(blenderToView);
     const [rollX, , rollZ] = blenderToView(stoneRolling(turn));
     return (
-      <mesh position={[x, y + STONE_TRACK.lift / scale + radius, z]} rotation={[0, Math.atan2(rollX, rollZ), Math.PI / 2]}>
-        <cylinderGeometry args={[radius, radius, radius * STONE_THICKNESS, 20]} />
-        <meshLambertMaterial color={ENEMY_COLOURS.rolling_stone} />
-        <Edges color={edgeColour(index, ENEMY_COLOURS.rolling_stone)} />
-      </mesh>
-    );
-  };
-
-  // the track a rolling stone comes with: its outline on the floor, and the line its middle rolls along
-  // where along its line a rolling stone starts, and an arrow the way it rolls first:
-  // on towards its last point, or back towards its first if it's reversed (only
-  // back from its last point, and only on from its first)
-  const renderStoneStart = (object: LevelObject, path: Vec3[], colour: string) => {
-    const start = object.start ?? 0;
-    const isRollingBack = start >= 1 || (start > 0 && object.reverse === true);
-    const at = pointAlongShare(path, start);
-    const ahead = pointAlongShare(path, isRollingBack ? start - 0.05 : start + 0.05);
-    const [dx, , dz] = [ahead[0] - at[0], 0, ahead[2] - at[2]];
-    const size = boxSize(scale);
-    return (
-      <group position={at}>
-        <mesh>
-          <sphereGeometry args={[size * HANDLE_SIZE, 12, 8]} />
-          <meshBasicMaterial color={colour} />
+      <group position={pointAlongShare(path, object.start ?? 0)}>
+        <mesh rotation={[0, Math.atan2(rollX, rollZ), Math.PI / 2]}>
+          <cylinderGeometry args={[radius, radius, radius * STONE_THICKNESS, 20]} />
+          <meshLambertMaterial color={ENEMY_COLOURS.rolling_stone} />
+          <Edges color={edgeColour(index, ENEMY_COLOURS.rolling_stone)} />
         </mesh>
-        <group rotation={[0, Math.atan2(-dx, -dz), 0]}>
-          <mesh position={[0, 0, -size * 0.4]} rotation={[-Math.PI / 2, 0, 0]}>
-            <coneGeometry args={[size * 0.12, size * 0.3, 12]} />
-            <meshBasicMaterial color={colour} />
-          </mesh>
-        </group>
+        {renderStoneArrow(object, path, radius)}
       </group>
     );
   };
 
-  // and where along it the stone starts
+  // the track a rolling stone comes with: its outline on the floor, and the line its middle rolls along
+  // an arrow over a rolling stone, the way it rolls first from where it starts: on
+  // towards its path's last point, or back towards its first if it's reversed
+  // (only back from its last point, and only on from its first)
+  const renderStoneArrow = (object: LevelObject, path: Vec3[], radius: number) => {
+    const start = object.start ?? 0;
+    const isRollingBack = start >= 1 || (start > 0 && object.reverse === true);
+    const at = pointAlongShare(path, start);
+    const ahead = pointAlongShare(path, isRollingBack ? start - 0.05 : start + 0.05);
+    const size = boxSize(scale);
+    return (
+      <group position={[0, radius + size * 0.3, 0]} rotation={[0, Math.atan2(at[0] - ahead[0], at[2] - ahead[2]), 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[size * 0.15, size * 0.4, 12]} />
+          <meshBasicMaterial color={ENEMY_COLOURS.rolling_stone} />
+        </mesh>
+      </group>
+    );
+  };
+
   const renderStoneTrack = (object: LevelObject) => {
     const [rollX, , rollZ] = blenderToView(stoneRolling(turn));
     const [x, y, z] = base(object);
@@ -209,7 +204,6 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     const colour = ENEMY_COLOURS.rolling_stone;
     return (
       <>
-        {renderStoneStart(object, path, colour)}
         <mesh position={[x, y + lift, z]} rotation={[0, Math.atan2(rollX, rollZ), 0]}>
           <boxGeometry args={[STONE_TRACK.width / scale, lift, STONE_TRACK.length / scale]} />
           <meshBasicMaterial color={colour} transparent opacity={TRACK_OPACITY} />
