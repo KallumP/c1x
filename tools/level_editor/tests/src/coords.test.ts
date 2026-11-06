@@ -103,7 +103,7 @@ describe("enemies facing the player", () => {
   });
 
   test.each([0, 90, 180, 270])("at a turn of %i, its side (+x) lies along the way a crab walks", (turn) => {
-    expect(turned(enemyTurn(turn)).side).toEqual(blenderToView(stoneRolling(turn)));
+    expect(turned(enemyTurn(turn)).side).toEqual(blenderToView(stoneRolling(turn)).map((value) => value + 0));
   });
 
   test("unturned, it isn't turned", () => {

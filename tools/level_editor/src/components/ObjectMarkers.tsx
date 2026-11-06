@@ -1,17 +1,18 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { blenderToView, boxSize, cameraFacing, crabPath, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { blenderToView, boxSize, cameraFacing, crabPath, enemyTurn, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
+import { ENEMY_SHAPES, partGeometry, type ShapePart } from "../enemyShapes";
 import type { LevelObject, Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
 const PAD_UNITS = 400;   // the warp pad's radius, about
-const PLANT_UNITS = 560; // the plant's height, about
 const CRAB_SIZE = [700, 250]; // the crab's width (along the way it walks, sideways) and height, about
 const STONE_THICKNESS = 0.35; // of the rolling stone's radius
 const TRACK_OPACITY = 0.25;   // of the outline of a rolling stone's track
 const BOX_EDGE_COLOUR = "#000000";
+const SELECTED_GLOW = 0.35; // how much brighter the selected enemy's model is
 
 // where an object's base is in the viewport, raised as it is in the game
 function base(object: LevelObject): Vec3 {
@@ -110,18 +111,25 @@ export default function ObjectMarkers({ objects, scale, turn, selected, warnings
     );
   };
 
-  // the plant: a cone as tall as it stands
-  const renderPlant = (object: LevelObject, index: number) => {
-    const height = PLANT_UNITS / scale;
-    const [x, y, z] = base(object);
+  const renderShapePart = (part: ShapePart, partIndex: number, glow: number) => (
+    <mesh key={partIndex} geometry={partGeometry(part)}>
+      <meshLambertMaterial color={part.colour} emissive={SELECTED_COLOUR} emissiveIntensity={glow} />
+    </mesh>
+  );
+
+  // an enemy's model standing at at (in the viewport), facing the player, sized by the level's
+  // scale; the selected one glows
+  const renderEnemyModel = (parts: ShapePart[], at: Vec3, index: number, key?: number) => {
+    const glow = index === selected ? SELECTED_GLOW : 0;
     return (
-      <mesh position={[x, y + height / 2, z]}>
-        <coneGeometry args={[height / 3, height, 12]} />
-        <meshLambertMaterial color={ENEMY_COLOURS.plant} />
-        <Edges color={edgeColour(index, ENEMY_COLOURS.plant)} />
-      </mesh>
+      <group key={key} position={at} rotation={[0, enemyTurn(turn), 0]} scale={1 / scale}>
+        {parts.map((part, partIndex) => renderShapePart(part, partIndex, glow))}
+      </group>
     );
   };
+
+  const renderPlant = (object: LevelObject, index: number) =>
+    renderEnemyModel(ENEMY_SHAPES.plant, base(object), index);
 
   // the rolling stone: a wheel on its track's floor, a box's height over its spot, turned to roll across the map as the game rolls it
   const renderStone = (object: LevelObject, index: number) => {
