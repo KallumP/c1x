@@ -5,6 +5,11 @@ import type { LevelObject, Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 5;
 
+// how far apart a path's points are in the game, in game units: as n. sanity
+// beach's crabs' and turtles' are. the game moves an enemy a point at a time,
+// so this keeps it walking at its own speed
+export const PATH_STEP = 100;
+
 type PathEnemy = "crab" | "turtle";
 
 const plus = (first: Vec3, second: Vec3): Vec3 => [first[0] + second[0], first[1] + second[1], first[2] + second[2]];
@@ -63,6 +68,11 @@ function pointAlong(nodes: Vec3[], wanted: number): Vec3 {
     travelled += step;
   }
   return nodes[nodes.length - 1];
+}
+
+// a path in steps as near step long as fit evenly, from its first node to its last
+export function inEvenSteps(nodes: Vec3[], step: number): Vec3[] {
+  return respaced(nodes, Math.max(1, Math.round(pathLength(nodes) / step)) + 1);
 }
 
 // count nodes evenly along a path, from its first node to its last, keeping its shape

@@ -67,7 +67,7 @@ export function stonePath(at: Vec3, raise: number, turn: number, scale: number):
 }
 
 // how far a crab walks back and forth, in game units: n. sanity beach's first
-// crab's path, a straight line along the game's x (the level build's placeOnExamplePath)
+// crab's path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const CRAB_WALK = 1600;
 
 // the ends of a crab's path (in blender), for a crab at at, raised by raise: its
@@ -80,7 +80,7 @@ export function crabPath(at: Vec3, raise: number, turn: number, scale: number): 
 }
 
 // how far a turtle walks back and forth, in game units: n. sanity beach's first
-// turtle's path, along the game's z (the route), straightened by the level build
+// turtle's path, along the game's z (the route), straightened (its default path, src/enemyPaths.ts)
 export const TURTLE_WALK = 2000;
 
 // the ends of a turtle's path (in blender), for a turtle at at, raised by raise:

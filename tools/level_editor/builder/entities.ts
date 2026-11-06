@@ -65,17 +65,6 @@ export function entityPath(item: Buffer): Vec3[] {
     [0, 1, 2].map((axis) => 4 * item.readInt16LE(ENTITY_POINTS + index * POINT_BYTES + 2 * axis)) as Vec3);
 }
 
-// the enemies whose example path, from a level with sloping floors, is
-// straightened for custom levels' flat ones: n. sanity beach's turtles curve
-// and rise and fall with the beach as they walk along the route (z)
-export const STRAIGHTENED_PATHS: EnemyType[] = ["turtle"];
-
-// a path straightened: along z as it was, at its middle's x and height
-export function straightened(path: Vec3[]): Vec3[] {
-  const [middleX, middleY] = path[Math.floor(path.length / 2)];
-  return path.map(([, , z]) => [middleX, middleY, z]);
-}
-
 // the entity with points (zone units relative to its zone) as its path, in place of its own
 export function withPath(item: Buffer, points: Vec3[]): Buffer {
   const header = Buffer.from(item.subarray(0, ENTITY_POINTS));
