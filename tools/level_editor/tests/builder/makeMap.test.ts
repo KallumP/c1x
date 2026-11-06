@@ -332,6 +332,18 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       placed.path.forEach((point) => expect(Math.abs(point[1] - 128)).toBeLessThanOrEqual(8));
     });
 
+    test("a turtle's speed spaces its path's points: twice as fast, twice as far apart, the same distance along", () => {
+      const path: Vec3[] = [[0, 0, 0], [4, 0, 0]]; // 4 m across: 1024 units at scale 256
+      const placedAt = (speed?: number) =>
+        enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "turtle", path, speed })], readOtherLevel }).zone)[0].path;
+      const steps = (points: Vec3[]) => points.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - points[index][axis])));
+      const [normal, fast, slow] = [placedAt(), placedAt(2), placedAt(0.5)];
+      expect([normal.length, fast.length, slow.length]).toEqual([11, 6, 21]); // steps of 102.4, 204.8 and 51.2
+      steps(fast).forEach((step) => expect(Math.abs(step - 204.8)).toBeLessThanOrEqual(8));
+      steps(slow).forEach((step) => expect(Math.abs(step - 51.2)).toBeLessThanOrEqual(8));
+      expect(Math.abs(fast[5][0] - normal[10][0])).toBeLessThanOrEqual(8);
+    });
+
     test("a turtle, with no other levels to take it from, is an error saying so", () => {
       expect(() => withTurtle({ readOtherLevel: undefined })).toThrow(/turtle/);
     });
