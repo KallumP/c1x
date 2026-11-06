@@ -10,7 +10,11 @@ export const DEFAULT_PATH_NODES = 5;
 // so this keeps it walking at its own speed
 export const PATH_STEP = 100;
 
-type PathEnemy = "crab" | "turtle" | "native";
+export type PathEnemy = "crab" | "turtle" | "native";
+
+// how far apart a path's points are in the game for an enemy, at its own speed:
+// a native's as the great gate's natives' are (its path in 4 steps), the rest PATH_STEP
+export const pathStep = (enemy: PathEnemy) => (enemy === "native" ? NATIVE_WALK / 4 : PATH_STEP);
 
 const plus = (first: Vec3, second: Vec3): Vec3 => [first[0] + second[0], first[1] + second[1], first[2] + second[2]];
 const scaled = (vector: Vec3, factor: number): Vec3 => [vector[0] * factor, vector[1] * factor, vector[2] * factor];
