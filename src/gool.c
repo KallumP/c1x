@@ -13,6 +13,7 @@
 #include "pc/gfx/gte.h"
 #include "pc/levelend.h"
 #include "pc/fling.h"
+#include "pc/shield.h"
 int CardControl(int op, int part_idx) { return 1; }
 
 /* forward declarations for unexported funcs */
@@ -1988,8 +1989,50 @@ gool_debug_cache debug_cache = { 0 };
 int GoolObjectTryBreak(gool_object *obj, uint32_t opcode, uint32_t flags, int res);
 #endif /* CFLAGS_GOOL_DEBUG */
 
-//----- (800201DC) --------------------------------------------------------
+/* pc: whether obj is a native (The Great Gate's SheNC) in a custom level */
+static int GoolObjectIsCustomLevelNative(gool_object *obj) {
+  static eid_t native_eid = 0;
+
+  if (!native_eid) { native_eid = NSStringToEID("SheNC"); }
+  return ns.ldat->lid == LID_TEST && obj->global && obj->global->eid == native_eid;
+}
+
+/* pc: turns the push a native's shield just gave crash, along the game's x,
+   to lie along the native's own path (ShieldPushWay), at the same speed */
+static void GoolTurnShieldPush(gool_object *native) {
+  vec *start, *end, way;
+  int32_t heading;
+
+  start = (vec*)&native->memory[SHIELD_PATH_START];
+  end = (vec*)&native->memory[SHIELD_PATH_END];
+  way = ShieldPushWay(&native->trans, &crash->trans, start, end);
+  heading = angle12(atan2(way.x, way.z));
+  crash->target_rot.x = heading;
+  crash->velocity.x = ((sin(heading)>>4)*SHIELD_PUSH_SPEED)>>8;
+  crash->velocity.z = ((cos(heading)>>4)*SHIELD_PUSH_SPEED)>>8;
+}
+
+static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_ref *transition);
+
+/* runs obj's code (GoolObjectInterpretCode). pc: a custom level's native
+   that pushes crash with its shield pushes him along its path (GoolTurnShieldPush) */
 int GoolObjectInterpret(gool_object *obj, uint32_t flags, gool_state_ref *transition) {
+  vec velocity_before;
+  int32_t heading_before;
+  int res;
+
+  if (!crash || !GoolObjectIsCustomLevelNative(obj))
+    return GoolObjectInterpretCode(obj, flags, transition);
+  velocity_before = crash->velocity;
+  heading_before = crash->target_rot.x;
+  res = GoolObjectInterpretCode(obj, flags, transition);
+  if (ShieldPushed(&velocity_before, heading_before, &crash->velocity, crash->target_rot.x))
+    GoolTurnShieldPush(obj);
+  return res;
+}
+
+//----- (800201DC) --------------------------------------------------------
+static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_ref *transition) {
   uint32_t instruction, opcode;
   gool_object *recipient;
   uint32_t arg;
