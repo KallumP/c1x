@@ -21,18 +21,21 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // rollers' biting plant, and its stone wheel, which comes with its track and
 // rolls back and forth along it), and those taken from other levels (n. sanity
 // beach's crab, which walks back and forth across the map, and its turtle, which
-// walks back and forth along the route). the level build places them by their
+// walks back and forth along the route, and the great gate's native). the level build places them by their
 // entity (builder/entities.ts)
-export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle"] as const;
+export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
 
-// the enemies that walk back and forth along a path of nodes, and how many nodes it can have
-export const PATH_ENEMIES: EnemyType[] = ["crab", "turtle"];
+// the enemies that walk back and forth along a path of nodes (crab, turtle, native), and how many nodes it can have
+export const PATH_ENEMIES: EnemyType[] = ["crab", "turtle", "native"];
 export const PATH_NODES_MAX = 20;
 
-// how many times the game's own pace a crab or turtle can walk at (seen working in the game)
+// the enemies with a path, for messages: "crabs, turtles and natives"
+const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map((enemy) => `${enemy}s`).join(", ")} and ${PATH_ENEMIES.at(-1)}s`;
+
+// how many times the game's own pace a path enemy can walk at (seen working in the game with crabs and turtles)
 export const SPEED_MIN = 0.25;
 export const SPEED_MAX = 3;
 
@@ -43,8 +46,8 @@ export interface LevelObject {
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
   enemy?: EnemyType;    // an enemy's type
-  path?: Vec3[];        // a crab's or turtle's path: its nodes, in metres from where it stands (at, raised)
-  speed?: number;       // how many times the game's own pace a crab or turtle walks at (1 without one)
+  path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised)
+  speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
   reverse?: boolean;    // a rolling stone that rolls back towards its first end first (true, or none)
 }
@@ -78,13 +81,13 @@ function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<
   return { enemy: fields.type as EnemyType };
 }
 
-// a crab's or turtle's path, from its fields in objects.json (none if it hasn't one)
+// a path enemy's path, from its fields in objects.json (none if it hasn't one)
 function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "path"> {
   if (!("path" in fields)) {
     return {};
   }
   if (!PATH_ENEMIES.includes(enemy)) {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no path (crabs and turtles do)`);
+    throw new Error(`object ${objectNumber}: a ${enemy} has no path (${PATH_ENEMIES_NAMED} do)`);
   }
   const nodes = fields.path;
   if (!Array.isArray(nodes) || nodes.length < 2 || nodes.length > PATH_NODES_MAX) {
@@ -96,13 +99,13 @@ function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumbe
   return { path: nodes.map(([x, y, z]): Vec3 => [x, y, z]) };
 }
 
-// a crab's or turtle's speed, from its fields in objects.json (none if it hasn't one)
+// a path enemy's speed, from its fields in objects.json (none if it hasn't one)
 function readSpeed(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "speed"> {
   if (!("speed" in fields)) {
     return {};
   }
   if (!PATH_ENEMIES.includes(enemy)) {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no speed (crabs and turtles do)`);
+    throw new Error(`object ${objectNumber}: a ${enemy} has no speed (${PATH_ENEMIES_NAMED} do)`);
   }
   const speed = fields.speed;
   if (!isNumber(speed) || speed < SPEED_MIN || speed > SPEED_MAX) {

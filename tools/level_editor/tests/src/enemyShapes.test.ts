@@ -32,6 +32,22 @@ describe("enemy shapes", () => {
     expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
   });
 
+  test("the native stands on the floor, as big as the game's (Na1iV): about 477 across, 925 tall and 532 deep", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.native);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeCloseTo(925, -1);
+    expect(max[0] - min[0]).toBeGreaterThan(420);
+    expect(max[0] - min[0]).toBeLessThan(540);
+    expect(max[2] - min[2]).toBeGreaterThan(470);
+    expect(max[2] - min[2]).toBeLessThan(600);
+  });
+
+  test("the native faces +z too: its shield is in front of its middle", () => {
+    const shields = ENEMY_SHAPES.native.filter((part) => part.name === "shield");
+    expect(shields.length).toBeGreaterThan(0);
+    expect(shields.every((part) => part.at[2] > 0)).toBe(true);
+  });
+
   test("the turtle faces +z too: its head is in front of its middle", () => {
     const heads = ENEMY_SHAPES.turtle.filter((part) => part.name === "head");
     expect(heads.length).toBeGreaterThan(0);

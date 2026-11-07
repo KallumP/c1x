@@ -30,7 +30,7 @@ function strays(place: Vec3, triangles: Triangle[]): boolean {
   return drop === null || drop > WALK_HEIGHT + FLOOR_REACH;
 }
 
-// the indices of the crabs and turtles whose paths leave the floor or run through a wall
+// the indices of the path enemies (crabs, turtles, natives) whose paths leave the floor or run through a wall
 export function strayingPaths(objects: LevelObject[], turn: number, scale: number, triangles: Triangle[]): Set<number> {
   const straying = new Set<number>();
   objects.forEach((object, index) => {

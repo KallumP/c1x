@@ -85,6 +85,10 @@ export const CRAB_WALK = 1600;
 // turtle's path, along the game's z (the route), straightened (its default path, src/enemyPaths.ts)
 export const TURTLE_WALK = 2000;
 
+// how far a native walks back and forth, in game units: the great gate's
+// natives' path, a straight line along the game's x (its default path, src/enemyPaths.ts)
+export const NATIVE_WALK = 1972;
+
 // a box's size in blender metres, for a level at scale game units a metre
 export function boxSize(scale: number): number {
   return BOX_UNITS / scale;

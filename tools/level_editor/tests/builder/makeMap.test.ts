@@ -68,6 +68,7 @@ const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
 const hasBase = existsSync(`${STREAMS}/${BASE_LEVEL.file}.nsd`);
 const N_SANITY_BEACH = 0x9;
 const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
+const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0x12)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -356,6 +357,70 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a turtle, with no other levels to take it from, is an error saying so", () => {
       expect(() => withTurtle({ readOtherLevel: undefined })).toThrow(/turtle/);
+    });
+  });
+
+  describe.skipIf(!hasGreatGate)("natives, from the great gate", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const native = () => object("enemy", [1, 2, 0], { enemy: "native" });
+    const withNative = (more: Partial<MapOptions> = {}) => make(MAP_OBJ, { scale: 256, objects: [native()], readOtherLevel, ...more });
+
+    const steps = (points: Vec3[]) => points.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - points[index][axis])));
+
+    test("a native walks the great gate's natives' path by default: 1972 across the map, its middle at the native's spot, in its steps (493)", () => {
+      const [placed] = enemies(withNative().zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.native);
+      expect(placed.path.length).toBe(5);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      const middle = placed.path[2];
+      [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(middle[axis] - value)).toBeLessThanOrEqual(8));
+      placed.path.forEach((point) => [1, 2].forEach((axis) => expect(Math.abs(point[axis] - middle[axis])).toBeLessThanOrEqual(8)));
+      steps(placed.path).forEach((step) => expect(Math.abs(step - 493)).toBeLessThanOrEqual(8));
+    });
+
+    test("a native walks its own path in steps about as long as the great gate's (1972 over 4), longer the faster it is", () => {
+      const path: Vec3[] = [[0, 0, 0], [8, 0, 0]]; // 8 m across: 2048 units at scale 256
+      const placedAt = (speed?: number) =>
+        enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "native", path, speed })], readOtherLevel }).zone)[0].path;
+      const [normal, fast] = [placedAt(), placedAt(2)];
+      expect([normal.length, fast.length]).toEqual([5, 3]); // steps of 512 and 1024
+      steps(normal).forEach((step) => expect(Math.abs(step - 512)).toBeLessThanOrEqual(8));
+      steps(fast).forEach((step) => expect(Math.abs(step - 1024)).toBeLessThanOrEqual(8));
+    });
+
+    test("a level with a native has the great gate's native code, model and animations", () => {
+      const { level, entries, zone } = withNative();
+      expect(enemies(zone).map(({ type }) => type)).toEqual([ENEMY_ENTITIES.native]);
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.native[0]]).toBe(stringToEid("SheNC"));
+      expect(["Na1iG", "Na1iV", "Na2iV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
+
+    test("a level without natives has none of their code", () => {
+      expect(make(MAP_OBJ, { scale: 256, readOtherLevel }).level.nsd.ldat.execMap[ENEMY_ENTITIES.native[0]]).toBe(EID_NONE);
+    });
+
+    test.skipIf(!hasBeach)("a level with a crab and a native reads each's level, has both, and nothing twice", () => {
+      const read: number[] = [];
+      const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
+      const both = make(MAP_OBJ, { scale: 256, objects: [native(), object("enemy", [-1, 4, 0], { enemy: "crab" })], readOtherLevel: readEach });
+      expect(read.sort((first, second) => first - second)).toEqual([0x9, 0x12]);
+      expect(enemies(both.zone).map(({ type }) => type)).toEqual(expect.arrayContaining([ENEMY_ENTITIES.native, ENEMY_ENTITIES.crab]));
+      const { execMap } = both.level.nsd.ldat;
+      expect([execMap[ENEMY_ENTITIES.native[0]], execMap[ENEMY_ENTITIES.crab[0]]]).toEqual([stringToEid("SheNC"), stringToEid("CrabC")]);
+      const everyEid = both.level.pages.flatMap((page) => (page.type === PAGE_TEXTURE ? [page.eid] : page.entries.map(({ eid }) => eid)));
+      expect(everyEid.filter((eid) => eid === stringToEid("fli0A")).length).toBe(1);
+      expect(everyEid.length).toBe(new Set(everyEid).size);
+    });
+
+    test.skipIf(!hasBeach)("a native adds no texture pages (its model is untextured): a crab, a turtle and a native have the crab's and turtle's", () => {
+      const texturePages = (objects: LevelObject[]) =>
+        make(MAP_OBJ, { scale: 256, objects, readOtherLevel }).level.pages.filter((page) => page.type === PAGE_TEXTURE).map(({ eid }) => eid);
+      const crabAndTurtle = [object("enemy", [-1, 4, 0], { enemy: "crab" }), object("enemy", [0, 3, 0], { enemy: "turtle" })];
+      expect(texturePages([...crabAndTurtle, native()])).toEqual(texturePages(crabAndTurtle));
+    });
+
+    test("a native, with no other levels to take it from, is an error saying so", () => {
+      expect(() => withNative({ readOtherLevel: undefined })).toThrow(/native/);
     });
   });
 

@@ -16,9 +16,10 @@ export interface DonorLevel {
 }
 
 const N_SANITY_BEACH: DonorLevel = { lid: 0x9, name: "N. Sanity Beach", file: "s0000009" };
+const THE_GREAT_GATE: DonorLevel = { lid: 0x12, name: "The Great Gate", file: "s0000012" };
 
 // the level each enemy jungle rollers doesn't have is taken from
-export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = { crab: N_SANITY_BEACH, turtle: N_SANITY_BEACH };
+export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = { crab: N_SANITY_BEACH, turtle: N_SANITY_BEACH, native: THE_GREAT_GATE };
 
 export interface DonorObject {
   code: [slot: number, eid: number][]; // each piece of code it brings, in its exec slot in the donor
@@ -131,6 +132,56 @@ export function enemyDonorLevels(objects: LevelObject[], readOtherLevel?: (lid: 
   return levels;
 }
 
+// one instruction of an object's code changed: its index in the code, what it
+// is in the donor level, and what it becomes
+interface CodePatch {
+  at: number;
+  was: number;
+  now: number;
+}
+
+const CODE_ITEM = 1; // a code entry's item holding its instructions
+
+// the great gate's natives start at the end of their path nearest crash, and
+// walk back to the end nearest him when he leaves. these make both their
+// path's first node, so its order decides where they stand: each branch on
+// which end is nearer (BEQZ) becomes one always taken (BRA) that drops the comparison
+const NATIVE_CODE_PATCHES: CodePatch[] = [
+  { at: 0x19, was: 0x8227c002, now: 0x82094400 }, // where it starts: on to its first node
+  { at: 0x2d, was: 0x8227c003, now: 0x82094403 }, // where it walks back to: past setting its last node
+];
+
+const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = { native: NATIVE_CODE_PATCHES };
+
+// instructions with patches made; an error if one isn't what the patch expects
+function patchedInstructions(type: EnemyType, instructions: Buffer, patches: CodePatch[]): Buffer {
+  const patched = Buffer.from(instructions);
+  for (const { at, was, now } of patches) {
+    if (at * 4 + 4 > patched.length || patched.readUInt32LE(at * 4) !== was) {
+      throw new Error(`the ${enemyName(type)}'s code isn't as expected at instruction ${at.toString(16)}, so it can't be changed to suit custom levels`);
+    }
+    patched.writeUInt32LE(now, at * 4);
+  }
+  return patched;
+}
+
+// object with its code (code, an eid) patched, the rest as it was
+function withPatchedCode(type: EnemyType, object: DonorObject, code: number, patches: CodePatch[]): DonorObject {
+  const patchEntry = (entry: Entry): Entry => {
+    const items = entry.items.map((item, index) => (index === CODE_ITEM ? patchedInstructions(type, item, patches) : item));
+    return { ...entry, items };
+  };
+  return { ...object, entries: object.entries.map((entry) => (entry.eid === code ? patchEntry(entry) : entry)) };
+}
+
+// a kind of enemy's object from the level it's taken from, its code changed to suit custom levels
+function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
+  const slot = ENEMY_ENTITIES[type][0];
+  const object = donorObject(level, slot);
+  const patches = ENEMY_CODE_PATCHES[type];
+  return patches ? withPatchedCode(type, object, level.nsd.ldat.execMap[slot], patches) : object;
+}
+
 // each kind of enemy's object, from the level it's taken from
 export const enemyDonorObjects = (levels: Map<EnemyType, Level>): DonorObject[] =>
-  [...levels].map(([type, level]) => donorObject(level, ENEMY_ENTITIES[type][0]));
+  [...levels].map(([type, level]) => enemyDonorObject(type, level));

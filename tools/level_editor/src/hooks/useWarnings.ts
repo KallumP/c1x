@@ -10,7 +10,7 @@ export function useTriangles(group: THREE.Group | null): Triangle[] {
   return useMemo(() => (group ? levelTriangles(group) : []), [group]);
 }
 
-// the crabs and turtles whose paths leave the floor or run through a wall
+// the path enemies whose paths leave the floor or run through a wall
 export function usePathWarnings(objects: LevelObject[], turn: number, scale: number, triangles: Triangle[]): Set<number> {
   return useMemo(() => strayingPaths(objects, turn, scale, triangles), [objects, turn, scale, triangles]);
 }

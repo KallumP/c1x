@@ -20,6 +20,7 @@ type ModelledEnemy = Exclude<EnemyType, "rolling_stone">;
 
 const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth: "#b0233a", tooth: "#f4f1e0", soil: "#6b4a2b" };
 const TURTLE_COLOURS = { shell: "#b8282a", spot: "#2fa58c", skin: "#b5a35a", eye: "#f4f1e0", pupil: "#1a1a1a" };
+const NATIVE_COLOURS = { skin: "#8a5a3a", skirt: "#46c84a", hair: "#2b1b14", shield: "#8e2416", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
 const ball = (radius: number, at: Vec3, colour: string, extra: Partial<ShapePart> = {}): ShapePart =>
@@ -155,6 +156,41 @@ function turtle(): ShapePart[] {
   ];
 }
 
+// the native's legs and bare feet, one side
+function nativeLeg(): ShapePart[] {
+  return [
+    rod(28, 26, 300, [60, 170, 0], NATIVE_COLOURS.skin),
+    ball(1, [60, 20, 25], NATIVE_COLOURS.skin, { stretch: [40, 22, 60] }),
+  ];
+}
+
+// the native's head: its face, its hair over the top and back, and its eyes
+function nativeHead(): ShapePart[] {
+  return [
+    ball(85, [0, 890, 0], NATIVE_COLOURS.skin),
+    ball(1, [0, 935, -20], NATIVE_COLOURS.hair, { stretch: [100, 75, 100] }),
+    ...bothSides([
+      ball(16, [32, 900, 76], NATIVE_COLOURS.eye),
+      ball(7, [33, 902, 90], NATIVE_COLOURS.pupil),
+    ]),
+  ];
+}
+
+// the native's arms, reaching forwards to hold its shield up in front of it
+function nativeArm(): ShapePart[] {
+  return [rod(26, 24, 300, [215, 660, 140], NATIVE_COLOURS.skin, { turn: [Math.PI / 2 - 0.4, 0, 0.15] })];
+}
+
+function native(): ShapePart[] {
+  return [
+    ...bothSides([...nativeLeg(), ...nativeArm()]),
+    rod(110, 180, 280, [0, 440, 0], NATIVE_COLOURS.skirt),
+    ball(1, [0, 660, 0], NATIVE_COLOURS.skin, { stretch: [150, 170, 95] }),
+    ...nativeHead(),
+    { kind: "box", size: [300, 430, 30], at: [40, 600, 345], colour: NATIVE_COLOURS.shield, name: "shield" },
+  ];
+}
+
 function primitiveGeometry(part: ShapePart): BufferGeometry {
   switch (part.kind) {
     case "box":
@@ -212,11 +248,13 @@ function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 }
 
 // how tall the game's models are, in game units: jungle rollers' plant (JuPcG) and
-// n. sanity beach's crab (Cr19G) and turtle (Tu19G), each vertex times 4, times its tgeo's scale / 4096
-const GAME_HEIGHTS: Record<ModelledEnemy, number> = { plant: 720, crab: 480, turtle: 370 };
+// n. sanity beach's crab (Cr19G) and turtle (Tu19G), and the great gate's native
+// (Na1iG, its first frame in Na1iV), each vertex times 4, times its tgeo's scale / 4096
+const GAME_HEIGHTS: Record<ModelledEnemy, number> = { plant: 720, crab: 480, turtle: 370, native: 925 };
 
 export const ENEMY_SHAPES: Record<ModelledEnemy, ShapePart[]> = {
   plant: scaledToHeight(standingOnFloor(plant()), GAME_HEIGHTS.plant),
   crab: scaledToHeight(standingOnFloor(crab()), GAME_HEIGHTS.crab),
   turtle: scaledToHeight(standingOnFloor(turtle()), GAME_HEIGHTS.turtle),
+  native: scaledToHeight(standingOnFloor(native()), GAME_HEIGHTS.native),
 };
