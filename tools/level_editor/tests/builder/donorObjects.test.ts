@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { donorObject, withDonorObjects } from "../../builder/donorObjects";
+import { donorObject, enemyDonorObjects, withDonorObjects, type DonorObject } from "../../builder/donorObjects";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import { entriesById, entryPage, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, readNsd, soundPage, texturePage, type Entry, type Level } from "../../builder/levelFiles";
 import { nsdData, texturePageData, words } from "./levelFiles";
@@ -127,5 +127,63 @@ describe("adding objects from other levels to a level", () => {
     const taken = donorObject(donorLevel(), CRAB_SLOT);
     taken.code.push([0, CRAB]);
     expect(() => withDonorObjects(baseLevel(), [taken])).toThrow(/slot 0/);
+  });
+});
+
+const NATIVE = stringToEid("SheNC");
+const NATIVE_SLOT = 38;
+const PICK_START = 0x19; // where the great gate's native code picks the end it starts from
+const PICK_WALK_BACK = 0x2d; // and the end it walks back to
+const BEQZ_2 = 0x8227c002;
+const BEQZ_3 = 0x8227c003;
+const BRA_0_DROP_1 = 0x82094400;
+const BRA_3_DROP_1 = 0x82094403;
+
+// native code as the great gate's: other instructions (1s), with its picks at their places
+function nativeCode(startPick = BEQZ_2, walkBackPick = BEQZ_3): number[] {
+  const code = Array<number>(0x30).fill(1);
+  code[PICK_START] = startPick;
+  code[PICK_WALK_BACK] = walkBackPick;
+  return code;
+}
+
+function nativeDonorLevel(code: number[]): Level {
+  const execMap: number[] = [];
+  execMap[NATIVE_SLOT] = NATIVE;
+  execMap[CRAB_SLOT] = CRAB;
+  const pages = [entryPage([entry(NATIVE, 11, [text("head"), words(...code), text("data")]), entry(CRAB, 11, [text("head"), words(...nativeCode())])])];
+  return { nsd: readNsd(nsdData([], 0x12, ZONE, execMap)), pages };
+}
+
+const codeOf = (objects: DonorObject[], eid: number) => {
+  const items = objects.flatMap((object) => object.entries).find((found) => found.eid === eid)!.items;
+  return Array.from({ length: items[1].length / 4 }, (_, index) => items[1].readUInt32LE(index * 4));
+};
+
+describe("enemies' code from other levels", () => {
+  test("a native's starts it at its path's first node and walks it back there, not to the end nearest crash: each pick branches past the other end, dropping its comparison", () => {
+    const code = codeOf(enemyDonorObjects(new Map([["native", nativeDonorLevel(nativeCode())]])), NATIVE);
+    expect(code).toEqual(nativeCode(BRA_0_DROP_1, BRA_3_DROP_1));
+  });
+
+  test("a native's other items are as they were", () => {
+    const items = enemyDonorObjects(new Map([["native", nativeDonorLevel(nativeCode())]]))[0].entries[0].items;
+    expect([items[0], items[2]]).toEqual([text("head"), text("data")]);
+  });
+
+  test("the level it came from keeps its own", () => {
+    const level = nativeDonorLevel(nativeCode());
+    enemyDonorObjects(new Map([["native", level]]));
+    expect(codeOf([donorObject(level, NATIVE_SLOT)], NATIVE)).toEqual(nativeCode());
+  });
+
+  test("other enemies' is as it was", () => {
+    const code = codeOf(enemyDonorObjects(new Map([["crab", nativeDonorLevel(nativeCode())]])), CRAB);
+    expect(code).toEqual(nativeCode());
+  });
+
+  test("a native's that isn't as the great gate's is an error, as it can't be changed", () => {
+    const level = nativeDonorLevel(nativeCode(1));
+    expect(() => enemyDonorObjects(new Map([["native", level]]))).toThrow(/native/);
   });
 });
