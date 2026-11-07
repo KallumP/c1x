@@ -42,29 +42,30 @@ level_src/my_level/grass.png
 
 ## 2. Place objects in the level editor
 
-The level editor allows you to place Crash's spawn, the end of the level, boxes and enemies.
+The level editor places Crash's spawn, the level's end, boxes and enemies.
 
 **Set it up (once):** install [Node.js](https://nodejs.org/) 18 or later, then click **Install** in the [launcher](launcher.md#level-editor)'s Level editor section.
 
 **Use it:**
 
 1. In the launcher, click **Open editor**. It opens in your browser.
-2. Pick your level at the top left.
-3. Pick `spawn`, `end`, a box or an enemy on the left, then click the floor to place it.
-4. Click **Select** (or press Escape), then click an object to select it. Drag it to move it, or change it on the right. Delete removes it.
-5. Click **Save** (or press Ctrl+S).
+1. Pick your level at the top left.
+1. Pick `spawn`, `end`, a `box` or an `enemy` on the left bar, then click the floor to place it. A level needs at least a spawn and an end to be played.
+1. Click **Select** (or press Esc), then click an object to select it. Drag it to move it, or change its properties on the right. **Delete** (or Del) removes it.
+1. Click **Save** (or press Ctrl+S), then **Build** at the top right (or press F5, which also boots the game straight into it). [Step 3](#3-build-the-level-and-play-it) has more on building.
 
-Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box, so move it. **Drop to floor** on the right puts the selected box just above the floor below it. To lift an object off the floor, set its **raise**: it stays that high above the floor as you drag it about.
+Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box (this doesn't stop the level from building). **Drop to floor** puts the selected box just above the floor, and **raise** sets how far off the floor an object should be.
 
-The arrow at the spawn points the way the camera faces when the level starts. With nothing selected, the right side shows the **Level**'s turn and scale (see [If something looks wrong](#if-something-looks-wrong)), and changing the turn turns the arrow. Save writes them to the level's `level.cfg`, along with the objects. Changing the scale changes how big the boxes look on the map, as they stay the same size in the game.
+The arrow on the spawn object shows which way the camera faces at the start. With nothing selected, the right side shows the level's settings, saved to its `level.cfg`:
 
-A crab, turtle or native walks back and forth along a path, drawn as a line from where it starts to where it turns round, with the enemy at each end: solid where it starts, faded where it turns round. **Reverse direction** turns its path round, so it starts at the other end. A rolling stone is drawn where it starts along its track, with an arrow over it the way it rolls first: its **start** slider moves it along the track, and its **Reverse direction** turns the arrow round. Select one to see a handle on each of its path's nodes: click a handle to select that node, then drag it across the floor, or set its x, y and z on the right. The **nodes** slider sets how many nodes the path has, spreading them evenly along it, and the **speed** slider how fast it walks, from a quarter of the game's own pace to three times it. A path drawn red leaves the floor or runs through a wall, which the enemy would walk straight through, so move its nodes.
+- **turn** and **scale** line the map up with the game (see [If something looks wrong](#if-something-looks-wrong)).
+- **Sky** sets a top colour down to **split** and a bottom colour below it.
 
-See [Objects](../level_src/README.md#objects) to see how each box and enemy behaves.
+**Enemy paths:** some enemies walk a path, drawn as a line with the enemy solid where it starts and faded at the other end. Select one to drag its nodes, or set their x, y and z on the right. **nodes** sets how many there are, **speed** how fast it walks, and **Reverse direction** which end it starts at. A path drawn red leaves the floor or runs through a wall, so move its nodes. 
 
-Below it, **Sky** sets the sky behind the level: a top colour filling the screen down to **split**, and a bottom colour below it, with a preview. It's N. Sanity Beach's blue over olive unless you change it, and it's saved to `level.cfg` too.
+A rolling stone instead has a **start** slider for where it starts along its track, and **Reverse direction** for which way it rolls first.
 
-When you're done, build and play the level from the editor too (see step 3).
+See [Objects](../level_src/README.md#objects) for how each box and enemy behaves.
 
 ## 3. Build the level and play it
 
