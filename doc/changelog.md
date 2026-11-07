@@ -4,17 +4,17 @@
 
 ### Added
 
-- custom levels can have N. Sanity Beach's crab, which walks back and forth across the map; it's the first enemy taken from a level other than Jungle Rollers, with its code, model, textures and sounds
-- custom levels can have N. Sanity Beach's turtle, which walks back and forth along the route; jump on it to bounce and flip it, then stand on it
-- the level editor draws plants and crabs as little plants and crabs, facing the player, as big as the game's, instead of a cone and a block; a crab is drawn at both ends of the path it walks, where it turns round in the game; turtles are drawn the same way
+- custom levels can have N. Sanity Beach's crab, which walks back and forth
+- custom levels can have N. Sanity Beach's turtle; jump on it to flip it, then stand on it
+- the level editor draws plants, crabs and turtles as themselves instead of a cone and a block
 - custom levels can have The Great Gate's native, which walks out to block Crash with its shield; spin it from the side or behind
-- crabs and turtles walk paths you set in the level editor: drag the nodes they walk through, on all three axes, and slide how many there are, how fast they walk, and which end they start at; a rolling stone can start anywhere along its track, rolling either way first; the editor warns about a path that leaves the floor or runs through a wall
+- enemies walk paths you set in the level editor, and the editor warns about a path that leaves the floor or runs through a wall
 
 ### Fixed
 
-- all sound and music playing far too quietly: the mixer divided every sound by the 24 voices it can play at once; it's now about 8 times louder, with music and sound effects in the same balance
-- some music instruments playing too loudly, such as Native Fortress's gong: each instrument's volume from the game's sound bank was dropped, so all of them played at full volume
-- softly played music notes coming out far quieter than on the PS1 (a note played at a quarter strength was 25 dB down rather than 12.5), leaving hard-hit notes like Native Fortress's gong standing out over the rest
+- all sound and music playing far too quietly
+- some music instruments, such as Native Fortress's gong, playing too loudly
+- soft music notes playing far quieter than on the PS1
 
 ## 2026-11-05
 
