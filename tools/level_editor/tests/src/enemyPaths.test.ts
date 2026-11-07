@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { canTurnRound, DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
+import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
@@ -108,9 +108,6 @@ describe("turning a path round", () => {
     expect([0, 1, 4].map((node) => nodeTurnedRound(node, 5))).toEqual([4, 3, 0]);
   });
 
-  test("a crab's or turtle's path can turn round; a native's can't, as it starts at the end nearest crash", () => {
-    expect((["crab", "turtle", "native"] as const).map(canTurnRound)).toEqual([true, true, false]);
-  });
 });
 
 describe("a point along a path", () => {

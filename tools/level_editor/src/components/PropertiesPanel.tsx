@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
-import { canTurnRound, enemyPath, inNodes, nodeCount, nodeTurnedRound, pathPositions, turnedRound, withNodeAt, type PathEnemy } from "../enemyPaths";
+import { enemyPath, inNodes, nodeCount, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
 import { BOX_TYPES, boxTypeName, PATH_ENEMIES, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { SKY_ROWS, type Sky } from "../sky";
@@ -131,7 +131,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     );
   };
 
-  // turns a crab's or turtle's path round, so it starts at the other end (not a native's: it starts at the end nearest crash); a selected node stays selected
+  // turns an enemy's path round, so it starts at the other end; a selected node stays selected
   const renderTurnRoundButton = (enemy: LevelObject) => {
     const turnRound = () => {
       const turn = levelCfg ? levelCfg.turn : 0;
@@ -278,7 +278,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {renderObjectFields(object)}
           {hasPath(object) && renderNodeSlider(object)}
           {hasPath(object) && renderSpeedSlider(object)}
-          {hasPath(object) && canTurnRound(object.enemy as PathEnemy) && renderTurnRoundButton(object)}
+          {hasPath(object) && renderTurnRoundButton(object)}
           {isStone(object) && renderStoneStartSlider(object)}
           {isStone(object) && renderStoneReverseButton(object)}
           {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}

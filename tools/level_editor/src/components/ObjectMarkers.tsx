@@ -4,7 +4,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
-import { canTurnRound, nodesUnderEnds, pathPositions, pointAlongShare, type PathEnemy } from "../enemyPaths";
+import { nodesUnderEnds, pathPositions, pointAlongShare, type PathEnemy } from "../enemyPaths";
 import { PATH_ENEMIES, type LevelObject, type Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
@@ -249,7 +249,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   // a crab, turtle or native: at the first and last nodes of the path it walks
   // back and forth along, where it turns round, with the line through its nodes,
   // and a handle on each node while it's selected. the far end is faded, as it
-  // starts at the other, but not a native's: it starts at the end nearest crash
+  // starts at the other
   const renderPathWalker = (object: LevelObject, index: number) => {
     const enemy = object.enemy as PathEnemy;
     const colour = ENEMY_COLOURS[enemy];
@@ -261,7 +261,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     return (
       <>
         {ends.map(({ end, next }, endIndex) =>
-          renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next), endIndex === 0 || !canTurnRound(enemy) ? 1 : FAR_END_OPACITY))}
+          renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next), endIndex === 0 ? 1 : FAR_END_OPACITY))}
         <Line points={line} color={pathWarnings.has(index) ? WARNING_COLOUR : colour} lineWidth={2} />
         {index === selected && renderPathHandles(positions, index, enemy, colour)}
       </>

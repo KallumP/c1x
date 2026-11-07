@@ -92,10 +92,6 @@ export function turnedRound(object: LevelObject, turn: number, scale: number): V
   return [...enemyPath(object, turn, scale)].reverse();
 }
 
-// whether turning an enemy's path round changes where it starts: not a native's,
-// which starts at whichever end is nearest crash
-export const canTurnRound = (enemy: PathEnemy) => enemy !== "native";
-
 // which node a node is once its path, of count nodes, is turned round
 export const nodeTurnedRound = (node: number, count: number) => count - 1 - node;
 
