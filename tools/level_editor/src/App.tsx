@@ -148,6 +148,7 @@ export default function App() {
       {renderPathWarningCount()}
       {error && <span className="error">{error}</span>}
       {renderLevelActions()}
+      {(isSaving || levelActions.isBusy) && <div className="progress" role="progressbar" aria-label="Working" />}
     </header>
   );
 

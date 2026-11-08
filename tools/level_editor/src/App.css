@@ -6,6 +6,7 @@
 
 .toolbar {
   grid-area: toolbar;
+  position: relative;
   display: flex;
   gap: 12px;
   align-items: center;
@@ -32,6 +33,33 @@
 .toolbar button:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+/* a bar along the bottom of the toolbar while saving, building or booting; none of
+   them say how far along they are, so a stripe slides back and forth across it */
+.progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  overflow: hidden;
+  background: #1e1f22;
+}
+
+.progress::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30%;
+  background: #3f9a55;
+  animation: progress-slide 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes progress-slide {
+  from { left: 0; }
+  to { left: 70%; }
 }
 
 .level-actions {
