@@ -78,6 +78,33 @@ describe("enemy shapes", () => {
     expect(snouts.every((part) => part.at[2] > 0)).toBe(true);
   });
 
+  test("the walking spider stands on the floor, as big as the game's (Sp1sV): about 975 across, 356 tall and 947 long", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.walking_spider);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeCloseTo(356, -1);
+    expect(max[0] - min[0]).toBeGreaterThan(850);
+    expect(max[0] - min[0]).toBeLessThan(1100);
+    expect(max[2] - min[2]).toBeGreaterThan(820);
+    expect(max[2] - min[2]).toBeLessThan(1070);
+    expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
+  });
+
+  test("the spider hangs as high as the game's waits to drop (SpDsV's first frame, its bottom about 1613 up), on a thread going up", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.spider);
+    expect(min[1]).toBeCloseTo(1613, -1);
+    expect(max[1]).toBeGreaterThan(1613 + 356);
+    expect(max[0] - min[0]).toBeGreaterThan(850);
+    expect(ENEMY_SHAPES.spider.some((part) => part.name === "thread")).toBe(true);
+  });
+
+  test("both spiders face +z: their heads are in front of their middles", () => {
+    for (const parts of [ENEMY_SHAPES.spider, ENEMY_SHAPES.walking_spider]) {
+      const heads = parts.filter((part) => part.name === "head");
+      expect(heads.length).toBeGreaterThan(0);
+      expect(heads.every((part) => part.at[2] > 0)).toBe(true);
+    }
+  });
+
   test("the native faces +z too: its shield is in front of its middle", () => {
     const shields = ENEMY_SHAPES.native.filter((part) => part.name === "shield");
     expect(shields.length).toBeGreaterThan(0);
