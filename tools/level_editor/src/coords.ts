@@ -93,6 +93,10 @@ export const NATIVE_WALK = 1972;
 // path, along the game's z (the route), straightened (its default path, src/enemyPaths.ts)
 export const BADGER_RUN = 5200;
 
+// how far a warthog charges back and forth, in game units: road to nowhere's
+// warthogs' path, along the game's z (the route) (its default path, src/enemyPaths.ts)
+export const WARTHOG_RUN = 5200;
+
 // a box's size in blender metres, for a level at scale game units a metre
 export function boxSize(scale: number): number {
   return BOX_UNITS / scale;

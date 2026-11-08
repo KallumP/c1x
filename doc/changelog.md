@@ -5,6 +5,7 @@
 ### Added
 
 - custom levels can have Jungle Rollers' badgers, which pop out of the ground and run at Crash, as many at once as you like
+- custom levels can have Road to Nowhere's warthog, which charges back and forth at Crash; jump over it
 
 ### Changed
 

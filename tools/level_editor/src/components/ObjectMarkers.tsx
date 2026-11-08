@@ -235,12 +235,12 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     return positions.map((position, nodeIndex) => renderPathHandle(position, index, nodeIndex, colour, lifts[nodeIndex]));
   };
 
-  // which way an enemy at an end of its path faces: a turtle back into its path
-  // (it turns to face the way it walks, seen in the game); a badger the way it
+  // which way an enemy at an end of its path faces: a turtle or warthog back into
+  // its path (it turns to face the way it goes, seen in the game); a badger the way it
   // runs (into its path at the start, on out of it at the far end, where it
   // dives away); a crab or native the player
   const endFacing = (enemy: PathEnemy, end: Vec3, next: Vec3, endIndex: number) => {
-    if (enemy === "turtle" || (enemy === "badger" && endIndex === 0)) {
+    if (enemy === "turtle" || enemy === "warthog" || (enemy === "badger" && endIndex === 0)) {
       return facingFrom(end, next, turn);
     }
     return enemy === "badger" ? facingFrom(next, end, turn) : enemyTurn(turn);

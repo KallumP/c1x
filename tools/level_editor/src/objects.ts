@@ -26,18 +26,19 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - turtle: n. sanity beach's, walking back and forth along the route
 // - native: the great gate's, guarding its path with a shield
 // - badger: jungle rollers', running out along its path, count at a time, when crash comes near
-export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native", "badger"] as const;
+// - warthog: road to nowhere's, charging back and forth along its path once crash comes near
+export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native", "badger", "warthog"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
 
 // the enemies that move along a path of nodes, and how many nodes it can have
-export const PATH_ENEMIES = ["crab", "turtle", "native", "badger"] as const satisfies readonly EnemyType[];
+export const PATH_ENEMIES = ["crab", "turtle", "native", "badger", "warthog"] as const satisfies readonly EnemyType[];
 export type PathEnemy = (typeof PATH_ENEMIES)[number];
 export const isPathEnemy = (type: EnemyType | undefined): type is PathEnemy => PATH_ENEMIES.some((enemy) => enemy === type);
 export const PATH_NODES_MAX = 20;
 
-// the enemies with a path, for messages: "crabs, turtles, natives and badgers"
+// the enemies with a path, for messages: "crabs, turtles, natives, badgers and warthogs"
 const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map((enemy) => `${enemy}s`).join(", ")} and ${PATH_ENEMIES.at(-1)}s`;
 
 // how many times the game's own pace a path enemy can walk at (seen working in the game with crabs and turtles)

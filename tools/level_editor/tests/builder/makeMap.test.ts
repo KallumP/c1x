@@ -69,6 +69,7 @@ const hasBase = existsSync(`${STREAMS}/${BASE_LEVEL.file}.nsd`);
 const N_SANITY_BEACH = 0x9;
 const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
 const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0x12)
+const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhere (0x14)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -408,6 +409,40 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a turtle, with no other levels to take it from, is an error saying so", () => {
       expect(() => withTurtle({ readOtherLevel: undefined })).toThrow(/turtle/);
+    });
+  });
+
+  describe.skipIf(!hasRoadToNowhere)("warthogs, from road to nowhere", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const warthog = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "warthog", ...more });
+    const withWarthog = (more: Partial<LevelObject> = {}) => make(MAP_OBJ, { scale: 256, objects: [warthog(more)], readOtherLevel });
+    const soundEids = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
+
+    test("a level with a warthog has road to nowhere's warthog code, model, animations and grunts", () => {
+      const { level, entries } = withWarthog();
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.warthog[0]]).toBe(stringToEid("WartC"));
+      expect(["WartG", "WarHV", "WarRV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(soundEids(level).filter((eid) => ["WH1kA", "WH2kA", "WH3kA"].map(stringToEid).includes(eid)).length).toBe(3);
+    });
+
+    const steps = (points: Vec3[]) => points.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - points[index][axis])));
+
+    test("a warthog charges road to nowhere's path's length by default (5200) along the route, its middle at its spot, in road to nowhere's steps (744)", () => {
+      const [placed] = enemies(withWarthog().zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.warthog);
+      expect(placed.path.length).toBe(8); // 7 steps of about 743
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      placed.path.forEach(([x, y]) => { expect(Math.abs(x - 1408)).toBeLessThanOrEqual(8); expect(Math.abs(y - 128)).toBeLessThanOrEqual(8); });
+      expect(Math.abs((placed.path[0][2] + placed.path[7][2]) / 2 - 1664)).toBeLessThanOrEqual(8);
+      steps(placed.path).forEach((step) => expect(Math.abs(step - 5200 / 7)).toBeLessThanOrEqual(8));
+    });
+
+    test("a faster warthog has longer steps", () => {
+      expect(enemies(withWarthog({ speed: 2 }).zone)[0].path.length).toBe(4); // 3 steps of about 1733 (5200 over 1488s, rounded)
+    });
+
+    test("a level without warthogs has none of their code", () => {
+      expect(make(MAP_OBJ, { scale: 256, readOtherLevel }).level.nsd.ldat.execMap[ENEMY_ENTITIES.warthog[0]]).toBe(EID_NONE);
     });
   });
 
