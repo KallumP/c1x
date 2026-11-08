@@ -281,10 +281,8 @@ function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 // frame in Pi10V), each vertex times 4, times its tgeo's scale / 4096
 const GAME_HEIGHTS: Record<ModelledEnemy, number> = { plant: 720, crab: 480, turtle: 370, native: 925, badger: 345 };
 
-export const ENEMY_SHAPES: Record<ModelledEnemy, ShapePart[]> = {
-  plant: scaledToHeight(standingOnFloor(plant()), GAME_HEIGHTS.plant),
-  crab: scaledToHeight(standingOnFloor(crab()), GAME_HEIGHTS.crab),
-  turtle: scaledToHeight(standingOnFloor(turtle()), GAME_HEIGHTS.turtle),
-  native: scaledToHeight(standingOnFloor(native()), GAME_HEIGHTS.native),
-  badger: scaledToHeight(standingOnFloor(badger()), GAME_HEIGHTS.badger),
-};
+const SHAPE_PARTS: Record<ModelledEnemy, () => ShapePart[]> = { plant, crab, turtle, native, badger };
+
+// each enemy's shape, standing on the floor, as tall as the game's model
+export const ENEMY_SHAPES = Object.fromEntries(Object.entries(SHAPE_PARTS).map(([enemy, parts]) =>
+  [enemy, scaledToHeight(standingOnFloor(parts()), GAME_HEIGHTS[enemy as ModelledEnemy])])) as Record<ModelledEnemy, ShapePart[]>;
