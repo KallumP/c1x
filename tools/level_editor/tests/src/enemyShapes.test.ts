@@ -61,6 +61,23 @@ describe("enemy shapes", () => {
     expect(named("tail").every((part) => part.at[2] < 0)).toBe(true);
   });
 
+  test("the warthog stands on the floor, as big as the game's (WarHV): about 352 across, 490 tall and 1097 long", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.warthog);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeCloseTo(490, -1);
+    expect(max[0] - min[0]).toBeGreaterThan(300);
+    expect(max[0] - min[0]).toBeLessThan(420);
+    expect(max[2] - min[2]).toBeGreaterThan(1000);
+    expect(max[2] - min[2]).toBeLessThan(1200);
+    expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
+  });
+
+  test("the warthog faces +z too: its snout is in front of its middle", () => {
+    const snouts = ENEMY_SHAPES.warthog.filter((part) => part.name === "snout");
+    expect(snouts.length).toBeGreaterThan(0);
+    expect(snouts.every((part) => part.at[2] > 0)).toBe(true);
+  });
+
   test("the native faces +z too: its shield is in front of its middle", () => {
     const shields = ENEMY_SHAPES.native.filter((part) => part.name === "shield");
     expect(shields.length).toBeGreaterThan(0);
