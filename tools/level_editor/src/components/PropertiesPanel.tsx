@@ -4,7 +4,7 @@ import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
-import { BOX_TYPES, boxTypeName, PATH_ENEMIES, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type BoxType, type LevelObject, type Vec3 } from "../objects";
+import { BADGER_COUNT, BADGER_COUNT_MAX, BADGER_COUNT_MIN, BOX_TYPES, boxTypeName, PATH_ENEMIES, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type BoxType, type LevelObject, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { SKY_ROWS, type Sky } from "../sky";
 import { ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
@@ -175,6 +175,26 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
   );
 
   const hasPath = (selected: LevelObject) => selected.kind === "enemy" && PATH_ENEMIES.includes(selected.enemy!);
+  // how many badgers come out at once; the whole slide is one change to undo
+  const renderBadgerCountSlider = (badger: LevelObject) => {
+    const changeCount = (count: number) => {
+      if (index !== null) {
+        dispatch({ type: "update", index, changes: { count }, record: false });
+      }
+    };
+    return (
+      <SliderField
+        label="count"
+        value={badger.count ?? BADGER_COUNT}
+        min={BADGER_COUNT_MIN}
+        max={BADGER_COUNT_MAX}
+        onGrab={() => dispatch({ type: "checkpoint" })}
+        onChange={changeCount}
+      />
+    );
+  };
+
+  const isBadger = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy === "badger";
   const isStone = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy === "rolling_stone";
 
   // raise is its height above the floor, kept as it's dragged about
@@ -279,6 +299,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {hasPath(object) && renderNodeSlider(object)}
           {hasPath(object) && renderSpeedSlider(object)}
           {hasPath(object) && renderTurnRoundButton(object)}
+          {isBadger(object) && renderBadgerCountSlider(object)}
           {isStone(object) && renderStoneStartSlider(object)}
           {isStone(object) && renderStoneReverseButton(object)}
           {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
