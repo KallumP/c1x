@@ -7,28 +7,28 @@ const enemy = (type: "crab" | "turtle" | "native" | "badger", more: Partial<Leve
   ({ kind: "enemy", enemy: type, at: [1, 2, 3], raise: 0, stack: 1, ...more });
 
 describe("a path enemy's default path", () => {
-  test("a crab's: 1600 game units across the map, its middle where it stands, in equal steps", () => {
-    expect(DEFAULT_PATH_NODES).toBe(5);
-    expect(noMinusZero(defaultPath("crab", 0, 400))).toEqual([[-2, 0, 0], [-1, 0, 0], [0, 0, 0], [1, 0, 0], [2, 0, 0]]);
+  test("a crab's: 1600 game units across the map, its middle where it stands, as its two ends and its middle", () => {
+    expect(DEFAULT_PATH_NODES).toBe(3);
+    expect(noMinusZero(defaultPath("crab", 0, 400))).toEqual([[-2, 0, 0], [0, 0, 0], [2, 0, 0]]);
   });
 
   test("a turtle's: 2000 game units along the route, the way the camera faces", () => {
-    expect(noMinusZero(defaultPath("turtle", 0, 400))).toEqual([[0, -2.5, 0], [0, -1.25, 0], [0, 0, 0], [0, 1.25, 0], [0, 2.5, 0]]);
+    expect(noMinusZero(defaultPath("turtle", 0, 400))).toEqual([[0, -2.5, 0], [0, 0, 0], [0, 2.5, 0]]);
   });
 
   test("a native's: 1972 game units across the map, as the great gate's natives walk", () => {
-    expect(noMinusZero(defaultPath("native", 0, 400))).toEqual([[-2.465, 0, 0], [-1.232, 0, 0], [0, 0, 0], [1.233, 0, 0], [2.465, 0, 0]]);
+    expect(noMinusZero(defaultPath("native", 0, 400))).toEqual([[-2.465, 0, 0], [0, 0, 0], [2.465, 0, 0]]);
     expect(enemyPath(enemy("native"), 90, 400)).toEqual(defaultPath("native", 90, 400));
   });
 
   test("a badger's: 5200 game units along the route, as jungle rollers' badgers run, from ahead back towards the spawn", () => {
-    expect(noMinusZero(defaultPath("badger", 0, 400))).toEqual([[0, 6.5, 0], [0, 3.25, 0], [0, 0, 0], [0, -3.25, 0], [0, -6.5, 0]]);
+    expect(noMinusZero(defaultPath("badger", 0, 400))).toEqual([[0, 6.5, 0], [0, 0, 0], [0, -6.5, 0]]);
     expect(enemyPath(enemy("badger"), 90, 400)).toEqual(defaultPath("badger", 90, 400));
   });
 
   test("turns with the level, and is longer in metres at a smaller scale", () => {
-    expect(noMinusZero(defaultPath("turtle", 90, 200))).toEqual([[-5, 0, 0], [-2.5, 0, 0], [0, 0, 0], [2.5, 0, 0], [5, 0, 0]]);
-    expect(noMinusZero(defaultPath("crab", 90, 400))).toEqual([[0, 2, 0], [0, 1, 0], [0, 0, 0], [0, -1, 0], [0, -2, 0]]);
+    expect(noMinusZero(defaultPath("turtle", 90, 200))).toEqual([[-5, 0, 0], [0, 0, 0], [5, 0, 0]]);
+    expect(noMinusZero(defaultPath("crab", 90, 400))).toEqual([[0, 2, 0], [0, 0, 0], [0, -2, 0]]);
   });
 });
 
@@ -71,7 +71,7 @@ describe("moving a node", () => {
 
   test("an enemy without a path of its own gets its default path, with that node moved", () => {
     const moved = withNodeAt(enemy("crab"), 0, [1, 4, 3], 0, 400);
-    expect(noMinusZero(moved)).toEqual([[0, 2, 0], [-1, 0, 0], [0, 0, 0], [1, 0, 0], [2, 0, 0]]);
+    expect(noMinusZero(moved)).toEqual([[0, 2, 0], [0, 0, 0], [2, 0, 0]]);
   });
 });
 
@@ -114,7 +114,7 @@ describe("turning a path round", () => {
   });
 
   test("an enemy without a path of its own gets its default path, turned round", () => {
-    expect(noMinusZero(turnedRound(enemy("crab"), 0, 400))).toEqual([[2, 0, 0], [1, 0, 0], [0, 0, 0], [-1, 0, 0], [-2, 0, 0]]);
+    expect(noMinusZero(turnedRound(enemy("crab"), 0, 400))).toEqual([[2, 0, 0], [0, 0, 0], [-2, 0, 0]]);
   });
 
   test("a node is the same node after, counted from the other end", () => {
