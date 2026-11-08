@@ -33,5 +33,7 @@
   {"kind": "box", "type": "enemy_tnt", "at": [-9, 56, 7]},
   {"kind": "box", "type": "iron_arrow", "at": [-9, 56, 2.184]},
 
+  {"kind": "enemy", "type": "monkey", "at": [0, 42, 0.3], "path": [[-3, 0, -0.05], [0, 0, 0], [3, 0, 0.2]]},
+
   {"kind": "end", "at": [-4.32, 108, 1.25], "raise": 0.3}
 ]
