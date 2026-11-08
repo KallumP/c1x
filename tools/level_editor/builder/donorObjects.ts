@@ -18,9 +18,17 @@ export interface DonorLevel {
 const N_SANITY_BEACH: DonorLevel = { lid: 0x9, name: "N. Sanity Beach", file: "s0000009" };
 const THE_GREAT_GATE: DonorLevel = { lid: 0x12, name: "The Great Gate", file: "s0000012" };
 const ROAD_TO_NOWHERE: DonorLevel = { lid: 0x14, name: "Road to Nowhere", file: "s0000014" };
+const FUMBLING_IN_THE_DARK: DonorLevel = { lid: 0x2a, name: "Fumbling in the Dark", file: "s000002a" };
 
 // the level each enemy jungle rollers doesn't have is taken from
-export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = { crab: N_SANITY_BEACH, turtle: N_SANITY_BEACH, native: THE_GREAT_GATE, warthog: ROAD_TO_NOWHERE };
+export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
+  crab: N_SANITY_BEACH,
+  turtle: N_SANITY_BEACH,
+  native: THE_GREAT_GATE,
+  warthog: ROAD_TO_NOWHERE,
+  spider: FUMBLING_IN_THE_DARK,
+  walking_spider: FUMBLING_IN_THE_DARK,
+};
 
 export interface DonorObject {
   code: [slot: number, eid: number][]; // each piece of code it brings, in its exec slot in the donor
@@ -121,14 +129,20 @@ function readDonorLevel(type: EnemyType, donor: DonorLevel, readOtherLevel?: (li
 }
 
 // the level each kind of enemy among objects is taken from, read with
-// readOtherLevel, for the kinds that come from another level
+// readOtherLevel, for the kinds that come from another level. a level two kinds
+// come from (such as fumbling in the dark's two spiders) is read once
 export function enemyDonorLevels(objects: LevelObject[], readOtherLevel?: (lid: number) => Level): Map<EnemyType, Level> {
   const levels = new Map<EnemyType, Level>();
+  const read = new Map<number, Level>();
   for (const type of new Set(objects.flatMap((object) => (object.kind === "enemy" && object.enemy ? [object.enemy] : [])))) {
     const donor = ENEMY_DONORS[type];
-    if (donor) {
-      levels.set(type, readDonorLevel(type, donor, readOtherLevel));
+    if (!donor) {
+      continue;
     }
+    if (!read.has(donor.lid)) {
+      read.set(donor.lid, readDonorLevel(type, donor, readOtherLevel));
+    }
+    levels.set(type, read.get(donor.lid)!);
   }
   return levels;
 }
