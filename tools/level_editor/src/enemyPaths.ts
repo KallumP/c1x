@@ -92,6 +92,26 @@ export function nodesUnderEnds(positions: Vec3[], reach: number): boolean[] {
   return positions.map((position) => ends.some((end) => flatDistance(position, end) <= reach));
 }
 
+// how high a node's handle floats above it (metres), so it can be seen and
+// clicked: clear of the enemy for a node under one at an end of its path
+// (enemyHeight), up to the floor for a node under the ground (depth, from
+// floorAbove), the higher of the two for both, and not at all otherwise
+function handleLift(underEnd: boolean, depth: number | null, enemyHeight: number): number {
+  let lift = 0;
+  if (underEnd) {
+    lift = enemyHeight;
+  }
+  if (depth !== null) {
+    lift = Math.max(lift, depth);
+  }
+  return lift;
+}
+
+// each of a path's nodes' handle lifts (see handleLift)
+export function handleLifts(underEnds: boolean[], depths: (number | null)[], enemyHeight: number): number[] {
+  return underEnds.map((underEnd, node) => handleLift(underEnd, depths[node], enemyHeight));
+}
+
 // an enemy's path turned round (its nodes reversed, its default's if it has
 // none), so it starts at the other end: the game starts it at its first node
 export function turnedRound(object: LevelObject, turn: number, scale: number): Vec3[] {
