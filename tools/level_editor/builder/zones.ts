@@ -1,7 +1,6 @@
 // zone headers (zone_header in src/formats/zdat.h): the zone's world meshes,
 // paths, entities, neighbours, load list and sky
 import { ByteWriter, readWords } from "./bytes";
-import { EID_NONE } from "./entryIds";
 import { PAGE_TEXTURE, type Entry, type Level } from "./levelFiles";
 import { pgid } from "./levelWriting";
 import type { Rgb, Sky } from "../src/sky";
@@ -97,8 +96,7 @@ export function zoneHeaderBytes(
   }
   header.fill(0, ZONE_LOADLIST, ZONE_DISPLAY_FLAGS);
   header.writeUInt32LE(0, ZONE_DISPLAY_FLAGS);
-  header.writeUInt32LE(EID_NONE, ZONE_MIDI);
-  return header;
+  return header; // its music is the template's: jungle rollers', whose second track is aku aku's song
 }
 
 // makes the zone's load list open every texture page in level: LevelUpdate
