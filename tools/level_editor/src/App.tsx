@@ -166,6 +166,7 @@ export default function App() {
         selectedNode={state.selectedNode}
         warnings={warnings}
         pathWarnings={pathWarnings}
+        triangles={triangles}
         onSelect={drag.start}
         onSelectNode={drag.startNode}
       />

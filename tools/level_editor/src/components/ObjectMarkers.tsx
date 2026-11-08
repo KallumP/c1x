@@ -4,8 +4,9 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
-import { nodesUnderEnds, pathPositions, pointAlongShare } from "../enemyPaths";
+import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare } from "../enemyPaths";
 import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
+import { floorAbove, type Triangle } from "../overlaps";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
 const PAD_UNITS = 400;   // the warp pad's radius, about
@@ -32,7 +33,7 @@ function base(object: LevelObject): Vec3 {
   return blenderToView([x, y, z + object.raise]);
 }
 
-export default function ObjectMarkers({ objects, scale, turn, selected, selectedNode, warnings, pathWarnings, onSelect, onSelectNode }: {
+export default function ObjectMarkers({ objects, scale, turn, selected, selectedNode, warnings, pathWarnings, triangles, onSelect, onSelectNode }: {
   objects: LevelObject[];
   scale: number;
   turn: number; // the level's, which sets the way the spawn's arrow points
@@ -40,6 +41,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   selectedNode: number | null; // a node of the selected crab's or turtle's path
   warnings: Set<number>; // the boxes in a wall or another box
   pathWarnings: Set<number>; // the path enemies whose paths leave the floor or run through a wall
+  triangles: Triangle[]; // the level's (in blender), to raise the handles of path nodes under the ground
   onSelect: (index: number) => void;
   onSelectNode: (index: number, node: number) => void;
 }) {
@@ -216,11 +218,14 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // a handle on one of a path's nodes, a little above the floor there; white if it's selected
-  // floating above units (game units) clear of the enemy standing there, on a thin line down to the node
-  const renderPathHandle = (position: Vec3, index: number, nodeIndex: number, colour: string, above = 0) => {
+  // floating lift metres up (clear of the enemy standing there, or out of the ground), on a thin line down to the node
+  const renderPathHandle = (position: Vec3, index: number, nodeIndex: number, colour: string, lift = 0) => {
     const radius = boxSize(scale) * HANDLE_SIZE;
     const [x, y, z] = blenderToView(position);
-    const height = above > 0 ? above / scale + 2 * radius : 0;
+    let height = 0;
+    if (lift > 0) {
+      height = lift + 2 * radius;
+    }
     const handleColour = nodeIndex === selectedNode ? SELECTED_COLOUR : colour;
     return (
       <group key={`node ${nodeIndex}`}>
@@ -233,12 +238,14 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // the handles on a path's nodes: those under the enemy at either end above it
+  // the handles on a path's nodes: those under the enemy at either end above
+  // it, and those under the ground above the floor
   const renderPathHandles = (positions: Vec3[], index: number, enemy: PathEnemy, colour: string) => {
     const { height, reach } = WALKER_SIZES[enemy];
     const underEnds = nodesUnderEnds(positions, reach / scale);
-    return positions.map((position, nodeIndex) =>
-      renderPathHandle(position, index, nodeIndex, colour, underEnds[nodeIndex] ? height : 0));
+    const depths = positions.map((position) => floorAbove(position, triangles));
+    const lifts = handleLifts(underEnds, depths, height / scale);
+    return positions.map((position, nodeIndex) => renderPathHandle(position, index, nodeIndex, colour, lifts[nodeIndex]));
   };
 
   // which way an enemy at an end of its path faces: a turtle back into its path
