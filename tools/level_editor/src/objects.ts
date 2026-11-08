@@ -20,20 +20,24 @@ export const BOX_TYPES = {
 export type BoxType = keyof typeof BOX_TYPES;
 export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 
-// the enemies custom levels can have, by name. the level build places them by
-// their entity (builder/entities.ts), and takes those jungle rollers hasn't
-// from the level they're in (builder/donorObjects.ts):
+// the enemies custom levels can have, by name, in the order the palette lists
+// them: by what they do. the level build places them by their entity
+// (builder/entities.ts), and takes those jungle rollers hasn't from the level
+// they're in (builder/donorObjects.ts). staying at their spot:
 // - plant: jungle rollers' biting plant, standing still
-// - rolling_stone: jungle rollers' stone wheel, rolling back and forth along its track
-// - crab: n. sanity beach's, walking back and forth across the map
-// - turtle: n. sanity beach's, walking back and forth along the route
-// - native: the great gate's, guarding its path with a shield
-// - badger: jungle rollers', running out along its path, count at a time, when crash comes near
-// - warthog: road to nowhere's, charging back and forth along its path once crash comes near
 // - spider: fumbling in the dark's, dropping from its thread when crash comes near
-// - walking_spider: fumbling in the dark's, running out along its path, count at a time, when crash comes near
-// - monkey: the great gate's, walking back and forth across the map once crash comes near
-export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native", "badger", "warthog", "spider", "walking_spider", "monkey"] as const;
+// walking back and forth along a path:
+// - crab: n. sanity beach's, across the map
+// - turtle: n. sanity beach's, along the route
+// - native: the great gate's, guarding its path with a shield
+// - monkey: the great gate's, across the map once crash comes near
+// - warthog: road to nowhere's, charging once crash comes near
+// running out along their path, count at a time, when crash comes near:
+// - badger: jungle rollers'
+// - walking_spider: fumbling in the dark's
+// rolling along a track:
+// - rolling_stone: jungle rollers' stone wheel, back and forth along its track
+export const ENEMY_TYPES = ["plant", "spider", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
