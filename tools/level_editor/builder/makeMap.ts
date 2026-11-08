@@ -110,6 +110,9 @@ function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffe
   return withPath(entity, run);
 }
 
+// the enemies that stay at their spot: jungle rollers' plant, and the spider hanging there
+const STANDING_ENEMIES: EnemyType[] = ["plant", "spider"];
+
 class ObjectPlacer {
   readonly entities: Buffer[][];
   readonly placedBoxes: PlacedBox[] = [];
@@ -153,11 +156,10 @@ class ObjectPlacer {
     }
   }
 
-  // a plant, at its spot in the zone it's in
-  placePlant(plant: LevelObject): void {
-    const { zone, at } = this.inZone(this.positionOf(plant));
-    const [type, subtype] = ENEMY_ENTITIES.plant;
-    this.entities[zone].push(withPosition(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), at));
+  // an enemy that stays at its spot (a plant or spider), as example, in the zone it's in
+  placeAtSpot(enemy: LevelObject, example: Buffer): void {
+    const { zone, at } = this.inZone(this.positionOf(enemy));
+    this.entities[zone].push(withPosition(withEntityId(example, this.ids.shift()!), at));
   }
 
   // an enemy that moves along a path (a crab, turtle, native or badger), as
@@ -283,14 +285,17 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   boxes.forEach((box) => placer.placeBoxStack(box));
   linkSwitches(placer.entities, placer.placedBoxes);
 
-  enemies.filter((enemy) => enemy.enemy === "plant").forEach((plant) => placer.placePlant(plant));
+  // an enemy's entity as its own level has it: its donor level's, or jungle rollers'
+  const enemyExample = (type: EnemyType) => {
+    const donor = donorLevels.get(type);
+    if (donor) {
+      return levelEntity(donor, ...ENEMY_ENTITIES[type]);
+    }
+    return templates.entity(...ENEMY_ENTITIES[type]);
+  };
+  enemies.filter((enemy) => STANDING_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeAtSpot(enemy, enemyExample(enemy.enemy!)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
-  // a path enemy's entity as its own level has it: its donor level's, or jungle rollers' (the badger)
-  const pathEnemyExample = (type: EnemyType) =>
-    donorLevels.has(type) ? levelEntity(donorLevels.get(type)!, ...ENEMY_ENTITIES[type]) : templates.entity(...ENEMY_ENTITIES[type]);
-  for (const enemy of objects.filter(hasPath)) {
-    placer.placeOnPath(enemy, pathEnemyExample(enemy.enemy!));
-  }
+  objects.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
   if (end) {
     const position = placer.positionOf(end);
