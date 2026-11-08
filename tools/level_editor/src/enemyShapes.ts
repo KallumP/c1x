@@ -16,12 +16,14 @@ export type ShapePart = Primitive & {
   name?: string;
 };
 
-type ModelledEnemy = Exclude<EnemyType, "rolling_stone" | "spider" | "walking_spider">;
+type ModelledEnemy = Exclude<EnemyType, "rolling_stone">;
+type StandingEnemy = Exclude<ModelledEnemy, "spider">; // all but the spider hanging on its thread
 
 const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth: "#b0233a", tooth: "#f4f1e0", soil: "#6b4a2b" };
 const TURTLE_COLOURS = { shell: "#b8282a", spot: "#2fa58c", skin: "#b5a35a", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const NATIVE_COLOURS = { skin: "#8a5a3a", skirt: "#46c84a", hair: "#2b1b14", shield: "#8e2416", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const WARTHOG_COLOURS = { hide: "#7a4a32", mane: "#3a2a20", snout: "#b07a64", tusk: "#f2ecd8", eye: "#1a1a1a" };
+const SPIDER_COLOURS = { body: "#3b2a4a", leg: "#2a1d36", eye: "#e8d44d", thread: "#e6e6e6" };
 const BADGER_COLOURS = { fur: "#1f1d24", stripe: "#e4dcc4", nose: "#3a3238", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
@@ -251,6 +253,34 @@ function warthog(): ShapePart[] {
   ];
 }
 
+// a spider's legs on one side, sloping down and out from its body, front to back
+function spiderLegs(): ShapePart[] {
+  return [200, 70, -70, -200].map((z) => rod(18, 14, 380, [280, 130, z], SPIDER_COLOURS.leg, { turn: [0, 0, 1.14] }));
+}
+
+// fumbling in the dark's spider: a round body, a smaller head with yellow eyes, and eight legs, facing +z
+function spiderBody(): ShapePart[] {
+  return [
+    ...bothSides(spiderLegs()),
+    ball(1, [0, 200, -170], SPIDER_COLOURS.body, { stretch: [180, 140, 270] }),
+    ball(1, [0, 190, 180], SPIDER_COLOURS.body, { stretch: [130, 110, 130], name: "head" }),
+    ...bothSides([ball(25, [45, 230, 290], SPIDER_COLOURS.eye, { name: "head" })]),
+  ];
+}
+
+const SPIDER_HANG = 1613; // how high the spider's bottom hangs before it drops: SpDsV's first frame
+const SPIDER_THREAD = 600; // how far its thread is drawn up above it
+
+// parts lifted up off the floor by height
+const lifted = (parts: ShapePart[], height: number): ShapePart[] =>
+  parts.map((part) => ({ ...part, at: [part.at[0], part.at[1] + height, part.at[2]] }));
+
+// the spider hanging at the height it drops from, on a thread up from its body
+function hangingSpider(body: ShapePart[]): ShapePart[] {
+  const top = SPIDER_HANG + shapeBounds(body).max[1];
+  return [...lifted(body, SPIDER_HANG), rod(6, 6, SPIDER_THREAD, [0, top + SPIDER_THREAD / 2, 0], SPIDER_COLOURS.thread, { name: "thread" })];
+}
+
 function primitiveGeometry(part: ShapePart): BufferGeometry {
   switch (part.kind) {
     case "box":
@@ -311,11 +341,15 @@ export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 // n. sanity beach's crab (Cr19G) and turtle (Tu19G), and the great gate's native
 // (Na1iG, its first frame in Na1iV), jungle rollers' badger (Pi10G, its first
 // frame in Pi10V), and road to nowhere's warthog (WartG, its first frame in
-// WarHV), each vertex times 4, times its tgeo's scale / 4096
-const GAME_HEIGHTS: Record<ModelledEnemy, number> = { plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490 };
+// WarHV), and fumbling in the dark's walking spider (Sp1sG, its first frame in
+// Sp1sV), each vertex times 4, times its tgeo's scale / 4096
+const GAME_HEIGHTS: Record<StandingEnemy, number> = { plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356 };
 
-const SHAPE_PARTS: Record<ModelledEnemy, () => ShapePart[]> = { plant, crab, turtle, native, badger, warthog };
+const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = { plant, crab, turtle, native, badger, warthog, walking_spider: spiderBody };
 
-// each enemy's shape, standing on the floor, as tall as the game's model
-export const ENEMY_SHAPES = Object.fromEntries(Object.entries(SHAPE_PARTS).map(([enemy, parts]) =>
-  [enemy, scaledToHeight(standingOnFloor(parts()), GAME_HEIGHTS[enemy as ModelledEnemy])])) as Record<ModelledEnemy, ShapePart[]>;
+// each standing enemy's shape, on the floor, as tall as the game's model
+const STANDING_SHAPES = Object.fromEntries(Object.entries(SHAPE_PARTS).map(([enemy, parts]) =>
+  [enemy, scaledToHeight(standingOnFloor(parts()), GAME_HEIGHTS[enemy as StandingEnemy])])) as Record<StandingEnemy, ShapePart[]>;
+
+// each enemy's shape: the standing ones', and the spider hanging as the walking spider's body
+export const ENEMY_SHAPES: Record<ModelledEnemy, ShapePart[]> = { ...STANDING_SHAPES, spider: hangingSpider(STANDING_SHAPES.walking_spider) };
