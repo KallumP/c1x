@@ -17,7 +17,7 @@ import { colour5551 } from "../../builder/tpage";
 import { levelEntity, STONE_TRACK_LIFT, stoneTrack } from "../../builder/templates";
 import { readWorldHeader, readWorldPolygon, readWorldVertex, TEXINFOS_AT } from "../../builder/worldGeometry";
 import type { TileRegion, WorldMesh, WorldVertex } from "../../builder/worldMeshes";
-import { ZONE_LOADLIST, ZONE_NEIGHBORS, ZONE_PATHS_IDX, zoneEntities, zoneOrigin, zoneWorldEids } from "../../builder/zones";
+import { ZONE_LOADLIST, ZONE_MIDI, ZONE_NEIGHBORS, ZONE_PATHS_IDX, zoneEntities, zoneOrigin, zoneWorldEids } from "../../builder/zones";
 
 const STONE_RGB: [number, number, number] = [90, 90, 100];
 const stone = (): RgbImage => ({ width: 32, height: 32, rgb: new Uint8Array(32 * 32 * 3).map((_, index) => STONE_RGB[index % 3]) });
@@ -118,6 +118,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   test("its world meshes are its faces", () => {
     const header = readWorldHeader(firstWorld(make()).items[0]);
     expect(header.polygonCount).toBeGreaterThan(4); // floor and wall, sliced
+  });
+
+  test("its zones play jungle rollers' music, which it has with its instruments (its second track is aku aku's song at three masks)", () => {
+    const { zone, entries } = make();
+    expect(zone.items[0].readUInt32LE(ZONE_MIDI)).toBe(stringToEid("So0cM"));
+    expect(["So0cM", "I00cN", "I01cN", "I02cN", "I03cN"].every((name) => entries.has(stringToEid(name)))).toBe(true);
   });
 
   test("its path uses the follow camera", () => {
