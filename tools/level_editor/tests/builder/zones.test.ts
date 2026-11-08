@@ -19,7 +19,14 @@ describe("zone headers", () => {
     expect(readWords(header, ZONE_PATHS_IDX, 4)).toEqual([2, 1, 1, 1]);
     expect(header.readUInt32LE(ZONE_NEIGHBORS)).toBe(self);
     expect([header.readInt32LE(ZONE_LOADLIST), header.readInt32LE(ZONE_LOADLIST + 4)]).toEqual([0, 0]);
-    expect(header.readUInt32LE(ZONE_MIDI)).toBe(EID_NONE);
+    expect(header.readUInt32LE(ZONE_MIDI)).toBe(0); // the template's music: none in an empty template
+  });
+
+  test("a zone plays its template's music (jungle rollers', whose second track is aku aku's song at three masks)", () => {
+    const template = Buffer.alloc(ZONE_HEADER_SIZE);
+    template.writeUInt32LE(stringToEid("So0cM"), ZONE_MIDI);
+    const header = zoneHeaderBytes(template, stringToEid("Flr0Z"), [], 1, 0);
+    expect(header.readUInt32LE(ZONE_MIDI)).toBe(stringToEid("So0cM"));
   });
 
   test("a zone lists itself, then its neighbours", () => {
