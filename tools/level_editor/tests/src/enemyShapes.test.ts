@@ -42,6 +42,25 @@ describe("enemy shapes", () => {
     expect(max[2] - min[2]).toBeLessThan(600);
   });
 
+  test("the badger stands on the floor, as big as the game's (Pi10V): about 534 across, 345 tall and 1125 long", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.badger);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeCloseTo(345, -1);
+    expect(max[0] - min[0]).toBeGreaterThan(470);
+    expect(max[0] - min[0]).toBeLessThan(600);
+    expect(max[2] - min[2]).toBeGreaterThan(1020);
+    expect(max[2] - min[2]).toBeLessThan(1230);
+    expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
+  });
+
+  test("the badger faces +z too: its head is in front of its middle, its tail behind", () => {
+    const named = (name: string) => ENEMY_SHAPES.badger.filter((part) => part.name === name);
+    expect(named("head").length).toBeGreaterThan(0);
+    expect(named("tail").length).toBeGreaterThan(0);
+    expect(named("head").every((part) => part.at[2] > 0)).toBe(true);
+    expect(named("tail").every((part) => part.at[2] < 0)).toBe(true);
+  });
+
   test("the native faces +z too: its shield is in front of its middle", () => {
     const shields = ENEMY_SHAPES.native.filter((part) => part.name === "shield");
     expect(shields.length).toBeGreaterThan(0);
