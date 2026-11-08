@@ -6,6 +6,10 @@
 
 - custom levels can have Jungle Rollers' badgers, which pop out of the ground and run at Crash, as many at once as you like
 
+### Changed
+
+- the level editor's enemy paths start with 3 nodes, and nodes under the ground can be grabbed
+
 ## 2026-11-06
 
 ### Added
