@@ -212,6 +212,57 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(plant.id).not.toBe(boxes(built.zone)[0].id);
   });
 
+  describe("badgers", () => {
+    const badger = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "badger", ...more });
+    const placedPath = (more: Partial<LevelObject> = {}) => enemies(make(MAP_OBJ, { scale: 256, objects: [badger(more)] }).zone)[0].path;
+    const steps = (points: Vec3[]) => points.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - points[index][axis])));
+    const near = (value: number, wanted: number) => expect(Math.abs(value - wanted)).toBeLessThanOrEqual(8);
+
+    test("a badger is jungle rollers' badger spawner, with its init flags", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [badger()] }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.badger);
+      expect(placed.initFlagA).toBe(levelEntity(base, ...ENEMY_ENTITIES.badger).readInt16LE(ENTITY_INIT_FLAGS));
+    });
+
+    test("badgers run jungle rollers' path's length by default (5200) along the route towards the spawn, on the floor, its middle at the spot, in jungle rollers' steps (400)", () => {
+      const path = placedPath();
+      const run = path.slice(0, -1);
+      expect(run.length).toBe(14);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone; the spawn is the +z way
+      run.forEach(([x, y]) => { near(x, 1408); near(y, 128); });
+      near(run[0][2], 1664 - 2600);
+      near(run.at(-1)![2], 1664 + 2600);
+      steps(run).forEach((step) => near(step, 400));
+    });
+
+    test("a badger's count is how many come out at once: its init flag c, 2 (as jungle rollers' first) without one", () => {
+      const initFlagC = (more: Partial<LevelObject>) =>
+        zoneEntities(make(MAP_OBJ, { scale: 256, objects: [badger(more)] }).zone).find((item) => entityType(item).join() === ENEMY_ENTITIES.badger.join())!
+          .readInt16LE(ENTITY_INIT_FLAGS + 4);
+      expect([initFlagC({}), initFlagC({ count: 1 }), initFlagC({ count: 6 })]).toEqual([2, 1, 6]);
+    });
+
+    test("badgers dive away at the end of their path: a last point 1160 below it", () => {
+      const path = placedPath();
+      const [last, dive] = path.slice(-2);
+      expect(dive).toEqual([last[0], last[1] - 1160, last[2]]);
+    });
+
+    test("badgers run their own path in steps about as long as jungle rollers' (400), longer the faster they are", () => {
+      const path: Vec3[] = [[0, 2, 0], [0, -2, 0]]; // 4 m: 1024 units at scale 256
+      const [normal, fast] = [placedPath({ path }), placedPath({ path, speed: 2.5 })].map((points) => points.slice(0, -1));
+      expect([normal.length, fast.length]).toEqual([4, 2]); // steps of 341 and 1024
+      steps(normal).forEach((step) => near(step, 1024 / 3));
+      steps(fast).forEach((step) => near(step, 1024));
+    });
+  });
+
+  test("a level with a badger has its code, model and animation (jungle rollers' own)", () => {
+    const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "badger" })] });
+    expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.badger[0]]).toBe(stringToEid("PillC"));
+    expect(["Pi10G", "Pi10V"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+  });
+
   test("rolling stones' tracks have a world mesh of their own in their zone, so they fit however full the map's meshes are", () => {
     const track = stoneTrack(base);
     const stones = [object("enemy", [1, 2, 0], { enemy: "rolling_stone" }), object("enemy", [-1, 4, 0], { enemy: "rolling_stone" })];

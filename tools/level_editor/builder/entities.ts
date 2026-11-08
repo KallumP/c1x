@@ -21,8 +21,9 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // each enemy's entity type and subtype: jungle rollers' biting plant (PlanC) and
 // its rolling stone wheel (JunOC), which rolls back and forth along its path,
 // and n. sanity beach's crab (CrabC), which walks back and forth along its path,
-// and turtle (TurtC), which does too, and the great gate's native (SheNC)
-export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0] };
+// and turtle (TurtC), which does too, the great gate's native (SheNC), and
+// jungle rollers' badger spawner (PillC), which sends badgers along its path
+export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0] };
 // not in the level's total (an iron outline fills in as an iron box)
 // a rolling stone's first init flag is where in its cycle along its path and
 // back it starts (its script's, seen in the game): 0 at its first point rolling
@@ -91,7 +92,7 @@ export function withPath(item: Buffer, points: Vec3[]): Buffer {
 // a box's first init flag is what it holds beyond the usual (a token, say); 0 for nothing
 export const withInitFlagA = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS));
 const withInitFlagB = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 2));
-const withInitFlagC = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 4));
+export const withInitFlagC = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 4));
 
 // count ids for new entities, from the lowest up: not taken, nor the main object's, and at most ENTITY_IDS_MAX
 export function newEntityIds(count: number, taken: Set<number>): number[] {

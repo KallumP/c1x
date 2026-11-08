@@ -24,7 +24,7 @@ const walkerSize = (parts: ShapePart[]) => {
   const { min, max } = shapeBounds(parts);
   return { height: max[1], reach: Math.max(-min[0], max[0], -min[2], max[2]) };
 };
-const WALKER_SIZES = { crab: walkerSize(ENEMY_SHAPES.crab), turtle: walkerSize(ENEMY_SHAPES.turtle), native: walkerSize(ENEMY_SHAPES.native) };
+const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy as PathEnemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
 
 // where an object's base is in the viewport, raised as it is in the game
 function base(object: LevelObject): Vec3 {
@@ -242,14 +242,20 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // which way an enemy at an end of its path faces: a turtle back into its path
-  // (it turns to face the way it walks, seen in the game); a crab or native the player
-  const endFacing = (enemy: PathEnemy, end: Vec3, next: Vec3) =>
-    enemy === "turtle" ? facingFrom(end, next, turn) : enemyTurn(turn);
+  // (it turns to face the way it walks, seen in the game); a badger the way it
+  // runs (into its path at the start, on out of it at the far end, where it
+  // dives away); a crab or native the player
+  const endFacing = (enemy: PathEnemy, end: Vec3, next: Vec3, endIndex: number) => {
+    if (enemy === "turtle" || (enemy === "badger" && endIndex === 0)) {
+      return facingFrom(end, next, turn);
+    }
+    return enemy === "badger" ? facingFrom(next, end, turn) : enemyTurn(turn);
+  };
 
-  // a crab, turtle or native: at the first and last nodes of the path it walks
-  // back and forth along, where it turns round, with the line through its nodes,
-  // and a handle on each node while it's selected. the far end is faded, as it
-  // starts at the other
+  // a crab, turtle, native or badger: at the first and last nodes of its path,
+  // where it turns round (or a badger dives away), with the line through its
+  // nodes, and a handle on each node while it's selected. the far end is faded,
+  // as it starts at the other
   const renderPathWalker = (object: LevelObject, index: number) => {
     const enemy = object.enemy as PathEnemy;
     const colour = ENEMY_COLOURS[enemy];
@@ -261,7 +267,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     return (
       <>
         {ends.map(({ end, next }, endIndex) =>
-          renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next), endIndex === 0 ? 1 : FAR_END_OPACITY))}
+          renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next, endIndex), endIndex === 0 ? 1 : FAR_END_OPACITY))}
         <Line points={line} color={pathWarnings.has(index) ? WARNING_COLOUR : colour} lineWidth={2} />
         {index === selected && renderPathHandles(positions, index, enemy, colour)}
       </>

@@ -3,14 +3,14 @@
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { inEvenSteps, pathPositions, pathStep, type PathEnemy } from "../src/enemyPaths";
-import { type LevelObject } from "../src/objects";
+import { BADGER_COUNT, PATH_ENEMIES, type EnemyType, type LevelObject } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
-  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA,
+  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
   WARP_PAD, withEntityId, withPath, withPosition, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
@@ -86,6 +86,16 @@ function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, tex
 }
 
 // places objects in the level: where they are in it, which zone they're in, and their entities
+// how far below the end of their path badgers dive away, in game units: as far
+// as the last point of jungle rollers' badger spawners' paths drops (1112 to 1220)
+export const BADGER_DIVE = 1160;
+
+// a badger spawner's path with the point its badgers dive down to after its last
+function withBadgerDive(run: Vec3[]): Vec3[] {
+  const [x, y, z] = run[run.length - 1];
+  return [...run, [x, y - BADGER_DIVE, z]];
+}
+
 class ObjectPlacer {
   readonly entities: Buffer[][];
   readonly placedBoxes: PlacedBox[] = [];
@@ -136,17 +146,19 @@ class ObjectPlacer {
     this.entities[zone].push(withPosition(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), at));
   }
 
-  // an enemy taken from another level that walks back and forth along a path (a
-  // crab, turtle or native), in the zone its spot is in: its path's nodes (or its
-  // default path's) in the level, in steps as long as its donor's, times its speed
-  // (the game moves it a step at a time, so longer steps are faster)
+  // an enemy that moves along a path (a crab, turtle, native or badger), as
+  // example, in the zone its spot is in: its path's nodes (or its default path's)
+  // in the level, in steps as long as its own level's, times its speed (the game
+  // moves it a step at a time, so longer steps are faster). badgers dive away at
+  // the end, and their spawner's init flag c is how many come out at once
   placeOnPath(enemy: LevelObject, example: Buffer): void {
     const position = this.positionOf(enemy);
     const { zone, at } = this.inZone(position);
     const nodes = pathPositions(enemy, this.turn, this.scale).map((node) => this.positionOf({ ...enemy, at: node, raise: 0 }));
     const step = pathStep(enemy.enemy as PathEnemy) * (enemy.speed ?? 1);
-    const path = inEvenSteps(nodes, step).map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
-    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
+    const run = inEvenSteps(nodes, step).map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
+    const placed = withPath(withEntityId(example, this.ids.shift()!), enemy.enemy === "badger" ? withBadgerDive(run) : run);
+    this.entities[zone].push(enemy.enemy === "badger" ? withInitFlagC(placed, enemy.count ?? BADGER_COUNT) : placed);
   }
 
   // a rolling stone, in the zone its spot is in, rolling jungle rollers' path along its track
@@ -261,9 +273,11 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
 
   enemies.filter((enemy) => enemy.enemy === "plant").forEach((plant) => placer.placePlant(plant));
   stones.forEach((stone) => placer.placeStone(stone, track!));
-  for (const enemy of enemies.filter(({ enemy: type }) => donorLevels.has(type!))) {
-    const example = levelEntity(donorLevels.get(enemy.enemy!)!, ...ENEMY_ENTITIES[enemy.enemy!]);
-    placer.placeOnPath(enemy, example);
+  // a path enemy's entity as its own level has it: its donor level's, or jungle rollers' (the badger)
+  const pathEnemyExample = (type: EnemyType) =>
+    donorLevels.has(type) ? levelEntity(donorLevels.get(type)!, ...ENEMY_ENTITIES[type]) : templates.entity(...ENEMY_ENTITIES[type]);
+  for (const enemy of enemies.filter(({ enemy: type }) => PATH_ENEMIES.includes(type!))) {
+    placer.placeOnPath(enemy, pathEnemyExample(enemy.enemy!));
   }
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
   if (end) {

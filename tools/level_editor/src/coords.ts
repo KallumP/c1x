@@ -89,6 +89,10 @@ export const TURTLE_WALK = 2000;
 // natives' path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const NATIVE_WALK = 1972;
 
+// how far badgers run, in game units: jungle rollers' first badger spawner's
+// path, along the game's z (the route), straightened (its default path, src/enemyPaths.ts)
+export const BADGER_RUN = 5200;
+
 // a box's size in blender metres, for a level at scale game units a metre
 export function boxSize(scale: number): number {
   return BOX_UNITS / scale;

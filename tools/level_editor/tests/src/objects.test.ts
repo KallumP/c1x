@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BOX_TYPES, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type Vec3 } from "../../src/objects";
+import { BADGER_COUNT, BADGER_COUNT_MAX, BADGER_COUNT_MIN, BOX_TYPES, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type Vec3 } from "../../src/objects";
 
 describe("parseObjects", () => {
   test("reads spawn, end and boxes with their settings", () => {
@@ -122,7 +122,7 @@ describe("boxTypeName", () => {
 
 describe("enemies", () => {
   test("knows the enemies custom levels can have, by name", () => {
-    expect(ENEMY_TYPES).toEqual(["plant", "rolling_stone", "crab", "turtle", "native"]);
+    expect(ENEMY_TYPES).toEqual(["plant", "rolling_stone", "crab", "turtle", "native", "badger"]);
   });
 
   test("reads an enemy by its type and spot (a rolling stone's path comes with its track)", () => {
@@ -131,7 +131,8 @@ describe("enemies", () => {
       {"kind": "enemy", "type": "rolling_stone", "at": [-4, 20, 0.5]},
       {"kind": "enemy", "type": "crab", "at": [2, 30, 0]},
       {"kind": "enemy", "type": "turtle", "at": [3, 40, 0]},
-      {"kind": "enemy", "type": "native", "at": [4, 50, 0]}
+      {"kind": "enemy", "type": "native", "at": [4, 50, 0]},
+      {"kind": "enemy", "type": "badger", "at": [5, 60, 0]}
     ]`);
     expect(objects).toEqual([
       { kind: "enemy", enemy: "plant", at: [1, 10, 0], raise: 0, stack: 1 },
@@ -139,14 +140,15 @@ describe("enemies", () => {
       { kind: "enemy", enemy: "crab", at: [2, 30, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "turtle", at: [3, 40, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "native", at: [4, 50, 0], raise: 0, stack: 1 },
+      { kind: "enemy", enemy: "badger", at: [5, 60, 0], raise: 0, stack: 1 },
     ]);
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, rolling_stone, crab, turtle, native)"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, rolling_stone, crab, turtle, native, badger)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
-    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles and natives do)"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives and badgers do)"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -176,14 +178,15 @@ describe("enemies", () => {
 });
 
 describe("enemy paths", () => {
-  test("a crab, turtle or native can have a path: its nodes, each from where the enemy stands, in metres", () => {
+  test("a crab, turtle, native or badger can have a path: its nodes, each from where the enemy stands, in metres", () => {
     const objects = parseObjects(`[
       {"kind": "enemy", "type": "crab", "at": [2, 30, 0], "path": [[-2, 0, 0], [0, 1, 0], [2, 0, 0]]},
       {"kind": "enemy", "type": "turtle", "at": [3, 40, 0], "path": [[0, -2.5, 0], [0, 2.5, 0.5]]},
       {"kind": "enemy", "type": "native", "at": [4, 45, 0], "path": [[-1, 0, 0], [1, 0, 0]]},
+      {"kind": "enemy", "type": "badger", "at": [5, 48, 0], "path": [[0, 3, 0], [0, -3, 0]]},
       {"kind": "enemy", "type": "turtle", "at": [3, 50, 0]}
     ]`);
-    expect(objects.map(({ path }) => path)).toEqual([[[-2, 0, 0], [0, 1, 0], [2, 0, 0]], [[0, -2.5, 0], [0, 2.5, 0.5]], [[-1, 0, 0], [1, 0, 0]], undefined]);
+    expect(objects.map(({ path }) => path)).toEqual([[[-2, 0, 0], [0, 1, 0], [2, 0, 0]], [[0, -2.5, 0], [0, 2.5, 0.5]], [[-1, 0, 0], [1, 0, 0]], [[0, 3, 0], [0, -3, 0]], undefined]);
   });
 
   test("writes a path after the rest, to the millimetre, and reads it back", () => {
@@ -199,7 +202,7 @@ describe("enemy paths", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a plant has no path (crabs, turtles and natives do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives and badgers do)"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: unknown setting path"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', `object 1: a path should be 2 to ${PATH_NODES_MAX} nodes`],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0]]}]', "object 1: a path's nodes should each be [x, y, z] in metres"],
@@ -216,14 +219,15 @@ describe("enemy paths", () => {
 });
 
 describe("enemy speeds", () => {
-  test("a crab, turtle or native can have a speed: how many times the game's own pace it walks at", () => {
+  test("a crab, turtle, native or badger can have a speed: how many times the game's own pace it walks at", () => {
     const objects = parseObjects(`[
       {"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 2},
       {"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "speed": 0.5},
       {"kind": "enemy", "type": "native", "at": [0, 0, 0], "speed": 1.5},
+      {"kind": "enemy", "type": "badger", "at": [0, 0, 0], "speed": 2.5},
       {"kind": "enemy", "type": "turtle", "at": [0, 0, 0]}
     ]`);
-    expect(objects.map(({ speed }) => speed)).toEqual([2, 0.5, 1.5, undefined]);
+    expect(objects.map(({ speed }) => speed)).toEqual([2, 0.5, 1.5, 2.5, undefined]);
   });
 
   test("writes a speed after the rest, and leaves out the game's own (1)", () => {
@@ -240,7 +244,7 @@ describe("enemy speeds", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs, turtles and natives do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs, turtles, natives and badgers do)"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 4}]', "object 1: speed should be 0.25 to 3 (times the game's own pace)"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 0.1}]', "object 1: speed should be 0.25 to 3"],
@@ -299,6 +303,40 @@ describe("a rolling stone's start", () => {
     ['[{"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "start": 0.5}]', "object 1: a turtle has no start (rolling stones do)"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 1.5}]', "object 1: start should be 0 to 1 (how far along its track it starts)"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": "middle"}]', "object 1: start should be 0 to 1"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+});
+
+describe("badger counts", () => {
+  const badger = { kind: "enemy" as const, enemy: "badger" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1 };
+
+  test("a badger can have a count: how many come out in each wave", () => {
+    const objects = parseObjects(`[
+      {"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 4},
+      {"kind": "enemy", "type": "badger", "at": [0, 0, 0]}
+    ]`);
+    expect(objects.map(({ count }) => count)).toEqual([4, undefined]);
+  });
+
+  test(`a count is ${1} to ${6}, ${2} without one (as jungle rollers' badgers)`, () => {
+    expect([BADGER_COUNT_MIN, BADGER_COUNT_MAX, BADGER_COUNT]).toEqual([1, 6, 2]);
+  });
+
+  test("writes a count after the rest, and leaves out the default (2)", () => {
+    expect(formatObjects([{ ...badger, count: 3 }])).toContain('"at": [1, 2, 0], "count": 3}');
+    expect(formatObjects([{ ...badger, count: 2 }])).toContain('"at": [1, 2, 0]}');
+    const withSpeed = formatObjects([{ ...badger, speed: 2, count: 5 }]);
+    expect(withSpeed).toContain('"speed": 2, "count": 5}');
+    expect(parseObjects(withSpeed)).toEqual([{ ...badger, speed: 2, count: 5 }]);
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "count": 2}]', "object 1: a crab has no count (badgers do)"],
+    ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count"],
+    ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 0}]', "object 1: count should be 1 to 6 (how many badgers come out at once)"],
+    ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 7}]', "object 1: count should be 1 to 6"],
+    ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 2.5}]', "object 1: count should be 1 to 6"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });

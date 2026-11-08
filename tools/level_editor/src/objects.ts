@@ -21,23 +21,29 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // rollers' biting plant, and its stone wheel, which comes with its track and
 // rolls back and forth along it), and those taken from other levels (n. sanity
 // beach's crab, which walks back and forth across the map, and its turtle, which
-// walks back and forth along the route, and the great gate's native). the level build places them by their
-// entity (builder/entities.ts)
-export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native"] as const;
+// walks back and forth along the route, and the great gate's native), and jungle
+// rollers' badgers, which run out along their path when crash comes near. the
+// level build places them by their entity (builder/entities.ts)
+export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native", "badger"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
 
-// the enemies that walk back and forth along a path of nodes (crab, turtle, native), and how many nodes it can have
-export const PATH_ENEMIES: EnemyType[] = ["crab", "turtle", "native"];
+// the enemies that move along a path of nodes (crab, turtle, native, badger), and how many nodes it can have
+export const PATH_ENEMIES: EnemyType[] = ["crab", "turtle", "native", "badger"];
 export const PATH_NODES_MAX = 20;
 
-// the enemies with a path, for messages: "crabs, turtles and natives"
+// the enemies with a path, for messages: "crabs, turtles, natives and badgers"
 const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map((enemy) => `${enemy}s`).join(", ")} and ${PATH_ENEMIES.at(-1)}s`;
 
 // how many times the game's own pace a path enemy can walk at (seen working in the game with crabs and turtles)
 export const SPEED_MIN = 0.25;
 export const SPEED_MAX = 3;
+
+// how many badgers come out at once: as jungle rollers' first badger spawner without a count
+export const BADGER_COUNT = 2;
+export const BADGER_COUNT_MIN = 1;
+export const BADGER_COUNT_MAX = 6;
 
 export interface LevelObject {
   kind: Kind;
@@ -50,6 +56,7 @@ export interface LevelObject {
   speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
   reverse?: boolean;    // a rolling stone that rolls back towards its first end first (true, or none)
+  count?: number;       // how many badgers come out at once (BADGER_COUNT without one)
 }
 
 // a box's type name, from its type or its subtype number
@@ -62,7 +69,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse"];
+const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
@@ -143,6 +150,21 @@ function readReverse(fields: Record<string, unknown>, enemy: EnemyType, objectNu
   return fields.reverse ? { reverse: true } : {};
 }
 
+// how many badgers come out at once, from a badger's fields in objects.json (none if it hasn't a count)
+function readCount(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "count"> {
+  if (!("count" in fields)) {
+    return {};
+  }
+  if (enemy !== "badger") {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no count (badgers do)`);
+  }
+  const count = fields.count;
+  if (!isWhole(count) || count < BADGER_COUNT_MIN || count > BADGER_COUNT_MAX) {
+    throw new Error(`object ${objectNumber}: count should be ${BADGER_COUNT_MIN} to ${BADGER_COUNT_MAX} (how many badgers come out at once)`);
+  }
+  return { count };
+}
+
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
 export function parseObjects(text: string): LevelObject[] {
   let entries: unknown;
@@ -221,6 +243,7 @@ export function parseObjects(text: string): LevelObject[] {
       Object.assign(object, readSpeed(fields, object.enemy!, objectNumber));
       Object.assign(object, readStart(fields, object.enemy!, objectNumber));
       Object.assign(object, readReverse(fields, object.enemy!, objectNumber));
+      Object.assign(object, readCount(fields, object.enemy!, objectNumber));
     }
 
     objects.push(object);
@@ -258,6 +281,9 @@ function formatObject(object: LevelObject): string {
   }
   if (object.reverse) {
     parts.push(`"reverse": true`);
+  }
+  if (object.count !== undefined && object.count !== BADGER_COUNT) {
+    parts.push(`"count": ${object.count}`);
   }
   return `{${parts.join(", ")}}`;
 }
