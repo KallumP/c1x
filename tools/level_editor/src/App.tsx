@@ -124,7 +124,7 @@ export default function App() {
 
   // build and boot, on the right
   const renderLevelActions = () => {
-    const { isBusy, status, build, boot } = levelActions;
+    const { isBusy, status, build, buildAndBoot } = levelActions;
     return (
       <div className="level-actions">
         {status && (
@@ -133,8 +133,8 @@ export default function App() {
         <button disabled={!level || isBusy} onClick={build} title="Build this level (saves first). F5 builds and boots">
           Build
         </button>
-        <button disabled={!level || isBusy} onClick={boot} title="Set boot_level in settings.cfg to this level">
-          Boot
+        <button disabled={!level || isBusy} onClick={buildAndBoot} title="Build this level, then set the game to boot into it">
+          Build + boot
         </button>
       </div>
     );

@@ -75,5 +75,5 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
     }
   };
 
-  return { isBusy, status, build, boot, buildAndBoot };
+  return { isBusy, status, build, buildAndBoot };
 }
