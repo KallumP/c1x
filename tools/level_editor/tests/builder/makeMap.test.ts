@@ -431,6 +431,24 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
     });
 
+    test("a walking spider is a spawner on its path: fumbling in the dark's length by default (3200) along the route, in steps of 800, then a drop of 1600", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [spider("walking_spider")], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.walking_spider);
+      const run = placed.path.slice(0, -1);
+      expect(run.length).toBe(5);
+      run.forEach(([x, y]) => { expect(Math.abs(x - 1408)).toBeLessThanOrEqual(8); expect(Math.abs(y - 128)).toBeLessThanOrEqual(8); });
+      expect(Math.abs(run[0][2] - (1664 - 1600))).toBeLessThanOrEqual(8); // starting ahead, running back towards the spawn (+z)
+      const [last, drop] = placed.path.slice(-2);
+      expect(drop).toEqual([last[0], last[1] - 1600, last[2]]);
+    });
+
+    test("a walking spider's count is how many come out at once: its init flag c, 1 (as fumbling in the dark's) without one", () => {
+      const initFlagC = (more: Partial<LevelObject>) =>
+        zoneEntities(make(MAP_OBJ, { scale: 256, objects: [spider("walking_spider", more)], readOtherLevel }).zone)
+          .find((item) => entityType(item).join() === ENEMY_ENTITIES.walking_spider.join())!.readInt16LE(ENTITY_INIT_FLAGS + 4);
+      expect([initFlagC({}), initFlagC({ count: 3 })]).toEqual([1, 3]);
+    });
+
     test("a level with both kinds reads fumbling in the dark once, and has its spider code once", () => {
       const read: number[] = [];
       const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
