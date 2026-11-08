@@ -10,7 +10,7 @@ import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
-  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA,
+  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, entityPath, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA,
   WARP_PAD, withEntityId, withPath, withPosition, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
@@ -134,6 +134,18 @@ class ObjectPlacer {
     const { zone, at } = this.inZone(this.positionOf(plant));
     const [type, subtype] = ENEMY_ENTITIES.plant;
     this.entities[zone].push(withPosition(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), at));
+  }
+
+  // a badger: jungle rollers' first badger spawner, its path moved to start at
+  // the badger's spot, where its badgers come out of the ground
+  placeBadger(badger: LevelObject): void {
+    const position = this.positionOf(badger);
+    const { zone, at } = this.inZone(position);
+    const [type, subtype] = ENEMY_ENTITIES.badger;
+    const example = this.templates.entity(type, subtype);
+    const examplePath = entityPath(example);
+    const path = examplePath.map((point) => point.map((value, axis) => at[axis] + value - examplePath[0][axis]) as Vec3);
+    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
   }
 
   // an enemy taken from another level that walks back and forth along a path (a
@@ -260,6 +272,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   linkSwitches(placer.entities, placer.placedBoxes);
 
   enemies.filter((enemy) => enemy.enemy === "plant").forEach((plant) => placer.placePlant(plant));
+  enemies.filter((enemy) => enemy.enemy === "badger").forEach((badger) => placer.placeBadger(badger));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   for (const enemy of enemies.filter(({ enemy: type }) => donorLevels.has(type!))) {
     const example = levelEntity(donorLevels.get(enemy.enemy!)!, ...ENEMY_ENTITIES[enemy.enemy!]);
