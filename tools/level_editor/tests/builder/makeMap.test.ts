@@ -514,6 +514,14 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       placed.path.slice(1).forEach((point, index) => expect(Math.abs(Math.hypot(...point.map((value, axis) => value - placed.path[index][axis])) - 480)).toBeLessThanOrEqual(8));
     });
 
+    test("a monkey's path goes into the level the other way round, as the game starts it at its far end: it starts at the editor's first node", () => {
+      const path: Vec3[] = [[-3, 0, 0], [3, 0, 0]]; // from -x to +x
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [monkey({ path })], readOtherLevel }).zone);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone; the path's first node, 3 m to -x, is 768 to -x
+      expect(Math.abs(placed.path.at(-1)![0] - (1408 - 768))).toBeLessThanOrEqual(8);
+      expect(Math.abs(placed.path[0][0] - (1408 + 768))).toBeLessThanOrEqual(8);
+    });
+
     test("a level with a monkey and a native reads the great gate once, and has both", () => {
       const read: number[] = [];
       const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
