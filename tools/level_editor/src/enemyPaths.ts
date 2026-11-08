@@ -1,6 +1,6 @@
-// the paths crabs, turtles and natives walk back and forth along: nodes, in metres
+// the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
-import { cameraFacing, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import { BADGER_RUN, cameraFacing, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 5;
@@ -10,7 +10,7 @@ export const DEFAULT_PATH_NODES = 5;
 // so this keeps it walking at its own speed
 export const PATH_STEP = 100;
 
-export type PathEnemy = "crab" | "turtle" | "native";
+export type PathEnemy = "crab" | "turtle" | "native" | "badger";
 
 // how far apart a path's points are in the game for an enemy, at its own speed:
 // a native's as the great gate's natives' are (its path in 4 steps), the rest PATH_STEP
@@ -29,10 +29,14 @@ function straightNodes(start: Vec3, end: Vec3, count: number): Vec3[] {
 }
 
 // the way an enemy walks without a path of its own (in blender): a crab or native
-// across the map, as the game walks them; a turtle along the route, the way the camera faces
+// across the map, as the game walks them; a turtle along the route, the way the
+// camera faces; badgers along the route the other way, back towards the spawn
 function defaultWay(enemy: PathEnemy, turn: number): { way: Vec3; walk: number } {
   if (enemy === "turtle") {
     return { way: cameraFacing(turn), walk: TURTLE_WALK };
+  }
+  if (enemy === "badger") {
+    return { way: scaled(cameraFacing(turn), -1), walk: BADGER_RUN };
   }
   return { way: stoneRolling(turn), walk: enemy === "crab" ? CRAB_WALK : NATIVE_WALK };
 }
