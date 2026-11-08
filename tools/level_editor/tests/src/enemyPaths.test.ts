@@ -3,7 +3,7 @@ import { DEFAULT_PATH_NODES, defaultPath, enemyPath, handleLifts, pathLength, pa
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
-const enemy = (type: "crab" | "turtle" | "native" | "badger", more: Partial<LevelObject> = {}): LevelObject =>
+const enemy = (type: "crab" | "turtle" | "native" | "badger" | "warthog", more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind: "enemy", enemy: type, at: [1, 2, 3], raise: 0, stack: 1, ...more });
 
 describe("a path enemy's default path", () => {
@@ -24,6 +24,10 @@ describe("a path enemy's default path", () => {
   test("a badger's: 5200 game units along the route, as jungle rollers' badgers run, from ahead back towards the spawn", () => {
     expect(noMinusZero(defaultPath("badger", 0, 400))).toEqual([[0, 6.5, 0], [0, 0, 0], [0, -6.5, 0]]);
     expect(enemyPath(enemy("badger"), 90, 400)).toEqual(defaultPath("badger", 90, 400));
+  });
+
+  test("a warthog's: 5200 game units along the route, the way the camera faces, as road to nowhere's warthogs charge", () => {
+    expect(noMinusZero(defaultPath("warthog", 0, 400))).toEqual([[0, -6.5, 0], [0, 0, 0], [0, 6.5, 0]]);
   });
 
   test("turns with the level, and is longer in metres at a smaller scale", () => {

@@ -425,6 +425,22 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(soundEids(level).filter((eid) => ["WH1kA", "WH2kA", "WH3kA"].map(stringToEid).includes(eid)).length).toBe(3);
     });
 
+    const steps = (points: Vec3[]) => points.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - points[index][axis])));
+
+    test("a warthog charges road to nowhere's path's length by default (5200) along the route, its middle at its spot, in road to nowhere's steps (744)", () => {
+      const [placed] = enemies(withWarthog().zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.warthog);
+      expect(placed.path.length).toBe(8); // 7 steps of about 743
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      placed.path.forEach(([x, y]) => { expect(Math.abs(x - 1408)).toBeLessThanOrEqual(8); expect(Math.abs(y - 128)).toBeLessThanOrEqual(8); });
+      expect(Math.abs((placed.path[0][2] + placed.path[7][2]) / 2 - 1664)).toBeLessThanOrEqual(8);
+      steps(placed.path).forEach((step) => expect(Math.abs(step - 5200 / 7)).toBeLessThanOrEqual(8));
+    });
+
+    test("a faster warthog has longer steps", () => {
+      expect(enemies(withWarthog({ speed: 2 }).zone)[0].path.length).toBe(5); // 4 steps of 1300
+    });
+
     test("a level without warthogs has none of their code", () => {
       expect(make(MAP_OBJ, { scale: 256, readOtherLevel }).level.nsd.ldat.execMap[ENEMY_ENTITIES.warthog[0]]).toBe(EID_NONE);
     });
