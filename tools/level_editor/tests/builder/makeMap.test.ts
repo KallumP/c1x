@@ -70,6 +70,7 @@ const N_SANITY_BEACH = 0x9;
 const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
 const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0x12)
 const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhere (0x14)
+const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the dark (0x2a)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -409,6 +410,25 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a turtle, with no other levels to take it from, is an error saying so", () => {
       expect(() => withTurtle({ readOtherLevel: undefined })).toThrow(/turtle/);
+    });
+  });
+
+  describe.skipIf(!hasFumbling)("spiders, from fumbling in the dark", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const spider = (type: "spider" | "walking_spider", more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: type, ...more });
+
+    test("a level with a spider has fumbling in the dark's spider code, models and animations", () => {
+      const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [spider("spider")], readOtherLevel });
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.spider[0]]).toBe(stringToEid("SpidC"));
+      expect(["SpSsG", "SpDsG", "SpdsG", "Sp1sG", "SpSsV", "SpDsV", "SpdsV", "Sp1sV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
+
+    test("a level with both kinds reads fumbling in the dark once, and has its spider code once", () => {
+      const read: number[] = [];
+      const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
+      const { level } = make(MAP_OBJ, { scale: 256, objects: [spider("spider"), spider("walking_spider", { at: [-1, 4, 0] })], readOtherLevel: readEach });
+      expect(read).toEqual([0x2a]);
+      expect(level.nsd.ldat.execMap.filter((eid) => eid === stringToEid("SpidC")).length).toBe(1);
     });
   });
 
