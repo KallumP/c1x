@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BOX_TYPES, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type Vec3 } from "../../src/objects";
+import { BADGER_COUNT, BADGER_COUNT_MAX, BADGER_COUNT_MIN, BOX_TYPES, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type Vec3 } from "../../src/objects";
 
 describe("parseObjects", () => {
   test("reads spawn, end and boxes with their settings", () => {
@@ -303,6 +303,40 @@ describe("a rolling stone's start", () => {
     ['[{"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "start": 0.5}]', "object 1: a turtle has no start (rolling stones do)"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 1.5}]', "object 1: start should be 0 to 1 (how far along its track it starts)"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": "middle"}]', "object 1: start should be 0 to 1"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+});
+
+describe("badger counts", () => {
+  const badger = { kind: "enemy" as const, enemy: "badger" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1 };
+
+  test("a badger can have a count: how many come out in each wave", () => {
+    const objects = parseObjects(`[
+      {"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 4},
+      {"kind": "enemy", "type": "badger", "at": [0, 0, 0]}
+    ]`);
+    expect(objects.map(({ count }) => count)).toEqual([4, undefined]);
+  });
+
+  test(`a count is ${1} to ${6}, ${2} without one (as jungle rollers' badgers)`, () => {
+    expect([BADGER_COUNT_MIN, BADGER_COUNT_MAX, BADGER_COUNT]).toEqual([1, 6, 2]);
+  });
+
+  test("writes a count after the rest, and leaves out the default (2)", () => {
+    expect(formatObjects([{ ...badger, count: 3 }])).toContain('"at": [1, 2, 0], "count": 3}');
+    expect(formatObjects([{ ...badger, count: 2 }])).toContain('"at": [1, 2, 0]}');
+    const withSpeed = formatObjects([{ ...badger, speed: 2, count: 5 }]);
+    expect(withSpeed).toContain('"speed": 2, "count": 5}');
+    expect(parseObjects(withSpeed)).toEqual([{ ...badger, speed: 2, count: 5 }]);
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "count": 2}]', "object 1: a crab has no count (badgers do)"],
+    ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count"],
+    ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 0}]', "object 1: count should be 1 to 6 (how many badgers come out at once)"],
+    ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 7}]', "object 1: count should be 1 to 6"],
+    ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 2.5}]', "object 1: count should be 1 to 6"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });

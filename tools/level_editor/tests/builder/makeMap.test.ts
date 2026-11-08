@@ -235,6 +235,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       steps(run).forEach((step) => near(step, 400));
     });
 
+    test("a badger's count is how many come out at once: its init flag c, 2 (as jungle rollers' first) without one", () => {
+      const initFlagC = (more: Partial<LevelObject>) =>
+        zoneEntities(make(MAP_OBJ, { scale: 256, objects: [badger(more)] }).zone).find((item) => entityType(item).join() === ENEMY_ENTITIES.badger.join())!
+          .readInt16LE(ENTITY_INIT_FLAGS + 4);
+      expect([initFlagC({}), initFlagC({ count: 1 }), initFlagC({ count: 6 })]).toEqual([2, 1, 6]);
+    });
+
     test("badgers dive away at the end of their path: a last point 1160 below it", () => {
       const path = placedPath();
       const [last, dive] = path.slice(-2);
