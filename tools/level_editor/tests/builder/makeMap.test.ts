@@ -423,6 +423,14 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(["SpSsG", "SpDsG", "SpdsG", "Sp1sG", "SpSsV", "SpDsV", "SpdsV", "Sp1sV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
     });
 
+    test("a spider hangs over its spot, as its entity, a single point there", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [spider("spider")], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.spider);
+      expect(placed.path.length).toBe(1);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+    });
+
     test("a level with both kinds reads fumbling in the dark once, and has its spider code once", () => {
       const read: number[] = [];
       const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
