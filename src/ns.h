@@ -245,6 +245,7 @@ typedef struct {
   int (*kill)(void);
 } ns_subsystem;
 
+extern void NSInitTexturePages(ns_struct *nss, uint32_t lid);
 extern char *NSEIDToString(eid_t eid);
 extern char *NSEIDValToString(eid_t eid);
 extern eid_t NSStringToEID(char *str);

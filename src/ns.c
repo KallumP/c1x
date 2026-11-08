@@ -729,7 +729,7 @@ entry *NSLookup(void *en_ref) {
 }
 
 //----- (80015F18) inline -------------------------------------------------
-static inline void NSInitTexturePages(ns_struct *nss, uint32_t lid) {
+void NSInitTexturePages(ns_struct *nss, uint32_t lid) {
   /*
   there are 2 ways to view the contents of vram (1024x512)
 
@@ -763,11 +763,10 @@ static inline void NSInitTexturePages(ns_struct *nss, uint32_t lid) {
     if (bly & 1)
       info |= 0x80;
     ps->info = info;
-    if (i<8) {
-      ps->state = 30; /* upper half of vram "inaccessible" */
-      continue;
-    }
-    else if (ps->state != 20 && ps->state != 21) { /* this slot not used in previous level? */
+    /* the ps1 kept slots 0-7 (the upper half of vram) for the display and draw
+       buffers. the pc draws from its own copies of the pages, so a level can use
+       all 16: a custom level with enemies from other levels can need more than 8 */
+    if (ps->state != 20 && ps->state != 21) { /* this slot not used in previous level? */
       ps->state = 1; /* freshly reserved; ready for transfer */
       continue;
     }
