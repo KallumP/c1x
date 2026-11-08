@@ -29,7 +29,8 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - warthog: road to nowhere's, charging back and forth along its path once crash comes near
 // - spider: fumbling in the dark's, dropping from its thread when crash comes near
 // - walking_spider: fumbling in the dark's, running out along its path, count at a time, when crash comes near
-export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native", "badger", "warthog", "spider", "walking_spider"] as const;
+// - monkey: the great gate's, walking back and forth across the map once crash comes near
+export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native", "badger", "warthog", "spider", "walking_spider", "monkey"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
