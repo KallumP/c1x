@@ -94,14 +94,6 @@ export default function App() {
     }
   };
 
-  const renderBoxWarningCount = () => {
-    if (warnings.size === 0) {
-      return null;
-    }
-    const boxes = warnings.size === 1 ? "box is" : "boxes are";
-    return <span className="warning">{warnings.size} {boxes} in a wall or another box</span>;
-  };
-
   const renderPathWarningCount = () => {
     if (pathWarnings.size === 0) {
       return null;
@@ -153,7 +145,6 @@ export default function App() {
       <LevelPicker levels={levels} level={level} onOpen={openLevel} />
       {renderHistoryButtons()}
       {renderSaveButton()}
-      {renderBoxWarningCount()}
       {renderPathWarningCount()}
       {error && <span className="error">{error}</span>}
       {renderLevelActions()}
