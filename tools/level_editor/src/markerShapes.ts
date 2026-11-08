@@ -39,3 +39,13 @@ function crash(): ShapePart[] {
 }
 
 export const CRASH_SHAPE = scaledToHeight(standingOnFloor(crash()), CRASH_HEIGHT);
+
+const PAD_RADIUS = 400; // the warp pad's radius in game units, about
+const PAD_COLOURS = { base: "#8a8f99", ring: "#5aa9e6", glow: "#e8f4ff" };
+
+// the warp pad that ends the level: a round stone base, a blue ring and a glowing middle
+export const WARP_PAD_SHAPE: ShapePart[] = [
+  rod(PAD_RADIUS, PAD_RADIUS, 60, [0, 30, 0], PAD_COLOURS.base),
+  rod(PAD_RADIUS * 0.95, PAD_RADIUS * 0.95, 20, [0, 70, 0], PAD_COLOURS.ring),
+  rod(PAD_RADIUS * 0.6, PAD_RADIUS * 0.6, 24, [0, 72, 0], PAD_COLOURS.glow),
+];

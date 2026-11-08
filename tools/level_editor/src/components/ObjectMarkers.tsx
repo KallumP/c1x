@@ -2,15 +2,14 @@
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
-import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
+import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
-import { CRASH_SHAPE } from "../markerShapes";
+import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare } from "../enemyPaths";
 import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
-const PAD_UNITS = 400;   // the warp pad's radius, about
 const STONE_THICKNESS = 0.35; // of the rolling stone's radius
 const TRACK_OPACITY = 0.25;   // of the outline of a rolling stone's track
 const BOX_EDGE_COLOUR = "#000000";
@@ -120,17 +119,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  const renderEnd = (object: LevelObject, index: number) => {
-    const radius = PAD_UNITS / scale;
-    const [x, y, z] = base(object);
-    return (
-      <mesh position={[x, y + radius / 20, z]}>
-        <cylinderGeometry args={[radius, radius, radius / 10, 24]} />
-        <meshLambertMaterial color={END_COLOUR} />
-        <Edges color={edgeColour(index, END_COLOUR)} />
-      </mesh>
-    );
-  };
+  const renderEnd = (object: LevelObject, index: number) => renderShapeModel(WARP_PAD_SHAPE, base(object), index);
 
   const renderShapePart = (part: ShapePart, partIndex: number, glow: number, opacity: number) => (
     <mesh key={partIndex} geometry={partGeometry(part)}>
