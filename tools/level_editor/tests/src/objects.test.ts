@@ -25,6 +25,16 @@ describe("parseObjects", () => {
     });
   });
 
+  test("lists them in the palette's order, by what they do: plain, bonus, tnt, the switch and its outlines, then iron", () => {
+    expect(Object.keys(BOX_TYPES)).toEqual([
+      "basic", "slatted", "arrow",
+      "question", "life", "aku_aku", "checkpoint",
+      "tnt", "enemy_tnt",
+      "switch", "outline",
+      "iron", "iron_arrow", "iron_outline",
+    ]);
+  });
+
   test("reads the boxes beyond n. sanity beach's, by type or subtype", () => {
     const objects = parseObjects(`[
       {"kind": "box", "type": "tnt", "at": [0, 0, 0]},
