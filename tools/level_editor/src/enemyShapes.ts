@@ -24,10 +24,10 @@ const NATIVE_COLOURS = { skin: "#8a5a3a", skirt: "#46c84a", hair: "#2b1b14", shi
 const BADGER_COLOURS = { fur: "#1f1d24", stripe: "#e4dcc4", nose: "#3a3238", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
-const ball = (radius: number, at: Vec3, colour: string, extra: Partial<ShapePart> = {}): ShapePart =>
+export const ball = (radius: number, at: Vec3, colour: string, extra: Partial<ShapePart> = {}): ShapePart =>
   ({ kind: "ball", radius, at, colour, ...extra } as ShapePart);
 
-const rod = (radiusTop: number, radiusBottom: number, length: number, at: Vec3, colour: string, extra: Partial<ShapePart> = {}): ShapePart =>
+export const rod = (radiusTop: number, radiusBottom: number, length: number, at: Vec3, colour: string, extra: Partial<ShapePart> = {}): ShapePart =>
   ({ kind: "rod", radiusTop, radiusBottom, length, at, colour, ...extra } as ShapePart);
 
 // the same parts on the other side (x → -x)
@@ -39,7 +39,7 @@ function mirrored(parts: ShapePart[]): ShapePart[] {
   });
 }
 
-function bothSides(parts: ShapePart[]): ShapePart[] {
+export function bothSides(parts: ShapePart[]): ShapePart[] {
   return [...parts, ...mirrored(parts)];
 }
 
@@ -257,7 +257,7 @@ export function shapeBounds(parts: ShapePart[]): { min: Vec3; max: Vec3 } {
 }
 
 // the parts made bigger or smaller (all of them, about the shape's foot), so the shape is height tall
-function scaledToHeight(parts: ShapePart[], height: number): ShapePart[] {
+export function scaledToHeight(parts: ShapePart[], height: number): ShapePart[] {
   const factor = height / shapeBounds(parts).max[1];
   return parts.map((part) => {
     const [stretchX, stretchY, stretchZ] = part.stretch ?? [1, 1, 1];
@@ -270,7 +270,7 @@ function scaledToHeight(parts: ShapePart[], height: number): ShapePart[] {
 }
 
 // the parts moved up or down so the lowest of them is on the floor
-function standingOnFloor(parts: ShapePart[]): ShapePart[] {
+export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
   const lowest = shapeBounds(parts).min[1];
   return parts.map((part) => ({ ...part, at: [part.at[0], part.at[1] - lowest, part.at[2]] }));
 }

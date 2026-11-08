@@ -68,7 +68,7 @@ export default function App() {
   useUnsavedWarning(unsaved);
   const levelActions = useLevelActions(level, unsaved, save);
 
-  useEditorShortcuts(state, dispatch, { stopPlacing: () => setTool(SELECT), save, buildAndBoot: levelActions.buildAndBoot });
+  useEditorShortcuts(state, dispatch, { stopPlacing: () => setTool(SELECT), save, build: levelActions.build, buildAndBoot: levelActions.buildAndBoot });
 
   const openLevel = (name: string) => {
     if (!confirmDiscard(unsaved)) {
@@ -94,14 +94,6 @@ export default function App() {
     }
   };
 
-  const renderBoxWarningCount = () => {
-    if (warnings.size === 0) {
-      return null;
-    }
-    const boxes = warnings.size === 1 ? "box is" : "boxes are";
-    return <span className="warning">{warnings.size} {boxes} in a wall or another box</span>;
-  };
-
   const renderPathWarningCount = () => {
     if (pathWarnings.size === 0) {
       return null;
@@ -112,8 +104,8 @@ export default function App() {
 
   const renderHistoryButtons = () => (
     <>
-      <button disabled={state.past.length === 0} onClick={() => dispatch({ type: "undo" })} title="Ctrl+Z">Undo</button>
-      <button disabled={state.future.length === 0} onClick={() => dispatch({ type: "redo" })} title="Ctrl+Y">Redo</button>
+      <button disabled={state.past.length === 0} onClick={() => dispatch({ type: "undo" })} title="Undo (Ctrl+Z)">Undo</button>
+      <button disabled={state.future.length === 0} onClick={() => dispatch({ type: "redo" })} title="Redo (Ctrl+Y)">Redo</button>
     </>
   );
 
@@ -125,24 +117,24 @@ export default function App() {
   };
 
   const renderSaveButton = () => (
-    <button className={unsaved ? "save unsaved" : "save"} disabled={!unsaved || isSaving} onClick={save} title="Ctrl+S">
+    <button className={unsaved ? "save unsaved" : "save"} disabled={!unsaved || isSaving} onClick={save} title="Save (Ctrl+S)">
       {saveButtonText()}
     </button>
   );
 
   // build and boot, on the right
   const renderLevelActions = () => {
-    const { isBusy, status, build, boot } = levelActions;
+    const { isBusy, status, build, buildAndBoot } = levelActions;
     return (
       <div className="level-actions">
         {status && (
           <span className={status.failed ? "status error" : "status"} title={status.detail}>{status.text}</span>
         )}
-        <button disabled={!level || isBusy} onClick={build} title="Build this level (saves first). F5 builds and boots">
+        <button disabled={!level || isBusy} onClick={build} title="Build this level, saving first (Ctrl+Shift+B)">
           Build
         </button>
-        <button disabled={!level || isBusy} onClick={boot} title="Set boot_level in settings.cfg to this level">
-          Boot
+        <button disabled={!level || isBusy} onClick={buildAndBoot} title="Build this level, then set the game to boot into it (F5)">
+          Build + boot
         </button>
       </div>
     );
@@ -153,10 +145,10 @@ export default function App() {
       <LevelPicker levels={levels} level={level} onOpen={openLevel} />
       {renderHistoryButtons()}
       {renderSaveButton()}
-      {renderBoxWarningCount()}
       {renderPathWarningCount()}
       {error && <span className="error">{error}</span>}
       {renderLevelActions()}
+      {(isSaving || levelActions.isBusy) && <div className="progress" role="progressbar" aria-label="Working" />}
     </header>
   );
 

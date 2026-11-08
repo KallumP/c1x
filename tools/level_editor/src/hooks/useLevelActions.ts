@@ -55,16 +55,20 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
     }
   };
 
+  // busy (and saying so) until boot_level is set
   const boot = async () => {
     if (!level) {
       return;
     }
+    setIsBusy(true);
     setStatus({ text: "Setting the game to boot into it..." });
     try {
       await bootLevel(level.name);
       setStatus({ text: `The game boots into ${level.name}` });
     } catch (error) {
       setStatus({ text: `Couldn't set boot_level: ${messageOf(error)}`, failed: true });
+    } finally {
+      setIsBusy(false);
     }
   };
 
@@ -75,5 +79,5 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
     }
   };
 
-  return { isBusy, status, build, boot, buildAndBoot };
+  return { isBusy, status, build, buildAndBoot };
 }

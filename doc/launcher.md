@@ -28,7 +28,7 @@ The launcher has a field for each setting in `settings.cfg` (see [Settings](sett
 
 **Save** writes the settings to `settings.cfg`. It changes each setting's line, or adds one for a setting the file doesn't have, and keeps the rest of the file as it is, comments included. Choosing **title screen** comments out the `boot_level` line. **Play** saves too, so you only need **Save** to keep the settings without playing.
 
-When something else changes `settings.cfg`, such as the level editor's **Boot** button, the fields update to match, unless you've changed them without saving. **Reload** reads `settings.cfg` again, dropping changes you haven't saved, and looks for newly built levels.
+When something else changes `settings.cfg`, such as the level editor's **Build + boot** button, the fields update to match, unless you've changed them without saving. **Reload** reads `settings.cfg` again, dropping changes you haven't saved, and looks for newly built levels.
 
 ## Controls
 

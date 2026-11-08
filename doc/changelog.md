@@ -9,6 +9,8 @@
 ### Changed
 
 - the level editor's enemy paths start with 3 nodes, and nodes under the ground can be grabbed
+- the level editor's Boot button builds the level first, and a bar shows while it saves, builds and boots
+- the level editor draws the spawn as Crash and the end as a warp pad
 
 ### Fixed
 

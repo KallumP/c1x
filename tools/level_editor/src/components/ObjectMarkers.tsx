@@ -2,14 +2,14 @@
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
-import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
+import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
+import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare } from "../enemyPaths";
 import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
-const PAD_UNITS = 400;   // the warp pad's radius, about
 const STONE_THICKNESS = 0.35; // of the rolling stone's radius
 const TRACK_OPACITY = 0.25;   // of the outline of a rolling stone's track
 const BOX_EDGE_COLOUR = "#000000";
@@ -110,29 +110,16 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
 
   const renderSpawn = (object: LevelObject, index: number) => {
     const height = CRASH_UNITS / scale;
+    const facingAway = enemyTurn(turn) + Math.PI; // crash faces the way the camera does, into the level
     return (
-      <group position={base(object)}>
-        <mesh position={[0, height / 2, 0]}>
-          <capsuleGeometry args={[height / 5, height * 0.6, 4, 12]} />
-          <meshLambertMaterial color={SPAWN_COLOUR} />
-          <Edges color={edgeColour(index, SPAWN_COLOUR)} />
-        </mesh>
-        {renderSpawnArrow(height)}
-      </group>
+      <>
+        {renderShapeModel(CRASH_SHAPE, base(object), index, undefined, facingAway)}
+        <group position={base(object)}>{renderSpawnArrow(height)}</group>
+      </>
     );
   };
 
-  const renderEnd = (object: LevelObject, index: number) => {
-    const radius = PAD_UNITS / scale;
-    const [x, y, z] = base(object);
-    return (
-      <mesh position={[x, y + radius / 20, z]}>
-        <cylinderGeometry args={[radius, radius, radius / 10, 24]} />
-        <meshLambertMaterial color={END_COLOUR} />
-        <Edges color={edgeColour(index, END_COLOUR)} />
-      </mesh>
-    );
-  };
+  const renderEnd = (object: LevelObject, index: number) => renderShapeModel(WARP_PAD_SHAPE, base(object), index);
 
   const renderShapePart = (part: ShapePart, partIndex: number, glow: number, opacity: number) => (
     <mesh key={partIndex} geometry={partGeometry(part)}>
@@ -149,7 +136,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   // an enemy's model standing at at (in the viewport), facing the player, sized by the level's
   // scale; the selected one glows
   // opacity below 1 fades it: the far end of a crab's or turtle's path, where it turns round
-  const renderEnemyModel = (parts: ShapePart[], at: Vec3, index: number, key?: number, facing = enemyTurn(turn), opacity = 1) => {
+  const renderShapeModel = (parts: ShapePart[], at: Vec3, index: number, key?: number, facing = enemyTurn(turn), opacity = 1) => {
     const glow = index === selected ? SELECTED_GLOW : 0;
     return (
       <group key={key} position={at} rotation={[0, facing, 0]} scale={1 / scale}>
@@ -159,7 +146,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // an enemy that stands where it's placed: a plant
-  const renderPlant = (object: LevelObject, index: number) => renderEnemyModel(ENEMY_SHAPES.plant, base(object), index);
+  const renderPlant = (object: LevelObject, index: number) => renderShapeModel(ENEMY_SHAPES.plant, base(object), index);
 
   // the rolling stone: a wheel where it starts along its track, turned to roll across the map as the game rolls it
   const renderStone = (object: LevelObject, index: number) => {
@@ -274,7 +261,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     return (
       <>
         {ends.map(({ end, next }, endIndex) =>
-          renderEnemyModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next, endIndex), endIndex === 0 ? 1 : FAR_END_OPACITY))}
+          renderShapeModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next, endIndex), endIndex === 0 ? 1 : FAR_END_OPACITY))}
         <Line points={line} color={pathWarnings.has(index) ? WARNING_COLOUR : colour} lineWidth={2} />
         {index === selected && renderPathHandles(positions, index, enemy, colour)}
       </>

@@ -52,7 +52,7 @@ The level editor places Crash's spawn, the level's end, boxes and enemies.
 1. Pick your level at the top left.
 1. Pick `spawn`, `end`, a `box` or an `enemy` on the left bar, then click the floor to place it. A level needs at least a spawn and an end to be played.
 1. Click **Select** (or press Esc), then click an object to select it. Drag it to move it, or change its properties on the right. **Delete** (or Del) removes it.
-1. Click **Save** (or press Ctrl+S), then **Build** at the top right (or press F5, which also boots the game straight into it). [Step 3](#3-build-the-level-and-play-it) has more on building.
+1. Click **Save** (or press Ctrl+S), then **Build + boot** at the top right (or press F5), which builds the level and boots the game straight into it. [Step 3](#3-build-the-level-and-play-it) has more on building.
 
 Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box (this doesn't stop the level from building). **Drop to floor** puts the selected box just above the floor, and **raise** sets how far off the floor an object should be.
 
@@ -73,11 +73,10 @@ See [Objects](../level_src/README.md#objects) for how each box and enemy behaves
 
 Then, in the level editor:
 
-1. Click **Build** at the top right. It saves your changes, then builds the level. It says `Built my_level` when it's done, or why it failed (hover over the message for the full output).
-2. Click **Boot**. It sets the game to start in this level, by writing `boot_level = my_level` in `settings.cfg`.
-3. In the launcher, click **Play**.
+1. Click **Build + boot** at the top right (or press **F5**). It saves your changes, builds the level, then, if the build worked, sets the game to start in it by writing `boot_level = my_level` in `settings.cfg`. A bar slides along the bottom of the top bar while it works, and it says `The game boots into my_level` when it's done, or why it failed (hover over the message for the full output).
+2. In the launcher, click **Play**.
 
-Or press **F5**, which does steps 1 and 2 together: it saves, builds, then sets the game to boot into the level if the build worked.
+**Build** (or Ctrl+Shift+B) on its own saves and builds the level without changing which level the game boots into. Hovering over a button shows its shortcut.
 
 **After any change** to the map or objects, build again. You don't need to rebuild the game.
 
