@@ -104,8 +104,8 @@ export default function App() {
 
   const renderHistoryButtons = () => (
     <>
-      <button disabled={state.past.length === 0} onClick={() => dispatch({ type: "undo" })} title="Ctrl+Z">Undo</button>
-      <button disabled={state.future.length === 0} onClick={() => dispatch({ type: "redo" })} title="Ctrl+Y">Redo</button>
+      <button disabled={state.past.length === 0} onClick={() => dispatch({ type: "undo" })} title="Undo (Ctrl+Z)">Undo</button>
+      <button disabled={state.future.length === 0} onClick={() => dispatch({ type: "redo" })} title="Redo (Ctrl+Y)">Redo</button>
     </>
   );
 
@@ -117,7 +117,7 @@ export default function App() {
   };
 
   const renderSaveButton = () => (
-    <button className={unsaved ? "save unsaved" : "save"} disabled={!unsaved || isSaving} onClick={save} title="Ctrl+S">
+    <button className={unsaved ? "save unsaved" : "save"} disabled={!unsaved || isSaving} onClick={save} title="Save (Ctrl+S)">
       {saveButtonText()}
     </button>
   );
@@ -130,10 +130,10 @@ export default function App() {
         {status && (
           <span className={status.failed ? "status error" : "status"} title={status.detail}>{status.text}</span>
         )}
-        <button disabled={!level || isBusy} onClick={build} title="Build this level (saves first). F5 builds and boots">
+        <button disabled={!level || isBusy} onClick={build} title="Build this level (saves first)">
           Build
         </button>
-        <button disabled={!level || isBusy} onClick={buildAndBoot} title="Build this level, then set the game to boot into it">
+        <button disabled={!level || isBusy} onClick={buildAndBoot} title="Build this level, then set the game to boot into it (F5)">
           Build + boot
         </button>
       </div>
