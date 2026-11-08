@@ -115,7 +115,7 @@ describe("zone paths", () => {
   });
 
   test("with the camera further behind, a point goes to the zone crash is in that far ahead", () => {
-    expect(zonePaths([[1, 2, 32768 + 3000]], SPANS, 3000)).toEqual([[], [[1, 2, 16384 + 3000]], []]);
+    expect(zonePaths([[1, 2, 32767 + 3000], [1, 2, 32768 + 3000]], SPANS, 3000)).toEqual([[[1, 2, 3000]], [[1, 2, 16383 + 3000]], []]);
   });
 
   test("zones before the start have no points", () => {

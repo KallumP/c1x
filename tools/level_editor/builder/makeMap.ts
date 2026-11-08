@@ -21,7 +21,8 @@ import { addMapPiece, TEXINFO_WORDS_MAX, textureWorlds } from "./mapTextures";
 import { readObj, type Mesh } from "./obj";
 import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
-import { cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
+import { cameraOffsets, cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
+import { DEFAULT_CAMERA, type Camera } from "../src/camera";
 import { levelEntity, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type StoneTrack, type Templates } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
@@ -44,6 +45,7 @@ export interface MapOptions {
   images?: Map<string, RgbImage>; // each material's image
   objects?: LevelObject[];
   sky?: Sky;                      // n. sanity beach's without one
+  camera?: Camera;                // how the follow camera looks at crash; as it always was without one
   readOtherLevel?: (lid: number) => Level; // the real levels enemies are taken from (see ENEMY_DONORS)
 }
 
@@ -272,7 +274,8 @@ const boxCount = (boxes: LevelObject[]) => boxes.reduce((sum, box) => sum + box.
 const breakableBoxes = (boxes: LevelObject[]) => boxCount(boxes.filter((box) => !UNBREAKABLE_BOXES.includes(boxSubtype(box))));
 
 export function makeMap(level: Level, text: string, options: MapOptions = {}): Level {
-  const { scale = MAP_SCALE, turn = 0, images = new Map(), objects = [], sky = DEFAULT_SKY, readOtherLevel } = options;
+  const { scale = MAP_SCALE, turn = 0, images = new Map(), objects = [], sky = DEFAULT_SKY, camera = DEFAULT_CAMERA, readOtherLevel } = options;
+  const offsets = cameraOffsets(camera);
   const base = readTemplates(level);
   const templates = { ...base, header: withSky(base.header, sky) }; // every zone's header is made from this one
   const map = fitMap(text, scale, turn);
@@ -317,7 +320,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   }
 
   const zonePlans = (step: number): ZonePlan[] => {
-    const paths = zonePaths(cameraPath(cells, fitted.size, MAP_CELL, start, step), spans);
+    const paths = zonePaths(cameraPath(cells, fitted.size, MAP_CELL, start, step, offsets), spans, offsets.lead);
     let first = 0;
     return spans.map((span, index) => {
       const count = zoneWorlds[index].length;
@@ -339,7 +342,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   for (let step = MAP_PATH_STEP; ; step *= 2) {
     try {
       const out = assembleLevel({
-        level, templates, size, zones: zonePlans(step), step, spawnZone, pageEids: withBase.pageEids, texturePages: pages, donors,
+        level, templates, size, zones: zonePlans(step), step, spawnZone, pageEids: withBase.pageEids, texturePages: pages, donors, camera,
       });
       out.nsd.ldat.boxTotal = breakableBoxes(boxes);
       return out;

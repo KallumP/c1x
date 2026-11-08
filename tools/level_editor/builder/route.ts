@@ -6,10 +6,29 @@ import type { Span } from "./fit";
 import type { Mesh } from "./obj";
 import { floorDivide, roundHalfToEven } from "./pyMath";
 import type { Vec3 } from "./vectors";
+import { DEFAULT_CAMERA, type Camera } from "../src/camera";
 
 export const CAM_OFFSET = [101, 1316]; // follow camera from crash: x, height (as on n. sanity beach)
 export const CAM_LEAD = 1450;          // how far ahead of the camera crash is (as on the beach)
 const CAM_EDGE = 200;                  // how far in from the zone's ends the camera path stays
+
+// how far behind crash (along the route) and above him the camera is, in game units
+export interface CameraOffsets {
+  lead: number;
+  height: number;
+}
+
+// where a level's camera is from crash: CAM_LEAD behind and CAM_OFFSET's height
+// above, turned up or down about him by how far its angle is from the usual
+// one, and scaled by its distance
+export function cameraOffsets({ distance, angle }: Camera): CameraOffsets {
+  const turn = ((angle - DEFAULT_CAMERA.angle) * Math.PI) / 180;
+  const lead = CAM_LEAD * Math.cos(turn) - CAM_OFFSET[1] * Math.sin(turn);
+  const height = CAM_LEAD * Math.sin(turn) + CAM_OFFSET[1] * Math.cos(turn);
+  return { lead: Math.round(lead * distance), height: Math.round(height * distance) };
+}
+
+const USUAL_OFFSETS: CameraOffsets = { lead: CAM_LEAD, height: CAM_OFFSET[1] };
 const HEADROOM = 2;                    // empty cells crash needs above the ground to start on it
 
 // the floors in each column of cells, to find the ground crash can stand on
@@ -159,21 +178,21 @@ function nearestTop(tops: number[], height: number): number {
 }
 
 // camera path points, step apart along -z from behind crash's start to the far
-// end of the zone, CAM_OFFSET above the ground CAM_LEAD ahead of each point (the
-// ground nearest the last height, which is kept over gaps), along crash's start x
-export function cameraPath(cells: Cells, size: Vec3, cell: number, start: Vec3, step: number): Vec3[] {
+// end of the zone, offsets.height above the ground offsets.lead ahead of each
+// point (the ground nearest the last height, which is kept over gaps), along crash's start x
+export function cameraPath(cells: Cells, size: Vec3, cell: number, start: Vec3, step: number, offsets = USUAL_OFFSETS): Vec3[] {
   const ground = new Ground(cells, cell);
   const [x, startHeight, z] = start;
   const i = floorDivide(x, cell);
   let height = startHeight;
   const points: Vec3[] = [];
-  for (let cameraZ = Math.min(z + CAM_LEAD, size[2] - CAM_EDGE); cameraZ > CAM_EDGE; cameraZ -= step) {
-    const k = floorDivide(cameraZ - CAM_LEAD, cell);
+  for (let cameraZ = Math.min(z + offsets.lead, size[2] - CAM_EDGE); cameraZ > CAM_EDGE; cameraZ -= step) {
+    const k = floorDivide(cameraZ - offsets.lead, cell);
     const tops = k >= 0 ? ground.tops(i, k) : [];
     if (tops.length) {
       height = nearestTop(tops, height);
     }
-    points.push([x + CAM_OFFSET[0], height + CAM_OFFSET[1], cameraZ]);
+    points.push([x + CAM_OFFSET[0], height + offsets.height, cameraZ]);
   }
   return points;
 }
@@ -185,12 +204,12 @@ export function zoneIndex(spans: Span[], z: number): number {
 }
 
 // camera path points split into each zone span's path, by the zone crash is in
-// (CAM_LEAD ahead, along -z, as on n. sanity beach), with z relative to it;
+// (lead ahead, along -z; CAM_LEAD as on n. sanity beach), with z relative to it;
 // zones before crash's start have none
-export function zonePaths(points: Vec3[], spans: Span[]): Vec3[][] {
+export function zonePaths(points: Vec3[], spans: Span[], lead = CAM_LEAD): Vec3[][] {
   const paths: Vec3[][] = spans.map(() => []);
   for (const [x, y, z] of points) {
-    const zone = zoneIndex(spans, z - CAM_LEAD);
+    const zone = zoneIndex(spans, z - lead);
     paths[zone].push([x, y, z - spans[zone][0]]);
   }
   return paths;
