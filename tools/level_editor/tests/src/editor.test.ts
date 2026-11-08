@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { draggedBy, draggedTo, editorReducer, emptyEditor, newObject, type EditorAction, type EditorState } from "../../src/editor";
+import { draggedBy, draggedTo, editorReducer, emptyEditor, newObject, placeableKind, type EditorAction, type EditorState, type Placeable } from "../../src/editor";
 import type { LevelObject } from "../../src/objects";
 
 const box = (x: number): LevelObject => newObject("basic", [x, 0, 0]);
@@ -7,6 +7,13 @@ const box = (x: number): LevelObject => newObject("basic", [x, 0, 0]);
 function withObjects(objects: LevelObject[]): EditorState {
   return editorReducer(emptyEditor, { type: "load", objects });
 }
+
+describe("placeableKind", () => {
+  test("is the palette kind a thing to place is under: the spawn, the end, a box or an enemy", () => {
+    expect(["spawn", "end", "basic", "tnt", "crab", "walking_spider"].map((what) => placeableKind(what as Placeable)))
+      .toEqual(["spawn", "end", "box", "box", "enemy", "enemy"]);
+  });
+});
 
 describe("newObject", () => {
   test("makes a box of a type, or a spawn or end, standing where it's put", () => {
