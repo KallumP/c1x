@@ -8,6 +8,7 @@
 - custom levels can have Road to Nowhere's warthog, which charges back and forth at Crash; jump over it
 - custom levels can have Fumbling in the Dark's spiders: one that drops from its thread, and walking ones that run at Crash
 - custom levels can have The Great Gate's monkey, which scurries across Crash's way and taunts him
+- custom levels play Jungle Rollers' music
 
 ### Changed
 
@@ -19,6 +20,7 @@
 
 - objects in the level editor jumping to the pointer as you start dragging them
 - boxes losing their textures in a custom level with several kinds of enemy from other levels
+- Aku Aku's song not playing in custom levels when Crash has three masks
 
 ## 2026-11-06
 
