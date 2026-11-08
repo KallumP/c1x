@@ -17,13 +17,15 @@ export const BOX_TYPES = {
 export type BoxType = keyof typeof BOX_TYPES;
 export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 
-// the enemies custom levels can have, by name: the base level's own (jungle
-// rollers' biting plant, and its stone wheel, which comes with its track and
-// rolls back and forth along it), and those taken from other levels (n. sanity
-// beach's crab, which walks back and forth across the map, and its turtle, which
-// walks back and forth along the route, and the great gate's native), and jungle
-// rollers' badgers, which run out along their path when crash comes near. the
-// level build places them by their entity (builder/entities.ts)
+// the enemies custom levels can have, by name. the level build places them by
+// their entity (builder/entities.ts), and takes those jungle rollers hasn't
+// from the level they're in (builder/donorObjects.ts):
+// - plant: jungle rollers' biting plant, standing still
+// - rolling_stone: jungle rollers' stone wheel, rolling back and forth along its track
+// - crab: n. sanity beach's, walking back and forth across the map
+// - turtle: n. sanity beach's, walking back and forth along the route
+// - native: the great gate's, guarding its path with a shield
+// - badger: jungle rollers', running out along its path in pairs when crash comes near
 export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native", "badger"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 

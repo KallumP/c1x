@@ -18,11 +18,9 @@ export const CRASH: [number, number] = [0, 0];
 export const WARP_PAD: [number, number] = [32, 1]; // WarpC: the warp pad that ends a level, as on n. sanity beach
 export const BOX_TYPE = 34;      // BoxsC: boxes, by subtype
 export const BOX_HEIGHT = 400;   // a box on top of another is this much higher (GoolObjectSpawn in src/gool.c)
-// each enemy's entity type and subtype: jungle rollers' biting plant (PlanC) and
-// its rolling stone wheel (JunOC), which rolls back and forth along its path,
-// and n. sanity beach's crab (CrabC), which walks back and forth along its path,
-// and turtle (TurtC), which does too, the great gate's native (SheNC), and
-// jungle rollers' badger spawner (PillC), which sends badgers along its path
+// each enemy's entity type (its exec map slot) and subtype: the plant PlanC, the
+// rolling stone JunOC, the crab CrabC, the turtle TurtC, the native SheNC, and
+// the badger PillC (an invisible spawner that sends badgers along its path)
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0] };
 // not in the level's total (an iron outline fills in as an iron box)
 // a rolling stone's first init flag is where in its cycle along its path and
