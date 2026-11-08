@@ -16,7 +16,7 @@ export type ShapePart = Primitive & {
   name?: string;
 };
 
-type ModelledEnemy = Exclude<EnemyType, "rolling_stone">;
+type ModelledEnemy = Exclude<EnemyType, "rolling_stone" | "badger">;
 
 const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth: "#b0233a", tooth: "#f4f1e0", soil: "#6b4a2b" };
 const TURTLE_COLOURS = { shell: "#b8282a", spot: "#2fa58c", skin: "#b5a35a", eye: "#f4f1e0", pupil: "#1a1a1a" };
