@@ -61,7 +61,7 @@ The arrow on the spawn object shows which way the camera faces at the start. Wit
 - **turn** and **scale** line the map up with the game (see [If something looks wrong](#if-something-looks-wrong)).
 - **Sky** sets a top colour down to **split** and a bottom colour below it.
 
-**Enemy paths:** some enemies walk a path, drawn as a line with the enemy solid where it starts and faded at the other end. Select one to drag its nodes, or set their x, y and z on the right. **nodes** sets how many there are, **speed** how fast it walks, and **Reverse direction** which end it starts at. A path drawn red leaves the floor or runs through a wall, so move its nodes. 
+**Enemy paths:** some enemies walk a path, drawn as a line with the enemy solid where it starts and faded at the other end. Select one to drag its nodes, or set their x, y and z on the right. **nodes** sets how many there are, **speed** how fast it walks, and **Reverse direction** which end it starts at. A path drawn red leaves the floor or runs through a wall, so move its nodes. Badgers come out of the ground at the solid end and dive away at the faded one.
 
 A rolling stone instead has a **start** slider for where it starts along its track, and **Reverse direction** for which way it rolls first.
 

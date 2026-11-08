@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-08
+
+### Added
+
+- custom levels can have Jungle Rollers' badgers, which pop out of the ground and run at Crash in pairs
+
 ## 2026-11-06
 
 ### Added
