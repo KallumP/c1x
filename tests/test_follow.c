@@ -48,21 +48,33 @@ UTEST(follow, starts_from_crashs_height) {
 
 UTEST(follow, starts_at_its_paths_height) {
   /* crash's floor is right below the path: it's where it should be already */
-  ASSERT_EQ(1000 + FOLLOW_CAM_HEIGHT, FollowCamHeight(FOLLOW_CAM_NO_HEIGHT, 1000, 1000 + FOLLOW_CAM_HEIGHT));
+  ASSERT_EQ(1000 + FOLLOW_CAM_HEIGHT, FollowCamHeight(FOLLOW_CAM_NO_HEIGHT, 1000, 1000 + FOLLOW_CAM_HEIGHT, FOLLOW_CAM_HEIGHT));
 }
 
 UTEST(follow, eases_towards_its_usual_height_above_crashs_floor) {
   int32_t target = 6000 + FOLLOW_CAM_HEIGHT;
 
-  ASSERT_EQ(FollowCamOffset(1000, target), FollowCamHeight(1000, 6000, 1000));
-  ASSERT_EQ(target, FollowCamHeight(target, 6000, 1000));
+  ASSERT_EQ(FollowCamOffset(1000, target), FollowCamHeight(1000, 6000, 1000, FOLLOW_CAM_HEIGHT));
+  ASSERT_EQ(target, FollowCamHeight(target, 6000, 1000, FOLLOW_CAM_HEIGHT));
 }
 
 UTEST(follow, keeps_its_height_when_its_paths_height_jumps) {
   /* the path is over a wall top, high above crash: the camera doesn't jump up to it */
   int32_t height = 1000 + FOLLOW_CAM_HEIGHT;
 
-  ASSERT_EQ(height, FollowCamHeight(height, 1000, 1000 + FOLLOW_CAM_HEIGHT));
-  ASSERT_EQ(height, FollowCamHeight(height, 1000, 2000000 + FOLLOW_CAM_HEIGHT));
-  ASSERT_EQ(height, FollowCamHeight(height, 1000, -2000000));
+  ASSERT_EQ(height, FollowCamHeight(height, 1000, 1000 + FOLLOW_CAM_HEIGHT, FOLLOW_CAM_HEIGHT));
+  ASSERT_EQ(height, FollowCamHeight(height, 1000, 2000000 + FOLLOW_CAM_HEIGHT, FOLLOW_CAM_HEIGHT));
+  ASSERT_EQ(height, FollowCamHeight(height, 1000, -2000000, FOLLOW_CAM_HEIGHT));
+}
+
+UTEST(follow, keeps_the_height_its_level_sets_above_crashs_floor) {
+  int32_t above = 2632 << 8;
+
+  ASSERT_EQ(6000 + above, FollowCamHeight(6000 + above, 6000, 1000, above));
+  ASSERT_EQ(FollowCamOffset(1000, 6000 + above), FollowCamHeight(1000, 6000, 1000, above));
+}
+
+UTEST(follow, its_height_above_crash_is_the_one_its_path_keeps_or_the_usual_one) {
+  ASSERT_EQ(2632 << 8, FollowCamAbove(2632));
+  ASSERT_EQ(FOLLOW_CAM_HEIGHT, FollowCamAbove(0)); /* a path built before levels set it */
 }

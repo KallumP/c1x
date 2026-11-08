@@ -9,12 +9,14 @@
 - custom levels can have Fumbling in the Dark's spiders: one that drops from its thread, and walking ones that run at Crash
 - custom levels can have The Great Gate's monkey, which scurries across Crash's way and taunts him
 - custom levels play Jungle Rollers' music
+- custom levels can set how far the camera is from Crash, and how far above him it looks down from
 
 ### Changed
 
 - the level editor's enemy paths start with 3 nodes, and nodes under the ground can be grabbed
 - the level editor's Boot button builds the level first, and a bar shows while it saves, builds and boots
 - the level editor draws the spawn as Crash and the end as a warp pad
+- the level editor's palette picks a kind (box, enemy) and then its type
 
 ### Fixed
 

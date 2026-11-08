@@ -1,25 +1,96 @@
-// what clicking on the level does: select, or place an object
-import type { Placeable, Tool } from "../editor";
-import { BOX_TYPES, ENEMY_TYPES, type BoxType } from "../objects";
+// what clicking on the level does: select, or place an object. the things to
+// place are by kind (the spawn, the end, a box, an enemy); picking box or enemy
+// places the type last picked of it and lists its types to pick another
+import { useState } from "react";
+import { placeableKind, type Placeable, type PlaceableKind, type Tool } from "../editor";
+import { BOX_TYPES, ENEMY_TYPES, type BoxType, type EnemyType } from "../objects";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SPAWN_COLOUR } from "../objectStyles";
 import "./Palette.css";
 
 const GRID_SIZES = [0, 0.25, 0.5, 1];
+const BOX_TYPE_NAMES = Object.keys(BOX_TYPES) as BoxType[];
+
+const nameOf = (what: Placeable) => what.replace("_", " ");
+
+type TypedKind = "box" | "enemy"; // the kinds with types to pick from
+const isTypedKind = (kind: PlaceableKind | null): kind is TypedKind => kind === "box" || kind === "enemy";
+const KIND_TYPES: Record<TypedKind, Placeable[]> = { box: BOX_TYPE_NAMES, enemy: [...ENEMY_TYPES] };
+const KIND_TYPE_HEADINGS: Record<TypedKind, string> = { box: "Box type", enemy: "Enemy type" };
+
+// what a tool places, if anything
+function placingOf(tool: Tool): Placeable | null {
+  if (tool.kind === "place") {
+    return tool.what;
+  }
+  return null;
+}
+
+// a thing to place's swatch colour
+function colourOf(what: Placeable): string {
+  if (what === "spawn") {
+    return SPAWN_COLOUR;
+  }
+  if (what === "end") {
+    return END_COLOUR;
+  }
+  if (placeableKind(what) === "box") {
+    return boxStyle(what as BoxType).colour;
+  }
+  return ENEMY_COLOURS[what as EnemyType];
+}
 
 export default function Palette({ tool, onTool, grid, onGrid }: {
   tool: Tool; onTool: (tool: Tool) => void; grid: number; onGrid: (grid: number) => void;
 }) {
-  const isPlacing = (what: Placeable) => tool.kind === "place" && tool.what === what;
+  // the box and enemy types last picked, which picking box or enemy places
+  const [lastPicked, setLastPicked] = useState<{ box: BoxType; enemy: EnemyType }>({ box: "basic", enemy: ENEMY_TYPES[0] });
+  const placing = placingOf(tool);
+  const placingKind = placing && placeableKind(placing);
 
-  const renderToolButton = (label: string, active: boolean, onClick: () => void, colour?: string) => (
-    <button key={label} className={active ? "tool active" : "tool"} onClick={onClick}>
+  const place = (what: Placeable) => {
+    const kind = placeableKind(what);
+    if (isTypedKind(kind)) {
+      setLastPicked({ ...lastPicked, [kind]: what });
+    }
+    onTool({ kind: "place", what });
+  };
+
+  // what picking a kind places: the spawn or end, or its type last picked
+  const kindPlaces = (kind: PlaceableKind): Placeable => {
+    if (isTypedKind(kind)) {
+      return lastPicked[kind];
+    }
+    return kind;
+  };
+
+  // a kind's label: box and enemy with the type they place
+  const kindLabel = (kind: PlaceableKind, what: Placeable) => {
+    if (isTypedKind(kind)) {
+      return `${kind}: ${nameOf(what)}`;
+    }
+    return kind;
+  };
+
+  const renderToolButton = (key: string, label: string, active: boolean, onClick: () => void, colour?: string) => (
+    <button key={key} className={active ? "tool active" : "tool"} onClick={onClick}>
       {colour && <span className="swatch" style={{ background: colour }} />}
       {label}
     </button>
   );
 
-  const renderPlaceButton = (what: Placeable, label: string, colour: string) =>
-    renderToolButton(label, isPlacing(what), () => onTool({ kind: "place", what }), colour);
+  // a kind's button, showing the type it places for box and enemy
+  const renderKindButton = (kind: PlaceableKind) => {
+    const what = kindPlaces(kind);
+    return renderToolButton(kind, kindLabel(kind, what), placingKind === kind, () => place(what), colourOf(what));
+  };
+
+  // the types of the kind being placed, to pick another
+  const renderTypes = (kind: TypedKind) => (
+    <div className="types">
+      <h3>{KIND_TYPE_HEADINGS[kind]}</h3>
+      {KIND_TYPES[kind].map((what) => renderToolButton(what, nameOf(what), placing === what, () => place(what), colourOf(what)))}
+    </div>
+  );
 
   const renderGridPicker = () => (
     <label className="grid-picker">
@@ -32,17 +103,15 @@ export default function Palette({ tool, onTool, grid, onGrid }: {
     </label>
   );
 
-  const boxTypes = Object.keys(BOX_TYPES) as BoxType[];
   return (
     <aside className="palette">
-      {renderToolButton("Select", tool.kind === "select", () => onTool({ kind: "select" }))}
+      {renderToolButton("select", "Select", tool.kind === "select", () => onTool({ kind: "select" }))}
       <h3>Place</h3>
-      {renderPlaceButton("spawn", "spawn", SPAWN_COLOUR)}
-      {renderPlaceButton("end", "end", END_COLOUR)}
-      <h3>Boxes</h3>
-      {boxTypes.map((boxType) => renderPlaceButton(boxType, boxType.replace("_", " "), boxStyle(boxType).colour))}
-      <h3>Enemies</h3>
-      {ENEMY_TYPES.map((enemy) => renderPlaceButton(enemy, enemy.replace("_", " "), ENEMY_COLOURS[enemy]))}
+      {renderKindButton("spawn")}
+      {renderKindButton("end")}
+      {renderKindButton("box")}
+      {renderKindButton("enemy")}
+      {isTypedKind(placingKind) && renderTypes(placingKind)}
       {renderGridPicker()}
     </aside>
   );

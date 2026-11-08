@@ -1,8 +1,9 @@
-// a level source's level.cfg (see doc/custom_levels.md): the turn, scale and
-// sky the level is built with (builder/levelCfg.ts reads it for the build),
+// a level source's level.cfg (see doc/custom_levels.md): the turn, scale, sky
+// and camera the level is built with (builder/levelCfg.ts reads it for the build),
 // read and set by the editor
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
 import { DEFAULT_SCALE } from "../src/coords";
 import { DEFAULT_SKY, formatRgb, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 import { levelFolder } from "./levels";
@@ -11,6 +12,7 @@ export interface LevelCfg {
   turn: number;  // degrees the build turns the level about the up axis
   scale: number; // game units per blender metre
   sky: Sky;
+  camera: Camera;
 }
 
 const TURNS = [0, 90, 180, 270]; // the build turns in steps of 90 degrees
@@ -42,12 +44,22 @@ function parseSky(text: string): Sky {
   };
 }
 
-// turn, scale and sky from level.cfg's text, the defaults for what it doesn't set (or sets wrong)
+function parseCamera(text: string): Camera {
+  const distance = Number(settingValue(text, "camera_distance"));
+  const angle = Number(settingValue(text, "camera_angle"));
+  return {
+    distance: isCameraDistance(distance) ? distance : DEFAULT_CAMERA.distance,
+    angle: isCameraAngle(angle) ? angle : DEFAULT_CAMERA.angle,
+  };
+}
+
+// turn, scale, sky and camera from level.cfg's text, the defaults for what it doesn't set (or sets wrong)
 export function parseLevelCfg(text: string): LevelCfg {
   return {
     turn: parseWholeNumber(text, "turn", 0),
     scale: parseWholeNumber(text, "scale", DEFAULT_SCALE),
     sky: parseSky(text),
+    camera: parseCamera(text),
   };
 }
 
@@ -68,9 +80,15 @@ function checkLevelCfg(cfg: LevelCfg): void {
   if (!isSkySplit(cfg.sky.split)) {
     throw new Error(`sky_split has to be 0 to ${SKY_ROWS}, not ${cfg.sky.split}`);
   }
+  if (!isCameraDistance(cfg.camera.distance)) {
+    throw new Error(`camera_distance has to be ${CAMERA_DISTANCE_MIN} to ${CAMERA_DISTANCE_MAX}, not ${cfg.camera.distance}`);
+  }
+  if (!isCameraAngle(cfg.camera.angle)) {
+    throw new Error(`camera_angle has to be ${CAMERA_ANGLE_MIN} to ${CAMERA_ANGLE_MAX}, not ${cfg.camera.angle}`);
+  }
 }
 
-// each setting's line, and whether it's its default (a default sky setting is only written over a line it already has)
+// each setting's line, and whether it's its default (a default sky or camera setting is only written over a line it already has)
 function settingLines(cfg: LevelCfg): [string, string, boolean][] {
   return [
     ["turn", `turn = ${cfg.turn}`, false],
@@ -78,11 +96,13 @@ function settingLines(cfg: LevelCfg): [string, string, boolean][] {
     ["sky_split", `sky_split = ${cfg.sky.split}`, cfg.sky.split === DEFAULT_SKY.split],
     ["sky_top", `sky_top = ${formatRgb(cfg.sky.top)}`, formatRgb(cfg.sky.top) === formatRgb(DEFAULT_SKY.top)],
     ["sky_bottom", `sky_bottom = ${formatRgb(cfg.sky.bottom)}`, formatRgb(cfg.sky.bottom) === formatRgb(DEFAULT_SKY.bottom)],
+    ["camera_distance", `camera_distance = ${cfg.camera.distance}`, cfg.camera.distance === DEFAULT_CAMERA.distance],
+    ["camera_angle", `camera_angle = ${cfg.camera.angle}`, cfg.camera.angle === DEFAULT_CAMERA.angle],
   ];
 }
 
-// level.cfg's text with turn, scale and the sky set: their lines changed, or
-// added at the end (the sky's only if it isn't the default), keeping its
+// level.cfg's text with turn, scale, the sky and the camera set: their lines changed, or
+// added at the end (the sky's and camera's only if they aren't the defaults), keeping its
 // comments, other lines and line endings
 export function setLevelCfg(text: string, cfg: LevelCfg): string {
   checkLevelCfg(cfg);

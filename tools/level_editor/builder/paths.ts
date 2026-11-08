@@ -20,15 +20,16 @@ export interface CameraPath {
   averageNodeDistance: number;
   direction?: [number, number, number];
   links?: PathLink[];
+  followHeight?: number; // the follow camera's height above crash's floor, in the path's first spare field (src/pc/follow.h)
 }
 
-export function pathBytes({ slst, points, camMode, zoom, averageNodeDistance, direction = [0, 0, 0], links = [] }: CameraPath): Buffer {
+export function pathBytes({ slst, points, camMode, zoom, averageNodeDistance, direction = [0, 0, 0], links = [], followHeight = 0 }: CameraPath): Buffer {
   const writer = new ByteWriter().u32(slst).u32(0).u32(links.length);
   const linkStart = writer.length;
   links.forEach((link) => link.forEach((field) => writer.u8(field)));
   writer.padTo(linkStart + 4 * PATH_LINKS_MAX);
   writer.u8(0).u8(0).u16(points.length).u16(camMode).s16(averageNodeDistance).s16(zoom);
-  writer.s16(0).s16(0).s16(0);
+  writer.u16(followHeight).s16(0).s16(0);
   direction.forEach((component) => writer.s16(component));
   points.forEach((point) => point.forEach((field) => writer.s16(field)));
   return padTo4(writer.toBuffer());

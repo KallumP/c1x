@@ -69,5 +69,11 @@ describe("camera paths", () => {
     const readPoint = (index: number) => Array.from({ length: 6 }, (_, field) => path.readInt16LE(50 + 12 * index + 2 * field));
     expect([readPoint(0), readPoint(1)]).toEqual(points);
     expect(path.length % 4).toBe(0);
+    expect(path.readUInt16LE(38)).toBe(0); // no follow camera height
+  });
+
+  test("a follow camera path keeps the camera's height above crash's floor in its first spare field, for the game", () => {
+    const path = pathBytes({ slst: 0, points: [[0, 0, 0, 0, 0, 0]], camMode: 9, zoom: 1700, averageNodeDistance: 128, followHeight: 2632 });
+    expect(path.readUInt16LE(38)).toBe(2632);
   });
 });

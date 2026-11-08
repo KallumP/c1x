@@ -126,6 +126,38 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(["So0cM", "I00cN", "I01cN", "I02cN", "I03cN"].every((name) => entries.has(stringToEid(name)))).toBe(true);
   });
 
+  test("its camera is where level.cfg's camera settings put it: its path that far behind and above crash, and the height for the game in the path", () => {
+    const pathOf = (more: MapOptions) => {
+      const { zone } = make(MAP_OBJ, { scale: 256, ...more });
+      return zone.items[zoneCounts(zone)[0]];
+    };
+    const usual = pathOf({});
+    const far = pathOf({ camera: { distance: 2, angle: 42 } });
+    expect(usual.readUInt16LE(38)).toBe(1316);
+    expect(far.readUInt16LE(38)).toBe(2632);
+    const firstPoint = (path: Buffer) => [0, 1, 2].map((field) => path.readInt16LE(50 + 2 * field));
+    expect(firstPoint(far)[1] - firstPoint(usual)[1]).toBeGreaterThan(1000); // higher above the floor
+  });
+
+  test("its camera's zoom, how far behind crash the game keeps it along its path, is its distance back and the 250 the game takes off", () => {
+    const zoomOf = (camera: MapOptions["camera"]) => {
+      const { zone } = make(MAP_OBJ, { scale: 256, camera });
+      return zone.items[zoneCounts(zone)[0]].readInt16LE(36);
+    };
+    expect(zoomOf(undefined)).toBe(1700);
+    expect(zoomOf({ distance: 2, angle: 42 })).toBe(2 * 1450 + 250); // the game keeps the camera 250 less than its zoom behind crash
+    expect(zoomOf({ distance: 1, angle: 70 })).toBeLessThan(1700); // steeper: nearer behind him, higher up
+  });
+
+  test("its camera tilts down as much more as its angle is steeper", () => {
+    const tiltOf = (angle: number) => {
+      const { zone } = make(MAP_OBJ, { scale: 256, camera: { distance: 1, angle } });
+      return zone.items[zoneCounts(zone)[0]].readInt16LE(50 + 6);
+    };
+    expect(tiltOf(42)).toBe(-181);
+    expect(tiltOf(60)).toBe(-181 - Math.round((18 * 4096) / 360));
+  });
+
   test("its path uses the follow camera", () => {
     const { zone } = make();
     expect(zone.items[zoneCounts(zone)[0]].readUInt16LE(32)).toBe(FOLLOW_CAM_MODE);

@@ -48,3 +48,12 @@
 .grid-picker {
   margin-top: 12px;
 }
+
+.types {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 10px;
+  padding-left: 6px;
+  border-left: 2px solid #43454c;
+}

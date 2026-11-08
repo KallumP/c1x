@@ -5,6 +5,8 @@ import { CORE_EXEC_SLOTS, cutLevel, packEntries } from "./cutLevel";
 import { withDonorObjects, type DonorObject } from "./donorObjects";
 import { entityType } from "./entities";
 import { stringToEid } from "./entryIds";
+import { CAM_LEAD, cameraOffsets } from "./route";
+import { DEFAULT_CAMERA, type Camera } from "../src/camera";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, type Entry, type Level, type Page } from "./levelFiles";
 import type { BuiltWorld } from "./mapTextures";
 import { blocksRectBytes, type Block } from "./octree";
@@ -18,7 +20,8 @@ import { loadTexturePages, ZONE_MIDI, zoneHeaderBytes, type ZoneWorld } from "./
 export const MAP_CELL = 128; // collision cells
 export const LID_TEST = 0x1; // custom levels use the test level id (see src/common.h)
 
-const CAMERA_ROTATION = [-181, 1, 0]; // the camera's rotation at each path point, as on n. sanity beach
+const CAMERA_ROTATION = [-181, 1, 0]; // the camera's rotation at each path point, as on n. sanity beach (its tilt first)
+const ANGLE_UNITS = 4096; // a whole turn, in the game's angles
 const CAMERA_ZOOM = 1700;
 const CAMERA_DIRECTION: [number, number, number] = [0, 0, -4096]; // along -z
 
@@ -45,6 +48,20 @@ export interface Assembly {
   pageEids: number[];      // texture pages for the meshes' texinfos
   texturePages: Page[];
   donors: DonorObject[];   // objects taken from other levels, such as enemies jungle rollers doesn't have
+  camera?: Camera;         // how the follow camera looks at crash (level.cfg's); as it always was without one
+}
+
+// how far behind crash the game keeps the camera along its path (its zoom): its
+// distance back, and what the game takes off it (CAMERA_ZOOM is the usual CAM_LEAD's)
+function cameraZoom(camera: Camera): number {
+  return cameraOffsets(camera).lead + CAMERA_ZOOM - CAM_LEAD;
+}
+
+// the camera's rotation at each path point: tilted down as much more than the
+// usual as its angle is steeper
+function cameraRotation(camera: Camera): number[] {
+  const tilt = Math.round(((camera.angle - DEFAULT_CAMERA.angle) * ANGLE_UNITS) / 360);
+  return [CAMERA_ROTATION[0] - tilt, CAMERA_ROTATION[1], CAMERA_ROTATION[2]];
 }
 
 const zonePrefix = (index: number) => `Bm${String(index).padStart(2, "0")}`; // a zone's entries are this and Z, S, W, 1, 2, 3
@@ -87,8 +104,9 @@ function pathLinks(zones: ZonePlan[], zoneIndex: number, neighbours: number[]): 
 // a zone's camera path and its sort list, which lists its own meshes and the
 // next zone's, as the camera looks on into it
 function zonePath(assembly: Assembly, zoneIndex: number, neighbours: number[]): { path: Buffer; sortList: Entry } {
-  const { zones, step } = assembly;
+  const { zones, step, camera = DEFAULT_CAMERA } = assembly;
   const zone = zones[zoneIndex];
+  const rotation = cameraRotation(camera);
   const next = zones[zoneIndex + 1];
   const listed = zone.worlds.map((world) => ({ ...world, zOffset: 0 }));
   if (next) {
@@ -96,12 +114,13 @@ function zonePath(assembly: Assembly, zoneIndex: number, neighbours: number[]): 
   }
   const path = pathBytes({
     slst: sortListEid(zoneIndex),
-    points: zone.points.map(([x, y, z]) => [x, y, z, CAMERA_ROTATION[0], CAMERA_ROTATION[1], CAMERA_ROTATION[2]]),
+    points: zone.points.map(([x, y, z]) => [x, y, z, rotation[0], rotation[1], rotation[2]]),
     camMode: FOLLOW_CAM_MODE,
-    zoom: CAMERA_ZOOM,
+    zoom: cameraZoom(camera),
     averageNodeDistance: step,
     direction: CAMERA_DIRECTION,
     links: pathLinks(zones, zoneIndex, neighbours),
+    followHeight: cameraOffsets(camera).height,
   });
   const sortList = { eid: sortListEid(zoneIndex), type: ENTRY_SLST, items: zoneSlstItems(listed, zone.points.map(([, , z]) => z), step) };
   return { path, sortList };

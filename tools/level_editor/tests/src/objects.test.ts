@@ -25,6 +25,16 @@ describe("parseObjects", () => {
     });
   });
 
+  test("lists them in the palette's order, by what they do: plain, bonus, tnt, the switch and its outlines, then iron", () => {
+    expect(Object.keys(BOX_TYPES)).toEqual([
+      "basic", "slatted", "arrow",
+      "question", "life", "aku_aku", "checkpoint",
+      "tnt", "enemy_tnt",
+      "switch", "outline", "iron_outline",
+      "iron", "iron_arrow",
+    ]);
+  });
+
   test("reads the boxes beyond n. sanity beach's, by type or subtype", () => {
     const objects = parseObjects(`[
       {"kind": "box", "type": "tnt", "at": [0, 0, 0]},
@@ -122,7 +132,7 @@ describe("boxTypeName", () => {
 
 describe("enemies", () => {
   test("knows the enemies custom levels can have, by name", () => {
-    expect(ENEMY_TYPES).toEqual(["plant", "rolling_stone", "crab", "turtle", "native", "badger", "warthog", "spider", "walking_spider", "monkey"]);
+    expect(ENEMY_TYPES).toEqual(["plant", "spider", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "rolling_stone"]); // by what they do, as the palette lists them
   });
 
   test("reads an enemy by its type and spot (a rolling stone's path comes with its track)", () => {
@@ -145,7 +155,7 @@ describe("enemies", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, rolling_stone, crab, turtle, native, badger, warthog, spider, walking_spider, monkey)"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, spider, crab, turtle, native, monkey, warthog, badger, walking_spider, rolling_stone)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs, walking spiders and monkeys do)"],

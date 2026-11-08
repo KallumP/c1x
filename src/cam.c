@@ -506,6 +506,10 @@ int CamUpdate() {
     return 1;
   case FOLLOW_CAM_MODE: /* follow crash, sideways and up too (custom levels) */
     game_state = GAME_STATE_PLAYING;
+    /* the path's zoom (how far behind crash, from the level's camera settings)
+       at once: CamFollow only eases towards it away from the path's ends, so at
+       the start of a level the camera would stay as near as the last level's */
+    cam_zoom = (int32_t)cur_path->cam_zoom << 8;
     CamFollow(crash, 0); /* along the path; LevelUpdate keeps the offsets on */
     path_x = cam_trans.x - follow_cam_offset;
     follow_cam_offset = FollowCamOffset(follow_cam_offset, crash->trans.x - path_x);
@@ -513,7 +517,8 @@ int CamUpdate() {
     path_y = cam_trans.y; /* the path's until the camera has a height of its own */
     follow_cam_ground_y = FollowCamGroundY(follow_cam_ground_y, crash->trans.y,
       crash->status_a & GOOL_FLAG_GROUNDLAND);
-    follow_cam_y = FollowCamHeight(follow_cam_y, follow_cam_ground_y, path_y);
+    follow_cam_y = FollowCamHeight(follow_cam_y, follow_cam_ground_y, path_y,
+      FollowCamAbove(cur_path->unknown_a)); /* the level's camera height, kept in its path */
     cam_trans.y = follow_cam_y;
     return 1;
   case 0: /* no camera */
