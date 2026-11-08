@@ -164,3 +164,17 @@ UTEST(ns_pages, entry_in_an_unloaded_page_needs_one_page) {
   ns.page_map = page_map_prev;
   ASSERT_EQ(1, count);
 }
+
+extern page_struct texture_pages[16];
+
+/* the ps1 kept the upper half of vram (slots 0-7) for the screen; the pc draws
+   from its own copies of the pages, so a level can have a page in any slot */
+UTEST(ns_texture_pages, a_level_can_load_a_texture_page_into_any_of_the_16_slots) {
+  int i;
+
+  memset(texture_pages, 0, sizeof(texture_pages));
+  NSInitTexturePages(&ns, LID_TEST);
+  for (i = 0; i < 16; i++) {
+    ASSERT_EQ(1, texture_pages[i].state);
+  }
+}
