@@ -3,7 +3,7 @@
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { inEvenSteps, pathPositions, pathStep } from "../src/enemyPaths";
-import { BADGER_COUNT, hasPath, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
+import { hasPath, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
@@ -96,6 +96,20 @@ function withBadgerDive(run: Vec3[]): Vec3[] {
   return [...run, [x, y - BADGER_DIVE, z]];
 }
 
+// a badger spawner running run: its badgers dive away at the end, and its init
+// flag c is how many come out at once
+function asBadgerSpawner(entity: Buffer, badger: LevelObject, run: Vec3[]): Buffer {
+  return withInitFlagC(withPath(entity, withBadgerDive(run)), numberSetting(badger, "count"));
+}
+
+// a path enemy's entity running run (a badger as its spawner)
+function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffer {
+  if (enemy.enemy === "badger") {
+    return asBadgerSpawner(entity, enemy, run);
+  }
+  return withPath(entity, run);
+}
+
 class ObjectPlacer {
   readonly entities: Buffer[][];
   readonly placedBoxes: PlacedBox[] = [];
@@ -149,16 +163,14 @@ class ObjectPlacer {
   // an enemy that moves along a path (a crab, turtle, native or badger), as
   // example, in the zone its spot is in: its path's nodes (or its default path's)
   // in the level, in steps as long as its own level's, times its speed (the game
-  // moves it a step at a time, so longer steps are faster). badgers dive away at
-  // the end, and their spawner's init flag c is how many come out at once
+  // moves it a step at a time, so longer steps are faster)
   placeOnPath(enemy: LevelObject, example: Buffer): void {
     const position = this.positionOf(enemy);
     const { zone, at } = this.inZone(position);
     const nodes = pathPositions(enemy, this.turn, this.scale).map((node) => this.positionOf({ ...enemy, at: node, raise: 0 }));
-    const step = pathStep(enemy.enemy as PathEnemy) * (enemy.speed ?? 1);
+    const step = pathStep(enemy.enemy as PathEnemy) * numberSetting(enemy, "speed");
     const run = inEvenSteps(nodes, step).map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
-    const placed = withPath(withEntityId(example, this.ids.shift()!), enemy.enemy === "badger" ? withBadgerDive(run) : run);
-    this.entities[zone].push(enemy.enemy === "badger" ? withInitFlagC(placed, enemy.count ?? BADGER_COUNT) : placed);
+    this.entities[zone].push(pathEnemyEntity(withEntityId(example, this.ids.shift()!), enemy, run));
   }
 
   // a rolling stone, in the zone its spot is in, rolling jungle rollers' path along its track
