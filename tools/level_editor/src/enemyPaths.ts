@@ -1,6 +1,6 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
-import { BADGER_RUN, cameraFacing, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import { BADGER_RUN, cameraFacing, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
 import { PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 3;
@@ -32,13 +32,15 @@ interface PathEnemyRun {
 }
 
 // crabs and natives go across the map, as their levels have them; turtles and
-// warthogs along the route, the way the camera faces; badgers along it the other way, at crash
+// warthogs along the route, the way the camera faces; badgers and walking spiders
+// along it the other way, at crash
 const PATH_ENEMY_RUNS: Record<PathEnemy, PathEnemyRun> = {
   crab: { length: CRAB_WALK, way: stoneRolling, step: 100 },                 // n. sanity beach's crabs' points
   turtle: { length: TURTLE_WALK, way: cameraFacing, step: 100 },             // n. sanity beach's turtles' points
   native: { length: NATIVE_WALK, way: stoneRolling, step: NATIVE_WALK / 4 }, // the great gate's natives' paths are 4 steps
   badger: { length: BADGER_RUN, way: towardsSpawn, step: 400 },              // jungle rollers' badger spawners' points
   warthog: { length: WARTHOG_RUN, way: cameraFacing, step: 744 },            // road to nowhere's warthogs' points
+  walking_spider: { length: WALKING_SPIDER_RUN, way: towardsSpawn, step: 800 }, // fumbling in the dark's walking spiders' points, on average
 };
 
 // how far apart a path's points are in the game for an enemy, at its own speed

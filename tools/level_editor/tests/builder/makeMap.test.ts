@@ -70,6 +70,7 @@ const N_SANITY_BEACH = 0x9;
 const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
 const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0x12)
 const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhere (0x14)
+const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the dark (0x2a)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -409,6 +410,51 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a turtle, with no other levels to take it from, is an error saying so", () => {
       expect(() => withTurtle({ readOtherLevel: undefined })).toThrow(/turtle/);
+    });
+  });
+
+  describe.skipIf(!hasFumbling)("spiders, from fumbling in the dark", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const spider = (type: "spider" | "walking_spider", more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: type, ...more });
+
+    test("a level with a spider has fumbling in the dark's spider code, models and animations", () => {
+      const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [spider("spider")], readOtherLevel });
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.spider[0]]).toBe(stringToEid("SpidC"));
+      expect(["SpSsG", "SpDsG", "SpdsG", "Sp1sG", "SpSsV", "SpDsV", "SpdsV", "Sp1sV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
+
+    test("a spider hangs over its spot, as its entity, a single point there", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [spider("spider")], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.spider);
+      expect(placed.path.length).toBe(1);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+    });
+
+    test("a walking spider is a spawner on its path: fumbling in the dark's length by default (3200) along the route, in steps of 800, then a drop of 1600", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [spider("walking_spider")], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.walking_spider);
+      const run = placed.path.slice(0, -1);
+      expect(run.length).toBe(5);
+      run.forEach(([x, y]) => { expect(Math.abs(x - 1408)).toBeLessThanOrEqual(8); expect(Math.abs(y - 128)).toBeLessThanOrEqual(8); });
+      expect(Math.abs(run[0][2] - (1664 - 1600))).toBeLessThanOrEqual(8); // starting ahead, running back towards the spawn (+z)
+      const [last, drop] = placed.path.slice(-2);
+      expect(drop).toEqual([last[0], last[1] - 1600, last[2]]);
+    });
+
+    test("a walking spider's count is how many come out at once: its init flag c, 1 (as fumbling in the dark's) without one", () => {
+      const initFlagC = (more: Partial<LevelObject>) =>
+        zoneEntities(make(MAP_OBJ, { scale: 256, objects: [spider("walking_spider", more)], readOtherLevel }).zone)
+          .find((item) => entityType(item).join() === ENEMY_ENTITIES.walking_spider.join())!.readInt16LE(ENTITY_INIT_FLAGS + 4);
+      expect([initFlagC({}), initFlagC({ count: 3 })]).toEqual([1, 3]);
+    });
+
+    test("a level with both kinds reads fumbling in the dark once, and has its spider code once", () => {
+      const read: number[] = [];
+      const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
+      const { level } = make(MAP_OBJ, { scale: 256, objects: [spider("spider"), spider("walking_spider", { at: [-1, 4, 0] })], readOtherLevel: readEach });
+      expect(read).toEqual([0x2a]);
+      expect(level.nsd.ldat.execMap.filter((eid) => eid === stringToEid("SpidC")).length).toBe(1);
     });
   });
 

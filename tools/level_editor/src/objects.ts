@@ -27,28 +27,41 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - native: the great gate's, guarding its path with a shield
 // - badger: jungle rollers', running out along its path, count at a time, when crash comes near
 // - warthog: road to nowhere's, charging back and forth along its path once crash comes near
-export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native", "badger", "warthog"] as const;
+// - spider: fumbling in the dark's, dropping from its thread when crash comes near
+// - walking_spider: fumbling in the dark's, running out along its path, count at a time, when crash comes near
+export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native", "badger", "warthog", "spider", "walking_spider"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
 
 // the enemies that move along a path of nodes, and how many nodes it can have
-export const PATH_ENEMIES = ["crab", "turtle", "native", "badger", "warthog"] as const satisfies readonly EnemyType[];
+export const PATH_ENEMIES = ["crab", "turtle", "native", "badger", "warthog", "walking_spider"] as const satisfies readonly EnemyType[];
 export type PathEnemy = (typeof PATH_ENEMIES)[number];
 export const isPathEnemy = (type: EnemyType | undefined): type is PathEnemy => PATH_ENEMIES.some((enemy) => enemy === type);
 export const PATH_NODES_MAX = 20;
 
-// the enemies with a path, for messages: "crabs, turtles, natives, badgers and warthogs"
-const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map((enemy) => `${enemy}s`).join(", ")} and ${PATH_ENEMIES.at(-1)}s`;
+// the enemies with a path, for messages: "crabs, turtles, natives, badgers, warthogs and walking spiders"
+const pluralName = (enemy: EnemyType) => `${enemy.replace("_", " ")}s`;
+const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map(pluralName).join(", ")} and ${pluralName(PATH_ENEMIES.at(-1)!)}`;
 
 // how many times the game's own pace a path enemy can walk at (seen working in the game with crabs and turtles)
 export const SPEED_MIN = 0.25;
 export const SPEED_MAX = 3;
 
-// how many badgers come out at once: as jungle rollers' first badger spawner without a count
+// how many badgers or walking spiders come out at once: as jungle rollers' first
+// badger spawner, and fumbling in the dark's spider spawners, without a count
 export const BADGER_COUNT = 2;
+export const WALKING_SPIDER_COUNT = 1;
 export const BADGER_COUNT_MIN = 1;
 export const BADGER_COUNT_MAX = 6;
+
+// how many come out at once for an enemy without a count
+function countFallback(enemy: EnemyType | undefined): number {
+  if (enemy === "walking_spider") {
+    return WALKING_SPIDER_COUNT;
+  }
+  return BADGER_COUNT;
+}
 
 // the enemy settings that are a number in a range, and for each: the enemies
 // that have it (named for messages), its range, whether it's whole, what it is
@@ -62,14 +75,14 @@ interface NumberSettingRule {
   min: number;
   max: number;
   whole: boolean;
-  fallback: number;
+  fallback: (enemy: EnemyType | undefined) => number;
   meaning: string;
 }
 
 export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
-  speed: { enemies: PATH_ENEMIES, enemiesNamed: PATH_ENEMIES_NAMED, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: 1, meaning: "times the game's own pace" },
-  start: { enemies: ["rolling_stone"], enemiesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: 0, meaning: "how far along its track it starts" },
-  count: { enemies: ["badger"], enemiesNamed: "badgers", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: BADGER_COUNT, meaning: "how many badgers come out at once" },
+  speed: { enemies: PATH_ENEMIES, enemiesNamed: PATH_ENEMIES_NAMED, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: () => 1, meaning: "times the game's own pace" },
+  start: { enemies: ["rolling_stone"], enemiesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
+  count: { enemies: ["badger", "walking_spider"], enemiesNamed: "badgers and walking spiders", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
 };
 
 // whether an object is an enemy with a number setting
@@ -77,7 +90,7 @@ export const hasNumberSetting = (object: LevelObject, setting: NumberSetting) =>
   object.kind === "enemy" && NUMBER_SETTING_RULES[setting].enemies.some((enemy) => enemy === object.enemy);
 
 // an object's number setting, or what it is without one
-export const numberSetting = (object: LevelObject, setting: NumberSetting) => object[setting] ?? NUMBER_SETTING_RULES[setting].fallback;
+export const numberSetting = (object: LevelObject, setting: NumberSetting) => object[setting] ?? NUMBER_SETTING_RULES[setting].fallback(object.enemy);
 
 export interface LevelObject {
   kind: Kind;
@@ -289,7 +302,7 @@ function formatObject(object: LevelObject): string {
   }
   for (const setting of NUMBER_SETTINGS) {
     const value = object[setting];
-    if (value !== undefined && value !== NUMBER_SETTING_RULES[setting].fallback) {
+    if (value !== undefined && value !== NUMBER_SETTING_RULES[setting].fallback(object.enemy)) {
       parts.push(`"${setting}": ${value}`);
     }
   }
