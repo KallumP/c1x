@@ -6,6 +6,7 @@
 
 - custom levels can have Jungle Rollers' badgers, which pop out of the ground and run at Crash, as many at once as you like
 - custom levels can have Road to Nowhere's warthog, which charges back and forth at Crash; jump over it
+- custom levels can have Fumbling in the Dark's spiders: one that drops from its thread, and walking ones that run at Crash
 
 ### Changed
 
