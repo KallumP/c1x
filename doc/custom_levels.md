@@ -50,7 +50,7 @@ The level editor places Crash's spawn, the level's end, boxes and enemies.
 
 1. In the launcher, click **Open editor**. It opens in your browser.
 1. Pick your level at the top left.
-1. Pick `spawn`, `end`, a `box` or an `enemy` on the left bar, then click the floor to place it. A level needs at least a spawn and an end to be played.
+1. Pick `spawn`, `end`, `box` or `enemy` on the left bar, then click the floor to place it. Box and enemy place the type you last picked of them, and list their types underneath to pick another. A level needs at least a spawn and an end to be played.
 1. Click **Select** (or press Esc), then click an object to select it. Drag it to move it, or change its properties on the right. **Delete** (or Del) removes it.
 1. Click **Save** (or press Ctrl+S), then **Build + boot** at the top right (or press F5), which builds the level and boots the game straight into it. [Step 3](#3-build-the-level-and-play-it) has more on building.
 
@@ -60,6 +60,7 @@ The arrow on the spawn object shows which way the camera faces at the start. Wit
 
 - **turn** and **scale** line the map up with the game (see [If something looks wrong](#if-something-looks-wrong)).
 - **Sky** sets a top colour down to **split** and a bottom colour below it.
+- **Camera** sets how far the camera is from Crash (**distance**, times its usual distance) and how far above him it looks down from (**angle**, in degrees; 42 is usual).
 
 **Enemy paths:** some enemies walk a path, drawn as a line with the enemy solid where it starts and faded at the other end. Select one to drag its nodes, or set their x, y and z on the right; a node under the ground has its handle raised above the floor, on a line down to it. **nodes** sets how many there are, **speed** how fast it walks, and **Reverse direction** which end it starts at. A path drawn red leaves the floor or runs through a wall, so move its nodes. Badgers and walking spiders come out at the solid end and go down out of sight at the faded one; **count** sets how many come out at once.
 
