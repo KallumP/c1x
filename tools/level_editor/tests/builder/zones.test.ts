@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { readWords } from "../../builder/bytes";
-import { EID_NONE, stringToEid } from "../../builder/entryIds";
+import { stringToEid } from "../../builder/entryIds";
 import { entryPage, texturePage, type Level } from "../../builder/levelFiles";
 import { pgid } from "../../builder/levelWriting";
 import {
