@@ -40,6 +40,11 @@ const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map((enemy) => `${enemy}
 export const SPEED_MIN = 0.25;
 export const SPEED_MAX = 3;
 
+// how many badgers come out at once: as jungle rollers' first badger spawner without a count
+export const BADGER_COUNT = 2;
+export const BADGER_COUNT_MIN = 1;
+export const BADGER_COUNT_MAX = 6;
+
 export interface LevelObject {
   kind: Kind;
   at: Vec3;             // in blender: x, y, z (up), metres
@@ -51,6 +56,7 @@ export interface LevelObject {
   speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
   reverse?: boolean;    // a rolling stone that rolls back towards its first end first (true, or none)
+  count?: number;       // how many badgers come out at once (BADGER_COUNT without one)
 }
 
 // a box's type name, from its type or its subtype number
@@ -63,7 +69,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse"];
+const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
@@ -144,6 +150,21 @@ function readReverse(fields: Record<string, unknown>, enemy: EnemyType, objectNu
   return fields.reverse ? { reverse: true } : {};
 }
 
+// how many badgers come out at once, from a badger's fields in objects.json (none if it hasn't a count)
+function readCount(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "count"> {
+  if (!("count" in fields)) {
+    return {};
+  }
+  if (enemy !== "badger") {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no count (badgers do)`);
+  }
+  const count = fields.count;
+  if (!isWhole(count) || count < BADGER_COUNT_MIN || count > BADGER_COUNT_MAX) {
+    throw new Error(`object ${objectNumber}: count should be ${BADGER_COUNT_MIN} to ${BADGER_COUNT_MAX} (how many badgers come out at once)`);
+  }
+  return { count };
+}
+
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
 export function parseObjects(text: string): LevelObject[] {
   let entries: unknown;
@@ -222,6 +243,7 @@ export function parseObjects(text: string): LevelObject[] {
       Object.assign(object, readSpeed(fields, object.enemy!, objectNumber));
       Object.assign(object, readStart(fields, object.enemy!, objectNumber));
       Object.assign(object, readReverse(fields, object.enemy!, objectNumber));
+      Object.assign(object, readCount(fields, object.enemy!, objectNumber));
     }
 
     objects.push(object);
@@ -259,6 +281,9 @@ function formatObject(object: LevelObject): string {
   }
   if (object.reverse) {
     parts.push(`"reverse": true`);
+  }
+  if (object.count !== undefined && object.count !== BADGER_COUNT) {
+    parts.push(`"count": ${object.count}`);
   }
   return `{${parts.join(", ")}}`;
 }
