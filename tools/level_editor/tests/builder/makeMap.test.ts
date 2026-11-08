@@ -139,13 +139,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(firstPoint(far)[1] - firstPoint(usual)[1]).toBeGreaterThan(1000); // higher above the floor
   });
 
-  test("its camera's zoom, how far behind crash the game keeps it along its path, scales as its distance back does", () => {
+  test("its camera's zoom, how far behind crash the game keeps it along its path, is its distance back and the 250 the game takes off", () => {
     const zoomOf = (camera: MapOptions["camera"]) => {
       const { zone } = make(MAP_OBJ, { scale: 256, camera });
       return zone.items[zoneCounts(zone)[0]].readInt16LE(36);
     };
     expect(zoomOf(undefined)).toBe(1700);
-    expect(zoomOf({ distance: 2, angle: 42 })).toBe(3400);
+    expect(zoomOf({ distance: 2, angle: 42 })).toBe(2 * 1450 + 250); // the game keeps the camera 250 less than its zoom behind crash
     expect(zoomOf({ distance: 1, angle: 70 })).toBeLessThan(1700); // steeper: nearer behind him, higher up
   });
 
