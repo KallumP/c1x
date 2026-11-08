@@ -492,6 +492,46 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasGreatGate)("monkeys, from the great gate", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const monkey = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "monkey", ...more });
+
+    test("a level with a monkey has the great gate's monkey code, model, animations and chatter", () => {
+      const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [monkey()], readOtherLevel });
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.monkey[0]]).toBe(stringToEid("MonkC"));
+      expect(["Mo1fG", "Mo1fV", "Mo2fV", "Mo3fV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      const sounds = level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
+      expect(["Mp1iA", "Mp2iA", "chmiA"].map(stringToEid).every((eid) => sounds.includes(eid))).toBe(true);
+    });
+
+    test("a monkey walks the great gate's path's length by default (2400) across the map, its middle at its spot, in the great gate's steps (480)", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [monkey()], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.monkey);
+      expect(placed.path.length).toBe(6);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      placed.path.forEach(([, y, z]) => { expect(Math.abs(y - 128)).toBeLessThanOrEqual(8); expect(Math.abs(z - 1664)).toBeLessThanOrEqual(8); });
+      expect(Math.abs((placed.path[0][0] + placed.path[5][0]) / 2 - 1408)).toBeLessThanOrEqual(8);
+      placed.path.slice(1).forEach((point, index) => expect(Math.abs(Math.hypot(...point.map((value, axis) => value - placed.path[index][axis])) - 480)).toBeLessThanOrEqual(8));
+    });
+
+    test("a monkey's path goes into the level the other way round, as the game starts it at its far end: it starts at the editor's first node", () => {
+      const path: Vec3[] = [[-3, 0, 0], [3, 0, 0]]; // from -x to +x
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [monkey({ path })], readOtherLevel }).zone);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone; the path's first node, 3 m to -x, is 768 to -x
+      expect(Math.abs(placed.path.at(-1)![0] - (1408 - 768))).toBeLessThanOrEqual(8);
+      expect(Math.abs(placed.path[0][0] - (1408 + 768))).toBeLessThanOrEqual(8);
+    });
+
+    test("a level with a monkey and a native reads the great gate once, and has both", () => {
+      const read: number[] = [];
+      const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
+      const { level } = make(MAP_OBJ, { scale: 256, objects: [monkey(), object("enemy", [-1, 4, 0], { enemy: "native" })], readOtherLevel: readEach });
+      expect(read).toEqual([0x12]);
+      const { execMap } = level.nsd.ldat;
+      expect([execMap[ENEMY_ENTITIES.monkey[0]], execMap[ENEMY_ENTITIES.native[0]]]).toEqual([stringToEid("MonkC"), stringToEid("SheNC")]);
+    });
+  });
+
   describe.skipIf(!hasGreatGate)("natives, from the great gate", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
     const native = () => object("enemy", [1, 2, 0], { enemy: "native" });

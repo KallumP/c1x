@@ -101,6 +101,10 @@ export const WARTHOG_RUN = 5200;
 // walking spider path, along the game's z (the route) (its default path, src/enemyPaths.ts)
 export const WALKING_SPIDER_RUN = 3200;
 
+// how far a monkey walks back and forth, in game units: the great gate's monkeys'
+// path, a straight line along the game's x (its default path, src/enemyPaths.ts)
+export const MONKEY_WALK = 2400;
+
 // a box's size in blender metres, for a level at scale game units a metre
 export function boxSize(scale: number): number {
   return BOX_UNITS / scale;

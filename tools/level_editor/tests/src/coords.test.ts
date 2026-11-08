@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -98,6 +98,10 @@ describe("crabs, turtles, natives, badgers and warthogs", () => {
 
   test("a walking spider runs fumbling in the dark's shortest walking spider path's length by default: 3200 game units along the route", () => {
     expect(WALKING_SPIDER_RUN).toBe(3200);
+  });
+
+  test("a monkey walks the great gate's monkeys' path's length by default: 2400 game units across the map", () => {
+    expect(MONKEY_WALK).toBe(2400);
   });
 });
 

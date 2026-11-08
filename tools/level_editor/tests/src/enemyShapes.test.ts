@@ -105,6 +105,23 @@ describe("enemy shapes", () => {
     }
   });
 
+  test("the monkey stands on the floor, as big as the game's (Mo1fG): about 645 across, 782 tall and 691 deep", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.monkey);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeCloseTo(782, -1);
+    expect(max[0] - min[0]).toBeGreaterThan(560);
+    expect(max[0] - min[0]).toBeLessThan(730);
+    expect(max[2] - min[2]).toBeGreaterThan(600);
+    expect(max[2] - min[2]).toBeLessThan(780);
+    expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
+  });
+
+  test("the monkey faces +z too: its face is in front of its middle", () => {
+    const faces = ENEMY_SHAPES.monkey.filter((part) => part.name === "face");
+    expect(faces.length).toBeGreaterThan(0);
+    expect(faces.every((part) => part.at[2] > 0)).toBe(true);
+  });
+
   test("the native faces +z too: its shield is in front of its middle", () => {
     const shields = ENEMY_SHAPES.native.filter((part) => part.name === "shield");
     expect(shields.length).toBeGreaterThan(0);

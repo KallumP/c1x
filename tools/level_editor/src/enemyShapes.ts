@@ -23,6 +23,7 @@ const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth:
 const TURTLE_COLOURS = { shell: "#b8282a", spot: "#2fa58c", skin: "#b5a35a", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const NATIVE_COLOURS = { skin: "#8a5a3a", skirt: "#46c84a", hair: "#2b1b14", shield: "#8e2416", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const WARTHOG_COLOURS = { hide: "#7a4a32", mane: "#3a2a20", snout: "#b07a64", tusk: "#f2ecd8", eye: "#1a1a1a" };
+const MONKEY_COLOURS = { fur: "#6b4226", face: "#d9b48a", eye: "#1a1a1a" };
 const SPIDER_COLOURS = { body: "#3b2a4a", leg: "#2a1d36", eye: "#e8d44d", thread: "#e6e6e6" };
 const BADGER_COLOURS = { fur: "#1f1d24", stripe: "#e4dcc4", nose: "#3a3238", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
@@ -253,6 +254,28 @@ function warthog(): ShapePart[] {
   ];
 }
 
+function monkeySide(): ShapePart[] {
+  return [
+    rod(35, 30, 180, [80, 90, 0], MONKEY_COLOURS.fur),
+    rod(28, 24, 330, [220, 380, 60], MONKEY_COLOURS.fur, { turn: [0, 0, 0.35] }),
+    ball(40, [250, 230, 80], MONKEY_COLOURS.face),
+    ball(40, [125, 610, 10], MONKEY_COLOURS.face),
+    ball(14, [40, 610, 140], MONKEY_COLOURS.eye, { name: "face" }),
+  ];
+}
+
+// the great gate's monkey: a round brown body on short legs, long arms, a pale face and a tail, facing +z
+function monkey(): ShapePart[] {
+  return [
+    ...bothSides(monkeySide()),
+    ball(1, [0, 330, 0], MONKEY_COLOURS.fur, { stretch: [150, 170, 130] }),
+    ball(1, [0, 320, 110], MONKEY_COLOURS.face, { stretch: [100, 120, 40] }),
+    ball(1, [0, 590, 20], MONKEY_COLOURS.fur, { stretch: [120, 115, 115] }),
+    ball(1, [0, 575, 115], MONKEY_COLOURS.face, { stretch: [85, 75, 40], name: "face" }),
+    rod(18, 12, 360, [0, 280, -300], MONKEY_COLOURS.fur, { turn: [-1.0, 0, 0] }),
+  ];
+}
+
 // a spider's legs on one side, sloping down and out from its body, front to back
 function spiderLegs(): ShapePart[] {
   return [200, 70, -70, -200].map((z) => rod(18, 14, 380, [280, 130, z], SPIDER_COLOURS.leg, { turn: [0, 0, 1.14] }));
@@ -341,11 +364,12 @@ export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 // n. sanity beach's crab (Cr19G) and turtle (Tu19G), and the great gate's native
 // (Na1iG, its first frame in Na1iV), jungle rollers' badger (Pi10G, its first
 // frame in Pi10V), and road to nowhere's warthog (WartG, its first frame in
-// WarHV), and fumbling in the dark's walking spider (Sp1sG, its first frame in
-// Sp1sV), each vertex times 4, times its tgeo's scale / 4096
-const GAME_HEIGHTS: Record<StandingEnemy, number> = { plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356 };
+// WarHV), fumbling in the dark's walking spider (Sp1sG, its first frame in
+// Sp1sV), and the great gate's monkey (Mo1fG, its first frame in Mo3fV), each
+// vertex times 4, times its tgeo's scale / 4096
+const GAME_HEIGHTS: Record<StandingEnemy, number> = { plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782 };
 
-const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = { plant, crab, turtle, native, badger, warthog, walking_spider: spiderBody };
+const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = { plant, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey };
 
 // each standing enemy's shape, on the floor, as tall as the game's model
 const STANDING_SHAPES = Object.fromEntries(Object.entries(SHAPE_PARTS).map(([enemy, parts]) =>

@@ -25,6 +25,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   crab: N_SANITY_BEACH,
   turtle: N_SANITY_BEACH,
   native: THE_GREAT_GATE,
+  monkey: THE_GREAT_GATE,
   warthog: ROAD_TO_NOWHERE,
   spider: FUMBLING_IN_THE_DARK,
   walking_spider: FUMBLING_IN_THE_DARK,

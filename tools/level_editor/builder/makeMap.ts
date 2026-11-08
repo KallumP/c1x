@@ -103,11 +103,19 @@ function asSpawner(entity: Buffer, enemy: LevelObject, run: Vec3[], drop: number
   return withInitFlagC(withPath(entity, withDrop(run, drop)), numberSetting(enemy, "count"));
 }
 
+// the enemies the game starts at the far end of their path (the great gate's
+// monkey, by its script, in a custom level), whose paths go into the level the
+// other way round, so they start at the editor's first node as the rest do
+const STARTS_AT_FAR_END: EnemyType[] = ["monkey"];
+
 // a path enemy's entity running run (a badger or walking spider as its spawner)
 function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffer {
   const drop = SPAWNER_DROPS[enemy.enemy!];
   if (drop !== undefined) {
     return asSpawner(entity, enemy, run, drop);
+  }
+  if (STARTS_AT_FAR_END.includes(enemy.enemy!)) {
+    return withPath(entity, [...run].reverse());
   }
   return withPath(entity, run);
 }

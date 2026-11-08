@@ -35,6 +35,7 @@ export const ENEMY_COLOURS: Record<EnemyType, string> = {
   warthog: "#8a5a44",
   spider: "#6b3fa0",
   walking_spider: "#a0407a",
+  monkey: "#c0763a",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";
