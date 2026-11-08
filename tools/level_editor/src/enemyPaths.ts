@@ -13,8 +13,11 @@ export const PATH_STEP = 100;
 export type PathEnemy = "crab" | "turtle" | "native" | "badger";
 
 // how far apart a path's points are in the game for an enemy, at its own speed:
-// a native's as the great gate's natives' are (its path in 4 steps), the rest PATH_STEP
-export const pathStep = (enemy: PathEnemy) => (enemy === "native" ? NATIVE_WALK / 4 : PATH_STEP);
+// a native's as the great gate's natives' are (its path in 4 steps), a badger's
+// as jungle rollers' badger spawners' are (BADGER_STEP), the rest PATH_STEP
+export const BADGER_STEP = 400;
+const PATH_STEPS: Record<PathEnemy, number> = { crab: PATH_STEP, turtle: PATH_STEP, native: NATIVE_WALK / 4, badger: BADGER_STEP };
+export const pathStep = (enemy: PathEnemy) => PATH_STEPS[enemy];
 
 const plus = (first: Vec3, second: Vec3): Vec3 => [first[0] + second[0], first[1] + second[1], first[2] + second[2]];
 const scaled = (vector: Vec3, factor: number): Vec3 => [vector[0] * factor, vector[1] * factor, vector[2] * factor];
