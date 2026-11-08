@@ -5,7 +5,7 @@ import { CORE_EXEC_SLOTS, cutLevel, packEntries } from "./cutLevel";
 import { withDonorObjects, type DonorObject } from "./donorObjects";
 import { entityType } from "./entities";
 import { stringToEid } from "./entryIds";
-import { cameraOffsets } from "./route";
+import { CAM_LEAD, cameraOffsets } from "./route";
 import { DEFAULT_CAMERA, type Camera } from "../src/camera";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, type Entry, type Level, type Page } from "./levelFiles";
 import type { BuiltWorld } from "./mapTextures";
@@ -49,6 +49,12 @@ export interface Assembly {
   texturePages: Page[];
   donors: DonorObject[];   // objects taken from other levels, such as enemies jungle rollers doesn't have
   camera?: Camera;         // how the follow camera looks at crash (level.cfg's); as it always was without one
+}
+
+// how far behind crash the game keeps the camera along its path (its zoom): its
+// distance back, and what the game takes off it (CAMERA_ZOOM is the usual CAM_LEAD's)
+function cameraZoom(camera: Camera): number {
+  return cameraOffsets(camera).lead + CAMERA_ZOOM - CAM_LEAD;
 }
 
 // the camera's rotation at each path point: tilted down as much more than the
@@ -110,7 +116,7 @@ function zonePath(assembly: Assembly, zoneIndex: number, neighbours: number[]): 
     slst: sortListEid(zoneIndex),
     points: zone.points.map(([x, y, z]) => [x, y, z, rotation[0], rotation[1], rotation[2]]),
     camMode: FOLLOW_CAM_MODE,
-    zoom: CAMERA_ZOOM,
+    zoom: cameraZoom(camera),
     averageNodeDistance: step,
     direction: CAMERA_DIRECTION,
     links: pathLinks(zones, zoneIndex, neighbours),
