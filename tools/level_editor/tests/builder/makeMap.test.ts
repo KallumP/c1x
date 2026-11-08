@@ -438,7 +438,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
 
     test("a faster warthog has longer steps", () => {
-      expect(enemies(withWarthog({ speed: 2 }).zone)[0].path.length).toBe(5); // 4 steps of 1300
+      expect(enemies(withWarthog({ speed: 2 }).zone)[0].path.length).toBe(4); // 3 steps of about 1733 (5200 over 1488s, rounded)
     });
 
     test("a level without warthogs has none of their code", () => {
