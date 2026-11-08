@@ -46,8 +46,8 @@ describe("entities", () => {
 });
 
 describe("enemies", () => {
-  test("are jungle rollers' plant, rolling stone and badger, n. sanity beach's crab and turtle, the great gate's native, and road to nowhere's warthog", () => {
-    expect(ENEMY_ENTITIES).toEqual({ plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1] });
+  test("are jungle rollers' plant, rolling stone and badger, n. sanity beach's crab and turtle, the great gate's native, road to nowhere's warthog, and fumbling in the dark's two spiders", () => {
+    expect(ENEMY_ENTITIES).toEqual({ plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1], spider: [43, 1], walking_spider: [43, 3] });
   });
 });
 
