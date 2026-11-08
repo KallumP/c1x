@@ -4,7 +4,8 @@ import { describe, expect, test } from "vitest";
 import { Cells, solidCells } from "../../builder/collision";
 import type { Span } from "../../builder/fit";
 import type { Mesh } from "../../builder/obj";
-import { CAM_LEAD, CAM_OFFSET, cameraPath, spawnPoint, zoneIndex, zonePaths } from "../../builder/route";
+import { CAM_LEAD, CAM_OFFSET, cameraOffsets, cameraPath, spawnPoint, zoneIndex, zonePaths } from "../../builder/route";
+import { DEFAULT_CAMERA } from "../../src/camera";
 import type { Vec3 } from "../../builder/vectors";
 import { worldMeshes } from "../../builder/worldMeshes";
 import { floorMesh, meshOf, merged, quadMesh } from "./meshes";
@@ -78,6 +79,24 @@ describe("crash's spawn", () => {
   });
 });
 
+describe("where the camera is from crash", () => {
+  test("as it always was without camera settings: CAM_LEAD behind him and CAM_OFFSET's height above", () => {
+    expect(cameraOffsets(DEFAULT_CAMERA)).toEqual({ lead: CAM_LEAD, height: CAM_OFFSET[1] });
+  });
+
+  test("its distance scales both", () => {
+    expect(cameraOffsets({ distance: 2, angle: 42 })).toEqual({ lead: 2 * CAM_LEAD, height: 2 * CAM_OFFSET[1] });
+  });
+
+  test("its angle turns it up or down about crash, the same distance away, that many degrees from where it was", () => {
+    const usual = Math.hypot(CAM_LEAD, CAM_OFFSET[1]);
+    const degrees = (offsets: { lead: number; height: number }) => (Math.atan2(offsets.height, offsets.lead) * 180) / Math.PI;
+    const steep = cameraOffsets({ distance: 1, angle: 60 });
+    expect(Math.hypot(steep.lead, steep.height)).toBeCloseTo(usual, 0);
+    expect(degrees(steep) - degrees(cameraOffsets(DEFAULT_CAMERA))).toBeCloseTo(18, 1);
+  });
+});
+
 describe("zone paths", () => {
   const SPANS: Span[] = [[32768, 49152], [16384, 32768], [0, 16384]];
 
@@ -93,6 +112,10 @@ describe("zone paths", () => {
 
   test("the zone a point is in", () => {
     expect([40000, 32767, 16384, 0].map((z) => zoneIndex(SPANS, z))).toEqual([0, 1, 1, 2]);
+  });
+
+  test("with the camera further behind, a point goes to the zone crash is in that far ahead", () => {
+    expect(zonePaths([[1, 2, 32768 + 3000]], SPANS, 3000)).toEqual([[], [[1, 2, 16384 + 3000]], []]);
   });
 
   test("zones before the start have no points", () => {
