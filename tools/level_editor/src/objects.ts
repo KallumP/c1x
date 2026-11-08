@@ -25,7 +25,7 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - crab: n. sanity beach's, walking back and forth across the map
 // - turtle: n. sanity beach's, walking back and forth along the route
 // - native: the great gate's, guarding its path with a shield
-// - badger: jungle rollers', running out along its path in pairs when crash comes near
+// - badger: jungle rollers', running out along its path, count at a time, when crash comes near
 export const ENEMY_TYPES = ["plant", "rolling_stone", "crab", "turtle", "native", "badger"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 

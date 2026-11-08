@@ -156,7 +156,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // an enemy that stands where it's placed: a plant, or a native
+  // an enemy that stands where it's placed: a plant
   const renderPlant = (object: LevelObject, index: number) => renderEnemyModel(ENEMY_SHAPES.plant, base(object), index);
 
   // the rolling stone: a wheel where it starts along its track, turned to roll across the map as the game rolls it
