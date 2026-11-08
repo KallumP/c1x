@@ -16,11 +16,12 @@ export type ShapePart = Primitive & {
   name?: string;
 };
 
-type ModelledEnemy = Exclude<EnemyType, "rolling_stone" | "badger">;
+type ModelledEnemy = Exclude<EnemyType, "rolling_stone">;
 
 const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth: "#b0233a", tooth: "#f4f1e0", soil: "#6b4a2b" };
 const TURTLE_COLOURS = { shell: "#b8282a", spot: "#2fa58c", skin: "#b5a35a", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const NATIVE_COLOURS = { skin: "#8a5a3a", skirt: "#46c84a", hair: "#2b1b14", shield: "#8e2416", eye: "#f4f1e0", pupil: "#1a1a1a" };
+const BADGER_COLOURS = { fur: "#1f1d24", stripe: "#e4dcc4", nose: "#3a3238", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
 const ball = (radius: number, at: Vec3, colour: string, extra: Partial<ShapePart> = {}): ShapePart =>
@@ -191,6 +192,33 @@ function native(): ShapePart[] {
   ];
 }
 
+function badgerLeg(): ShapePart[] {
+  return [rod(35, 30, 100, [150, 50, 220], BADGER_COLOURS.fur), rod(35, 30, 100, [150, 50, -120], BADGER_COLOURS.fur)];
+}
+
+function badgerEye(): ShapePart[] {
+  return [ball(22, [55, 230, 540], BADGER_COLOURS.eye), ball(10, [57, 232, 560], BADGER_COLOURS.pupil)];
+}
+
+function badgerHead(): ShapePart[] {
+  return [
+    ball(1, [0, 190, 420], BADGER_COLOURS.fur, { stretch: [130, 110, 150], name: "head" }),
+    ball(45, [0, 170, 575], BADGER_COLOURS.nose, { name: "head" }),
+    ...bothSides([...badgerEye(), ball(1, [70, 290, 400], BADGER_COLOURS.fur, { stretch: [30, 40, 20], name: "head" })]),
+  ];
+}
+
+// jungle rollers' badger (a skunk): low and long, black with a pale stripe and a big bushy tail held up behind
+function badger(): ShapePart[] {
+  return [
+    ...bothSides(badgerLeg()),
+    ball(1, [0, 170, 60], BADGER_COLOURS.fur, { stretch: [280, 130, 330] }),
+    ball(1, [0, 260, 60], BADGER_COLOURS.stripe, { stretch: [70, 45, 300] }),
+    ...badgerHead(),
+    ball(1, [0, 220, -420], BADGER_COLOURS.stripe, { stretch: [110, 160, 130], turn: [0.4, 0, 0], name: "tail" }),
+  ];
+}
+
 function primitiveGeometry(part: ShapePart): BufferGeometry {
   switch (part.kind) {
     case "box":
@@ -249,12 +277,14 @@ function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 
 // how tall the game's models are, in game units: jungle rollers' plant (JuPcG) and
 // n. sanity beach's crab (Cr19G) and turtle (Tu19G), and the great gate's native
-// (Na1iG, its first frame in Na1iV), each vertex times 4, times its tgeo's scale / 4096
-const GAME_HEIGHTS: Record<ModelledEnemy, number> = { plant: 720, crab: 480, turtle: 370, native: 925 };
+// (Na1iG, its first frame in Na1iV), and jungle rollers' badger (Pi10G, its first
+// frame in Pi10V), each vertex times 4, times its tgeo's scale / 4096
+const GAME_HEIGHTS: Record<ModelledEnemy, number> = { plant: 720, crab: 480, turtle: 370, native: 925, badger: 345 };
 
 export const ENEMY_SHAPES: Record<ModelledEnemy, ShapePart[]> = {
   plant: scaledToHeight(standingOnFloor(plant()), GAME_HEIGHTS.plant),
   crab: scaledToHeight(standingOnFloor(crab()), GAME_HEIGHTS.crab),
   turtle: scaledToHeight(standingOnFloor(turtle()), GAME_HEIGHTS.turtle),
   native: scaledToHeight(standingOnFloor(native()), GAME_HEIGHTS.native),
+  badger: scaledToHeight(standingOnFloor(badger()), GAME_HEIGHTS.badger),
 };
