@@ -17,6 +17,7 @@
 ### Fixed
 
 - objects in the level editor jumping to the pointer as you start dragging them
+- boxes losing their textures in a custom level with several kinds of enemy from other levels
 
 ## 2026-11-06
 
