@@ -32,6 +32,7 @@ export const ENEMY_COLOURS: Record<EnemyType, string> = {
   turtle: "#2aa198",
   native: "#c98a3b",
   badger: "#9a8fb0",
+  warthog: "#8a5a44",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";

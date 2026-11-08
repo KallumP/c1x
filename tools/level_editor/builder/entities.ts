@@ -20,8 +20,8 @@ export const BOX_TYPE = 34;      // BoxsC: boxes, by subtype
 export const BOX_HEIGHT = 400;   // a box on top of another is this much higher (GoolObjectSpawn in src/gool.c)
 // each enemy's entity type (its exec map slot) and subtype: the plant PlanC, the
 // rolling stone JunOC, the crab CrabC, the turtle TurtC, the native SheNC, and
-// the badger PillC (an invisible spawner that sends badgers along its path)
-export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0] };
+// the badger PillC (an invisible spawner that sends badgers along its path), and the warthog WartC
+export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = { plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1] };
 // not in the level's total (an iron outline fills in as an iron box)
 // a rolling stone's first init flag is where in its cycle along its path and
 // back it starts (its script's, seen in the game): 0 at its first point rolling
