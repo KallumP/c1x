@@ -13,7 +13,7 @@ import { zoneSlstItems } from "./slst";
 import type { Templates } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader, worldHeaderBytes, worldPolygonBytes, worldVertexBytes } from "./worldGeometry";
-import { loadTexturePages, zoneHeaderBytes, type ZoneWorld } from "./zones";
+import { loadTexturePages, ZONE_MIDI, zoneHeaderBytes, type ZoneWorld } from "./zones";
 
 export const MAP_CELL = 128; // collision cells
 export const LID_TEST = 0x1; // custom levels use the test level id (see src/common.h)
@@ -123,12 +123,14 @@ function zoneEntries(assembly: Assembly, zoneIndex: number, origins: Vec3[]): En
 }
 
 // what to keep of the real level: the code for crash, the hud, the core objects
-// and the entities' types, and the texture pages the meshes use
+// and the entities' types, the texture pages the meshes use, and the zones'
+// music (jungle rollers', with its instruments; aku aku's song is its second track)
 function keptEids({ level, templates, zones, pageEids }: Assembly): number[] {
   const slots = new Set([...CORE_EXEC_SLOTS, ...zones.flatMap((zone) => zone.entities.map((entity) => entityType(entity)[0]))]);
   const execMap = level.nsd.ldat.execMap;
   const ownPages = readWorldHeader(templates.world.items[0]).pages.filter((page) => page !== 0);
-  return [...[...slots].map((slot) => execMap[slot]), ...ownPages, ...pageEids];
+  const music = templates.header.readUInt32LE(ZONE_MIDI);
+  return [...[...slots].map((slot) => execMap[slot]), ...ownPages, ...pageEids, music];
 }
 
 export function assembleLevel(assembly: Assembly): Level {
