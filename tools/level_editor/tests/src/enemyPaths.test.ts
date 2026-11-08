@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_PATH_NODES, defaultPath, enemyPath, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
+import { DEFAULT_PATH_NODES, defaultPath, enemyPath, handleLifts, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
@@ -96,6 +96,14 @@ describe("nodes under the enemy at an end of its path", () => {
 
   test("whatever their height", () => {
     expect(nodesUnderEnds([[0, 0, 0], [0.2, 0, 5], [3, 0, 0]], 0.5)).toEqual([true, true, true]);
+  });
+});
+
+describe("how high a node's handle floats above it", () => {
+  test("the enemy's height for a node under an end, how far down it is for a node under the ground, the higher of the two for both, and none for the rest (metres)", () => {
+    const underEnds = [true, false, false, true, true];
+    const depths = [null, 0.5, null, 2, 0.3];
+    expect(handleLifts(underEnds, depths, 1)).toEqual([1, 0.5, 0, 2, 1]);
   });
 });
 
