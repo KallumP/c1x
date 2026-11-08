@@ -8,11 +8,14 @@ const ONCE: Kind[] = ["spawn", "end"]; // a level has at most one of these
 // every box the game has, by name: its subtype, which the level build places
 // it by. the base level (jungle rollers, see builder/baseLevel.ts) has all
 // their models. enemy_tnt is a tnt set up for an enemy to be spun into, and a
-// switch fills an iron_outline in as an iron box
+// switch fills an iron_outline in as an iron box. in the order the palette
+// lists them: plain, bonus, tnt, the switch and its outlines, then iron
 export const BOX_TYPES = {
-  basic: 2, arrow: 3, checkpoint: 4, iron: 5, slatted: 6,
-  switch: 7, life: 8, aku_aku: 9, question: 10, outline: 13,
-  tnt: 0, enemy_tnt: 11, iron_arrow: 15, iron_outline: 19,
+  basic: 2, slatted: 6, arrow: 3,
+  question: 10, life: 8, aku_aku: 9, checkpoint: 4,
+  tnt: 0, enemy_tnt: 11,
+  switch: 7, outline: 13,
+  iron: 5, iron_arrow: 15, iron_outline: 19,
 } as const;
 export type BoxType = keyof typeof BOX_TYPES;
 export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
