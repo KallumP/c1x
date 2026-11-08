@@ -5,11 +5,6 @@ import { PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./o
 
 export const DEFAULT_PATH_NODES = 5;
 
-// how far apart a path's points are in the game, in game units: as n. sanity
-// beach's crabs' and turtles' are (PATH_STEP), and jungle rollers' badger spawners' (BADGER_STEP)
-export const PATH_STEP = 100;
-export const BADGER_STEP = 400;
-
 const plus = (first: Vec3, second: Vec3): Vec3 => [first[0] + second[0], first[1] + second[1], first[2] + second[2]];
 const scaled = (vector: Vec3, factor: number): Vec3 => [vector[0] * factor, vector[1] * factor, vector[2] * factor];
 const distance = (first: Vec3, second: Vec3) => Math.hypot(first[0] - second[0], first[1] - second[1], first[2] - second[2]);
@@ -27,8 +22,9 @@ const towardsSpawn = (turn: number) => scaled(cameraFacing(turn), -1);
 
 // each path enemy as its own level has it: how long its path is (game units),
 // which way it goes without a path of its own (in blender, for a level turned
-// by turn degrees), and how far apart its path's points are in the game. the
-// game moves an enemy a point at a time, so its step keeps it at its own speed
+// by turn degrees), and how far apart its path's points are in the game (game
+// units, as its level's are). the game moves an enemy a point at a time, so its
+// step keeps it at its own speed
 interface PathEnemyRun {
   length: number;
   way: (turn: number) => Vec3;
@@ -38,10 +34,10 @@ interface PathEnemyRun {
 // crabs and natives go across the map, as their levels have them; turtles along
 // the route, the way the camera faces; badgers along it the other way, at crash
 const PATH_ENEMY_RUNS: Record<PathEnemy, PathEnemyRun> = {
-  crab: { length: CRAB_WALK, way: stoneRolling, step: PATH_STEP },
-  turtle: { length: TURTLE_WALK, way: cameraFacing, step: PATH_STEP },
+  crab: { length: CRAB_WALK, way: stoneRolling, step: 100 },                 // n. sanity beach's crabs' points
+  turtle: { length: TURTLE_WALK, way: cameraFacing, step: 100 },             // n. sanity beach's turtles' points
   native: { length: NATIVE_WALK, way: stoneRolling, step: NATIVE_WALK / 4 }, // the great gate's natives' paths are 4 steps
-  badger: { length: BADGER_RUN, way: towardsSpawn, step: BADGER_STEP },
+  badger: { length: BADGER_RUN, way: towardsSpawn, step: 400 },              // jungle rollers' badger spawners' points
 };
 
 // how far apart a path's points are in the game for an enemy, at its own speed
