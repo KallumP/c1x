@@ -16,11 +16,12 @@ export type ShapePart = Primitive & {
   name?: string;
 };
 
-type ModelledEnemy = Exclude<EnemyType, "rolling_stone" | "warthog">;
+type ModelledEnemy = Exclude<EnemyType, "rolling_stone">;
 
 const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth: "#b0233a", tooth: "#f4f1e0", soil: "#6b4a2b" };
 const TURTLE_COLOURS = { shell: "#b8282a", spot: "#2fa58c", skin: "#b5a35a", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const NATIVE_COLOURS = { skin: "#8a5a3a", skirt: "#46c84a", hair: "#2b1b14", shield: "#8e2416", eye: "#f4f1e0", pupil: "#1a1a1a" };
+const WARTHOG_COLOURS = { hide: "#7a4a32", mane: "#3a2a20", snout: "#b07a64", tusk: "#f2ecd8", eye: "#1a1a1a" };
 const BADGER_COLOURS = { fur: "#1f1d24", stripe: "#e4dcc4", nose: "#3a3238", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
@@ -219,6 +220,37 @@ function badger(): ShapePart[] {
   ];
 }
 
+function warthogLegs(): ShapePart[] {
+  return [rod(30, 26, 140, [90, 70, 230], WARTHOG_COLOURS.hide), rod(30, 26, 140, [90, 70, -230], WARTHOG_COLOURS.hide)];
+}
+
+function warthogHeadSide(): ShapePart[] {
+  return [
+    rod(0, 18, 90, [60, 300, 600], WARTHOG_COLOURS.tusk, { turn: [-0.6, 0, 0.3] }),
+    ball(14, [70, 350, 520], WARTHOG_COLOURS.eye),
+    ball(1, [75, 420, 400], WARTHOG_COLOURS.mane, { stretch: [25, 45, 20] }),
+  ];
+}
+
+function warthogHead(): ShapePart[] {
+  return [
+    ball(1, [0, 310, 420], WARTHOG_COLOURS.hide, { stretch: [120, 120, 150] }),
+    ball(1, [0, 260, 570], WARTHOG_COLOURS.snout, { stretch: [70, 60, 55], name: "snout" }),
+    ...bothSides(warthogHeadSide()),
+  ];
+}
+
+// road to nowhere's warthog: a long brown body on short legs, a dark mane, and tusks, facing +z
+function warthog(): ShapePart[] {
+  return [
+    ...bothSides(warthogLegs()),
+    ball(1, [0, 270, 0], WARTHOG_COLOURS.hide, { stretch: [175, 150, 380] }),
+    ball(1, [0, 410, 0], WARTHOG_COLOURS.mane, { stretch: [40, 70, 320] }),
+    ...warthogHead(),
+    rod(12, 6, 120, [0, 330, -430], WARTHOG_COLOURS.mane, { turn: [-0.8, 0, 0] }),
+  ];
+}
+
 function primitiveGeometry(part: ShapePart): BufferGeometry {
   switch (part.kind) {
     case "box":
@@ -277,11 +309,12 @@ export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 
 // how tall the game's models are, in game units: jungle rollers' plant (JuPcG) and
 // n. sanity beach's crab (Cr19G) and turtle (Tu19G), and the great gate's native
-// (Na1iG, its first frame in Na1iV), and jungle rollers' badger (Pi10G, its first
-// frame in Pi10V), each vertex times 4, times its tgeo's scale / 4096
-const GAME_HEIGHTS: Record<ModelledEnemy, number> = { plant: 720, crab: 480, turtle: 370, native: 925, badger: 345 };
+// (Na1iG, its first frame in Na1iV), jungle rollers' badger (Pi10G, its first
+// frame in Pi10V), and road to nowhere's warthog (WartG, its first frame in
+// WarHV), each vertex times 4, times its tgeo's scale / 4096
+const GAME_HEIGHTS: Record<ModelledEnemy, number> = { plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490 };
 
-const SHAPE_PARTS: Record<ModelledEnemy, () => ShapePart[]> = { plant, crab, turtle, native, badger };
+const SHAPE_PARTS: Record<ModelledEnemy, () => ShapePart[]> = { plant, crab, turtle, native, badger, warthog };
 
 // each enemy's shape, standing on the floor, as tall as the game's model
 export const ENEMY_SHAPES = Object.fromEntries(Object.entries(SHAPE_PARTS).map(([enemy, parts]) =>
