@@ -14,8 +14,8 @@ export const BOX_TYPES = {
   basic: 2, slatted: 6, arrow: 3,
   question: 10, life: 8, aku_aku: 9, checkpoint: 4,
   tnt: 0, enemy_tnt: 11,
-  switch: 7, outline: 13,
-  iron: 5, iron_arrow: 15, iron_outline: 19,
+  switch: 7, outline: 13, iron_outline: 19,
+  iron: 5, iron_arrow: 15,
 } as const;
 export type BoxType = keyof typeof BOX_TYPES;
 export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
