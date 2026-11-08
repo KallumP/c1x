@@ -4,7 +4,7 @@
 
 ### Added
 
-- custom levels can have Jungle Rollers' badgers, which pop out of the ground and run at Crash in pairs
+- custom levels can have Jungle Rollers' badgers, which pop out of the ground and run at Crash, as many at once as you like
 
 ## 2026-11-06
 
