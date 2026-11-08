@@ -122,7 +122,7 @@ describe("boxTypeName", () => {
 
 describe("enemies", () => {
   test("knows the enemies custom levels can have, by name", () => {
-    expect(ENEMY_TYPES).toEqual(["plant", "rolling_stone", "crab", "turtle", "native", "badger", "warthog", "spider", "walking_spider"]);
+    expect(ENEMY_TYPES).toEqual(["plant", "rolling_stone", "crab", "turtle", "native", "badger", "warthog", "spider", "walking_spider", "monkey"]);
   });
 
   test("reads an enemy by its type and spot (a rolling stone's path comes with its track)", () => {
@@ -145,7 +145,7 @@ describe("enemies", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, rolling_stone, crab, turtle, native, badger, warthog, spider, walking_spider)"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, rolling_stone, crab, turtle, native, badger, warthog, spider, walking_spider, monkey)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs and walking spiders do)"],
