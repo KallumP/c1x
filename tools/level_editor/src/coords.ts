@@ -97,6 +97,10 @@ export const BADGER_RUN = 5200;
 // warthogs' path, along the game's z (the route) (its default path, src/enemyPaths.ts)
 export const WARTHOG_RUN = 5200;
 
+// how far walking spiders run, in game units: fumbling in the dark's shortest
+// walking spider path, along the game's z (the route) (its default path, src/enemyPaths.ts)
+export const WALKING_SPIDER_RUN = 3200;
+
 // a box's size in blender metres, for a level at scale game units a metre
 export function boxSize(scale: number): number {
   return BOX_UNITS / scale;

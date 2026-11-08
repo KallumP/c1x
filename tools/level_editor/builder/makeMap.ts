@@ -85,27 +85,29 @@ function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, tex
   });
 }
 
-// places objects in the level: where they are in it, which zone they're in, and their entities
-// how far below the end of their path badgers dive away, in game units: as far
-// as the last point of jungle rollers' badger spawners' paths drops (1112 to 1220)
-export const BADGER_DIVE = 1160;
+// the enemies placed as an invisible spawner that sends them out along its path,
+// and how far below its last point they go down out of sight, in game units: as
+// far as the last points of jungle rollers' badger spawners' paths drop (1112 to
+// 1220), and fumbling in the dark's spider spawners'
+const SPAWNER_DROPS: Partial<Record<EnemyType, number>> = { badger: 1160, walking_spider: 1600 };
 
-// a badger spawner's path with the point its badgers dive down to after its last
-function withBadgerDive(run: Vec3[]): Vec3[] {
+// a spawner's path with the point its enemies go down to after its last
+function withDrop(run: Vec3[], drop: number): Vec3[] {
   const [x, y, z] = run[run.length - 1];
-  return [...run, [x, y - BADGER_DIVE, z]];
+  return [...run, [x, y - drop, z]];
 }
 
-// a badger spawner running run: its badgers dive away at the end, and its init
-// flag c is how many come out at once
-function asBadgerSpawner(entity: Buffer, badger: LevelObject, run: Vec3[]): Buffer {
-  return withInitFlagC(withPath(entity, withBadgerDive(run)), numberSetting(badger, "count"));
+// a spawner running run: its enemies go down out of sight at the end, and its
+// init flag c is how many come out at once
+function asSpawner(entity: Buffer, enemy: LevelObject, run: Vec3[], drop: number): Buffer {
+  return withInitFlagC(withPath(entity, withDrop(run, drop)), numberSetting(enemy, "count"));
 }
 
-// a path enemy's entity running run (a badger as its spawner)
+// a path enemy's entity running run (a badger or walking spider as its spawner)
 function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffer {
-  if (enemy.enemy === "badger") {
-    return asBadgerSpawner(entity, enemy, run);
+  const drop = SPAWNER_DROPS[enemy.enemy!];
+  if (drop !== undefined) {
+    return asSpawner(entity, enemy, run, drop);
   }
   return withPath(entity, run);
 }
@@ -113,6 +115,7 @@ function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffe
 // the enemies that stay at their spot: jungle rollers' plant, and the spider hanging there
 const STANDING_ENEMIES: EnemyType[] = ["plant", "spider"];
 
+// places objects in the level: where they are in it, which zone they're in, and their entities
 class ObjectPlacer {
   readonly entities: Buffer[][];
   readonly placedBoxes: PlacedBox[] = [];
