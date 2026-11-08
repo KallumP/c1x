@@ -1,4 +1,5 @@
 // the dev server's api (server/plugin.ts)
+import type { Camera } from "./camera";
 import type { Sky } from "./sky";
 
 export interface LevelInfo {
@@ -11,6 +12,7 @@ export interface LevelCfg {
   turn: number;  // degrees the build turns the level about the up axis: 0, 90, 180 or 270
   scale: number; // game units per blender metre
   sky: Sky;
+  camera: Camera; // how the follow camera looks at crash
 }
 
 export interface BuildResult {

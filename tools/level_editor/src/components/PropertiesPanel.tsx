@@ -6,6 +6,7 @@ import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
 import { BOX_TYPES, boxTypeName, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type LevelObject, type NumberSetting, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
+import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
 import { ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
 import "./PropertiesPanel.css";
@@ -257,6 +258,37 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     );
   };
 
+  // how the follow camera looks at crash in the game; saved to its level.cfg with the rest
+  const renderCameraFields = (camera: Camera) => {
+    const changeCamera = (changes: Partial<Camera>) => onLevelCfg({ camera: { ...camera, ...changes } });
+    return (
+      <>
+        <h3>Camera</h3>
+        <SliderField
+          label="distance ×"
+          value={camera.distance}
+          min={CAMERA_DISTANCE_MIN}
+          max={CAMERA_DISTANCE_MAX}
+          step={0.25}
+          onGrab={() => {}}
+          onChange={(distance) => changeCamera({ distance })}
+        />
+        <SliderField
+          label="angle °"
+          value={camera.angle}
+          min={CAMERA_ANGLE_MIN}
+          max={CAMERA_ANGLE_MAX}
+          onGrab={() => {}}
+          onChange={(angle) => changeCamera({ angle })}
+        />
+        <p className="hint">
+          Distance is how far the camera is from Crash, times its usual distance. Angle is how far above him it looks
+          down from (42 is usual). Build the level to see it in the game.
+        </p>
+      </>
+    );
+  };
+
   const renderHint = () => (
     <p className="hint">
       Click an object to select it, then drag it across the floor. Pick something under Place and click the floor to add one.
@@ -282,6 +314,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
         <>
           {levelCfg && renderLevelFields(levelCfg)}
           {levelCfg && renderSkyFields(levelCfg.sky)}
+          {levelCfg && renderCameraFields(levelCfg.camera)}
           {renderHint()}
         </>
       )}
