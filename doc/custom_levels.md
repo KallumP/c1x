@@ -76,7 +76,7 @@ Then, in the level editor:
 1. Click **Build + boot** at the top right (or press **F5**). It saves your changes, builds the level, then, if the build worked, sets the game to start in it by writing `boot_level = my_level` in `settings.cfg`. A bar slides along the bottom of the top bar while it works, and it says `The game boots into my_level` when it's done, or why it failed (hover over the message for the full output).
 2. In the launcher, click **Play**.
 
-**Build** on its own saves and builds the level without changing which level the game boots into. Hovering over a button shows its shortcut.
+**Build** (or Ctrl+Shift+B) on its own saves and builds the level without changing which level the game boots into. Hovering over a button shows its shortcut.
 
 **After any change** to the map or objects, build again. You don't need to rebuild the game.
 

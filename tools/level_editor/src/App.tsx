@@ -68,7 +68,7 @@ export default function App() {
   useUnsavedWarning(unsaved);
   const levelActions = useLevelActions(level, unsaved, save);
 
-  useEditorShortcuts(state, dispatch, { stopPlacing: () => setTool(SELECT), save, buildAndBoot: levelActions.buildAndBoot });
+  useEditorShortcuts(state, dispatch, { stopPlacing: () => setTool(SELECT), save, build: levelActions.build, buildAndBoot: levelActions.buildAndBoot });
 
   const openLevel = (name: string) => {
     if (!confirmDiscard(unsaved)) {
@@ -130,7 +130,7 @@ export default function App() {
         {status && (
           <span className={status.failed ? "status error" : "status"} title={status.detail}>{status.text}</span>
         )}
-        <button disabled={!level || isBusy} onClick={build} title="Build this level (saves first)">
+        <button disabled={!level || isBusy} onClick={build} title="Build this level, saving first (Ctrl+Shift+B)">
           Build
         </button>
         <button disabled={!level || isBusy} onClick={buildAndBoot} title="Build this level, then set the game to boot into it (F5)">
