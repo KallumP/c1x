@@ -4,15 +4,20 @@ import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
-import { BADGER_COUNT, BADGER_COUNT_MAX, BADGER_COUNT_MIN, BOX_TYPES, boxTypeName, PATH_ENEMIES, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type BoxType, type LevelObject, type Vec3 } from "../objects";
+import { BOX_TYPES, boxTypeName, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type LevelObject, type NumberSetting, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { SKY_ROWS, type Sky } from "../sky";
 import { ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
 import "./PropertiesPanel.css";
 
 const AXES = ["x", "y"] as const;
-const STONE_START_STEP = 0.05; // the stone start slider's steps, of its track
-const SPEED_STEP = 0.25; // the speed slider's steps, times the game's own pace
+// each number setting's slider: its label, and its steps (a stone's start of
+// its track, a speed times the game's own pace, a count of badgers)
+const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
+  speed: { label: "speed ×", step: 0.25 },
+  start: { label: "start", step: 0.05 },
+  count: { label: "count", step: 1 },
+};
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
@@ -111,25 +116,33 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     return <SliderField label="nodes" value={nodeCount(enemy)} min={2} max={PATH_NODES_MAX} onGrab={grab} onChange={changeCount} />;
   };
 
-  // how fast a path enemy walks, times the game's own pace; the whole slide is one change to undo
-  const renderSpeedSlider = (enemy: LevelObject) => {
-    const changeSpeed = (speed: number) => {
+  // an enemy's number setting (a path enemy's speed, a rolling stone's start, a
+  // badger's count) in its range; the whole slide is one change to undo
+  const renderNumberSlider = (enemy: LevelObject, setting: NumberSetting) => {
+    const changeSetting = (value: number) => {
       if (index !== null) {
-        dispatch({ type: "update", index, changes: { speed }, record: false });
+        dispatch({ type: "update", index, changes: { [setting]: value }, record: false });
       }
     };
+    const { min, max } = NUMBER_SETTING_RULES[setting];
+    const { label, step } = NUMBER_SLIDERS[setting];
     return (
       <SliderField
-        label="speed ×"
-        value={enemy.speed ?? 1}
-        min={SPEED_MIN}
-        max={SPEED_MAX}
-        step={SPEED_STEP}
+        key={setting}
+        label={label}
+        value={numberSetting(enemy, setting)}
+        min={min}
+        max={max}
+        step={step}
         onGrab={() => dispatch({ type: "checkpoint" })}
-        onChange={changeSpeed}
+        onChange={changeSetting}
       />
     );
   };
+
+  // the sliders for each number setting an enemy has
+  const renderNumberSliders = (enemy: LevelObject) =>
+    NUMBER_SETTINGS.filter((setting) => hasNumberSetting(enemy, setting)).map((setting) => renderNumberSlider(enemy, setting));
 
   // turns an enemy's path round, so it starts at the other end; a selected node stays selected
   const renderTurnRoundButton = (enemy: LevelObject) => {
@@ -147,26 +160,6 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     );
   };
 
-  // where along its track a rolling stone starts, 0 (its first end) to 1 (its far end); the whole slide is one change to undo
-  const renderStoneStartSlider = (stone: LevelObject) => {
-    const changeStart = (start: number) => {
-      if (index !== null) {
-        dispatch({ type: "update", index, changes: { start }, record: false });
-      }
-    };
-    return (
-      <SliderField
-        label="start"
-        value={stone.start ?? 0}
-        min={0}
-        max={1}
-        step={STONE_START_STEP}
-        onGrab={() => dispatch({ type: "checkpoint" })}
-        onChange={changeStart}
-      />
-    );
-  };
-
   // which way a rolling stone rolls first from where it starts: on along its track, or back
   const renderStoneReverseButton = (stone: LevelObject) => (
     <button className="drop" onClick={() => change({ reverse: stone.reverse ? undefined : true })} title="The arrow at the dot shows which way it rolls first">
@@ -174,27 +167,6 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     </button>
   );
 
-  const hasPath = (selected: LevelObject) => selected.kind === "enemy" && PATH_ENEMIES.includes(selected.enemy!);
-  // how many badgers come out at once; the whole slide is one change to undo
-  const renderBadgerCountSlider = (badger: LevelObject) => {
-    const changeCount = (count: number) => {
-      if (index !== null) {
-        dispatch({ type: "update", index, changes: { count }, record: false });
-      }
-    };
-    return (
-      <SliderField
-        label="count"
-        value={badger.count ?? BADGER_COUNT}
-        min={BADGER_COUNT_MIN}
-        max={BADGER_COUNT_MAX}
-        onGrab={() => dispatch({ type: "checkpoint" })}
-        onChange={changeCount}
-      />
-    );
-  };
-
-  const isBadger = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy === "badger";
   const isStone = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy === "rolling_stone";
 
   // raise is its height above the floor, kept as it's dragged about
@@ -297,10 +269,8 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
         <>
           {renderObjectFields(object)}
           {hasPath(object) && renderNodeSlider(object)}
-          {hasPath(object) && renderSpeedSlider(object)}
+          {renderNumberSliders(object)}
           {hasPath(object) && renderTurnRoundButton(object)}
-          {isBadger(object) && renderBadgerCountSlider(object)}
-          {isStone(object) && renderStoneStartSlider(object)}
           {isStone(object) && renderStoneReverseButton(object)}
           {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}

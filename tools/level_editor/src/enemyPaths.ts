@@ -1,23 +1,9 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
 import { BADGER_RUN, cameraFacing, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
-import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "./objects";
+import { PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 5;
-
-// how far apart a path's points are in the game, in game units: as n. sanity
-// beach's crabs' and turtles' are. the game moves an enemy a point at a time,
-// so this keeps it walking at its own speed
-export const PATH_STEP = 100;
-
-export type PathEnemy = "crab" | "turtle" | "native" | "badger";
-
-// how far apart a path's points are in the game for an enemy, at its own speed:
-// a native's as the great gate's natives' are (its path in 4 steps), a badger's
-// as jungle rollers' badger spawners' are (BADGER_STEP), the rest PATH_STEP
-export const BADGER_STEP = 400;
-const PATH_STEPS: Record<PathEnemy, number> = { crab: PATH_STEP, turtle: PATH_STEP, native: NATIVE_WALK / 4, badger: BADGER_STEP };
-export const pathStep = (enemy: PathEnemy) => PATH_STEPS[enemy];
 
 const plus = (first: Vec3, second: Vec3): Vec3 => [first[0] + second[0], first[1] + second[1], first[2] + second[2]];
 const scaled = (vector: Vec3, factor: number): Vec3 => [vector[0] * factor, vector[1] * factor, vector[2] * factor];
@@ -31,24 +17,37 @@ function straightNodes(start: Vec3, end: Vec3, count: number): Vec3[] {
   });
 }
 
-// the way an enemy walks without a path of its own (in blender): a crab or native
-// across the map, as the game walks them; a turtle along the route, the way the
-// camera faces; badgers along the route the other way, back towards the spawn
-function defaultWay(enemy: PathEnemy, turn: number): { way: Vec3; walk: number } {
-  if (enemy === "turtle") {
-    return { way: cameraFacing(turn), walk: TURTLE_WALK };
-  }
-  if (enemy === "badger") {
-    return { way: scaled(cameraFacing(turn), -1), walk: BADGER_RUN };
-  }
-  return { way: stoneRolling(turn), walk: enemy === "crab" ? CRAB_WALK : NATIVE_WALK };
+// the way along the route back towards the spawn (in blender), for a level turned by turn degrees
+const towardsSpawn = (turn: number) => scaled(cameraFacing(turn), -1);
+
+// each path enemy as its own level has it: how long its path is (game units),
+// which way it goes without a path of its own (in blender, for a level turned
+// by turn degrees), and how far apart its path's points are in the game (game
+// units, as its level's are). the game moves an enemy a point at a time, so its
+// step keeps it at its own speed
+interface PathEnemyRun {
+  length: number;
+  way: (turn: number) => Vec3;
+  step: number;
 }
 
-// a path enemy's path without one of its own: its donor level's length,
+// crabs and natives go across the map, as their levels have them; turtles along
+// the route, the way the camera faces; badgers along it the other way, at crash
+const PATH_ENEMY_RUNS: Record<PathEnemy, PathEnemyRun> = {
+  crab: { length: CRAB_WALK, way: stoneRolling, step: 100 },                 // n. sanity beach's crabs' points
+  turtle: { length: TURTLE_WALK, way: cameraFacing, step: 100 },             // n. sanity beach's turtles' points
+  native: { length: NATIVE_WALK, way: stoneRolling, step: NATIVE_WALK / 4 }, // the great gate's natives' paths are 4 steps
+  badger: { length: BADGER_RUN, way: towardsSpawn, step: 400 },              // jungle rollers' badger spawners' points
+};
+
+// how far apart a path's points are in the game for an enemy, at its own speed
+export const pathStep = (enemy: PathEnemy) => PATH_ENEMY_RUNS[enemy].step;
+
+// a path enemy's path without one of its own: its own level's length,
 // straight, its middle where it stands, in equal steps
 export function defaultPath(enemy: PathEnemy, turn: number, scale: number): Vec3[] {
-  const { way, walk } = defaultWay(enemy, turn);
-  const half = scaled(way, walk / 2 / scale);
+  const { length, way } = PATH_ENEMY_RUNS[enemy];
+  const half = scaled(way(turn), length / 2 / scale);
   return straightNodes(scaled(half, -1), half, DEFAULT_PATH_NODES);
 }
 

@@ -1,7 +1,7 @@
 // crabs' and turtles' paths that leave the floor or run through a wall, which the
 // editor warns about: the game walks them along their paths regardless (seen in the game)
 import { enemyPath, pathLength, respaced } from "./enemyPaths";
-import { PATH_ENEMIES, type LevelObject, type Vec3 } from "./objects";
+import { hasPath, type LevelObject, type Vec3 } from "./objects";
 import { floorBelow, reachesIntoLevel, type Triangle } from "./overlaps";
 
 const CHECK_STEP = 0.1;    // metres between the places checked along a path
@@ -9,7 +9,6 @@ const WALK_HEIGHT = 0.3;   // metres above the path that's checked, clear of the
 const CHECK_SIZE = 0.05;   // half the size of the space checked there, metres
 const FLOOR_REACH = 0.5;   // how far below the path the floor can be, metres, as it steps down
 
-const hasPath = (object: LevelObject) => object.kind === "enemy" && PATH_ENEMIES.includes(object.enemy!);
 
 // the places along an enemy's path to check (blender): every CHECK_STEP, at walking height
 function placesAlong(object: LevelObject, turn: number, scale: number): Vec3[] {
