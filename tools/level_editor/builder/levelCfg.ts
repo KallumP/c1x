@@ -1,9 +1,10 @@
-// a level source's level.cfg: the scale, turn and sky the level is built with,
+// a level source's level.cfg: the scale, turn, sky and camera the level is built with,
 // one "key = value" a line. the build reads it strictly, so a mistake stops it
 // with a message; the editor reads it leniently (server/levelCfg.ts)
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DEFAULT_SCALE } from "../src/coords";
+import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
 import { DEFAULT_SKY, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 
 export const LEVEL_CFG = "level.cfg";
@@ -12,6 +13,7 @@ export interface LevelOptions {
   scale: number; // game units per blender metre
   turn: number;  // degrees to turn the level about the up axis
   sky: Sky;
+  camera: Camera;
 }
 
 // what a level.cfg sets, each by its key
@@ -21,11 +23,13 @@ export interface LevelCfgSettings {
   sky_top?: Rgb;
   sky_bottom?: Rgb;
   sky_split?: number;
+  camera_distance?: number;
+  camera_angle?: number;
 }
 
 const WHOLE_NUMBERS = ["scale", "turn"];
 const COLOURS = ["sky_top", "sky_bottom"];
-const SETTINGS = [...WHOLE_NUMBERS, ...COLOURS, "sky_split"];
+const SETTINGS = [...WHOLE_NUMBERS, ...COLOURS, "sky_split", "camera_distance", "camera_angle"];
 
 const isComment = (line: string) => line === "" || line.startsWith("#");
 const isWholeNumber = (value: string) => /^[+-]?\d+$/.test(value);
@@ -53,6 +57,22 @@ function readSkySplit(value: string, where: string): number {
   return split;
 }
 
+function readCameraDistance(value: string, where: string): number {
+  const distance = Number(value);
+  if (value === "" || !isCameraDistance(distance)) {
+    throw new Error(`${where}: camera_distance has to be ${CAMERA_DISTANCE_MIN} to ${CAMERA_DISTANCE_MAX}, not ${value || "nothing"}`);
+  }
+  return distance;
+}
+
+function readCameraAngle(value: string, where: string): number {
+  const angle = readWholeNumber("camera_angle", value, where);
+  if (!isCameraAngle(angle)) {
+    throw new Error(`${where}: camera_angle has to be ${CAMERA_ANGLE_MIN} to ${CAMERA_ANGLE_MAX}, not ${value}`);
+  }
+  return angle;
+}
+
 // the setting one line gives; an unknown setting, or a value it can't take, is an error
 function readSetting(line: string, where: string): [keyof LevelCfgSettings, number | Rgb] {
   const equals = line.indexOf("=");
@@ -69,6 +89,12 @@ function readSetting(line: string, where: string): [keyof LevelCfgSettings, numb
   }
   if (key === "sky_split") {
     return [key, readSkySplit(value, where)];
+  }
+  if (key === "camera_distance") {
+    return [key, readCameraDistance(value, where)];
+  }
+  if (key === "camera_angle") {
+    return [key, readCameraAngle(value, where)];
   }
   return [key as keyof LevelCfgSettings, readWholeNumber(key, value, where)];
 }
@@ -99,12 +125,21 @@ function skyOf(settings: LevelCfgSettings): Sky {
   };
 }
 
-// the scale, turn and sky for the level source in folder: those given, else its level.cfg's, else the defaults
+// the level's camera: what its level.cfg sets, else where it always was
+function cameraOf(settings: LevelCfgSettings): Camera {
+  return {
+    distance: settings.camera_distance ?? DEFAULT_CAMERA.distance,
+    angle: settings.camera_angle ?? DEFAULT_CAMERA.angle,
+  };
+}
+
+// the scale, turn, sky and camera for the level source in folder: those given, else its level.cfg's, else the defaults
 export function levelOptions(folder: string, given: Partial<LevelOptions> = {}): LevelOptions {
   const settings = readLevelCfg(folder);
   return {
     scale: given.scale ?? settings.scale ?? DEFAULT_SCALE,
     turn: given.turn ?? settings.turn ?? 0,
     sky: given.sky ?? skyOf(settings),
+    camera: given.camera ?? cameraOf(settings),
   };
 }
