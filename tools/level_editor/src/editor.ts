@@ -1,6 +1,6 @@
 // what's being edited: a level's objects, which one is selected, and the
 // changes that can be undone and redone
-import { nodeCount, withNodeAt } from "./enemyPaths";
+import { nodeCount, pathPositions, withNodeAt } from "./enemyPaths";
 import { BOX_TYPES, ENEMY_TYPES, type BoxType, type EnemyType, type LevelObject, type Vec3 } from "./objects";
 
 export type Placeable = "spawn" | "end" | BoxType | EnemyType;
@@ -59,6 +59,25 @@ export function draggedTo(object: LevelObject, node: number | null, at: Vec3, tu
     return { at };
   }
   return { path: withNodeAt(object, node, at, turn, scale) };
+}
+
+const roundToMillimetre = (metres: number) => Math.round(metres * 1000) / 1000 + 0; // + 0 turns -0 into 0
+
+// where what's dragged was as the drag began: the object's spot, or its path node's position (in blender)
+function dragStart(object: LevelObject, node: number | null, turn: number, scale: number): Vec3 {
+  if (node === null) {
+    return object.at;
+  }
+  return pathPositions(object, turn, scale)[node];
+}
+
+// the change for dragging an object, or a node of its path, as it was when the
+// drag began, by how far the pointer has moved over the floor since then (from
+// to to): it keeps its distance from the pointer, rather than jumping to it
+export function draggedBy(object: LevelObject, node: number | null, from: Vec3, to: Vec3, turn: number, scale: number): Partial<LevelObject> {
+  const start = dragStart(object, node, turn, scale);
+  const at = start.map((value, axis) => roundToMillimetre(value + to[axis] - from[axis])) as Vec3;
+  return draggedTo(object, node, at, turn, scale);
 }
 
 // a change to the objects, which undo takes back
