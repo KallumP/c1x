@@ -30,8 +30,8 @@ describe("parseObjects", () => {
       "basic", "slatted", "arrow",
       "question", "life", "aku_aku", "checkpoint",
       "tnt", "enemy_tnt",
-      "switch", "outline",
-      "iron", "iron_arrow", "iron_outline",
+      "switch", "outline", "iron_outline",
+      "iron", "iron_arrow",
     ]);
   });
 
