@@ -4,8 +4,8 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
-import { nodesUnderEnds, pathPositions, pointAlongShare, type PathEnemy } from "../enemyPaths";
-import { PATH_ENEMIES, type LevelObject, type Vec3 } from "../objects";
+import { nodesUnderEnds, pathPositions, pointAlongShare } from "../enemyPaths";
+import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
 const PAD_UNITS = 400;   // the warp pad's radius, about
@@ -24,7 +24,7 @@ const walkerSize = (parts: ShapePart[]) => {
   const { min, max } = shapeBounds(parts);
   return { height: max[1], reach: Math.max(-min[0], max[0], -min[2], max[2]) };
 };
-const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy as PathEnemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
+const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
 
 // where an object's base is in the viewport, raised as it is in the game
 function base(object: LevelObject): Vec3 {
@@ -275,7 +275,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   const renderEnemy = (object: LevelObject, index: number) => {
-    if (PATH_ENEMIES.includes(object.enemy!)) {
+    if (isPathEnemy(object.enemy)) {
       return renderPathWalker(object, index);
     }
     if (object.enemy === "plant") {

@@ -2,8 +2,8 @@
 // as the level's world meshes and collision, crash, and the objects placed in
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
-import { inEvenSteps, pathPositions, pathStep, type PathEnemy } from "../src/enemyPaths";
-import { BADGER_COUNT, PATH_ENEMIES, type EnemyType, type LevelObject } from "../src/objects";
+import { inEvenSteps, pathPositions, pathStep } from "../src/enemyPaths";
+import { BADGER_COUNT, hasPath, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
@@ -276,7 +276,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   // a path enemy's entity as its own level has it: its donor level's, or jungle rollers' (the badger)
   const pathEnemyExample = (type: EnemyType) =>
     donorLevels.has(type) ? levelEntity(donorLevels.get(type)!, ...ENEMY_ENTITIES[type]) : templates.entity(...ENEMY_ENTITIES[type]);
-  for (const enemy of enemies.filter(({ enemy: type }) => PATH_ENEMIES.includes(type!))) {
+  for (const enemy of objects.filter(hasPath)) {
     placer.placeOnPath(enemy, pathEnemyExample(enemy.enemy!));
   }
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;

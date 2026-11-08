@@ -29,8 +29,10 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
 
-// the enemies that move along a path of nodes (crab, turtle, native, badger), and how many nodes it can have
-export const PATH_ENEMIES: EnemyType[] = ["crab", "turtle", "native", "badger"];
+// the enemies that move along a path of nodes, and how many nodes it can have
+export const PATH_ENEMIES = ["crab", "turtle", "native", "badger"] as const satisfies readonly EnemyType[];
+export type PathEnemy = (typeof PATH_ENEMIES)[number];
+export const isPathEnemy = (type: EnemyType | undefined): type is PathEnemy => PATH_ENEMIES.some((enemy) => enemy === type);
 export const PATH_NODES_MAX = 20;
 
 // the enemies with a path, for messages: "crabs, turtles, natives and badgers"
@@ -58,6 +60,9 @@ export interface LevelObject {
   reverse?: boolean;    // a rolling stone that rolls back towards its first end first (true, or none)
   count?: number;       // how many badgers come out at once (BADGER_COUNT without one)
 }
+
+// whether an object is an enemy that moves along a path
+export const hasPath = (object: LevelObject) => object.kind === "enemy" && isPathEnemy(object.enemy);
 
 // a box's type name, from its type or its subtype number
 export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
@@ -93,7 +98,7 @@ function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumbe
   if (!("path" in fields)) {
     return {};
   }
-  if (!PATH_ENEMIES.includes(enemy)) {
+  if (!isPathEnemy(enemy)) {
     throw new Error(`object ${objectNumber}: a ${enemy} has no path (${PATH_ENEMIES_NAMED} do)`);
   }
   const nodes = fields.path;
@@ -111,7 +116,7 @@ function readSpeed(fields: Record<string, unknown>, enemy: EnemyType, objectNumb
   if (!("speed" in fields)) {
     return {};
   }
-  if (!PATH_ENEMIES.includes(enemy)) {
+  if (!isPathEnemy(enemy)) {
     throw new Error(`object ${objectNumber}: a ${enemy} has no speed (${PATH_ENEMIES_NAMED} do)`);
   }
   const speed = fields.speed;

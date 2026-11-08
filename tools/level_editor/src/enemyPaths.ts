@@ -1,7 +1,7 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
 import { BADGER_RUN, cameraFacing, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
-import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "./objects";
+import { PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 5;
 
@@ -9,8 +9,6 @@ export const DEFAULT_PATH_NODES = 5;
 // beach's crabs' and turtles' are. the game moves an enemy a point at a time,
 // so this keeps it walking at its own speed
 export const PATH_STEP = 100;
-
-export type PathEnemy = "crab" | "turtle" | "native" | "badger";
 
 // how far apart a path's points are in the game for an enemy, at its own speed:
 // a native's as the great gate's natives' are (its path in 4 steps), a badger's
