@@ -32,13 +32,24 @@ int32_t FollowCamGroundY(int32_t ground, int32_t crash_y, int on_floor) {
 }
 
 /*
- * the follow camera's next height, from height towards FOLLOW_CAM_HEIGHT
- * above crash's floor (at ground_y). it starts at its path's height (path_y),
- * then leaves it be: the path's height is the ground under one straight line,
- * so it jumps where the line crosses a ledge, rock or wall crash isn't on
+ * how far above crash's floor the follow camera keeps (game units): the
+ * height its path keeps (path_height, from the level's camera settings), or
+ * FOLLOW_CAM_HEIGHT for a path without one
  */
-int32_t FollowCamHeight(int32_t height, int32_t ground_y, int32_t path_y) {
+int32_t FollowCamAbove(uint16_t path_height) {
+  if (path_height == 0)
+    return FOLLOW_CAM_HEIGHT;
+  return (int32_t)path_height << 8;
+}
+
+/*
+ * the follow camera's next height, from height towards above crash's floor
+ * (at ground_y). it starts at its path's height (path_y), then leaves it be:
+ * the path's height is the ground under one straight line, so it jumps where
+ * the line crosses a ledge, rock or wall crash isn't on
+ */
+int32_t FollowCamHeight(int32_t height, int32_t ground_y, int32_t path_y, int32_t above) {
   if (height == FOLLOW_CAM_NO_HEIGHT)
     height = path_y;
-  return FollowCamOffset(height, ground_y + FOLLOW_CAM_HEIGHT);
+  return FollowCamOffset(height, ground_y + above);
 }

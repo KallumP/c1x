@@ -513,7 +513,8 @@ int CamUpdate() {
     path_y = cam_trans.y; /* the path's until the camera has a height of its own */
     follow_cam_ground_y = FollowCamGroundY(follow_cam_ground_y, crash->trans.y,
       crash->status_a & GOOL_FLAG_GROUNDLAND);
-    follow_cam_y = FollowCamHeight(follow_cam_y, follow_cam_ground_y, path_y);
+    follow_cam_y = FollowCamHeight(follow_cam_y, follow_cam_ground_y, path_y,
+      FollowCamAbove(cur_path->unknown_a)); /* the level's camera height, kept in its path */
     cam_trans.y = follow_cam_y;
     return 1;
   case 0: /* no camera */
