@@ -212,6 +212,24 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(plant.id).not.toBe(boxes(built.zone)[0].id);
   });
 
+  test("a badger is jungle rollers' first badger spawner, its path starting at the badger's spot", () => {
+    const example = levelEntity(base, ...ENEMY_ENTITIES.badger);
+    const examplePath = entityPath(example);
+    const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "badger" })] }).zone);
+    expect(placed.type).toEqual(ENEMY_ENTITIES.badger);
+    expect(placed.path.length).toBe(examplePath.length);
+    // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+    [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(8));
+    placed.path.forEach((point, index) => point.forEach((value, axis) =>
+      expect(Math.abs(value - placed.path[0][axis] - (examplePath[index][axis] - examplePath[0][axis]))).toBeLessThanOrEqual(8)));
+  });
+
+  test("a level with a badger has its code, model and animation (jungle rollers' own)", () => {
+    const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "badger" })] });
+    expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.badger[0]]).toBe(stringToEid("PillC"));
+    expect(["Pi10G", "Pi10V"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+  });
+
   test("rolling stones' tracks have a world mesh of their own in their zone, so they fit however full the map's meshes are", () => {
     const track = stoneTrack(base);
     const stones = [object("enemy", [1, 2, 0], { enemy: "rolling_stone" }), object("enemy", [-1, 4, 0], { enemy: "rolling_stone" })];
