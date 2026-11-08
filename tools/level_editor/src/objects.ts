@@ -49,6 +49,35 @@ export const BADGER_COUNT = 2;
 export const BADGER_COUNT_MIN = 1;
 export const BADGER_COUNT_MAX = 6;
 
+// the enemy settings that are a number in a range, and for each: the enemies
+// that have it (named for messages), its range, whether it's whole, what it is
+// without one (left out of objects.json), and what it means
+export const NUMBER_SETTINGS = ["speed", "start", "count"] as const;
+export type NumberSetting = (typeof NUMBER_SETTINGS)[number];
+
+interface NumberSettingRule {
+  enemies: readonly EnemyType[];
+  enemiesNamed: string;
+  min: number;
+  max: number;
+  whole: boolean;
+  fallback: number;
+  meaning: string;
+}
+
+export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
+  speed: { enemies: PATH_ENEMIES, enemiesNamed: PATH_ENEMIES_NAMED, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: 1, meaning: "times the game's own pace" },
+  start: { enemies: ["rolling_stone"], enemiesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: 0, meaning: "how far along its track it starts" },
+  count: { enemies: ["badger"], enemiesNamed: "badgers", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: BADGER_COUNT, meaning: "how many badgers come out at once" },
+};
+
+// whether an object is an enemy with a number setting
+export const hasNumberSetting = (object: LevelObject, setting: NumberSetting) =>
+  object.kind === "enemy" && NUMBER_SETTING_RULES[setting].enemies.some((enemy) => enemy === object.enemy);
+
+// an object's number setting, or what it is without one
+export const numberSetting = (object: LevelObject, setting: NumberSetting) => object[setting] ?? NUMBER_SETTING_RULES[setting].fallback;
+
 export interface LevelObject {
   kind: Kind;
   at: Vec3;             // in blender: x, y, z (up), metres
@@ -113,34 +142,28 @@ function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumbe
   return { path: nodes.map(([x, y, z]): Vec3 => [x, y, z]) };
 }
 
-// a path enemy's speed, from its fields in objects.json (none if it hasn't one)
-function readSpeed(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "speed"> {
-  if (!("speed" in fields)) {
-    return {};
+// whether a value is a number a setting can be: in its range, and whole if it has to be
+function isInRange(value: unknown, rule: NumberSettingRule): value is number {
+  if (!isNumber(value) || value < rule.min || value > rule.max) {
+    return false;
   }
-  if (!isPathEnemy(enemy)) {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no speed (${PATH_ENEMIES_NAMED} do)`);
-  }
-  const speed = fields.speed;
-  if (!isNumber(speed) || speed < SPEED_MIN || speed > SPEED_MAX) {
-    throw new Error(`object ${objectNumber}: speed should be ${SPEED_MIN} to ${SPEED_MAX} (times the game's own pace)`);
-  }
-  return { speed };
+  return !rule.whole || Number.isInteger(value);
 }
 
-// how far along its track a rolling stone starts, from its fields in objects.json (none if it hasn't a start)
-function readStart(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "start"> {
-  if (!("start" in fields)) {
+// an enemy's number setting, from its fields in objects.json (none if it hasn't one)
+function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetting, enemy: EnemyType, objectNumber: number): Partial<LevelObject> {
+  if (!(setting in fields)) {
     return {};
   }
-  if (enemy !== "rolling_stone") {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no start (rolling stones do)`);
+  const rule = NUMBER_SETTING_RULES[setting];
+  if (!rule.enemies.includes(enemy)) {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no ${setting} (${rule.enemiesNamed} do)`);
   }
-  const start = fields.start;
-  if (!isNumber(start) || start < 0 || start > 1) {
-    throw new Error(`object ${objectNumber}: start should be 0 to 1 (how far along its track it starts)`);
+  const value = fields[setting];
+  if (!isInRange(value, rule)) {
+    throw new Error(`object ${objectNumber}: ${setting} should be ${rule.min} to ${rule.max} (${rule.meaning})`);
   }
-  return { start };
+  return { [setting]: value };
 }
 
 // whether a rolling stone rolls back towards its first end first, from its fields in objects.json
@@ -155,21 +178,6 @@ function readReverse(fields: Record<string, unknown>, enemy: EnemyType, objectNu
     throw new Error(`object ${objectNumber}: reverse should be true or false`);
   }
   return fields.reverse ? { reverse: true } : {};
-}
-
-// how many badgers come out at once, from a badger's fields in objects.json (none if it hasn't a count)
-function readCount(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "count"> {
-  if (!("count" in fields)) {
-    return {};
-  }
-  if (enemy !== "badger") {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no count (badgers do)`);
-  }
-  const count = fields.count;
-  if (!isWhole(count) || count < BADGER_COUNT_MIN || count > BADGER_COUNT_MAX) {
-    throw new Error(`object ${objectNumber}: count should be ${BADGER_COUNT_MIN} to ${BADGER_COUNT_MAX} (how many badgers come out at once)`);
-  }
-  return { count };
 }
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
@@ -247,10 +255,8 @@ export function parseObjects(text: string): LevelObject[] {
     if (kind === "enemy") {
       Object.assign(object, readEnemy(fields, objectNumber));
       Object.assign(object, readPath(fields, object.enemy!, objectNumber));
-      Object.assign(object, readSpeed(fields, object.enemy!, objectNumber));
-      Object.assign(object, readStart(fields, object.enemy!, objectNumber));
+      NUMBER_SETTINGS.forEach((setting) => Object.assign(object, readNumberSetting(fields, setting, object.enemy!, objectNumber)));
       Object.assign(object, readReverse(fields, object.enemy!, objectNumber));
-      Object.assign(object, readCount(fields, object.enemy!, objectNumber));
     }
 
     objects.push(object);
@@ -280,17 +286,14 @@ function formatObject(object: LevelObject): string {
     const nodes = object.path.map((node) => `[${node.map(roundToMillimetre).join(", ")}]`);
     parts.push(`"path": [${nodes.join(", ")}]`);
   }
-  if (object.speed !== undefined && object.speed !== 1) {
-    parts.push(`"speed": ${object.speed}`);
-  }
-  if (object.start !== undefined && object.start !== 0) {
-    parts.push(`"start": ${object.start}`);
+  for (const setting of NUMBER_SETTINGS) {
+    const value = object[setting];
+    if (value !== undefined && value !== NUMBER_SETTING_RULES[setting].fallback) {
+      parts.push(`"${setting}": ${value}`);
+    }
   }
   if (object.reverse) {
     parts.push(`"reverse": true`);
-  }
-  if (object.count !== undefined && object.count !== BADGER_COUNT) {
-    parts.push(`"count": ${object.count}`);
   }
   return `{${parts.join(", ")}}`;
 }
