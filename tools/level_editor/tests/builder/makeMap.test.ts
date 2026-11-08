@@ -492,6 +492,28 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasGreatGate)("monkeys, from the great gate", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const monkey = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "monkey", ...more });
+
+    test("a level with a monkey has the great gate's monkey code, model, animations and chatter", () => {
+      const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [monkey()], readOtherLevel });
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.monkey[0]]).toBe(stringToEid("MonkC"));
+      expect(["Mo1fG", "Mo1fV", "Mo2fV", "Mo3fV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      const sounds = level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
+      expect(["Mp1iA", "Mp2iA", "chmiA"].map(stringToEid).every((eid) => sounds.includes(eid))).toBe(true);
+    });
+
+    test("a level with a monkey and a native reads the great gate once, and has both", () => {
+      const read: number[] = [];
+      const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
+      const { level } = make(MAP_OBJ, { scale: 256, objects: [monkey(), object("enemy", [-1, 4, 0], { enemy: "native" })], readOtherLevel: readEach });
+      expect(read).toEqual([0x12]);
+      const { execMap } = level.nsd.ldat;
+      expect([execMap[ENEMY_ENTITIES.monkey[0]], execMap[ENEMY_ENTITIES.native[0]]]).toEqual([stringToEid("MonkC"), stringToEid("SheNC")]);
+    });
+  });
+
   describe.skipIf(!hasGreatGate)("natives, from the great gate", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
     const native = () => object("enemy", [1, 2, 0], { enemy: "native" });
