@@ -504,6 +504,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(["Mp1iA", "Mp2iA", "chmiA"].map(stringToEid).every((eid) => sounds.includes(eid))).toBe(true);
     });
 
+    test("a monkey walks the great gate's path's length by default (2400) across the map, its middle at its spot, in the great gate's steps (480)", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [monkey()], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.monkey);
+      expect(placed.path.length).toBe(6);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      placed.path.forEach(([, y, z]) => { expect(Math.abs(y - 128)).toBeLessThanOrEqual(8); expect(Math.abs(z - 1664)).toBeLessThanOrEqual(8); });
+      expect(Math.abs((placed.path[0][0] + placed.path[5][0]) / 2 - 1408)).toBeLessThanOrEqual(8);
+      placed.path.slice(1).forEach((point, index) => expect(Math.abs(Math.hypot(...point.map((value, axis) => value - placed.path[index][axis])) - 480)).toBeLessThanOrEqual(8));
+    });
+
     test("a level with a monkey and a native reads the great gate once, and has both", () => {
       const read: number[] = [];
       const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
