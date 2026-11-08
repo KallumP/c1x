@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { newObject } from "../../src/editor";
 import type { LevelObject, Vec3 } from "../../src/objects";
-import { dropToFloor, overlappingBoxes, triangleTouchesBox } from "../../src/overlaps";
+import { dropToFloor, floorAbove, overlappingBoxes, triangleTouchesBox } from "../../src/overlaps";
 
 const SCALE = 400; // 1 m boxes
 const box = (at: Vec3, extra: Partial<LevelObject> = {}): LevelObject => ({ ...newObject("basic", at), ...extra });
@@ -172,5 +172,28 @@ describe("dropToFloor", () => {
   test("is rounded to the millimetre", () => {
     const z = dropToFloor(box([0, 0, 1.2345]), SCALE, floor)!;
     expect(Math.round(z * 1000) / 1000).toBe(z);
+  });
+});
+
+describe("floorAbove", () => {
+  const floor: Tri[] = [[[-50, -50, 0], [50, -50, 0], [-50, 50, 0]], [[50, -50, 0], [50, 50, 0], [-50, 50, 0]]];
+  const step: Tri[] = [[[-1, -1, 1], [1, -1, 1], [-1, 1, 1]], [[1, -1, 1], [1, 1, 1], [-1, 1, 1]]];
+
+  test("is how far a point under the ground is below the floor's surface", () => {
+    expect(floorAbove([0, 0, -0.5], floor)).toBeCloseTo(0.5);
+  });
+
+  test("is the nearest floor above: a step's top over the floor", () => {
+    expect(floorAbove([0, 0, 0.25], [...floor, ...step])).toBeCloseTo(0.75);
+  });
+
+  test("is null for a point above the ground", () => {
+    expect(floorAbove([0, 0, 2], floor)).toBeNull();
+    expect(floorAbove([5, 5, 0.5], [...floor, ...step])).toBeNull();
+  });
+
+  test("is null under an overhang: the face above is the underside of something", () => {
+    const overhang: Tri[] = step.map(([a, b, c]) => [a, c, b]);
+    expect(floorAbove([0, 0, 0.5], overhang)).toBeNull();
   });
 });

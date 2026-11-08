@@ -11,16 +11,18 @@ export interface DragTarget {
 }
 
 export interface DragHandlers {
-  grab: (target: DragTarget) => void;           // pressed on an object or a node
-  begin: () => void;                            // it starts moving
-  move: (target: DragTarget, at: Vec3) => void; // it's moved to at
+  grab: (target: DragTarget) => void;                       // pressed on an object or a node
+  begin: () => void;                                        // it starts moving
+  move: (target: DragTarget, from: Vec3, to: Vec3) => void; // the pointer has moved over the floor from from (where the drag began) to to
 }
 
 // dragging an object, or a node of its path, across the floor: press on it,
-// move over the level, let go anywhere. the camera stays still while dragging
+// move over the level, let go anywhere. it moves as far as the pointer does
+// from where the drag began, so it doesn't jump to the pointer. the camera
+// stays still while dragging
 export function useDrag(orbitRef: RefObject<Orbit>, grid: number, handlers: DragHandlers) {
   const [dragging, setDragging] = useState<DragTarget | null>(null);
-  const hasMoved = useRef(false); // whether this drag has moved the object yet, so begin runs once
+  const from = useRef<Vec3 | null>(null); // where the pointer first met the floor in this drag, so begin runs once
 
   useEffect(() => {
     if (dragging === null) {
@@ -41,7 +43,7 @@ export function useDrag(orbitRef: RefObject<Orbit>, grid: number, handlers: Drag
     if (orbitRef.current) {
       orbitRef.current.enabled = false;
     }
-    hasMoved.current = false;
+    from.current = null;
     handlers.grab(target);
     setDragging(target);
   };
@@ -54,11 +56,11 @@ export function useDrag(orbitRef: RefObject<Orbit>, grid: number, handlers: Drag
     if (!at) {
       return;
     }
-    if (!hasMoved.current) {
+    if (from.current === null) {
       handlers.begin();
-      hasMoved.current = true;
+      from.current = at;
     }
-    handlers.move(dragging, at);
+    handlers.move(dragging, from.current, at);
   };
 
   return {

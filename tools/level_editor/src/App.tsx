@@ -6,7 +6,8 @@ import ObjectMarkers from "./components/ObjectMarkers";
 import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
 import Scene, { type Orbit } from "./components/Scene";
-import { draggedTo, newObject, type Tool } from "./editor";
+import { draggedBy, newObject, type Tool } from "./editor";
+import type { LevelObject } from "./objects";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
 import { useLevelActions } from "./hooks/useLevelActions";
@@ -38,11 +39,15 @@ export default function App() {
   const [grid, setGrid] = useState(0.5);
   const orbitRef = useRef<Orbit>(null);
   const turn = levelCfg.cfg.turn;
+  const dragged = useRef<LevelObject | null>(null); // the object being dragged, as it was when grabbed
   const drag = useDrag(orbitRef, grid, {
-    grab: ({ index, node }) => dispatch(node === null ? { type: "select", index } : { type: "selectNode", index, node }),
+    grab: ({ index, node }) => {
+      dragged.current = state.objects[index];
+      dispatch(node === null ? { type: "select", index } : { type: "selectNode", index, node });
+    },
     begin: () => dispatch({ type: "checkpoint" }),
-    move: ({ index, node }, at) => {
-      const changes = draggedTo(state.objects[index], node, at, turn, scale);
+    move: ({ index, node }, from, to) => {
+      const changes = draggedBy(dragged.current ?? state.objects[index], node, from, to, turn, scale);
       dispatch({ type: "update", index, changes, record: false });
     },
   });
@@ -166,6 +171,7 @@ export default function App() {
         selectedNode={state.selectedNode}
         warnings={warnings}
         pathWarnings={pathWarnings}
+        triangles={triangles}
         onSelect={drag.start}
         onSelectNode={drag.startNode}
       />

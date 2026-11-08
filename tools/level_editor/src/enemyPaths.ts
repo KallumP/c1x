@@ -3,7 +3,7 @@
 import { BADGER_RUN, cameraFacing, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
 import { PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
-export const DEFAULT_PATH_NODES = 5;
+export const DEFAULT_PATH_NODES = 3;
 
 const plus = (first: Vec3, second: Vec3): Vec3 => [first[0] + second[0], first[1] + second[1], first[2] + second[2]];
 const scaled = (vector: Vec3, factor: number): Vec3 => [vector[0] * factor, vector[1] * factor, vector[2] * factor];
@@ -90,6 +90,26 @@ export function nodesUnderEnds(positions: Vec3[], reach: number): boolean[] {
   const ends = [positions[0], positions[positions.length - 1]];
   const flatDistance = (first: Vec3, second: Vec3) => Math.hypot(first[0] - second[0], first[1] - second[1]);
   return positions.map((position) => ends.some((end) => flatDistance(position, end) <= reach));
+}
+
+// how high a node's handle floats above it (metres), so it can be seen and
+// clicked: clear of the enemy for a node under one at an end of its path
+// (enemyHeight), up to the floor for a node under the ground (depth, from
+// floorAbove), the higher of the two for both, and not at all otherwise
+function handleLift(underEnd: boolean, depth: number | null, enemyHeight: number): number {
+  let lift = 0;
+  if (underEnd) {
+    lift = enemyHeight;
+  }
+  if (depth !== null) {
+    lift = Math.max(lift, depth);
+  }
+  return lift;
+}
+
+// each of a path's nodes' handle lifts (see handleLift)
+export function handleLifts(underEnds: boolean[], depths: (number | null)[], enemyHeight: number): number[] {
+  return underEnds.map((underEnd, node) => handleLift(underEnd, depths[node], enemyHeight));
 }
 
 // an enemy's path turned round (its nodes reversed, its default's if it has

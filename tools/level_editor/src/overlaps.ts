@@ -139,9 +139,8 @@ function trianglesNear(grid: TriangleGrid, bounds: Bounds): BoundedTriangle[] {
   return [...near];
 }
 
-// whether point is inside a solid: the first face straight above it is seen from behind
-// (faces point out of the solids they bound, as blender exports them)
-function insideSolid(point: Vec3, grid: TriangleGrid): boolean {
+// the first face straight above point, and how far up it is (null if there's none)
+function nearestAbove(point: Vec3, grid: TriangleGrid): UpwardHit | null {
   let nearest: UpwardHit | null = null;
   for (const { triangle } of trianglesNear(grid, { min: point, max: point })) {
     const hit = aboveHit(point, triangle);
@@ -149,7 +148,25 @@ function insideSolid(point: Vec3, grid: TriangleGrid): boolean {
       nearest = hit;
     }
   }
+  return nearest;
+}
+
+// whether point is inside a solid: the first face straight above it is seen from behind
+// (faces point out of the solids they bound, as blender exports them)
+function insideSolid(point: Vec3, grid: TriangleGrid): boolean {
+  const nearest = nearestAbove(point, grid);
   return nearest !== null && nearest.facesUp;
+}
+
+// how far a point under the ground is below the floor's surface: the first face
+// straight above it, if that faces up (so the point is inside the ground). null
+// if the point isn't under the ground
+export function floorAbove(point: Vec3, triangles: Triangle[]): number | null {
+  const nearest = nearestAbove(point, triangleGrid(triangles));
+  if (nearest === null || !nearest.facesUp) {
+    return null;
+  }
+  return nearest.height;
 }
 
 const middle = (bounds: Bounds): Vec3 => AXIS_INDICES.map((axis) => (bounds.min[axis] + bounds.max[axis]) / 2) as Vec3;

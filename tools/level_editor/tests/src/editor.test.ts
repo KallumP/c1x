@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { draggedTo, editorReducer, emptyEditor, newObject, type EditorAction, type EditorState } from "../../src/editor";
+import { draggedBy, draggedTo, editorReducer, emptyEditor, newObject, type EditorAction, type EditorState } from "../../src/editor";
 import type { LevelObject } from "../../src/objects";
 
 const box = (x: number): LevelObject => newObject("basic", [x, 0, 0]);
@@ -186,6 +186,19 @@ describe("dragging", () => {
   test("a path's node is moved to where it's dragged, the enemy staying put", () => {
     const changes = draggedTo({ ...crab, path: [[0, 0, 0], [1, 0, 0]] }, 1, [4, 5, 3], 0, 400);
     expect(changes).toEqual({ path: [[0, 0, 0], [3, 3, 0]] });
+  });
+
+  test("an object is moved by how far the pointer has moved since the drag began, from where it was then", () => {
+    expect(draggedBy(crab, null, [5, 5, 0], [6, 7, 0.5], 0, 400)).toEqual({ at: [2, 4, 3.5] });
+  });
+
+  test("so it doesn't jump to the pointer as the drag begins, wherever on it it was grabbed", () => {
+    expect(draggedBy(crab, null, [9, 9, 1], [9, 9, 1], 0, 400)).toEqual({ at: [1, 2, 3] });
+  });
+
+  test("a path's node is moved by how far the pointer has moved, from where it was then", () => {
+    const changes = draggedBy({ ...crab, path: [[0, 0, 0], [1, 0, 0]] }, 1, [10, 10, 0], [11, 12, 0], 0, 400);
+    expect(changes).toEqual({ path: [[0, 0, 0], [2, 2, 0]] });
   });
 
   test("a node's drag is undone in one go, back to the path before it", () => {
