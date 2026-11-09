@@ -60,45 +60,31 @@ describe("a cut level as a blender scene", () => {
     expect(upOf(face)).toBeGreaterThan(0.5);
   });
 
-  test("a wall faces the route (the side crash and the camera are on), whichever way it's wound", () => {
-    // walls along the route (game z), at x 1600 and -1600; the route runs along x 0
-    const wall = (x: number, corners: Vec3[]) => cutLevelScene(levelOf(triangleWorld(corners.map(([dx, y, z]) => [x + dx, y, z] as Vec3))), OPTIONS).objects[0].faces;
-    const towards = (x: number) => wall(x, [[0, 0, 0], [0, 400, 0], [0, 0, 400]]).concat(wall(x, [[0, 0, 0], [0, 0, 400], [0, 400, 0]]));
-    const acrossOf = ({ corners: [a, b, c] }: { corners: Vec3[] }) => cross(subtract(b, a), subtract(c, a))[0];
-    expect(towards(1600).every((face) => acrossOf(face) < 0)).toBe(true); // right of the route, facing -x
-    expect(towards(-1600).every((face) => acrossOf(face) > 0)).toBe(true);
-    expect(towards(1600).length).toBe(2); // one face each, not two
+  const normalOf = ({ corners: [a, b, c] }: { corners: Vec3[] }) => cross(subtract(b, a), subtract(c, a));
+  const wallFaces = (corners: Vec3[]) => cutLevelScene(levelOf(triangleWorld(corners)), OPTIONS).objects[0].faces;
+  const bothWays = (corners: Vec3[]) => wallFaces(corners).concat(wallFaces([corners[0], corners[2], corners[1]]));
+
+  test("a wall across the route faces back along it (blender -y), whichever way it's wound: the camera looks along the route, and the builder hides walls facing away from it", () => {
+    // a wall across the route (game x, up) at game z -2000, ahead of the camera
+    const faces = bothWays([[0, 0, -2000], [400, 0, -2000], [0, 400, -2000]]);
+    expect(faces.every((face) => normalOf(face)[1] < 0)).toBe(true);
+    expect(faces.length).toBe(2); // one face each, not two
   });
 
-  test("a wall faces away from the cut level's collision behind it (the solid side), even with the route on that side", () => {
-    // a wall at game x 1600 along z, solid behind it to +x; the route at x 2400, beyond the solid
-    const world = triangleWorld([[1600, 0, 0], [1600, 400, 0], [1600, 0, 400]]);
-    const solid = { low: [1600, -400, -400] as Vec3, high: [2400, 800, 800] as Vec3, leaf: 1 };
-    const level: CutLevel = { worlds: [world], texturePages: new Map([[PAGE, page]]), entities: [], solids: [solid] };
-    const [face] = cutLevelScene(level, { ...OPTIONS, route: [[6, 10, 0], [6, -10, 0]] }).objects[0].faces;
-    const [a, b, c] = face.corners;
-    expect(cross(subtract(b, a), subtract(c, a))[0]).toBeLessThan(0); // facing -x, away from the solid
+  test("a sloping wall a little across the route (a mound's foot) faces back along it too, whatever the collision or the route beside it say", () => {
+    // a mound's foot facing mostly along the route and out to +x, over the acid's solid ground
+    const acidGround = { low: [-2000, -2000, -4000] as Vec3, high: [2000, 250, 0] as Vec3, leaf: 1 };
+    const level = (corners: Vec3[]): CutLevel => ({ worlds: [triangleWorld(corners)], texturePages: new Map([[PAGE, page]]), entities: [], solids: [acidGround] });
+    const corners: Vec3[] = [[0, 200, -2000], [400, 200, -2200], [0, 600, -2100]];
+    const faces = [corners, [corners[0], corners[2], corners[1]]].map((wound) => cutLevelScene(level(wound), { ...OPTIONS, route: [[6, 10, 0], [6, -10, 0]] }).objects[0].faces[0]);
+    expect(faces.every((face) => normalOf(face)[1] < 0)).toBe(true);
   });
 
-  test("a wall with the collision reaching a little in front of it (a margin) still faces out: the side solid deeper in is behind it", () => {
-    // a wall at game x 1600 facing -x, the rock solid behind it to +x, and a margin 120 out in front of it
-    const world = triangleWorld([[1600, 0, 0], [1600, 0, 400], [1600, 400, 0]]);
-    const rock = { low: [1600, -400, -400] as Vec3, high: [3200, 800, 800] as Vec3, leaf: 1 };
-    const margin = { low: [1480, -400, -400] as Vec3, high: [1600, 800, 800] as Vec3, leaf: 1 };
-    const level: CutLevel = { worlds: [world], texturePages: new Map([[PAGE, page]]), entities: [], solids: [rock, margin] };
-    const [face] = cutLevelScene(level, { ...OPTIONS, route: [[10, 10, 0], [10, -10, 0]] }).objects[0].faces; // the route beyond the rock
-    const [a, b, c] = face.corners;
-    expect(cross(subtract(b, a), subtract(c, a))[0]).toBeLessThan(0); // facing -x, out of the rock
-  });
-
-  test("a sloping wall over solid ground (the acid's) that it isn't part of still faces the route: what's below it doesn't count", () => {
-    // a mound's foot at game x 1375 to 1600, sloping, wound to face out (-x) and down, over the acid's ground (solid up to 250)
-    const world = triangleWorld([[1600, 200, 0], [1375, 600, 0], [1600, 200, 400]]);
-    const acidGround = { low: [0, -2000, -400] as Vec3, high: [1600, 250, 800] as Vec3, leaf: 1 };
-    const level: CutLevel = { worlds: [world], texturePages: new Map([[PAGE, page]]), entities: [], solids: [acidGround] };
-    const [face] = cutLevelScene(level, OPTIONS).objects[0].faces; // the route along blender x 0: -x of it
-    const [a, b, c] = face.corners;
-    expect(cross(subtract(b, a), subtract(c, a))[0]).toBeLessThan(0); // facing -x, towards the route
+  test("a wall beside the route (facing across it) is left as it's wound: the builder never hides those", () => {
+    const corners: Vec3[] = [[1600, 0, 0], [1600, 400, 0], [1600, 0, 400]];
+    const [face] = wallFaces(corners);
+    const [reversedFace] = wallFaces([corners[0], corners[2], corners[1]]);
+    expect(Math.sign(normalOf(face)[0])).toBe(-Math.sign(normalOf(reversedFace)[0]));
   });
 
   test("each texture region is a material with its image, and a triangle's UVs are its layout's corners (v up), turned round with it", () => {
