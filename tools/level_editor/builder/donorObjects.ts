@@ -171,7 +171,22 @@ const NATIVE_CODE_PATCHES: CodePatch[] = [
   { at: 0x2d, was: 0x8227c003, now: 0x82094403 }, // where it walks back to: past setting its last node
 ];
 
-const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = { native: NATIVE_CODE_PATCHES };
+// up the creek's green river plant (RivOC subtype 7), landed on, bites once
+// crash isn't going up and has come back down within 400 of its height. off
+// it onto anything higher (such as a box), it wouldn't bite until he came back
+// down, so that check always passes: it bites 20 frames after he landed on it,
+// once he isn't going up, wherever he is. RivOC is all three river enemies'
+// code, so each has the same patch (their copies of it have to be the same)
+const RIVER_CODE_PATCHES: CodePatch[] = [
+  { at: 0x47, was: 0x09e1fd49, now: 0x06e1f801 }, // SLT pop(), player[0x84] becomes ORL pop(), 0x100: always true
+];
+
+const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = {
+  native: NATIVE_CODE_PATCHES,
+  blue_river_plant: RIVER_CODE_PATCHES,
+  green_river_plant: RIVER_CODE_PATCHES,
+  fish: RIVER_CODE_PATCHES,
+};
 
 // instructions with patches made; an error if one isn't what the patch expects
 function patchedInstructions(type: EnemyType, instructions: Buffer, patches: CodePatch[]): Buffer {
