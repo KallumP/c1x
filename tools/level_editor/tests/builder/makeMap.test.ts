@@ -565,6 +565,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect([initFlagA({}), initFlagA({ count: 1 }), initFlagA({ count: 6 })]).toEqual([4, 1, 6]);
     });
 
+    test("a leader bats roost is at its spot, raised, as sunset vista's first, its bats' flight its path: 13 points, 6400 back along the game's x, down 1700 at most", () => {
+      const placed = enemies(make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats" })], readOtherLevel }).zone)
+        .find(({ type }) => type.join() === ENEMY_ENTITIES.leader_bats.join())!;
+      expect(placed.path.length).toBe(13);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone, and raise 3 is 768 more at scale 256
+      [1408, 128 + 768, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+      const [first, last] = [placed.path[0], placed.path.at(-1)!];
+      expect(last.map((value, axis) => value - first[axis])).toEqual([-6400, 0, 0]);
+      expect(Math.min(...placed.path.map(([, y]) => y)) - first[1]).toBe(-1700);
+    });
+
     test.skipIf(!hasFumbling)("a level with bats and spiders has both codes, within the texture pages the game holds", () => {
       const objects = [bat(), bat({ at: [-1, 4, 0] }), object("enemy", [1, 6, 0], { enemy: "walking_spider" })];
       const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel });
