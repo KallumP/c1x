@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
+import { FISH_LEAP } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
@@ -71,6 +72,7 @@ const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
 const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0x12)
 const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhere (0x14)
 const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the dark (0x2a)
+const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x18)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -448,6 +450,67 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a turtle, with no other levels to take it from, is an error saying so", () => {
       expect(() => withTurtle({ readOtherLevel: undefined })).toThrow(/turtle/);
+    });
+  });
+
+  describe.skipIf(!hasUpTheCreek)("river plants and fish, from up the creek", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const river = (type: "blue_river_plant" | "green_river_plant" | "fish", more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: type, ...more });
+
+    test("a level with a river plant has up the creek's river code (and the water it spawns), its models, animations and sounds", () => {
+      const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [river("blue_river_plant")], readOtherLevel });
+      const { execMap } = level.nsd.ldat;
+      expect([execMap[ENEMY_ENTITIES.blue_river_plant[0]], execMap[55]]).toEqual([stringToEid("RivOC"), stringToEid("WateC")]);
+      expect(["RV1fG", "Rv1fG", "RF1fG", "RV1fV", "Rv1fV", "RF1fV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      const sounds = level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
+      expect(["FJufA", "FSpfA"].map(stringToEid).every((eid) => sounds.includes(eid))).toBe(true);
+    });
+
+    test.each(["blue_river_plant", "green_river_plant"] as const)("a %s stands at its spot, as its entity, a single point there", (type) => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [river(type)], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES[type]);
+      expect(placed.path.length).toBe(1);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+    });
+
+    test("a fish leaps from its spot as up the creek's do: up, 1600 across the map in an arc 2172 high, and down", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [river("fish")], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.fish);
+      expect(placed.path.length).toBe(14);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+      const [first, last] = [placed.path[0], placed.path.at(-1)!];
+      expect(last.map((value, axis) => value - first[axis])).toEqual([1600, 0, 0]);
+      expect(Math.max(...placed.path.map(([, y]) => y)) - first[1]).toBe(2172);
+    });
+
+    test("a reversed fish leaps the other way across the map", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [river("fish", { reverse: true })], readOtherLevel }).zone);
+      const [first, last] = [placed.path[0], placed.path.at(-1)!];
+      expect(last.map((value, axis) => value - first[axis])).toEqual([-1600, 0, 0]);
+    });
+
+    test("the editor draws a fish's leap as up the creek's (FISH_LEAP, across and up)", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [river("fish")], readOtherLevel }).zone);
+      const [x0, y0] = placed.path[0];
+      expect(placed.path.map(([x, y]) => [x - x0, y - y0])).toEqual(FISH_LEAP);
+    });
+
+    test("a green river plant bites once crash has landed on it and gone up, at any height: its check that he's come back down within 400 of it (0x47) always passes", () => {
+      const { entries } = make(MAP_OBJ, { scale: 256, objects: [river("green_river_plant")], readOtherLevel });
+      const code = entries.get(stringToEid("RivOC"))!.items[1];
+      expect(code.readUInt32LE(0x46 * 4)).toBe(0x0000fe09); // ADD ireg[0x3c], obj[0x84]: its height, and 400 more
+      expect(code.readUInt32LE(0x47 * 4)).toBe(0x06e1f801); // ORL pop(), 0x100: true, in place of SLT pop(), player[0x84]
+    });
+
+    test("a level with both river plants and a fish reads up the creek once, and has its river code", () => {
+      const read: number[] = [];
+      const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
+      const objects = [river("blue_river_plant"), river("green_river_plant", { at: [-1, 4, 0] }), river("fish", { at: [1, 6, 0] })];
+      const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel: readEach });
+      expect(read).toEqual([0x18]);
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.fish[0]]).toBe(stringToEid("RivOC"));
     });
   });
 

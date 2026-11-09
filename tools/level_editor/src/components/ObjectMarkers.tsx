@@ -1,7 +1,7 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
@@ -26,6 +26,11 @@ const walkerSize = (parts: ShapePart[]) => {
   return { height: max[1], reach: Math.max(-min[0], max[0], -min[2], max[2]) };
 };
 const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
+
+// the enemies that stay at their spot, drawn there
+const SPOT_ENEMIES = ["plant", "blue_river_plant", "green_river_plant", "spider"] as const;
+type SpotEnemy = (typeof SPOT_ENEMIES)[number];
+const isSpotEnemy = (enemy: string | undefined): enemy is SpotEnemy => SPOT_ENEMIES.some((spotEnemy) => spotEnemy === enemy);
 
 // where an object's base is in the viewport, raised as it is in the game
 function base(object: LevelObject): Vec3 {
@@ -145,8 +150,23 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // an enemy that stays where it's placed, facing the player: a plant, or a spider hanging there
-  const renderAtSpot = (object: LevelObject, index: number, enemy: "plant" | "spider") => renderShapeModel(ENEMY_SHAPES[enemy], base(object), index);
+  // an enemy that stays where it's placed, facing the player: a plant, a river plant, or a spider hanging there
+  const renderAtSpot = (object: LevelObject, index: number, enemy: SpotEnemy) => renderShapeModel(ENEMY_SHAPES[enemy], base(object), index);
+
+  // a fish: at its spot, where it leaps from, facing the way it leaps (across the
+  // map, or back reversed), with the line of its leap, and faded where it lands
+  const renderFish = (object: LevelObject, index: number) => {
+    const leap = fishLeap(object.at, object.raise, turn, scale, object.reverse === true);
+    const [start, end] = [leap[0], leap[leap.length - 1]];
+    const facing = facingFrom(start, end, turn);
+    return (
+      <>
+        {renderShapeModel(ENEMY_SHAPES.fish, blenderToView(start), index, 0, facing)}
+        {renderShapeModel(ENEMY_SHAPES.fish, blenderToView(end), index, 1, facing, FAR_END_OPACITY)}
+        <Line points={leap.map(blenderToView)} color={ENEMY_COLOURS.fish} lineWidth={2} />
+      </>
+    );
+  };
 
   // the rolling stone: a wheel where it starts along its track, turned to roll across the map as the game rolls it
   const renderStone = (object: LevelObject, index: number) => {
@@ -276,8 +296,11 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     if (isPathEnemy(object.enemy)) {
       return renderPathWalker(object, index);
     }
-    if (object.enemy === "plant" || object.enemy === "spider") {
+    if (isSpotEnemy(object.enemy)) {
       return renderAtSpot(object, index, object.enemy);
+    }
+    if (object.enemy === "fish") {
+      return renderFish(object, index);
     }
     return (
       <>

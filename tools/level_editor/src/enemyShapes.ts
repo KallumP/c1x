@@ -12,6 +12,7 @@ export type ShapePart = Primitive & {
   at: Vec3;
   turn?: Vec3;    // euler angles, in radians
   stretch?: Vec3; // scale along each of the part's own axes
+  turnOrder?: "XYZ" | "YXZ"; // the order turn's angles apply in (three's Euler order): XYZ unless given
   colour: string;
   name?: string;
 };
@@ -26,6 +27,9 @@ const WARTHOG_COLOURS = { hide: "#7a4a32", mane: "#3a2a20", snout: "#b07a64", tu
 const MONKEY_COLOURS = { fur: "#6b4226", face: "#d9b48a", eye: "#1a1a1a" };
 const SPIDER_COLOURS = { body: "#3b2a4a", leg: "#2a1d36", eye: "#e8d44d", thread: "#e6e6e6" };
 const BADGER_COLOURS = { fur: "#1f1d24", stripe: "#e4dcc4", nose: "#3a3238", eye: "#f4f1e0", pupil: "#1a1a1a" };
+const RIVER_PLANT_COLOURS = { jaw: "#b0233a", tooth: "#f4f1e0" };
+const RIVER_PLANT_LEAVES = { blue: "#4a6478", green: "#2f7d32" };
+const FISH_COLOURS = { body: "#23306e", fin: "#e08a2a", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
 export const ball = (radius: number, at: Vec3, colour: string, extra: Partial<ShapePart> = {}): ShapePart =>
@@ -84,6 +88,100 @@ function plant(): ShapePart[] {
     ...plantLeaves(),
     rod(26, 38, 340, [0, 190, 0], PLANT_COLOURS.stem),
     ...plantHead(),
+  ];
+}
+
+// a part turned about the plant's middle (y) by angle, from facing +z: its own
+// turn first (such as a petal's tip up), then this one (Euler order YXZ)
+function turnedAbout(part: ShapePart, angle: number): ShapePart {
+  const [x, y, z] = part.at;
+  const [turnX, turnY, turnZ] = part.turn ?? [0, 0, 0];
+  const at: Vec3 = [x * Math.cos(angle) + z * Math.sin(angle), y, z * Math.cos(angle) - x * Math.sin(angle)];
+  return { ...part, at, turn: [turnX, turnY + angle, turnZ], turnOrder: "YXZ" };
+}
+
+// a part tipped up about a level line across the plant (along x) at height
+// and depth pivot, so what's further along +z rises by angle
+function tippedUp(part: ShapePart, angle: number, [pivotY, pivotZ]: [number, number]): ShapePart {
+  const [x, y, z] = part.at;
+  const [up, along] = [y - pivotY, z - pivotZ];
+  const [turnX, turnY, turnZ] = part.turn ?? [0, 0, 0];
+  const at: Vec3 = [x, pivotY + up * Math.cos(angle) + along * Math.sin(angle), pivotZ + along * Math.cos(angle) - up * Math.sin(angle)];
+  return { ...part, at, turn: [turnX - angle, turnY, turnZ] };
+}
+
+// how far a river plant's petals rise from the floor, in radians: the two
+// towards the player lie open, almost flat; the one behind rears up, as the game shows them
+const OPEN_PETAL_TILT = 0.12;
+const REARING_PETAL_TILT = 0.3;
+
+const PETAL_LENGTH = 370; // half a petal's length, along it
+const PETAL_WIDTH = 170;  // half its width
+const PETAL_MIDDLE = 550; // how far its middle is out from the plant's
+
+// the teeth standing round a petal's rim, pointing up out of it
+function petalTeeth(): ShapePart[] {
+  const alongs = [-0.75, -0.45, -0.15, 0.15, 0.45, 0.75];
+  return alongs.flatMap((along) => [-1, 1].map((side) => {
+    const across = side * PETAL_WIDTH * 0.85 * Math.sqrt(1 - along * along);
+    return rod(0, 14, 60, [across, 130, PETAL_MIDDLE + along * PETAL_LENGTH], RIVER_PLANT_COLOURS.tooth);
+  }));
+}
+
+// a river plant's petal pointing along +z: a low red jaw, open, its teeth
+// standing round its rim, tipped up from the plant's middle by tilt
+function riverPlantPetal(tilt: number): ShapePart[] {
+  const petal = [
+    ball(1, [0, 70, PETAL_MIDDLE], RIVER_PLANT_COLOURS.jaw, { name: "jaw", stretch: [PETAL_WIDTH, 70, PETAL_LENGTH] }),
+    ...petalTeeth(),
+  ];
+  return petal.map((part) => tippedUp(part, tilt, [70, 130]));
+}
+
+// a green bit pointing along +z, lying on the floor and curling up at its end
+function riverPlantLeaf(leafColour: string): ShapePart[] {
+  return [
+    ball(1, [0, 40, 340], leafColour, { name: "leaf", stretch: [60, 20, 260], turn: [-0.2, 0, 0] }),
+    ball(1, [0, 220, 640], leafColour, { name: "leaf", stretch: [55, 18, 200], turn: [-1.0, 0, 0] }),
+  ];
+}
+
+const THIRD_TURN = (Math.PI * 2) / 3;
+
+// up the creek's biting plant: three red petals with teeth, a third of a turn
+// apart round a red bud in its middle (two towards the player lying open, the
+// one behind rearing up), with leaves, blue or green, between them
+function riverPlant(leafColour: string): ShapePart[] {
+  const petals = [
+    { angle: Math.PI, tilt: REARING_PETAL_TILT },
+    { angle: Math.PI + THIRD_TURN, tilt: OPEN_PETAL_TILT },
+    { angle: Math.PI - THIRD_TURN, tilt: OPEN_PETAL_TILT },
+  ];
+  const petalAngles = petals.map(({ angle }) => angle);
+  return [
+    ...petals.flatMap(({ angle, tilt }) => riverPlantPetal(tilt).map((part) => turnedAbout(part, angle))),
+    ...petalAngles.flatMap((angle) => riverPlantLeaf(leafColour).map((part) => turnedAbout(part, angle + Math.PI))),
+    ball(1, [0, 150, 0], RIVER_PLANT_COLOURS.jaw, { name: "bud", stretch: [150, 150, 150] }),
+  ];
+}
+
+// one side of the fish: a fin out to the side and an eye
+function fishSide(): ShapePart[] {
+  return [
+    ball(1, [140, 280, 20], FISH_COLOURS.fin, { stretch: [80, 20, 60] }),
+    ball(25, [80, 380, 150], FISH_COLOURS.eye, { name: "eye" }),
+    ball(10, [95, 382, 170], FISH_COLOURS.pupil),
+  ];
+}
+
+// up the creek's fish: a tall dark body, orange fins and tail, facing +z
+function fish(): ShapePart[] {
+  return [
+    ...bothSides(fishSide()),
+    ball(1, [0, 290, 0], FISH_COLOURS.body, { stretch: [110, 200, 190] }),
+    ball(1, [0, 300, -200], FISH_COLOURS.fin, { stretch: [20, 110, 60] }),
+    ball(1, [0, 500, -20], FISH_COLOURS.fin, { stretch: [15, 80, 90] }),
+    ball(1, [0, 90, -40], FISH_COLOURS.fin, { stretch: [15, 60, 60] }),
   ];
 }
 
@@ -316,7 +414,7 @@ function primitiveGeometry(part: ShapePart): BufferGeometry {
 }
 
 function partMatrix(part: ShapePart): Matrix4 {
-  const rotation = new Quaternion().setFromEuler(new Euler(...(part.turn ?? [0, 0, 0])));
+  const rotation = new Quaternion().setFromEuler(new Euler(...(part.turn ?? [0, 0, 0]), part.turnOrder));
   return new Matrix4().compose(new Vector3(...part.at), rotation, new Vector3(...(part.stretch ?? [1, 1, 1])));
 }
 
@@ -365,11 +463,24 @@ export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 // (Na1iG, its first frame in Na1iV), jungle rollers' badger (Pi10G, its first
 // frame in Pi10V), and road to nowhere's warthog (WartG, its first frame in
 // WarHV), fumbling in the dark's walking spider (Sp1sG, its first frame in
-// Sp1sV), and the great gate's monkey (Mo1fG, its first frame in Mo3fV), each
-// vertex times 4, times its tgeo's scale / 4096
-const GAME_HEIGHTS: Record<StandingEnemy, number> = { plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782 };
+// Sp1sV), the great gate's monkey (Mo1fG, its first frame in Mo3fV), and up the
+// creek's river plants (RV1fG and Rv1fG, their first frames in RV1fV and Rv1fV)
+// and fish (RF1fG, its first frame in RF1fV), each vertex times 4, times its
+// tgeo's scale / 4096
+// a river plant's height: its first frame in the game (RV1fV) rears its back
+// petal up 602, but the editor's lies lower, so it's as tall as makes it as wide
+// as the game's (about 1570 across)
+const RIVER_PLANT_HEIGHT = 400;
 
-const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = { plant, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey };
+const GAME_HEIGHTS: Record<StandingEnemy, number> = {
+  plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
+  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581,
+};
+
+const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
+  plant, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
+  blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
+};
 
 // each standing enemy's shape, on the floor, as tall as the game's model
 const STANDING_SHAPES = Object.fromEntries(Object.entries(SHAPE_PARTS).map(([enemy, parts]) =>

@@ -19,6 +19,7 @@ const N_SANITY_BEACH: DonorLevel = { lid: 0x9, name: "N. Sanity Beach", file: "s
 const THE_GREAT_GATE: DonorLevel = { lid: 0x12, name: "The Great Gate", file: "s0000012" };
 const ROAD_TO_NOWHERE: DonorLevel = { lid: 0x14, name: "Road to Nowhere", file: "s0000014" };
 const FUMBLING_IN_THE_DARK: DonorLevel = { lid: 0x2a, name: "Fumbling in the Dark", file: "s000002a" };
+const UP_THE_CREEK: DonorLevel = { lid: 0x18, name: "Up the Creek", file: "s0000018" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -29,6 +30,9 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   warthog: ROAD_TO_NOWHERE,
   spider: FUMBLING_IN_THE_DARK,
   walking_spider: FUMBLING_IN_THE_DARK,
+  blue_river_plant: UP_THE_CREEK,
+  green_river_plant: UP_THE_CREEK,
+  fish: UP_THE_CREEK,
 };
 
 export interface DonorObject {
@@ -167,7 +171,22 @@ const NATIVE_CODE_PATCHES: CodePatch[] = [
   { at: 0x2d, was: 0x8227c003, now: 0x82094403 }, // where it walks back to: past setting its last node
 ];
 
-const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = { native: NATIVE_CODE_PATCHES };
+// up the creek's green river plant (RivOC subtype 7), landed on, bites once
+// crash isn't going up and has come back down within 400 of its height. off
+// it onto anything higher (such as a box), it wouldn't bite until he came back
+// down, so that check always passes: it bites 20 frames after he landed on it,
+// once he isn't going up, wherever he is. RivOC is all three river enemies'
+// code, so each has the same patch (their copies of it have to be the same)
+const RIVER_CODE_PATCHES: CodePatch[] = [
+  { at: 0x47, was: 0x09e1fd49, now: 0x06e1f801 }, // SLT pop(), player[0x84] becomes ORL pop(), 0x100: always true
+];
+
+const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = {
+  native: NATIVE_CODE_PATCHES,
+  blue_river_plant: RIVER_CODE_PATCHES,
+  green_river_plant: RIVER_CODE_PATCHES,
+  fish: RIVER_CODE_PATCHES,
+};
 
 // instructions with patches made; an error if one isn't what the patch expects
 function patchedInstructions(type: EnemyType, instructions: Buffer, patches: CodePatch[]): Buffer {

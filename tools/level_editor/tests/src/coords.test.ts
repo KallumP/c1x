@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -68,6 +68,29 @@ describe("rolling stones", () => {
     expect(path[10][0]).toBeCloseTo(1 - 1800 / 400);
     expect(path[0][2]).toBeCloseTo(3 + radius + 472 / 400);
     expect(path.every(([, y]) => y === 2)).toBe(true);
+  });
+
+  test("a fish leaps from its spot as up the creek's do: 14 points, 1600 across the map, 2172 at its highest (game units)", () => {
+    expect(FISH_LEAP.length).toBe(14);
+    const path = fishLeap([1, 2, 3], 0, 0, 400);
+    expect(path[0]).toEqual([1, 2, 3]);
+    expect(path[13][0]).toBeCloseTo(1 + 1600 / 400);
+    expect(path[13][2]).toBeCloseTo(3);
+    expect(Math.max(...path.map(([, , z]) => z))).toBeCloseTo(3 + 2172 / 400);
+    expect(path.every(([, y]) => y === 2)).toBe(true);
+  });
+
+  test("a fish's leap turns with the level, across the map as a stone rolls, and lifts with raise", () => {
+    const path = fishLeap([0, 0, 0], 1, 90, 400);
+    expect(path[13][0]).toBeCloseTo(0);
+    expect(path[13][1]).toBeCloseTo(-1600 / 400);
+    expect(path[0][2]).toBeCloseTo(1);
+  });
+
+  test("a reversed fish leaps the other way across the map", () => {
+    const path = fishLeap([1, 2, 3], 0, 0, 400, true);
+    expect(path[13][0]).toBeCloseTo(1 - 1600 / 400);
+    expect(Math.max(...path.map(([, , z]) => z))).toBeCloseTo(3 + 2172 / 400);
   });
 
   test("a stone's path turns with the level and lifts with raise", () => {

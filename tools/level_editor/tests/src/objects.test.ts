@@ -132,7 +132,7 @@ describe("boxTypeName", () => {
 
 describe("enemies", () => {
   test("knows the enemies custom levels can have, by name", () => {
-    expect(ENEMY_TYPES).toEqual(["plant", "spider", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "rolling_stone"]); // by what they do, as the palette lists them
+    expect(ENEMY_TYPES).toEqual(["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "rolling_stone"]); // by what they do, as the palette lists them
   });
 
   test("reads an enemy by its type and spot (a rolling stone's path comes with its track)", () => {
@@ -155,7 +155,7 @@ describe("enemies", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, spider, crab, turtle, native, monkey, warthog, badger, walking_spider, rolling_stone)"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, fish, crab, turtle, native, monkey, warthog, badger, walking_spider, rolling_stone)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs, walking spiders and monkeys do)"],
@@ -274,6 +274,11 @@ describe("a rolling stone's direction", () => {
     expect(objects.map(({ reverse }) => reverse)).toEqual([true, undefined, undefined]);
   });
 
+  test("a fish can leap the other way across the map, reversed", () => {
+    const [fish] = parseObjects('[{"kind": "enemy", "type": "fish", "at": [0, 0, 0], "reverse": true}]');
+    expect(fish.reverse).toBe(true);
+  });
+
   test("writes it when it's reversed, and reads it back", () => {
     const stone = { kind: "enemy" as const, enemy: "rolling_stone" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1 };
     const text = formatObjects([{ ...stone, reverse: true }]);
@@ -283,7 +288,7 @@ describe("a rolling stone's direction", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "reverse": true}]', "object 1: a crab has no reverse (rolling stones do; reverse a crab's path instead)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "reverse": true}]', "object 1: a crab has no reverse (rolling stones and fish do; reverse a crab's path instead)"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "reverse": true}]', "object 1: unknown setting reverse"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": "yes"}]', "object 1: reverse should be true or false"],
   ])("refuses %s", (text, message) => {

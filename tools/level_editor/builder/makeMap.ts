@@ -2,6 +2,7 @@
 // as the level's world meshes and collision, crash, and the objects placed in
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
+import { leapWay } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep } from "../src/enemyPaths";
 import { hasPath, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
@@ -11,7 +12,7 @@ import { EntryTooBig } from "./cutLevel";
 import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
   BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
-  WARP_PAD, withEntityId, withPath, withPosition, type PlacedBox,
+  WARP_PAD, withEntityId, withPath, withPathFrom, withPosition, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
@@ -122,8 +123,9 @@ function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffe
   return withPath(entity, run);
 }
 
-// the enemies that stay at their spot: jungle rollers' plant, and the spider hanging there
-const STANDING_ENEMIES: EnemyType[] = ["plant", "spider"];
+// the enemies that stay at their spot: jungle rollers' plant, up the creek's two
+// river plants, and the spider hanging there
+const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider"];
 
 // places objects in the level: where they are in it, which zone they're in, and their entities
 class ObjectPlacer {
@@ -173,6 +175,13 @@ class ObjectPlacer {
   placeAtSpot(enemy: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(enemy));
     this.entities[zone].push(withPosition(withEntityId(example, this.ids.shift()!), at));
+  }
+
+  // an enemy that moves along its own level's path, as example, from its spot:
+  // up the creek's fish, leaping across the map (the other way, reversed)
+  placeWithItsPath(enemy: LevelObject, example: Buffer): void {
+    const { zone, at } = this.inZone(this.positionOf(enemy));
+    this.entities[zone].push(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(enemy.reverse === true)));
   }
 
   // an enemy that moves along a path (a crab, turtle, native or badger), as
@@ -308,6 +317,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     return templates.entity(...ENEMY_ENTITIES[type]);
   };
   enemies.filter((enemy) => STANDING_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeAtSpot(enemy, enemyExample(enemy.enemy!)));
+  enemies.filter((enemy) => enemy.enemy === "fish").forEach((enemy) => placer.placeWithItsPath(enemy, enemyExample("fish")));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   objects.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;

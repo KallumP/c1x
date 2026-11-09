@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-09
+
+### Added
+
+- custom levels can have Up the Creek's biting river plants and its leaping fish
+
 ## 2026-11-08
 
 ### Added

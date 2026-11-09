@@ -23,10 +23,12 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // the badger PillC (an invisible spawner that sends badgers along its path), the
 // warthog WartC, and the spiders SpidC: subtype 1 drops from its thread, subtype
 // 3 is an invisible spawner, like the badger's, that sends spiders along its path,
-// and the monkey MonkC
+// the monkey MonkC, and up the creek's river objects RivOC: subtypes 6 and 7 its
+// biting plants with blue and green leaves, subtype 5 its leaping fish
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
+  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5],
 };
 // not in the level's total (an iron outline fills in as an iron box)
 // a rolling stone's first init flag is where in its cycle along its path and
@@ -91,6 +93,15 @@ export function withPath(item: Buffer, points: Vec3[]): Buffer {
   points.forEach((point, index) => point.forEach((coordinate, axis) =>
     body.writeInt16LE(Math.floor(coordinate / 4), index * POINT_BYTES + 2 * axis)));
   return padTo4(Buffer.concat([header, body]));
+}
+
+// the entity with its whole path moved so that it starts at at (zone units
+// relative to its zone), its shape kept, or mirrored along x with xWay -1,
+// such as a fish's leap
+export function withPathFrom(item: Buffer, at: Vec3, xWay = 1): Buffer {
+  const path = entityPath(item);
+  const ways: Vec3 = [xWay, 1, 1];
+  return withPath(item, path.map((point) => point.map((value, axis) => at[axis] + ways[axis] * (value - path[0][axis])) as Vec3));
 }
 
 // a box's first init flag is what it holds beyond the usual (a token, say); 0 for nothing

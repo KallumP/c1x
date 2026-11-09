@@ -25,7 +25,9 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // (builder/entities.ts), and takes those jungle rollers hasn't from the level
 // they're in (builder/donorObjects.ts). staying at their spot:
 // - plant: jungle rollers' biting plant, standing still
+// - blue_river_plant, green_river_plant: up the creek's biting plants (red jaws, blue or green leaves), standing still
 // - spider: fumbling in the dark's, dropping from its thread when crash comes near
+// - fish: up the creek's, leaping out of the river and back
 // walking back and forth along a path:
 // - crab: n. sanity beach's, across the map
 // - turtle: n. sanity beach's, along the route
@@ -37,7 +39,7 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - walking_spider: fumbling in the dark's
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track
-export const ENEMY_TYPES = ["plant", "spider", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "rolling_stone"] as const;
+export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
@@ -110,7 +112,7 @@ export interface LevelObject {
   path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised)
   speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
-  reverse?: boolean;    // a rolling stone that rolls back towards its first end first (true, or none)
+  reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping the other way (true, or none)
   count?: number;       // how many badgers come out at once (BADGER_COUNT without one)
 }
 
@@ -188,13 +190,17 @@ function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetti
   return { [setting]: value };
 }
 
-// whether a rolling stone rolls back towards its first end first, from its fields in objects.json
+// the enemies that can be reversed: a rolling stone rolls back towards its first
+// end first, and a fish leaps the other way across the map
+const REVERSIBLE_ENEMIES: EnemyType[] = ["rolling_stone", "fish"];
+
+// whether a rolling stone or fish is reversed, from its fields in objects.json
 function readReverse(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "reverse"> {
   if (!("reverse" in fields)) {
     return {};
   }
-  if (enemy !== "rolling_stone") {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no reverse (rolling stones do; reverse a ${enemy}'s path instead)`);
+  if (!REVERSIBLE_ENEMIES.includes(enemy)) {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no reverse (rolling stones and fish do; reverse a ${enemy}'s path instead)`);
   }
   if (typeof fields.reverse !== "boolean") {
     throw new Error(`object ${objectNumber}: reverse should be true or false`);

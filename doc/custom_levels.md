@@ -64,7 +64,7 @@ The arrow on the spawn object shows which way the camera faces at the start. Wit
 
 **Enemy paths:** some enemies walk a path, drawn as a line with the enemy solid where it starts and faded at the other end. Select one to drag its nodes, or set their x, y and z on the right; a node under the ground has its handle raised above the floor, on a line down to it. **nodes** sets how many there are, **speed** how fast it walks, and **Reverse direction** which end it starts at. A path drawn red leaves the floor or runs through a wall, so move its nodes. Badgers and walking spiders come out at the solid end and go down out of sight at the faded one; **count** sets how many come out at once.
 
-A rolling stone instead has a **start** slider for where it starts along its track, and **Reverse direction** for which way it rolls first.
+A rolling stone instead has a **start** slider for where it starts along its track, and **Reverse direction** for which way it rolls first. A fish's leap is drawn from the solid fish, where it leaps from, to the faded one, where it lands; **Reverse direction** turns it to leap the other way.
 
 See [Objects](../level_src/README.md#objects) for how each box and enemy behaves.
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { ENEMY_SHAPES, shapeBounds } from "../../src/enemyShapes";
+import { ENEMY_SHAPES, partGeometry, shapeBounds } from "../../src/enemyShapes";
 
 describe("enemy shapes", () => {
   // the sizes of the game's models, in game units (jungle rollers' JuPcG, n. sanity beach's Cr19G)
@@ -114,6 +114,69 @@ describe("enemy shapes", () => {
     expect(max[2] - min[2]).toBeGreaterThan(600);
     expect(max[2] - min[2]).toBeLessThan(780);
     expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
+  });
+
+  test.each(["blue_river_plant", "green_river_plant"] as const)("the %s stands on the floor, as wide and deep as the game's (RV1fV): about 1570 across and 1703 deep, its petals lower than the game's first frame rears its back one (602)", (enemy) => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES[enemy]);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeGreaterThan(300);
+    expect(max[1]).toBeLessThan(500);
+    expect(max[0] - min[0]).toBeGreaterThan(1400);
+    expect(max[0] - min[0]).toBeLessThan(1750);
+    expect(max[2] - min[2]).toBeGreaterThan(1500);
+    expect(max[2] - min[2]).toBeLessThan(1900);
+    expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
+  });
+
+  test("the river plants are one shape with the same red jaws, their leaves blue or green", () => {
+    const [blue, green] = [ENEMY_SHAPES.blue_river_plant, ENEMY_SHAPES.green_river_plant];
+    expect(green.map(({ colour, ...shape }) => shape)).toEqual(blue.map(({ colour, ...shape }) => shape));
+    const colours = (parts: typeof blue, name: string) => new Set(parts.filter((part) => part.name === name).map((part) => part.colour));
+    expect(colours(green, "jaw")).toEqual(colours(blue, "jaw"));
+    expect(colours(blue, "leaf").size).toBeGreaterThan(0);
+    expect([...colours(blue, "leaf")].some((colour) => colours(green, "leaf").has(colour))).toBe(false);
+  });
+
+  test("a river plant is three toothed petals a third of a turn apart, one behind and two towards the player, round a bud in its middle", () => {
+    const angleOf = ({ at: [x, , z] }: { at: number[] }) => Math.round((Math.atan2(x, z) * 180) / Math.PI);
+    const parts = ENEMY_SHAPES.blue_river_plant;
+    const petals = parts.filter((part) => part.name === "jaw");
+    expect(petals.map(angleOf).map((angle) => (angle + 360) % 360).sort((first, second) => first - second)).toEqual([60, 180, 300]);
+    const buds = parts.filter((part) => part.name === "bud");
+    expect(buds.length).toBe(1);
+    expect(Math.hypot(buds[0].at[0], buds[0].at[2])).toBeLessThan(1);
+  });
+
+  test("each river plant petal rises away from the plant's middle: its highest point is further out than its middle", () => {
+    const petals = ENEMY_SHAPES.blue_river_plant.filter((part) => part.name === "jaw");
+    petals.forEach((petal) => {
+      const positions = partGeometry(petal).getAttribute("position");
+      let highest = 0;
+      for (let index = 1; index < positions.count; index++) {
+        if (positions.getY(index) > positions.getY(highest)) {
+          highest = index;
+        }
+      }
+      const outAt = (x: number, z: number) => Math.hypot(x, z);
+      expect(outAt(positions.getX(highest), positions.getZ(highest))).toBeGreaterThan(outAt(petal.at[0], petal.at[2]));
+    });
+  });
+
+  test("the fish is on the floor, as big as the game's (RF1fV): about 434 long, 581 tall and 431 across", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.fish);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeCloseTo(581, -1);
+    expect(max[2] - min[2]).toBeGreaterThan(370);
+    expect(max[2] - min[2]).toBeLessThan(500);
+    expect(max[0] - min[0]).toBeGreaterThan(370);
+    expect(max[0] - min[0]).toBeLessThan(500);
+    expect(min[0] + max[0]).toBeCloseTo(0);
+  });
+
+  test("the fish faces +z too: its eyes are in front of its middle", () => {
+    const eyes = ENEMY_SHAPES.fish.filter((part) => part.name === "eye");
+    expect(eyes.length).toBeGreaterThan(0);
+    expect(eyes.every((part) => part.at[2] > 0)).toBe(true);
   });
 
   test("the monkey faces +z too: its face is in front of its middle", () => {
