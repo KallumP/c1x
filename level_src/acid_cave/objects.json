@@ -35,5 +35,5 @@
   {"kind": "box", "type": "basic", "at": [-4, 10, 0.466]},
   {"kind": "box", "type": "slatted", "at": [-3, 10, 0.519], "raise": -0.05},
 
-  {"kind": "end", "at": [-2.5, 72, 0.25]}
+  {"kind": "end", "at": [-4, 150, -2.1]}
 ]
