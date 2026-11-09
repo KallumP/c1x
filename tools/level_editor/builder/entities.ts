@@ -26,12 +26,18 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // the monkey MonkC, and up the creek's river objects RivOC: subtypes 6 and 7 its
 // biting plants with blue and green leaves, subtype 5 its leaping fish, and
 // temple ruins' ruins objects RuiOC: subtype 9 a bat roost, which sends out bats
-// (subtype 11) along its path
+// (subtype 11) along its path, and sunset vista's: subtype 12 a bat roost that
+// sends them whether crash is near or not, stopped by killing its two leader
+// bats (subtype 14)
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
-  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9],
+  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12],
 };
+// sunset vista's leader bat (RuiOC subtype 14): two hover where a leader bats
+// roost's bats come in and go out, and killing both stops it; its first init
+// flag is its roost's entity id
+export const LEADER_BAT: [number, number] = [42, 14];
 // not in the level's total (an iron outline fills in as an iron box)
 // a rolling stone's first init flag is where in its cycle along its path and
 // back it starts (its script's, seen in the game): 0 at its first point rolling
@@ -108,7 +114,7 @@ export function withPathFrom(item: Buffer, at: Vec3, xWay = 1): Buffer {
 
 // a box's first init flag is what it holds beyond the usual (a token, say); 0 for nothing
 export const withInitFlagA = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS));
-const withInitFlagB = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 2));
+export const withInitFlagB = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 2));
 export const withInitFlagC = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 4));
 
 // count ids for new entities, from the lowest up: not taken, nor the main object's, and at most ENTITY_IDS_MAX

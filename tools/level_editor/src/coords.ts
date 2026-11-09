@@ -114,12 +114,113 @@ export const BAT_SWOOP: [number, number][] = [
 // (Ba1sG reaches 361 below its spot) clear of the floor
 export const BAT_ROOST_HEIGHT = 600 - Math.min(...BAT_SWOOP.map(([, up]) => up));
 
-// each point of a bat roost's swoop (in blender), for a roost at at, raised by
-// raise: back along the way the camera faces, towards the spawn
-export function batSwoop(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
-  const [wayX, wayY] = scaled(cameraFacing(turn), -1);
-  return BAT_SWOOP.map(([along, up]) =>
-    [at[0] + (wayX * along) / scale, at[1] + (wayY * along) / scale, at[2] + raise + up / scale] as Vec3);
+const BAT_SWOOP_LENGTH = BAT_SWOOP[BAT_SWOOP.length - 1][0];
+
+// where a bat roost's swoop ends by default (in blender), from the roost: as
+// temple ruins', back along the way the camera faces, towards the spawn
+export const batSwoopEnd = (turn: number, scale: number): Vec3 => scaled(cameraFacing(turn), -BAT_SWOOP_LENGTH / scale);
+
+// temple ruins' swoop with each step split into pieces, evenly
+function splitSwoop(pieces: number): [number, number][] {
+  const split = BAT_SWOOP.slice(1).flatMap(([along, up], step) => {
+    const [fromAlong, fromUp] = BAT_SWOOP[step];
+    return Array.from({ length: pieces }, (_, piece): [number, number] => {
+      const share = (piece + 1) / pieces;
+      return [fromAlong + (along - fromAlong) * share, fromUp + (up - fromUp) * share];
+    });
+  });
+  return [BAT_SWOOP[0], ...split];
+}
+
+// each point of a bat roost's swoop (in blender), from the roost to its end:
+// temple ruins' (its dip and wobble kept), stretched and turned to reach the
+// end and rising or falling to it, each step split into as many pieces as it's
+// stretched, so its points stay about as far apart as temple ruins'
+export function batSwoop(roost: Vec3, end: Vec3, turn: number, scale: number): Vec3[] {
+  const way = flatWay(roost, end, scaled(cameraFacing(turn), -1));
+  const stretch = (Math.hypot(end[0] - roost[0], end[1] - roost[1]) * scale) / BAT_SWOOP_LENGTH;
+  const rise = end[2] - roost[2];
+  return splitSwoop(Math.max(1, Math.round(stretch))).map(([along, up]) => [
+    roost[0] + (way[0] * along * stretch) / scale,
+    roost[1] + (way[1] * along * stretch) / scale,
+    roost[2] + up / scale + (rise * along) / BAT_SWOOP_LENGTH,
+  ] as Vec3);
+}
+
+// sunset vista's leader bats' flight (its first roost's path), in game units
+// from the roost: along the game's x (back across the map) and up. its bats fly it once
+export const LEADER_BATS_FLIGHT: [number, number][] = [
+  [0, 0], [-56, -748], [-288, -1412], [-800, -1700], [-1600, -1700], [-2400, -1700], [-3200, -1700],
+  [-4000, -1700], [-4800, -1700], [-5600, -1700], [-6116, -1412], [-6348, -748], [-6400, 0],
+];
+
+// how high new leader bats' first leader goes over the floor, in game units:
+// where crash can spin it, and the bats fly at him
+export const LEADER_BAT_HEIGHT = 600;
+
+// how far apart sunset vista's first leader bats are, in game units, along
+// their flight (200 and 6200 along it): the second leader's default gap from the first
+export const LEADER_BATS_GAP = 6000;
+
+const FIRST_LEADER_ACROSS = -200; // where sunset vista's first leader is along its flight
+// how far below the roost the bats fly past the leaders, at the leaders'
+// height (sunset vista's leaders are 800 down, over ledges crash reaches them
+// from; here they're at the flight's lowest, so he can spin them on flat ground)
+const FLIGHT_LOWEST = -1700;
+const FLIGHT_BEHIND = 400;        // how far behind the leaders (away from the camera) the bats fly
+const FLIGHT_STEP = 800;          // how far apart the flight's points are, past the leaders, at most
+
+// sunset vista's bats' dive down to the first leader, and their climb up
+// away from the second: along the flight from that leader, and up from it
+const toFirstLeader = ([across, up]: [number, number]): [number, number] => [FIRST_LEADER_ACROSS - across, up - FLIGHT_LOWEST];
+const toSecondLeader = ([across, up]: [number, number]): [number, number] => [FIRST_LEADER_ACROSS - LEADER_BATS_GAP - across, up - FLIGHT_LOWEST];
+const LEADER_BATS_DIVE = LEADER_BATS_FLIGHT.slice(0, 3).map(toFirstLeader);
+const LEADER_BATS_CLIMB = LEADER_BATS_FLIGHT.slice(-3).map(toSecondLeader);
+const DOWN_FROM_LEADER = toFirstLeader(LEADER_BATS_FLIGHT[3])[0]; // how far past the first leader (and before the second) the bats are down
+
+// where the second leader goes by default (in blender), from the first: back
+// across the map, the other way from a rolling stone
+export const leaderBatsGap = (turn: number, scale: number): Vec3 => scaled(stoneRolling(turn), -LEADER_BATS_GAP / scale);
+
+// how far along the flight the bats fly down at the leaders' height, from the
+// first leader (game units), for leaders distance apart: in even steps from
+// just past the first to just before the second, or between them at their
+// middle when they're closer than that
+function flightRun(distance: number): number[] {
+  const [start, end] = [DOWN_FROM_LEADER, distance - DOWN_FROM_LEADER];
+  if (end <= start) {
+    return [distance / 2];
+  }
+  const steps = Math.ceil((end - start) / FLIGHT_STEP);
+  return Array.from({ length: steps + 1 }, (_, step) => start + ((end - start) * step) / steps);
+}
+
+// which way it is, flat, from one point to another: fallback with one right over the other
+function flatWay(from: Vec3, to: Vec3, fallback: Vec3): Vec3 {
+  const [x, y] = [to[0] - from[0], to[1] - from[1]];
+  const length = Math.hypot(x, y);
+  if (length === 0) {
+    return fallback;
+  }
+  return [x / length, y / length, 0];
+}
+
+// leader bats' flight (in blender), between their leaders: as sunset vista's
+// bats, from high over the first and a little before it, down past it, on to
+// the second (rising or falling as the leaders are), and up away past it, all
+// a little behind the leaders. its first point is where the roost is
+export function leaderBatsFlight(first: Vec3, second: Vec3, turn: number, scale: number): Vec3[] {
+  const way = flatWay(first, second, scaled(stoneRolling(turn), -1)); // back across the map, as by default, with the leaders one over the other
+  const distance = Math.hypot(second[0] - first[0], second[1] - first[1]) * scale;
+  const behind = scaled(cameraFacing(turn), -FLIGHT_BEHIND / scale);
+  const pointAt = ([along, up]: [number, number]): Vec3 => {
+    const share = Math.min(1, Math.max(0, along / Math.max(distance, 1)));
+    const height = first[2] + (second[2] - first[2]) * share;
+    return [first[0] + (way[0] * along) / scale + behind[0], first[1] + (way[1] * along) / scale + behind[1], height + up / scale];
+  };
+  const run = flightRun(distance).map((along): [number, number] => [along, 0]);
+  const climb = LEADER_BATS_CLIMB.map(([along, up]): [number, number] => [distance + along, up]);
+  return [...LEADER_BATS_DIVE, ...run, ...climb].map(pointAt);
 }
 
 // how far a crab walks back and forth, in game units: n. sanity beach's first

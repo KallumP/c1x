@@ -48,6 +48,11 @@ describe("new enemies", () => {
     expect(newObject("bat", [1, 2, 3]).raise).toBeCloseTo((lowest + 600) / DEFAULT_SCALE);
   });
 
+  test("leader bats start with their first leader 600 game units over the floor, where crash can spin it and its bats fly at him, at the level's scale", () => {
+    expect(newObject("leader_bats", [1, 2, 3], 400).raise).toBeCloseTo(600 / 400);
+    expect(newObject("leader_bats", [1, 2, 3], 2000).raise).toBeCloseTo(600 / 2000);
+  });
+
   test("a level can have many, so adding one keeps the rest", () => {
     const state = editorReducer(withObjects([newObject("plant", [0, 0, 0])]), { type: "add", object: newObject("plant", [5, 0, 0]) });
     expect(state.objects).toEqual([newObject("plant", [0, 0, 0]), newObject("plant", [5, 0, 0])]);

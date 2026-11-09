@@ -1,7 +1,7 @@
 // what's being edited: a level's objects, which one is selected, and the
 // changes that can be undone and redone
 import { nodeCount, pathPositions, withNodeAt } from "./enemyPaths";
-import { BAT_ROOST_HEIGHT, DEFAULT_SCALE } from "./coords";
+import { BAT_ROOST_HEIGHT, DEFAULT_SCALE, LEADER_BAT_HEIGHT } from "./coords";
 import { BOX_TYPES, ENEMY_TYPES, type BoxType, type EnemyType, type LevelObject, type Vec3 } from "./objects";
 
 export type Placeable = "spawn" | "end" | BoxType | EnemyType;
@@ -49,14 +49,13 @@ export const emptyEditor: EditorState = { objects: [], selected: null, selectedN
 
 const isEnemyType = (what: Placeable): what is EnemyType => (ENEMY_TYPES as readonly string[]).includes(what);
 
-// how far a new enemy is raised, in metres for a level at scale: a bat roost
-// high enough for its bats to swoop at crash; the rest stand on the floor
-function newEnemyRaise(enemy: EnemyType, scale: number): number {
-  if (enemy === "bat") {
-    return BAT_ROOST_HEIGHT / scale;
-  }
-  return 0;
-}
+// how high new enemies go over the floor, in game units: a bat roost, high
+// enough for its bats to swoop at crash, and leader bats' first leader, where
+// crash can spin it; the rest stand on the floor
+const NEW_ENEMY_HEIGHTS: Partial<Record<EnemyType, number>> = { bat: BAT_ROOST_HEIGHT, leader_bats: LEADER_BAT_HEIGHT };
+
+// how far a new enemy is raised, in metres for a level at scale
+const newEnemyRaise = (enemy: EnemyType, scale: number) => (NEW_ENEMY_HEIGHTS[enemy] ?? 0) / scale;
 
 export function newObject(what: Placeable, at: Vec3, scale = DEFAULT_SCALE): LevelObject {
   if (isEnemyType(what)) {

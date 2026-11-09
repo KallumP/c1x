@@ -38,9 +38,10 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - badger: jungle rollers'
 // - walking_spider: fumbling in the dark's
 // - bat: temple ruins', from a roost: they swoop down at crash
+// - leader_bats: sunset vista's, from a roost, flying across between two leader bats: kill both and they stop
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track
-export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "bat", "rolling_stone"] as const;
+export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
@@ -61,10 +62,12 @@ export const SPEED_MAX = 3;
 
 // how many badgers or walking spiders come out at once: as jungle rollers' first
 // badger spawner, and fumbling in the dark's spider spawners, without a count;
-// and how many bats a roost sends, as temple ruins' roosts
+// and how many bats a roost sends, as temple ruins' roosts, and in each flock a
+// leader bats roost sends, as most of sunset vista's
 export const BADGER_COUNT = 2;
 export const WALKING_SPIDER_COUNT = 1;
 export const BAT_COUNT = 4;
+export const LEADER_BATS_COUNT = 5;
 export const BADGER_COUNT_MIN = 1;
 export const BADGER_COUNT_MAX = 6;
 
@@ -76,13 +79,31 @@ function countFallback(enemy: EnemyType | undefined): number {
   if (enemy === "bat") {
     return BAT_COUNT;
   }
+  if (enemy === "leader_bats") {
+    return LEADER_BATS_COUNT;
+  }
   return BADGER_COUNT;
+}
+
+// how many seconds between a bat roost's flocks: temple ruins' roosts' (their
+// code's default, 300 frames), and sunset vista's first leader bats' (135 frames)
+export const BAT_DELAY = 10;
+export const LEADER_BATS_DELAY = 4.5;
+export const DELAY_MIN = 1;
+export const DELAY_MAX = 20;
+
+// the seconds between flocks for a bat roost without a delay
+function delayFallback(enemy: EnemyType | undefined): number {
+  if (enemy === "leader_bats") {
+    return LEADER_BATS_DELAY;
+  }
+  return BAT_DELAY;
 }
 
 // the enemy settings that are a number in a range, and for each: the enemies
 // that have it (named for messages), its range, whether it's whole, what it is
 // without one (left out of objects.json), and what it means
-export const NUMBER_SETTINGS = ["speed", "start", "count"] as const;
+export const NUMBER_SETTINGS = ["speed", "start", "count", "delay"] as const;
 export type NumberSetting = (typeof NUMBER_SETTINGS)[number];
 
 interface NumberSettingRule {
@@ -98,7 +119,8 @@ interface NumberSettingRule {
 export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   speed: { enemies: PATH_ENEMIES, enemiesNamed: PATH_ENEMIES_NAMED, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: () => 1, meaning: "times the game's own pace" },
   start: { enemies: ["rolling_stone"], enemiesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
-  count: { enemies: ["badger", "walking_spider", "bat"], enemiesNamed: "badgers, walking spiders and bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
+  count: { enemies: ["badger", "walking_spider", "bat", "leader_bats"], enemiesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
+  delay: { enemies: ["bat", "leader_bats"], enemiesNamed: "bats and leader bats", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks" },
 };
 
 // whether an object is an enemy with a number setting
@@ -115,15 +137,32 @@ export interface LevelObject {
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
   enemy?: EnemyType;    // an enemy's type
-  path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised)
+  path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised); leader bats' second leader, from their first
   speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
   reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping the other way (true, or none)
-  count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT without one)
+  count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
+  delay?: number;       // the seconds between a bat roost's flocks (BAT_DELAY, LEADER_BATS_DELAY without one)
 }
 
 // whether an object is an enemy that moves along a path
 export const hasPath = (object: LevelObject) => object.kind === "enemy" && isPathEnemy(object.enemy);
+
+// the enemies whose path is one node, which they don't walk: leader bats'
+// second leader (the object is their first), and a bat roost's swoop's end
+// (the object is the roost), with what it is, for messages
+const ONE_NODE_PATHS: Partial<Record<EnemyType, string>> = {
+  leader_bats: "leader bats' path is their second leader, [[x, y, z]] in metres from the first",
+  bat: "a bat roost's path is its swoop's end, [[x, y, z]] in metres from the roost",
+};
+export const hasOneNode = (enemy: EnemyType | undefined) => enemy !== undefined && enemy in ONE_NODE_PATHS;
+
+// whether an object has nodes that can be moved: a path enemy's path, or a
+// one node enemy's node (leader bats' second leader, a bat roost's swoop's end)
+export const hasNodes = (object: LevelObject) => hasPath(object) || (object.kind === "enemy" && hasOneNode(object.enemy));
+
+// how many leaders leader bats have: the object, and its path's one node
+export const LEADER_BATS_LEADERS = 2;
 
 // a box's type name, from its type or its subtype number
 export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
@@ -135,7 +174,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count"];
+const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
@@ -154,18 +193,30 @@ function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<
   return { enemy: fields.type as EnemyType };
 }
 
-// a path enemy's path, from its fields in objects.json (none if it hasn't one)
-function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "path"> {
-  if (!("path" in fields)) {
-    return {};
+// whether a path has as many nodes as an enemy's can: a one node enemy's one
+// (leader bats' second leader, a bat roost's swoop's end), a path enemy's 2 to PATH_NODES_MAX
+function checkNodeCount(nodes: unknown, enemy: EnemyType, objectNumber: number): asserts nodes is unknown[] {
+  if (hasOneNode(enemy)) {
+    if (!Array.isArray(nodes) || nodes.length !== 1) {
+      throw new Error(`object ${objectNumber}: ${ONE_NODE_PATHS[enemy]}`);
+    }
+    return;
   }
   if (!isPathEnemy(enemy)) {
     throw new Error(`object ${objectNumber}: a ${enemy} has no path (${PATH_ENEMIES_NAMED} do)`);
   }
-  const nodes = fields.path;
   if (!Array.isArray(nodes) || nodes.length < 2 || nodes.length > PATH_NODES_MAX) {
     throw new Error(`object ${objectNumber}: a path should be 2 to ${PATH_NODES_MAX} nodes, [[x, y, z], ...]`);
   }
+}
+
+// a path enemy's path, or a one node enemy's node, from its fields in objects.json (none if it hasn't one)
+function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "path"> {
+  if (!("path" in fields)) {
+    return {};
+  }
+  const nodes = fields.path;
+  checkNodeCount(nodes, enemy, objectNumber);
   if (!nodes.every(isPosition)) {
     throw new Error(`object ${objectNumber}: a path's nodes should each be [x, y, z] in metres from where the enemy stands`);
   }

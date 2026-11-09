@@ -1,11 +1,11 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { batSwoop, blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { batSwoop, blenderToView, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
-import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare } from "../enemyPaths";
+import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
@@ -26,6 +26,10 @@ const walkerSize = (parts: ShapePart[]) => {
   return { height: max[1], reach: Math.max(-min[0], max[0], -min[2], max[2]) };
 };
 const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
+
+// how far a leader bat's and a bat's tops are above their spots, in game units: their handles float over them
+const LEADER_BAT_TOP = shapeBounds(ENEMY_SHAPES.leader_bats).max[1];
+const BAT_TOP = shapeBounds(ENEMY_SHAPES.bat).max[1];
 
 // the enemies that stay at their spot, drawn there
 const SPOT_ENEMIES = ["plant", "blue_river_plant", "green_river_plant", "spider"] as const;
@@ -169,16 +173,42 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // a bat roost: a bat at the roost, where its bats fly from, facing the way they
-  // swoop (towards the spawn), with the line of their swoop, and faded where it ends
+  // swoop (to its path's node, by default towards the spawn), with the line of
+  // their swoop, and faded where it ends, with a handle there to drag the end by
+  // while it's selected
   const renderBat = (object: LevelObject, index: number) => {
-    const swoop = batSwoop(object.at, object.raise, turn, scale);
-    const [start, end] = [swoop[0], swoop[swoop.length - 1]];
-    const facing = facingFrom(start, end, turn);
+    const [roost, end] = spotAndNode(object, turn, scale);
+    const swoop = batSwoop(roost, end, turn, scale);
+    const facing = facingFrom(roost, end, turn);
     return (
       <>
-        {renderShapeModel(ENEMY_SHAPES.bat, blenderToView(start), index, 0, facing)}
+        {renderShapeModel(ENEMY_SHAPES.bat, blenderToView(roost), index, 0, facing)}
         {renderShapeModel(ENEMY_SHAPES.bat, blenderToView(end), index, 1, facing, FAR_END_OPACITY)}
         <Line points={swoop.map(blenderToView)} color={ENEMY_COLOURS.bat} lineWidth={2} />
+        {index === selected && renderPathHandle(end, index, 0, ENEMY_COLOURS.bat, BAT_TOP / scale)}
+      </>
+    );
+  };
+
+  // leader bats' second leader's handle, over it, while they're selected (the
+  // first is the object, dragged as any other)
+  const renderSecondLeaderHandle = (second: Vec3, index: number) =>
+    renderPathHandle(second, index, 0, ENEMY_COLOURS.leader_bats, LEADER_BAT_TOP / scale);
+
+  // leader bats: their two leaders, the first where the object is (solid,
+  // where the bats come in) and the second at its path's node (faded, where
+  // they go out; with a handle to drag it by while they're selected), and the
+  // line of their bats' flight between them
+  const renderLeaderBats = (object: LevelObject, index: number) => {
+    const [first, second] = spotAndNode(object, turn, scale);
+    const flight = leaderBatsFlight(first, second, turn, scale);
+    const leaderOpacities = [1, FAR_END_OPACITY];
+    return (
+      <>
+        {[first, second].map((spot, leader) =>
+          renderShapeModel(ENEMY_SHAPES.leader_bats, blenderToView(spot), index, leader, enemyTurn(turn), leaderOpacities[leader]))}
+        <Line points={flight.map(blenderToView)} color={ENEMY_COLOURS.leader_bats} lineWidth={2} />
+        {index === selected && renderSecondLeaderHandle(second, index)}
       </>
     );
   };
@@ -319,6 +349,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     }
     if (object.enemy === "bat") {
       return renderBat(object, index);
+    }
+    if (object.enemy === "leader_bats") {
+      return renderLeaderBats(object, index);
     }
     return (
       <>

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BADGER_COUNT, BADGER_COUNT_MAX, BADGER_COUNT_MIN, BOX_TYPES, numberSetting, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type Vec3 } from "../../src/objects";
+import { BADGER_COUNT, BADGER_COUNT_MAX, BADGER_COUNT_MIN, BOX_TYPES, numberSetting, boxTypeName, ENEMY_TYPES, formatObjects, hasNodes, hasPath, parseObjects, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type Vec3 } from "../../src/objects";
 
 describe("parseObjects", () => {
   test("reads spawn, end and boxes with their settings", () => {
@@ -132,7 +132,7 @@ describe("boxTypeName", () => {
 
 describe("enemies", () => {
   test("knows the enemies custom levels can have, by name", () => {
-    expect(ENEMY_TYPES).toEqual(["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "bat", "rolling_stone"]); // by what they do, as the palette lists them
+    expect(ENEMY_TYPES).toEqual(["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"]); // by what they do, as the palette lists them
   });
 
   test("reads an enemy by its type and spot (a rolling stone's path comes with its track)", () => {
@@ -143,7 +143,8 @@ describe("enemies", () => {
       {"kind": "enemy", "type": "turtle", "at": [3, 40, 0]},
       {"kind": "enemy", "type": "native", "at": [4, 50, 0]},
       {"kind": "enemy", "type": "badger", "at": [5, 60, 0]},
-      {"kind": "enemy", "type": "bat", "at": [6, 70, 0], "raise": 3}
+      {"kind": "enemy", "type": "bat", "at": [6, 70, 0], "raise": 3},
+      {"kind": "enemy", "type": "leader_bats", "at": [7, 80, 0], "raise": 2}
     ]`);
     expect(objects).toEqual([
       { kind: "enemy", enemy: "plant", at: [1, 10, 0], raise: 0, stack: 1 },
@@ -153,11 +154,12 @@ describe("enemies", () => {
       { kind: "enemy", enemy: "native", at: [4, 50, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "badger", at: [5, 60, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "bat", at: [6, 70, 0], raise: 3, stack: 1 },
+      { kind: "enemy", enemy: "leader_bats", at: [7, 80, 0], raise: 2, stack: 1 },
     ]);
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, fish, crab, turtle, native, monkey, warthog, badger, walking_spider, bat, rolling_stone)"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, fish, crab, turtle, native, monkey, warthog, badger, walking_spider, bat, leader_bats, rolling_stone)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs, walking spiders and monkeys do)"],
@@ -201,6 +203,22 @@ describe("enemy paths", () => {
     expect(objects.map(({ path }) => path)).toEqual([[[-2, 0, 0], [0, 1, 0], [2, 0, 0]], [[0, -2.5, 0], [0, 2.5, 0.5]], [[-1, 0, 0], [1, 0, 0]], [[0, 3, 0], [0, -3, 0]], undefined]);
   });
 
+  test("leader bats can have a path of their second leader: where it hovers, from the first (at, raised), in metres", () => {
+    const [leaders] = parseObjects('[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "path": [[-14, 2, 0]]}]');
+    expect(leaders.path).toEqual([[-14, 2, 0]]);
+  });
+
+  test("a bat roost can have a path of its swoop's end: where its bats' swoop ends, from the roost (at, raised), in metres", () => {
+    const [roost] = parseObjects('[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "path": [[10, -20, 0]]}]');
+    expect(roost.path).toEqual([[10, -20, 0]]);
+  });
+
+  test("leader bats' node is their second leader, and a bat roost's its swoop's end, which they have, though they don't walk a path", () => {
+    const enemy = (type: "leader_bats" | "crab" | "bat") => ({ kind: "enemy" as const, enemy: type, at: [0, 0, 0] as Vec3, raise: 0, stack: 1 });
+    expect([hasNodes(enemy("leader_bats")), hasNodes(enemy("crab")), hasNodes(enemy("bat")), hasNodes({ ...enemy("crab"), enemy: "fish" })]).toEqual([true, true, true, false]);
+    expect([hasPath(enemy("leader_bats")), hasPath(enemy("crab"))]).toEqual([false, true]);
+  });
+
   test("writes a path after the rest, to the millimetre, and reads it back", () => {
     const crab = { kind: "enemy" as const, enemy: "crab" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1, path: [[-2.00004, 0, 0], [2, 0.5, 0]] as Vec3[] };
     const text = formatObjects([crab]);
@@ -219,6 +237,9 @@ describe("enemy paths", () => {
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', `object 1: a path should be 2 to ${PATH_NODES_MAX} nodes`],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0]]}]', "object 1: a path's nodes should each be [x, y, z] in metres"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": "across"}]', "object 1: a path should be 2 to"],
+    ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: leader bats' path is their second leader, [[x, y, z]] in metres from the first"],
+    ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "path": []}]', "object 1: leader bats' path is their second leader"],
+    ['[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a bat roost's path is its swoop's end, [[x, y, z]] in metres from the roost"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -356,6 +377,14 @@ describe("badger counts", () => {
     expect(formatObjects([{ ...bat, count: 1 }])).toContain('"count": 1}');
   });
 
+  test("leader bats can have a count too: how many bats each flock has, 5 without one (as sunset vista's), which is left out when written", () => {
+    const leaders = { ...badger, enemy: "leader_bats" as const };
+    expect(parseObjects('[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "count": 2}]')[0].count).toBe(2);
+    expect(numberSetting(leaders, "count")).toBe(5);
+    expect(formatObjects([{ ...leaders, count: 5 }])).toContain('"at": [1, 2, 0]}');
+    expect(formatObjects([{ ...leaders, count: 3 }])).toContain('"count": 3}');
+  });
+
   test("writes a count after the rest, and leaves out the default (2)", () => {
     expect(formatObjects([{ ...badger, count: 3 }])).toContain('"at": [1, 2, 0], "count": 3}');
     expect(formatObjects([{ ...badger, count: 2 }])).toContain('"at": [1, 2, 0]}');
@@ -365,12 +394,36 @@ describe("badger counts", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "count": 2}]', "object 1: a crab has no count (badgers, walking spiders and bats do)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "count": 2}]', "object 1: a crab has no count (badgers, walking spiders, bats and leader bats do)"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count"],
     ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 0}]', "object 1: count should be 1 to 6 (how many badgers come out at once)"],
     ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 7}]', "object 1: count should be 1 to 6"],
     ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 2.5}]', "object 1: count should be 1 to 6"],
     ['[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "count": 7}]', "object 1: count should be 1 to 6"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+});
+
+describe("bat roosts' delays", () => {
+  const roost = (enemy: "bat" | "leader_bats") => ({ kind: "enemy" as const, enemy, at: [1, 2, 0] as Vec3, raise: 0, stack: 1 });
+
+  test("a bat roost or leader bats can have a delay: the seconds between their flocks, in halves of a second or finer", () => {
+    expect(parseObjects('[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "delay": 3.5}]')[0].delay).toBe(3.5);
+    expect(parseObjects('[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "delay": 12}]')[0].delay).toBe(12);
+  });
+
+  test("without one, a bat roost's is 10 seconds (temple ruins') and leader bats' 4.5 (sunset vista's), which are left out when written", () => {
+    expect([numberSetting(roost("bat"), "delay"), numberSetting(roost("leader_bats"), "delay")]).toEqual([10, 4.5]);
+    expect(formatObjects([{ ...roost("bat"), delay: 10 }])).toContain('"at": [1, 2, 0]}');
+    expect(formatObjects([{ ...roost("leader_bats"), delay: 4.5 }])).toContain('"at": [1, 2, 0]}');
+    expect(formatObjects([{ ...roost("bat"), count: 2, delay: 3 }])).toContain('"count": 2, "delay": 3}');
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "delay": 2}]', "object 1: a crab has no delay (bats and leader bats do)"],
+    ['[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "delay": 0.5}]', "object 1: delay should be 1 to 20 (the seconds between its flocks)"],
+    ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "delay": 21}]', "object 1: delay should be 1 to 20"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });

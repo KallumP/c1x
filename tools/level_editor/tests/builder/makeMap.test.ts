@@ -1,11 +1,11 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { BAT_SWOOP, FISH_LEAP } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
-import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, ENTITY_INIT_FLAGS, entityId, entityPath, entityPosition, entityType, STONE_FAR_END, WARP_PAD } from "../../builder/entities";
+import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, LEADER_BAT, ENTITY_INIT_FLAGS, entityId, entityPath, entityPosition, entityType, STONE_FAR_END, WARP_PAD } from "../../builder/entities";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_SOUNDS, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
@@ -74,7 +74,7 @@ const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0
 const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhere (0x14)
 const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the dark (0x2a)
 const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x18)
-const hasTempleRuins = existsSync(`${STREAMS}/s000001c.nsd`); // temple ruins (0x1c)
+const hasSunsetVista = existsSync(`${STREAMS}/s0000023.nsd`); // sunset vista (0x23)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -516,19 +516,38 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
-  describe.skipIf(!hasTempleRuins)("bats, from temple ruins", () => {
+  describe.skipIf(!hasSunsetVista)("bats, from sunset vista", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
     const bat = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "bat", raise: 3, ...more });
     const soundsOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
 
-    test("a level with a bat has temple ruins' ruins code, the bat's model and animation, its texture page and every sound the code plays", () => {
+    test("a level with a bat has sunset vista's ruins code, its bats' and leaders' models and animations, its texture page and every sound the code plays", () => {
       const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [bat()], readOtherLevel });
       expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.bat[0]]).toBe(stringToEid("RuiOC"));
-      expect(["Ba1sG", "Ba1sV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
-      expect(level.pages.some((page) => page.type === PAGE_TEXTURE && page.eid === stringToEid("Ru3sT"))).toBe(true);
-      const sounds = donorObject(readLevel(STREAMS, 0x1c), ENEMY_ENTITIES.bat[0]).sounds.map(({ eid }) => eid);
+      expect(["Ba1wG", "Ba1wV", "Ba2wG", "Ba2wV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(level.pages.some((page) => page.type === PAGE_TEXTURE && page.eid === stringToEid("Ru6wT"))).toBe(true);
+      const sounds = donorObject(readLevel(STREAMS, 0x23), ENEMY_ENTITIES.bat[0]).sounds.map(({ eid }) => eid);
       expect(sounds.length).toBeGreaterThan(0);
       expect(sounds.every((eid) => soundsOf(level).includes(eid))).toBe(true);
+    });
+
+    test("bats bring two texture pages (sunset vista's code reaches only its bats and leader bats), not temple ruins' three", () => {
+      const pagesOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_TEXTURE).length;
+      const without = make(MAP_OBJ, { scale: 256, objects: [], readOtherLevel }).level;
+      const withBats = make(MAP_OBJ, { scale: 256, objects: [bat(), bat({ at: [-1, 4, 0] })], readOtherLevel }).level;
+      expect(pagesOf(withBats) - pagesOf(without)).toBe(2);
+    });
+
+    test("a bat roost is temple ruins' kind (subtype 9, its flags its count, its delay, 300 frames as its code's default, and the wait before its first flock left at its default) though sunset vista has none", () => {
+      const placed = zoneEntities(make(MAP_OBJ, { scale: 256, objects: [bat()], readOtherLevel }).zone).find((item) => entityType(item).join() === ENEMY_ENTITIES.bat.join())!;
+      expect([1, 2].map((flag) => placed.readInt16LE(ENTITY_INIT_FLAGS + 2 * flag))).toEqual([300, 0]);
+    });
+
+    test("a bat roost's and leader bats' delay is the frames between their flocks (30 a second): their init flag b, 300 and 135 (sunset vista's) without one", () => {
+      const initFlagB = (more: Partial<LevelObject>) => zoneEntities(make(MAP_OBJ, { scale: 256, objects: [bat(more)], readOtherLevel }).zone)
+        .find((item) => [ENEMY_ENTITIES.bat.join(), ENEMY_ENTITIES.leader_bats.join()].includes(entityType(item).join()))!.readInt16LE(ENTITY_INIT_FLAGS + 2);
+      expect([initFlagB({}), initFlagB({ delay: 3 }), initFlagB({ delay: 2.25 })]).toEqual([300, 90, 68]);
+      expect([initFlagB({ enemy: "leader_bats" }), initFlagB({ enemy: "leader_bats", delay: 12 })]).toEqual([135, 360]);
     });
 
     test("a bat roost is at its spot, raised, as temple ruins' first, its bats' swoop its path: 14 points, 10000 along the game's z, down 1336 at most", () => {
@@ -548,9 +567,68 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(placed.path.map(([, y, z]) => [z - z0, y - y0])).toEqual(BAT_SWOOP);
     });
 
+    test("a bat roost's swoop goes to its path's node: 10 m across the map is 2560 along the game's x at scale 256, temple ruins' 14 points, its dip kept", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [bat({ path: [[10, 0, 0]] })], readOtherLevel }).zone);
+      expect(placed.path.length).toBe(14);
+      const [first, last] = [placed.path[0], placed.path.at(-1)!];
+      expect(last.map((value, axis) => value - first[axis])).toEqual([2560, 0, 0]);
+      expect(Math.min(...placed.path.map(([, y]) => y)) - first[1]).toBe(-1336);
+    });
+
     test("a bat roost's count is how many bats it sends: its init flag a, 4 (as temple ruins') without one", () => {
       const initFlagA = (more: Partial<LevelObject>) => enemies(make(MAP_OBJ, { scale: 256, objects: [bat(more)], readOtherLevel }).zone)[0].initFlagA;
       expect([initFlagA({}), initFlagA({ count: 1 }), initFlagA({ count: 6 })]).toEqual([4, 1, 6]);
+    });
+
+    test("leader bats' roost is where their flight starts, 200 before the first leader (at, raised), 1700 over it and 400 behind, the flight its path: 13 points, 6400 back along the game's x, down 1700 at most", () => {
+      const placed = enemies(make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats" })], readOtherLevel }).zone)
+        .find(({ type }) => type.join() === ENEMY_ENTITIES.leader_bats.join())!;
+      expect(placed.path.length).toBe(13);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone, and raise 3 is 768 more at scale 256
+      [1408 + 200, 128 + 768 + 1700, 1664 + 400].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+      const [first, last] = [placed.path[0], placed.path.at(-1)!];
+      expect(last.map((value, axis) => value - first[axis])).toEqual([-6400, 0, 0]);
+      expect(Math.min(...placed.path.map(([, y]) => y)) - first[1]).toBe(-1700);
+    });
+
+    test("a leader bats roost has two leader bats (subtype 14) where its bats come in and go out, as sunset vista's (200 and 6200 back along x, 400 back along z), but down at the flight's lowest (1700), where crash can spin them, their flag a the roost's id", () => {
+      const built = make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats" })], readOtherLevel });
+      const items = zonesOf(built).flatMap((zone) => zoneEntities(zone).map((item) => ({ item, origin: zoneOrigin(zone) })));
+      const placedAt = ({ item, origin }: (typeof items)[number]) => entityPosition(item).map((value, axis) => value + origin[axis]);
+      const roost = items.find(({ item }) => entityType(item).join() === ENEMY_ENTITIES.leader_bats.join())!;
+      const leaders = items.filter(({ item }) => entityType(item).join() === LEADER_BAT.join());
+      expect(leaders.length).toBe(2);
+      leaders.forEach(({ item }) => expect(item.readInt16LE(ENTITY_INIT_FLAGS)).toBe(entityId(roost.item)));
+      const offsets = leaders.map((leader) => placedAt(leader).map((value, axis) => value - placedAt(roost)[axis]));
+      expect(offsets).toEqual([[-200, -1700, -400], [-6200, -1700, -400]]);
+      expect(new Set([roost, ...leaders].map(({ item }) => entityId(item))).size).toBe(3);
+    });
+
+    test("leader bats' second leader hovers at their path's node, and the bats fly to it: moved a metre up, it and the flight's end are 256 higher at scale 256", () => {
+      const gap = leaderBatsGap(0, 256);
+      const path = [[gap[0], gap[1], gap[2] + 1]] as Vec3[];
+      const built = make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats", path })], readOtherLevel });
+      const items = zonesOf(built).flatMap((zone) => zoneEntities(zone).map((item) => ({ item, origin: zoneOrigin(zone) })));
+      const placedAt = ({ item, origin }: (typeof items)[number]) => entityPosition(item).map((value, axis) => value + origin[axis]);
+      const roost = items.find(({ item }) => entityType(item).join() === ENEMY_ENTITIES.leader_bats.join())!;
+      const leaders = items.filter(({ item }) => entityType(item).join() === LEADER_BAT.join());
+      const offsets = leaders.map((leader) => placedAt(leader).map((value, axis) => value - placedAt(roost)[axis]));
+      expect(offsets).toEqual([[-200, -1700, -400], [-6200, -1700 + 256, -400]]);
+      const flight = entityPath(roost.item);
+      expect(flight.at(-1)!.map((value, axis) => value - flight[0][axis])).toEqual([-6400, 256, 0]);
+    });
+
+    test("the editor draws a leader bats roost's flight as sunset vista's (LEADER_BATS_FLIGHT, back along the game's x and up)", () => {
+      const placed = enemies(make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats" })], readOtherLevel }).zone)
+        .find(({ type }) => type.join() === ENEMY_ENTITIES.leader_bats.join())!;
+      const [x0, y0] = placed.path[0];
+      expect(placed.path.map(([x, y]) => [x - x0, y - y0])).toEqual(LEADER_BATS_FLIGHT);
+    });
+
+    test("a leader bats roost's count is how many bats each flock has: its init flag a, 5 (as most of sunset vista's) without one", () => {
+      const initFlagA = (more: Partial<LevelObject>) => enemies(make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats", ...more })], readOtherLevel }).zone)
+        .find(({ type }) => type.join() === ENEMY_ENTITIES.leader_bats.join())!.initFlagA;
+      expect([initFlagA({}), initFlagA({ count: 1 }), initFlagA({ count: 6 })]).toEqual([5, 1, 6]);
     });
 
     test.skipIf(!hasFumbling)("a level with bats and spiders has both codes, within the texture pages the game holds", () => {

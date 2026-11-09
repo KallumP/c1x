@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
-import { enemyPath, inNodes, nodeCount, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
-import { BOX_TYPES, boxTypeName, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type LevelObject, type NumberSetting, type Vec3 } from "../objects";
+import { enemyPath, inNodes, nodeCount, nodeHeading, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
+import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type LevelObject, type NumberSetting, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
@@ -13,11 +13,13 @@ import "./PropertiesPanel.css";
 
 const AXES = ["x", "y"] as const;
 // each number setting's slider: its label, and its steps (a stone's start of
-// its track, a speed times the game's own pace, a count of badgers)
+// its track, a speed times the game's own pace, a count of badgers, a bat
+// roost's seconds between flocks)
 const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
   speed: { label: "speed ×", step: 0.25 },
   start: { label: "start", step: 0.05 },
   count: { label: "count", step: 1 },
+  delay: { label: "delay s", step: 0.5 },
 };
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
@@ -80,7 +82,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     </>
   );
 
-  // the selected node of a path enemy's path: where it is in blender
+  // the selected node of a path enemy's path, or leader bats' second leader: where it is in blender
   const renderNodeFields = (enemy: LevelObject, node: number) => {
     const turn = levelCfg ? levelCfg.turn : 0;
     const position = pathPositions(enemy, turn, scale)[node];
@@ -91,7 +93,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     const step = isShiftHeld ? 0.01 : 0.1;
     return (
       <>
-        <h3>node {node + 1} of {nodeCount(enemy)}</h3>
+        <h3>{nodeHeading(enemy, node)}</h3>
         {NODE_AXES.map((axis, axisIndex) => (
           <NumberField key={axis} label={axis} value={position[axisIndex]} step={step} onChange={(value) => setAxis(axisIndex, value)} />
         ))}
@@ -313,7 +315,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {hasPath(object) && renderTurnRoundButton(object)}
           {isStone(object) && renderStoneReverseButton(object)}
           {isFish(object) && renderFishReverseButton(object)}
-          {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
+          {hasNodes(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
           {pathWarnings.has(index) && <p className="warning">This path leaves the floor or runs through a wall.</p>}

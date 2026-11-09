@@ -1,7 +1,7 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
-import { BADGER_RUN, cameraFacing, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
-import { PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
+import { BADGER_RUN, batSwoopEnd, cameraFacing, leaderBatsGap, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import { hasOneNode, PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 3;
 
@@ -55,9 +55,22 @@ export function defaultPath(enemy: PathEnemy, turn: number, scale: number): Vec3
   return straightNodes(scaled(half, -1), half, DEFAULT_PATH_NODES);
 }
 
-// an enemy's path nodes: its own, or its default
+// an enemy's nodes without a path of its own: leader bats' second leader
+// where it hovers by default, a bat roost's swoop's end where temple ruins'
+// ends, or a path enemy's default path
+function defaultNodes(object: LevelObject, turn: number, scale: number): Vec3[] {
+  if (object.enemy === "leader_bats") {
+    return [leaderBatsGap(turn, scale)];
+  }
+  if (object.enemy === "bat") {
+    return [batSwoopEnd(turn, scale)];
+  }
+  return defaultPath(object.enemy as PathEnemy, turn, scale);
+}
+
+// an enemy's path nodes (a one node enemy's, its node): its own, or its default
 export function enemyPath(object: LevelObject, turn: number, scale: number): Vec3[] {
-  return object.path ?? defaultPath(object.enemy as PathEnemy, turn, scale);
+  return object.path ?? defaultNodes(object, turn, scale);
 }
 
 // where an enemy's path nodes are in blender: from where it stands, raised
@@ -67,8 +80,32 @@ export function pathPositions(object: LevelObject, turn: number, scale: number):
   return enemyPath(object, turn, scale).map((node) => plus(standing, node));
 }
 
-// how many nodes an enemy's path has: its own, or its default's
-export const nodeCount = (object: LevelObject) => object.path?.length ?? DEFAULT_PATH_NODES;
+// a one node enemy's spot and its node (in blender): where the object is,
+// raised, then its path's node. leader bats' two leaders, or a bat roost and its swoop's end
+export function spotAndNode(object: LevelObject, turn: number, scale: number): Vec3[] {
+  const [x, y, z] = object.at;
+  return [[x, y, z + object.raise], ...pathPositions(object, turn, scale)];
+}
+
+// how many nodes an enemy's path has: its own, or its default's (a one node enemy's one)
+export function nodeCount(object: LevelObject): number {
+  if (object.path) {
+    return object.path.length;
+  }
+  if (hasOneNode(object.enemy)) {
+    return 1;
+  }
+  return DEFAULT_PATH_NODES;
+}
+
+// what a one node enemy's node is called in the editor
+const ONE_NODE_HEADINGS: Partial<Record<string, string>> = { leader_bats: "leader 2", bat: "swoop's end" };
+
+// a selected node's heading in the editor: a one node enemy's what its node
+// is, or which node of a path enemy's path
+export function nodeHeading(object: LevelObject, node: number): string {
+  return ONE_NODE_HEADINGS[object.enemy ?? ""] ?? `node ${node + 1} of ${nodeCount(object)}`;
+}
 
 // an enemy's path with one of its nodes moved to position (in blender), the rest
 // as they were; an enemy without a path of its own gets its default path
