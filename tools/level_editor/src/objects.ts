@@ -85,10 +85,25 @@ function countFallback(enemy: EnemyType | undefined): number {
   return BADGER_COUNT;
 }
 
+// how many seconds between a bat roost's flocks: temple ruins' roosts' (their
+// code's default, 300 frames), and sunset vista's first leader bats' (135 frames)
+export const BAT_DELAY = 10;
+export const LEADER_BATS_DELAY = 4.5;
+export const DELAY_MIN = 1;
+export const DELAY_MAX = 20;
+
+// the seconds between flocks for a bat roost without a delay
+function delayFallback(enemy: EnemyType | undefined): number {
+  if (enemy === "leader_bats") {
+    return LEADER_BATS_DELAY;
+  }
+  return BAT_DELAY;
+}
+
 // the enemy settings that are a number in a range, and for each: the enemies
 // that have it (named for messages), its range, whether it's whole, what it is
 // without one (left out of objects.json), and what it means
-export const NUMBER_SETTINGS = ["speed", "start", "count"] as const;
+export const NUMBER_SETTINGS = ["speed", "start", "count", "delay"] as const;
 export type NumberSetting = (typeof NUMBER_SETTINGS)[number];
 
 interface NumberSettingRule {
@@ -105,6 +120,7 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   speed: { enemies: PATH_ENEMIES, enemiesNamed: PATH_ENEMIES_NAMED, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: () => 1, meaning: "times the game's own pace" },
   start: { enemies: ["rolling_stone"], enemiesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
   count: { enemies: ["badger", "walking_spider", "bat", "leader_bats"], enemiesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
+  delay: { enemies: ["bat", "leader_bats"], enemiesNamed: "bats and leader bats", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks" },
 };
 
 // whether an object is an enemy with a number setting
@@ -126,6 +142,7 @@ export interface LevelObject {
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
   reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping the other way (true, or none)
   count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
+  delay?: number;       // the seconds between a bat roost's flocks (BAT_DELAY, LEADER_BATS_DELAY without one)
 }
 
 // whether an object is an enemy that moves along a path
@@ -157,7 +174,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count"];
+const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
