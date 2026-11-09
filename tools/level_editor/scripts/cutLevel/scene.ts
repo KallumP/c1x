@@ -43,7 +43,7 @@ const PIT_OBJECT = "pit_acid"; // a pit (builder/collision.ts) kills crash
 const FLAT_IMAGE_SIZE = 8;
 
 // a game point in blender metres from the centre: blender's y is the game's -z, its z the game's y (up)
-function toBlender([x, y, z]: Vec3, { centre, scale }: SceneOptions): Vec3 {
+export function toBlender([x, y, z]: Vec3, { centre, scale }: Pick<SceneOptions, "centre" | "scale">): Vec3 {
   return [(x - centre[0]) / scale, -(z - centre[2]) / scale + 0, (y - centre[1]) / scale]; // + 0 turns -0 into 0
 }
 
