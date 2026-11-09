@@ -122,8 +122,9 @@ function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffe
   return withPath(entity, run);
 }
 
-// the enemies that stay at their spot: jungle rollers' plant, and the spider hanging there
-const STANDING_ENEMIES: EnemyType[] = ["plant", "spider"];
+// the enemies that stay at their spot: jungle rollers' plant, up the creek's two
+// river plants, and the spider hanging there
+const STANDING_ENEMIES: EnemyType[] = ["plant", "red_river_plant", "green_river_plant", "spider"];
 
 // places objects in the level: where they are in it, which zone they're in, and their entities
 class ObjectPlacer {
