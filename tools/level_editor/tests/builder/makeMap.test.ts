@@ -531,11 +531,11 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(sounds.every((eid) => soundsOf(level).includes(eid))).toBe(true);
     });
 
-    test("bats bring one texture page (sunset vista's code reaches only its bats), not temple ruins' three", () => {
+    test("bats bring two texture pages (sunset vista's code reaches only its bats and leader bats), not temple ruins' three", () => {
       const pagesOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_TEXTURE).length;
       const without = make(MAP_OBJ, { scale: 256, objects: [], readOtherLevel }).level;
       const withBats = make(MAP_OBJ, { scale: 256, objects: [bat(), bat({ at: [-1, 4, 0] })], readOtherLevel }).level;
-      expect(pagesOf(withBats) - pagesOf(without)).toBe(1);
+      expect(pagesOf(withBats) - pagesOf(without)).toBe(2);
     });
 
     test("a bat roost is temple ruins' kind (subtype 9, its flags left at their defaults but its count) though sunset vista has none", () => {
