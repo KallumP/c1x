@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { framesToLand, handOffset, LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
+import { framesToLand, handOffset, LAB_ASSISTANT_REACH, throwFlags, vialHeights } from "../../src/labAssistantThrow";
 
 const STEP = 34 / 1024; // how far a vial goes each frame, of its speed
 
@@ -17,6 +17,15 @@ describe("a lab assistant's vials (as seen in the game)", () => {
       expect(Math.abs(handX - x)).toBeLessThan(1);
       expect(Math.abs(handZ - z)).toBeLessThan(1);
     });
+  });
+
+  test("fly up from its hand (1211 over its feet) and down, a height each frame, until they're below the landing spot", () => {
+    const heights = vialHeights(0);
+    expect(heights.length).toBe(framesToLand(0) + 1);
+    expect(heights[0]).toBe(1211);
+    expect(Math.max(...heights)).toBeGreaterThan(1500);
+    expect(heights.at(-1)!).toBeLessThan(0);
+    expect(heights.at(-2)!).toBeGreaterThanOrEqual(0);
   });
 
   test("thrown as stormy ascent's first (2480 along -x) land about 1878 off on flat ground", () => {
