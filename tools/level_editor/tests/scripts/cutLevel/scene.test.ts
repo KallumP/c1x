@@ -3,6 +3,7 @@ import { colour5551, texinfoBytes, texturePage, TILE, type Rgb } from "../../../
 import { TEXINFOS_AT, type BuiltPolygon } from "../../../builder/worldGeometry";
 import type { CutLevel, CutWorld } from "../../../scripts/cutLevel/readCutLevel";
 import { cutLevelScene } from "../../../scripts/cutLevel/scene";
+import { cross, subtract, type Vec3 } from "../../../builder/vectors";
 
 const PAGE = 0x12345671;
 const ACID: Rgb = [200, 230, 40];
@@ -41,6 +42,28 @@ describe("a cut level as a blender scene", () => {
   test("its triangles are turned round, as the builder takes the other corner order as facing up", () => {
     const [face] = cutLevelScene(levelOf(worldWith([ROCK_WORD])), OPTIONS).objects[0].faces;
     expect(face.corners).toEqual([[0, 0, 0], [0, -1, 0], [1, 0, 0]]); // game (0,0,0), (0,0,400), (400,0,0)
+  });
+
+  // a world of one triangle with corners at (game units), in rock
+  const triangleWorld = (corners: Vec3[]): CutWorld => ({
+    name: "k0_4W", origin: [0, 0, 0], header, pages: [PAGE],
+    vertices: corners.map((at) => ({ at, colour: [100, 100, 100] as Rgb })),
+    polygons: [{ corners: [0, 1, 2], texinfo: ROCK_WORD, page: 0 }],
+  });
+  const upOf = ({ corners: [a, b, c] }: { corners: Vec3[] }) => {
+    const normal = cross(subtract(b, a), subtract(c, a));
+    return normal[2] / Math.hypot(...normal);
+  };
+
+  test("a floor wound the other way still faces up: the game draws world polygons from both sides, so their winding says nothing", () => {
+    const [face] = cutLevelScene(levelOf(triangleWorld([[0, 0, 0], [0, 0, 400], [400, 0, 0]])), OPTIONS).objects[0].faces;
+    expect(upOf(face)).toBeGreaterThan(0.5);
+  });
+
+  test("a wall is there both ways round, as the game draws it from both sides", () => {
+    const faces = cutLevelScene(levelOf(triangleWorld([[0, 0, 0], [400, 0, 0], [0, 400, 0]])), OPTIONS).objects[0].faces;
+    expect(faces.length).toBe(2);
+    expect(faces[1].corners).toEqual([faces[0].corners[0], faces[0].corners[2], faces[0].corners[1]]);
   });
 
   test("each texture region is a material with its image, and a triangle's UVs are its layout's corners (v up), turned round with it", () => {
