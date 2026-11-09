@@ -132,7 +132,7 @@ describe("boxTypeName", () => {
 
 describe("enemies", () => {
   test("knows the enemies custom levels can have, by name", () => {
-    expect(ENEMY_TYPES).toEqual(["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"]); // by what they do, as the palette lists them
+    expect(ENEMY_TYPES).toEqual(["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "lab_assistant", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"]); // by what they do, as the palette lists them
   });
 
   test("reads an enemy by its type and spot (a rolling stone's path comes with its track)", () => {
@@ -146,7 +146,8 @@ describe("enemies", () => {
       {"kind": "enemy", "type": "bat", "at": [6, 70, 0], "raise": 3},
       {"kind": "enemy", "type": "leader_bats", "at": [7, 80, 0], "raise": 2},
       {"kind": "enemy", "type": "lizard", "at": [8, 90, 0]},
-      {"kind": "enemy", "type": "red_lizard", "at": [9, 100, 0]}
+      {"kind": "enemy", "type": "red_lizard", "at": [9, 100, 0]},
+      {"kind": "enemy", "type": "lab_assistant", "at": [10, 110, 0]}
     ]`);
     expect(objects).toEqual([
       { kind: "enemy", enemy: "plant", at: [1, 10, 0], raise: 0, stack: 1 },
@@ -159,11 +160,12 @@ describe("enemies", () => {
       { kind: "enemy", enemy: "leader_bats", at: [7, 80, 0], raise: 2, stack: 1 },
       { kind: "enemy", enemy: "lizard", at: [8, 90, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "red_lizard", at: [9, 100, 0], raise: 0, stack: 1 },
+      { kind: "enemy", enemy: "lab_assistant", at: [10, 110, 0], raise: 0, stack: 1 },
     ]);
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, fish, crab, turtle, native, monkey, warthog, lizard, red_lizard, badger, walking_spider, bat, leader_bats, rolling_stone)"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, badger, walking_spider, bat, leader_bats, rolling_stone)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards and red lizards do)"],
