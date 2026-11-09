@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_PATH_NODES, defaultPath, enemyPath, handleLifts, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
+import { DEFAULT_PATH_NODES, defaultPath, enemyPath, handleLifts, nodeCount, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
+import { leaderBatSpots } from "../../src/coords";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
@@ -52,6 +53,19 @@ describe("an enemy's path", () => {
 
   test("its nodes' places in blender: from where the enemy stands, raised", () => {
     expect(pathPositions(enemy("turtle", { raise: 0.5, path: [[0, -1, 0], [2, 1, 0.25]] }), 0, 400)).toEqual([[1, 1, 3.5], [3, 3, 3.75]]);
+  });
+
+  test("a leader bats roost's are its leaders, where they hover without a path of its own (as the editor's always drawn them), 2 of them", () => {
+    const roost: LevelObject = { kind: "enemy", enemy: "leader_bats", at: [1, 2, 3], raise: 5, stack: 1 };
+    expect(pathPositions(roost, 90, 400)).toEqual(leaderBatSpots([1, 2, 3], 5, 90, 400));
+    expect(nodeCount(roost)).toBe(2);
+    expect(enemyPath({ ...roost, path: [[0, 0, 0], [3, 0, 0]] }, 0, 400)).toEqual([[0, 0, 0], [3, 0, 0]]);
+  });
+
+  test("dragging a leader bats roost's leader moves just that one", () => {
+    const roost: LevelObject = { kind: "enemy", enemy: "leader_bats", at: [0, 0, 0], raise: 0, stack: 1 };
+    const [, far] = leaderBatSpots([0, 0, 0], 0, 0, 400);
+    expect(noMinusZero(withNodeAt(roost, 0, [1, 1, 1], 0, 400))).toEqual(noMinusZero([[1, 1, 1], far]));
   });
 
   test("its length, along all its nodes", () => {
