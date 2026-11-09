@@ -17,7 +17,7 @@ export type ShapePart = Primitive & {
   name?: string;
 };
 
-type ModelledEnemy = Exclude<EnemyType, "rolling_stone" | "lizard" | "red_lizard">; // the lizards' come later // the leader bats' shape is its leaders'
+type ModelledEnemy = Exclude<EnemyType, "rolling_stone">; // the leader bats' shape is its leaders'
 type StandingEnemy = Exclude<ModelledEnemy, "spider" | "bat" | "leader_bats">; // all but the spider hanging on its thread and the flying bats
 
 const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth: "#b0233a", tooth: "#f4f1e0", soil: "#6b4a2b" };
@@ -30,6 +30,9 @@ const BADGER_COLOURS = { fur: "#1f1d24", stripe: "#e4dcc4", nose: "#3a3238", eye
 const RIVER_PLANT_COLOURS = { jaw: "#b0233a", tooth: "#f4f1e0" };
 const RIVER_PLANT_LEAVES = { blue: "#4a6478", green: "#2f7d32" };
 const FISH_COLOURS = { body: "#23306e", fin: "#e08a2a", eye: "#f4f1e0", pupil: "#1a1a1a" };
+// the lost city's lizards: green (LizgG) and red (LizrG), their bellies and eyes the same
+const LIZARD_SKINS = { lizard: "#6f9a32", red_lizard: "#b0402e" };
+const LIZARD_COLOURS = { belly: "#d8c27a", claw: "#e8e0c8", eye: "#f2d36b", pupil: "#1a1a1a" };
 const BAT_COLOURS = { body: "#3a2c34", wing: "#5a3a3e", ear: "#2a1e26", eye: "#f2d36b" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
@@ -222,6 +225,34 @@ function leaderBat(): ShapePart[] {
     ball(45, [0, 300, 40], BAT_COLOURS.body),
   ];
 }
+
+// one side of a lizard: a leg it stands on, an arm reaching out with its claws, a horn and an eye
+function lizardSide(skin: string): ShapePart[] {
+  return [
+    rod(32, 26, 260, [80, 160, 0], skin),
+    { kind: "box", size: [80, 30, 160], at: [80, 15, 50], colour: skin },
+    rod(16, 12, 220, [180, 470, 70], skin, { turn: [0, 0, 1.2] }),
+    ball(1, [285, 430, 90], LIZARD_COLOURS.claw, { stretch: [30, 20, 40] }),
+    rod(0, 14, 90, [40, 715, 80], LIZARD_COLOURS.claw),
+    ball(18, [48, 650, 200], LIZARD_COLOURS.eye, { name: "eye" }),
+    ball(8, [52, 652, 216], LIZARD_COLOURS.pupil),
+  ];
+}
+
+// one of the lost city's lizards (lizard green, red_lizard red): standing on
+// its hind legs, arms out, a long tail behind, facing +z
+function lizardOf(skin: string): ShapePart[] {
+  return [
+    ...bothSides(lizardSide(skin)),
+    ball(1, [0, 420, 0], skin, { stretch: [110, 180, 140] }),
+    ball(1, [0, 420, 60], LIZARD_COLOURS.belly, { stretch: [80, 140, 90] }),
+    ball(1, [0, 640, 120], skin, { stretch: [80, 70, 130] }),
+    ball(1, [0, 300, -420], skin, { stretch: [50, 50, 300] }),
+  ];
+}
+
+const lizard = () => lizardOf(LIZARD_SKINS.lizard);
+const redLizard = () => lizardOf(LIZARD_SKINS.red_lizard);
 
 // one of the crab's eyes, on its stalk
 function crabEye(): ShapePart[] {
@@ -512,12 +543,13 @@ const RIVER_PLANT_HEIGHT = 400;
 
 const GAME_HEIGHTS: Record<StandingEnemy, number> = {
   plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
-  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581,
+  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763,
 };
 
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
   plant, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
   blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
+  lizard, red_lizard: redLizard,
 };
 
 // each standing enemy's shape, on the floor, as tall as the game's model
