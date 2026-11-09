@@ -151,8 +151,11 @@ function batRoostExample(donor: Level): Buffer {
 }
 
 // where a leader bats roost's two leaders hover, from the roost, in game units:
-// as sunset vista's, where its bats come in and go out, below their flight's ends
-const LEADER_OFFSETS: Vec3[] = [[-200, -800, -400], [-6200, -800, -400]];
+// as sunset vista's, at its bats' flight's ends, where they come in and go out,
+// but down at the flight's lowest (sunset vista's are 800 down, over ledges
+// crash reaches them from), so that with the flight at crash's height he can
+// spin them on flat ground. only the bats follow the roost's path
+const LEADER_OFFSETS: Vec3[] = [[-200, -1700, -400], [-6200, -1700, -400]];
 
 // entities each enemy takes: a leader bats roost and its two leaders, one for the rest
 function entitiesFor(enemy: LevelObject): number {
