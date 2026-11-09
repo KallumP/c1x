@@ -109,6 +109,11 @@ export const BAT_SWOOP: [number, number][] = [
   [5384, -1200], [6156, -1336], [6924, -1300], [7692, -1236], [8464, -1200], [9232, -776], [10000, 0],
 ];
 
+// how high a bat roost goes over the floor, in game units: its bats' spot comes
+// down to 600 over it at the swoop's lowest, so they fly at crash, their bodies
+// (Ba1sG reaches 361 below its spot) clear of the floor
+export const BAT_ROOST_HEIGHT = 600 - Math.min(...BAT_SWOOP.map(([, up]) => up));
+
 // each point of a bat roost's swoop (in blender), for a roost at at, raised by
 // raise: back along the way the camera faces, towards the spawn
 export function batSwoop(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
