@@ -5,7 +5,7 @@ import { batSwoop, batSwoopEnd, blenderToView, leaderBatsFlight, boxSize, camera
 import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
-import { handleLifts, leaderBatsLeaders, nodesUnderEnds, pathPositions, pointAlongShare } from "../enemyPaths";
+import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
@@ -198,7 +198,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   // they go out; with a handle to drag it by while they're selected), and the
   // line of their bats' flight between them
   const renderLeaderBats = (object: LevelObject, index: number) => {
-    const [first, second] = leaderBatsLeaders(object, turn, scale);
+    const [first, second] = spotAndNode(object, turn, scale);
     const flight = leaderBatsFlight(first, second, turn, scale);
     const leaderOpacities = [1, FAR_END_OPACITY];
     return (

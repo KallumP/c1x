@@ -3,7 +3,7 @@
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { BAT_SWOOP, leaderBatsFlight, leapWay } from "../src/coords";
-import { inEvenSteps, leaderBatsLeaders, pathPositions, pathStep } from "../src/enemyPaths";
+import { inEvenSteps, pathPositions, pathStep, spotAndNode } from "../src/enemyPaths";
 import { hasPath, LEADER_BATS_LEADERS, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
@@ -228,7 +228,7 @@ class ObjectPlacer {
   // the leaders starts, the flight its path, and the two leaders (leader, an
   // example), each pointed at the roost by its id
   placeLeaderBats(enemy: LevelObject, roost: Buffer, leader: Buffer): void {
-    const leaders = leaderBatsLeaders(enemy, this.turn, this.scale).map((spot) => this.positionOf({ ...enemy, at: spot, raise: 0 }));
+    const leaders = spotAndNode(enemy, this.turn, this.scale).map((spot) => this.positionOf({ ...enemy, at: spot, raise: 0 }));
     const roostId = this.placeLeaderBatsRoost(enemy, roost);
     for (const spot of leaders) {
       const { zone, at } = this.inZone(spot);
@@ -238,7 +238,7 @@ class ObjectPlacer {
 
   // leader bats' roost, in the zone where their flight starts, the flight its path. its entity id
   private placeLeaderBatsRoost(enemy: LevelObject, roost: Buffer): number {
-    const [first, second] = leaderBatsLeaders(enemy, this.turn, this.scale);
+    const [first, second] = spotAndNode(enemy, this.turn, this.scale);
     const flight = leaderBatsFlight(first, second, this.turn, this.scale).map((point) => this.positionOf({ ...enemy, at: point, raise: 0 }));
     const { zone, at } = this.inZone(flight[0]);
     const path = flight.map((point) => point.map((value, axis) => at[axis] + value - flight[0][axis]) as Vec3);
