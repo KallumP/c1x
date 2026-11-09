@@ -27,6 +27,25 @@ export function framesToLand(height: number): number {
 // how far off its vials land on flat ground, thrown as stormy ascent's first
 export const LAB_ASSISTANT_REACH = HAND_AHEAD + framesToLand(0) * PRESET_SPEED * STEP;
 
+const TURN = 4096;           // the game's angles, a whole turn
+const FACING_WITHOUT_WAY = -1024; // back along the game's x, as stormy ascent's first faces
+const FLAG_MAX = 32767;      // an init flag is a 16 bit number
+
+const flag = (value: number) => Math.max(-FLAG_MAX, Math.min(FLAG_MAX, Math.round(value)));
+
+// a lab assistant's init flags (its code patched for custom levels) to throw
+// its vials from spot to landing (game units, y up): which way it faces (an
+// angle, 4096 a turn, 0 along the game's +z), and their speeds along x and z
+export function throwFlags(spot: [number, number, number], landing: [number, number, number]): [number, number, number] {
+  const [x, y, z] = [landing[0] - spot[0], landing[1] - spot[1], landing[2] - spot[2]];
+  const distance = Math.hypot(x, z);
+  if (distance === 0) {
+    return [FACING_WITHOUT_WAY, 0, 0];
+  }
+  const speed = throwSpeed(distance, y);
+  return [flag((Math.atan2(x, z) * TURN) / (2 * Math.PI)), flag((speed * x) / distance), flag((speed * z) / distance)];
+}
+
 // the speed along the ground (the units of its init flags) to land a vial
 // distance off and height up from the assistant's feet; none nearer than its hand
 export function throwSpeed(distance: number, height: number): number {

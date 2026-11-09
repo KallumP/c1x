@@ -5,6 +5,7 @@
 import { batSwoop, leaderBatsFlight, leapWay } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep, spotAndNode } from "../src/enemyPaths";
 import { hasPath, LEADER_BATS_LEADERS, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
+import { throwFlags } from "../src/labAssistantThrow";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
@@ -156,9 +157,8 @@ function entitiesFor(enemy: LevelObject): number {
 }
 
 // the enemies that stay at their spot: jungle rollers' plant, up the creek's two
-// river plants, the spider hanging there, and stormy ascent's lab assistant,
-// throwing vials from there as its first does (its init flag a, 90, how often)
-const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider", "lab_assistant"];
+// river plants, and the spider hanging there
+const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider"];
 
 // places objects in the level: where they are in it, which zone they're in, and their entities
 class ObjectPlacer {
@@ -208,6 +208,17 @@ class ObjectPlacer {
   placeAtSpot(enemy: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(enemy));
     this.entities[zone].push(withPosition(withEntityId(example, this.ids.shift()!), at));
+  }
+
+  // stormy ascent's lab assistant (example) at its spot, facing its landing spot
+  // (its path's node) and throwing its vials to land there: its init flags
+  // its facing and their speeds along x and z (its code is patched to read them)
+  placeLabAssistant(enemy: LevelObject, example: Buffer): void {
+    const [spot, landing] = spotAndNode(enemy, this.turn, this.scale).map((point) => this.positionOf({ ...enemy, at: point, raise: 0 }));
+    const [facing, alongX, alongZ] = throwFlags(spot, landing);
+    const { zone, at } = this.inZone(spot);
+    const placed = withPosition(withEntityId(example, this.ids.shift()!), at);
+    this.entities[zone].push(withInitFlagC(withInitFlagB(withInitFlagA(placed, facing), alongX), alongZ));
   }
 
   // an enemy that moves along its own level's path, as example, from its spot:
@@ -384,6 +395,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     return templates.entity(...ENEMY_ENTITIES[type]);
   };
   enemies.filter((enemy) => STANDING_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeAtSpot(enemy, enemyExample(enemy.enemy!)));
+  enemies.filter((enemy) => enemy.enemy === "lab_assistant").forEach((enemy) => placer.placeLabAssistant(enemy, enemyExample("lab_assistant")));
   enemies.filter((enemy) => OWN_PATH_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeWithItsPath(enemy, enemyExample(enemy.enemy!)));
   enemies.filter((enemy) => enemy.enemy === "bat").forEach((enemy) => placer.placeBatRoost(enemy, enemyExample("bat")));
   enemies.filter((enemy) => enemy.enemy === "leader_bats")
