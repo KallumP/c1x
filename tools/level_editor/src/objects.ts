@@ -49,12 +49,12 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 export type Vec3 = [number, number, number];
 
 // the enemies that move along a path of nodes, and how many nodes it can have
-export const PATH_ENEMIES = ["crab", "turtle", "native", "badger", "warthog", "walking_spider", "monkey"] as const satisfies readonly EnemyType[];
+export const PATH_ENEMIES = ["crab", "turtle", "native", "badger", "warthog", "walking_spider", "monkey", "lizard", "red_lizard"] as const satisfies readonly EnemyType[];
 export type PathEnemy = (typeof PATH_ENEMIES)[number];
 export const isPathEnemy = (type: EnemyType | undefined): type is PathEnemy => PATH_ENEMIES.some((enemy) => enemy === type);
 export const PATH_NODES_MAX = 20;
 
-// the enemies with a path, for messages: "crabs, turtles, natives, badgers, warthogs, walking spiders and monkeys"
+// the enemies with a path, for messages: "crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards and red lizards"
 const pluralName = (enemy: EnemyType) => `${enemy.replace("_", " ")}s`;
 const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map(pluralName).join(", ")} and ${pluralName(PATH_ENEMIES.at(-1)!)}`;
 

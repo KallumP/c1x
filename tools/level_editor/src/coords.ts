@@ -247,6 +247,13 @@ export const WARTHOG_RUN = 5200;
 // walking spider path, along the game's z (the route) (its default path, src/enemyPaths.ts)
 export const WALKING_SPIDER_RUN = 3200;
 
+// how far lizards go back and forth, in game units: the lost city's green
+// lizards' longest path, which they leap along, and its red lizards' shorter
+// one's points, which they hop along, each a straight line along the game's x
+// (their default paths, src/enemyPaths.ts)
+export const LIZARD_LEAPS = 3200;
+export const RED_LIZARD_HOPS = 4800;
+
 // how far a monkey walks back and forth, in game units: the great gate's monkeys'
 // path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const MONKEY_WALK = 2400;

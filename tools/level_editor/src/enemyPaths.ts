@@ -1,6 +1,6 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
-import { BADGER_RUN, batSwoopEnd, cameraFacing, leaderBatsGap, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import { BADGER_RUN, batSwoopEnd, cameraFacing, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
 import { hasOneNode, PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 3;
@@ -31,7 +31,7 @@ interface PathEnemyRun {
   step: number;
 }
 
-// crabs, natives and monkeys go across the map, as their levels have them; turtles and
+// crabs, natives, monkeys and lizards go across the map, as their levels have them; turtles and
 // warthogs along the route, the way the camera faces; badgers and walking spiders
 // along it the other way, at crash
 const PATH_ENEMY_RUNS: Record<PathEnemy, PathEnemyRun> = {
@@ -42,6 +42,8 @@ const PATH_ENEMY_RUNS: Record<PathEnemy, PathEnemyRun> = {
   warthog: { length: WARTHOG_RUN, way: cameraFacing, step: 744 },            // road to nowhere's warthogs' points
   walking_spider: { length: WALKING_SPIDER_RUN, way: towardsSpawn, step: 800 }, // fumbling in the dark's walking spiders' points, on average
   monkey: { length: MONKEY_WALK, way: stoneRolling, step: 480 },             // the great gate's monkeys' points
+  lizard: { length: LIZARD_LEAPS, way: stoneRolling, step: 1600 },          // the lost city's green lizards' leaps
+  red_lizard: { length: RED_LIZARD_HOPS, way: stoneRolling, step: 800 },    // the lost city's red lizards' hops
 };
 
 // how far apart a path's points are in the game for an enemy, at its own speed
