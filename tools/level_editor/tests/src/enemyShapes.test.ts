@@ -184,6 +184,18 @@ describe("enemy shapes", () => {
     expect(min[0] + max[0]).toBeCloseTo(0);
   });
 
+  test("the leader bat is as big as sunset vista's (Ba2wG): 394 tall, about 470 across, wings spread, and 300 long, its spot 262 above its lowest point", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.leader_bats);
+    expect(min[1]).toBeCloseTo(-262);
+    expect(max[1]).toBeCloseTo(132);
+    expect(max[0] - min[0]).toBeGreaterThan(420);
+    expect(max[0] - min[0]).toBeLessThan(520);
+    expect(max[2] - min[2]).toBeGreaterThan(240);
+    expect(max[2] - min[2]).toBeLessThan(350);
+    expect(min[0] + max[0]).toBeCloseTo(0);
+    expect(ENEMY_SHAPES.leader_bats.filter((part) => part.name === "eye").every((part) => part.at[2] > 0)).toBe(true);
+  });
+
   test("the bat faces +z too: its eyes are in front of its middle", () => {
     const eyes = ENEMY_SHAPES.bat.filter((part) => part.name === "eye");
     expect(eyes.length).toBeGreaterThan(0);

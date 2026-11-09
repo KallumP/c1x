@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { BAT_SWOOP, FISH_LEAP } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
@@ -587,6 +587,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const offsets = leaders.map((leader) => placedAt(leader).map((value, axis) => value - placedAt(roost)[axis]));
       expect(offsets).toEqual([[-200, -1700, -400], [-6200, -1700, -400]]);
       expect(new Set([roost, ...leaders].map(({ item }) => entityId(item))).size).toBe(3);
+    });
+
+    test("the editor draws a leader bats roost's flight as sunset vista's (LEADER_BATS_FLIGHT, back along the game's x and up)", () => {
+      const placed = enemies(make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats" })], readOtherLevel }).zone)
+        .find(({ type }) => type.join() === ENEMY_ENTITIES.leader_bats.join())!;
+      const [x0, y0] = placed.path[0];
+      expect(placed.path.map(([x, y]) => [x - x0, y - y0])).toEqual(LEADER_BATS_FLIGHT);
     });
 
     test("a leader bats roost's count is how many bats each flock has: its init flag a, 5 (as most of sunset vista's) without one", () => {

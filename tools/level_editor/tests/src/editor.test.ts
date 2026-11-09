@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { draggedBy, draggedTo, editorReducer, emptyEditor, newObject, placeableKind, type EditorAction, type EditorState, type Placeable } from "../../src/editor";
-import { BAT_SWOOP, DEFAULT_SCALE } from "../../src/coords";
+import { BAT_SWOOP, DEFAULT_SCALE, LEADER_BATS_FLIGHT } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 
 const box = (x: number): LevelObject => newObject("basic", [x, 0, 0]);
@@ -46,6 +46,12 @@ describe("new enemies", () => {
     expect(newObject("bat", [1, 2, 3], 400)).toEqual({ kind: "enemy", enemy: "bat", at: [1, 2, 3], raise: (lowest + 600) / 400, stack: 1 });
     expect(newObject("bat", [1, 2, 3], 2000).raise).toBeCloseTo((lowest + 600) / 2000);
     expect(newObject("bat", [1, 2, 3]).raise).toBeCloseTo((lowest + 600) / DEFAULT_SCALE);
+  });
+
+  test("a leader bats roost starts raised so its flight's lowest point is 600 game units over the floor, at the level's scale", () => {
+    const lowest = -Math.min(...LEADER_BATS_FLIGHT.map(([, up]) => up));
+    expect(newObject("leader_bats", [1, 2, 3], 400).raise).toBeCloseTo((lowest + 600) / 400);
+    expect(newObject("leader_bats", [1, 2, 3], 2000).raise).toBeCloseTo((lowest + 600) / 2000);
   });
 
   test("a level can have many, so adding one keeps the rest", () => {

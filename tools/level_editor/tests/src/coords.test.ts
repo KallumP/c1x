@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, BAT_SWOOP, batSwoop, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, BAT_SWOOP, batSwoop, LEADER_BATS_FLIGHT, leaderBatsFlight, LEADER_BAT_SPOTS, leaderBatSpots, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -108,6 +108,30 @@ describe("rolling stones", () => {
     expect(path[13][0]).toBeCloseTo(-10000 / 400);
     expect(path[13][1]).toBeCloseTo(0);
     expect(path[0][2]).toBeCloseTo(2);
+  });
+
+  test("a leader bats roost's bats fly as sunset vista's do: 13 points, 6400 back across the map, down 1700 at most (game units)", () => {
+    expect(LEADER_BATS_FLIGHT.length).toBe(13);
+    const path = leaderBatsFlight([1, 2, 3], 0, 0, 400);
+    expect(path[0]).toEqual([1, 2, 3]);
+    expect(path[12][0]).toBeCloseTo(1 - 6400 / 400);
+    expect(path[12][2]).toBeCloseTo(3);
+    expect(Math.min(...path.map(([, , z]) => z))).toBeCloseTo(3 - 1700 / 400);
+    expect(path.every(([, y]) => y === 2)).toBe(true);
+  });
+
+  test("a leader bats roost's flight turns with the level, back across the map as a stone rolls the other way, and lifts with raise", () => {
+    const path = leaderBatsFlight([0, 0, 0], 2, 90, 400);
+    expect(path[12][0]).toBeCloseTo(0);
+    expect(path[12][1]).toBeCloseTo(6400 / 400);
+    expect(path[0][2]).toBeCloseTo(2);
+  });
+
+  test("a leader bats roost's leaders hover at its flight's ends, down at its lowest, 400 towards the camera's way (game units)", () => {
+    expect(LEADER_BAT_SPOTS).toEqual([[-200, -1700, -400], [-6200, -1700, -400]]);
+    const [near, far] = leaderBatSpots([1, 2, 3], 0, 0, 400);
+    [near[0], near[1], near[2]].forEach((value, axis) => expect(value).toBeCloseTo([1 - 200 / 400, 2 + 1, 3 - 1700 / 400][axis]));
+    expect(far[0]).toBeCloseTo(1 - 6200 / 400);
   });
 
   test("a stone's path turns with the level and lifts with raise", () => {
