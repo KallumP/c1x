@@ -191,15 +191,18 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   const renderSecondLeaderHandle = (second: Vec3, index: number) =>
     renderPathHandle(second, index, 0, ENEMY_COLOURS.leader_bats, LEADER_BAT_TOP / scale);
 
-  // leader bats: their two leaders, the first where the object is and the
-  // second at its path's node (with a handle to drag it by while they're
-  // selected), and the line of their bats' flight between them
+  // leader bats: their two leaders, the first where the object is (solid,
+  // where the bats come in) and the second at its path's node (faded, where
+  // they go out; with a handle to drag it by while they're selected), and the
+  // line of their bats' flight between them
   const renderLeaderBats = (object: LevelObject, index: number) => {
     const [first, second] = leaderBatsLeaders(object, turn, scale);
     const flight = leaderBatsFlight(first, second, turn, scale);
+    const leaderOpacities = [1, FAR_END_OPACITY];
     return (
       <>
-        {[first, second].map((spot, leader) => renderShapeModel(ENEMY_SHAPES.leader_bats, blenderToView(spot), index, leader))}
+        {[first, second].map((spot, leader) =>
+          renderShapeModel(ENEMY_SHAPES.leader_bats, blenderToView(spot), index, leader, enemyTurn(turn), leaderOpacities[leader]))}
         <Line points={flight.map(blenderToView)} color={ENEMY_COLOURS.leader_bats} lineWidth={2} />
         {index === selected && renderSecondLeaderHandle(second, index)}
       </>
