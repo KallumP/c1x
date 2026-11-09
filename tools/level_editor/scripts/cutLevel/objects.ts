@@ -9,7 +9,7 @@ import { toBlender, type SceneFace, type SceneObject, type SceneOptions } from "
 const CRASH = 0;          // the cut level's entity types: crash,
 const BOX = 3;            // its boxes, by the game's box subtypes,
 const PLATFORM = 11;      // and its platforms over the acid, a box on each
-const END_PAST = 1200;    // how far past the last box along the route the end goes, in game units
+const END_PAST = 400;     // how far past the last box along the route the end goes, in game units (the cave's floor ends about 1.5 m past it)
 const PAD_RADIUS = 300;   // a platform's pad, in game units
 const PAD_DEPTH = 400;
 const PAD_SIDES = 6;
