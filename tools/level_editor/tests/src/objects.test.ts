@@ -303,6 +303,11 @@ describe("a rolling stone's direction", () => {
     expect(objects.map(({ reverse }) => reverse)).toEqual([true, undefined, undefined]);
   });
 
+  test("a lab assistant can throw the other way across the map, reversed", () => {
+    const [assistant] = parseObjects('[{"kind": "enemy", "type": "lab_assistant", "at": [0, 0, 0], "reverse": true}]');
+    expect(assistant.reverse).toBe(true);
+  });
+
   test("a fish can leap the other way across the map, reversed", () => {
     const [fish] = parseObjects('[{"kind": "enemy", "type": "fish", "at": [0, 0, 0], "reverse": true}]');
     expect(fish.reverse).toBe(true);
@@ -317,7 +322,7 @@ describe("a rolling stone's direction", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "reverse": true}]', "object 1: a crab has no reverse (rolling stones and fish do; reverse a crab's path instead)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "reverse": true}]', "object 1: a crab has no reverse (rolling stones, fish and lab assistants do; reverse a crab's path instead)"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "reverse": true}]', "object 1: unknown setting reverse"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": "yes"}]', "object 1: reverse should be true or false"],
   ])("refuses %s", (text, message) => {
