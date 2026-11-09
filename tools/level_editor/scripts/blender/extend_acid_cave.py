@@ -295,7 +295,7 @@ def end_chamber(parts):
         inward = (END_CENTRE[0] - middle[0], END_CENTRE[1] - middle[1], 0)
         wall(parts["chamber_walls"], (xa, ya), (xb, yb), END_FLOOR, END_FLOOR + 7, inward, carved)
     pillar = lambda x, y, z: lit(wall_light(z, END_FLOOR, END_FLOOR + 4.5) + 20)
-    for (x, y) in ring(END_CENTRE, 4.5, 6, math.pi / 6)[1:-1]:
+    for (x, y) in ring(END_CENTRE, 4.5, 6):  # none straight in front of the way in: two stand either side of it
         prism(parts["tiki"], (x, y), 0.6, 8, END_FLOOR, END_FLOOR + 4.5, pillar, cap=parts["tiki_cap"])
 
 
