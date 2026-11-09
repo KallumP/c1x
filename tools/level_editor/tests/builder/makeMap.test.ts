@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
+import { FISH_LEAP } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
@@ -482,6 +483,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const [first, last] = [placed.path[0], placed.path.at(-1)!];
       expect(last.map((value, axis) => value - first[axis])).toEqual([1600, 0, 0]);
       expect(Math.max(...placed.path.map(([, y]) => y)) - first[1]).toBe(2172);
+    });
+
+    test("the editor draws a fish's leap as up the creek's (FISH_LEAP, across and up)", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [river("fish")], readOtherLevel }).zone);
+      const [x0, y0] = placed.path[0];
+      expect(placed.path.map(([x, y]) => [x - x0, y - y0])).toEqual(FISH_LEAP);
     });
 
     test("a level with both river plants and a fish reads up the creek once, and has its river code", () => {

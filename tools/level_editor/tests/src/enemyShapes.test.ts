@@ -116,6 +116,47 @@ describe("enemy shapes", () => {
     expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
   });
 
+  test.each(["red_river_plant", "green_river_plant"] as const)("the %s stands on the floor, as big as the game's (RV1fV): about 1570 across, 602 tall and 1703 deep", (enemy) => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES[enemy]);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeCloseTo(602, -1);
+    expect(max[0] - min[0]).toBeGreaterThan(1400);
+    expect(max[0] - min[0]).toBeLessThan(1750);
+    expect(max[2] - min[2]).toBeGreaterThan(1500);
+    expect(max[2] - min[2]).toBeLessThan(1900);
+    expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
+  });
+
+  test("the river plants are one shape, the green one green where the red one is red", () => {
+    const [red, green] = [ENEMY_SHAPES.red_river_plant, ENEMY_SHAPES.green_river_plant];
+    expect(green.map(({ colour, ...shape }) => shape)).toEqual(red.map(({ colour, ...shape }) => shape));
+    const jawColours = (parts: typeof red) => new Set(parts.filter((part) => part.name === "jaw").map((part) => part.colour));
+    expect([...jawColours(red)].some((colour) => jawColours(green).has(colour))).toBe(false);
+  });
+
+  test("the river plants face +z too: their jaws are in front of their middles", () => {
+    const jaws = ENEMY_SHAPES.red_river_plant.filter((part) => part.name === "jaw");
+    expect(jaws.length).toBeGreaterThan(0);
+    expect(jaws.every((part) => part.at[2] > 0)).toBe(true);
+  });
+
+  test("the fish is on the floor, as big as the game's (RF1fV): about 434 long, 581 tall and 431 across", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.fish);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeCloseTo(581, -1);
+    expect(max[2] - min[2]).toBeGreaterThan(370);
+    expect(max[2] - min[2]).toBeLessThan(500);
+    expect(max[0] - min[0]).toBeGreaterThan(370);
+    expect(max[0] - min[0]).toBeLessThan(500);
+    expect(min[0] + max[0]).toBeCloseTo(0);
+  });
+
+  test("the fish faces +z too: its eyes are in front of its middle", () => {
+    const eyes = ENEMY_SHAPES.fish.filter((part) => part.name === "eye");
+    expect(eyes.length).toBeGreaterThan(0);
+    expect(eyes.every((part) => part.at[2] > 0)).toBe(true);
+  });
+
   test("the monkey faces +z too: its face is in front of its middle", () => {
     const faces = ENEMY_SHAPES.monkey.filter((part) => part.name === "face");
     expect(faces.length).toBeGreaterThan(0);
