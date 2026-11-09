@@ -208,9 +208,14 @@ describe("enemy paths", () => {
     expect(leaders.path).toEqual([[-14, 2, 0]]);
   });
 
-  test("leader bats' node is their second leader, which they have, though they don't walk a path", () => {
+  test("a bat roost can have a path of its swoop's end: where its bats' swoop ends, from the roost (at, raised), in metres", () => {
+    const [roost] = parseObjects('[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "path": [[10, -20, 0]]}]');
+    expect(roost.path).toEqual([[10, -20, 0]]);
+  });
+
+  test("leader bats' node is their second leader, and a bat roost's its swoop's end, which they have, though they don't walk a path", () => {
     const enemy = (type: "leader_bats" | "crab" | "bat") => ({ kind: "enemy" as const, enemy: type, at: [0, 0, 0] as Vec3, raise: 0, stack: 1 });
-    expect([hasNodes(enemy("leader_bats")), hasNodes(enemy("crab")), hasNodes(enemy("bat"))]).toEqual([true, true, false]);
+    expect([hasNodes(enemy("leader_bats")), hasNodes(enemy("crab")), hasNodes(enemy("bat")), hasNodes({ ...enemy("crab"), enemy: "fish" })]).toEqual([true, true, true, false]);
     expect([hasPath(enemy("leader_bats")), hasPath(enemy("crab"))]).toEqual([false, true]);
   });
 
@@ -234,6 +239,7 @@ describe("enemy paths", () => {
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": "across"}]', "object 1: a path should be 2 to"],
     ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: leader bats' path is their second leader, [[x, y, z]] in metres from the first"],
     ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "path": []}]', "object 1: leader bats' path is their second leader"],
+    ['[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a bat roost's path is its swoop's end, [[x, y, z]] in metres from the roost"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });

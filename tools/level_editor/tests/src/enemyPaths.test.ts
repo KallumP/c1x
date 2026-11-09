@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { DEFAULT_PATH_NODES, defaultPath, enemyPath, handleLifts, nodeCount, nodeHeading, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
-import { leaderBatsGap } from "../../src/coords";
+import { batSwoopEnd, leaderBatsGap } from "../../src/coords";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
@@ -68,8 +68,16 @@ describe("an enemy's path", () => {
     expect(withNodeAt(leaders, 0, [2, 3, 1], 0, 400)).toEqual([[2, 3, 0]]);
   });
 
-  test("a node's heading in the editor: leader bats' is their second leader, a path enemy's which node of how many", () => {
+  test("a bat roost's is its swoop's end: its own, or 10000 game units back along the route from the roost without one", () => {
+    const roost: LevelObject = { kind: "enemy", enemy: "bat", at: [1, 2, 3], raise: 5, stack: 1 };
+    const end = batSwoopEnd(90, 400);
+    pathPositions(roost, 90, 400)[0].forEach((value, axis) => expect(value).toBeCloseTo([1, 2, 8][axis] + end[axis]));
+    expect(nodeCount(roost)).toBe(1);
+  });
+
+  test("a node's heading in the editor: leader bats' is their second leader, a bat roost's its swoop's end, a path enemy's which node of how many", () => {
     expect(nodeHeading({ kind: "enemy", enemy: "leader_bats", at: [0, 0, 0], raise: 0, stack: 1 }, 0)).toBe("leader 2");
+    expect(nodeHeading({ kind: "enemy", enemy: "bat", at: [0, 0, 0], raise: 0, stack: 1 }, 0)).toBe("swoop's end");
     expect(nodeHeading(enemy("crab"), 1)).toBe("node 2 of 3");
   });
 
