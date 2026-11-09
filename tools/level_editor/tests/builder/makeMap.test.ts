@@ -465,6 +465,14 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(["FJufA", "FSpfA"].map(stringToEid).every((eid) => sounds.includes(eid))).toBe(true);
     });
 
+    test.each(["red_river_plant", "green_river_plant"] as const)("a %s stands at its spot, as its entity, a single point there", (type) => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [river(type)], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES[type]);
+      expect(placed.path.length).toBe(1);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+    });
+
     test("a level with both river plants and a fish reads up the creek once, and has its river code", () => {
       const read: number[] = [];
       const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
