@@ -173,6 +173,23 @@ describe("enemy shapes", () => {
     expect(min[0] + max[0]).toBeCloseTo(0);
   });
 
+  test("the bat is as big as the game's (Ba1sG): 567 tall, about 220 across and 300 long, its spot 361 above its lowest point, as the game's", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.bat);
+    expect(min[1]).toBeCloseTo(-361);
+    expect(max[1]).toBeCloseTo(206);
+    expect(max[0] - min[0]).toBeGreaterThan(180);
+    expect(max[0] - min[0]).toBeLessThan(270);
+    expect(max[2] - min[2]).toBeGreaterThan(250);
+    expect(max[2] - min[2]).toBeLessThan(350);
+    expect(min[0] + max[0]).toBeCloseTo(0);
+  });
+
+  test("the bat faces +z too: its eyes are in front of its middle", () => {
+    const eyes = ENEMY_SHAPES.bat.filter((part) => part.name === "eye");
+    expect(eyes.length).toBeGreaterThan(0);
+    expect(eyes.every((part) => part.at[2] > 0)).toBe(true);
+  });
+
   test("the fish faces +z too: its eyes are in front of its middle", () => {
     const eyes = ENEMY_SHAPES.fish.filter((part) => part.name === "eye");
     expect(eyes.length).toBeGreaterThan(0);

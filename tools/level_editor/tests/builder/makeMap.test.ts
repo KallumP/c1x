@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { FISH_LEAP } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
@@ -540,6 +540,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const [first, last] = [placed.path[0], placed.path.at(-1)!];
       expect(last.map((value, axis) => value - first[axis])).toEqual([0, 0, 10000]);
       expect(Math.min(...placed.path.map(([, y]) => y)) - first[1]).toBe(-1336);
+    });
+
+    test("the editor draws a bat roost's swoop as temple ruins' (BAT_SWOOP, along the game's z and up)", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [bat()], readOtherLevel }).zone);
+      const [, y0, z0] = placed.path[0];
+      expect(placed.path.map(([, y, z]) => [z - z0, y - y0])).toEqual(BAT_SWOOP);
     });
 
     test("a bat roost's count is how many bats it sends: its init flag a, 4 (as temple ruins') without one", () => {
