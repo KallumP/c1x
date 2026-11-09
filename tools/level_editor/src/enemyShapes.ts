@@ -26,7 +26,7 @@ const WARTHOG_COLOURS = { hide: "#7a4a32", mane: "#3a2a20", snout: "#b07a64", tu
 const MONKEY_COLOURS = { fur: "#6b4226", face: "#d9b48a", eye: "#1a1a1a" };
 const SPIDER_COLOURS = { body: "#3b2a4a", leg: "#2a1d36", eye: "#e8d44d", thread: "#e6e6e6" };
 const BADGER_COLOURS = { fur: "#1f1d24", stripe: "#e4dcc4", nose: "#3a3238", eye: "#f4f1e0", pupil: "#1a1a1a" };
-const RIVER_PLANT_COLOURS = { jaw: "#b0233a", mouth: "#7a1424", tooth: "#f4f1e0" };
+const RIVER_PLANT_COLOURS = { jaw: "#b0233a", tooth: "#f4f1e0" };
 const RIVER_PLANT_LEAVES = { blue: "#4a6478", green: "#2f7d32" };
 const FISH_COLOURS = { body: "#23306e", fin: "#e08a2a", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
@@ -98,41 +98,45 @@ function turnedAbout(part: ShapePart, angle: number): ShapePart {
   return { ...part, at, turn: [turnX, turnY + angle, turnZ] };
 }
 
-// a river plant's jaw pointing along +z: a low red half-shell lying on the
-// floor, its teeth standing along its top
-function riverPlantJaw(): ShapePart[] {
-  const teeth = [340, 440, 540, 640, 740].map((along) =>
-    rod(0, 16, 80, [0, 190, along], RIVER_PLANT_COLOURS.tooth));
-  return [
-    ball(1, [0, 90, 540], RIVER_PLANT_COLOURS.jaw, { name: "jaw", stretch: [150, 100, 300] }),
-    ...teeth,
-  ];
+// a part tipped up about a level line across the plant (along x) at height
+// and depth pivot, so what's further along +z rises by angle
+function tippedUp(part: ShapePart, angle: number, [pivotY, pivotZ]: [number, number]): ShapePart {
+  const [x, y, z] = part.at;
+  const [up, along] = [y - pivotY, z - pivotZ];
+  const [turnX, turnY, turnZ] = part.turn ?? [0, 0, 0];
+  const at: Vec3 = [x, pivotY + up * Math.cos(angle) + along * Math.sin(angle), pivotZ + along * Math.cos(angle) - up * Math.sin(angle)];
+  return { ...part, at, turn: [turnX - angle, turnY, turnZ] };
 }
 
-// a leaf strip pointing along +z, curling up from the floor
+const PETAL_TILT = 0.6; // how far a river plant's petals open up from the floor, in radians
+
+// a river plant's petal pointing along +z: a red jaw rising from its middle,
+// its teeth standing along its top
+function riverPlantPetal(): ShapePart[] {
+  const teeth = [260, 360, 460, 560, 660].map((along) => rod(0, 16, 80, [0, 200, along], RIVER_PLANT_COLOURS.tooth));
+  const petal = [ball(1, [0, 120, 460], RIVER_PLANT_COLOURS.jaw, { name: "jaw", stretch: [170, 90, 330] }), ...teeth];
+  return petal.map((part) => tippedUp(part, PETAL_TILT, [120, 130]));
+}
+
+// a green bit pointing along +z, lying on the floor and curling up at its end
 function riverPlantLeaf(leafColour: string): ShapePart[] {
   return [
-    ball(1, [0, 60, 340], leafColour, { name: "leaf", stretch: [60, 20, 260], turn: [-0.2, 0, 0] }),
-    ball(1, [0, 260, 640], leafColour, { name: "leaf", stretch: [55, 18, 200], turn: [-1.0, 0, 0] }),
+    ball(1, [0, 40, 340], leafColour, { name: "leaf", stretch: [60, 20, 260], turn: [-0.2, 0, 0] }),
+    ball(1, [0, 220, 640], leafColour, { name: "leaf", stretch: [55, 18, 200], turn: [-1.0, 0, 0] }),
   ];
 }
 
-// the red bud in a river plant's middle, leaning back away from the player and pointing up
-function riverPlantBud(): ShapePart {
-  return rod(0, 170, 950, [0, 364, -523], RIVER_PLANT_COLOURS.jaw, { name: "bud", turn: [-1.1, 0, 0] });
-}
+const THIRD_TURN = (Math.PI * 2) / 3;
 
-const SIXTH_TURN = Math.PI / 3;
-
-// up the creek's biting plant, as the game shows it: a red bud leaning back and
-// up, two red jaws lying towards the player either side, teeth up, and leaf
-// strips, blue or green, curling up between them
+// up the creek's biting plant: three red petals with teeth, a third of a turn
+// apart (one behind, two towards the player), round a red bud in its middle,
+// with leaves, blue or green, between them
 function riverPlant(leafColour: string): ShapePart[] {
+  const petalAngles = [Math.PI, Math.PI + THIRD_TURN, Math.PI - THIRD_TURN];
   return [
-    riverPlantBud(),
-    ...[SIXTH_TURN, -SIXTH_TURN].flatMap((angle) => riverPlantJaw().map((part) => turnedAbout(part, angle))),
-    ...[0, 2 * SIXTH_TURN, -2 * SIXTH_TURN].flatMap((angle) => riverPlantLeaf(leafColour).map((part) => turnedAbout(part, angle))),
-    ball(1, [0, 120, 0], RIVER_PLANT_COLOURS.mouth, { stretch: [130, 110, 130] }),
+    ...petalAngles.flatMap((angle) => riverPlantPetal().map((part) => turnedAbout(part, angle))),
+    ...petalAngles.flatMap((angle) => riverPlantLeaf(leafColour).map((part) => turnedAbout(part, angle + Math.PI))),
+    ball(1, [0, 150, 0], RIVER_PLANT_COLOURS.jaw, { name: "bud", stretch: [150, 150, 150] }),
   ];
 }
 
