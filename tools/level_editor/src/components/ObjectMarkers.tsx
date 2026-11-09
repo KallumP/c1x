@@ -200,7 +200,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
 
   // a lab assistant: at its spot, facing the way it throws its vials across the map
   const renderLabAssistant = (object: LevelObject, index: number) => {
-    const way = labAssistantThrow(turn, object.reverse === true);
+    const way = labAssistantThrow(turn);
     const ahead = object.at.map((value, axis) => value + way[axis]) as Vec3;
     return renderShapeModel(ENEMY_SHAPES.lab_assistant, base(object), index, undefined, facingFrom(object.at, ahead, turn));
   };

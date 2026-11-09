@@ -25,7 +25,6 @@ const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up a
 // the enemies reversed across the map, and what their Reverse direction button does
 const ACROSS_REVERSE_TITLES: Partial<Record<EnemyType, string>> = {
   fish: "It leaps from the solid fish to the faded one, and back",
-  lab_assistant: "It throws its vials the other way across the map",
 };
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 

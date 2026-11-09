@@ -155,22 +155,9 @@ function entitiesFor(enemy: LevelObject): number {
   return 1;
 }
 
-// a lab assistant's first init flag is how fast it throws its vials along the
-// game's x, and its sign which way: stormy ascent's first's, on along +x
-const LAB_ASSISTANT_THROW = 90;
-
-// an enemy at its spot: a lab assistant throwing as stormy ascent's first, or
-// the other way across the map reversed
-function spotEnemyEntity(entity: Buffer, enemy: LevelObject): Buffer {
-  if (enemy.enemy === "lab_assistant") {
-    return withInitFlagA(entity, LAB_ASSISTANT_THROW * leapWay(enemy.reverse === true));
-  }
-  return entity;
-}
-
 // the enemies that stay at their spot: jungle rollers' plant, up the creek's two
 // river plants, the spider hanging there, and stormy ascent's lab assistant,
-// throwing vials from there
+// throwing vials from there as its first does (its init flag a, 90, how often)
 const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider", "lab_assistant"];
 
 // places objects in the level: where they are in it, which zone they're in, and their entities
@@ -220,7 +207,7 @@ class ObjectPlacer {
   // an enemy that stays at its spot (a plant or spider), as example, in the zone it's in
   placeAtSpot(enemy: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(enemy));
-    this.entities[zone].push(spotEnemyEntity(withPosition(withEntityId(example, this.ids.shift()!), at), enemy));
+    this.entities[zone].push(withPosition(withEntityId(example, this.ids.shift()!), at));
   }
 
   // an enemy that moves along its own level's path, as example, from its spot:
