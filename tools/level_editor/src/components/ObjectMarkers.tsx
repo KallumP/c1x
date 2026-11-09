@@ -28,7 +28,7 @@ const walkerSize = (parts: ShapePart[]) => {
 const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
 
 // the enemies that stay at their spot, drawn there
-const SPOT_ENEMIES = ["plant", "red_river_plant", "green_river_plant", "spider"] as const;
+const SPOT_ENEMIES = ["plant", "blue_river_plant", "green_river_plant", "spider"] as const;
 type SpotEnemy = (typeof SPOT_ENEMIES)[number];
 const isSpotEnemy = (enemy: string | undefined): enemy is SpotEnemy => SPOT_ENEMIES.some((spotEnemy) => spotEnemy === enemy);
 

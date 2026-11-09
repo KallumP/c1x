@@ -26,8 +26,8 @@ const WARTHOG_COLOURS = { hide: "#7a4a32", mane: "#3a2a20", snout: "#b07a64", tu
 const MONKEY_COLOURS = { fur: "#6b4226", face: "#d9b48a", eye: "#1a1a1a" };
 const SPIDER_COLOURS = { body: "#3b2a4a", leg: "#2a1d36", eye: "#e8d44d", thread: "#e6e6e6" };
 const BADGER_COLOURS = { fur: "#1f1d24", stripe: "#e4dcc4", nose: "#3a3238", eye: "#f4f1e0", pupil: "#1a1a1a" };
-const RIVER_PLANT_COLOURS = { stem: "#3d5a2a", leaf: "#2f7d32", mouth: "#7a1424", tooth: "#f4f1e0" };
-const RIVER_PLANT_JAWS = { red: "#b0233a", green: "#5aa02c" };
+const RIVER_PLANT_COLOURS = { jaw: "#b0233a", mouth: "#7a1424", tooth: "#f4f1e0" };
+const RIVER_PLANT_LEAVES = { blue: "#4a6478", green: "#2f7d32" };
 const FISH_COLOURS = { body: "#23306e", fin: "#e08a2a", eye: "#f4f1e0", pupil: "#1a1a1a" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
@@ -90,24 +90,24 @@ function plant(): ShapePart[] {
   ];
 }
 
-// one side of a river plant: a wide jaw spread out and up, teeth along its front, and a leaf behind
-function riverPlantSide(jawColour: string): ShapePart[] {
+// one side of a river plant: a wide red jaw spread out and up, teeth along its front, and a leaf behind
+function riverPlantSide(leafColour: string): ShapePart[] {
   const teeth = [100, 220, 340, 460].map((x) =>
     rod(0, 14, 60, [x, 300 + x * 0.42, 700], RIVER_PLANT_COLOURS.tooth, { turn: [Math.PI, 0, 0] }));
   return [
-    ball(1, [380, 360, 420], jawColour, { name: "jaw", stretch: [400, 80, 340], turn: [0, 0, 0.4] }),
+    ball(1, [380, 360, 420], RIVER_PLANT_COLOURS.jaw, { name: "jaw", stretch: [400, 80, 340], turn: [0, 0, 0.4] }),
     ...teeth,
-    ball(1, [350, 40, -450], RIVER_PLANT_COLOURS.leaf, { stretch: [220, 30, 380], turn: [0, 0.5, 0] }),
+    ball(1, [350, 40, -450], leafColour, { name: "leaf", stretch: [220, 30, 380], turn: [0, 0.5, 0] }),
   ];
 }
 
-// up the creek's biting plant: low and wide, its two jaws spread open towards the
-// player from a bulb on a short stalk, red inside; its jaws red or green
-function riverPlant(jawColour: string): ShapePart[] {
+// up the creek's biting plant: low and wide, its two red jaws spread open
+// towards the player from a red bulb on a short stalk; its leaves blue or green
+function riverPlant(leafColour: string): ShapePart[] {
   return [
-    ...bothSides(riverPlantSide(jawColour)),
-    rod(50, 70, 180, [0, 90, 100], RIVER_PLANT_COLOURS.stem),
-    ball(1, [0, 180, 150], RIVER_PLANT_COLOURS.stem, { stretch: [170, 180, 170] }),
+    ...bothSides(riverPlantSide(leafColour)),
+    rod(50, 70, 180, [0, 90, 100], leafColour, { name: "leaf" }),
+    ball(1, [0, 180, 150], RIVER_PLANT_COLOURS.jaw, { stretch: [170, 180, 170] }),
     ball(1, [0, 330, 380], RIVER_PLANT_COLOURS.mouth, { stretch: [230, 60, 220] }),
   ];
 }
@@ -416,12 +416,12 @@ export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 // tgeo's scale / 4096
 const GAME_HEIGHTS: Record<StandingEnemy, number> = {
   plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
-  red_river_plant: 602, green_river_plant: 602, fish: 581,
+  blue_river_plant: 602, green_river_plant: 602, fish: 581,
 };
 
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
   plant, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
-  red_river_plant: () => riverPlant(RIVER_PLANT_JAWS.red), green_river_plant: () => riverPlant(RIVER_PLANT_JAWS.green), fish,
+  blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
 };
 
 // each standing enemy's shape, on the floor, as tall as the game's model

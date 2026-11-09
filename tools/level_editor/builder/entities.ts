@@ -24,11 +24,11 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // warthog WartC, and the spiders SpidC: subtype 1 drops from its thread, subtype
 // 3 is an invisible spawner, like the badger's, that sends spiders along its path,
 // the monkey MonkC, and up the creek's river objects RivOC: subtypes 6 and 7 its
-// red and green biting plants, subtype 5 its leaping fish
+// biting plants with blue and green leaves, subtype 5 its leaping fish
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
-  red_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5],
+  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5],
 };
 // not in the level's total (an iron outline fills in as an iron box)
 // a rolling stone's first init flag is where in its cycle along its path and

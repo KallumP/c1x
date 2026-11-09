@@ -30,7 +30,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   warthog: ROAD_TO_NOWHERE,
   spider: FUMBLING_IN_THE_DARK,
   walking_spider: FUMBLING_IN_THE_DARK,
-  red_river_plant: UP_THE_CREEK,
+  blue_river_plant: UP_THE_CREEK,
   green_river_plant: UP_THE_CREEK,
   fish: UP_THE_CREEK,
 };
