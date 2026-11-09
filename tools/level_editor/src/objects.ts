@@ -25,7 +25,9 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // (builder/entities.ts), and takes those jungle rollers hasn't from the level
 // they're in (builder/donorObjects.ts). staying at their spot:
 // - plant: jungle rollers' biting plant, standing still
+// - red_river_plant, green_river_plant: up the creek's biting plants, standing still
 // - spider: fumbling in the dark's, dropping from its thread when crash comes near
+// - fish: up the creek's, leaping out of the river and back
 // walking back and forth along a path:
 // - crab: n. sanity beach's, across the map
 // - turtle: n. sanity beach's, along the route
@@ -37,7 +39,7 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - walking_spider: fumbling in the dark's
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track
-export const ENEMY_TYPES = ["plant", "spider", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "rolling_stone"] as const;
+export const ENEMY_TYPES = ["plant", "red_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];

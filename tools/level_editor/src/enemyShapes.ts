@@ -16,7 +16,7 @@ export type ShapePart = Primitive & {
   name?: string;
 };
 
-type ModelledEnemy = Exclude<EnemyType, "rolling_stone">;
+type ModelledEnemy = Exclude<EnemyType, "rolling_stone" | "red_river_plant" | "green_river_plant" | "fish">;
 type StandingEnemy = Exclude<ModelledEnemy, "spider">; // all but the spider hanging on its thread
 
 const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth: "#b0233a", tooth: "#f4f1e0", soil: "#6b4a2b" };
