@@ -4,11 +4,11 @@
 // everywhere; split into meshes of at most WGEO_MAX vertices and polygons
 import { facesDown, facesUp, FACING, isSpawn, normal } from "./faces";
 import type { Span } from "./fit";
-import type { Mesh } from "./obj";
+import type { Colour, Mesh, Triangle } from "./obj";
 import { floorDivide, roundHalfToEven } from "./pyMath";
 import { tileRegion, type RegionOnTile } from "./tileRegions";
 import type { Rgb } from "./tpage";
-import { cross, subtract, type Vec3 } from "./vectors";
+import { barycentric, cross, subtract, type Vec3 } from "./vectors";
 
 export const WGEO_MAX = 4096;        // polygon and vertex indices are 12 bits
 export const WGEO_ITEMS_MAX = 7500;  // vertices, polygons and texinfos (8 bytes each) a mesh fits in a page
@@ -188,6 +188,30 @@ class WorldMeshFiller {
   }
 }
 
+// a triangle's vertices' colours, if they all have one
+function triangleColours(mesh: Mesh, triangle: Triangle): Colour[] | null {
+  const colours = triangle.corners.map((index) => mesh.colours?.[index] ?? null);
+  if (colours.some((colour) => colour === null)) {
+    return null;
+  }
+  return colours as Colour[];
+}
+
+// the colour at point on a triangle with corners, blended from its corners' colours
+function blendedColour(point: Vec3, corners: Vec3[], colours: Colour[]): Rgb {
+  const weights = barycentric(point, corners);
+  return [0, 1, 2].map((channel) => Math.round(colours.reduce((sum, colour, corner) => sum + colour[channel] * weights[corner], 0))) as Rgb;
+}
+
+// how a face is coloured at each point: blended from its vertices' colours if
+// it has them, or lit, all one colour
+function faceColouring(corners: Vec3[], colours: Colour[] | null, lit: Rgb): (at: Vec3) => Rgb {
+  if (colours) {
+    return (at) => blendedColour(at, corners, colours);
+  }
+  return () => lit;
+}
+
 // whether the camera never sees a face: facing down (the camera looks down on
 // the level, and it would hide it), or a wall facing away from the camera
 // (along -z), as it always looks that way. collision still has them
@@ -217,8 +241,8 @@ export function worldMeshes(mesh: Mesh, options: WorldMeshOptions): WorldMesh[] 
     }
     const pageTexture = facesUp(facing) ? ground : side;
     const isTextured = triangle.material !== null && textured.has(triangle.material);
-    const colour = shade(facing);
     const corners = triangle.corners.map((index) => mesh.vertices[index]);
+    const colourAt = faceColouring(corners, triangleColours(mesh, triangle), shade(facing));
     for (const part of slices(corners, slicing).map((points) => points.map(snapToVertexGrid))) {
       if (span && !isInSpan(part, span)) {
         continue;
@@ -230,7 +254,7 @@ export function worldMeshes(mesh: Mesh, options: WorldMeshOptions): WorldMesh[] 
         }
         const texture = isTextured ? { material: triangle.material!, ...tileRegion(fan, facing, tile) } : pageTexture;
         const inZone = span ? fan.map(([x, y, z]) => [x, y, z - span[0]] as Vec3) : fan;
-        filler.add(inZone.map((at) => ({ at, colour })), texture);
+        filler.add(inZone.map((at, corner) => ({ at, colour: colourAt(fan[corner]) })), texture);
       }
     }
   }

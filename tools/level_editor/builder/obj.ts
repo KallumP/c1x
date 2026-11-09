@@ -11,8 +11,11 @@ export interface Triangle {
   material: string | null;           // its material (usemtl)
 }
 
+export type Colour = [number, number, number]; // 0 to 255
+
 export interface Mesh {
   vertices: Vec3[];
+  colours?: (Colour | null)[]; // each vertex's colour, if it has one (blender's v x y z r g b)
   triangles: Triangle[];
   materialLibraries: string[]; // the .mtl files the .obj names
 }
@@ -38,14 +41,22 @@ function vertexIndex(field: string, vertexCount: number, lineNumber: number): nu
   return index;
 }
 
+// a vertex colour from v's fields after x, y and z: 0 to 1 each, as blender writes them
+function vertexColour(fields: string[]): Colour | null {
+  if (fields.length < 3) {
+    return null;
+  }
+  return fields.slice(0, 3).map((field) => Math.round(Number(field) * 255)) as Colour;
+}
+
 // a mesh from the text of a .obj: vertices in zone units (scale zone units per
-// .obj unit, turned by turn degrees about the up axis) and triangles (polygons
-// are fanned). texture coordinates and normals are ignored
+// .obj unit, turned by turn degrees about the up axis), their colours, and
+// triangles (polygons are fanned). texture coordinates and normals are ignored
 export function readObj(text: string, scale: number, turn = 0): Mesh {
   if (turn % 90 !== 0) {
     throw new Error(`turn (${turn}) has to be a multiple of 90 degrees`);
   }
-  const mesh: Mesh = { vertices: [], triangles: [], materialLibraries: [] };
+  const mesh: Mesh = { vertices: [], colours: [], triangles: [], materialLibraries: [] };
   let object: string | null = null;
   let material: string | null = null;
   splitLines(text).forEach((line, index) => {
@@ -55,6 +66,7 @@ export function readObj(text: string, scale: number, turn = 0): Mesh {
       const [x, y, z] = rest.slice(0, 3).map((field) => Number(field) * scale);
       const [turnedX, turnedZ] = turned(x, z, turn);
       mesh.vertices.push([turnedX, y, turnedZ]);
+      mesh.colours!.push(vertexColour(rest.slice(3)));
     } else if (keyword === "o" || keyword === "g") {
       object = value;
     } else if (keyword === "usemtl") {
