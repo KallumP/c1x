@@ -473,6 +473,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
     });
 
+    test("a fish leaps from its spot as up the creek's do: up, 1600 across the map in an arc 2172 high, and down", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [river("fish")], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.fish);
+      expect(placed.path.length).toBe(14);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+      const [first, last] = [placed.path[0], placed.path.at(-1)!];
+      expect(last.map((value, axis) => value - first[axis])).toEqual([1600, 0, 0]);
+      expect(Math.max(...placed.path.map(([, y]) => y)) - first[1]).toBe(2172);
+    });
+
     test("a level with both river plants and a fish reads up the creek once, and has its river code", () => {
       const read: number[] = [];
       const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
