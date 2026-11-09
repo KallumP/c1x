@@ -5,14 +5,20 @@ import { isAbsolute, join } from "node:path";
 import { pythonModulo } from "./pyMath";
 import type { Vec3 } from "./vectors";
 
+export type Uv = [number, number]; // a texture coordinate, as .obj has it: 0 to 1 across its image, v up
+
 export interface Triangle {
   corners: [number, number, number]; // vertex indices
   object: string | null;             // the object it came from (o or g)
   material: string | null;           // its material (usemtl)
+  uvs?: Uv[];                        // its corners' texture coordinates, if its face gives them all
 }
+
+export type Colour = [number, number, number]; // 0 to 255
 
 export interface Mesh {
   vertices: Vec3[];
+  colours?: (Colour | null)[]; // each vertex's colour, if it has one (blender's v x y z r g b)
   triangles: Triangle[];
   materialLibraries: string[]; // the .mtl files the .obj names
 }
@@ -38,14 +44,46 @@ function vertexIndex(field: string, vertexCount: number, lineNumber: number): nu
   return index;
 }
 
+// the texture coordinate of a face's vertex (f's v/vt), if it has one
+function uvOf(field: string, uvs: Uv[], lineNumber: number): Uv | null {
+  const given = field.split("/")[1];
+  if (!given) {
+    return null;
+  }
+  const index = parseInt(given, 10);
+  const uv = uvs[index > 0 ? index - 1 : uvs.length + index];
+  if (!uv) {
+    throw new Error(`line ${lineNumber}: face uses texture coordinate ${given}, which isn't there`);
+  }
+  return uv;
+}
+
+// a face's texture coordinates, if all its vertices have one
+function faceUvs(fields: string[], uvs: Uv[], lineNumber: number): Uv[] | null {
+  const faceUvs = fields.map((field) => uvOf(field, uvs, lineNumber));
+  if (faceUvs.some((uv) => uv === null)) {
+    return null;
+  }
+  return faceUvs as Uv[];
+}
+
+// a vertex colour from v's fields after x, y and z: 0 to 1 each, as blender writes them
+function vertexColour(fields: string[]): Colour | null {
+  if (fields.length < 3) {
+    return null;
+  }
+  return fields.slice(0, 3).map((field) => Math.round(Number(field) * 255)) as Colour;
+}
+
 // a mesh from the text of a .obj: vertices in zone units (scale zone units per
-// .obj unit, turned by turn degrees about the up axis) and triangles (polygons
-// are fanned). texture coordinates and normals are ignored
+// .obj unit, turned by turn degrees about the up axis), their colours, and
+// triangles (polygons are fanned) with their texture coordinates. normals are ignored
 export function readObj(text: string, scale: number, turn = 0): Mesh {
   if (turn % 90 !== 0) {
     throw new Error(`turn (${turn}) has to be a multiple of 90 degrees`);
   }
-  const mesh: Mesh = { vertices: [], triangles: [], materialLibraries: [] };
+  const mesh: Mesh = { vertices: [], colours: [], triangles: [], materialLibraries: [] };
+  const uvs: Uv[] = [];
   let object: string | null = null;
   let material: string | null = null;
   splitLines(text).forEach((line, index) => {
@@ -55,6 +93,9 @@ export function readObj(text: string, scale: number, turn = 0): Mesh {
       const [x, y, z] = rest.slice(0, 3).map((field) => Number(field) * scale);
       const [turnedX, turnedZ] = turned(x, z, turn);
       mesh.vertices.push([turnedX, y, turnedZ]);
+      mesh.colours!.push(vertexColour(rest.slice(3)));
+    } else if (keyword === "vt") {
+      uvs.push([Number(rest[0]), Number(rest[1] ?? 0)]);
     } else if (keyword === "o" || keyword === "g") {
       object = value;
     } else if (keyword === "usemtl") {
@@ -63,8 +104,13 @@ export function readObj(text: string, scale: number, turn = 0): Mesh {
       mesh.materialLibraries.push(value);
     } else if (keyword === "f") {
       const corners = rest.map((field) => vertexIndex(field, mesh.vertices.length, index + 1));
+      const cornerUvs = faceUvs(rest, uvs, index + 1);
       for (let k = 1; k < corners.length - 1; k++) {
-        mesh.triangles.push({ corners: [corners[0], corners[k], corners[k + 1]], object, material });
+        const triangle: Triangle = { corners: [corners[0], corners[k], corners[k + 1]], object, material };
+        if (cornerUvs) {
+          triangle.uvs = [cornerUvs[0], cornerUvs[k], cornerUvs[k + 1]];
+        }
+        mesh.triangles.push(triangle);
       }
     }
   });

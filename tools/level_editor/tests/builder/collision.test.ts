@@ -146,6 +146,10 @@ describe("collision cells", () => {
     expect(cells.get([2, 1, 0])).toBe("floor");
   });
 
+  test("collision objects (named collision...) are solid, though not drawn", () => {
+    expect(kinds(floorMesh(0, 0, 256, 256, 256, "collision_floor"))).toEqual(new Set(["floor"]));
+  });
+
   test("pit wins where they share a cell", () => {
     const mesh = merged(floorMesh(0, 0, 256, 256, 256, "Ground"), floorMesh(0, 0, 256, 256, 256, "pit"));
     expect(kinds(mesh)).toEqual(new Set(["pit"]));

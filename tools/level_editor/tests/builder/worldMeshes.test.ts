@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { normal } from "../../builder/faces";
 import type { Mesh } from "../../builder/obj";
 import { floorDivide } from "../../builder/pyMath";
-import { tileRegion } from "../../builder/tileRegions";
+import { tileRegion, uvTileRegion } from "../../builder/tileRegions";
 import { LAYOUTS } from "../../builder/tpage";
 import { cross, subtract, type Vec3 } from "../../builder/vectors";
 import {
@@ -96,6 +96,11 @@ describe("world meshes", () => {
     }
   });
 
+  test("collision objects (named collision...) aren't drawn", () => {
+    expect(worldsOf(floorMesh(0, 0, 256, 256, 0, "collision_floor"))).toEqual([]);
+    expect(worldsOf(floorMesh(0, 0, 256, 256, 0, "floor")).length).toBe(1);
+  });
+
   test("up facing polygons use the ground texture, and the rest the side", () => {
     const [world] = worldsOf(merged(floorMesh(0, 0, 256, 256, 0), EAST_WALL));
     for (const polygon of world.polygons) {
@@ -151,6 +156,34 @@ describe("world meshes", () => {
   });
 });
 
+describe("vertex colours", () => {
+  // a floor from z 0 to 512, black along z 0 and grey (200) along z 512
+  const shadedFloor: Mesh = {
+    vertices: [[0, 0, 0], [256, 0, 0], [256, 0, 512], [0, 0, 512]],
+    colours: [[0, 0, 0], [0, 0, 0], [200, 200, 200], [200, 200, 200]],
+    triangles: [{ corners: [0, 2, 1], object: null, material: null }, { corners: [0, 3, 2], object: null, material: null }],
+    materialLibraries: [],
+  };
+
+  test("a face whose vertices have colours is shaded by them, in place of the builder's light", () => {
+    const [world] = worldsOf(shadedFloor, 1024);
+    const colourAt = (z: number) => world.vertices.find(({ at }) => at[2] === z)!.colour;
+    expect(colourAt(0)).toEqual([0, 0, 0]);
+    expect(colourAt(512)).toEqual([200, 200, 200]);
+  });
+
+  test("where a face is sliced, its colours are blended along it", () => {
+    const [world] = worldsOf(shadedFloor, 256);
+    expect(world.vertices.filter(({ at }) => at[2] === 256).map(({ colour }) => colour)).toContainEqual([100, 100, 100]);
+  });
+
+  test("a face with a vertex without a colour is lit as usual", () => {
+    const [world] = worldsOf({ ...shadedFloor, colours: [[0, 0, 0], null, [0, 0, 0], [0, 0, 0]] }, 1024);
+    const unlit = worldsOf({ ...shadedFloor, colours: undefined }, 1024)[0];
+    expect(world.vertices.slice(0, 3).map(({ colour }) => colour)).toEqual(unlit.vertices.slice(0, 3).map(({ colour }) => colour));
+  });
+});
+
 describe("textured materials", () => {
   test("their polygons get tile regions", () => {
     const mesh = withMaterials(merged(floorMesh(0, 0, 512, 512, 0), EAST_WALL), (index) => (index < 2 ? "stone" : "plain"));
@@ -178,6 +211,48 @@ describe("textured materials", () => {
   });
 });
 
+describe("textured faces with their own UVs", () => {
+  // a 1024 floor triangle in stone, the whole image on it, upside down from how it'd be projected
+  const uvFloor = (uvs: [number, number][]): Mesh => ({
+    vertices: [[0, 0, 0], [1024, 0, 0], [0, 0, 1024]],
+    triangles: [{ corners: [0, 2, 1], object: null, material: "stone", uvs }],
+    materialLibraries: [],
+  });
+  const regionsOf = (mesh: Mesh, piece: number) =>
+    worldMeshes(mesh, { piece, ground: GROUND, side: SIDE, tile: 256, textured: new Set(["stone"]) })[0].polygons.map(({ texture }) => texture).filter(isTileRegion);
+
+  test("keep them: the whole image on the face, in place of a projected part of it", () => {
+    const [region] = regionsOf(uvFloor([[0, 0], [0, 1], [1, 0]]), 2048);
+    expect(region).toMatchObject({ x: 0, y: 0, w: 64, h: 64 });
+    expect(LAYOUTS[region.layout]).toEqual([[0, 1], [0, 0], [1, 1]]);
+  });
+
+  test("sliced, each piece gets the part of the image under it", () => {
+    const regions = regionsOf(uvFloor([[0, 0], [0, 1], [1, 0]]), 512);
+    expect(regions.length).toBeGreaterThan(1);
+    expect(regions.every(({ w, h }) => w <= 64 && h <= 64)).toBe(true);
+    expect(regions.some(({ w, h }) => w < 64 || h < 64)).toBe(true);
+  });
+
+  test("a small face isn't sliced across a piece's edge: its image stays whole (a sliced piece's region is only the nearest the game can address)", () => {
+    // a 400 triangle from z 300 to 700, across the piece edge at 512
+    const small: Mesh = {
+      vertices: [[0, 0, 300], [400, 0, 300], [0, 0, 700]],
+      triangles: [{ corners: [0, 2, 1], object: null, material: "stone", uvs: [[0, 0], [0, 1], [1, 0]] }],
+      materialLibraries: [],
+    };
+    const regions = regionsOf(small, 512);
+    expect(regions.length).toBe(1);
+    expect(regions[0]).toMatchObject({ x: 0, y: 0, w: 64, h: 64 });
+  });
+
+  test("UVs beyond the image (repeating it) are projected as usual", () => {
+    const [region] = regionsOf(uvFloor([[0, 0], [0, 4], [4, 0]]), 2048);
+    const [projected] = regionsOf(uvFloor(undefined as unknown as [number, number][]), 2048);
+    expect(region).toEqual(projected);
+  });
+});
+
 describe("tile regions", () => {
   const UP: Vec3 = [0, 1, 0];
   const EAST: Vec3 = [1, 0, 0];
@@ -193,6 +268,19 @@ describe("tile regions", () => {
     expect(LAYOUTS[tileRegion([[0, 0, 0], [512, 0, 0], [512, 0, 512]], UP, 1024).layout]).toEqual([[0, 0], [1, 0], [1, 1]]);
     const startingElsewhere: Vec3[] = [[512, 0, 512], [0, 0, 0], [512, 0, 0]];
     expect(LAYOUTS[tileRegion(startingElsewhere, UP, 1024).layout]).toEqual([[1, 1], [0, 0], [1, 0]]);
+  });
+
+  test("from a face's UVs: the part of the image under them (v up, as .obj has it), and the corners where they are", () => {
+    const whole = uvTileRegion([[0, 1], [1, 1], [0, 0]]);
+    expect(whole).toMatchObject({ x: 0, y: 0, w: 64, h: 64 });
+    expect(LAYOUTS[whole.layout]).toEqual([[0, 0], [1, 0], [0, 1]]);
+    expect(uvTileRegion([[0.5, 0.5], [1, 0.5], [0.5, 0]])).toMatchObject({ x: 32, y: 32, w: 32, h: 32 });
+  });
+
+  test("a sliver lying on the image's bottom edge still gets a region inside the tile", () => {
+    const region = uvTileRegion([[0, 0], [0.5, 0], [0.25, 0]]); // every corner on the edge, as a thin slice of a face can be
+    expect(region.y + region.h).toBeLessThanOrEqual(64);
+    expect(region.x + region.w).toBeLessThanOrEqual(64);
   });
 
   test("walls are upright", () => {

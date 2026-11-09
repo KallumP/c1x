@@ -28,3 +28,6 @@ export const isPit = (triangle: Triangle) => objectNameStarts(triangle, "pit");
 
 // faces of an object named spawn... only mark where crash starts
 export const isSpawn = (triangle: Triangle) => objectNameStarts(triangle, "spawn");
+
+// faces of objects named collision... are solid but not drawn: collision only, such as a cut level's own (scripts/cutLevel)
+export const isCollisionOnly = (triangle: Triangle) => objectNameStarts(triangle, "collision");

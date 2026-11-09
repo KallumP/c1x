@@ -22,7 +22,8 @@ Each level gets its own folder in `level_src/`, such as `level_src/tide_ruins/`.
 
 - Put each image in a Principled BSDF's Base Color. Other shaders, such as Diffuse BSDF, aren't exported.
 - If the images are packed in the `.blend`, unpack them with File > External Data > Unpack Resources.
-- UVs aren't used: each image repeats every 2.6 m.
+- A face whose UVs are all on its image (0 to 1) keeps them. Otherwise its image repeats every 2.6 m, whatever its UVs.
+- To light faces yourself, give the mesh a colour attribute and turn on **Colors** when you export. 128 (0.5) leaves a texture as it is. Without colours, faces are lit by which way they face.
 
 **Export it:**
 
