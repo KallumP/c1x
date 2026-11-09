@@ -122,6 +122,45 @@ export function batSwoop(at: Vec3, raise: number, turn: number, scale: number): 
     [at[0] + (wayX * along) / scale, at[1] + (wayY * along) / scale, at[2] + raise + up / scale] as Vec3);
 }
 
+// sunset vista's leader bats' flight (its first roost's path), in game units
+// from the roost: along the game's x (back across the map) and up. its bats fly it once
+export const LEADER_BATS_FLIGHT: [number, number][] = [
+  [0, 0], [-56, -748], [-288, -1412], [-800, -1700], [-1600, -1700], [-2400, -1700], [-3200, -1700],
+  [-4000, -1700], [-4800, -1700], [-5600, -1700], [-6116, -1412], [-6348, -748], [-6400, 0],
+];
+
+// how high a leader bats roost goes over the floor, in game units: as a bat roost,
+// its bats' spot coming down to 600 over it at their flight's lowest
+export const LEADER_BATS_ROOST_HEIGHT = 600 - Math.min(...LEADER_BATS_FLIGHT.map(([, up]) => up));
+
+// where a leader bats roost's two leaders hover, from the roost, in game units
+// (along the game's x, up, along its z): as sunset vista's, at its bats'
+// flight's ends, where they come in and go out, but down at the flight's lowest
+// (sunset vista's are 800 down, over ledges crash reaches them from), so that
+// with the flight at crash's height he can spin them on flat ground. only the
+// bats follow the roost's path
+export const LEADER_BAT_SPOTS: Vec3[] = [[-200, -1700, -400], [-6200, -1700, -400]];
+
+// each point of a leader bats roost's flight (in blender), for a roost at at,
+// raised by raise: across the map, the other way from a rolling stone
+export function leaderBatsFlight(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
+  const [rollX, rollY] = stoneRolling(turn);
+  return LEADER_BATS_FLIGHT.map(([across, up]) =>
+    [at[0] + (rollX * across) / scale, at[1] + (rollY * across) / scale, at[2] + raise + up / scale] as Vec3);
+}
+
+// where a leader bats roost's leaders hover (in blender), for a roost at at,
+// raised by raise. the game's z runs back towards the spawn, against the camera
+export function leaderBatSpots(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
+  const [rollX, rollY] = stoneRolling(turn);
+  const [faceX, faceY] = cameraFacing(turn);
+  return LEADER_BAT_SPOTS.map(([across, up, along]) => [
+    at[0] + (rollX * across - faceX * along) / scale,
+    at[1] + (rollY * across - faceY * along) / scale,
+    at[2] + raise + up / scale,
+  ] as Vec3);
+}
+
 // how far a crab walks back and forth, in game units: n. sanity beach's first
 // crab's path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const CRAB_WALK = 1600;

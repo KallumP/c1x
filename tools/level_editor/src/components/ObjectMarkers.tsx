@@ -1,7 +1,7 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { batSwoop, blenderToView, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { batSwoop, blenderToView, leaderBatSpots, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
@@ -183,6 +183,22 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
+  // a leader bats roost: a bat at the roost, where its bats fly from, facing the
+  // way they fly (across the map), the line of their flight, and its two
+  // leaders hovering at the flight's ends
+  const renderLeaderBats = (object: LevelObject, index: number) => {
+    const flight = leaderBatsFlight(object.at, object.raise, turn, scale);
+    const facing = facingFrom(flight[0], flight[flight.length - 1], turn);
+    return (
+      <>
+        {renderShapeModel(ENEMY_SHAPES.bat, blenderToView(flight[0]), index, 0, facing)}
+        {leaderBatSpots(object.at, object.raise, turn, scale).map((spot, leader) =>
+          renderShapeModel(ENEMY_SHAPES.leader_bats, blenderToView(spot), index, 1 + leader))}
+        <Line points={flight.map(blenderToView)} color={ENEMY_COLOURS.leader_bats} lineWidth={2} />
+      </>
+    );
+  };
+
   // the rolling stone: a wheel where it starts along its track, turned to roll across the map as the game rolls it
   const renderStone = (object: LevelObject, index: number) => {
     const radius = STONE_TRACK.radius / scale;
@@ -319,6 +335,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     }
     if (object.enemy === "bat") {
       return renderBat(object, index);
+    }
+    if (object.enemy === "leader_bats") {
+      return renderLeaderBats(object, index);
     }
     return (
       <>

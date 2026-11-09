@@ -17,8 +17,8 @@ export type ShapePart = Primitive & {
   name?: string;
 };
 
-type ModelledEnemy = Exclude<EnemyType, "rolling_stone" | "leader_bats">; // the leader bats' comes later
-type StandingEnemy = Exclude<ModelledEnemy, "spider" | "bat">; // all but the spider hanging on its thread and the flying bat
+type ModelledEnemy = Exclude<EnemyType, "rolling_stone">; // the leader bats' shape is its leaders'
+type StandingEnemy = Exclude<ModelledEnemy, "spider" | "bat" | "leader_bats">; // all but the spider hanging on its thread and the flying bats
 
 const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth: "#b0233a", tooth: "#f4f1e0", soil: "#6b4a2b" };
 const TURTLE_COLOURS = { shell: "#b8282a", spot: "#2fa58c", skin: "#b5a35a", eye: "#f4f1e0", pupil: "#1a1a1a" };
@@ -202,6 +202,24 @@ function bat(): ShapePart[] {
     ...bothSides(batSide()),
     ball(1, [0, 250, 0], BAT_COLOURS.body, { stretch: [60, 95, 70] }),
     ball(45, [0, 350, 40], BAT_COLOURS.body),
+  ];
+}
+
+// one side of a leader bat: a wing spread out from its shoulder, tipped up, an ear and an eye
+function leaderBatSide(): ShapePart[] {
+  return [
+    { kind: "box", size: [140, 16, 180], at: [95, 260, -10], turn: [0, 0, 0.35], colour: BAT_COLOURS.wing },
+    rod(0, 18, 60, [22, 360, 30], BAT_COLOURS.ear),
+    ball(12, [20, 312, 82], BAT_COLOURS.eye, { name: "eye" }),
+  ];
+}
+
+// sunset vista's leader bat: a bat with its wings spread, hovering, facing +z
+function leaderBat(): ShapePart[] {
+  return [
+    ...bothSides(leaderBatSide()),
+    ball(1, [0, 200, 0], BAT_COLOURS.body, { stretch: [60, 90, 70] }),
+    ball(45, [0, 300, 40], BAT_COLOURS.body),
   ];
 }
 
@@ -510,6 +528,9 @@ const STANDING_SHAPES = Object.fromEntries(Object.entries(SHAPE_PARTS).map(([ene
 // below its spot its lowest point is, in game units, as the game's
 const BAT_HEIGHT = 567;
 const BAT_BELOW_SPOT = 361;
+// and sunset vista's leader bat (Ba2wG, its first frame in Ba2wV)
+const LEADER_BAT_HEIGHT = 394;
+const LEADER_BAT_BELOW_SPOT = 262;
 
 // each enemy's shape: the standing ones', the spider hanging as the walking
 // spider's body, and the bat about its spot as the game's
@@ -517,4 +538,5 @@ export const ENEMY_SHAPES: Record<ModelledEnemy, ShapePart[]> = {
   ...STANDING_SHAPES,
   spider: hangingSpider(STANDING_SHAPES.walking_spider),
   bat: lifted(scaledToHeight(standingOnFloor(bat()), BAT_HEIGHT), -BAT_BELOW_SPOT),
+  leader_bats: lifted(scaledToHeight(standingOnFloor(leaderBat()), LEADER_BAT_HEIGHT), -LEADER_BAT_BELOW_SPOT),
 };

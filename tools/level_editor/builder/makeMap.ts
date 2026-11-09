@@ -2,7 +2,7 @@
 // as the level's world meshes and collision, crash, and the objects placed in
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
-import { BAT_SWOOP, leapWay } from "../src/coords";
+import { BAT_SWOOP, LEADER_BAT_SPOTS, leapWay } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep } from "../src/enemyPaths";
 import { hasPath, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
@@ -150,17 +150,11 @@ function batRoostExample(donor: Level): Buffer {
   return withSubtype(withPath(roost, swoop), ENEMY_ENTITIES.bat[1]);
 }
 
-// where a leader bats roost's two leaders hover, from the roost, in game units:
-// as sunset vista's, at its bats' flight's ends, where they come in and go out,
-// but down at the flight's lowest (sunset vista's are 800 down, over ledges
-// crash reaches them from), so that with the flight at crash's height he can
-// spin them on flat ground. only the bats follow the roost's path
-const LEADER_OFFSETS: Vec3[] = [[-200, -1700, -400], [-6200, -1700, -400]];
 
 // entities each enemy takes: a leader bats roost and its two leaders, one for the rest
 function entitiesFor(enemy: LevelObject): number {
   if (enemy.enemy === "leader_bats") {
-    return 1 + LEADER_OFFSETS.length;
+    return 1 + LEADER_BAT_SPOTS.length;
   }
   return 1;
 }
@@ -234,7 +228,7 @@ class ObjectPlacer {
   // and go out, each pointed at the roost by its id
   placeLeaders(roost: LevelObject, roostId: number, leader: Buffer): void {
     const spot = this.positionOf(roost);
-    for (const offset of LEADER_OFFSETS) {
+    for (const offset of LEADER_BAT_SPOTS) {
       const { zone, at } = this.inZone(spot.map((value, axis) => value + offset[axis]) as Vec3);
       this.entities[zone].push(withInitFlagA(withPosition(withEntityId(leader, this.ids.shift()!), at), roostId));
     }
