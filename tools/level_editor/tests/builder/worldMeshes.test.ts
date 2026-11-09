@@ -151,6 +151,34 @@ describe("world meshes", () => {
   });
 });
 
+describe("vertex colours", () => {
+  // a floor from z 0 to 512, black along z 0 and grey (200) along z 512
+  const shadedFloor: Mesh = {
+    vertices: [[0, 0, 0], [256, 0, 0], [256, 0, 512], [0, 0, 512]],
+    colours: [[0, 0, 0], [0, 0, 0], [200, 200, 200], [200, 200, 200]],
+    triangles: [{ corners: [0, 2, 1], object: null, material: null }, { corners: [0, 3, 2], object: null, material: null }],
+    materialLibraries: [],
+  };
+
+  test("a face whose vertices have colours is shaded by them, in place of the builder's light", () => {
+    const [world] = worldsOf(shadedFloor, 1024);
+    const colourAt = (z: number) => world.vertices.find(({ at }) => at[2] === z)!.colour;
+    expect(colourAt(0)).toEqual([0, 0, 0]);
+    expect(colourAt(512)).toEqual([200, 200, 200]);
+  });
+
+  test("where a face is sliced, its colours are blended along it", () => {
+    const [world] = worldsOf(shadedFloor, 256);
+    expect(world.vertices.filter(({ at }) => at[2] === 256).map(({ colour }) => colour)).toContainEqual([100, 100, 100]);
+  });
+
+  test("a face with a vertex without a colour is lit as usual", () => {
+    const [world] = worldsOf({ ...shadedFloor, colours: [[0, 0, 0], null, [0, 0, 0], [0, 0, 0]] }, 1024);
+    const unlit = worldsOf({ ...shadedFloor, colours: undefined }, 1024)[0];
+    expect(world.vertices.slice(0, 3).map(({ colour }) => colour)).toEqual(unlit.vertices.slice(0, 3).map(({ colour }) => colour));
+  });
+});
+
 describe("textured materials", () => {
   test("their polygons get tile regions", () => {
     const mesh = withMaterials(merged(floorMesh(0, 0, 512, 512, 0), EAST_WALL), (index) => (index < 2 ? "stone" : "plain"));

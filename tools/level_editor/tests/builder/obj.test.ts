@@ -31,6 +31,12 @@ describe("reading a .obj", () => {
     expect(mesh.vertices.length).toBe(7);
   });
 
+  test("vertex colours (blender's v x y z r g b, 0 to 1) are read as 0 to 255, none where a vertex has none", () => {
+    const mesh = readObj(["v 0 0 0 1 0.5 0", "v 1 0 0", "v 0 0 1 0.2 0.4 0.6", "f 1 2 3"].join("
+"), 256);
+    expect(mesh.colours).toEqual([[255, 128, 0], null, [51, 102, 153]]);
+  });
+
   test("polygons are fanned into triangles", () => {
     const floor = readObj(QUAD_OBJ, 256).triangles.filter((triangle) => triangle.object === "Floor");
     expect(floor.map((triangle) => triangle.corners)).toEqual([[0, 1, 2], [0, 2, 3]]);
