@@ -576,7 +576,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(Math.min(...placed.path.map(([, y]) => y)) - first[1]).toBe(-1700);
     });
 
-    test("a leader bats roost has two leader bats (subtype 14) where its bats come in and go out, as sunset vista's: 200 and 6200 back along x, 800 down and 400 back along z, their flag a the roost's id", () => {
+    test("a leader bats roost has two leader bats (subtype 14) where its bats come in and go out, as sunset vista's (200 and 6200 back along x, 400 back along z), but down at the flight's lowest (1700), where crash can spin them, their flag a the roost's id", () => {
       const built = make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats" })], readOtherLevel });
       const items = zonesOf(built).flatMap((zone) => zoneEntities(zone).map((item) => ({ item, origin: zoneOrigin(zone) })));
       const placedAt = ({ item, origin }: (typeof items)[number]) => entityPosition(item).map((value, axis) => value + origin[axis]);
@@ -585,7 +585,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(leaders.length).toBe(2);
       leaders.forEach(({ item }) => expect(item.readInt16LE(ENTITY_INIT_FLAGS)).toBe(entityId(roost.item)));
       const offsets = leaders.map((leader) => placedAt(leader).map((value, axis) => value - placedAt(roost)[axis]));
-      expect(offsets).toEqual([[-200, -800, -400], [-6200, -800, -400]]);
+      expect(offsets).toEqual([[-200, -1700, -400], [-6200, -1700, -400]]);
       expect(new Set([roost, ...leaders].map(({ item }) => entityId(item))).size).toBe(3);
     });
 
