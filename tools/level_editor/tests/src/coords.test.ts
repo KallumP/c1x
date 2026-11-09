@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, BAT_SWOOP, batSwoop, LEADER_BATS_FLIGHT, leaderBatsFlight, LEADER_BAT_SPOTS, leaderBatSpots, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import type { Vec3 } from "../../src/objects";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, BAT_SWOOP, batSwoop, LEADER_BATS_FLIGHT, leaderBatsFlight, LEADER_BATS_GAP, leaderBatsGap, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -110,28 +111,37 @@ describe("rolling stones", () => {
     expect(path[0][2]).toBeCloseTo(2);
   });
 
-  test("a leader bats roost's bats fly as sunset vista's do: 13 points, 6400 back across the map, down 1700 at most (game units)", () => {
-    expect(LEADER_BATS_FLIGHT.length).toBe(13);
-    const path = leaderBatsFlight([1, 2, 3], 0, 0, 400);
-    expect(path[0]).toEqual([1, 2, 3]);
-    expect(path[12][0]).toBeCloseTo(1 - 6400 / 400);
-    expect(path[12][2]).toBeCloseTo(3);
-    expect(Math.min(...path.map(([, , z]) => z))).toBeCloseTo(3 - 1700 / 400);
-    expect(path.every(([, y]) => y === 2)).toBe(true);
+  test("leader bats' second leader is 6000 game units from the first by default, back across the map as a stone rolls the other way, turning with the level", () => {
+    expect(LEADER_BATS_GAP).toBe(6000);
+    expect(leaderBatsGap(0, 400).map((value) => value + 0)).toEqual([-15, 0, 0]);
+    leaderBatsGap(90, 400).forEach((value, axis) => expect(value).toBeCloseTo(stoneRolling(90)[axis] * -15));
   });
 
-  test("a leader bats roost's flight turns with the level, back across the map as a stone rolls the other way, and lifts with raise", () => {
-    const path = leaderBatsFlight([0, 0, 0], 2, 90, 400);
-    expect(path[12][0]).toBeCloseTo(0);
-    expect(path[12][1]).toBeCloseTo(6400 / 400);
-    expect(path[0][2]).toBeCloseTo(2);
+  test("with the leaders 6000 apart, the bats fly as sunset vista's do: from 1700 over the first leader and 200 before it, down past it, to the second and up 1700 again, 400 behind them (game units)", () => {
+    const first: Vec3 = [1, 2, 3];
+    const flight = leaderBatsFlight(first, [1 - 15, 2, 3], 0, 400);
+    expect(flight.length).toBe(13);
+    [1 + 200 / 400, 2 - 1, 3 + 1700 / 400].forEach((value, axis) => expect(flight[0][axis]).toBeCloseTo(value));
+    flight.forEach(([x, y, z], point) => {
+      const [across, up] = LEADER_BATS_FLIGHT[point];
+      [flight[0][0] + across / 400, flight[0][1], flight[0][2] + up / 400].forEach((value, axis) => expect([x, y, z][axis]).toBeCloseTo(value));
+    });
   });
 
-  test("a leader bats roost's leaders hover at its flight's ends, down at its lowest, 400 towards the camera's way (game units)", () => {
-    expect(LEADER_BAT_SPOTS).toEqual([[-200, -1700, -400], [-6200, -1700, -400]]);
-    const [near, far] = leaderBatSpots([1, 2, 3], 0, 0, 400);
-    [near[0], near[1], near[2]].forEach((value, axis) => expect(value).toBeCloseTo([1 - 200 / 400, 2 + 1, 3 - 1700 / 400][axis]));
-    expect(far[0]).toBeCloseTo(1 - 6200 / 400);
+  test("the bats fly to the second leader wherever it is: along the route, further and higher, in steps of at most 800 between the dive and the climb", () => {
+    const flight = leaderBatsFlight([0, 0, 0], [0, 20, 1], 0, 400);
+    [0, -200 / 400 - 1, 1700 / 400].forEach((value, axis) => expect(flight[0][axis]).toBeCloseTo(value));
+    [0, 20 + 200 / 400 - 1, 1 + 1700 / 400].forEach((value, axis) => expect(flight.at(-1)![axis]).toBeCloseTo(value));
+    const run = flight.slice(3, -3);
+    expect(run[0][1]).toBeCloseTo(600 / 400 - 1);
+    expect(run.at(-1)![1]).toBeCloseTo(20 - 600 / 400 - 1);
+    run.slice(1).forEach((point, step) => expect(Math.hypot(point[0] - run[step][0], point[1] - run[step][1])).toBeLessThanOrEqual(800 / 400 + 1e-9));
+  });
+
+  test("leaders closer together than the dive and climb take: the bats run between them at their middle", () => {
+    const flight = leaderBatsFlight([0, 0, 0], [-1, 0, 0], 0, 400);
+    expect(flight.length).toBe(7);
+    expect(flight[3][0]).toBeCloseTo(-0.5);
   });
 
   test("a stone's path turns with the level and lifts with raise", () => {
