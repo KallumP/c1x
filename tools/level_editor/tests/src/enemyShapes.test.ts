@@ -116,7 +116,7 @@ describe("enemy shapes", () => {
     expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
   });
 
-  test.each(["red_river_plant", "green_river_plant"] as const)("the %s stands on the floor, as big as the game's (RV1fV): about 1570 across, 602 tall and 1703 deep", (enemy) => {
+  test.each(["blue_river_plant", "green_river_plant"] as const)("the %s stands on the floor, as big as the game's (RV1fV): about 1570 across, 602 tall and 1703 deep", (enemy) => {
     const { min, max } = shapeBounds(ENEMY_SHAPES[enemy]);
     expect(min[1]).toBeCloseTo(0);
     expect(max[1]).toBeCloseTo(602, -1);
@@ -127,15 +127,17 @@ describe("enemy shapes", () => {
     expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
   });
 
-  test("the river plants are one shape, the green one green where the red one is red", () => {
-    const [red, green] = [ENEMY_SHAPES.red_river_plant, ENEMY_SHAPES.green_river_plant];
-    expect(green.map(({ colour, ...shape }) => shape)).toEqual(red.map(({ colour, ...shape }) => shape));
-    const jawColours = (parts: typeof red) => new Set(parts.filter((part) => part.name === "jaw").map((part) => part.colour));
-    expect([...jawColours(red)].some((colour) => jawColours(green).has(colour))).toBe(false);
+  test("the river plants are one shape with the same red jaws, their leaves blue or green", () => {
+    const [blue, green] = [ENEMY_SHAPES.blue_river_plant, ENEMY_SHAPES.green_river_plant];
+    expect(green.map(({ colour, ...shape }) => shape)).toEqual(blue.map(({ colour, ...shape }) => shape));
+    const colours = (parts: typeof blue, name: string) => new Set(parts.filter((part) => part.name === name).map((part) => part.colour));
+    expect(colours(green, "jaw")).toEqual(colours(blue, "jaw"));
+    expect(colours(blue, "leaf").size).toBeGreaterThan(0);
+    expect([...colours(blue, "leaf")].some((colour) => colours(green, "leaf").has(colour))).toBe(false);
   });
 
   test("the river plants face +z too: their jaws are in front of their middles", () => {
-    const jaws = ENEMY_SHAPES.red_river_plant.filter((part) => part.name === "jaw");
+    const jaws = ENEMY_SHAPES.blue_river_plant.filter((part) => part.name === "jaw");
     expect(jaws.length).toBeGreaterThan(0);
     expect(jaws.every((part) => part.at[2] > 0)).toBe(true);
   });
