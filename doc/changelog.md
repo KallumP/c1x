@@ -7,6 +7,7 @@
 - custom levels can have Up the Creek's biting river plants and its leaping fish
 - custom levels can have Temple Ruins' bats, which swoop down at Crash from wherever the level sends them
 - custom levels can have Sunset Vista's bats, which fly past in flocks until Crash spins both their leaders, wherever the level puts them
+- custom levels can set how often bats come
 - the acid cave cut from the original game, playable as a custom level, and going on past where it was cut off: a crystal geode, a mushroom grotto, a river gorge and a collapsed temple
 - custom level maps keep their UVs and vertex colours
 
