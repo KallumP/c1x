@@ -2,9 +2,9 @@
 // as the level's world meshes and collision, crash, and the objects placed in
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
-import { BAT_SWOOP, LEADER_BAT_SPOTS, leapWay } from "../src/coords";
+import { BAT_SWOOP, leapWay } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep } from "../src/enemyPaths";
-import { hasPath, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
+import { hasPath, LEADER_BATS_LEADERS, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
@@ -154,7 +154,7 @@ function batRoostExample(donor: Level): Buffer {
 // entities each enemy takes: a leader bats roost and its two leaders, one for the rest
 function entitiesFor(enemy: LevelObject): number {
   if (enemy.enemy === "leader_bats") {
-    return 1 + LEADER_BAT_SPOTS.length;
+    return 1 + LEADER_BATS_LEADERS;
   }
   return 1;
 }
@@ -224,12 +224,11 @@ class ObjectPlacer {
     return id;
   }
 
-  // a leader bats roost's two leaders (leader, an example), where its bats come in
-  // and go out, each pointed at the roost by its id
+  // a leader bats roost's two leaders (leader, an example) at its path's nodes
+  // (by default where its bats come in and go out), each pointed at the roost by its id
   placeLeaders(roost: LevelObject, roostId: number, leader: Buffer): void {
-    const spot = this.positionOf(roost);
-    for (const offset of LEADER_BAT_SPOTS) {
-      const { zone, at } = this.inZone(spot.map((value, axis) => value + offset[axis]) as Vec3);
+    for (const node of pathPositions(roost, this.turn, this.scale)) {
+      const { zone, at } = this.inZone(this.positionOf({ ...roost, at: node, raise: 0 }));
       this.entities[zone].push(withInitFlagA(withPosition(withEntityId(leader, this.ids.shift()!), at), roostId));
     }
   }
