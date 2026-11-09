@@ -101,6 +101,22 @@ describe("a cut level as a blender scene", () => {
     expect(cross(subtract(b, a), subtract(c, a))[0]).toBeLessThan(0); // facing -x, towards the route
   });
 
+  test("gaps in the acid (nothing over them, beside it) are filled with acid at its level", () => {
+    // acid over half of a 400 square (one triangle), the other half a gap; rock floor over a square beside it
+    const acid = triangleWorld([[0, -400, 0], [400, -400, 0], [0, -400, 400]]);
+    acid.polygons[0].texinfo = ACID_WORD;
+    const scene = cutLevelScene(levelOf(acid), OPTIONS);
+    const pit = scene.objects.find(({ name }) => name.startsWith("pit"))!;
+    const covered = (x: number, y: number) => pit.faces.some(({ corners: [a, b, c] }) => {
+      const d = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1]);
+      const l1 = ((b[1] - c[1]) * (x - c[0]) + (c[0] - b[0]) * (y - c[1])) / d;
+      const l2 = ((c[1] - a[1]) * (x - c[0]) + (a[0] - c[0]) * (y - c[1])) / d;
+      return l1 >= 0 && l2 >= 0 && l1 + l2 <= 1;
+    });
+    expect(covered(0.8, -0.8)).toBe(true); // the gap's half of the square, in blender metres (game 320, 320)
+    expect(pit.faces.flatMap(({ corners }) => corners).every(([, , z]) => z === -1)).toBe(true);
+  });
+
   test("each texture region is a material with its image, and a triangle's UVs are its layout's corners (v up), turned round with it", () => {
     const scene = cutLevelScene(levelOf(worldWith([ROCK_WORD])), OPTIONS);
     const [face] = scene.objects[0].faces;
