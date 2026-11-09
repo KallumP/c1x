@@ -1,6 +1,7 @@
 // sort lists (slst, see src/formats/slst.h and src/slst.c): for each camera
 // path point, the polygons the game draws, in the order it draws them
 import { ByteWriter, padTo4 } from "./bytes";
+import type { Vec3 } from "./vectors";
 import type { BuiltPolygon } from "./worldGeometry";
 import type { WorldVertex } from "./worldMeshes";
 
@@ -126,14 +127,42 @@ export interface ListedMesh {
   zOffset: number;
 }
 
-// slstItems for a zone's path (cameras at cameraZs) over the meshes it lists:
-// its own (offset 0) and the next zone's, further along -z
-export function zoneSlstItems(listed: ListedMesh[], cameraZs: number[], step: number): Buffer[] {
-  const cornerZs = ({ vertices }: ListedMesh, { corners }: BuiltPolygon) => corners.map((index) => vertices[index].at[2]);
-  const worldZmax = listed.map((mesh) => mesh.polygons.map((polygon) => Math.max(...cornerZs(mesh, polygon)) + mesh.zOffset));
-  const worldZmid = listed.map((mesh) => mesh.polygons.map((polygon) => {
-    const [a, b, c] = cornerZs(mesh, polygon);
-    return (a + b + c) / 3 + mesh.zOffset;
-  }));
-  return slstItems(worldZmax, cameraZs, step, SLST_NEAR, worldZmid);
+// how far a point is along a camera's view, backwards: its z and height seen by
+// a camera facing -z and looking lookDown (radians) below level. as with z
+// alone (a level camera), less is further in front
+const backAlongView = (z: number, height: number, lookDown: number) => z * Math.cos(lookDown) + height * Math.sin(lookDown);
+
+// each camera's place along its view, at the lower of its height and the next
+// point's, as the camera may go down between them
+function cameraPlaces(cameras: Vec3[], lookDown: number): number[] {
+  return cameras.map(([, height, z], index) => {
+    const lower = Math.min(height, (cameras[index + 1] ?? cameras[index])[1]);
+    return backAlongView(z, lower, lookDown);
+  });
+}
+
+// each mesh's polygons' places along the view: their corners' furthest back
+function polygonPlaces({ vertices, polygons, zOffset }: ListedMesh, lookDown: number): number[] {
+  return polygons.map(({ corners }) => Math.max(...corners.map((index) => {
+    const [, height, z] = vertices[index].at;
+    return backAlongView(z + zOffset, height, lookDown);
+  })));
+}
+
+// each mesh's polygons' middle z, to draw them farthest first
+function polygonMiddles({ vertices, polygons, zOffset }: ListedMesh): number[] {
+  return polygons.map(({ corners }) => {
+    const [a, b, c] = corners.map((index) => vertices[index].at[2]);
+    return (a + b + c) / 3 + zOffset;
+  });
+}
+
+// slstItems for a zone's path (its cameras' points, looking lookDown below level)
+// over the meshes it lists: its own (offset 0) and the next zone's, further along
+// -z. a camera looking down sees the floor reaching back under it, so whether a
+// polygon is in front is taken along its view, not along z
+export function zoneSlstItems(listed: ListedMesh[], cameras: Vec3[], step: number, lookDown = 0): Buffer[] {
+  const worldPlaces = listed.map((mesh) => polygonPlaces(mesh, lookDown));
+  const viewStep = step * Math.cos(lookDown);
+  return slstItems(worldPlaces, cameraPlaces(cameras, lookDown), viewStep, SLST_NEAR, listed.map(polygonMiddles));
 }
