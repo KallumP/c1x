@@ -34,6 +34,8 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - native: the great gate's, guarding its path with a shield
 // - monkey: the great gate's, across the map once crash comes near
 // - warthog: road to nowhere's, charging once crash comes near
+// - lizard: the lost city's green lizard, leaping back and forth along its path
+// - red_lizard: the lost city's red lizard, hopping along its path after crash
 // running out along their path, count at a time, when crash comes near:
 // - badger: jungle rollers'
 // - walking_spider: fumbling in the dark's
@@ -41,7 +43,7 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - leader_bats: sunset vista's, from a roost, flying across between two leader bats: kill both and they stop
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track
-export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
+export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];

@@ -28,11 +28,12 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // temple ruins' ruins objects RuiOC: subtype 9 a bat roost, which sends out bats
 // (subtype 11) along its path, and sunset vista's: subtype 12 a bat roost that
 // sends them whether crash is near or not, stopped by killing its two leader
-// bats (subtype 14)
+// bats (subtype 14), and the lost city's lizards LizaC: subtype 1 green, leaping
+// back and forth along its path, subtype 2 red, hopping along it after crash
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
-  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12],
+  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12], lizard: [47, 1], red_lizard: [47, 2],
 };
 // sunset vista's leader bat (RuiOC subtype 14): two hover where a leader bats
 // roost's bats come in and go out, and killing both stops it; its first init
