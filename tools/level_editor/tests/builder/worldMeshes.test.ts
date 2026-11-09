@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { normal } from "../../builder/faces";
 import type { Mesh } from "../../builder/obj";
 import { floorDivide } from "../../builder/pyMath";
-import { tileRegion } from "../../builder/tileRegions";
+import { tileRegion, uvTileRegion } from "../../builder/tileRegions";
 import { LAYOUTS } from "../../builder/tpage";
 import { cross, subtract, type Vec3 } from "../../builder/vectors";
 import {
@@ -206,6 +206,36 @@ describe("textured materials", () => {
   });
 });
 
+describe("textured faces with their own UVs", () => {
+  // a 1024 floor triangle in stone, the whole image on it, upside down from how it'd be projected
+  const uvFloor = (uvs: [number, number][]): Mesh => ({
+    vertices: [[0, 0, 0], [1024, 0, 0], [0, 0, 1024]],
+    triangles: [{ corners: [0, 2, 1], object: null, material: "stone", uvs }],
+    materialLibraries: [],
+  });
+  const regionsOf = (mesh: Mesh, piece: number) =>
+    worldMeshes(mesh, { piece, ground: GROUND, side: SIDE, tile: 256, textured: new Set(["stone"]) })[0].polygons.map(({ texture }) => texture).filter(isTileRegion);
+
+  test("keep them: the whole image on the face, in place of a projected part of it", () => {
+    const [region] = regionsOf(uvFloor([[0, 0], [0, 1], [1, 0]]), 2048);
+    expect(region).toMatchObject({ x: 0, y: 0, w: 64, h: 64 });
+    expect(LAYOUTS[region.layout]).toEqual([[0, 1], [0, 0], [1, 1]]);
+  });
+
+  test("sliced, each piece gets the part of the image under it", () => {
+    const regions = regionsOf(uvFloor([[0, 0], [0, 1], [1, 0]]), 512);
+    expect(regions.length).toBeGreaterThan(1);
+    expect(regions.every(({ w, h }) => w <= 64 && h <= 64)).toBe(true);
+    expect(regions.some(({ w, h }) => w < 64 || h < 64)).toBe(true);
+  });
+
+  test("UVs beyond the image (repeating it) are projected as usual", () => {
+    const [region] = regionsOf(uvFloor([[0, 0], [0, 4], [4, 0]]), 2048);
+    const [projected] = regionsOf(uvFloor(undefined as unknown as [number, number][]), 2048);
+    expect(region).toEqual(projected);
+  });
+});
+
 describe("tile regions", () => {
   const UP: Vec3 = [0, 1, 0];
   const EAST: Vec3 = [1, 0, 0];
@@ -221,6 +251,13 @@ describe("tile regions", () => {
     expect(LAYOUTS[tileRegion([[0, 0, 0], [512, 0, 0], [512, 0, 512]], UP, 1024).layout]).toEqual([[0, 0], [1, 0], [1, 1]]);
     const startingElsewhere: Vec3[] = [[512, 0, 512], [0, 0, 0], [512, 0, 0]];
     expect(LAYOUTS[tileRegion(startingElsewhere, UP, 1024).layout]).toEqual([[1, 1], [0, 0], [1, 0]]);
+  });
+
+  test("from a face's UVs: the part of the image under them (v up, as .obj has it), and the corners where they are", () => {
+    const whole = uvTileRegion([[0, 1], [1, 1], [0, 0]]);
+    expect(whole).toMatchObject({ x: 0, y: 0, w: 64, h: 64 });
+    expect(LAYOUTS[whole.layout]).toEqual([[0, 0], [1, 0], [0, 1]]);
+    expect(uvTileRegion([[0.5, 0.5], [1, 0.5], [0.5, 0]])).toMatchObject({ x: 32, y: 32, w: 32, h: 32 });
   });
 
   test("walls are upright", () => {
