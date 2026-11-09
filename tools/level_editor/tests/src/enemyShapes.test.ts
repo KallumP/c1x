@@ -136,10 +136,14 @@ describe("enemy shapes", () => {
     expect([...colours(blue, "leaf")].some((colour) => colours(green, "leaf").has(colour))).toBe(false);
   });
 
-  test("the river plants have three jaw petals a third of a turn apart, as the game's: one towards +z, two behind either side", () => {
+  test("a river plant is as the game shows it: a red bud pointing up behind, away from the player, and two jaws towards the player either side", () => {
+    const angleOf = ({ at: [x, , z] }: { at: number[] }) => Math.round((Math.atan2(x, z) * 180) / Math.PI);
     const jaws = ENEMY_SHAPES.blue_river_plant.filter((part) => part.name === "jaw");
-    const angles = jaws.map(({ at: [x, , z] }) => Math.round((Math.atan2(x, z) * 180) / Math.PI)).sort((first, second) => first - second);
-    expect(angles).toEqual([-120, 0, 120]);
+    expect(jaws.map(angleOf).sort((first, second) => first - second)).toEqual([-60, 60]);
+    const buds = ENEMY_SHAPES.blue_river_plant.filter((part) => part.name === "bud");
+    expect(buds.length).toBe(1);
+    expect(buds[0].at[2]).toBeLessThan(0);
+    expect(buds[0].at[0]).toBeCloseTo(0);
   });
 
   test("the fish is on the floor, as big as the game's (RF1fV): about 434 long, 581 tall and 431 across", () => {
