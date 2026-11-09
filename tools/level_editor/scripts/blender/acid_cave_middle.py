@@ -268,10 +268,12 @@ def terrain_faces(terrain, parts):
             corners = [terrain.at(c, r) for c, r in cell]
             colours = [vertex_light(terrain, c, r) for c, r in cell]
             level = acid_level(terrain.ys[row])
+            if all(z < level for _, _, z in corners):
+                parts["acid"].add([(x, y, level) for x, y, _ in corners], [ACID_GLOW] * 4, UP)
+                continue  # all under the acid
             for triangle in ([0, 1, 2], [0, 2, 3]):
                 add_above(parts, [corners[i] for i in triangle], [colours[i] for i in triangle], level)
-            if any(terrain.is_under_acid(c, r) for c, r in cell):
-                parts["acid"].add([(x, y, level) for x, y, _ in corners], [(150, 220, 90)] * 4, UP)
+                add_acid_over(parts, [corners[i] for i in triangle], level)
 
 
 def add_above(parts, corners, colours, level):
@@ -286,17 +288,41 @@ def add_above(parts, corners, colours, level):
         parts[material].add([kept[0], kept[k], kept[k + 1]], [kept_colours[0], kept_colours[k], kept_colours[k + 1]], UP)
 
 
+ACID_GLOW = (150, 220, 90)
+
+
+def add_acid_over(parts, corners, level):
+    """the acid over a terrain triangle's part under its level, laid flat at it: it meets
+    the ground along the same shoreline, so neither is drawn over the other"""
+    under, _ = clipped(corners, [ACID_GLOW] * len(corners), level, keep_above=False)
+    flat = [(x, y, level) for x, y, _ in under]
+    for k in range(1, len(flat) - 1):
+        parts["acid"].add([flat[0], flat[k], flat[k + 1]], [ACID_GLOW] * 3, UP)
+
+
 def clipped_above(corners, colours, level):
     """a polygon's part at or above height level, its corners and colours (blended where its edges cross it)"""
+    return clipped(corners, colours, level, keep_above=True)
+
+
+def side_of(height_over_level, keep_above):
+    """a corner's height over the level, as the side kept sees it: positive on the kept side"""
+    if keep_above:
+        return height_over_level
+    return -height_over_level
+
+
+def clipped(corners, colours, level, keep_above):
+    """a polygon's part above height level (or below it), its corners and colours (blended where its edges cross it)"""
     kept, kept_colours = [], []
     for index, corner in enumerate(corners):
         following = (index + 1) % len(corners)
-        here, there = corner[2] - level, corners[following][2] - level
+        here, there = side_of(corner[2] - level, keep_above), side_of(corners[following][2] - level, keep_above)
         if here >= 0:
             kept.append(corner)
             kept_colours.append(colours[index])
         if (here >= 0) != (there >= 0):
-            t = here / (here - there)
+            t = here / (here - there)  # the same point whichever side is kept: here and there flip together
             kept.append(tuple(a + (b - a) * t for a, b in zip(corner, corners[following])))
             kept_colours.append(tuple(round(a + (b - a) * t) for a, b in zip(colours[index], colours[following])))
     return kept, kept_colours
