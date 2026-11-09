@@ -76,6 +76,7 @@ const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the da
 const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x18)
 const hasSunsetVista = existsSync(`${STREAMS}/s0000023.nsd`); // sunset vista (0x23)
 const hasLostCity = existsSync(`${STREAMS}/s0000020.nsd`); // the lost city (0x20)
+const hasStormyAscent = existsSync(`${STREAMS}/s0000022.nsd`); // stormy ascent (0x22)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -514,6 +515,21 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel: readEach });
       expect(read).toEqual([0x18]);
       expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.fish[0]]).toBe(stringToEid("RivOC"));
+    });
+  });
+
+  describe.skipIf(!hasStormyAscent)("lab assistants, from stormy ascent", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const assistant = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "lab_assistant", ...more });
+
+    test("a level with a lab assistant has stormy ascent's lab assistant code, its model and its vial's, and every sound the code plays", () => {
+      const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [assistant()], readOtherLevel });
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.lab_assistant[0]]).toBe(stringToEid("LabAC"));
+      expect(["LW1EG", "LW1EV", "Vi1KG", "Vi1KV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      const donor = donorObject(readLevel(STREAMS, 0x22), ENEMY_ENTITIES.lab_assistant[0]);
+      const sounds = level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
+      expect(donor.sounds.length).toBeGreaterThan(0);
+      expect(donor.sounds.every(({ eid }) => sounds.includes(eid))).toBe(true);
     });
   });
 
