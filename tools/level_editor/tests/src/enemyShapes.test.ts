@@ -196,6 +196,23 @@ describe("enemy shapes", () => {
     expect(ENEMY_SHAPES.leader_bats.filter((part) => part.name === "eye").every((part) => part.at[2] > 0)).toBe(true);
   });
 
+  test.each(["lizard", "red_lizard"] as const)("the %s is on the floor, as big as the game's (LizgG, LizrG): 763 tall, about 630 across and 980 long, its eyes in front", (type) => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES[type]);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeCloseTo(763, -1);
+    expect(max[0] - min[0]).toBeGreaterThan(560);
+    expect(max[0] - min[0]).toBeLessThan(700);
+    expect(max[2] - min[2]).toBeGreaterThan(880);
+    expect(max[2] - min[2]).toBeLessThan(1080);
+    expect(min[0] + max[0]).toBeCloseTo(0);
+    expect(ENEMY_SHAPES[type].filter((part) => part.name === "eye").every((part) => part.at[2] > 0)).toBe(true);
+  });
+
+  test("the lizards differ by colour: green and red", () => {
+    const colours = (type: "lizard" | "red_lizard") => ENEMY_SHAPES[type].map(({ colour }) => colour);
+    expect(colours("lizard")).not.toEqual(colours("red_lizard"));
+  });
+
   test("the bat faces +z too: its eyes are in front of its middle", () => {
     const eyes = ENEMY_SHAPES.bat.filter((part) => part.name === "eye");
     expect(eyes.length).toBeGreaterThan(0);
