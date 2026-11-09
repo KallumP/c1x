@@ -156,8 +156,9 @@ function entitiesFor(enemy: LevelObject): number {
 }
 
 // the enemies that stay at their spot: jungle rollers' plant, up the creek's two
-// river plants, and the spider hanging there
-const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider"];
+// river plants, the spider hanging there, and stormy ascent's lab assistant,
+// throwing vials from there
+const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider", "lab_assistant"];
 
 // places objects in the level: where they are in it, which zone they're in, and their entities
 class ObjectPlacer {
