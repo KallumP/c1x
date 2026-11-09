@@ -1,7 +1,7 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { batSwoop, blenderToView, leaderBatSpots, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { batSwoop, blenderToView, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
@@ -26,6 +26,9 @@ const walkerSize = (parts: ShapePart[]) => {
   return { height: max[1], reach: Math.max(-min[0], max[0], -min[2], max[2]) };
 };
 const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
+
+// how far a leader bat's top is above where it hovers, in game units: its handle floats over it
+const LEADER_BAT_TOP = shapeBounds(ENEMY_SHAPES.leader_bats).max[1];
 
 // the enemies that stay at their spot, drawn there
 const SPOT_ENEMIES = ["plant", "blue_river_plant", "green_river_plant", "spider"] as const;
@@ -183,18 +186,24 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
+  // a leader bats roost's leaders' handles, over them, while it's selected
+  const renderLeaderHandles = (leaders: Vec3[], index: number) =>
+    leaders.map((spot, leader) => renderPathHandle(spot, index, leader, ENEMY_COLOURS.leader_bats, LEADER_BAT_TOP / scale));
+
   // a leader bats roost: a bat at the roost, where its bats fly from, facing the
   // way they fly (across the map), the line of their flight, and its two
-  // leaders hovering at the flight's ends
+  // leaders hovering at its path's nodes (by default the flight's ends), each
+  // with a handle to drag it by while the roost is selected
   const renderLeaderBats = (object: LevelObject, index: number) => {
     const flight = leaderBatsFlight(object.at, object.raise, turn, scale);
     const facing = facingFrom(flight[0], flight[flight.length - 1], turn);
+    const leaders = pathPositions(object, turn, scale);
     return (
       <>
         {renderShapeModel(ENEMY_SHAPES.bat, blenderToView(flight[0]), index, 0, facing)}
-        {leaderBatSpots(object.at, object.raise, turn, scale).map((spot, leader) =>
-          renderShapeModel(ENEMY_SHAPES.leader_bats, blenderToView(spot), index, 1 + leader))}
+        {leaders.map((spot, leader) => renderShapeModel(ENEMY_SHAPES.leader_bats, blenderToView(spot), index, 1 + leader))}
         <Line points={flight.map(blenderToView)} color={ENEMY_COLOURS.leader_bats} lineWidth={2} />
+        {index === selected && renderLeaderHandles(leaders, index)}
       </>
     );
   };
