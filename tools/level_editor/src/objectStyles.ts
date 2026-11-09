@@ -43,6 +43,7 @@ export const ENEMY_COLOURS: Record<EnemyType, string> = {
   leader_bats: "#8a3b5e",
   lizard: "#7fa83a",
   red_lizard: "#b8433a",
+  lab_assistant: "#c9ccd6",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";
