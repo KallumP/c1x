@@ -5,6 +5,7 @@ import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { levelFilesUrl, type LevelInfo } from "../api";
 import { boxUvs } from "./boxUvs";
+import { isCollisionOnly } from "./collisionObjects";
 
 async function fetchText(url: string): Promise<string | null> {
   const res = await fetch(url);
@@ -54,6 +55,7 @@ export async function loadLevel(level: LevelInfo): Promise<THREE.Group> {
     if (!(child instanceof THREE.Mesh)) return;
     fillIn(child.geometry);
     retexture(child);
+    child.visible = !isCollisionOnly(child.name);
   });
   return group;
 }

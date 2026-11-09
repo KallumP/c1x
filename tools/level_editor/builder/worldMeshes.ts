@@ -2,7 +2,7 @@
 // the pieces behind the camera a little at a time (see slst.ts), and along x
 // and y so textures, which cover a whole polygon, are about the same size
 // everywhere; split into meshes of at most WGEO_MAX vertices and polygons
-import { facesDown, facesUp, FACING, isSpawn, normal } from "./faces";
+import { facesDown, facesUp, FACING, isCollisionOnly, isSpawn, normal } from "./faces";
 import type { Span } from "./fit";
 import type { Colour, Mesh, Triangle, Uv } from "./obj";
 import { floorDivide, roundHalfToEven } from "./pyMath";
@@ -265,7 +265,7 @@ export function worldMeshes(mesh: Mesh, options: WorldMeshOptions): WorldMesh[] 
   const filler = new WorldMeshFiller(options.regionsMax);
   for (const triangle of mesh.triangles) {
     const facing = normal(mesh, triangle);
-    if (!facing || isHidden(facing) || isSpawn(triangle)) {
+    if (!facing || isHidden(facing) || isSpawn(triangle) || isCollisionOnly(triangle)) {
       continue;
     }
     const pageTexture = facesUp(facing) ? ground : side;
