@@ -71,6 +71,7 @@ const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
 const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0x12)
 const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhere (0x14)
 const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the dark (0x2a)
+const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x18)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -448,6 +449,29 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a turtle, with no other levels to take it from, is an error saying so", () => {
       expect(() => withTurtle({ readOtherLevel: undefined })).toThrow(/turtle/);
+    });
+  });
+
+  describe.skipIf(!hasUpTheCreek)("river plants and fish, from up the creek", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const river = (type: "red_river_plant" | "green_river_plant" | "fish", more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: type, ...more });
+
+    test("a level with a river plant has up the creek's river code (and the water it spawns), its models, animations and sounds", () => {
+      const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [river("red_river_plant")], readOtherLevel });
+      const { execMap } = level.nsd.ldat;
+      expect([execMap[ENEMY_ENTITIES.red_river_plant[0]], execMap[55]]).toEqual([stringToEid("RivOC"), stringToEid("WateC")]);
+      expect(["RV1fG", "Rv1fG", "RF1fG", "RV1fV", "Rv1fV", "RF1fV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      const sounds = level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
+      expect(["FJufA", "FSpfA"].map(stringToEid).every((eid) => sounds.includes(eid))).toBe(true);
+    });
+
+    test("a level with both river plants and a fish reads up the creek once, and has its river code", () => {
+      const read: number[] = [];
+      const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
+      const objects = [river("red_river_plant"), river("green_river_plant", { at: [-1, 4, 0] }), river("fish", { at: [1, 6, 0] })];
+      const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel: readEach });
+      expect(read).toEqual([0x18]);
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.fish[0]]).toBe(stringToEid("RivOC"));
     });
   });
 
