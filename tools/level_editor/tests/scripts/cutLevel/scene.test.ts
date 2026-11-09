@@ -70,6 +70,16 @@ describe("a cut level as a blender scene", () => {
     expect(towards(1600).length).toBe(2); // one face each, not two
   });
 
+  test("a wall faces away from the cut level's collision behind it (the solid side), even with the route on that side", () => {
+    // a wall at game x 1600 along z, solid behind it to +x; the route at x 2400, beyond the solid
+    const world = triangleWorld([[1600, 0, 0], [1600, 400, 0], [1600, 0, 400]]);
+    const solid = { low: [1600, -400, -400] as Vec3, high: [2400, 800, 800] as Vec3, leaf: 1 };
+    const level: CutLevel = { worlds: [world], texturePages: new Map([[PAGE, page]]), entities: [], solids: [solid] };
+    const [face] = cutLevelScene(level, { ...OPTIONS, route: [[6, 10, 0], [6, -10, 0]] }).objects[0].faces;
+    const [a, b, c] = face.corners;
+    expect(cross(subtract(b, a), subtract(c, a))[0]).toBeLessThan(0); // facing -x, away from the solid
+  });
+
   test("each texture region is a material with its image, and a triangle's UVs are its layout's corners (v up), turned round with it", () => {
     const scene = cutLevelScene(levelOf(worldWith([ROCK_WORD])), OPTIONS);
     const [face] = scene.objects[0].faces;
