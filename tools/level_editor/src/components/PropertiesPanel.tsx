@@ -4,7 +4,7 @@ import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeHeading, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
-import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type LevelObject, type NumberSetting, type Vec3 } from "../objects";
+import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type EnemyType, type LevelObject, type NumberSetting, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
@@ -22,6 +22,11 @@ const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
   delay: { label: "delay s", step: 0.5 },
 };
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
+// the enemies reversed across the map, and what their Reverse direction button does
+const ACROSS_REVERSE_TITLES: Partial<Record<EnemyType, string>> = {
+  fish: "It leaps from the solid fish to the faded one, and back",
+  lab_assistant: "It throws its vials the other way across the map",
+};
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
 export default function PropertiesPanel({ state, warnings, pathWarnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
@@ -170,15 +175,16 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     </button>
   );
 
-  // which way a fish leaps across the map: to its faded end, or the other way
-  const renderFishReverseButton = (fish: LevelObject) => (
-    <button className="drop" onClick={() => change({ reverse: fish.reverse ? undefined : true })} title="It leaps from the solid fish to the faded one, and back">
+  // which way a fish leaps or a lab assistant throws across the map: the way
+  // the editor shows it, or the other way
+  const renderAcrossReverseButton = (selected: LevelObject) => (
+    <button className="drop" onClick={() => change({ reverse: selected.reverse ? undefined : true })} title={ACROSS_REVERSE_TITLES[selected.enemy!]}>
       Reverse direction
     </button>
   );
 
   const isStone = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy === "rolling_stone";
-  const isFish = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy === "fish";
+  const isReversedAcross = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy! in ACROSS_REVERSE_TITLES;
 
   // raise is its height above the floor, kept as it's dragged about
   const renderObjectFields = (selected: LevelObject) => (
@@ -314,7 +320,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {renderNumberSliders(object)}
           {hasPath(object) && renderTurnRoundButton(object)}
           {isStone(object) && renderStoneReverseButton(object)}
-          {isFish(object) && renderFishReverseButton(object)}
+          {isReversedAcross(object) && renderAcrossReverseButton(object)}
           {hasNodes(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}

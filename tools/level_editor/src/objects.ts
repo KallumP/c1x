@@ -251,8 +251,9 @@ function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetti
 }
 
 // the enemies that can be reversed: a rolling stone rolls back towards its first
-// end first, and a fish leaps the other way across the map
-const REVERSIBLE_ENEMIES: EnemyType[] = ["rolling_stone", "fish"];
+// end first, a fish leaps the other way across the map, and a lab assistant
+// throws its vials the other way across it
+const REVERSIBLE_ENEMIES: EnemyType[] = ["rolling_stone", "fish", "lab_assistant"];
 
 // whether a rolling stone or fish is reversed, from its fields in objects.json
 function readReverse(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "reverse"> {
@@ -260,7 +261,7 @@ function readReverse(fields: Record<string, unknown>, enemy: EnemyType, objectNu
     return {};
   }
   if (!REVERSIBLE_ENEMIES.includes(enemy)) {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no reverse (rolling stones and fish do; reverse a ${enemy}'s path instead)`);
+    throw new Error(`object ${objectNumber}: a ${enemy} has no reverse (rolling stones, fish and lab assistants do; reverse a ${enemy}'s path instead)`);
   }
   if (typeof fields.reverse !== "boolean") {
     throw new Error(`object ${objectNumber}: reverse should be true or false`);
