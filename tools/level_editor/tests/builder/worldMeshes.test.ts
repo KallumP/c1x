@@ -96,6 +96,11 @@ describe("world meshes", () => {
     }
   });
 
+  test("collision objects (named collision...) aren't drawn", () => {
+    expect(worldsOf(floorMesh(0, 0, 256, 256, 0, "collision_floor"))).toEqual([]);
+    expect(worldsOf(floorMesh(0, 0, 256, 256, 0, "floor")).length).toBe(1);
+  });
+
   test("up facing polygons use the ground texture, and the rest the side", () => {
     const [world] = worldsOf(merged(floorMesh(0, 0, 256, 256, 0), EAST_WALL));
     for (const polygon of world.polygons) {
