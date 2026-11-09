@@ -1,7 +1,7 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { batSwoop, blenderToView, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
@@ -198,6 +198,13 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   const renderSecondLeaderHandle = (second: Vec3, index: number) =>
     renderPathHandle(second, index, 0, ENEMY_COLOURS.leader_bats, LEADER_BAT_TOP / scale);
 
+  // a lab assistant: at its spot, facing the way it throws its vials across the map
+  const renderLabAssistant = (object: LevelObject, index: number) => {
+    const way = labAssistantThrow(turn, object.reverse === true);
+    const ahead = object.at.map((value, axis) => value + way[axis]) as Vec3;
+    return renderShapeModel(ENEMY_SHAPES.lab_assistant, base(object), index, undefined, facingFrom(object.at, ahead, turn));
+  };
+
   // leader bats: their two leaders, the first where the object is (solid,
   // where the bats come in) and the second at its path's node (faded, where
   // they go out; with a handle to drag it by while they're selected), and the
@@ -355,6 +362,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     }
     if (object.enemy === "leader_bats") {
       return renderLeaderBats(object, index);
+    }
+    if (object.enemy === "lab_assistant") {
+      return renderLabAssistant(object, index);
     }
     return (
       <>

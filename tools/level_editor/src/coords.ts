@@ -94,6 +94,11 @@ export function leapWay(reverse: boolean): number {
 
 const scaled = ([x, y, z]: Vec3, factor: number): Vec3 => [x * factor, y * factor, z * factor];
 
+// which way a lab assistant throws its vials (in blender): along the game's x,
+// across the map as a stone rolls, or the other way reversed
+export const labAssistantThrow = (turn: number, reverse: boolean): Vec3 =>
+  scaled(stoneRolling(turn), leapWay(reverse)).map((value) => value + 0) as Vec3; // + 0 turns -0 into 0
+
 // each point of a fish's leap (in blender), for a fish at at, raised by raise;
 // reversed, it leaps the other way across the map
 export function fishLeap(at: Vec3, raise: number, turn: number, scale: number, reverse = false): Vec3[] {
