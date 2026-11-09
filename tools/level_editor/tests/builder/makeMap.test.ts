@@ -533,6 +533,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(donor.sounds.every(({ eid }) => soundsOf(level).includes(eid))).toBe(true);
     });
 
+    test.each([["lizard", 3, 1600], ["red_lizard", 7, 800]] as const)("a %s goes the lost city's path's length by default across the map, its middle at its spot, in the lost city's steps (%i points, %i apart)", (type, points, step) => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [lizard(type)], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES[type]);
+      expect(placed.path.length).toBe(points);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      placed.path.forEach(([, y, z]) => { expect(Math.abs(y - 128)).toBeLessThanOrEqual(8); expect(Math.abs(z - 1664)).toBeLessThanOrEqual(8); });
+      expect(Math.abs((placed.path[0][0] + placed.path.at(-1)![0]) / 2 - 1408)).toBeLessThanOrEqual(8);
+      placed.path.slice(1).forEach((point, index) => expect(Math.abs(Math.hypot(...point.map((value, axis) => value - placed.path[index][axis])) - step)).toBeLessThanOrEqual(8));
+    });
+
     test("a level with both lizards reads the lost city once", () => {
       const read: number[] = [];
       const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };

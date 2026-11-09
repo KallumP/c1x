@@ -4,7 +4,7 @@ import { batSwoopEnd, leaderBatsGap } from "../../src/coords";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
-const enemy = (type: "crab" | "turtle" | "native" | "badger" | "warthog" | "walking_spider" | "monkey", more: Partial<LevelObject> = {}): LevelObject =>
+const enemy = (type: "crab" | "turtle" | "native" | "badger" | "warthog" | "walking_spider" | "monkey" | "lizard" | "red_lizard", more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind: "enemy", enemy: type, at: [1, 2, 3], raise: 0, stack: 1, ...more });
 
 describe("a path enemy's default path", () => {
@@ -37,6 +37,14 @@ describe("a path enemy's default path", () => {
 
   test("a monkey's: 2400 game units across the map, as the great gate's monkeys walk", () => {
     expect(noMinusZero(defaultPath("monkey", 0, 400))).toEqual([[-3, 0, 0], [0, 0, 0], [3, 0, 0]]);
+  });
+
+  test("a lizard's: 3200 game units across the map, as the lost city's green lizards leap", () => {
+    expect(noMinusZero(defaultPath("lizard", 0, 400))).toEqual([[-4, 0, 0], [0, 0, 0], [4, 0, 0]]);
+  });
+
+  test("a red lizard's: 4800 game units across the map, as the lost city's red lizards hop", () => {
+    expect(noMinusZero(defaultPath("red_lizard", 0, 400))).toEqual([[-6, 0, 0], [0, 0, 0], [6, 0, 0]]);
   });
 
   test("turns with the level, and is longer in metres at a smaller scale", () => {

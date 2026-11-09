@@ -166,7 +166,7 @@ describe("enemies", () => {
     ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, fish, crab, turtle, native, monkey, warthog, lizard, red_lizard, badger, walking_spider, bat, leader_bats, rolling_stone)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]', "object 1: unknown setting stack"],
-    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs, walking spiders and monkeys do)"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards and red lizards do)"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -236,7 +236,7 @@ describe("enemy paths", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives, badgers, warthogs, walking spiders and monkeys do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards and red lizards do)"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: unknown setting path"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', `object 1: a path should be 2 to ${PATH_NODES_MAX} nodes`],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0]]}]', "object 1: a path's nodes should each be [x, y, z] in metres"],
@@ -281,7 +281,7 @@ describe("enemy speeds", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs, turtles, natives, badgers, warthogs, walking spiders and monkeys do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards and red lizards do)"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 4}]', "object 1: speed should be 0.25 to 3 (times the game's own pace)"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 0.1}]', "object 1: speed should be 0.25 to 3"],
