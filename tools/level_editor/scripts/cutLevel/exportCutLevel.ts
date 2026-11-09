@@ -63,8 +63,7 @@ function writeObjectsOnce(level: CutLevel, outDir: string, options: SceneOptions
 // (objects.json, if it has none) to outDir; the scene's path
 export function exportCutLevel(level: CutLevel, outDir: string, name: string): string {
   const placement = { centre: sceneCentre(level), scale: SCENE_SCALE };
-  const route = cutLevelObjects(level, placement).map(({ at }) => at); // its spawn, boxes and end
-  const options = { ...placement, halfWidth: SCENE_HALF_WIDTH, route };
+  const options = { ...placement, halfWidth: SCENE_HALF_WIDTH };
   const scene = sceneWithPads(level, options);
   mkdirSync(outDir, { recursive: true });
   writeObjectsOnce(level, outDir, options);

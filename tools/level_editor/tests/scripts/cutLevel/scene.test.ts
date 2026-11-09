@@ -29,7 +29,7 @@ function worldWith(words: number[], origin: [number, number, number] = [0, 0, 0]
   return { name: "k0_4W", origin, header, pages: [PAGE], vertices, polygons };
 }
 const levelOf = (...worlds: CutWorld[]): CutLevel => ({ worlds, texturePages: new Map([[PAGE, page]]), entities: [], solids: [] });
-const OPTIONS = { centre: [0, 0, 0] as [number, number, number], halfWidth: 8000, scale: 400, route: [[0, 10, 0], [0, -10, 0]] as Vec3[] };
+const OPTIONS = { centre: [0, 0, 0] as [number, number, number], halfWidth: 8000, scale: 400 };
 
 describe("a cut level as a blender scene", () => {
   test("each world mesh is an object of its faces, in blender metres from the centre: x, -z, y (its route, along -z, along +y)", () => {
@@ -71,12 +71,12 @@ describe("a cut level as a blender scene", () => {
     expect(faces.length).toBe(2); // one face each, not two
   });
 
-  test("a sloping wall a little across the route (a mound's foot) faces back along it too, whatever the collision or the route beside it say", () => {
+  test("a sloping wall a little across the route (a mound's foot) faces back along it too, whatever the collision says", () => {
     // a mound's foot facing mostly along the route and out to +x, over the acid's solid ground
     const acidGround = { low: [-2000, -2000, -4000] as Vec3, high: [2000, 250, 0] as Vec3, leaf: 1 };
     const level = (corners: Vec3[]): CutLevel => ({ worlds: [triangleWorld(corners)], texturePages: new Map([[PAGE, page]]), entities: [], solids: [acidGround] });
     const corners: Vec3[] = [[0, 200, -2000], [400, 200, -2200], [0, 600, -2100]];
-    const faces = [corners, [corners[0], corners[2], corners[1]]].map((wound) => cutLevelScene(level(wound), { ...OPTIONS, route: [[6, 10, 0], [6, -10, 0]] }).objects[0].faces[0]);
+    const faces = [corners, [corners[0], corners[2], corners[1]]].map((wound) => cutLevelScene(level(wound), OPTIONS).objects[0].faces[0]);
     expect(faces.every((face) => normalOf(face)[1] < 0)).toBe(true);
   });
 
