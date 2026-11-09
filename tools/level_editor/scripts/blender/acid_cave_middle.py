@@ -267,12 +267,39 @@ def terrain_faces(terrain, parts):
             cell = square(column, row)
             corners = [terrain.at(c, r) for c, r in cell]
             colours = [vertex_light(terrain, c, r) for c, r in cell]
-            material = face_material(corners)
+            level = acid_level(terrain.ys[row])
             for triangle in ([0, 1, 2], [0, 2, 3]):
-                parts[material].add([corners[i] for i in triangle], [colours[i] for i in triangle], UP)
+                add_above(parts, [corners[i] for i in triangle], [colours[i] for i in triangle], level)
             if any(terrain.is_under_acid(c, r) for c, r in cell):
-                level = acid_level(terrain.ys[row])
                 parts["acid"].add([(x, y, level) for x, y, _ in corners], [(150, 220, 90)] * 4, UP)
+
+
+def add_above(parts, corners, colours, level):
+    """a terrain triangle, cut off at the acid's level: only its part above it.
+    the game draws polygons farthest first, so ground under the acid could be
+    drawn over it; under the acid it's never seen, and the acid is a pit"""
+    kept, kept_colours = clipped_above(corners, colours, level)
+    if len(kept) < 3:
+        return
+    material = face_material(kept)
+    for k in range(1, len(kept) - 1):
+        parts[material].add([kept[0], kept[k], kept[k + 1]], [kept_colours[0], kept_colours[k], kept_colours[k + 1]], UP)
+
+
+def clipped_above(corners, colours, level):
+    """a polygon's part at or above height level, its corners and colours (blended where its edges cross it)"""
+    kept, kept_colours = [], []
+    for index, corner in enumerate(corners):
+        following = (index + 1) % len(corners)
+        here, there = corner[2] - level, corners[following][2] - level
+        if here >= 0:
+            kept.append(corner)
+            kept_colours.append(colours[index])
+        if (here >= 0) != (there >= 0):
+            t = here / (here - there)
+            kept.append(tuple(a + (b - a) * t for a, b in zip(corner, corners[following])))
+            kept_colours.append(tuple(round(a + (b - a) * t) for a, b in zip(colours[index], colours[following])))
+    return kept, kept_colours
 
 
 # what stands on the ground
