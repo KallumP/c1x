@@ -404,3 +404,27 @@ describe("badger counts", () => {
     expect(() => parseObjects(text)).toThrow(message);
   });
 });
+
+describe("bat roosts' delays", () => {
+  const roost = (enemy: "bat" | "leader_bats") => ({ kind: "enemy" as const, enemy, at: [1, 2, 0] as Vec3, raise: 0, stack: 1 });
+
+  test("a bat roost or leader bats can have a delay: the seconds between their flocks, in halves of a second or finer", () => {
+    expect(parseObjects('[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "delay": 3.5}]')[0].delay).toBe(3.5);
+    expect(parseObjects('[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "delay": 12}]')[0].delay).toBe(12);
+  });
+
+  test("without one, a bat roost's is 10 seconds (temple ruins') and leader bats' 4.5 (sunset vista's), which are left out when written", () => {
+    expect([numberSetting(roost("bat"), "delay"), numberSetting(roost("leader_bats"), "delay")]).toEqual([10, 4.5]);
+    expect(formatObjects([{ ...roost("bat"), delay: 10 }])).toContain('"at": [1, 2, 0]}');
+    expect(formatObjects([{ ...roost("leader_bats"), delay: 4.5 }])).toContain('"at": [1, 2, 0]}');
+    expect(formatObjects([{ ...roost("bat"), count: 2, delay: 3 }])).toContain('"count": 2, "delay": 3}');
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "delay": 2}]', "object 1: a crab has no delay (bats and leader bats do)"],
+    ['[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "delay": 0.5}]', "object 1: delay should be 1 to 20 (the seconds between its flocks)"],
+    ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "delay": 21}]', "object 1: delay should be 1 to 20"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+});
