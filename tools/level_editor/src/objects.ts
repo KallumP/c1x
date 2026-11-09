@@ -37,9 +37,10 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // running out along their path, count at a time, when crash comes near:
 // - badger: jungle rollers'
 // - walking_spider: fumbling in the dark's
+// - bat: temple ruins', from a roost: they swoop down at crash
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track
-export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "rolling_stone"] as const;
+export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "bat", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
