@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_PATH_NODES, defaultPath, enemyPath, handleLifts, nodeCount, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
+import { DEFAULT_PATH_NODES, defaultPath, enemyPath, handleLifts, nodeCount, nodeName, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
 import { leaderBatSpots } from "../../src/coords";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
@@ -66,6 +66,11 @@ describe("an enemy's path", () => {
     const roost: LevelObject = { kind: "enemy", enemy: "leader_bats", at: [0, 0, 0], raise: 0, stack: 1 };
     const [, far] = leaderBatSpots([0, 0, 0], 0, 0, 400);
     expect(noMinusZero(withNodeAt(roost, 0, [1, 1, 1], 0, 400))).toEqual(noMinusZero([[1, 1, 1], far]));
+  });
+
+  test("a node is called a leader on a leader bats roost, and a node on a path enemy's path", () => {
+    expect(nodeName({ kind: "enemy", enemy: "leader_bats", at: [0, 0, 0], raise: 0, stack: 1 })).toBe("leader");
+    expect(nodeName(enemy("crab"))).toBe("node");
   });
 
   test("its length, along all its nodes", () => {
