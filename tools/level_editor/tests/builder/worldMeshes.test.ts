@@ -260,8 +260,8 @@ describe("tile regions", () => {
     expect(uvTileRegion([[0.5, 0.5], [1, 0.5], [0.5, 0]])).toMatchObject({ x: 32, y: 32, w: 32, h: 32 });
   });
 
-  test("a sliver along the image's bottom edge still gets a region inside the tile", () => {
-    const region = uvTileRegion([[0, 0], [0.5, 0], [0.5, 0.01]]);
+  test("a sliver lying on the image's bottom edge still gets a region inside the tile", () => {
+    const region = uvTileRegion([[0, 0], [0.5, 0], [0.25, 0]]); // every corner on the edge, as a thin slice of a face can be
     expect(region.y + region.h).toBeLessThanOrEqual(64);
     expect(region.x + region.w).toBeLessThanOrEqual(64);
   });
