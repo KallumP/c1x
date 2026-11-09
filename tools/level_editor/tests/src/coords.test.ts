@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Vec3 } from "../../src/objects";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, BAT_SWOOP, batSwoop, LEADER_BATS_FLIGHT, leaderBatsFlight, LEADER_BATS_GAP, leaderBatsGap, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, LEADER_BATS_GAP, leaderBatsGap, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -94,21 +94,35 @@ describe("rolling stones", () => {
     expect(Math.max(...path.map(([, , z]) => z))).toBeCloseTo(3 + 2172 / 400);
   });
 
-  test("a bat roost's bats swoop as temple ruins' do: 14 points, 10000 along the route back towards the spawn, down 1336 at most (game units)", () => {
-    expect(BAT_SWOOP.length).toBe(14);
-    const path = batSwoop([1, 2, 3], 0, 0, 400);
-    expect(path[0]).toEqual([1, 2, 3]);
-    expect(path[13][1]).toBeCloseTo(2 - 10000 / 400);
-    expect(path[13][2]).toBeCloseTo(3);
-    expect(Math.min(...path.map(([, , z]) => z))).toBeCloseTo(3 - 1336 / 400);
-    expect(path.every(([x]) => x === 1)).toBe(true);
+  test("a bat roost's swoop ends 10000 game units back along the way the camera faces by default, turning with the level", () => {
+    expect(batSwoopEnd(0, 400).map((value) => value + 0)).toEqual([0, -25, 0]);
+    batSwoopEnd(90, 400).forEach((value, axis) => expect(value).toBeCloseTo(cameraFacing(90)[axis] * -25));
   });
 
-  test("a bat roost's swoop turns with the level, back along the way the camera faces, and lifts with raise", () => {
-    const path = batSwoop([0, 0, 0], 2, 90, 400);
-    expect(path[13][0]).toBeCloseTo(-10000 / 400);
-    expect(path[13][1]).toBeCloseTo(0);
-    expect(path[0][2]).toBeCloseTo(2);
+  test("with its end 10000 back along the route, a bat roost's bats swoop as temple ruins' do: 14 points, down 1336 at most (game units)", () => {
+    expect(BAT_SWOOP.length).toBe(14);
+    const path = batSwoop([1, 2, 3], [1, 2 - 25, 3], 0, 400);
+    expect(path.length).toBe(14);
+    expect(path[0]).toEqual([1, 2, 3]);
+    path.forEach(([x, y, z], point) => {
+      const [along, up] = BAT_SWOOP[point];
+      [1, 2 - along / 400, 3 + up / 400].forEach((value, axis) => expect([x, y, z][axis]).toBeCloseTo(value));
+    });
+  });
+
+  test("the swoop stretches and turns to its end wherever it is, its dip kept, rising or falling to it, each step split to keep its points about as far apart", () => {
+    const path = batSwoop([0, 0, 0], [50, 0, 1], 0, 400);
+    expect(path.length).toBe(27);
+    [50, 0, 1].forEach((value, axis) => expect(path.at(-1)![axis]).toBeCloseTo(value));
+    expect(path.every(([, y]) => Math.abs(y) < 1e-9)).toBe(true);
+    const [along, up] = BAT_SWOOP[1];
+    [(2 * along) / 400, 0, up / 400 + (2 * along) / 20000].forEach((value, axis) => expect(path[2][axis]).toBeCloseTo(value));
+  });
+
+  test("a shorter swoop keeps temple ruins' 14 points, closer together", () => {
+    const path = batSwoop([0, 0, 0], [0, -10, 0], 0, 400);
+    expect(path.length).toBe(14);
+    expect(path.at(-1)![1]).toBeCloseTo(-10);
   });
 
   test("leader bats' second leader is 6000 game units from the first by default, back across the map as a stone rolls the other way, turning with the level", () => {
