@@ -230,8 +230,10 @@ def shifted(faces, dy):
     faces.faces = [([(x, y + dy, z) for x, y, z in corners], colours) for corners, colours in faces.faces]
 
 
-def lumpy_ball(faces, centre, radius, colour_at, seed, flat_top=None):
-    """a boulder: a ball with a lumpy surface, its top cut flat at flat_top if given (to stand on)"""
+def lumpy_ball(faces, centre, radius, colour_at, seed, flat_top=None, tallness=1.0, flat_bottom=None):
+    """a boulder: a ball with a lumpy surface, tallness times as tall as it's wide
+    (a rock standing up out of the acid), its top cut flat at flat_top if given (to
+    stand on), and its bottom at flat_bottom (the acid's surface: nothing under it)"""
     cx, cy, cz = centre
     rings, around = 6, 9
     def point(ring_index, side):
@@ -239,16 +241,30 @@ def lumpy_ball(faces, centre, radius, colour_at, seed, flat_top=None):
         azimuth = 2 * math.pi * side / around
         direction = (math.sin(polar) * math.cos(azimuth), math.sin(polar) * math.sin(azimuth), math.cos(polar))
         bulge = radius * (1 + 0.22 * wobble(*direction, 0.7, seed))
-        z = cz + bulge * direction[2]
+        z = cz + bulge * direction[2] * tallness
         if flat_top is not None:
             z = min(z, flat_top)
+        if flat_bottom is not None:
+            z = max(z, flat_bottom)
         return (cx + bulge * direction[0], cy + bulge * direction[1], z)
     for ring_index in range(rings):
         for side in range(around):
-            corners = [point(ring_index, side), point(ring_index, side + 1), point(ring_index + 1, side + 1), point(ring_index + 1, side)]
-            middle = [sum(corner[axis] for corner in corners) / 4 for axis in range(3)]
+            corners = distinct([point(ring_index, side), point(ring_index, side + 1), point(ring_index + 1, side + 1), point(ring_index + 1, side)])
+            if len(corners) < 3:
+                continue
+            middle = [sum(corner[axis] for corner in corners) / len(corners) for axis in range(3)]
             out = tuple(middle[axis] - centre[axis] for axis in range(3))
             faces.quad(corners, colour_at, out)
+
+
+def distinct(corners):
+    """a face's corners without repeats (at a ball's poles, its quads close to triangles,
+    which blender would otherwise drop as faces with a repeated corner)"""
+    kept = []
+    for corner in corners:
+        if all(max(abs(a - b) for a, b in zip(corner, other)) > 1e-6 for other in kept):
+            kept.append(corner)
+    return kept
 
 
 def mushroom(stalks, caps, base, top, cap_radius, colour_at, seed):

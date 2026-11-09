@@ -397,12 +397,14 @@ def gorge_arch(parts):
 
 
 def gorge_boulders(parts):
-    """fallen boulders across the river, their tops level enough to jump along"""
-    rock = lambda x, y, z: lit(90, glow=0.3)
+    """fallen boulders across the river, standing up out of the acid (the builder
+    never draws faces facing down, so a ball over it would show its missing
+    underside), their tops cut level to jump along"""
+    rock = lambda x, y, z: lit(90 - 6 * max(0.0, FLOOR - z), glow=0.3)
     left, right = river_x(BOULDER_Y) - LEDGE_OFFSET + 1.0, river_x(BOULDER_Y) + LEDGE_OFFSET - 1.0
     for index in range(3):
         x = left + (right - left) * (index + 0.5) / 3
-        lumpy_ball(parts["boulders"], (x, BOULDER_Y + 0.3 * (index % 2), -0.65), 1.0, rock, 30 + index, flat_top=FLOOR)
+        lumpy_ball(parts["boulders"], (x, BOULDER_Y + 0.3 * (index % 2), -1.2), 1.0, rock, 30 + index, flat_top=FLOOR, tallness=2.8, flat_bottom=acid_level(BOULDER_Y))
 
 
 MIDDLE_PARTS = {
