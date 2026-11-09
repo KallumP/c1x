@@ -209,13 +209,22 @@ const isOnImage = (uv: Uv) => uv.every((coordinate) => coordinate >= -1e-6 && co
 const keepsItsUvs = (triangle: Triangle) => triangle.uvs !== undefined && triangle.uvs.every(isOnImage);
 
 // how a face is sliced: along z into pieces, and along x and y for each repeat
-// of its tile, unless it keeps its own UVs, which don't repeat
-function faceSlicing(slicing: Slicing, keepsUvs: boolean): Slicing {
-  if (keepsUvs) {
-    return slicing.slice(0, 1);
+// of its tile, unless it keeps its own UVs, which don't repeat: then only along
+// z, and not at all if it's no longer than a piece (sliced, a piece's part of
+// its image is only the nearest region the game can address, which smears it)
+function faceSlicing(slicing: Slicing, keepsUvs: boolean, corners: Vec3[]): Slicing {
+  if (!keepsUvs) {
+    return slicing;
   }
-  return slicing;
+  const [[axis, piece]] = slicing;
+  if (reach(corners, axis) <= piece) {
+    return []; // no longer along z than a piece: whole, in the piece its middle is in, its image whole
+  }
+  return slicing.slice(0, 1);
 }
+
+// how far a face's corners reach along an axis
+const reach = (corners: Vec3[], axis: number) => Math.max(...corners.map((corner) => corner[axis])) - Math.min(...corners.map((corner) => corner[axis]));
 
 // the texture coordinate at point on a triangle with corners, blended from its corners'
 function blendedUv(point: Vec3, corners: Vec3[], uvs: Uv[]): Uv {
@@ -272,7 +281,7 @@ export function worldMeshes(mesh: Mesh, options: WorldMeshOptions): WorldMesh[] 
     const isTextured = triangle.material !== null && textured.has(triangle.material);
     const corners = triangle.corners.map((index) => mesh.vertices[index]);
     const colourAt = faceColouring(corners, triangleColours(mesh, triangle), shade(facing));
-    for (const part of slices(corners, faceSlicing(slicing, isTextured && keepsItsUvs(triangle))).map((points) => points.map(snapToVertexGrid))) {
+    for (const part of slices(corners, faceSlicing(slicing, isTextured && keepsItsUvs(triangle), corners)).map((points) => points.map(snapToVertexGrid))) {
       if (span && !isInSpan(part, span)) {
         continue;
       }
