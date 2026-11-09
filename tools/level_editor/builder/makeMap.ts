@@ -124,9 +124,10 @@ function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffe
 }
 
 // the enemies that move along their own level's path, moved to their spot: up
-// the creek's fish, leaping, and temple ruins' bat roost, its bats swooping
-// along the game's +z (where its own go, so the way the roost looks for crash)
-const OWN_PATH_ENEMIES: EnemyType[] = ["fish", "bat"];
+// the creek's fish, leaping, temple ruins' bat roost, its bats swooping along
+// the game's +z (where its own go, so the way the roost looks for crash), and
+// sunset vista's, its bats flying back along the game's x
+const OWN_PATH_ENEMIES: EnemyType[] = ["fish", "bat", "leader_bats"];
 
 // an enemy on its own level's path: a bat roost's init flag a is how many bats it sends
 function ownPathEnemyEntity(entity: Buffer, enemy: LevelObject): Buffer {
