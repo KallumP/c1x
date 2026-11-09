@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { ENEMY_SHAPES, shapeBounds } from "../../src/enemyShapes";
+import { ENEMY_SHAPES, partGeometry, shapeBounds } from "../../src/enemyShapes";
 
 describe("enemy shapes", () => {
   // the sizes of the game's models, in game units (jungle rollers' JuPcG, n. sanity beach's Cr19G)
@@ -144,6 +144,21 @@ describe("enemy shapes", () => {
     const buds = parts.filter((part) => part.name === "bud");
     expect(buds.length).toBe(1);
     expect(Math.hypot(buds[0].at[0], buds[0].at[2])).toBeLessThan(1);
+  });
+
+  test("each river plant petal rises away from the plant's middle: its highest point is further out than its middle", () => {
+    const petals = ENEMY_SHAPES.blue_river_plant.filter((part) => part.name === "jaw");
+    petals.forEach((petal) => {
+      const positions = partGeometry(petal).getAttribute("position");
+      let highest = 0;
+      for (let index = 1; index < positions.count; index++) {
+        if (positions.getY(index) > positions.getY(highest)) {
+          highest = index;
+        }
+      }
+      const outAt = (x: number, z: number) => Math.hypot(x, z);
+      expect(outAt(positions.getX(highest), positions.getZ(highest))).toBeGreaterThan(outAt(petal.at[0], petal.at[2]));
+    });
   });
 
   test("the fish is on the floor, as big as the game's (RF1fV): about 434 long, 581 tall and 431 across", () => {
