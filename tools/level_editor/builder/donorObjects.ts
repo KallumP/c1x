@@ -23,6 +23,7 @@ const UP_THE_CREEK: DonorLevel = { lid: 0x18, name: "Up the Creek", file: "s0000
 // its code is temple ruins' too, but its copy reaches only its bats and leader
 // bats, so it brings two texture pages where temple ruins' brings three
 const SUNSET_VISTA: DonorLevel = { lid: 0x23, name: "Sunset Vista", file: "s0000023" };
+const THE_LOST_CITY: DonorLevel = { lid: 0x20, name: "The Lost City", file: "s0000020" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -38,6 +39,8 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   fish: UP_THE_CREEK,
   bat: SUNSET_VISTA,
   leader_bats: SUNSET_VISTA,
+  lizard: THE_LOST_CITY,
+  red_lizard: THE_LOST_CITY,
 };
 
 export interface DonorObject {

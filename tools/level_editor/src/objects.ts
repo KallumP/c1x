@@ -34,6 +34,8 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - native: the great gate's, guarding its path with a shield
 // - monkey: the great gate's, across the map once crash comes near
 // - warthog: road to nowhere's, charging once crash comes near
+// - lizard: the lost city's green lizard, leaping back and forth along its path
+// - red_lizard: the lost city's red lizard, hopping along its path after crash
 // running out along their path, count at a time, when crash comes near:
 // - badger: jungle rollers'
 // - walking_spider: fumbling in the dark's
@@ -41,18 +43,18 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - leader_bats: sunset vista's, from a roost, flying across between two leader bats: kill both and they stop
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track
-export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
+export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
 
 // the enemies that move along a path of nodes, and how many nodes it can have
-export const PATH_ENEMIES = ["crab", "turtle", "native", "badger", "warthog", "walking_spider", "monkey"] as const satisfies readonly EnemyType[];
+export const PATH_ENEMIES = ["crab", "turtle", "native", "badger", "warthog", "walking_spider", "monkey", "lizard", "red_lizard"] as const satisfies readonly EnemyType[];
 export type PathEnemy = (typeof PATH_ENEMIES)[number];
 export const isPathEnemy = (type: EnemyType | undefined): type is PathEnemy => PATH_ENEMIES.some((enemy) => enemy === type);
 export const PATH_NODES_MAX = 20;
 
-// the enemies with a path, for messages: "crabs, turtles, natives, badgers, warthogs, walking spiders and monkeys"
+// the enemies with a path, for messages: "crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards and red lizards"
 const pluralName = (enemy: EnemyType) => `${enemy.replace("_", " ")}s`;
 const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map(pluralName).join(", ")} and ${pluralName(PATH_ENEMIES.at(-1)!)}`;
 

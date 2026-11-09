@@ -75,6 +75,7 @@ const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhe
 const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the dark (0x2a)
 const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x18)
 const hasSunsetVista = existsSync(`${STREAMS}/s0000023.nsd`); // sunset vista (0x23)
+const hasLostCity = existsSync(`${STREAMS}/s0000020.nsd`); // the lost city (0x20)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -513,6 +514,40 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel: readEach });
       expect(read).toEqual([0x18]);
       expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.fish[0]]).toBe(stringToEid("RivOC"));
+    });
+  });
+
+  describe.skipIf(!hasLostCity)("lizards, from the lost city", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const lizard = (type: "lizard" | "red_lizard", more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: type, ...more });
+    const soundsOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
+
+    test("a level with a lizard has the lost city's lizard code, both lizards' models and animations, their texture pages and every sound the code plays", () => {
+      const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [lizard("lizard")], readOtherLevel });
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.lizard[0]]).toBe(stringToEid("LizaC"));
+      expect(["LizgG", "LizgV", "LizrG", "LizrV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      const donor = donorObject(readLevel(STREAMS, 0x20), ENEMY_ENTITIES.lizard[0]);
+      const pageEids = level.pages.filter((page) => page.type === PAGE_TEXTURE).map((page) => page.eid);
+      expect(donor.texturePages.every((page) => pageEids.includes(page.eid))).toBe(true);
+      expect(donor.sounds.length).toBeGreaterThan(0);
+      expect(donor.sounds.every(({ eid }) => soundsOf(level).includes(eid))).toBe(true);
+    });
+
+    test.each([["lizard", 3, 1600], ["red_lizard", 7, 800]] as const)("a %s goes the lost city's path's length by default across the map, its middle at its spot, in the lost city's steps (%i points, %i apart)", (type, points, step) => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [lizard(type)], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES[type]);
+      expect(placed.path.length).toBe(points);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      placed.path.forEach(([, y, z]) => { expect(Math.abs(y - 128)).toBeLessThanOrEqual(8); expect(Math.abs(z - 1664)).toBeLessThanOrEqual(8); });
+      expect(Math.abs((placed.path[0][0] + placed.path.at(-1)![0]) / 2 - 1408)).toBeLessThanOrEqual(8);
+      placed.path.slice(1).forEach((point, index) => expect(Math.abs(Math.hypot(...point.map((value, axis) => value - placed.path[index][axis])) - step)).toBeLessThanOrEqual(8));
+    });
+
+    test("a level with both lizards reads the lost city once", () => {
+      const read: number[] = [];
+      const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
+      make(MAP_OBJ, { scale: 256, objects: [lizard("lizard"), lizard("red_lizard", { at: [-1, 4, 0] })], readOtherLevel: readEach });
+      expect(read).toEqual([0x20]);
     });
   });
 

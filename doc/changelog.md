@@ -8,6 +8,7 @@
 - custom levels can have Temple Ruins' bats, which swoop down at Crash from wherever the level sends them
 - custom levels can have Sunset Vista's bats, which fly past in flocks until Crash spins both their leaders, wherever the level puts them
 - custom levels can set how often bats come
+- custom levels can have The Lost City's lizards: a green one that leaps back and forth, and a red one that hops after Crash
 - the acid cave cut from the original game, playable as a custom level, and going on past where it was cut off: a crystal geode, a mushroom grotto, a river gorge and a collapsed temple
 - custom level maps keep their UVs and vertex colours
 

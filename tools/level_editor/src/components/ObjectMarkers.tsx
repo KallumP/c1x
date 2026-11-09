@@ -25,6 +25,9 @@ const walkerSize = (parts: ShapePart[]) => {
   const { min, max } = shapeBounds(parts);
   return { height: max[1], reach: Math.max(-min[0], max[0], -min[2], max[2]) };
 };
+// the path enemies that turn to face the way they go (seen in the game)
+const FACES_ITS_WAY: PathEnemy[] = ["turtle", "warthog", "monkey", "lizard", "red_lizard"];
+
 const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
 
 // how far a leader bat's and a bat's tops are above their spots, in game units: their handles float over them
@@ -300,13 +303,13 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     return positions.map((position, nodeIndex) => renderPathHandle(position, index, nodeIndex, colour, lifts[nodeIndex]));
   };
 
-  // which way an enemy at an end of its path faces: a turtle, warthog or monkey back into
+  // which way an enemy at an end of its path faces: a turtle, warthog, monkey or lizard back into
   // its path (it turns to face the way it goes, seen in the game); a badger or
   // walking spider the way it runs (into its path at the start, on out of it at
   // the far end, where it goes down out of sight); a crab or native the player
   const endFacing = (enemy: PathEnemy, end: Vec3, next: Vec3, endIndex: number) => {
     const runsOnce = enemy === "badger" || enemy === "walking_spider";
-    if (enemy === "turtle" || enemy === "warthog" || enemy === "monkey" || (runsOnce && endIndex === 0)) {
+    if (FACES_ITS_WAY.includes(enemy) || (runsOnce && endIndex === 0)) {
       return facingFrom(end, next, turn);
     }
     if (runsOnce) {
