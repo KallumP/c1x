@@ -485,6 +485,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(Math.max(...placed.path.map(([, y]) => y)) - first[1]).toBe(2172);
     });
 
+    test("a reversed fish leaps the other way across the map", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [river("fish", { reverse: true })], readOtherLevel }).zone);
+      const [first, last] = [placed.path[0], placed.path.at(-1)!];
+      expect(last.map((value, axis) => value - first[axis])).toEqual([-1600, 0, 0]);
+    });
+
     test("the editor draws a fish's leap as up the creek's (FISH_LEAP, across and up)", () => {
       const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [river("fish")], readOtherLevel }).zone);
       const [x0, y0] = placed.path[0];

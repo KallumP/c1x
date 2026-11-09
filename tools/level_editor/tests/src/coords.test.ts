@@ -87,6 +87,12 @@ describe("rolling stones", () => {
     expect(path[0][2]).toBeCloseTo(1);
   });
 
+  test("a reversed fish leaps the other way across the map", () => {
+    const path = fishLeap([1, 2, 3], 0, 0, 400, true);
+    expect(path[13][0]).toBeCloseTo(1 - 1600 / 400);
+    expect(Math.max(...path.map(([, , z]) => z))).toBeCloseTo(3 + 2172 / 400);
+  });
+
   test("a stone's path turns with the level and lifts with raise", () => {
     const path = stonePath([0, 0, 0], 1, 90, 400);
     expect(path[0][0]).toBeCloseTo(0);
