@@ -48,7 +48,7 @@
 
 ### The Lost City
 
-- game crashes when attempting to kill lizards
+- game crashes when attempting to kill lizards (not seen any more: a lizard knocked away by a masked Crash's spin didn't crash the game)
 
 ### Temple Ruins
 
@@ -64,7 +64,7 @@
 
 ### Sunset Vista
 
-- same crashes as The Lost City, when attempting to kill lizards (note: RWaOC; corrupted animation eid?)
+- same crashes as The Lost City, when attempting to kill lizards (note: RWaOC; corrupted animation eid?) (not seen any more, as in The Lost City)
 
 ### Koala Kong
 
