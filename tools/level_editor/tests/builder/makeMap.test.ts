@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
+import { throwSpeed } from "../../src/labAssistantThrow";
 import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
@@ -522,13 +523,43 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
     const assistant = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "lab_assistant", ...more });
 
-    test("a lab assistant stands at its spot, a single point there, throwing as stormy ascent's first: its init flag a (how often it throws) 90", () => {
+    // a placed lab assistant's init flags: its facing, and its vials' speeds along the game's x and z
+    const assistantFlags = (more: Partial<LevelObject> = {}) => {
+      const placed = zoneEntities(make(MAP_OBJ, { scale: 256, objects: [assistant(more)], readOtherLevel }).zone)
+        .find((item) => entityType(item).join() === ENEMY_ENTITIES.lab_assistant.join())!;
+      return [0, 1, 2].map((flag) => placed.readInt16LE(ENTITY_INIT_FLAGS + 2 * flag));
+    };
+
+    test("a lab assistant stands at its spot, a single point there", () => {
       const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [assistant()], readOtherLevel }).zone);
       expect(placed.type).toEqual(ENEMY_ENTITIES.lab_assistant);
       expect(placed.path.length).toBe(1);
       // blender (1, 2, 0) is (1408, 128, 1664) in the zone
       [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
-      expect(placed.initFlagA).toBe(90);
+    });
+
+    test("without a landing spot, a lab assistant faces back along the game's x (-1024 of 4096) and throws as stormy ascent's first: 2480 along x, none along z", () => {
+      const [facing, alongX, alongZ] = assistantFlags();
+      expect(facing).toBe(-1024);
+      expect(Math.abs(alongX + 2480)).toBeLessThanOrEqual(2);
+      expect(alongZ).toBe(0);
+    });
+
+    test("a lab assistant faces its landing spot and throws to land there: 6 m along the route back towards the spawn is 1536 along the game's z at scale 256, facing 0", () => {
+      const [facing, alongX, alongZ] = assistantFlags({ path: [[0, -6, 0]] });
+      expect([facing, alongX]).toEqual([0, 0]);
+      expect(alongZ).toBe(Math.round(throwSpeed(1536, 0)));
+    });
+
+    test("a landing spot lower than the assistant takes a slower throw, and one at an angle splits it between x and z", () => {
+      const [, , level] = assistantFlags({ path: [[0, -6, 0]] });
+      const [, , lower] = assistantFlags({ path: [[0, -6, -2]] });
+      expect(lower).toBe(Math.round(throwSpeed(1536, -512)));
+      expect(lower).toBeLessThan(level);
+      const [facing, alongX, alongZ] = assistantFlags({ path: [[-6, -6, 0]] });
+      expect(facing).toBe(-512);
+      expect(alongX).toBe(-alongZ);
+      expect(Math.hypot(alongX, alongZ)).toBeCloseTo(throwSpeed(Math.hypot(1536, 1536), 0), -1);
     });
 
     test("a lab assistant's code faces its init flag a (an angle) and throws its vials at b along the game's x and c along z, up and timed as custom levels' first preset, at its code's own rate", () => {
