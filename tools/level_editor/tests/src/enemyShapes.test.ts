@@ -136,10 +136,10 @@ describe("enemy shapes", () => {
     expect([...colours(blue, "leaf")].some((colour) => colours(green, "leaf").has(colour))).toBe(false);
   });
 
-  test("the river plants face +z too: their jaws are in front of their middles", () => {
+  test("the river plants have three jaw petals a third of a turn apart, as the game's: one towards +z, two behind either side", () => {
     const jaws = ENEMY_SHAPES.blue_river_plant.filter((part) => part.name === "jaw");
-    expect(jaws.length).toBeGreaterThan(0);
-    expect(jaws.every((part) => part.at[2] > 0)).toBe(true);
+    const angles = jaws.map(({ at: [x, , z] }) => Math.round((Math.atan2(x, z) * 180) / Math.PI)).sort((first, second) => first - second);
+    expect(angles).toEqual([-120, 0, 120]);
   });
 
   test("the fish is on the floor, as big as the game's (RF1fV): about 434 long, 581 tall and 431 across", () => {
