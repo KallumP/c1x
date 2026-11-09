@@ -158,10 +158,9 @@ describe("rolling stones", () => {
     expect(flight[3][0]).toBeCloseTo(-0.5);
   });
 
-  test("a lab assistant throws along the game's x, across the map as a stone rolls, or back the other way reversed, turning with the level", () => {
-    expect(labAssistantThrow(0, false)).toEqual([1, 0, 0]);
-    expect(labAssistantThrow(0, true)).toEqual([-1, 0, 0]);
-    expect(labAssistantThrow(90, false)).toEqual(stoneRolling(90));
+  test("a lab assistant throws back along the game's x (every throw custom levels get does), across the map the other way from a rolling stone, turning with the level", () => {
+    expect(labAssistantThrow(0)).toEqual([-1, 0, 0]);
+    expect(labAssistantThrow(90)).toEqual(stoneRolling(90).map((value) => -value + 0));
   });
 
   test("a stone's path turns with the level and lifts with raise", () => {

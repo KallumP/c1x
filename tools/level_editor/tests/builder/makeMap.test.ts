@@ -522,18 +522,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
     const assistant = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "lab_assistant", ...more });
 
-    test("a lab assistant stands at its spot, a single point there, throwing as stormy ascent's first: its init flag a 90, along +x", () => {
+    test("a lab assistant stands at its spot, a single point there, throwing as stormy ascent's first: its init flag a (how often it throws) 90", () => {
       const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [assistant()], readOtherLevel }).zone);
       expect(placed.type).toEqual(ENEMY_ENTITIES.lab_assistant);
       expect(placed.path.length).toBe(1);
       // blender (1, 2, 0) is (1408, 128, 1664) in the zone
       [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
       expect(placed.initFlagA).toBe(90);
-    });
-
-    test("a reversed lab assistant throws the other way across the map: its init flag a -90", () => {
-      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [assistant({ reverse: true })], readOtherLevel }).zone);
-      expect(placed.initFlagA).toBe(-90);
     });
 
     test("a level with a lab assistant has stormy ascent's lab assistant code, its model and its vial's, and every sound the code plays", () => {
