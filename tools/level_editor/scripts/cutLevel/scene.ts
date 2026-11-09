@@ -6,6 +6,7 @@ import type { Uv } from "../../builder/obj";
 import type { Rgb } from "../../builder/tpage";
 import type { BuiltPolygon } from "../../builder/worldGeometry";
 import { cross, subtract, type Vec3 } from "../../builder/vectors";
+import type { CutSolid } from "./collision";
 import type { CutLevel, CutWorld } from "./readCutLevel";
 import { polygonTexture, regionImage, triangleUVs, type PolygonTexture } from "./textures";
 
@@ -180,17 +181,93 @@ function facesAwayFromRoute(face: SceneFace, route: Vec3[]): boolean {
   return normal[0] * (routeX - middle[0]) + normal[1] * (routeY - middle[1]) < 0;
 }
 
+const SOLID_CELL = 512; // game units: the solid index's buckets
+const PROBE = 0.25;     // blender metres in front of and behind a wall where its solid side is looked for
+
+// the cut level's collision (its solid boxes), to ask whether a point is inside it
+export class SolidIndex {
+  private readonly buckets = new Map<string, CutSolid[]>();
+
+  constructor(solids: CutSolid[]) {
+    for (const solid of solids) {
+      for (const key of bucketsOver(solid)) {
+        const bucket = this.buckets.get(key) ?? [];
+        bucket.push(solid);
+        this.buckets.set(key, bucket);
+      }
+    }
+  }
+
+  isSolid(point: Vec3): boolean {
+    const bucket = this.buckets.get(bucketOf(point)) ?? [];
+    return bucket.some(({ low, high }) => point.every((value, axis) => value >= low[axis] && value < high[axis]));
+  }
+}
+
+const bucketIndex = (value: number) => Math.floor(value / SOLID_CELL);
+const bucketOf = ([x, y, z]: Vec3) => [x, y, z].map(bucketIndex).join();
+
+function bucketsOver({ low, high }: CutSolid): string[] {
+  const keys: string[] = [];
+  for (let i = bucketIndex(low[0]); i <= bucketIndex(high[0]); i++) {
+    for (let j = bucketIndex(low[1]); j <= bucketIndex(high[1]); j++) {
+      for (let k = bucketIndex(low[2]); k <= bucketIndex(high[2]); k++) {
+        keys.push([i, j, k].join());
+      }
+    }
+  }
+  return keys;
+}
+
+// a blender point back in the game (the inverse of toBlender)
+function fromBlender([x, y, z]: Vec3, { centre, scale }: Pick<SceneOptions, "centre" | "scale">): Vec3 {
+  return [x * scale + centre[0], z * scale + centre[1], -y * scale + centre[2]];
+}
+
+type WallSide = "front" | "back" | "unknown";
+
+// which side of a wall the cut level's collision has solid: in front of it (where it faces), behind, or neither or both
+function solidSide(face: SceneFace, solids: SolidIndex, options: SceneOptions): WallSide {
+  const [a, b, c] = face.corners;
+  const normal = cross(subtract(b, a), subtract(c, a));
+  const length = Math.hypot(...normal);
+  if (length === 0) {
+    return "unknown";
+  }
+  const middle = middleOf(face);
+  const probe = (towards: number) => fromBlender(middle.map((value, axis) => value + (towards * PROBE * normal[axis]) / length) as Vec3, options);
+  const [front, back] = [solids.isSolid(probe(1)), solids.isSolid(probe(-1))];
+  if (front && !back) {
+    return "front";
+  }
+  if (back && !front) {
+    return "back";
+  }
+  return "unknown";
+}
+
+// whether a wall should be turned round: it faces its solid side, or (where the
+// collision doesn't say) it faces away from the route
+function isWallBackwards(face: SceneFace, route: Vec3[], solids: SolidIndex, options: SceneOptions): boolean {
+  const side = solidSide(face, solids, options);
+  if (side !== "unknown") {
+    return side === "front";
+  }
+  return route.length > 0 && facesAwayFromRoute(face, route);
+}
+
 // a face as the builder should take it. the game draws world polygons from
 // both sides (SwTransformAndShadeWorlds in src/pc/gfx/soft.c doesn't cull),
 // so a cut level's winding says nothing: a floor or slope faces up (the camera
-// looks down on it), and a wall faces the route, where crash and the camera
-// are, its solid side behind it
-function orientedFace(face: SceneFace, route: Vec3[]): SceneFace {
+// looks down on it), and a wall faces away from its solid side, as the cut
+// level's collision has it (or, where that doesn't say, faces the route, where
+// crash and the camera are)
+function orientedFace(face: SceneFace, solids: SolidIndex, options: SceneOptions): SceneFace {
   const up = upness(face);
   if (up < -FACING) {
     return reversed(face);
   }
-  if (up <= FACING && route.length > 0 && facesAwayFromRoute(face, route)) {
+  if (up <= FACING && isWallBackwards(face, options.route ?? [], solids, options)) {
     return reversed(face);
   }
   return face;
@@ -202,11 +279,12 @@ const isWithinWidth = (face: SceneFace, { halfWidth, scale }: SceneOptions) =>
 
 export function cutLevelScene(level: CutLevel, options: SceneOptions): CutLevelScene {
   const materials = new Materials(level.texturePages);
+  const solids = new SolidIndex(level.solids);
   const objects: SceneObject[] = [];
   const pit: SceneObject = { name: PIT_OBJECT, faces: [] };
   for (const world of level.worlds) {
     const faces = world.polygons.map((polygon) => sceneFace(world, polygon, materials, options))
-      .filter((face) => isWithinWidth(face, options)).map((face) => orientedFace(face, options.route ?? []));
+      .filter((face) => isWithinWidth(face, options)).map((face) => orientedFace(face, solids, options));
     objects.push({ name: world.name, faces: faces.filter(({ material }) => !isAcid(material)) });
     pit.faces.push(...faces.filter(({ material }) => isAcid(material)));
   }

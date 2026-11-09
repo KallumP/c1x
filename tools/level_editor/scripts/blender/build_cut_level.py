@@ -111,4 +111,5 @@ def main():
     export_obj(os.path.abspath(obj_path))
 
 
-main()
+if __name__ == "__main__":  # run by blender; replace_cut_level_meshes.py uses its pieces
+    main()
