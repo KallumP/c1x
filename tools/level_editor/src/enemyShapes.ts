@@ -113,7 +113,7 @@ function tippedUp(part: ShapePart, angle: number, [pivotY, pivotZ]: [number, num
 // how far a river plant's petals rise from the floor, in radians: the two
 // towards the player lie open, almost flat; the one behind rears up, as the game shows them
 const OPEN_PETAL_TILT = 0.12;
-const REARING_PETAL_TILT = 0.65;
+const REARING_PETAL_TILT = 0.3;
 
 const PETAL_LENGTH = 370; // half a petal's length, along it
 const PETAL_WIDTH = 170;  // half its width
@@ -467,9 +467,14 @@ export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 // creek's river plants (RV1fG and Rv1fG, their first frames in RV1fV and Rv1fV)
 // and fish (RF1fG, its first frame in RF1fV), each vertex times 4, times its
 // tgeo's scale / 4096
+// a river plant's height: its first frame in the game (RV1fV) rears its back
+// petal up 602, but the editor's lies lower, so it's as tall as makes it as wide
+// as the game's (about 1570 across)
+const RIVER_PLANT_HEIGHT = 400;
+
 const GAME_HEIGHTS: Record<StandingEnemy, number> = {
   plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
-  blue_river_plant: 602, green_river_plant: 602, fish: 581,
+  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581,
 };
 
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
