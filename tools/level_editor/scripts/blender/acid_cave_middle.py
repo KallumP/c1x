@@ -19,7 +19,6 @@ ACID_LEVELS = {"geode": -3.4, "grotto": -0.9, "gorge": -3.3}
 WALL_TOPS = {"geode": 8.0, "grotto": 5.0, "gorge": 7.0}
 PURPLE_ROCK_DARK = "tex_053"
 ROCK_TOP_ABOVE = FLOOR + 1.5  # flat ground higher than this is the rock's top, not a floor to walk on
-GREEN_SPORE = "tex_055"
 
 
 def part_of(y):
@@ -379,16 +378,6 @@ def grotto_mushrooms(terrain, parts):
         mushroom(parts["mushroom_stalks"], parts["mushroom_caps"], (x, y, z - 0.3), z + 1.2 + 0.4 * (index % 3), 0.7 + 0.15 * (index % 2), cap_light, 40 + index)
 
 
-def grotto_spores(parts):
-    """glowing shards drifting high over the marsh"""
-    glow = lambda x, y, z: lit(170, glow=0.4)
-    for index in range(14):
-        x = -3.0 + 7.5 * wobble(index, 7, 0, 1, 8)
-        y = 121.0 + 6.5 * wobble(index, 9, 0, 1, 9)
-        z = 4.2 + 1.2 * (0.5 + 0.5 * wobble(index, 11, 0, 1, 10))
-        crystal(parts["spores"], (x, y, z), 0.12, 0.5, (0.05, 0.05), glow)
-
-
 def gorge_arch(parts):
     """a natural rock arch over the river, from the left ledge to the right"""
     y0, y1 = ARCH_Y - 1.1, ARCH_Y + 1.1
@@ -420,8 +409,7 @@ MIDDLE_PARTS = {
     DARK_MOSS: (DARK_MOSS, False), MOSS_PATH: (MOSS_PATH, False), PURPLE_ROCK: (PURPLE_ROCK, False),
     PURPLE_ROCK_BRIGHT: (PURPLE_ROCK_BRIGHT, False), PURPLE_ROCK_DARK: (PURPLE_ROCK_DARK, False),
     GREEN_ROCK: (GREEN_ROCK, False), GREEN_ROCK_VEINED: (GREEN_ROCK_VEINED, False), "acid": (ACID, False),
-    "crystals_purple": (CRYSTAL_PURPLE, True), "crystals_green": (CRYSTAL_GREEN, True), "spores": (GREEN_SPORE, True),
-    "mushroom_stalks": (MUSHROOM_STALK, True), "mushroom_caps": (MUSHROOM_CAP, True), "arch": (PURPLE_ROCK, False),
+    "crystals_purple": (CRYSTAL_PURPLE, True), "crystals_green": (CRYSTAL_GREEN, True), "mushroom_stalks": (MUSHROOM_STALK, True), "mushroom_caps": (MUSHROOM_CAP, True), "arch": (PURPLE_ROCK, False),
     "boulders": (PURPLE_ROCK_BRIGHT, False),
 }
 
@@ -433,7 +421,6 @@ def middle_parts():
     terrain_faces(terrain, parts)
     geode_crystals(terrain, parts)
     grotto_mushrooms(terrain, parts)
-    grotto_spores(parts)
     gorge_arch(parts)
     gorge_boulders(parts)
     return parts
