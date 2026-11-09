@@ -128,6 +128,14 @@ function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffe
 // along the game's +z (where its own go, so the way the roost looks for crash)
 const OWN_PATH_ENEMIES: EnemyType[] = ["fish", "bat"];
 
+// an enemy on its own level's path: a bat roost's init flag a is how many bats it sends
+function ownPathEnemyEntity(entity: Buffer, enemy: LevelObject): Buffer {
+  if (enemy.enemy === "bat") {
+    return withInitFlagA(entity, numberSetting(enemy, "count"));
+  }
+  return entity;
+}
+
 // the enemies that stay at their spot: jungle rollers' plant, up the creek's two
 // river plants, and the spider hanging there
 const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider"];
@@ -187,7 +195,8 @@ class ObjectPlacer {
   // temple ruins' bat roost, sending its bats along it
   placeWithItsPath(enemy: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(enemy));
-    this.entities[zone].push(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(enemy.reverse === true)));
+    const placed = withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(enemy.reverse === true));
+    this.entities[zone].push(ownPathEnemyEntity(placed, enemy));
   }
 
   // an enemy that moves along a path (a crab, turtle, native or badger), as
