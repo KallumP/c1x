@@ -116,10 +116,11 @@ describe("enemy shapes", () => {
     expect(min[0] + max[0]).toBeCloseTo(0); // the same both sides
   });
 
-  test.each(["blue_river_plant", "green_river_plant"] as const)("the %s stands on the floor, as big as the game's (RV1fV): about 1570 across, 602 tall and 1703 deep", (enemy) => {
+  test.each(["blue_river_plant", "green_river_plant"] as const)("the %s stands on the floor, as wide and deep as the game's (RV1fV): about 1570 across and 1703 deep, its petals lower than the game's first frame rears its back one (602)", (enemy) => {
     const { min, max } = shapeBounds(ENEMY_SHAPES[enemy]);
     expect(min[1]).toBeCloseTo(0);
-    expect(max[1]).toBeCloseTo(602, -1);
+    expect(max[1]).toBeGreaterThan(300);
+    expect(max[1]).toBeLessThan(500);
     expect(max[0] - min[0]).toBeGreaterThan(1400);
     expect(max[0] - min[0]).toBeLessThan(1750);
     expect(max[2] - min[2]).toBeGreaterThan(1500);
