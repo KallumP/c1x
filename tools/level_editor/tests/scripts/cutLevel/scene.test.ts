@@ -91,6 +91,16 @@ describe("a cut level as a blender scene", () => {
     expect(cross(subtract(b, a), subtract(c, a))[0]).toBeLessThan(0); // facing -x, out of the rock
   });
 
+  test("a sloping wall over solid ground (the acid's) that it isn't part of still faces the route: what's below it doesn't count", () => {
+    // a mound's foot at game x 1375 to 1600, sloping, wound to face out (-x) and down, over the acid's ground (solid up to 250)
+    const world = triangleWorld([[1600, 200, 0], [1375, 600, 0], [1600, 200, 400]]);
+    const acidGround = { low: [0, -2000, -400] as Vec3, high: [1600, 250, 800] as Vec3, leaf: 1 };
+    const level: CutLevel = { worlds: [world], texturePages: new Map([[PAGE, page]]), entities: [], solids: [acidGround] };
+    const [face] = cutLevelScene(level, OPTIONS).objects[0].faces; // the route along blender x 0: -x of it
+    const [a, b, c] = face.corners;
+    expect(cross(subtract(b, a), subtract(c, a))[0]).toBeLessThan(0); // facing -x, towards the route
+  });
+
   test("each texture region is a material with its image, and a triangle's UVs are its layout's corners (v up), turned round with it", () => {
     const scene = cutLevelScene(levelOf(worldWith([ROCK_WORD])), OPTIONS);
     const [face] = scene.objects[0].faces;
