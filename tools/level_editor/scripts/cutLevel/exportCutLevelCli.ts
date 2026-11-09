@@ -2,7 +2,7 @@
 // the game (such as streams/s0000004.nsf, the acid cave) to level_src/<name>:
 // its textures as pngs, and with blender (headless), its .blend, .obj and .mtl
 import { execFileSync } from "node:child_process";
-import { rmSync } from "node:fs";
+import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { exportCutLevel } from "./exportCutLevel";
@@ -17,7 +17,13 @@ const USAGE = `usage: npm run export-cut-level -- <nsf> <name> [blender]
   name     the level source to make: level_src/<name>
   blender  blender.exe, to make its .blend, .obj and .mtl (without it, only its images and scene)`;
 
+// makes the .blend, .obj and .mtl; not over a .blend there already, which may have been changed in blender since
 function runBlender(blender: string, scenePath: string, folder: string, name: string): void {
+  const blend = join(folder, `${name}.blend`);
+  if (existsSync(blend)) {
+    rmSync(scenePath);
+    throw new Error(`${blend} is there already, and may have been changed in blender: move it away to make it again`);
+  }
   const args = ["--background", "--python", BLENDER_SCRIPT, "--", scenePath, join(folder, `${name}.blend`), join(folder, `${name}.obj`)];
   execFileSync(blender, args, { stdio: "inherit" });
   rmSync(scenePath);

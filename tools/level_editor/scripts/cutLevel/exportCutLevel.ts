@@ -8,7 +8,7 @@ import type { RgbImage } from "../../builder/images";
 import type { Vec3 } from "../../builder/vectors";
 import type { CutLevel } from "./readCutLevel";
 import { formatObjects } from "../../src/objects";
-import { cutLevelObjects, platformPads } from "./objects";
+import { collisionFloors, cutLevelObjects, platformPads } from "./objects";
 import { cutLevelScene, type CutLevelScene, type SceneOptions } from "./scene";
 
 export const SCENE_SCALE = 400;    // game units a blender metre (MAP_SCALE in builder/makeMap.ts)
@@ -45,10 +45,10 @@ function mostUsedRock(scene: CutLevelScene): string {
   return [...counts].sort((first, second) => second[1] - first[1])[0][0];
 }
 
-// the level's scene, with its platforms as pads
+// the level's scene, with its platforms as pads, and its own floor as collision
 function sceneWithPads(level: CutLevel, options: SceneOptions): CutLevelScene {
   const scene = cutLevelScene(level, options);
-  return { ...scene, objects: [...scene.objects, platformPads(level, options, mostUsedRock(scene))] };
+  return { ...scene, objects: [...scene.objects, platformPads(level, options, mostUsedRock(scene)), collisionFloors(level, options)] };
 }
 
 // its objects.json, unless it has one (which may have been changed in the level editor since)
@@ -62,7 +62,9 @@ function writeObjectsOnce(level: CutLevel, outDir: string, options: SceneOptions
 // writes level's material images, its scene (name.scene.json) and its objects
 // (objects.json, if it has none) to outDir; the scene's path
 export function exportCutLevel(level: CutLevel, outDir: string, name: string): string {
-  const options = { centre: sceneCentre(level), halfWidth: SCENE_HALF_WIDTH, scale: SCENE_SCALE };
+  const placement = { centre: sceneCentre(level), scale: SCENE_SCALE };
+  const route = cutLevelObjects(level, placement).map(({ at }) => at); // its spawn, boxes and end
+  const options = { ...placement, halfWidth: SCENE_HALF_WIDTH, route };
   const scene = sceneWithPads(level, options);
   mkdirSync(outDir, { recursive: true });
   writeObjectsOnce(level, outDir, options);

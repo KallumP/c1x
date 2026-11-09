@@ -9,6 +9,7 @@ import type { Vec3 } from "../../builder/vectors";
 import { readWorldHeader, readWorldPolygon, readWorldVertex, type BuiltPolygon } from "../../builder/worldGeometry";
 import type { WorldVertex } from "../../builder/worldMeshes";
 import { zoneEntities, zoneOrigin } from "../../builder/zones";
+import { zoneSolids, type CutSolid } from "./collision";
 
 // a world mesh: its vertices are relative to its origin; its header holds its
 // texture page slots (pages) and texture infos
@@ -35,6 +36,7 @@ export interface CutLevel {
   worlds: CutWorld[];
   texturePages: Map<number, Buffer>; // each texture page's whole 64 KB, by entry id
   entities: CutEntity[];
+  solids: CutSolid[]; // its zones' collision
 }
 
 const ENTITY_FLAGS_AT = 12; // init flags a, b and c (see ENTITY_INIT_FLAGS in builder/entities.ts)
@@ -76,5 +78,6 @@ export function readCutLevel(nsfPath: string): CutLevel {
     worlds: entries.filter((entry) => entry.type === ENTRY_WGEO).map(cutWorld),
     texturePages: new Map(pages.filter((page) => page.type === PAGE_TEXTURE).map((page) => [page.eid, page.data])),
     entities: entries.filter((entry) => entry.type === ENTRY_ZDAT).flatMap(zoneCutEntities),
+    solids: entries.filter((entry) => entry.type === ENTRY_ZDAT).flatMap(zoneSolids),
   };
 }

@@ -5,7 +5,7 @@ import type { RgbImage } from "../../builder/images";
 import type { Uv } from "../../builder/obj";
 import type { Rgb } from "../../builder/tpage";
 import type { BuiltPolygon } from "../../builder/worldGeometry";
-import type { Vec3 } from "../../builder/vectors";
+import { cross, subtract, type Vec3 } from "../../builder/vectors";
 import type { CutLevel, CutWorld } from "./readCutLevel";
 import { polygonTexture, regionImage, triangleUVs, type PolygonTexture } from "./textures";
 
@@ -36,6 +36,7 @@ export interface SceneOptions {
   centre: Vec3;      // the game point that goes at blender's origin
   halfWidth: number; // faces reaching further across (x) from it than this are cropped
   scale: number;     // game units a blender metre
+  route?: Vec3[];    // places along the level's route (blender metres), which its walls face
 }
 
 const ACID_MATERIAL = "acid";
@@ -144,6 +145,57 @@ function sceneFace(world: CutWorld, polygon: BuiltPolygon, materials: Materials,
   };
 }
 
+const FACING = 0.5; // a face whose normal's up is over this faces up, under -FACING down (FACING in builder/faces.ts)
+
+// a face the other way round: its corners in the other order, with their UVs and colours
+export function reversed({ corners, uvs, colours, material }: SceneFace): SceneFace {
+  const order = [0, 2, 1];
+  return { corners: order.map((corner) => corners[corner]), uvs: order.map((corner) => uvs[corner]), colours: order.map((corner) => colours[corner]), material };
+}
+
+// how much a face faces up (its unit normal's z, blender's up)
+export function upness({ corners: [a, b, c] }: SceneFace): number {
+  const normal = cross(subtract(b, a), subtract(c, a));
+  const length = Math.hypot(...normal);
+  if (length === 0) {
+    return 0;
+  }
+  return normal[2] / length;
+}
+
+const middleOf = ({ corners }: SceneFace): Vec3 => [0, 1, 2].map((axis) => corners.reduce((sum, corner) => sum + corner[axis], 0) / 3) as Vec3;
+
+// the place along the route nearest point, from above
+function nearestOnRoute([x, y]: Vec3, route: Vec3[]): Vec3 {
+  const distance = ([px, py]: Vec3) => Math.hypot(px - x, py - y);
+  return [...route].sort((first, second) => distance(first) - distance(second))[0];
+}
+
+// whether a wall faces away from the route (its normal, from above, points away from the nearest place along it)
+function facesAwayFromRoute(face: SceneFace, route: Vec3[]): boolean {
+  const [a, b, c] = face.corners;
+  const normal = cross(subtract(b, a), subtract(c, a));
+  const middle = middleOf(face);
+  const [routeX, routeY] = nearestOnRoute(middle, route);
+  return normal[0] * (routeX - middle[0]) + normal[1] * (routeY - middle[1]) < 0;
+}
+
+// a face as the builder should take it. the game draws world polygons from
+// both sides (SwTransformAndShadeWorlds in src/pc/gfx/soft.c doesn't cull),
+// so a cut level's winding says nothing: a floor or slope faces up (the camera
+// looks down on it), and a wall faces the route, where crash and the camera
+// are, its solid side behind it
+function orientedFace(face: SceneFace, route: Vec3[]): SceneFace {
+  const up = upness(face);
+  if (up < -FACING) {
+    return reversed(face);
+  }
+  if (up <= FACING && route.length > 0 && facesAwayFromRoute(face, route)) {
+    return reversed(face);
+  }
+  return face;
+}
+
 // whether all a face's corners are within halfWidth across of the centre (in blender metres)
 const isWithinWidth = (face: SceneFace, { halfWidth, scale }: SceneOptions) =>
   face.corners.every(([x]) => Math.abs(x) <= halfWidth / scale);
@@ -153,7 +205,8 @@ export function cutLevelScene(level: CutLevel, options: SceneOptions): CutLevelS
   const objects: SceneObject[] = [];
   const pit: SceneObject = { name: PIT_OBJECT, faces: [] };
   for (const world of level.worlds) {
-    const faces = world.polygons.map((polygon) => sceneFace(world, polygon, materials, options)).filter((face) => isWithinWidth(face, options));
+    const faces = world.polygons.map((polygon) => sceneFace(world, polygon, materials, options))
+      .filter((face) => isWithinWidth(face, options)).map((face) => orientedFace(face, options.route ?? []));
     objects.push({ name: world.name, faces: faces.filter(({ material }) => !isAcid(material)) });
     pit.faces.push(...faces.filter(({ material }) => isAcid(material)));
   }

@@ -1,10 +1,12 @@
 // a cut level's objects for its level source: crash's spawn, its boxes and an
 // end (objects.json), and its platforms as fixed pads in its geometry
 import { BOX_HEIGHT } from "../../builder/entities";
+import { LEAF_FLOOR } from "../../builder/octree";
 import type { Vec3 } from "../../builder/vectors";
 import { BOX_TYPES, type BoxType, type LevelObject } from "../../src/objects";
 import type { CutEntity, CutLevel } from "./readCutLevel";
-import { toBlender, type SceneFace, type SceneObject, type SceneOptions } from "./scene";
+import type { CutSolid } from "./collision";
+import { reversed, toBlender, upness, type SceneFace, type SceneObject, type SceneOptions } from "./scene";
 
 const CRASH = 0;          // the cut level's entity types: crash,
 const BOX = 3;            // its boxes, by the game's box subtypes,
@@ -80,4 +82,36 @@ export function platformPads(level: CutLevel, options: Options, material: string
     return padFaces([x, top, z], options, material);
   });
   return { name: "platforms", faces };
+}
+
+const COLLISION_FLOOR = "collision_floor"; // solid but not drawn (isCollisionOnly in builder/faces.ts)
+
+// what a solid's footprint and height are, to find one right on top of another
+const bottomKey = ({ low, high }: CutSolid) => [low[0], low[2], high[0], high[2], low[1]].join();
+const topKey = ({ low, high }: CutSolid) => [low[0], low[2], high[0], high[2], high[1]].join();
+
+// a floor quad over a solid's top, facing up, in blender metres
+function topFaces({ low, high }: CutSolid, options: Options, material: string): SceneFace[] {
+  const y = high[1];
+  const [a, b, c, d] = [[low[0], low[2]], [high[0], low[2]], [high[0], high[2]], [low[0], high[2]]]
+    .map(([x, z]) => toBlender([x, y, z], options));
+  return [padFace([a, b, c], material), padFace([a, c, d], material)].map(facingUp);
+}
+
+// a face turned to face up, if it faces down
+function facingUp(face: SceneFace): SceneFace {
+  if (upness(face) < 0) {
+    return reversed(face);
+  }
+  return face;
+}
+
+// the cut level's own floor (its floor leaves' tops, those without another
+// floor leaf right on them) as collision only, filling holes its mesh has but
+// its collision didn't: the game never fell through them
+export function collisionFloors(level: CutLevel, options: Options, material = "flat_000000"): SceneObject {
+  const floors = level.solids.filter(({ leaf }) => leaf === LEAF_FLOOR);
+  const bottoms = new Set(floors.map(bottomKey));
+  const tops = floors.filter((floor) => !bottoms.has(topKey(floor)));
+  return { name: COLLISION_FLOOR, faces: tops.flatMap((floor) => topFaces(floor, options, material)) };
 }
