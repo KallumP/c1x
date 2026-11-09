@@ -195,9 +195,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   // leaders hovering at its path's nodes (by default the flight's ends), each
   // with a handle to drag it by while the roost is selected
   const renderLeaderBats = (object: LevelObject, index: number) => {
-    const flight = leaderBatsFlight(object.at, object.raise, turn, scale);
-    const facing = facingFrom(flight[0], flight[flight.length - 1], turn);
     const leaders = pathPositions(object, turn, scale);
+    const flight = leaderBatsFlight(leaders[0], leaders[1], turn, scale);
+    const facing = facingFrom(flight[0], flight[flight.length - 1], turn);
     return (
       <>
         {renderShapeModel(ENEMY_SHAPES.bat, blenderToView(flight[0]), index, 0, facing)}
