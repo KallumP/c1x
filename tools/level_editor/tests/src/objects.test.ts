@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BADGER_COUNT, BADGER_COUNT_MAX, BADGER_COUNT_MIN, BOX_TYPES, numberSetting, boxTypeName, ENEMY_TYPES, formatObjects, parseObjects, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type Vec3 } from "../../src/objects";
+import { BADGER_COUNT, BADGER_COUNT_MAX, BADGER_COUNT_MIN, BOX_TYPES, numberSetting, boxTypeName, ENEMY_TYPES, formatObjects, hasNodes, hasPath, parseObjects, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type Vec3 } from "../../src/objects";
 
 describe("parseObjects", () => {
   test("reads spawn, end and boxes with their settings", () => {
@@ -203,6 +203,17 @@ describe("enemy paths", () => {
     expect(objects.map(({ path }) => path)).toEqual([[[-2, 0, 0], [0, 1, 0], [2, 0, 0]], [[0, -2.5, 0], [0, 2.5, 0.5]], [[-1, 0, 0], [1, 0, 0]], [[0, 3, 0], [0, -3, 0]], undefined]);
   });
 
+  test("a leader bats roost can have a path of its two leaders: where each hovers, from where the roost is, in metres", () => {
+    const [roost] = parseObjects('[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "path": [[-1, 0, -4], [-15, 2, -4]]}]');
+    expect(roost.path).toEqual([[-1, 0, -4], [-15, 2, -4]]);
+  });
+
+  test("a leader bats roost's nodes are its leaders, which it has, though it doesn't walk a path", () => {
+    const enemy = (type: "leader_bats" | "crab" | "bat") => ({ kind: "enemy" as const, enemy: type, at: [0, 0, 0] as Vec3, raise: 0, stack: 1 });
+    expect([hasNodes(enemy("leader_bats")), hasNodes(enemy("crab")), hasNodes(enemy("bat"))]).toEqual([true, true, false]);
+    expect([hasPath(enemy("leader_bats")), hasPath(enemy("crab"))]).toEqual([false, true]);
+  });
+
   test("writes a path after the rest, to the millimetre, and reads it back", () => {
     const crab = { kind: "enemy" as const, enemy: "crab" as const, at: [1, 2, 0] as Vec3, raise: 0, stack: 1, path: [[-2.00004, 0, 0], [2, 0.5, 0]] as Vec3[] };
     const text = formatObjects([crab]);
@@ -221,6 +232,8 @@ describe("enemy paths", () => {
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', `object 1: a path should be 2 to ${PATH_NODES_MAX} nodes`],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0]]}]', "object 1: a path's nodes should each be [x, y, z] in metres"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": "across"}]', "object 1: a path should be 2 to"],
+    ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0], [2, 0, 0]]}]', "object 1: a leader bats roost's path is its two leaders, [[x, y, z], [x, y, z]]"],
+    ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', "object 1: a leader bats roost's path is its two leaders"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
