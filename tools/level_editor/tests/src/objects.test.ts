@@ -348,6 +348,14 @@ describe("badger counts", () => {
     expect(formatObjects([{ ...walker, count: 2 }])).toContain('"count": 2}');
   });
 
+  test("a bat can have a count too: how many bats its roost sends, 4 without one (as temple ruins'), which is left out when written", () => {
+    const bat = { ...badger, enemy: "bat" as const };
+    expect(parseObjects('[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "count": 6}]')[0].count).toBe(6);
+    expect(numberSetting(bat, "count")).toBe(4);
+    expect(formatObjects([{ ...bat, count: 4 }])).toContain('"at": [1, 2, 0]}');
+    expect(formatObjects([{ ...bat, count: 1 }])).toContain('"count": 1}');
+  });
+
   test("writes a count after the rest, and leaves out the default (2)", () => {
     expect(formatObjects([{ ...badger, count: 3 }])).toContain('"at": [1, 2, 0], "count": 3}');
     expect(formatObjects([{ ...badger, count: 2 }])).toContain('"at": [1, 2, 0]}');
@@ -357,11 +365,12 @@ describe("badger counts", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "count": 2}]', "object 1: a crab has no count (badgers and walking spiders do)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "count": 2}]', "object 1: a crab has no count (badgers, walking spiders and bats do)"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count"],
     ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 0}]', "object 1: count should be 1 to 6 (how many badgers come out at once)"],
     ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 7}]', "object 1: count should be 1 to 6"],
     ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 2.5}]', "object 1: count should be 1 to 6"],
+    ['[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "count": 7}]', "object 1: count should be 1 to 6"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });

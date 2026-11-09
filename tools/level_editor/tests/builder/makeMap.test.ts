@@ -542,6 +542,11 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(Math.min(...placed.path.map(([, y]) => y)) - first[1]).toBe(-1336);
     });
 
+    test("a bat roost's count is how many bats it sends: its init flag a, 4 (as temple ruins') without one", () => {
+      const initFlagA = (more: Partial<LevelObject>) => enemies(make(MAP_OBJ, { scale: 256, objects: [bat(more)], readOtherLevel }).zone)[0].initFlagA;
+      expect([initFlagA({}), initFlagA({ count: 1 }), initFlagA({ count: 6 })]).toEqual([4, 1, 6]);
+    });
+
     test.skipIf(!hasFumbling)("a level with bats and spiders has both codes, within the texture pages the game holds", () => {
       const objects = [bat(), bat({ at: [-1, 4, 0] }), object("enemy", [1, 6, 0], { enemy: "walking_spider" })];
       const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel });
