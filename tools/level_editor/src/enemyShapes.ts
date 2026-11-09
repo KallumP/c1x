@@ -90,25 +90,43 @@ function plant(): ShapePart[] {
   ];
 }
 
-// one side of a river plant: a wide red jaw spread out and up, teeth along its front, and a leaf behind
-function riverPlantSide(leafColour: string): ShapePart[] {
-  const teeth = [100, 220, 340, 460].map((x) =>
-    rod(0, 14, 60, [x, 300 + x * 0.42, 700], RIVER_PLANT_COLOURS.tooth, { turn: [Math.PI, 0, 0] }));
+// a part turned about the plant's middle (y) by angle, from facing +z
+function turnedAbout(part: ShapePart, angle: number): ShapePart {
+  const [x, y, z] = part.at;
+  const [turnX, turnY, turnZ] = part.turn ?? [0, 0, 0];
+  const at: Vec3 = [x * Math.cos(angle) + z * Math.sin(angle), y, z * Math.cos(angle) - x * Math.sin(angle)];
+  return { ...part, at, turn: [turnX, turnY + angle, turnZ] };
+}
+
+// a river plant's petal pointing along +z: a wide red jaw reaching out from
+// its middle, with teeth round its tip
+function riverPlantPetal(): ShapePart[] {
+  const teeth = [-0.5, -0.17, 0.17, 0.5].map((across) =>
+    rod(0, 14, 70, [across * 230, 410, 365 + 230 * Math.cos(across)], RIVER_PLANT_COLOURS.tooth));
   return [
-    ball(1, [380, 360, 420], RIVER_PLANT_COLOURS.jaw, { name: "jaw", stretch: [400, 80, 340], turn: [0, 0, 0.4] }),
+    ball(1, [0, 330, 365], RIVER_PLANT_COLOURS.jaw, { name: "jaw", stretch: [175, 90, 290] }),
     ...teeth,
-    ball(1, [350, 40, -450], leafColour, { name: "leaf", stretch: [220, 30, 380], turn: [0, 0.5, 0] }),
   ];
 }
 
-// up the creek's biting plant: low and wide, its two red jaws spread open
-// towards the player from a red bulb on a short stalk; its leaves blue or green
+// a leaf between two petals, lying on the floor, pointing along +z
+function riverPlantLeaf(leafColour: string): ShapePart {
+  return ball(1, [0, 40, 380], leafColour, { name: "leaf", stretch: [85, 30, 230] });
+}
+
+const THIRD_TURN = (Math.PI * 2) / 3;
+
+// up the creek's biting plant: three red jaw petals spread a third of a turn
+// apart round a red bulb, one towards the player, as the game's; its leaves,
+// between them, blue or green
 function riverPlant(leafColour: string): ShapePart[] {
+  const petalAngles = [0, THIRD_TURN, -THIRD_TURN];
   return [
-    ...bothSides(riverPlantSide(leafColour)),
-    rod(50, 70, 180, [0, 90, 100], leafColour, { name: "leaf" }),
-    ball(1, [0, 180, 150], RIVER_PLANT_COLOURS.jaw, { stretch: [170, 180, 170] }),
-    ball(1, [0, 330, 380], RIVER_PLANT_COLOURS.mouth, { stretch: [230, 60, 220] }),
+    ...petalAngles.flatMap((angle) => riverPlantPetal().map((part) => turnedAbout(part, angle))),
+    ...petalAngles.map((angle) => turnedAbout(riverPlantLeaf(leafColour), angle + Math.PI)),
+    rod(50, 70, 180, [0, 90, 0], leafColour, { name: "leaf" }),
+    ball(1, [0, 250, 0], RIVER_PLANT_COLOURS.jaw, { stretch: [130, 170, 130] }),
+    ball(1, [0, 380, 0], RIVER_PLANT_COLOURS.mouth, { stretch: [110, 40, 110] }),
   ];
 }
 
