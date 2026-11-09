@@ -52,7 +52,7 @@
 
 ### Temple Ruins
 
-- approaching bats causes game to crash
+- approaching bats causes game to crash (not seen any more: bats flying at, past and over Crash, and spun, with sound, didn't crash the game)
 
 ### Road To Nowhere
 

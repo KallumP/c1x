@@ -39,6 +39,7 @@ export const ENEMY_COLOURS: Record<EnemyType, string> = {
   blue_river_plant: "#4a7fa0",
   green_river_plant: "#6fae2e",
   fish: "#3a6fc0",
+  bat: "#5b4a6e",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";

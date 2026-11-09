@@ -18,7 +18,7 @@ export type ShapePart = Primitive & {
 };
 
 type ModelledEnemy = Exclude<EnemyType, "rolling_stone">;
-type StandingEnemy = Exclude<ModelledEnemy, "spider">; // all but the spider hanging on its thread
+type StandingEnemy = Exclude<ModelledEnemy, "spider" | "bat">; // all but the spider hanging on its thread and the flying bat
 
 const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth: "#b0233a", tooth: "#f4f1e0", soil: "#6b4a2b" };
 const TURTLE_COLOURS = { shell: "#b8282a", spot: "#2fa58c", skin: "#b5a35a", eye: "#f4f1e0", pupil: "#1a1a1a" };
@@ -30,6 +30,7 @@ const BADGER_COLOURS = { fur: "#1f1d24", stripe: "#e4dcc4", nose: "#3a3238", eye
 const RIVER_PLANT_COLOURS = { jaw: "#b0233a", tooth: "#f4f1e0" };
 const RIVER_PLANT_LEAVES = { blue: "#4a6478", green: "#2f7d32" };
 const FISH_COLOURS = { body: "#23306e", fin: "#e08a2a", eye: "#f4f1e0", pupil: "#1a1a1a" };
+const BAT_COLOURS = { body: "#3a2c34", wing: "#5a3a3e", ear: "#2a1e26", eye: "#f2d36b" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
 export const ball = (radius: number, at: Vec3, colour: string, extra: Partial<ShapePart> = {}): ShapePart =>
@@ -182,6 +183,25 @@ function fish(): ShapePart[] {
     ball(1, [0, 300, -200], FISH_COLOURS.fin, { stretch: [20, 110, 60] }),
     ball(1, [0, 500, -20], FISH_COLOURS.fin, { stretch: [15, 80, 90] }),
     ball(1, [0, 90, -40], FISH_COLOURS.fin, { stretch: [15, 60, 60] }),
+  ];
+}
+
+// one side of the bat: a wing raised up from its shoulder, an ear, an eye and a claw hanging down
+function batSide(): ShapePart[] {
+  return [
+    { kind: "box", size: [20, 280, 260], at: [55, 330, -10], turn: [0, 0, -0.2], colour: BAT_COLOURS.wing },
+    rod(0, 18, 60, [25, 415, 30], BAT_COLOURS.ear),
+    ball(12, [20, 362, 82], BAT_COLOURS.eye, { name: "eye" }),
+    rod(8, 8, 160, [25, 80, 0], BAT_COLOURS.ear),
+  ];
+}
+
+// temple ruins' bat: a dark body and head, its wings raised over it, facing +z
+function bat(): ShapePart[] {
+  return [
+    ...bothSides(batSide()),
+    ball(1, [0, 250, 0], BAT_COLOURS.body, { stretch: [60, 95, 70] }),
+    ball(45, [0, 350, 40], BAT_COLOURS.body),
   ];
 }
 
@@ -486,5 +506,15 @@ const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
 const STANDING_SHAPES = Object.fromEntries(Object.entries(SHAPE_PARTS).map(([enemy, parts]) =>
   [enemy, scaledToHeight(standingOnFloor(parts()), GAME_HEIGHTS[enemy as StandingEnemy])])) as Record<StandingEnemy, ShapePart[]>;
 
-// each enemy's shape: the standing ones', and the spider hanging as the walking spider's body
-export const ENEMY_SHAPES: Record<ModelledEnemy, ShapePart[]> = { ...STANDING_SHAPES, spider: hangingSpider(STANDING_SHAPES.walking_spider) };
+// temple ruins' bat (Ba1sG, its first frame in Ba1sV): its height, and how far
+// below its spot its lowest point is, in game units, as the game's
+const BAT_HEIGHT = 567;
+const BAT_BELOW_SPOT = 361;
+
+// each enemy's shape: the standing ones', the spider hanging as the walking
+// spider's body, and the bat about its spot as the game's
+export const ENEMY_SHAPES: Record<ModelledEnemy, ShapePart[]> = {
+  ...STANDING_SHAPES,
+  spider: hangingSpider(STANDING_SHAPES.walking_spider),
+  bat: lifted(scaledToHeight(standingOnFloor(bat()), BAT_HEIGHT), -BAT_BELOW_SPOT),
+};

@@ -123,6 +123,19 @@ function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffe
   return withPath(entity, run);
 }
 
+// the enemies that move along their own level's path, moved to their spot: up
+// the creek's fish, leaping, and temple ruins' bat roost, its bats swooping
+// along the game's +z (where its own go, so the way the roost looks for crash)
+const OWN_PATH_ENEMIES: EnemyType[] = ["fish", "bat"];
+
+// an enemy on its own level's path: a bat roost's init flag a is how many bats it sends
+function ownPathEnemyEntity(entity: Buffer, enemy: LevelObject): Buffer {
+  if (enemy.enemy === "bat") {
+    return withInitFlagA(entity, numberSetting(enemy, "count"));
+  }
+  return entity;
+}
+
 // the enemies that stay at their spot: jungle rollers' plant, up the creek's two
 // river plants, and the spider hanging there
 const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider"];
@@ -178,10 +191,12 @@ class ObjectPlacer {
   }
 
   // an enemy that moves along its own level's path, as example, from its spot:
-  // up the creek's fish, leaping across the map (the other way, reversed)
+  // up the creek's fish, leaping across the map (the other way, reversed), or
+  // temple ruins' bat roost, sending its bats along it
   placeWithItsPath(enemy: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(enemy));
-    this.entities[zone].push(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(enemy.reverse === true)));
+    const placed = withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(enemy.reverse === true));
+    this.entities[zone].push(ownPathEnemyEntity(placed, enemy));
   }
 
   // an enemy that moves along a path (a crab, turtle, native or badger), as
@@ -317,7 +332,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     return templates.entity(...ENEMY_ENTITIES[type]);
   };
   enemies.filter((enemy) => STANDING_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeAtSpot(enemy, enemyExample(enemy.enemy!)));
-  enemies.filter((enemy) => enemy.enemy === "fish").forEach((enemy) => placer.placeWithItsPath(enemy, enemyExample("fish")));
+  enemies.filter((enemy) => OWN_PATH_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeWithItsPath(enemy, enemyExample(enemy.enemy!)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   objects.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;

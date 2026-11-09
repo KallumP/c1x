@@ -102,6 +102,26 @@ export function fishLeap(at: Vec3, raise: number, turn: number, scale: number, r
     [at[0] + (rollX * across) / scale, at[1] + (rollY * across) / scale, at[2] + raise + up / scale] as Vec3);
 }
 
+// temple ruins' bats' swoop (its first roost's path), in game units from the
+// roost: along the game's z (the route back towards the spawn) and up. its bats fly it once
+export const BAT_SWOOP: [number, number][] = [
+  [0, 0], [772, -776], [1540, -1200], [2308, -1200], [3076, -1200], [3848, -1200], [4616, -1200],
+  [5384, -1200], [6156, -1336], [6924, -1300], [7692, -1236], [8464, -1200], [9232, -776], [10000, 0],
+];
+
+// how high a bat roost goes over the floor, in game units: its bats' spot comes
+// down to 600 over it at the swoop's lowest, so they fly at crash, their bodies
+// (Ba1sG reaches 361 below its spot) clear of the floor
+export const BAT_ROOST_HEIGHT = 600 - Math.min(...BAT_SWOOP.map(([, up]) => up));
+
+// each point of a bat roost's swoop (in blender), for a roost at at, raised by
+// raise: back along the way the camera faces, towards the spawn
+export function batSwoop(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
+  const [wayX, wayY] = scaled(cameraFacing(turn), -1);
+  return BAT_SWOOP.map(([along, up]) =>
+    [at[0] + (wayX * along) / scale, at[1] + (wayY * along) / scale, at[2] + raise + up / scale] as Vec3);
+}
+
 // how far a crab walks back and forth, in game units: n. sanity beach's first
 // crab's path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const CRAB_WALK = 1600;

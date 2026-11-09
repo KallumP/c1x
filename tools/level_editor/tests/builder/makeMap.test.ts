@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { FISH_LEAP } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
@@ -10,6 +10,7 @@ import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_SOUNDS, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
 import { CORE_EXEC_SLOTS } from "../../builder/cutLevel";
+import { donorObject } from "../../builder/donorObjects";
 import type { Vec3 } from "../../builder/vectors";
 import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
 import { textureWorlds } from "../../builder/mapTextures";
@@ -73,6 +74,7 @@ const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0
 const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhere (0x14)
 const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the dark (0x2a)
 const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x18)
+const hasTempleRuins = existsSync(`${STREAMS}/s000001c.nsd`); // temple ruins (0x1c)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -511,6 +513,51 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel: readEach });
       expect(read).toEqual([0x18]);
       expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.fish[0]]).toBe(stringToEid("RivOC"));
+    });
+  });
+
+  describe.skipIf(!hasTempleRuins)("bats, from temple ruins", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const bat = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "bat", raise: 3, ...more });
+    const soundsOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
+
+    test("a level with a bat has temple ruins' ruins code, the bat's model and animation, its texture page and every sound the code plays", () => {
+      const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [bat()], readOtherLevel });
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.bat[0]]).toBe(stringToEid("RuiOC"));
+      expect(["Ba1sG", "Ba1sV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(level.pages.some((page) => page.type === PAGE_TEXTURE && page.eid === stringToEid("Ru3sT"))).toBe(true);
+      const sounds = donorObject(readLevel(STREAMS, 0x1c), ENEMY_ENTITIES.bat[0]).sounds.map(({ eid }) => eid);
+      expect(sounds.length).toBeGreaterThan(0);
+      expect(sounds.every((eid) => soundsOf(level).includes(eid))).toBe(true);
+    });
+
+    test("a bat roost is at its spot, raised, as temple ruins' first, its bats' swoop its path: 14 points, 10000 along the game's z, down 1336 at most", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [bat()], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.bat);
+      expect(placed.path.length).toBe(14);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone, and raise 3 is 768 more at scale 256
+      [1408, 128 + 768, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+      const [first, last] = [placed.path[0], placed.path.at(-1)!];
+      expect(last.map((value, axis) => value - first[axis])).toEqual([0, 0, 10000]);
+      expect(Math.min(...placed.path.map(([, y]) => y)) - first[1]).toBe(-1336);
+    });
+
+    test("the editor draws a bat roost's swoop as temple ruins' (BAT_SWOOP, along the game's z and up)", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [bat()], readOtherLevel }).zone);
+      const [, y0, z0] = placed.path[0];
+      expect(placed.path.map(([, y, z]) => [z - z0, y - y0])).toEqual(BAT_SWOOP);
+    });
+
+    test("a bat roost's count is how many bats it sends: its init flag a, 4 (as temple ruins') without one", () => {
+      const initFlagA = (more: Partial<LevelObject>) => enemies(make(MAP_OBJ, { scale: 256, objects: [bat(more)], readOtherLevel }).zone)[0].initFlagA;
+      expect([initFlagA({}), initFlagA({ count: 1 }), initFlagA({ count: 6 })]).toEqual([4, 1, 6]);
+    });
+
+    test.skipIf(!hasFumbling)("a level with bats and spiders has both codes, within the texture pages the game holds", () => {
+      const objects = [bat(), bat({ at: [-1, 4, 0] }), object("enemy", [1, 6, 0], { enemy: "walking_spider" })];
+      const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel });
+      const { execMap } = level.nsd.ldat;
+      expect([execMap[ENEMY_ENTITIES.bat[0]], execMap[ENEMY_ENTITIES.walking_spider[0]]]).toEqual([stringToEid("RuiOC"), stringToEid("SpidC")]);
     });
   });
 

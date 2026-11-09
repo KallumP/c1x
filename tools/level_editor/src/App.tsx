@@ -90,7 +90,7 @@ export default function App() {
     }
     const at = clickedFloor(event, grid);
     if (at) {
-      dispatch({ type: "add", object: newObject(tool.what, at) });
+      dispatch({ type: "add", object: newObject(tool.what, at, scale) });
     }
   };
 

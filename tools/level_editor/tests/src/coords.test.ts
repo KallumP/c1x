@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, BAT_SWOOP, batSwoop, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -91,6 +91,23 @@ describe("rolling stones", () => {
     const path = fishLeap([1, 2, 3], 0, 0, 400, true);
     expect(path[13][0]).toBeCloseTo(1 - 1600 / 400);
     expect(Math.max(...path.map(([, , z]) => z))).toBeCloseTo(3 + 2172 / 400);
+  });
+
+  test("a bat roost's bats swoop as temple ruins' do: 14 points, 10000 along the route back towards the spawn, down 1336 at most (game units)", () => {
+    expect(BAT_SWOOP.length).toBe(14);
+    const path = batSwoop([1, 2, 3], 0, 0, 400);
+    expect(path[0]).toEqual([1, 2, 3]);
+    expect(path[13][1]).toBeCloseTo(2 - 10000 / 400);
+    expect(path[13][2]).toBeCloseTo(3);
+    expect(Math.min(...path.map(([, , z]) => z))).toBeCloseTo(3 - 1336 / 400);
+    expect(path.every(([x]) => x === 1)).toBe(true);
+  });
+
+  test("a bat roost's swoop turns with the level, back along the way the camera faces, and lifts with raise", () => {
+    const path = batSwoop([0, 0, 0], 2, 90, 400);
+    expect(path[13][0]).toBeCloseTo(-10000 / 400);
+    expect(path[13][1]).toBeCloseTo(0);
+    expect(path[0][2]).toBeCloseTo(2);
   });
 
   test("a stone's path turns with the level and lifts with raise", () => {
