@@ -182,7 +182,9 @@ function facesAwayFromRoute(face: SceneFace, route: Vec3[]): boolean {
 }
 
 const SOLID_CELL = 512; // game units: the solid index's buckets
-const PROBE = 0.25;     // blender metres in front of and behind a wall where its solid side is looked for
+// how far in front of and behind a wall (blender metres) its solid side is looked
+// for: several depths, as the cut level's collision reaches a little past its rock
+const PROBES = [0.15, 0.4, 0.8, 1.5];
 
 // the cut level's collision (its solid boxes), to ask whether a point is inside it
 export class SolidIndex {
@@ -226,21 +228,25 @@ function fromBlender([x, y, z]: Vec3, { centre, scale }: Pick<SceneOptions, "cen
 
 type WallSide = "front" | "back" | "unknown";
 
-// which side of a wall the cut level's collision has solid: in front of it (where it faces), behind, or neither or both
+// which side of a wall the cut level's collision has solid: in front of it
+// (where it faces, looking level) or behind, as more of its probes are solid
+// there, or neither (as many each side)
 function solidSide(face: SceneFace, solids: SolidIndex, options: SceneOptions): WallSide {
   const [a, b, c] = face.corners;
-  const normal = cross(subtract(b, a), subtract(c, a));
-  const length = Math.hypot(...normal);
+  const [nx, ny] = cross(subtract(b, a), subtract(c, a));
+  const length = Math.hypot(nx, ny); // level: what's below a sloping wall (the acid's ground) isn't its solid side
   if (length === 0) {
     return "unknown";
   }
+  const across: Vec3 = [nx / length, ny / length, 0];
   const middle = middleOf(face);
-  const probe = (towards: number) => fromBlender(middle.map((value, axis) => value + (towards * PROBE * normal[axis]) / length) as Vec3, options);
-  const [front, back] = [solids.isSolid(probe(1)), solids.isSolid(probe(-1))];
-  if (front && !back) {
+  const solidCount = (towards: number) => PROBES.filter((depth) =>
+    solids.isSolid(fromBlender(middle.map((value, axis) => value + towards * depth * across[axis]) as Vec3, options))).length;
+  const [front, back] = [solidCount(1), solidCount(-1)];
+  if (front > back) {
     return "front";
   }
-  if (back && !front) {
+  if (back > front) {
     return "back";
   }
   return "unknown";

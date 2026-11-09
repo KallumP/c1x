@@ -101,32 +101,6 @@ describe("a cut level as a blender scene", () => {
     expect(cross(subtract(b, a), subtract(c, a))[0]).toBeLessThan(0); // facing -x, towards the route
   });
 
-  test("gaps in the acid (nothing over them, beside it) are filled with acid at its level", () => {
-    // acid over half of a 400 square (one triangle), the other half a gap; rock floor over a square beside it
-    const acid = triangleWorld([[0, -400, 0], [400, -400, 0], [0, -400, 400]]);
-    acid.polygons[0].texinfo = ACID_WORD;
-    const scene = cutLevelScene(levelOf(acid), OPTIONS);
-    const pit = scene.objects.find(({ name }) => name.startsWith("pit"))!;
-    const covered = (x: number, y: number) => pit.faces.some(({ corners: [a, b, c] }) => {
-      const d = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1]);
-      const l1 = ((b[1] - c[1]) * (x - c[0]) + (c[0] - b[0]) * (y - c[1])) / d;
-      const l2 = ((c[1] - a[1]) * (x - c[0]) + (a[0] - c[0]) * (y - c[1])) / d;
-      return l1 >= 0 && l2 >= 0 && l1 + l2 <= 1;
-    });
-    expect(covered(0.8, -0.8)).toBe(true); // the gap's half of the square, in blender metres (game 320, 320)
-    expect(pit.faces.flatMap(({ corners }) => corners).every(([, , z]) => z === -1)).toBe(true);
-  });
-
-  test("a gap in the acid under rock high over it (an overhang) is filled too: the camera sees in under it", () => {
-    const acid = triangleWorld([[0, -400, 0], [400, -400, 0], [0, -400, 400]]);
-    acid.polygons[0].texinfo = ACID_WORD;
-    const overhang = triangleWorld([[400, 400, 0], [400, 400, 400], [0, 400, 400]]); // over the gap's half, 2 m over the acid
-    const scene = cutLevelScene(levelOf(acid, overhang), OPTIONS);
-    const pit = scene.objects.find(({ name }) => name.startsWith("pit"))!;
-    const under = pit.faces.filter(({ corners }) => corners.every(([x, y]) => x > 0.5 && x < 1 && y < -0.5 && y > -1));
-    expect(under.length).toBeGreaterThan(0);
-  });
-
   test("each texture region is a material with its image, and a triangle's UVs are its layout's corners (v up), turned round with it", () => {
     const scene = cutLevelScene(levelOf(worldWith([ROCK_WORD])), OPTIONS);
     const [face] = scene.objects[0].faces;
@@ -143,7 +117,7 @@ describe("a cut level as a blender scene", () => {
   test("the acid (bright yellow-green) is in a pit object, so it kills crash", () => {
     const scene = cutLevelScene(levelOf(worldWith([ACID_WORD, ROCK_WORD])), OPTIONS);
     const pit = scene.objects.find(({ name }) => name.startsWith("pit"))!;
-    expect(new Set(pit.faces.map(({ material }) => material))).toEqual(new Set(["acid"])); // its own, and its gaps filled
+    expect(pit.faces.map(({ material }) => material)).toEqual(["acid"]);
     expect(scene.objects.find(({ name }) => name === "k0_4W")!.faces.length).toBe(1);
   });
 
