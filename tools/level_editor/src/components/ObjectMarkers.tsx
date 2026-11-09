@@ -6,6 +6,7 @@ import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR,
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
+import { vialArc } from "../labAssistantThrow";
 import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
@@ -33,6 +34,8 @@ const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walk
 // how far a leader bat's and a bat's tops are above their spots, in game units: their handles float over them
 const LEADER_BAT_TOP = shapeBounds(ENEMY_SHAPES.leader_bats).max[1];
 const BAT_TOP = shapeBounds(ENEMY_SHAPES.bat).max[1];
+const LANDING_SIZE = 0.35;   // a lab assistant's landing spot's ring's radius, of a box's size
+const VIAL_COLOUR = "#d0409a"; // its vials' pink, for their flight and landing spot
 
 // the enemies that stay at their spot, drawn there
 const SPOT_ENEMIES = ["plant", "blue_river_plant", "green_river_plant", "spider"] as const;
@@ -199,10 +202,40 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     renderPathHandle(second, index, 0, ENEMY_COLOURS.leader_bats, LEADER_BAT_TOP / scale);
 
   // a lab assistant: at its spot, facing the way it throws its vials across the map
+  // which way a lab assistant faces: at its landing spot, or as stormy
+  // ascent's first (back along the game's x) with it right under it
+  const labAssistantFacing = (spot: Vec3, landing: Vec3) => {
+    if (spot[0] === landing[0] && spot[1] === landing[1]) {
+      const way = labAssistantThrow(turn);
+      return facingFrom(spot, spot.map((value, axis) => value + way[axis]) as Vec3, turn);
+    }
+    return facingFrom(spot, landing, turn);
+  };
+
+  // a ring on the ground where a lab assistant's vials land
+  const renderLandingSpot = (landing: Vec3) => {
+    const radius = boxSize(scale) * LANDING_SIZE;
+    const [x, y, z] = blenderToView(landing);
+    return (
+      <mesh position={[x, y + boxSize(scale) / 50, z]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[radius * 0.6, radius, 24]} />
+        <meshBasicMaterial color={VIAL_COLOUR} side={2} />
+      </mesh>
+    );
+  };
+
+  // a lab assistant: at its spot, facing where its vials land, with their
+  // flight there, a ring where they land, and a handle on it while it's selected
   const renderLabAssistant = (object: LevelObject, index: number) => {
-    const way = labAssistantThrow(turn);
-    const ahead = object.at.map((value, axis) => value + way[axis]) as Vec3;
-    return renderShapeModel(ENEMY_SHAPES.lab_assistant, base(object), index, undefined, facingFrom(object.at, ahead, turn));
+    const [spot, landing] = spotAndNode(object, turn, scale);
+    return (
+      <>
+        {renderShapeModel(ENEMY_SHAPES.lab_assistant, blenderToView(spot), index, undefined, labAssistantFacing(spot, landing))}
+        <Line points={vialArc(spot, landing, scale).map(blenderToView)} color={VIAL_COLOUR} lineWidth={2} />
+        {renderLandingSpot(landing)}
+        {index === selected && renderPathHandle(landing, index, 0, VIAL_COLOUR)}
+      </>
+    );
   };
 
   // leader bats: their two leaders, the first where the object is (solid,
