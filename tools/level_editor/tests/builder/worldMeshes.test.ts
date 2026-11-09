@@ -260,6 +260,12 @@ describe("tile regions", () => {
     expect(uvTileRegion([[0.5, 0.5], [1, 0.5], [0.5, 0]])).toMatchObject({ x: 32, y: 32, w: 32, h: 32 });
   });
 
+  test("a sliver along the image's bottom edge still gets a region inside the tile", () => {
+    const region = uvTileRegion([[0, 0], [0.5, 0], [0.5, 0.01]]);
+    expect(region.y + region.h).toBeLessThanOrEqual(64);
+    expect(region.x + region.w).toBeLessThanOrEqual(64);
+  });
+
   test("walls are upright", () => {
     // a wall facing +x is mapped by z and y; the image's top is up
     const region = tileRegion([[0, 0, 0], [0, 1024, 0], [0, 1024, 1024]], EAST, 1024);
