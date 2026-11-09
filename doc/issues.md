@@ -119,4 +119,4 @@
 
 ### Stormy Ascent
 
-- potion vials thrown by lab asses are not visible
+- potion vials thrown by lab asses are not visible (not seen any more: Stormy Ascent's lab assistant's vials show in a custom level)
