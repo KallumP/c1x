@@ -29,7 +29,7 @@ function worldWith(words: number[], origin: [number, number, number] = [0, 0, 0]
   return { name: "k0_4W", origin, header, pages: [PAGE], vertices, polygons };
 }
 const levelOf = (...worlds: CutWorld[]): CutLevel => ({ worlds, texturePages: new Map([[PAGE, page]]), entities: [] });
-const OPTIONS = { centre: [0, 0, 0] as [number, number, number], halfWidth: 8000, scale: 400 };
+const OPTIONS = { centre: [0, 0, 0] as [number, number, number], halfWidth: 8000, scale: 400, route: [[0, 10, 0], [0, -10, 0]] as Vec3[] };
 
 describe("a cut level as a blender scene", () => {
   test("each world mesh is an object of its faces, in blender metres from the centre: x, -z, y (its route, along -z, along +y)", () => {
@@ -60,10 +60,14 @@ describe("a cut level as a blender scene", () => {
     expect(upOf(face)).toBeGreaterThan(0.5);
   });
 
-  test("a wall is there both ways round, as the game draws it from both sides", () => {
-    const faces = cutLevelScene(levelOf(triangleWorld([[0, 0, 0], [400, 0, 0], [0, 400, 0]])), OPTIONS).objects[0].faces;
-    expect(faces.length).toBe(2);
-    expect(faces[1].corners).toEqual([faces[0].corners[0], faces[0].corners[2], faces[0].corners[1]]);
+  test("a wall faces the route (the side crash and the camera are on), whichever way it's wound", () => {
+    // walls along the route (game z), at x 1600 and -1600; the route runs along x 0
+    const wall = (x: number, corners: Vec3[]) => cutLevelScene(levelOf(triangleWorld(corners.map(([dx, y, z]) => [x + dx, y, z] as Vec3))), OPTIONS).objects[0].faces;
+    const towards = (x: number) => wall(x, [[0, 0, 0], [0, 400, 0], [0, 0, 400]]).concat(wall(x, [[0, 0, 0], [0, 0, 400], [0, 400, 0]]));
+    const acrossOf = ({ corners: [a, b, c] }: { corners: Vec3[] }) => cross(subtract(b, a), subtract(c, a))[0];
+    expect(towards(1600).every((face) => acrossOf(face) < 0)).toBe(true); // right of the route, facing -x
+    expect(towards(-1600).every((face) => acrossOf(face) > 0)).toBe(true);
+    expect(towards(1600).length).toBe(2); // one face each, not two
   });
 
   test("each texture region is a material with its image, and a triangle's UVs are its layout's corners (v up), turned round with it", () => {
