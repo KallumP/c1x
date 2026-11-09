@@ -127,21 +127,20 @@ function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffe
 // the creek's fish, leaping
 const OWN_PATH_ENEMIES: EnemyType[] = ["fish"];
 
-// the enemies whose init flag a is their count: the bat roosts, how many bats they send
-const COUNT_IN_FLAG_A: EnemyType[] = ["bat", "leader_bats"];
+const FRAMES_A_SECOND = 30; // the game's clock (frames_elapsed), as a bat roost counts its delay
 
-// an enemy on its own level's path: a bat roost's init flag a is how many bats it sends
-function ownPathEnemyEntity(entity: Buffer, enemy: LevelObject): Buffer {
-  if (COUNT_IN_FLAG_A.includes(enemy.enemy!)) {
-    return withInitFlagA(entity, numberSetting(enemy, "count"));
-  }
-  return entity;
+// a bat roost's entity with its settings: its init flag a how many bats it
+// sends, and b the frames between its flocks (counted from when one starts;
+// c, the wait before its first, is left as it was)
+function roostEntity(entity: Buffer, enemy: LevelObject): Buffer {
+  const withCount = withInitFlagA(entity, numberSetting(enemy, "count"));
+  return withInitFlagB(withCount, Math.round(numberSetting(enemy, "delay") * FRAMES_A_SECOND));
 }
 
 // a bat roost as temple ruins' are, made from sunset vista's (which the bats
 // come from, and which has none of them): subtype 9, which waits for crash to
-// come along the route, and its timings (flags b and c) the defaults. its path
-// (its swoop) is set where it's placed
+// come along the route, and the wait before its first flock (flag c) the
+// default. its path (its swoop), count and delay are set where it's placed
 function batRoostExample(donor: Level): Buffer {
   const roost = withInitFlagC(withInitFlagB(levelEntity(donor, ...ENEMY_ENTITIES.leader_bats), 0), 0);
   return withSubtype(roost, ENEMY_ENTITIES.bat[1]);
@@ -211,13 +210,10 @@ class ObjectPlacer {
   }
 
   // an enemy that moves along its own level's path, as example, from its spot:
-  // up the creek's fish, leaping across the map (the other way, reversed). its entity id
-  placeWithItsPath(enemy: LevelObject, example: Buffer): number {
+  // up the creek's fish, leaping across the map (the other way, reversed)
+  placeWithItsPath(enemy: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(enemy));
-    const id = this.ids.shift()!;
-    const placed = withPathFrom(withEntityId(example, id), at, leapWay(enemy.reverse === true));
-    this.entities[zone].push(ownPathEnemyEntity(placed, enemy));
-    return id;
+    this.entities[zone].push(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(enemy.reverse === true)));
   }
 
   // leader bats: their roost (roost, an example) where their flight between
@@ -247,7 +243,7 @@ class ObjectPlacer {
     const { zone, at } = this.inZone(flight[0]);
     const path = flight.map((point) => point.map((value, axis) => at[axis] + value - flight[0][axis]) as Vec3);
     const id = this.ids.shift()!;
-    this.entities[zone].push(ownPathEnemyEntity(withPath(withEntityId(roost, id), path), enemy));
+    this.entities[zone].push(roostEntity(withPath(withEntityId(roost, id), path), enemy));
     return id;
   }
 
