@@ -497,6 +497,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(placed.path.map(([x, y]) => [x - x0, y - y0])).toEqual(FISH_LEAP);
     });
 
+    test("a green river plant bites once crash has landed on it and gone up, at any height: its check that he's come back down within 400 of it (0x47) always passes", () => {
+      const { entries } = make(MAP_OBJ, { scale: 256, objects: [river("green_river_plant")], readOtherLevel });
+      const code = entries.get(stringToEid("RivOC"))!.items[1];
+      expect(code.readUInt32LE(0x46 * 4)).toBe(0x0000fe09); // ADD ireg[0x3c], obj[0x84]: its height, and 400 more
+      expect(code.readUInt32LE(0x47 * 4)).toBe(0x06e1f801); // ORL pop(), 0x100: true, in place of SLT pop(), player[0x84]
+    });
+
     test("a level with both river plants and a fish reads up the creek once, and has its river code", () => {
       const read: number[] = [];
       const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
