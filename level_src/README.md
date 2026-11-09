@@ -9,6 +9,7 @@ Some level sources are included in the repository, made for c1x, listed below. O
 | `tide_ruins/` | Made for c1x, with procedural textures. |
 | `mossy_creek/` | Made for c1x, with procedural textures: a more organic map, its shores and ledges curves rather than straight lines. |
 | `sunset_canyon/` | Made for c1x in Blender (its `.blend` is included), with procedural textures: a long, winding desert canyon at sunset, about twice mossy creek's length, with boxes laid out as in the game's own levels. |
+| `acid_cave/` | The acid cave cut from the original game (its files are in `streams/s0000004`), exported with `npm run export-cut-level` (in `tools/level_editor`) through Blender (its `.blend` is included): its own models, textures and lighting, its boxes, the acid killing Crash, and fixed pads in place of its platforms over the acid. |
 
 ## Objects
 

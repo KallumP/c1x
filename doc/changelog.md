@@ -5,6 +5,8 @@
 ### Added
 
 - custom levels can have Up the Creek's biting river plants and its leaping fish
+- the acid cave cut from the original game, playable as a custom level
+- custom level maps keep their UVs and vertex colours
 
 ## 2026-11-08
 
