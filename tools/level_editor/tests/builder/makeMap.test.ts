@@ -5,7 +5,7 @@ import { BAT_SWOOP, FISH_LEAP } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
-import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, ENTITY_INIT_FLAGS, entityId, entityPath, entityPosition, entityType, STONE_FAR_END, WARP_PAD } from "../../builder/entities";
+import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, LEADER_BAT, ENTITY_INIT_FLAGS, entityId, entityPath, entityPosition, entityType, STONE_FAR_END, WARP_PAD } from "../../builder/entities";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_SOUNDS, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
@@ -574,6 +574,19 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const [first, last] = [placed.path[0], placed.path.at(-1)!];
       expect(last.map((value, axis) => value - first[axis])).toEqual([-6400, 0, 0]);
       expect(Math.min(...placed.path.map(([, y]) => y)) - first[1]).toBe(-1700);
+    });
+
+    test("a leader bats roost has two leader bats (subtype 14) where its bats come in and go out, as sunset vista's: 200 and 6200 back along x, 800 down and 400 back along z, their flag a the roost's id", () => {
+      const built = make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats" })], readOtherLevel });
+      const items = zonesOf(built).flatMap((zone) => zoneEntities(zone).map((item) => ({ item, origin: zoneOrigin(zone) })));
+      const placedAt = ({ item, origin }: (typeof items)[number]) => entityPosition(item).map((value, axis) => value + origin[axis]);
+      const roost = items.find(({ item }) => entityType(item).join() === ENEMY_ENTITIES.leader_bats.join())!;
+      const leaders = items.filter(({ item }) => entityType(item).join() === LEADER_BAT.join());
+      expect(leaders.length).toBe(2);
+      leaders.forEach(({ item }) => expect(item.readInt16LE(ENTITY_INIT_FLAGS)).toBe(entityId(roost.item)));
+      const offsets = leaders.map((leader) => placedAt(leader).map((value, axis) => value - placedAt(roost)[axis]));
+      expect(offsets).toEqual([[-200, -800, -400], [-6200, -800, -400]]);
+      expect(new Set([roost, ...leaders].map(({ item }) => entityId(item))).size).toBe(3);
     });
 
     test.skipIf(!hasFumbling)("a level with bats and spiders has both codes, within the texture pages the game holds", () => {
