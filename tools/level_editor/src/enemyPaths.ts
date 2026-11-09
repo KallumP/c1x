@@ -78,6 +78,14 @@ export function pathPositions(object: LevelObject, turn: number, scale: number):
   return enemyPath(object, turn, scale).map((node) => plus(standing, node));
 }
 
+// what an enemy's nodes are called in the editor: a leader bats roost's are its leaders
+export function nodeName(object: LevelObject): string {
+  if (isLeaderBats(object)) {
+    return "leader";
+  }
+  return "node";
+}
+
 // how many nodes an enemy's path has: its own, or its default's (a leader bats roost's, its two leaders)
 export function nodeCount(object: LevelObject): number {
   if (object.path) {
