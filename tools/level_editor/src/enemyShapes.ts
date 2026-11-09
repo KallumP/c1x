@@ -108,14 +108,32 @@ function tippedUp(part: ShapePart, angle: number, [pivotY, pivotZ]: [number, num
   return { ...part, at, turn: [turnX - angle, turnY, turnZ] };
 }
 
-const PETAL_TILT = 0.6; // how far a river plant's petals open up from the floor, in radians
+// how far a river plant's petals rise from the floor, in radians: the two
+// towards the player lie open, almost flat; the one behind rears up, as the game shows them
+const OPEN_PETAL_TILT = 0.12;
+const REARING_PETAL_TILT = 0.65;
 
-// a river plant's petal pointing along +z: a red jaw rising from its middle,
-// its teeth standing along its top
-function riverPlantPetal(): ShapePart[] {
-  const teeth = [260, 360, 460, 560, 660].map((along) => rod(0, 16, 80, [0, 200, along], RIVER_PLANT_COLOURS.tooth));
-  const petal = [ball(1, [0, 120, 460], RIVER_PLANT_COLOURS.jaw, { name: "jaw", stretch: [170, 90, 330] }), ...teeth];
-  return petal.map((part) => tippedUp(part, PETAL_TILT, [120, 130]));
+const PETAL_LENGTH = 370; // half a petal's length, along it
+const PETAL_WIDTH = 170;  // half its width
+const PETAL_MIDDLE = 550; // how far its middle is out from the plant's
+
+// the teeth standing round a petal's rim, pointing up out of it
+function petalTeeth(): ShapePart[] {
+  const alongs = [-0.75, -0.45, -0.15, 0.15, 0.45, 0.75];
+  return alongs.flatMap((along) => [-1, 1].map((side) => {
+    const across = side * PETAL_WIDTH * 0.85 * Math.sqrt(1 - along * along);
+    return rod(0, 14, 60, [across, 130, PETAL_MIDDLE + along * PETAL_LENGTH], RIVER_PLANT_COLOURS.tooth);
+  }));
+}
+
+// a river plant's petal pointing along +z: a low red jaw, open, its teeth
+// standing round its rim, tipped up from the plant's middle by tilt
+function riverPlantPetal(tilt: number): ShapePart[] {
+  const petal = [
+    ball(1, [0, 70, PETAL_MIDDLE], RIVER_PLANT_COLOURS.jaw, { name: "jaw", stretch: [PETAL_WIDTH, 70, PETAL_LENGTH] }),
+    ...petalTeeth(),
+  ];
+  return petal.map((part) => tippedUp(part, tilt, [70, 130]));
 }
 
 // a green bit pointing along +z, lying on the floor and curling up at its end
@@ -129,12 +147,17 @@ function riverPlantLeaf(leafColour: string): ShapePart[] {
 const THIRD_TURN = (Math.PI * 2) / 3;
 
 // up the creek's biting plant: three red petals with teeth, a third of a turn
-// apart (one behind, two towards the player), round a red bud in its middle,
-// with leaves, blue or green, between them
+// apart round a red bud in its middle (two towards the player lying open, the
+// one behind rearing up), with leaves, blue or green, between them
 function riverPlant(leafColour: string): ShapePart[] {
-  const petalAngles = [Math.PI, Math.PI + THIRD_TURN, Math.PI - THIRD_TURN];
+  const petals = [
+    { angle: Math.PI, tilt: REARING_PETAL_TILT },
+    { angle: Math.PI + THIRD_TURN, tilt: OPEN_PETAL_TILT },
+    { angle: Math.PI - THIRD_TURN, tilt: OPEN_PETAL_TILT },
+  ];
+  const petalAngles = petals.map(({ angle }) => angle);
   return [
-    ...petalAngles.flatMap((angle) => riverPlantPetal().map((part) => turnedAbout(part, angle))),
+    ...petals.flatMap(({ angle, tilt }) => riverPlantPetal(tilt).map((part) => turnedAbout(part, angle))),
     ...petalAngles.flatMap((angle) => riverPlantLeaf(leafColour).map((part) => turnedAbout(part, angle + Math.PI))),
     ball(1, [0, 150, 0], RIVER_PLANT_COLOURS.jaw, { name: "bud", stretch: [150, 150, 150] }),
   ];
