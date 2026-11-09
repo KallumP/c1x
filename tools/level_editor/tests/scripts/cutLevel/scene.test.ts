@@ -28,7 +28,7 @@ function worldWith(words: number[], origin: [number, number, number] = [0, 0, 0]
   const polygons: BuiltPolygon[] = words.map((texinfo, index) => ({ corners: [3 * index, 3 * index + 1, 3 * index + 2], texinfo, page: 0 }));
   return { name: "k0_4W", origin, header, pages: [PAGE], vertices, polygons };
 }
-const levelOf = (...worlds: CutWorld[]): CutLevel => ({ worlds, texturePages: new Map([[PAGE, page]]), entities: [] });
+const levelOf = (...worlds: CutWorld[]): CutLevel => ({ worlds, texturePages: new Map([[PAGE, page]]), entities: [], solids: [] });
 const OPTIONS = { centre: [0, 0, 0] as [number, number, number], halfWidth: 8000, scale: 400, route: [[0, 10, 0], [0, -10, 0]] as Vec3[] };
 
 describe("a cut level as a blender scene", () => {

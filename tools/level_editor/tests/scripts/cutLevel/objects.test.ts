@@ -4,7 +4,7 @@ import { cutLevelObjects, platformPads } from "../../../scripts/cutLevel/objects
 import { cross, subtract, type Vec3 } from "../../../builder/vectors";
 
 const entity = (type: number, subtype: number, at: Vec3, flags: [number, number, number] = [0, 0, 0]): CutEntity => ({ type, subtype, zone: "k0_4Z", at, flags });
-const levelOf = (entities: CutEntity[]): CutLevel => ({ worlds: [], texturePages: new Map(), entities });
+const levelOf = (entities: CutEntity[]): CutLevel => ({ worlds: [], texturePages: new Map(), entities, solids: [] });
 const OPTIONS = { centre: [0, 0, 0] as Vec3, halfWidth: 8000, scale: 400 };
 
 describe("a cut level's objects", () => {

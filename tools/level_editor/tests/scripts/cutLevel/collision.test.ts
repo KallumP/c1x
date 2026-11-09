@@ -5,7 +5,7 @@ import { blocksRectBytes, LEAF_FLOOR, LEAF_GROUND } from "../../../builder/octre
 import type { Vec3 } from "../../../builder/vectors";
 import { zoneSolids, type CutSolid } from "../../../scripts/cutLevel/collision";
 import { collisionFloors } from "../../../scripts/cutLevel/objects";
-import type { CutLevel } from "../../../scripts/cutLevel/readCutLevel";
+import { readCutLevel, type CutLevel } from "../../../scripts/cutLevel/readCutLevel";
 
 const ORIGIN: Vec3 = [1000, 2000, 3000];
 const SIZE: Vec3 = [1024, 1024, 1024];
@@ -51,8 +51,7 @@ describe("a cut level's collision floors", () => {
 
 const ACID_CAVE = fileURLToPath(new URL("../../../../../streams/s0000004.nsf", import.meta.url));
 
-describe.skipIf(!existsSync(ACID_CAVE))("the acid cave's collision", async () => {
-  const { readCutLevel } = await import("../../../scripts/cutLevel/readCutLevel");
+describe.skipIf(!existsSync(ACID_CAVE))("the acid cave's collision", () => {
   test("has floor where its path is, which its mesh may have holes in", () => {
     const solids = readCutLevel(ACID_CAVE).solids;
     expect(solids.filter(({ leaf }) => leaf === LEAF_FLOOR).length).toBeGreaterThan(1000);
