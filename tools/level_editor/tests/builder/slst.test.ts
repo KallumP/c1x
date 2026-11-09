@@ -103,8 +103,26 @@ describe("sort lists", () => {
     // the next zone is further along -z, so its meshes are offset by -16384 in this zone's frame, and come first
     const vertices: WorldVertex[] = [[0, 0, 1000], [8, 0, 1000], [0, 0, 1008]].map((at) => ({ at: at as [number, number, number], colour: [0, 0, 0] }));
     const polygons: BuiltPolygon[] = [{ corners: [0, 1, 2], texinfo: 0, page: 0 }];
-    const items = zoneSlstItems([{ vertices, polygons, zOffset: 0 }, { vertices, polygons, zOffset: -16384 }], [3000], 200);
+    const items = zoneSlstItems([{ vertices, polygons, zOffset: 0 }, { vertices, polygons, zOffset: -16384 }], [[0, 0, 3000]], 200);
     expect(slstWords(items[0]).words).toEqual([polyId(1, 0), polyId(0, 0)]);
+  });
+
+  test("a camera looking steeply down lists the floor reaching back under it", () => {
+    // a floor triangle from z 2000 to 3500, the camera 1930 above it at z 3000:
+    // level, the triangle reaches behind it; tilted 54 degrees down, it's all in front
+    const vertices: WorldVertex[] = [[0, 0, 2000], [800, 0, 2000], [0, 0, 3500]].map((at) => ({ at: at as [number, number, number], colour: [0, 0, 0] }));
+    const polygons: BuiltPolygon[] = [{ corners: [0, 1, 2], texinfo: 0, page: 0 }];
+    const meshes = [{ vertices, polygons, zOffset: 0 }];
+    const cameras: [number, number, number][] = [[0, 1930, 3000]];
+    expect(slstWords(zoneSlstItems(meshes, cameras, 128)[0]).words).toEqual([]);
+    expect(slstWords(zoneSlstItems(meshes, cameras, 128, (54 * Math.PI) / 180)[0]).words).toEqual([polyId(0, 0)]);
+  });
+
+  test("a camera looking down leaves out what is above and behind it", () => {
+    const vertices: WorldVertex[] = [[0, 2400, 3200], [800, 2400, 3200], [0, 2400, 3500]].map((at) => ({ at: at as [number, number, number], colour: [0, 0, 0] }));
+    const polygons: BuiltPolygon[] = [{ corners: [0, 1, 2], texinfo: 0, page: 0 }];
+    const items = zoneSlstItems([{ vertices, polygons, zOffset: 0 }], [[0, 1930, 3000]], 128, (54 * Math.PI) / 180);
+    expect(slstWords(items[0]).words).toEqual([]);
   });
 
   test("a polygon's id is its mesh, then its index", () => {
