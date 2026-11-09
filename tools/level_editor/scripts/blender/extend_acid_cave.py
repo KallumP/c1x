@@ -186,7 +186,7 @@ PART_MATERIALS = {
 }
 
 # how much each of the temple's parts is roughened: organic rock swallowing its square stone
-ROUGHNESS = {"green_rock": 0.7, "green_rock_veined": 0.7, "purple_rock": 0.7, "chamber_walls": 0.35, "dark_moss": 0.25, "stones": 0.15}
+ROUGHNESS = {"green_rock": 1.4, "green_rock_veined": 1.4, "purple_rock": 1.4, "chamber_walls": 0.6, "dark_moss": 0.3, "stones": 0.2}
 FLOOR_UNEVENNESS = 0.06
 
 
@@ -207,7 +207,7 @@ def temple_parts():
     for section in (corridor, tiki_hall, crystal_cavern, acid_falls, end_chamber):
         section(parts)
     for part, amount in ROUGHNESS.items():
-        roughened(parts[part], amount)
+        roughened(parts[part], amount, scale=2.2)
     roughened(parts["path"], FLOOR_UNEVENNESS, scale=1.2)
     for faces in parts.values():
         shifted(faces, TEMPLE_SHIFT)

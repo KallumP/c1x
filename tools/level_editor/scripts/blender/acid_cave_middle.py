@@ -321,6 +321,8 @@ def grotto_mushrooms(terrain, parts):
         mushroom(parts["mushroom_stalks"], parts["mushroom_caps"], (x, y, -1.7), top, radius, cap_light, 20 + index)
     for index, (x, y) in enumerate([(-10.5, 116), (-11.2, 122.5), (-9.5, 126.5), (4.5, 118.5), (5.2, 123.5), (3.5, 127.0)]):
         z = ground_height(terrain, x, y)
+        if z > ROCK_TOP_ABOVE:
+            continue  # on the rock's top, which isn't built: it would float
         mushroom(parts["mushroom_stalks"], parts["mushroom_caps"], (x, y, z - 0.3), z + 1.2 + 0.4 * (index % 3), 0.7 + 0.15 * (index % 2), cap_light, 40 + index)
 
 
