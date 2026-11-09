@@ -86,7 +86,7 @@ describe("a cut level as a blender scene", () => {
     const rock = { low: [1600, -400, -400] as Vec3, high: [3200, 800, 800] as Vec3, leaf: 1 };
     const margin = { low: [1480, -400, -400] as Vec3, high: [1600, 800, 800] as Vec3, leaf: 1 };
     const level: CutLevel = { worlds: [world], texturePages: new Map([[PAGE, page]]), entities: [], solids: [rock, margin] };
-    const [face] = cutLevelScene(level, OPTIONS).objects[0].faces;
+    const [face] = cutLevelScene(level, { ...OPTIONS, route: [[10, 10, 0], [10, -10, 0]] }).objects[0].faces; // the route beyond the rock
     const [a, b, c] = face.corners;
     expect(cross(subtract(b, a), subtract(c, a))[0]).toBeLessThan(0); // facing -x, out of the rock
   });
