@@ -12,6 +12,7 @@ export type ShapePart = Primitive & {
   at: Vec3;
   turn?: Vec3;    // euler angles, in radians
   stretch?: Vec3; // scale along each of the part's own axes
+  turnOrder?: "XYZ" | "YXZ"; // the order turn's angles apply in (three's Euler order): XYZ unless given
   colour: string;
   name?: string;
 };
@@ -90,12 +91,13 @@ function plant(): ShapePart[] {
   ];
 }
 
-// a part turned about the plant's middle (y) by angle, from facing +z
+// a part turned about the plant's middle (y) by angle, from facing +z: its own
+// turn first (such as a petal's tip up), then this one (Euler order YXZ)
 function turnedAbout(part: ShapePart, angle: number): ShapePart {
   const [x, y, z] = part.at;
   const [turnX, turnY, turnZ] = part.turn ?? [0, 0, 0];
   const at: Vec3 = [x * Math.cos(angle) + z * Math.sin(angle), y, z * Math.cos(angle) - x * Math.sin(angle)];
-  return { ...part, at, turn: [turnX, turnY + angle, turnZ] };
+  return { ...part, at, turn: [turnX, turnY + angle, turnZ], turnOrder: "YXZ" };
 }
 
 // a part tipped up about a level line across the plant (along x) at height
@@ -412,7 +414,7 @@ function primitiveGeometry(part: ShapePart): BufferGeometry {
 }
 
 function partMatrix(part: ShapePart): Matrix4 {
-  const rotation = new Quaternion().setFromEuler(new Euler(...(part.turn ?? [0, 0, 0])));
+  const rotation = new Quaternion().setFromEuler(new Euler(...(part.turn ?? [0, 0, 0]), part.turnOrder));
   return new Matrix4().compose(new Vector3(...part.at), rotation, new Vector3(...(part.stretch ?? [1, 1, 1])));
 }
 
