@@ -2,8 +2,8 @@
 // as the level's world meshes and collision, crash, and the objects placed in
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
-import { BAT_SWOOP, leapWay } from "../src/coords";
-import { inEvenSteps, pathPositions, pathStep } from "../src/enemyPaths";
+import { BAT_SWOOP, leaderBatsFlight, leapWay } from "../src/coords";
+import { inEvenSteps, leaderBatsLeaders, pathPositions, pathStep } from "../src/enemyPaths";
 import { hasPath, LEADER_BATS_LEADERS, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
@@ -127,7 +127,7 @@ function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffe
 // the creek's fish, leaping, temple ruins' bat roost, its bats swooping along
 // the game's +z (where its own go, so the way the roost looks for crash), and
 // sunset vista's, its bats flying back along the game's x
-const OWN_PATH_ENEMIES: EnemyType[] = ["fish", "bat", "leader_bats"];
+const OWN_PATH_ENEMIES: EnemyType[] = ["fish", "bat"];
 
 // the enemies whose init flag a is their count: the bat roosts, how many bats they send
 const COUNT_IN_FLAG_A: EnemyType[] = ["bat", "leader_bats"];
@@ -215,7 +215,7 @@ class ObjectPlacer {
 
   // an enemy that moves along its own level's path, as example, from its spot:
   // up the creek's fish, leaping across the map (the other way, reversed), or
-  // temple ruins' or sunset vista's bat roost, sending its bats along it. its entity id
+  // temple ruins' bat roost, sending its bats along it. its entity id
   placeWithItsPath(enemy: LevelObject, example: Buffer): number {
     const { zone, at } = this.inZone(this.positionOf(enemy));
     const id = this.ids.shift()!;
@@ -224,13 +224,27 @@ class ObjectPlacer {
     return id;
   }
 
-  // a leader bats roost's two leaders (leader, an example) at its path's nodes
-  // (by default where its bats come in and go out), each pointed at the roost by its id
-  placeLeaders(roost: LevelObject, roostId: number, leader: Buffer): void {
-    for (const node of pathPositions(roost, this.turn, this.scale)) {
-      const { zone, at } = this.inZone(this.positionOf({ ...roost, at: node, raise: 0 }));
+  // leader bats: their roost (roost, an example) where their flight between
+  // the leaders starts, the flight its path, and the two leaders (leader, an
+  // example), each pointed at the roost by its id
+  placeLeaderBats(enemy: LevelObject, roost: Buffer, leader: Buffer): void {
+    const leaders = leaderBatsLeaders(enemy, this.turn, this.scale).map((spot) => this.positionOf({ ...enemy, at: spot, raise: 0 }));
+    const roostId = this.placeLeaderBatsRoost(enemy, roost);
+    for (const spot of leaders) {
+      const { zone, at } = this.inZone(spot);
       this.entities[zone].push(withInitFlagA(withPosition(withEntityId(leader, this.ids.shift()!), at), roostId));
     }
+  }
+
+  // leader bats' roost, in the zone where their flight starts, the flight its path. its entity id
+  private placeLeaderBatsRoost(enemy: LevelObject, roost: Buffer): number {
+    const [first, second] = leaderBatsLeaders(enemy, this.turn, this.scale);
+    const flight = leaderBatsFlight(first, second, this.turn, this.scale).map((point) => this.positionOf({ ...enemy, at: point, raise: 0 }));
+    const { zone, at } = this.inZone(flight[0]);
+    const path = flight.map((point) => point.map((value, axis) => at[axis] + value - flight[0][axis]) as Vec3);
+    const id = this.ids.shift()!;
+    this.entities[zone].push(ownPathEnemyEntity(withPath(withEntityId(roost, id), path), enemy));
+    return id;
   }
 
   // an enemy that moves along a path (a crab, turtle, native or badger), as
@@ -369,12 +383,9 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     return templates.entity(...ENEMY_ENTITIES[type]);
   };
   enemies.filter((enemy) => STANDING_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeAtSpot(enemy, enemyExample(enemy.enemy!)));
-  enemies.filter((enemy) => OWN_PATH_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => {
-    const id = placer.placeWithItsPath(enemy, enemyExample(enemy.enemy!));
-    if (enemy.enemy === "leader_bats") {
-      placer.placeLeaders(enemy, id, levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT));
-    }
-  });
+  enemies.filter((enemy) => OWN_PATH_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeWithItsPath(enemy, enemyExample(enemy.enemy!)));
+  enemies.filter((enemy) => enemy.enemy === "leader_bats")
+    .forEach((enemy) => placer.placeLeaderBats(enemy, enemyExample("leader_bats"), levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   objects.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;

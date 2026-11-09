@@ -121,7 +121,7 @@ export interface LevelObject {
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
   enemy?: EnemyType;    // an enemy's type
-  path?: Vec3[];        // a path enemy's path, or a leader bats roost's two leaders: its nodes, in metres from where it stands (at, raised)
+  path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised); leader bats' second leader, from their first
   speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
   reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping the other way (true, or none)
@@ -131,11 +131,12 @@ export interface LevelObject {
 // whether an object is an enemy that moves along a path
 export const hasPath = (object: LevelObject) => object.kind === "enemy" && isPathEnemy(object.enemy);
 
-// whether an object has nodes that can be moved: a path enemy's path, or a
-// leader bats roost's two leaders (its path, though it doesn't walk it)
+// whether an object has nodes that can be moved: a path enemy's path, or
+// leader bats' second leader (their path, though they don't walk it; the
+// object itself is their first)
 export const hasNodes = (object: LevelObject) => hasPath(object) || (object.kind === "enemy" && object.enemy === "leader_bats");
 
-// how many leaders a leader bats roost has, its path's nodes
+// how many leaders leader bats have: the object, and its path's one node
 export const LEADER_BATS_LEADERS = 2;
 
 // a box's type name, from its type or its subtype number
@@ -167,12 +168,12 @@ function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<
   return { enemy: fields.type as EnemyType };
 }
 
-// whether a path has as many nodes as an enemy's can: a leader bats roost's
-// its two leaders, a path enemy's 2 to PATH_NODES_MAX
+// whether a path has as many nodes as an enemy's can: leader bats' one, their
+// second leader, a path enemy's 2 to PATH_NODES_MAX
 function checkNodeCount(nodes: unknown, enemy: EnemyType, objectNumber: number): asserts nodes is unknown[] {
   if (enemy === "leader_bats") {
-    if (!Array.isArray(nodes) || nodes.length !== LEADER_BATS_LEADERS) {
-      throw new Error(`object ${objectNumber}: a leader bats roost's path is its two leaders, [[x, y, z], [x, y, z]]`);
+    if (!Array.isArray(nodes) || nodes.length !== LEADER_BATS_LEADERS - 1) {
+      throw new Error(`object ${objectNumber}: leader bats' path is their second leader, [[x, y, z]] in metres from the first`);
     }
     return;
   }
@@ -184,7 +185,7 @@ function checkNodeCount(nodes: unknown, enemy: EnemyType, objectNumber: number):
   }
 }
 
-// a path enemy's path, or a leader bats roost's leaders, from its fields in objects.json (none if it hasn't one)
+// a path enemy's path, or leader bats' second leader, from its fields in objects.json (none if it hasn't one)
 function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "path"> {
   if (!("path" in fields)) {
     return {};

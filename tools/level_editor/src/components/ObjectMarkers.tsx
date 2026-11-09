@@ -5,7 +5,7 @@ import { batSwoop, blenderToView, leaderBatsFlight, boxSize, cameraFacing, enemy
 import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
-import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare } from "../enemyPaths";
+import { handleLifts, leaderBatsLeaders, nodesUnderEnds, pathPositions, pointAlongShare } from "../enemyPaths";
 import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
@@ -186,24 +186,22 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // a leader bats roost's leaders' handles, over them, while it's selected
-  const renderLeaderHandles = (leaders: Vec3[], index: number) =>
-    leaders.map((spot, leader) => renderPathHandle(spot, index, leader, ENEMY_COLOURS.leader_bats, LEADER_BAT_TOP / scale));
+  // leader bats' second leader's handle, over it, while they're selected (the
+  // first is the object, dragged as any other)
+  const renderSecondLeaderHandle = (second: Vec3, index: number) =>
+    renderPathHandle(second, index, 0, ENEMY_COLOURS.leader_bats, LEADER_BAT_TOP / scale);
 
-  // a leader bats roost: a bat at the roost, where its bats fly from, facing the
-  // way they fly (across the map), the line of their flight, and its two
-  // leaders hovering at its path's nodes (by default the flight's ends), each
-  // with a handle to drag it by while the roost is selected
+  // leader bats: their two leaders, the first where the object is and the
+  // second at its path's node (with a handle to drag it by while they're
+  // selected), and the line of their bats' flight between them
   const renderLeaderBats = (object: LevelObject, index: number) => {
-    const leaders = pathPositions(object, turn, scale);
-    const flight = leaderBatsFlight(leaders[0], leaders[1], turn, scale);
-    const facing = facingFrom(flight[0], flight[flight.length - 1], turn);
+    const [first, second] = leaderBatsLeaders(object, turn, scale);
+    const flight = leaderBatsFlight(first, second, turn, scale);
     return (
       <>
-        {renderShapeModel(ENEMY_SHAPES.bat, blenderToView(flight[0]), index, 0, facing)}
-        {leaders.map((spot, leader) => renderShapeModel(ENEMY_SHAPES.leader_bats, blenderToView(spot), index, 1 + leader))}
+        {[first, second].map((spot, leader) => renderShapeModel(ENEMY_SHAPES.leader_bats, blenderToView(spot), index, leader))}
         <Line points={flight.map(blenderToView)} color={ENEMY_COLOURS.leader_bats} lineWidth={2} />
-        {index === selected && renderLeaderHandles(leaders, index)}
+        {index === selected && renderSecondLeaderHandle(second, index)}
       </>
     );
   };

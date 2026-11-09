@@ -138,7 +138,10 @@ export const LEADER_BAT_HEIGHT = 600;
 export const LEADER_BATS_GAP = 6000;
 
 const FIRST_LEADER_ACROSS = -200; // where sunset vista's first leader is along its flight
-const FLIGHT_LOWEST = -1700;      // and how far below the roost, as the bats fly past the leaders
+// how far below the roost the bats fly past the leaders, at the leaders'
+// height (sunset vista's leaders are 800 down, over ledges crash reaches them
+// from; here they're at the flight's lowest, so he can spin them on flat ground)
+const FLIGHT_LOWEST = -1700;
 const FLIGHT_BEHIND = 400;        // how far behind the leaders (away from the camera) the bats fly
 const FLIGHT_STEP = 800;          // how far apart the flight's points are, past the leaders, at most
 
@@ -194,26 +197,6 @@ export function leaderBatsFlight(first: Vec3, second: Vec3, turn: number, scale:
   const run = flightRun(distance).map((along): [number, number] => [along, 0]);
   const climb = LEADER_BATS_CLIMB.map(([along, up]): [number, number] => [distance + along, up]);
   return [...LEADER_BATS_DIVE, ...run, ...climb].map(pointAt);
-}
-
-// where a leader bats roost's two leaders hover, from the roost, in game units
-// (along the game's x, up, along its z): as sunset vista's, at its bats'
-// flight's ends, where they come in and go out, but down at the flight's lowest
-// (sunset vista's are 800 down, over ledges crash reaches them from), so that
-// with the flight at crash's height he can spin them on flat ground. only the
-// bats follow the roost's path
-export const LEADER_BAT_SPOTS: Vec3[] = [[-200, -1700, -400], [-6200, -1700, -400]];
-
-// where a leader bats roost's leaders hover (in blender), for a roost at at,
-// raised by raise. the game's z runs back towards the spawn, against the camera
-export function leaderBatSpots(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
-  const [rollX, rollY] = stoneRolling(turn);
-  const [faceX, faceY] = cameraFacing(turn);
-  return LEADER_BAT_SPOTS.map(([across, up, along]) => [
-    at[0] + (rollX * across - faceX * along) / scale,
-    at[1] + (rollY * across - faceY * along) / scale,
-    at[2] + raise + up / scale,
-  ] as Vec3);
 }
 
 // how far a crab walks back and forth, in game units: n. sanity beach's first

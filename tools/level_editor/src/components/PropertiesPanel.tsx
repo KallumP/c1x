@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
-import { enemyPath, inNodes, nodeCount, nodeName, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
+import { enemyPath, inNodes, nodeCount, nodeHeading, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
 import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type LevelObject, type NumberSetting, type Vec3 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
@@ -80,7 +80,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     </>
   );
 
-  // the selected node of a path enemy's path, or a leader bats roost's leader: where it is in blender
+  // the selected node of a path enemy's path, or leader bats' second leader: where it is in blender
   const renderNodeFields = (enemy: LevelObject, node: number) => {
     const turn = levelCfg ? levelCfg.turn : 0;
     const position = pathPositions(enemy, turn, scale)[node];
@@ -91,7 +91,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     const step = isShiftHeld ? 0.01 : 0.1;
     return (
       <>
-        <h3>{nodeName(enemy)} {node + 1} of {nodeCount(enemy)}</h3>
+        <h3>{nodeHeading(enemy, node)}</h3>
         {NODE_AXES.map((axis, axisIndex) => (
           <NumberField key={axis} label={axis} value={position[axisIndex]} step={step} onChange={(value) => setAxis(axisIndex, value)} />
         ))}
