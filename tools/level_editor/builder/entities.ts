@@ -32,6 +32,9 @@ export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
   blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9],
 };
+// sunset vista's bat roost (RuiOC subtype 12), which the bat's roost (temple
+// ruins' kind, subtype 9) is made from, sunset vista having none of those
+export const SUNSET_VISTA_ROOST: [number, number] = [42, 12];
 // not in the level's total (an iron outline fills in as an iron box)
 // a rolling stone's first init flag is where in its cycle along its path and
 // back it starts (its script's, seen in the game): 0 at its first point rolling
@@ -108,7 +111,7 @@ export function withPathFrom(item: Buffer, at: Vec3, xWay = 1): Buffer {
 
 // a box's first init flag is what it holds beyond the usual (a token, say); 0 for nothing
 export const withInitFlagA = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS));
-const withInitFlagB = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 2));
+export const withInitFlagB = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 2));
 export const withInitFlagC = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 4));
 
 // count ids for new entities, from the lowest up: not taken, nor the main object's, and at most ENTITY_IDS_MAX

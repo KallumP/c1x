@@ -2,7 +2,7 @@
 // as the level's world meshes and collision, crash, and the objects placed in
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
-import { leapWay } from "../src/coords";
+import { BAT_SWOOP, leapWay } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep } from "../src/enemyPaths";
 import { hasPath, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
@@ -12,7 +12,7 @@ import { EntryTooBig } from "./cutLevel";
 import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
   BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
-  WARP_PAD, withEntityId, withPath, withPathFrom, withPosition, type PlacedBox,
+  SUNSET_VISTA_ROOST, WARP_PAD, withEntityId, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
@@ -134,6 +134,16 @@ function ownPathEnemyEntity(entity: Buffer, enemy: LevelObject): Buffer {
     return withInitFlagA(entity, numberSetting(enemy, "count"));
   }
   return entity;
+}
+
+// a bat roost as temple ruins' are, made from sunset vista's (which the bats
+// come from, and which has none of them): subtype 9, which waits for crash to
+// come along the route, its timings (flags b and c) the defaults, and temple
+// ruins' swoop along the game's z as its path
+function batRoostExample(donor: Level): Buffer {
+  const roost = withInitFlagC(withInitFlagB(levelEntity(donor, ...SUNSET_VISTA_ROOST), 0), 0);
+  const swoop = BAT_SWOOP.map(([along, up]): Vec3 => [0, up, along]);
+  return withSubtype(withPath(roost, swoop), ENEMY_ENTITIES.bat[1]);
 }
 
 // the enemies that stay at their spot: jungle rollers' plant, up the creek's two
@@ -326,6 +336,9 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   // an enemy's entity as its own level has it: its donor level's, or jungle rollers'
   const enemyExample = (type: EnemyType) => {
     const donor = donorLevels.get(type);
+    if (donor && type === "bat") {
+      return batRoostExample(donor);
+    }
     if (donor) {
       return levelEntity(donor, ...ENEMY_ENTITIES[type]);
     }
