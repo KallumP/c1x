@@ -589,6 +589,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(new Set([roost, ...leaders].map(({ item }) => entityId(item))).size).toBe(3);
     });
 
+    test("a leader bats roost's count is how many bats each flock has: its init flag a, 5 (as most of sunset vista's) without one", () => {
+      const initFlagA = (more: Partial<LevelObject>) => enemies(make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats", ...more })], readOtherLevel }).zone)
+        .find(({ type }) => type.join() === ENEMY_ENTITIES.leader_bats.join())!.initFlagA;
+      expect([initFlagA({}), initFlagA({ count: 1 }), initFlagA({ count: 6 })]).toEqual([5, 1, 6]);
+    });
+
     test.skipIf(!hasFumbling)("a level with bats and spiders has both codes, within the texture pages the game holds", () => {
       const objects = [bat(), bat({ at: [-1, 4, 0] }), object("enemy", [1, 6, 0], { enemy: "walking_spider" })];
       const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel });
