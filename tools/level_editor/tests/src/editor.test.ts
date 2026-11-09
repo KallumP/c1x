@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { draggedBy, draggedTo, editorReducer, emptyEditor, newObject, placeableKind, type EditorAction, type EditorState, type Placeable } from "../../src/editor";
+import { BAT_SWOOP, DEFAULT_SCALE } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 
 const box = (x: number): LevelObject => newObject("basic", [x, 0, 0]);
@@ -38,6 +39,13 @@ describe("new enemies", () => {
 
   test("a turtle stands where it's put; its path comes from n. sanity beach's", () => {
     expect(newObject("turtle", [1, 2, 3])).toEqual({ kind: "enemy", enemy: "turtle", at: [1, 2, 3], raise: 0, stack: 1 });
+  });
+
+  test("a bat roost starts raised so its bats' swoop comes down to crash's height, not under the floor: its lowest point 600 game units over the floor, at the level's scale", () => {
+    const lowest = -Math.min(...BAT_SWOOP.map(([, up]) => up));
+    expect(newObject("bat", [1, 2, 3], 400)).toEqual({ kind: "enemy", enemy: "bat", at: [1, 2, 3], raise: (lowest + 600) / 400, stack: 1 });
+    expect(newObject("bat", [1, 2, 3], 2000).raise).toBeCloseTo((lowest + 600) / 2000);
+    expect(newObject("bat", [1, 2, 3]).raise).toBeCloseTo((lowest + 600) / DEFAULT_SCALE);
   });
 
   test("a level can have many, so adding one keeps the rest", () => {
