@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT, leaderBatSpots } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
@@ -565,12 +565,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect([initFlagA({}), initFlagA({ count: 1 }), initFlagA({ count: 6 })]).toEqual([4, 1, 6]);
     });
 
-    test("a leader bats roost is at its spot, raised, as sunset vista's first, its bats' flight its path: 13 points, 6400 back along the game's x, down 1700 at most", () => {
+    test("leader bats' roost is where their flight starts, 200 before the first leader (at, raised), 1700 over it and 400 behind, the flight its path: 13 points, 6400 back along the game's x, down 1700 at most", () => {
       const placed = enemies(make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats" })], readOtherLevel }).zone)
         .find(({ type }) => type.join() === ENEMY_ENTITIES.leader_bats.join())!;
       expect(placed.path.length).toBe(13);
       // blender (1, 2, 0) is (1408, 128, 1664) in the zone, and raise 3 is 768 more at scale 256
-      [1408, 128 + 768, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+      [1408 + 200, 128 + 768 + 1700, 1664 + 400].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
       const [first, last] = [placed.path[0], placed.path.at(-1)!];
       expect(last.map((value, axis) => value - first[axis])).toEqual([-6400, 0, 0]);
       expect(Math.min(...placed.path.map(([, y]) => y)) - first[1]).toBe(-1700);
@@ -589,9 +589,9 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(new Set([roost, ...leaders].map(({ item }) => entityId(item))).size).toBe(3);
     });
 
-    test("a leader bats roost's leaders hover at its path's nodes: the far one moved a metre up is 256 higher at scale 256", () => {
-      const [near, far] = leaderBatSpots([0, 0, 0], 0, 0, 256);
-      const path = [near, [far[0], far[1], far[2] + 1]] as Vec3[];
+    test("leader bats' second leader hovers at their path's node, and the bats fly to it: moved a metre up, it and the flight's end are 256 higher at scale 256", () => {
+      const gap = leaderBatsGap(0, 256);
+      const path = [[gap[0], gap[1], gap[2] + 1]] as Vec3[];
       const built = make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats", path })], readOtherLevel });
       const items = zonesOf(built).flatMap((zone) => zoneEntities(zone).map((item) => ({ item, origin: zoneOrigin(zone) })));
       const placedAt = ({ item, origin }: (typeof items)[number]) => entityPosition(item).map((value, axis) => value + origin[axis]);
@@ -599,6 +599,8 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const leaders = items.filter(({ item }) => entityType(item).join() === LEADER_BAT.join());
       const offsets = leaders.map((leader) => placedAt(leader).map((value, axis) => value - placedAt(roost)[axis]));
       expect(offsets).toEqual([[-200, -1700, -400], [-6200, -1700 + 256, -400]]);
+      const flight = entityPath(roost.item);
+      expect(flight.at(-1)!.map((value, axis) => value - flight[0][axis])).toEqual([-6400, 256, 0]);
     });
 
     test("the editor draws a leader bats roost's flight as sunset vista's (LEADER_BATS_FLIGHT, back along the game's x and up)", () => {
