@@ -538,9 +538,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(pagesOf(withBats) - pagesOf(without)).toBe(2);
     });
 
-    test("a bat roost is temple ruins' kind (subtype 9, its flags left at their defaults but its count) though sunset vista has none", () => {
+    test("a bat roost is temple ruins' kind (subtype 9, its flags its count, its delay, 300 frames as its code's default, and the wait before its first flock left at its default) though sunset vista has none", () => {
       const placed = zoneEntities(make(MAP_OBJ, { scale: 256, objects: [bat()], readOtherLevel }).zone).find((item) => entityType(item).join() === ENEMY_ENTITIES.bat.join())!;
-      expect([1, 2].map((flag) => placed.readInt16LE(ENTITY_INIT_FLAGS + 2 * flag))).toEqual([0, 0]);
+      expect([1, 2].map((flag) => placed.readInt16LE(ENTITY_INIT_FLAGS + 2 * flag))).toEqual([300, 0]);
+    });
+
+    test("a bat roost's and leader bats' delay is the frames between their flocks (30 a second): their init flag b, 300 and 135 (sunset vista's) without one", () => {
+      const initFlagB = (more: Partial<LevelObject>) => zoneEntities(make(MAP_OBJ, { scale: 256, objects: [bat(more)], readOtherLevel }).zone)
+        .find((item) => [ENEMY_ENTITIES.bat.join(), ENEMY_ENTITIES.leader_bats.join()].includes(entityType(item).join()))!.readInt16LE(ENTITY_INIT_FLAGS + 2);
+      expect([initFlagB({}), initFlagB({ delay: 3 }), initFlagB({ delay: 2.25 })]).toEqual([300, 90, 68]);
+      expect([initFlagB({ enemy: "leader_bats" }), initFlagB({ enemy: "leader_bats", delay: 12 })]).toEqual([135, 360]);
     });
 
     test("a bat roost is at its spot, raised, as temple ruins' first, its bats' swoop its path: 14 points, 10000 along the game's z, down 1336 at most", () => {
