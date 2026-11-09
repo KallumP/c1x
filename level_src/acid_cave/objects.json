@@ -1,5 +1,5 @@
 [
-  {"kind": "spawn", "at": [-5, 24.5, 0.326]},
+  {"kind": "spawn", "at": [9.3, 0.1, 21.679]},
 
   {"kind": "box", "type": "life", "at": [-8.251, 52.5, 0.6]},
   {"kind": "box", "type": "basic", "at": [7, 7.5, 0.65]},
@@ -18,7 +18,7 @@
   {"kind": "box", "type": "iron_outline", "at": [-9.5, 39, -1.31]},
   {"kind": "box", "type": "iron_outline", "at": [-7.5, 37, -1.31]},
   {"kind": "box", "type": "checkpoint", "at": [-5.5, 30, 0.132]},
-  {"kind": "box", "type": "switch", "at": [7, 26.5, 0.325], "raise": -0.26},
+  {"kind": "box", "type": "switch", "at": [-0.5, 0.5, 1.541], "raise": -0.26},
   {"kind": "box", "type": "basic", "at": [-4, 10, 0.466]},
   {"kind": "box", "type": "slatted", "at": [-3, 10, 0.519], "raise": -0.05},
   {"kind": "box", "type": "basic", "at": [-5, 37, -1.31]},
@@ -35,6 +35,23 @@
   {"kind": "box", "type": "question", "at": [-1, 71.5, 0.844], "raise": -0.12},
   {"kind": "box", "type": "basic", "at": [-2, 72.5, 0.884], "raise": -0.14},
   {"kind": "box", "type": "life", "at": [-2, 71.5, 0.715]},
+  {"kind": "box", "type": "basic", "at": [4, 100, -3.4]},
+  {"kind": "box", "type": "basic", "at": [4.5, 92.5, -3.4]},
+  {"kind": "box", "type": "checkpoint", "at": [0, 110.5, 0.249]},
+  {"kind": "box", "type": "basic", "at": [-6.5, 108.5, -0.845], "raise": 5},
+  {"kind": "box", "type": "life", "at": [-11, 92.5, -3.4]},
+  {"kind": "box", "type": "life", "at": [1.5, 169, 2.547]},
+  {"kind": "box", "type": "life", "at": [-9.5, 184, 5]},
+  {"kind": "box", "type": "basic", "at": [-10.5, 116, 2.169]},
+  {"kind": "box", "type": "basic", "at": [-4.1, 141.8, 0.301]},
+  {"kind": "box", "type": "basic", "at": [5.1, 123.6, 0.132]},
+
+  {"kind": "enemy", "type": "plant", "at": [1, 89.5, -3.4]},
+  {"kind": "enemy", "type": "plant", "at": [0, 92.5, -3.4]},
+  {"kind": "enemy", "type": "blue_river_plant", "at": [3.5, 96, -3.4]},
+  {"kind": "enemy", "type": "turtle", "at": [-10, 105.5, -1.613], "path": [[-1, -6.5, -0.824], [-2.091, -4.074, -0.524], [-1.907, -2.165, -0.309], [-1.21, -0.267, -0.12], [0.18, 1.188, 0.009], [1.811, 2.379, 0.135], [3.5, 3, 0.256]]},
+  {"kind": "enemy", "type": "rolling_stone", "at": [-5.5, 151.5, 0.299]},
+  {"kind": "enemy", "type": "rolling_stone", "at": [0, 140, 0.438]},
 
   {"kind": "end", "at": [-4, 235, -2.1]}
 ]
