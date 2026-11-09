@@ -64,6 +64,9 @@ function cameraRotation(camera: Camera): number[] {
   return [CAMERA_ROTATION[0] - tilt, CAMERA_ROTATION[1], CAMERA_ROTATION[2]];
 }
 
+// how far below level the camera looks (radians), from its rotation's tilt
+const lookDown = (rotation: number[]) => (-rotation[0] * 2 * Math.PI) / ANGLE_UNITS;
+
 const zonePrefix = (index: number) => `Bm${String(index).padStart(2, "0")}`; // a zone's entries are this and Z, S, W, 1, 2, 3
 const zoneEid = (index: number) => stringToEid(`${zonePrefix(index)}Z`);
 const worldEid = (zone: number, world: number) => stringToEid(zonePrefix(zone) + (world === 0 ? "W" : String(world)));
@@ -122,7 +125,7 @@ function zonePath(assembly: Assembly, zoneIndex: number, neighbours: number[]): 
     links: pathLinks(zones, zoneIndex, neighbours),
     followHeight: cameraOffsets(camera).height,
   });
-  const sortList = { eid: sortListEid(zoneIndex), type: ENTRY_SLST, items: zoneSlstItems(listed, zone.points.map(([, , z]) => z), step) };
+  const sortList = { eid: sortListEid(zoneIndex), type: ENTRY_SLST, items: zoneSlstItems(listed, zone.points, step, lookDown(rotation)) };
   return { path, sortList };
 }
 
