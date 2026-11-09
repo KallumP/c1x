@@ -10,6 +10,7 @@ level_src/*
 !level_src/tide_ruins/
 !level_src/mossy_creek/
 !level_src/sunset_canyon/
+!level_src/acid_cave/
 imgui.ini
 controls.cfg
 settings.cfg
