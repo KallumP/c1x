@@ -208,6 +208,17 @@ describe("enemy shapes", () => {
     expect(ENEMY_SHAPES[type].filter((part) => part.name === "eye").every((part) => part.at[2] > 0)).toBe(true);
   });
 
+  test("the lab assistant is on the floor, as big as stormy ascent's (LW1EG): 1203 tall, about 400 across and 540 long, its face in front", () => {
+    const { min, max } = shapeBounds(ENEMY_SHAPES.lab_assistant);
+    expect(min[1]).toBeCloseTo(0);
+    expect(max[1]).toBeCloseTo(1203, -1);
+    expect(max[0] - min[0]).toBeGreaterThan(340);
+    expect(max[0] - min[0]).toBeLessThan(460);
+    expect(max[2] - min[2]).toBeGreaterThan(470);
+    expect(max[2] - min[2]).toBeLessThan(610);
+    expect(ENEMY_SHAPES.lab_assistant.filter((part) => part.name === "eye").every((part) => part.at[2] > 0)).toBe(true);
+  });
+
   test("the lizards differ by colour: green and red", () => {
     const colours = (type: "lizard" | "red_lizard") => ENEMY_SHAPES[type].map(({ colour }) => colour);
     expect(colours("lizard")).not.toEqual(colours("red_lizard"));
