@@ -560,6 +560,14 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(placed.path.map(([, y, z]) => [z - z0, y - y0])).toEqual(BAT_SWOOP);
     });
 
+    test("a bat roost's swoop goes to its path's node: 10 m across the map is 2560 along the game's x at scale 256, temple ruins' 14 points, its dip kept", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [bat({ path: [[10, 0, 0]] })], readOtherLevel }).zone);
+      expect(placed.path.length).toBe(14);
+      const [first, last] = [placed.path[0], placed.path.at(-1)!];
+      expect(last.map((value, axis) => value - first[axis])).toEqual([2560, 0, 0]);
+      expect(Math.min(...placed.path.map(([, y]) => y)) - first[1]).toBe(-1336);
+    });
+
     test("a bat roost's count is how many bats it sends: its init flag a, 4 (as temple ruins') without one", () => {
       const initFlagA = (more: Partial<LevelObject>) => enemies(make(MAP_OBJ, { scale: 256, objects: [bat(more)], readOtherLevel }).zone)[0].initFlagA;
       expect([initFlagA({}), initFlagA({ count: 1 }), initFlagA({ count: 6 })]).toEqual([4, 1, 6]);
