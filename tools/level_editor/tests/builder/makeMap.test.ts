@@ -74,7 +74,7 @@ const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0
 const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhere (0x14)
 const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the dark (0x2a)
 const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x18)
-const hasTempleRuins = existsSync(`${STREAMS}/s000001c.nsd`); // temple ruins (0x1c)
+const hasSunsetVista = existsSync(`${STREAMS}/s0000023.nsd`); // sunset vista (0x23)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -516,19 +516,31 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
-  describe.skipIf(!hasTempleRuins)("bats, from temple ruins", () => {
+  describe.skipIf(!hasSunsetVista)("bats, from sunset vista", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
     const bat = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "bat", raise: 3, ...more });
     const soundsOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
 
-    test("a level with a bat has temple ruins' ruins code, the bat's model and animation, its texture page and every sound the code plays", () => {
+    test("a level with a bat has sunset vista's ruins code, its bats' and leaders' models and animations, its texture page and every sound the code plays", () => {
       const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [bat()], readOtherLevel });
       expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.bat[0]]).toBe(stringToEid("RuiOC"));
-      expect(["Ba1sG", "Ba1sV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
-      expect(level.pages.some((page) => page.type === PAGE_TEXTURE && page.eid === stringToEid("Ru3sT"))).toBe(true);
-      const sounds = donorObject(readLevel(STREAMS, 0x1c), ENEMY_ENTITIES.bat[0]).sounds.map(({ eid }) => eid);
+      expect(["Ba1wG", "Ba1wV", "Ba2wG", "Ba2wV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(level.pages.some((page) => page.type === PAGE_TEXTURE && page.eid === stringToEid("Ru6wT"))).toBe(true);
+      const sounds = donorObject(readLevel(STREAMS, 0x23), ENEMY_ENTITIES.bat[0]).sounds.map(({ eid }) => eid);
       expect(sounds.length).toBeGreaterThan(0);
       expect(sounds.every((eid) => soundsOf(level).includes(eid))).toBe(true);
+    });
+
+    test("bats bring one texture page (sunset vista's code reaches only its bats), not temple ruins' three", () => {
+      const pagesOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_TEXTURE).length;
+      const without = make(MAP_OBJ, { scale: 256, objects: [], readOtherLevel }).level;
+      const withBats = make(MAP_OBJ, { scale: 256, objects: [bat(), bat({ at: [-1, 4, 0] })], readOtherLevel }).level;
+      expect(pagesOf(withBats) - pagesOf(without)).toBe(1);
+    });
+
+    test("a bat roost is temple ruins' kind (subtype 9, its flags left at their defaults but its count) though sunset vista has none", () => {
+      const placed = zoneEntities(make(MAP_OBJ, { scale: 256, objects: [bat()], readOtherLevel }).zone).find((item) => entityType(item).join() === ENEMY_ENTITIES.bat.join())!;
+      expect([1, 2].map((flag) => placed.readInt16LE(ENTITY_INIT_FLAGS + 2 * flag))).toEqual([0, 0]);
     });
 
     test("a bat roost is at its spot, raised, as temple ruins' first, its bats' swoop its path: 14 points, 10000 along the game's z, down 1336 at most", () => {
