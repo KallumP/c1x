@@ -54,7 +54,6 @@
   {"kind": "enemy", "type": "plant", "at": [5.812, 56.79, 2.162]},
   {"kind": "enemy", "type": "plant", "at": [-6.95, 63.812, 3.053]},
   {"kind": "enemy", "type": "plant", "at": [3.844, 107, 1.615]},
-  {"kind": "enemy", "type": "bat", "at": [6, 40, 0.618], "raise": 4.84},
 
   {"kind": "end", "at": [-4.32, 108, 1.25], "raise": 0.3}
 ]
