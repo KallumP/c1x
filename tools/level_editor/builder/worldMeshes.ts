@@ -4,9 +4,9 @@
 // everywhere; split into meshes of at most WGEO_MAX vertices and polygons
 import { facesDown, facesUp, FACING, isSpawn, normal } from "./faces";
 import type { Span } from "./fit";
-import type { Colour, Mesh, Triangle } from "./obj";
+import type { Colour, Mesh, Triangle, Uv } from "./obj";
 import { floorDivide, roundHalfToEven } from "./pyMath";
-import { tileRegion, type RegionOnTile } from "./tileRegions";
+import { tileRegion, uvTileRegion, type RegionOnTile } from "./tileRegions";
 import type { Rgb } from "./tpage";
 import { barycentric, cross, subtract, type Vec3 } from "./vectors";
 
@@ -203,6 +203,35 @@ function blendedColour(point: Vec3, corners: Vec3[], colours: Colour[]): Rgb {
   return [0, 1, 2].map((channel) => Math.round(colours.reduce((sum, colour, corner) => sum + colour[channel] * weights[corner], 0))) as Rgb;
 }
 
+const isOnImage = (uv: Uv) => uv.every((coordinate) => coordinate >= -1e-6 && coordinate <= 1 + 1e-6);
+
+// whether a face keeps its own UVs: they're all on its image
+const keepsItsUvs = (triangle: Triangle) => triangle.uvs !== undefined && triangle.uvs.every(isOnImage);
+
+// how a face is sliced: along z into pieces, and along x and y for each repeat
+// of its tile, unless it keeps its own UVs, which don't repeat
+function faceSlicing(slicing: Slicing, keepsUvs: boolean): Slicing {
+  if (keepsUvs) {
+    return slicing.slice(0, 1);
+  }
+  return slicing;
+}
+
+// the texture coordinate at point on a triangle with corners, blended from its corners'
+function blendedUv(point: Vec3, corners: Vec3[], uvs: Uv[]): Uv {
+  const weights = barycentric(point, corners);
+  return [0, 1].map((axis) => uvs.reduce((sum, uv, corner) => sum + uv[axis] * weights[corner], 0)) as Uv;
+}
+
+// the part of its tile a piece (fan) of a textured face is mapped to: under its
+// own UVs if they're all on the image, else projected, the tile repeating every tile units
+function tileRegionOf(fan: Vec3[], corners: Vec3[], triangle: Triangle, facing: Vec3, tile: number): RegionOnTile {
+  if (keepsItsUvs(triangle)) {
+    return uvTileRegion(fan.map((point) => blendedUv(point, corners, triangle.uvs!)));
+  }
+  return tileRegion(fan, facing, tile);
+}
+
 // how a face is coloured at each point: blended from its vertices' colours if
 // it has them, or lit, all one colour
 function faceColouring(corners: Vec3[], colours: Colour[] | null, lit: Rgb): (at: Vec3) => Rgb {
@@ -243,7 +272,7 @@ export function worldMeshes(mesh: Mesh, options: WorldMeshOptions): WorldMesh[] 
     const isTextured = triangle.material !== null && textured.has(triangle.material);
     const corners = triangle.corners.map((index) => mesh.vertices[index]);
     const colourAt = faceColouring(corners, triangleColours(mesh, triangle), shade(facing));
-    for (const part of slices(corners, slicing).map((points) => points.map(snapToVertexGrid))) {
+    for (const part of slices(corners, faceSlicing(slicing, isTextured && keepsItsUvs(triangle))).map((points) => points.map(snapToVertexGrid))) {
       if (span && !isInSpan(part, span)) {
         continue;
       }
@@ -252,7 +281,7 @@ export function worldMeshes(mesh: Mesh, options: WorldMeshOptions): WorldMesh[] 
         if (isDegenerate(fan[0], fan[1], fan[2])) {
           continue;
         }
-        const texture = isTextured ? { material: triangle.material!, ...tileRegion(fan, facing, tile) } : pageTexture;
+        const texture = isTextured ? { material: triangle.material!, ...tileRegionOf(fan, corners, triangle, facing, tile) } : pageTexture;
         const inZone = span ? fan.map(([x, y, z]) => [x, y, z - span[0]] as Vec3) : fan;
         filler.add(inZone.map((at, corner) => ({ at, colour: colourAt(fan[corner]) })), texture);
       }

@@ -75,7 +75,20 @@ function nearestLayout(relative: [number, number][]): number {
 // normal facing, the tile repeating every repeat units across the face, and the
 // layout whose corners are nearest its points
 export function tileRegion(points: Vec3[], facing: Vec3, repeat: number): RegionOnTile {
-  const pixels = pixelsOnTile(points.map((point) => planeCoordinates(point, facing)), repeat);
+  return regionUnder(pixelsOnTile(points.map((point) => planeCoordinates(point, facing)), repeat));
+}
+
+const onTile = (coordinate: number) => Math.min(Math.max(coordinate * TILE, 0), TILE);
+
+// the region of the tile under a triangle with texture coordinates uvs (.obj's:
+// 0 to 1 across the image, v up), and the layout whose corners are nearest them
+export function uvTileRegion(uvs: [number, number][]): RegionOnTile {
+  return regionUnder(uvs.map(([u, v]) => [onTile(u), onTile(1 - v)] as [number, number]));
+}
+
+// the smallest region the game can address around a triangle's pixels on the
+// tile, and the layout whose corners are nearest them
+function regionUnder(pixels: [number, number][]): RegionOnTile {
   const us = pixels.map(([u]) => u);
   const vs = pixels.map(([, v]) => v);
   const [x, w] = alignedSpan(Math.min(...us), Math.max(...us), 8); // 4 bit textures step 8 across
