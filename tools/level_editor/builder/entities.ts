@@ -26,15 +26,14 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // the monkey MonkC, and up the creek's river objects RivOC: subtypes 6 and 7 its
 // biting plants with blue and green leaves, subtype 5 its leaping fish, and
 // temple ruins' ruins objects RuiOC: subtype 9 a bat roost, which sends out bats
-// (subtype 11) along its path
+// (subtype 11) along its path, and sunset vista's: subtype 12 a bat roost that
+// sends them whether crash is near or not, stopped by killing its two leader
+// bats (subtype 14)
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
-  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9],
+  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12],
 };
-// sunset vista's bat roost (RuiOC subtype 12), which the bat's roost (temple
-// ruins' kind, subtype 9) is made from, sunset vista having none of those
-export const SUNSET_VISTA_ROOST: [number, number] = [42, 12];
 // not in the level's total (an iron outline fills in as an iron box)
 // a rolling stone's first init flag is where in its cycle along its path and
 // back it starts (its script's, seen in the game): 0 at its first point rolling

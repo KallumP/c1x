@@ -37,6 +37,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   green_river_plant: UP_THE_CREEK,
   fish: UP_THE_CREEK,
   bat: SUNSET_VISTA,
+  leader_bats: SUNSET_VISTA,
 };
 
 export interface DonorObject {

@@ -12,7 +12,7 @@ import { EntryTooBig } from "./cutLevel";
 import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
   BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
-  SUNSET_VISTA_ROOST, WARP_PAD, withEntityId, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
+  WARP_PAD, withEntityId, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
@@ -141,7 +141,7 @@ function ownPathEnemyEntity(entity: Buffer, enemy: LevelObject): Buffer {
 // come along the route, its timings (flags b and c) the defaults, and temple
 // ruins' swoop along the game's z as its path
 function batRoostExample(donor: Level): Buffer {
-  const roost = withInitFlagC(withInitFlagB(levelEntity(donor, ...SUNSET_VISTA_ROOST), 0), 0);
+  const roost = withInitFlagC(withInitFlagB(levelEntity(donor, ...ENEMY_ENTITIES.leader_bats), 0), 0);
   const swoop = BAT_SWOOP.map(([along, up]): Vec3 => [0, up, along]);
   return withSubtype(withPath(roost, swoop), ENEMY_ENTITIES.bat[1]);
 }

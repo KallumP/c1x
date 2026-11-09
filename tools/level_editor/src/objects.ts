@@ -38,9 +38,10 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - badger: jungle rollers'
 // - walking_spider: fumbling in the dark's
 // - bat: temple ruins', from a roost: they swoop down at crash
+// - leader_bats: sunset vista's, from a roost, flying across between two leader bats: kill both and they stop
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track
-export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "bat", "rolling_stone"] as const;
+export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
