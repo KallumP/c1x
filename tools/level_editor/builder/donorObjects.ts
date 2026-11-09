@@ -20,6 +20,7 @@ const THE_GREAT_GATE: DonorLevel = { lid: 0x12, name: "The Great Gate", file: "s
 const ROAD_TO_NOWHERE: DonorLevel = { lid: 0x14, name: "Road to Nowhere", file: "s0000014" };
 const FUMBLING_IN_THE_DARK: DonorLevel = { lid: 0x2a, name: "Fumbling in the Dark", file: "s000002a" };
 const UP_THE_CREEK: DonorLevel = { lid: 0x18, name: "Up the Creek", file: "s0000018" };
+const TEMPLE_RUINS: DonorLevel = { lid: 0x1c, name: "Temple Ruins", file: "s000001c" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -33,6 +34,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   blue_river_plant: UP_THE_CREEK,
   green_river_plant: UP_THE_CREEK,
   fish: UP_THE_CREEK,
+  bat: TEMPLE_RUINS,
 };
 
 export interface DonorObject {
