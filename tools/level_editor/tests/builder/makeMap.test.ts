@@ -531,6 +531,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(sounds.every((eid) => soundsOf(level).includes(eid))).toBe(true);
     });
 
+    test("a bat roost is at its spot, raised, as temple ruins' first, its bats' swoop its path: 14 points, 10000 along the game's z, down 1336 at most", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [bat()], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.bat);
+      expect(placed.path.length).toBe(14);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone, and raise 3 is 768 more at scale 256
+      [1408, 128 + 768, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+      const [first, last] = [placed.path[0], placed.path.at(-1)!];
+      expect(last.map((value, axis) => value - first[axis])).toEqual([0, 0, 10000]);
+      expect(Math.min(...placed.path.map(([, y]) => y)) - first[1]).toBe(-1336);
+    });
+
     test.skipIf(!hasFumbling)("a level with bats and spiders has both codes, within the texture pages the game holds", () => {
       const objects = [bat(), bat({ at: [-1, 4, 0] }), object("enemy", [1, 6, 0], { enemy: "walking_spider" })];
       const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel });
