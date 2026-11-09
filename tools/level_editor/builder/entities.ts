@@ -34,6 +34,10 @@ export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
   blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12],
 };
+// sunset vista's leader bat (RuiOC subtype 14): two hover where a leader bats
+// roost's bats come in and go out, and killing both stops it; its first init
+// flag is its roost's entity id
+export const LEADER_BAT: [number, number] = [42, 14];
 // not in the level's total (an iron outline fills in as an iron box)
 // a rolling stone's first init flag is where in its cycle along its path and
 // back it starts (its script's, seen in the game): 0 at its first point rolling

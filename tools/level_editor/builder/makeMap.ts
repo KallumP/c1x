@@ -12,7 +12,7 @@ import { EntryTooBig } from "./cutLevel";
 import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
   BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
-  WARP_PAD, withEntityId, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
+  LEADER_BAT, WARP_PAD, withEntityId, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
@@ -147,6 +147,18 @@ function batRoostExample(donor: Level): Buffer {
   return withSubtype(withPath(roost, swoop), ENEMY_ENTITIES.bat[1]);
 }
 
+// where a leader bats roost's two leaders hover, from the roost, in game units:
+// as sunset vista's, where its bats come in and go out, below their flight's ends
+const LEADER_OFFSETS: Vec3[] = [[-200, -800, -400], [-6200, -800, -400]];
+
+// entities each enemy takes: a leader bats roost and its two leaders, one for the rest
+function entitiesFor(enemy: LevelObject): number {
+  if (enemy.enemy === "leader_bats") {
+    return 1 + LEADER_OFFSETS.length;
+  }
+  return 1;
+}
+
 // the enemies that stay at their spot: jungle rollers' plant, up the creek's two
 // river plants, and the spider hanging there
 const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider"];
@@ -203,11 +215,23 @@ class ObjectPlacer {
 
   // an enemy that moves along its own level's path, as example, from its spot:
   // up the creek's fish, leaping across the map (the other way, reversed), or
-  // temple ruins' bat roost, sending its bats along it
-  placeWithItsPath(enemy: LevelObject, example: Buffer): void {
+  // temple ruins' or sunset vista's bat roost, sending its bats along it. its entity id
+  placeWithItsPath(enemy: LevelObject, example: Buffer): number {
     const { zone, at } = this.inZone(this.positionOf(enemy));
-    const placed = withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(enemy.reverse === true));
+    const id = this.ids.shift()!;
+    const placed = withPathFrom(withEntityId(example, id), at, leapWay(enemy.reverse === true));
     this.entities[zone].push(ownPathEnemyEntity(placed, enemy));
+    return id;
+  }
+
+  // a leader bats roost's two leaders (leader, an example), where its bats come in
+  // and go out, each pointed at the roost by its id
+  placeLeaders(roost: LevelObject, roostId: number, leader: Buffer): void {
+    const spot = this.positionOf(roost);
+    for (const offset of LEADER_OFFSETS) {
+      const { zone, at } = this.inZone(spot.map((value, axis) => value + offset[axis]) as Vec3);
+      this.entities[zone].push(withInitFlagA(withPosition(withEntityId(leader, this.ids.shift()!), at), roostId));
+    }
   }
 
   // an enemy that moves along a path (a crab, turtle, native or badger), as
@@ -321,7 +345,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const enemies = objects.filter((object) => object.kind === "enemy");
   const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
   const donorLevels = enemyDonorLevels(enemies, readOtherLevel);
-  const placer = new ObjectPlacer(map, templates, scale, turn, (end ? 1 : 0) + boxCount(boxes) + enemies.length);
+  const placer = new ObjectPlacer(map, templates, scale, turn, (end ? 1 : 0) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0));
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
   const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
 
@@ -346,7 +370,12 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     return templates.entity(...ENEMY_ENTITIES[type]);
   };
   enemies.filter((enemy) => STANDING_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeAtSpot(enemy, enemyExample(enemy.enemy!)));
-  enemies.filter((enemy) => OWN_PATH_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeWithItsPath(enemy, enemyExample(enemy.enemy!)));
+  enemies.filter((enemy) => OWN_PATH_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => {
+    const id = placer.placeWithItsPath(enemy, enemyExample(enemy.enemy!));
+    if (enemy.enemy === "leader_bats") {
+      placer.placeLeaders(enemy, id, levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT));
+    }
+  });
   stones.forEach((stone) => placer.placeStone(stone, track!));
   objects.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
