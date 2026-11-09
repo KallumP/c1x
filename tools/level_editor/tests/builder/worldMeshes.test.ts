@@ -234,6 +234,18 @@ describe("textured faces with their own UVs", () => {
     expect(regions.some(({ w, h }) => w < 64 || h < 64)).toBe(true);
   });
 
+  test("a small face isn't sliced across a piece's edge: its image stays whole (a sliced piece's region is only the nearest the game can address)", () => {
+    // a 400 triangle from z 300 to 700, across the piece edge at 512
+    const small: Mesh = {
+      vertices: [[0, 0, 300], [400, 0, 300], [0, 0, 700]],
+      triangles: [{ corners: [0, 2, 1], object: null, material: "stone", uvs: [[0, 0], [0, 1], [1, 0]] }],
+      materialLibraries: [],
+    };
+    const regions = regionsOf(small, 512);
+    expect(regions.length).toBe(1);
+    expect(regions[0]).toMatchObject({ x: 0, y: 0, w: 64, h: 64 });
+  });
+
   test("UVs beyond the image (repeating it) are projected as usual", () => {
     const [region] = regionsOf(uvFloor([[0, 0], [0, 4], [4, 0]]), 2048);
     const [projected] = regionsOf(uvFloor(undefined as unknown as [number, number][]), 2048);
