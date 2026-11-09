@@ -63,13 +63,20 @@ function codeSlots(donor: Level, entries: Entry[]): [number, number][] {
     .filter(([slot]) => slot >= 0);
 }
 
-// the object whose code is in exec slot slot in the donor level, and what it uses there
-export function donorObject(donor: Level, slot: number): DonorObject {
+// the code in exec slot slot in the donor level; an error if there's none
+function codeInSlot(donor: Level, slot: number): number {
   const code = donor.nsd.ldat.execMap[slot];
   if (code === undefined || code === EID_NONE || !entriesById(donor).has(code)) {
     throw new Error(`the donor level (${donor.nsd.ldat.lid.toString(16)}) has no code in exec slot ${slot}`);
   }
-  const used = reachableEids(donor, [code]);
+  return code;
+}
+
+// the object whose code is in exec slot slot in the donor level, and what it
+// uses there, with the code in childSlots: objects it spawns by their exec slot
+// (which its entries don't name), and what they use
+export function donorObject(donor: Level, slot: number, childSlots: number[] = []): DonorObject {
+  const used = reachableEids(donor, [slot, ...childSlots].map((codeSlot) => codeInSlot(donor, codeSlot)));
   const entries = entriesInPages(donor, PAGE_ENTRIES, used);
   const texturePages = [...rawPagesById(donor)].filter(([eid, page]) => used.has(eid) && page.type === PAGE_TEXTURE).map(([, page]) => page);
   return { code: codeSlots(donor, entries), entries, sounds: entriesInPages(donor, PAGE_SOUNDS, used), texturePages };
