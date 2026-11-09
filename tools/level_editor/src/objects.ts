@@ -152,11 +152,13 @@ export interface LevelObject {
 export const hasPath = (object: LevelObject) => object.kind === "enemy" && isPathEnemy(object.enemy);
 
 // the enemies whose path is one node, which they don't walk: leader bats'
-// second leader (the object is their first), and a bat roost's swoop's end
-// (the object is the roost), with what it is, for messages
+// second leader (the object is their first), a bat roost's swoop's end (the
+// object is the roost), and where a lab assistant's vials land, with what it
+// is, for messages
 const ONE_NODE_PATHS: Partial<Record<EnemyType, string>> = {
   leader_bats: "leader bats' path is their second leader, [[x, y, z]] in metres from the first",
   bat: "a bat roost's path is its swoop's end, [[x, y, z]] in metres from the roost",
+  lab_assistant: "a lab assistant's path is where its vials land, [[x, y, z]] in metres from it",
 };
 export const hasOneNode = (enemy: EnemyType | undefined) => enemy !== undefined && enemy in ONE_NODE_PATHS;
 
