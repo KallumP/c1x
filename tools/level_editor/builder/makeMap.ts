@@ -2,6 +2,7 @@
 // as the level's world meshes and collision, crash, and the objects placed in
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
+import { leapWay } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep } from "../src/enemyPaths";
 import { hasPath, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
@@ -177,10 +178,10 @@ class ObjectPlacer {
   }
 
   // an enemy that moves along its own level's path, as example, from its spot:
-  // up the creek's fish, leaping
+  // up the creek's fish, leaping across the map (the other way, reversed)
   placeWithItsPath(enemy: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(enemy));
-    this.entities[zone].push(withPathFrom(withEntityId(example, this.ids.shift()!), at));
+    this.entities[zone].push(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(enemy.reverse === true)));
   }
 
   // an enemy that moves along a path (a crab, turtle, native or badger), as

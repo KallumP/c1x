@@ -112,7 +112,7 @@ export interface LevelObject {
   path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised)
   speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
-  reverse?: boolean;    // a rolling stone that rolls back towards its first end first (true, or none)
+  reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping the other way (true, or none)
   count?: number;       // how many badgers come out at once (BADGER_COUNT without one)
 }
 
@@ -190,13 +190,17 @@ function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetti
   return { [setting]: value };
 }
 
-// whether a rolling stone rolls back towards its first end first, from its fields in objects.json
+// the enemies that can be reversed: a rolling stone rolls back towards its first
+// end first, and a fish leaps the other way across the map
+const REVERSIBLE_ENEMIES: EnemyType[] = ["rolling_stone", "fish"];
+
+// whether a rolling stone or fish is reversed, from its fields in objects.json
 function readReverse(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "reverse"> {
   if (!("reverse" in fields)) {
     return {};
   }
-  if (enemy !== "rolling_stone") {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no reverse (rolling stones do; reverse a ${enemy}'s path instead)`);
+  if (!REVERSIBLE_ENEMIES.includes(enemy)) {
+    throw new Error(`object ${objectNumber}: a ${enemy} has no reverse (rolling stones and fish do; reverse a ${enemy}'s path instead)`);
   }
   if (typeof fields.reverse !== "boolean") {
     throw new Error(`object ${objectNumber}: reverse should be true or false`);

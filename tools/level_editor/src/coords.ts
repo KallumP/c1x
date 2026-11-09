@@ -84,9 +84,20 @@ export const FISH_LEAP: [number, number][] = [
   [916, 2172], [1144, 1932], [1372, 1400], [1600, 600], [1600, 224], [1600, 44], [1600, 0],
 ];
 
-// each point of a fish's leap (in blender), for a fish at at, raised by raise
-export function fishLeap(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
-  const [rollX, rollY] = stoneRolling(turn);
+// which way along the game's x a fish leaps: on (1), or back (-1) reversed
+export function leapWay(reverse: boolean): number {
+  if (reverse) {
+    return -1;
+  }
+  return 1;
+}
+
+const scaled = ([x, y, z]: Vec3, factor: number): Vec3 => [x * factor, y * factor, z * factor];
+
+// each point of a fish's leap (in blender), for a fish at at, raised by raise;
+// reversed, it leaps the other way across the map
+export function fishLeap(at: Vec3, raise: number, turn: number, scale: number, reverse = false): Vec3[] {
+  const [rollX, rollY] = scaled(stoneRolling(turn), leapWay(reverse));
   return FISH_LEAP.map(([across, up]) =>
     [at[0] + (rollX * across) / scale, at[1] + (rollY * across) / scale, at[2] + raise + up / scale] as Vec3);
 }

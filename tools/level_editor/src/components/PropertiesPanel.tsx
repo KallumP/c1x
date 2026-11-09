@@ -168,7 +168,15 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     </button>
   );
 
+  // which way a fish leaps across the map: to its faded end, or the other way
+  const renderFishReverseButton = (fish: LevelObject) => (
+    <button className="drop" onClick={() => change({ reverse: fish.reverse ? undefined : true })} title="It leaps from the solid fish to the faded one, and back">
+      Reverse direction
+    </button>
+  );
+
   const isStone = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy === "rolling_stone";
+  const isFish = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy === "fish";
 
   // raise is its height above the floor, kept as it's dragged about
   const renderObjectFields = (selected: LevelObject) => (
@@ -304,6 +312,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {renderNumberSliders(object)}
           {hasPath(object) && renderTurnRoundButton(object)}
           {isStone(object) && renderStoneReverseButton(object)}
+          {isFish(object) && renderFishReverseButton(object)}
           {hasPath(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}

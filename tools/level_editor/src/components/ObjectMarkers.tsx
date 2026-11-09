@@ -154,9 +154,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   const renderAtSpot = (object: LevelObject, index: number, enemy: SpotEnemy) => renderShapeModel(ENEMY_SHAPES[enemy], base(object), index);
 
   // a fish: at its spot, where it leaps from, facing the way it leaps (across the
-  // map), with the line of its leap, and faded where it lands
+  // map, or back reversed), with the line of its leap, and faded where it lands
   const renderFish = (object: LevelObject, index: number) => {
-    const leap = fishLeap(object.at, object.raise, turn, scale);
+    const leap = fishLeap(object.at, object.raise, turn, scale, object.reverse === true);
     const [start, end] = [leap[0], leap[leap.length - 1]];
     const facing = facingFrom(start, end, turn);
     return (

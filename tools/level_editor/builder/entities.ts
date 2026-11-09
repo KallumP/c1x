@@ -96,10 +96,12 @@ export function withPath(item: Buffer, points: Vec3[]): Buffer {
 }
 
 // the entity with its whole path moved so that it starts at at (zone units
-// relative to its zone), its shape kept, such as a fish's leap
-export function withPathFrom(item: Buffer, at: Vec3): Buffer {
+// relative to its zone), its shape kept, or mirrored along x with xWay -1,
+// such as a fish's leap
+export function withPathFrom(item: Buffer, at: Vec3, xWay = 1): Buffer {
   const path = entityPath(item);
-  return withPath(item, path.map((point) => point.map((value, axis) => at[axis] + value - path[0][axis]) as Vec3));
+  const ways: Vec3 = [xWay, 1, 1];
+  return withPath(item, path.map((point) => point.map((value, axis) => at[axis] + ways[axis] * (value - path[0][axis])) as Vec3));
 }
 
 // a box's first init flag is what it holds beyond the usual (a token, say); 0 for nothing
