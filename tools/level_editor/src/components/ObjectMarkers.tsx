@@ -1,7 +1,7 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { batSwoop, blenderToView, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { batSwoop, batSwoopEnd, blenderToView, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
@@ -174,7 +174,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   // a bat roost: a bat at the roost, where its bats fly from, facing the way they
   // swoop (towards the spawn), with the line of their swoop, and faded where it ends
   const renderBat = (object: LevelObject, index: number) => {
-    const swoop = batSwoop(object.at, object.raise, turn, scale);
+    const roost: Vec3 = [object.at[0], object.at[1], object.at[2] + object.raise];
+    const swoopEnd = roost.map((value, axis) => value + batSwoopEnd(turn, scale)[axis]) as Vec3;
+    const swoop = batSwoop(roost, swoopEnd, turn, scale);
     const [start, end] = [swoop[0], swoop[swoop.length - 1]];
     const facing = facingFrom(start, end, turn);
     return (
