@@ -34,7 +34,7 @@ function planeCoordinates(point: Vec3, facing: Vec3): [number, number] {
 // starting on a multiple of its size and of step) that covers low..high
 function alignedSpan(low: number, high: number, step: number): [number, number] {
   for (const size of SIZES) {
-    const start = Math.trunc(floorDivide(low, size)) * size;
+    const start = Math.min(Math.trunc(floorDivide(low, size)) * size, TILE - size); // inside the tile, even on its far edge
     if (size >= step && start + size >= high - 1e-6) {
       return [start, size];
     }
