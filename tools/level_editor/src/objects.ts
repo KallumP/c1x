@@ -62,10 +62,12 @@ export const SPEED_MAX = 3;
 
 // how many badgers or walking spiders come out at once: as jungle rollers' first
 // badger spawner, and fumbling in the dark's spider spawners, without a count;
-// and how many bats a roost sends, as temple ruins' roosts
+// and how many bats a roost sends, as temple ruins' roosts, and in each flock a
+// leader bats roost sends, as most of sunset vista's
 export const BADGER_COUNT = 2;
 export const WALKING_SPIDER_COUNT = 1;
 export const BAT_COUNT = 4;
+export const LEADER_BATS_COUNT = 5;
 export const BADGER_COUNT_MIN = 1;
 export const BADGER_COUNT_MAX = 6;
 
@@ -76,6 +78,9 @@ function countFallback(enemy: EnemyType | undefined): number {
   }
   if (enemy === "bat") {
     return BAT_COUNT;
+  }
+  if (enemy === "leader_bats") {
+    return LEADER_BATS_COUNT;
   }
   return BADGER_COUNT;
 }
@@ -99,7 +104,7 @@ interface NumberSettingRule {
 export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   speed: { enemies: PATH_ENEMIES, enemiesNamed: PATH_ENEMIES_NAMED, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: () => 1, meaning: "times the game's own pace" },
   start: { enemies: ["rolling_stone"], enemiesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
-  count: { enemies: ["badger", "walking_spider", "bat"], enemiesNamed: "badgers, walking spiders and bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
+  count: { enemies: ["badger", "walking_spider", "bat", "leader_bats"], enemiesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
 };
 
 // whether an object is an enemy with a number setting
@@ -120,7 +125,7 @@ export interface LevelObject {
   speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
   reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping the other way (true, or none)
-  count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT without one)
+  count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
 }
 
 // whether an object is an enemy that moves along a path

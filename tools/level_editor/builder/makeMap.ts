@@ -129,9 +129,12 @@ function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffe
 // sunset vista's, its bats flying back along the game's x
 const OWN_PATH_ENEMIES: EnemyType[] = ["fish", "bat", "leader_bats"];
 
+// the enemies whose init flag a is their count: the bat roosts, how many bats they send
+const COUNT_IN_FLAG_A: EnemyType[] = ["bat", "leader_bats"];
+
 // an enemy on its own level's path: a bat roost's init flag a is how many bats it sends
 function ownPathEnemyEntity(entity: Buffer, enemy: LevelObject): Buffer {
-  if (enemy.enemy === "bat") {
+  if (COUNT_IN_FLAG_A.includes(enemy.enemy!)) {
     return withInitFlagA(entity, numberSetting(enemy, "count"));
   }
   return entity;
