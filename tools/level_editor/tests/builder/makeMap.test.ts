@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT, leaderBatSpots } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readWords } from "../../builder/bytes";
@@ -587,6 +587,18 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const offsets = leaders.map((leader) => placedAt(leader).map((value, axis) => value - placedAt(roost)[axis]));
       expect(offsets).toEqual([[-200, -1700, -400], [-6200, -1700, -400]]);
       expect(new Set([roost, ...leaders].map(({ item }) => entityId(item))).size).toBe(3);
+    });
+
+    test("a leader bats roost's leaders hover at its path's nodes: the far one moved a metre up is 256 higher at scale 256", () => {
+      const [near, far] = leaderBatSpots([0, 0, 0], 0, 0, 256);
+      const path = [near, [far[0], far[1], far[2] + 1]] as Vec3[];
+      const built = make(MAP_OBJ, { scale: 256, objects: [bat({ enemy: "leader_bats", path })], readOtherLevel });
+      const items = zonesOf(built).flatMap((zone) => zoneEntities(zone).map((item) => ({ item, origin: zoneOrigin(zone) })));
+      const placedAt = ({ item, origin }: (typeof items)[number]) => entityPosition(item).map((value, axis) => value + origin[axis]);
+      const roost = items.find(({ item }) => entityType(item).join() === ENEMY_ENTITIES.leader_bats.join())!;
+      const leaders = items.filter(({ item }) => entityType(item).join() === LEADER_BAT.join());
+      const offsets = leaders.map((leader) => placedAt(leader).map((value, axis) => value - placedAt(roost)[axis]));
+      expect(offsets).toEqual([[-200, -1700, -400], [-6200, -1700 + 256, -400]]);
     });
 
     test("the editor draws a leader bats roost's flight as sunset vista's (LEADER_BATS_FLIGHT, back along the game's x and up)", () => {
