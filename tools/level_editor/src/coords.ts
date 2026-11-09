@@ -77,6 +77,20 @@ export function stonePath(at: Vec3, raise: number, turn: number, scale: number):
   });
 }
 
+// up the creek's fish's leap (its first fish's path), in game units from its
+// spot: across the map (as a stone rolls) and up. it leaps out along it and back
+export const FISH_LEAP: [number, number][] = [
+  [0, 0], [0, 36], [0, 208], [0, 604], [228, 1404], [460, 1932], [688, 2172],
+  [916, 2172], [1144, 1932], [1372, 1400], [1600, 600], [1600, 224], [1600, 44], [1600, 0],
+];
+
+// each point of a fish's leap (in blender), for a fish at at, raised by raise
+export function fishLeap(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
+  const [rollX, rollY] = stoneRolling(turn);
+  return FISH_LEAP.map(([across, up]) =>
+    [at[0] + (rollX * across) / scale, at[1] + (rollY * across) / scale, at[2] + raise + up / scale] as Vec3);
+}
+
 // how far a crab walks back and forth, in game units: n. sanity beach's first
 // crab's path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const CRAB_WALK = 1600;
