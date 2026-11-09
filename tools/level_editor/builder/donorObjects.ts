@@ -24,6 +24,9 @@ const UP_THE_CREEK: DonorLevel = { lid: 0x18, name: "Up the Creek", file: "s0000
 // bats, so it brings two texture pages where temple ruins' brings three
 const SUNSET_VISTA: DonorLevel = { lid: 0x23, name: "Sunset Vista", file: "s0000023" };
 const THE_LOST_CITY: DonorLevel = { lid: 0x20, name: "The Lost City", file: "s0000020" };
+// its lab assistants' code differs from the lab's, whose walkers spawn an object
+// (by exec slot 9) that crashes a custom level
+const STORMY_ASCENT: DonorLevel = { lid: 0x22, name: "Stormy Ascent", file: "s0000022" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -41,6 +44,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   leader_bats: SUNSET_VISTA,
   lizard: THE_LOST_CITY,
   red_lizard: THE_LOST_CITY,
+  lab_assistant: STORMY_ASCENT,
 };
 
 export interface DonorObject {
