@@ -91,8 +91,8 @@ describe("a path enemy's default path", () => {
   });
 
   test("a flying camera's rises from its spot", () => {
-    // 6400 game units, castle machinery's and heavy machinery's flying cameras' paths, most often
-    expect(defaultPath("flying_camera", 0, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 8], [0, 0, 16]]);
+    // 1200 game units, short of the game's own (6400 most often), so it stays in sight, as camera robots' and birds' do
+    expect(defaultPath("flying_camera", 0, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 1.5], [0, 0, 3]]);
   });
 
   test("turns with the level", () => {

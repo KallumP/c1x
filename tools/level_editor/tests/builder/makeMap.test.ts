@@ -903,11 +903,11 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(enemies(zone)[0].type).toEqual([9, 6]);
     });
 
-    test("by default a flying camera floats up 6400 (16 m at scale 400) from its spot, in steps of 400", () => {
+    test("by default a flying camera floats up 1200 (3 m at scale 400) from its spot, in steps of 400", () => {
       const [placed] = enemies(build([enemy("flying_camera")]).zone);
       placed.path.forEach(([x, , z]) => expectNear([x, z], [SPOT_X, SPOT_Z], 8));
       expectNear(placed.path[0][1], FLOOR_Y, 8);
-      expectNear(placed.path.at(-1)![1], FLOOR_Y + 6400, 8);
+      expectNear(placed.path.at(-1)![1], FLOOR_Y + 1200, 8);
       stepLengths(placed.path).forEach((step) => expectNear(step, 400, 8));
     });
 
