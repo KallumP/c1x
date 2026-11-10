@@ -90,6 +90,11 @@ describe("a path enemy's default path", () => {
     expect(defaultPath("blob", 0, 400).map(noMinusZero)).toEqual([[0, 6.5, 0], [0, 0, 0], [0, -6.5, 0]]);
   });
 
+  test("a flying camera's rises from its spot", () => {
+    // 6400 game units, castle machinery's and heavy machinery's flying cameras' paths, most often
+    expect(defaultPath("flying_camera", 0, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 8], [0, 0, 16]]);
+  });
+
   test("turns with the level", () => {
     expect(defaultPath("crab", 90, 400).map(noMinusZero)).toEqual([[0, 2, 0], [0, 0, 0], [0, -2, 0]]);
   });

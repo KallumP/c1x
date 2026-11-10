@@ -56,6 +56,11 @@ describe("crabs' and turtles' paths that leave the floor or run through a wall",
     expect(strayingPaths([bird], 0, SCALE, floor)).toEqual(new Set());
   });
 
+  test("a flying camera's path rising off the floor is fine: it hovers", () => {
+    const camera: LevelObject = { ...newObject("flying_camera", [0, 0, 0]), path: [[0, 0, 0], [0, 0, 3]] };
+    expect(strayingPaths([camera], 0, SCALE, floor)).toEqual(new Set());
+  });
+
   test("other objects aren't checked here", () => {
     expect(strayingPaths([newObject("plant", [9, 0, 0]), newObject("basic", [9, 0, 0])], 0, SCALE, floor)).toEqual(new Set());
   });
