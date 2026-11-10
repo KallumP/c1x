@@ -16,6 +16,7 @@
 
 #include "pc/init.h"
 #include "pc/time.h"
+#include "pc/tween.h"
 #include "pc/gfx/gl.h"
 #include "pc/gfx/soft.h" // for ext only
 
@@ -189,6 +190,7 @@ void CoreLoop(lid_t lid) {
         checkpoint_id = -1;
       }
       NSInit(&ns, lid);
+      TweenForgetAll(); /* pc: nothing in the new level is tweened from the old one */
       CoreObjectsCreate();
       if (bonus_return2) {
         next_lid = -2;
@@ -210,6 +212,7 @@ void CoreLoop(lid_t lid) {
       CamUpdate();
     }
     GfxUpdateMatrices();
+    TweenRecordCamera((tween_pose*)&cam); /* pc: drawn at, to tween from next game frame */
     ot = context.ot;
     header = (zone_header*)cur_zone->items[0];
     terrain_reach = REACH_UNKNOWN; /* pc: until the terrain is drawn, below */

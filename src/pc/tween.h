@@ -97,11 +97,14 @@ typedef struct {
   vec scale;
 } tween_pose;
 
-#define TWEEN_SLOTS 128 /* poses kept, one per object (GOOL_OBJECT_COUNT, plus the player) */
+#define TWEEN_SLOTS       128 /* poses kept, one per object (GOOL_OBJECT_COUNT, plus the player) ... */
+#define TWEEN_CAMERA_SLOT 127 /* ... and the camera's */
 
 extern void TweenForgetAll();
 extern void TweenForget(int slot);
 extern void TweenRecord(int slot, const tween_pose *pose);
 extern void TweenPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out);
+extern void TweenRecordCamera(const tween_pose *drawn);
+extern void TweenCameraAt(int32_t alpha, tween_pose *out);
 
 #endif /* _PC_TWEEN_H_ */

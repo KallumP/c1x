@@ -3,6 +3,9 @@
 /* each object's pose in the last game frame, by slot */
 static tween_pose last_poses[TWEEN_SLOTS];
 static int has_last_pose[TWEEN_SLOTS];
+/* the camera pose the current game frame was drawn at */
+static tween_pose drawn_camera;
+static int has_drawn_camera = 0;
 
 static int IsSlot(int slot) {
   return slot >= 0 && slot < TWEEN_SLOTS;
@@ -13,6 +16,7 @@ void TweenForgetAll() {
 
   for (i = 0; i < TWEEN_SLOTS; i++)
     has_last_pose[i] = 0;
+  has_drawn_camera = 0;
 }
 
 /* forget the slot's pose, as a new object has it */
@@ -56,4 +60,18 @@ void TweenPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out
   TweenLerpVec(&last->trans, &cur.trans, alpha, &out->trans);
   TweenLerpAng(&last->rot, &cur.rot, alpha, &out->rot);
   TweenScaleVec(&last->scale, &cur.scale, alpha, &out->scale);
+}
+
+
+/* keep the pose the camera was drawn at this game frame; the last one is tweened from */
+void TweenRecordCamera(const tween_pose *drawn) {
+  if (has_drawn_camera)
+    TweenRecord(TWEEN_CAMERA_SLOT, &drawn_camera);
+  drawn_camera = *drawn;
+  has_drawn_camera = 1;
+}
+
+/* the camera pose to draw at, alpha of the way from the last game frame's to this one's */
+void TweenCameraAt(int32_t alpha, tween_pose *out) {
+  TweenPoseAt(TWEEN_CAMERA_SLOT, &drawn_camera, alpha, out);
 }
