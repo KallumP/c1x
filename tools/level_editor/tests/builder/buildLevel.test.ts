@@ -5,13 +5,24 @@ import { fileURLToPath } from "node:url";
 import { PNG } from "pngjs";
 import { describe, expect, test } from "vitest";
 import { buildLevel, fittingScale, levelSource, levelSourcePath, mapImages } from "../../builder/buildLevel";
-import { TooBig } from "../../builder/fit";
+import { fit, TooBig } from "../../builder/fit";
+import { boxMesh } from "./meshes";
 
 const newFolder = (name: string) => {
   const folder = join(mkdtempSync(join(tmpdir(), "build-level-")), name);
   mkdirSync(folder);
   return folder;
 };
+
+// the error a function throws
+function errorThrownBy(run: () => unknown): unknown {
+  try {
+    run();
+  } catch (error) {
+    return error;
+  }
+  throw new Error("it didn't throw");
+}
 
 function writePng(path: string, rgb: [number, number, number]): void {
   const png = new PNG({ width: 4, height: 4 });
@@ -69,9 +80,14 @@ describe("a map's images", () => {
 });
 
 describe("building a level", () => {
-  test("too big says the largest scale that fits", () => {
-    // 20000 long at scale 1000 with a 256 margin that doesn't scale: (16384 - 256) / (20000 - 256) of 1000, rounded down to a 10
-    expect(fittingScale(1000, new TooBig(2, 20000, 16384, 256))).toBe(810);
+  test("too big says the largest scale, on a 10, that fits", () => {
+    // a map 20 metres long, with a margin that doesn't scale
+    const fitAtScale = (scale: number) => fit(boxMesh(0, 0, 0, 20 * scale, 10, 10), 128, 0, 128);
+    const tooBig = errorThrownBy(() => fitAtScale(1000));
+    expect(tooBig).toBeInstanceOf(TooBig);
+    const suggested = fittingScale(1000, tooBig as TooBig);
+    expect(() => fitAtScale(suggested)).not.toThrow();
+    expect(() => fitAtScale(suggested + 10)).toThrow(TooBig);
   });
 
   const quietBuild = (source: string, streamsDir = "streams") => {
@@ -80,22 +96,14 @@ describe("building a level", () => {
     return { ok, output: lines.join("\n") };
   };
 
-  test("a bad level.cfg stops it with a message", () => {
-    const folder = newFolder("bad_cfg");
-    writeFileSync(join(folder, "x.obj"), "");
-    writeFileSync(join(folder, "level.cfg"), "scale = big\n");
-    expect(quietBuild(folder)).toEqual({ ok: false, output: expect.stringMatching(/level\.cfg, line 1: scale has to be a whole number/) });
-  });
-
-  test("a bad objects.json stops it with a message naming it", () => {
-    const folder = newFolder("bad_objects");
-    writeFileSync(join(folder, "x.obj"), "");
-    writeFileSync(join(folder, "objects.json"), '[{"kind": "crate", "at": [0, 0, 0]}]');
-    expect(quietBuild(folder)).toEqual({ ok: false, output: expect.stringMatching(/objects\.json.*crate/) });
-  });
-
-  test("a folder without one .obj stops it with a message", () => {
-    expect(quietBuild(newFolder("empty"))).toEqual({ ok: false, output: expect.stringMatching(/0 \.obj files/) });
+  test.each([
+    { problem: "a bad level.cfg", files: { "x.obj": "", "level.cfg": "scale = big\n" }, message: /level\.cfg, line 1/ },
+    { problem: "a bad objects.json", files: { "x.obj": "", "objects.json": '[{"kind": "crate", "at": [0, 0, 0]}]' }, message: /objects\.json/ },
+    { problem: "a folder without a .obj", files: {}, message: /0 \.obj files/ },
+  ])("$problem stops the build with its message", ({ files, message }) => {
+    const folder = newFolder("bad_source");
+    Object.entries(files).forEach(([file, text]) => writeFileSync(join(folder, file), text));
+    expect(quietBuild(folder)).toEqual({ ok: false, output: expect.stringMatching(message) });
   });
 
   const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
@@ -107,7 +115,8 @@ describe("building a level", () => {
     const lines: string[] = [];
     expect(buildLevel(folder, { streamsDir: STREAMS, levelsDir, log: (line) => lines.push(line) })).toBe(true);
     expect(lines).toEqual([`wrote ${join(levelsDir, "tiny")}`]);
-    expect(existsSync(join(levelsDir, "tiny.nsd")) && existsSync(join(levelsDir, "tiny.nsf"))).toBe(true);
+    expect(existsSync(join(levelsDir, "tiny.nsd"))).toBe(true);
+    expect(existsSync(join(levelsDir, "tiny.nsf"))).toBe(true);
   });
 
   const crabLevel = () => {

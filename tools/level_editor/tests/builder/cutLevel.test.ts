@@ -32,8 +32,10 @@ describe("cutting a level down", () => {
     expect(references(willc, new Set([MODEL, ZONE, BEACH]))).toEqual(new Set([MODEL, ZONE]));
   });
 
-  test("it keeps what the kept code uses, and drops the rest", () => {
-    expect(eidsIn(cutLevel(testLevel(), [WILLC]))).toEqual(new Set([WILLC, MODEL, TEX]));
+  test("it keeps only what the kept code uses, packed into as few pages as hold it", () => {
+    const cut = cutLevel(testLevel(), [WILLC]);
+    expect(eidsIn(cut)).toEqual(new Set([WILLC, MODEL, TEX]));
+    expect(cut.pages.length).toBe(2); // one entry page, one texture page
   });
 
   test("the exec map keeps only the kept code", () => {
@@ -44,10 +46,6 @@ describe("cutting a level down", () => {
     const level = testLevel();
     cutLevel(level, [WILLC]);
     expect(level.nsd.ldat.execMap.slice(0, 2)).toEqual([WILLC, BEACH]);
-  });
-
-  test("the kept entries are packed into fewer pages", () => {
-    expect(cutLevel(testLevel(), [WILLC]).pages.length).toBe(2); // one entry page, one texture page
   });
 });
 

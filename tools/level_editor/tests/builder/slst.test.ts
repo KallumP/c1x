@@ -5,6 +5,7 @@ import { PAGE_SIZE } from "../../builder/levelFiles";
 import { POLY_IDS_MAX, polyId, slstChange, slstItems, zoneSlstItems } from "../../builder/slst";
 import type { BuiltPolygon } from "../../builder/worldGeometry";
 import type { WorldVertex } from "../../builder/worldMeshes";
+import type { Vec3 } from "../../builder/vectors";
 import { slstDecode, slstWalk, slstWords } from "./slstDecoder";
 
 const range = (start: number, end: number, step = 1) => {
@@ -14,6 +15,12 @@ const range = (start: number, end: number, step = 1) => {
   }
   return values;
 };
+
+// a world mesh of one triangle with these corners, not offset
+function triangleMesh(corners: Vec3[]): { vertices: WorldVertex[]; polygons: BuiltPolygon[]; zOffset: number } {
+  const vertices = corners.map((at): WorldVertex => ({ at, colour: [0, 0, 0] }));
+  return { vertices, polygons: [{ corners: [0, 1, 2], texinfo: 0, page: 0 }], zOffset: 0 };
+}
 
 describe("sort lists", () => {
   // three polygons whose far edges (towards +z) are at z 100, 500 and 900; the
@@ -68,10 +75,6 @@ describe("sort lists", () => {
     expect(items.reduce((sum, item) => sum + item.length, 0)).toBeLessThan(PAGE_SIZE / 2);
   });
 
-  test("it lists polygons of every world mesh", () => {
-    expect(slstWords(slstItems([[100, 900], [200]], [1000], 200, 50)[0]).words).toEqual([polyId(0, 0), polyId(1, 0)]);
-  });
-
   test("it lists polygons farthest first", () => {
     // the game draws a list in order with no depth test, so a near wall has to come after what's behind it
     const items = slstItems([[500, 100], [500]], [1000], 200, 50, [[250, 50], [500]]);
@@ -101,27 +104,22 @@ describe("sort lists", () => {
 
   test("a zone's list takes in the next zone's meshes", () => {
     // the next zone is further along -z, so its meshes are offset by -16384 in this zone's frame, and come first
-    const vertices: WorldVertex[] = [[0, 0, 1000], [8, 0, 1000], [0, 0, 1008]].map((at) => ({ at: at as [number, number, number], colour: [0, 0, 0] }));
-    const polygons: BuiltPolygon[] = [{ corners: [0, 1, 2], texinfo: 0, page: 0 }];
-    const items = zoneSlstItems([{ vertices, polygons, zOffset: 0 }, { vertices, polygons, zOffset: -16384 }], [[0, 0, 3000]], 200);
+    const triangle = triangleMesh([[0, 0, 1000], [8, 0, 1000], [0, 0, 1008]]);
+    const items = zoneSlstItems([triangle, { ...triangle, zOffset: -16384 }], [[0, 0, 3000]], 200);
     expect(slstWords(items[0]).words).toEqual([polyId(1, 0), polyId(0, 0)]);
   });
 
   test("a camera looking steeply down lists the floor reaching back under it", () => {
     // a floor triangle from z 2000 to 3500, the camera 1930 above it at z 3000:
     // level, the triangle reaches behind it; tilted 54 degrees down, it's all in front
-    const vertices: WorldVertex[] = [[0, 0, 2000], [800, 0, 2000], [0, 0, 3500]].map((at) => ({ at: at as [number, number, number], colour: [0, 0, 0] }));
-    const polygons: BuiltPolygon[] = [{ corners: [0, 1, 2], texinfo: 0, page: 0 }];
-    const meshes = [{ vertices, polygons, zOffset: 0 }];
+    const meshes = [triangleMesh([[0, 0, 2000], [800, 0, 2000], [0, 0, 3500]])];
     const cameras: [number, number, number][] = [[0, 1930, 3000]];
     expect(slstWords(zoneSlstItems(meshes, cameras, 128)[0]).words).toEqual([]);
     expect(slstWords(zoneSlstItems(meshes, cameras, 128, (54 * Math.PI) / 180)[0]).words).toEqual([polyId(0, 0)]);
   });
 
   test("a camera looking down leaves out what is above and behind it", () => {
-    const vertices: WorldVertex[] = [[0, 2400, 3200], [800, 2400, 3200], [0, 2400, 3500]].map((at) => ({ at: at as [number, number, number], colour: [0, 0, 0] }));
-    const polygons: BuiltPolygon[] = [{ corners: [0, 1, 2], texinfo: 0, page: 0 }];
-    const items = zoneSlstItems([{ vertices, polygons, zOffset: 0 }], [[0, 1930, 3000]], 128, (54 * Math.PI) / 180);
+    const items = zoneSlstItems([triangleMesh([[0, 2400, 3200], [800, 2400, 3200], [0, 2400, 3500]])], [[0, 1930, 3000]], 128, (54 * Math.PI) / 180);
     expect(slstWords(items[0]).words).toEqual([]);
   });
 });

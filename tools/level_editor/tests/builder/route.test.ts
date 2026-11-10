@@ -80,7 +80,7 @@ describe("crash's spawn", () => {
 });
 
 describe("where the camera is from crash", () => {
-  test("as it always was without camera settings: CAM_LEAD behind him and CAM_OFFSET's height above", () => {
+  test("default camera settings keep the standard follow distance and height", () => {
     expect(cameraOffsets(DEFAULT_CAMERA)).toEqual({ lead: CAM_LEAD, height: CAM_OFFSET[1] });
   });
 

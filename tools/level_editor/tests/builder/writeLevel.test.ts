@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { stringToEid } from "../../builder/entryIds";
 import { PAGE_SIZE, PAGE_SOUNDS, readEntry, soundPage, readLevelFiles, readNsd, readPages, type Entry, type Level, type Nsd } from "../../builder/levelFiles";
-import { entryBytes, entryPageBytes, writeLevel } from "../../builder/levelWriting";
+import { entryBytes, entryPageBytes, pgid, writeLevel } from "../../builder/levelWriting";
 import { entryData, nsdData, pageData, texturePageData } from "./levelFiles";
 
 const WILLC = stringToEid("WillC");
@@ -48,9 +48,9 @@ describe("writing a level", () => {
 
   test("its page table finds every entry by bucket", () => {
     const { nsd } = writtenAndReadBack(smallLevel());
-    expect(probe(nsd, WILLC)).toBe((0 << 1) | 1);
-    expect(probe(nsd, ZONE)).toBe((0 << 1) | 1);
-    expect(probe(nsd, TPAG)).toBe((1 << 1) | 1);
+    expect(probe(nsd, WILLC)).toBe(pgid(0));
+    expect(probe(nsd, ZONE)).toBe(pgid(0));
+    expect(probe(nsd, TPAG)).toBe(pgid(1));
   });
 
   test("a sound page made from entries is written as a sound page holding them", () => {
@@ -60,7 +60,7 @@ describe("writing a level", () => {
     const back = writtenAndReadBack(level);
     expect(back.pages[2].type).toBe(PAGE_SOUNDS);
     expect(contents(back)[2]).toEqual([[sound.eid, sound.type, sound.items]]);
-    expect(probe(back.nsd, sound.eid)).toBe((2 << 1) | 1);
+    expect(probe(back.nsd, sound.eid)).toBe(pgid(2));
   });
 
   test("too many entries for a page is an error", () => {
@@ -84,6 +84,7 @@ describe("sort lists' identical items", () => {
     const offsets = Array.from({ length: 5 }, (_, index) => data.readUInt32LE(16 + 4 * index));
     items.forEach((item, index) => expect(data.subarray(offsets[index], offsets[index] + item.length).equals(item)).toBe(true));
     expect(offsets[4]).toBe(data.length);
+    expect(readEntry(data, 0).items).toEqual(items);
   });
 
   test("other entries keep every item, empty ones too", () => {
@@ -92,10 +93,5 @@ describe("sort lists' identical items", () => {
     const data = entryBytes({ eid: stringToEid("TestZ"), type: 7, items });
     expect(data.length).toBe(16 + 4 * 4 + 2 * A.length);
     expect(readEntry(data, 0).items).toEqual(items);
-  });
-
-  test("read back", () => {
-    const items = [A, B, A, A, B];
-    expect(readEntry(entryBytes(sortList(items)), 0).items).toEqual(items);
   });
 });

@@ -62,7 +62,7 @@ describe("fitting a map into a zone", () => {
     expect(() => fit(boxMesh(0, 0, 0, 20000, 10, 40000), 128, 0, 128, true)).toThrow(TooBig);
   });
 
-  test("a short route is one zone", () => {
+  test("a route shorter than a zone fits like a plain map", () => {
     expect(fit(boxMesh(0, 0, 0, 1000, 140, 5000), 128, 0, 0, true).size).toEqual([1024, 256, 8192]);
   });
 

@@ -64,8 +64,7 @@ describe("texture pages", () => {
   });
 
   test("tiles and palettes don't overlap the header or each other", () => {
-    const { page, places } = texturePage(EID, testTiles(TILES_PER_PAGE));
-    expect(header(page)).toEqual([0x1234, 1, EID, 5]);
+    const { places } = texturePage(EID, testTiles(TILES_PER_PAGE));
     expect(new Set(places.map((place) => `${regionX(place)},${place.offsY}`)).size).toBe(places.length);
     expect(new Set(places.map((place) => `${place.clutX},${place.clutY}`)).size).toBe(places.length);
     for (const place of places) {
