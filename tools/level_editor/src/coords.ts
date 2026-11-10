@@ -266,6 +266,11 @@ export const RED_LIZARD_HOPS = 4800;
 // crash runs in that side-on level (its default path, src/enemyPaths.ts)
 export const ROBOT_DOG_WALK = 1600;
 
+// how far a barrel roller's barrels roll, in game units: toxic waste's first
+// barrel roller's path, from him back along the walkway towards crash's start,
+// a straight line there (its default path, src/enemyPaths.ts)
+export const BARREL_ROLL = 4800;
+
 // how far a monkey walks back and forth, in game units: the great gate's monkeys'
 // path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const MONKEY_WALK = 2400;
