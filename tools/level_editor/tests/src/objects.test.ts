@@ -140,6 +140,7 @@ describe("enemies", () => {
       {"kind": "enemy", "type": "red_lizard", "at": [9, 100, 0]},
       {"kind": "enemy", "type": "robot_dog", "at": [12, 130, 0]},
       {"kind": "enemy", "type": "barrel_roller", "at": [13, 140, 0]},
+      {"kind": "enemy", "type": "gunman", "at": [14, 150, 0]},
       {"kind": "enemy", "type": "lab_assistant", "at": [10, 110, 0]},
       {"kind": "enemy", "type": "snake", "at": [11, 120, 0]}
     ]`);
@@ -156,13 +157,14 @@ describe("enemies", () => {
       { kind: "enemy", enemy: "red_lizard", at: [9, 100, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "robot_dog", at: [12, 130, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "barrel_roller", at: [13, 140, 0], raise: 0, stack: 1 },
+      { kind: "enemy", enemy: "gunman", at: [14, 150, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "lab_assistant", at: [10, 110, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "snake", at: [11, 120, 0], raise: 0, stack: 1 },
     ]);
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, snake, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, robot_dog, barrel_roller, badger, walking_spider, bat, leader_bats, rolling_stone)"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, snake, gunman, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, robot_dog, barrel_roller, badger, walking_spider, bat, leader_bats, rolling_stone)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, robot dogs and barrel rollers do)"],
   ])("refuses %s", (text, message) => {
@@ -226,6 +228,7 @@ describe("enemy paths", () => {
     ["bat", true, false],
     ["lab_assistant", true, false],
     ["fish", false, false],
+    ["gunman", false, false],
   ] as const)("a %s has nodes: %s, walks a path: %s", (enemy, nodes, path) => {
     expect(hasNodes(enemyObject(enemy))).toBe(nodes);
     expect(hasPath(enemyObject(enemy))).toBe(path);
