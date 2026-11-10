@@ -59,6 +59,11 @@ describe("a path enemy's default path", () => {
     expect(defaultPath("robot_dog", 0, 400).map(noMinusZero)).toEqual([[0, -2, 0], [0, 0, 0], [0, 2, 0]]);
   });
 
+  test("a barrel roller's runs from him back towards the spawn", () => {
+    // 4800 game units, toxic waste's first barrel roller's barrels' path, which he stands at the start of
+    expect(defaultPath("barrel_roller", 0, 400).map(noMinusZero)).toEqual([[0, 6, 0], [0, 0, 0], [0, -6, 0]]);
+  });
+
   test("turns with the level", () => {
     expect(defaultPath("crab", 90, 400).map(noMinusZero)).toEqual([[0, 2, 0], [0, 0, 0], [0, -2, 0]]);
   });
