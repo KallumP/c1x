@@ -304,6 +304,68 @@ function withCappedModel(object: DonorObject, [model, animation]: [string, strin
   return { ...object, entries: object.entries.map((entry) => (entry === modelEntry ? capped : entry)) };
 }
 
+// a branch (BRA) from instruction from to instruction to, which goes up to 512 either way
+function branch(from: number, to: number): number {
+  const BRA = 0x82094000;
+  return (BRA | ((to - (from + 1)) & 0x3ff)) >>> 0;
+}
+
+// instructions added after the end of an enemy's code, for its patches to
+// branch out to: the code's length (which they need it to be) and the instructions
+interface CodeAddition {
+  after: number;
+  instructions: number[];
+}
+
+// the lost city's lizards (LizaC) leap and hop along their path's points, but
+// only ever set their x (the lost city's paths all run along x); their z keeps
+// within 1 m of a line where they started (obj[0x188]), drifting in the air
+// towards crash's. so they follow a custom level's path however it runs, each
+// frame of a green one's leap sets its z as it does its x and moves its line
+// there, and a red one's hop moves its line (it still drifts towards crash)
+const LIZARD_CODE_LENGTH = 0x20c;
+const GREEN_LEAP_SETS_X = 0x55;
+const RED_HOP_SETS_X = 0xa6;
+const GREEN_LEAP_Z = LIZARD_CODE_LENGTH;     // the instructions added for each, after the code's end
+const RED_HOP_Z = LIZARD_CODE_LENGTH + 9;
+const MOVE_TO_X = 0x11e1fe08;                // MOVE pop(), obj[0x80]: its x, as the code sets it
+
+const LIZARD_CODE_PATCHES: CodePatch[] = [
+  { at: GREEN_LEAP_SETS_X, was: MOVE_TO_X, now: branch(GREEN_LEAP_SETS_X, GREEN_LEAP_Z) },
+  { at: RED_HOP_SETS_X, was: MOVE_TO_X, now: branch(RED_HOP_SETS_X, RED_HOP_Z) },
+];
+
+// a leap's frame: start x, z at 0xc($fp), 0x10; its target point at 0x14 (x), 0x18, 0x1c (z); its frame at
+// 0x20 (in 256ths). a hop's has one more word first, so each is 4 on. x is start x + (target x - start x) ×
+// frame / ireg[0x34] (its frames); the same for z
+const LIZARD_CODE_ADDITION: CodeAddition = {
+  after: LIZARD_CODE_LENGTH,
+  instructions: [
+    MOVE_TO_X,  // a green lizard's leap: its x, as the code set it
+    0x01b04b07, // SUB 0x10($fp), 0x1c($fp): target z less start z
+    0x1500cb08, // SHA ireg[0x30], 0x20($fp): the leap's frame
+    0x02e1fe1f, // MULT pop(), pop()
+    0x0300de1f, // DIV ireg[0x34], pop(): over its frames
+    0x00e1fb04, // ADD pop(), 0x10($fp): from start z
+    0x11e1fe0a, // MOVE pop(), obj[0x88]: its z
+    0x11e0ae4a, // MOVE obj[0x88], obj[0x188]: the line its z keeps near
+    branch(GREEN_LEAP_Z + 8, GREEN_LEAP_SETS_X + 1),
+    MOVE_TO_X,  // a red lizard's hop: its x, as the code set it
+    0x01b05b08, // SUB 0x14($fp), 0x20($fp): target z less start z
+    0x1500cb09, // SHA ireg[0x30], 0x24($fp): the hop's frame
+    0x02e1fe1f, // MULT pop(), pop()
+    0x0300de1f, // DIV ireg[0x34], pop(): over its frames
+    0x00e1fb05, // ADD pop(), 0x14($fp): from start z
+    0x11e1fe4a, // MOVE pop(), obj[0x188]: the line its z keeps near
+    branch(RED_HOP_Z + 7, RED_HOP_SETS_X + 1),
+  ],
+};
+
+const ENEMY_CODE_ADDITIONS: Partial<Record<EnemyType, CodeAddition>> = {
+  lizard: LIZARD_CODE_ADDITION,
+  red_lizard: LIZARD_CODE_ADDITION,
+};
+
 // toxic waste's barrels (BaraC) stop flattening crash 5 points short of their
 // path's end, where they fall off the walkway's end there. a custom level's
 // trail ends on the floor, its points spaced out by its speed, so that left
@@ -325,7 +387,29 @@ const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = {
   fish: RIVER_CODE_PATCHES,
   lab_assistant: LAB_ASSISTANT_CODE_PATCHES,
   gunman: GUNMAN_CODE_PATCHES,
+  lizard: LIZARD_CODE_PATCHES,
+  red_lizard: LIZARD_CODE_PATCHES,
 };
+
+// instructions with an addition after their end; an error if they aren't as long as it needs
+function withAddedInstructions(type: EnemyType, instructions: Buffer, addition: CodeAddition): Buffer {
+  if (instructions.length !== addition.after * 4) {
+    throw new Error(`the ${enemyName(type)}'s code isn't as long as expected, so it can't be changed to suit custom levels`);
+  }
+  const added = Buffer.alloc(addition.instructions.length * 4);
+  addition.instructions.forEach((instruction, index) => added.writeUInt32LE(instruction, index * 4));
+  return Buffer.concat([instructions, added]);
+}
+
+// instructions patched, with the enemy's addition (if it has one) after their end
+function changedInstructions(type: EnemyType, instructions: Buffer, patches: CodePatch[]): Buffer {
+  const patched = patchedInstructions(type, instructions, patches);
+  const addition = ENEMY_CODE_ADDITIONS[type];
+  if (!addition) {
+    return patched;
+  }
+  return withAddedInstructions(type, patched, addition);
+}
 
 // instructions with patches made; an error if one isn't what the patch expects
 function patchedInstructions(type: EnemyType, instructions: Buffer, patches: CodePatch[]): Buffer {
@@ -340,9 +424,9 @@ function patchedInstructions(type: EnemyType, instructions: Buffer, patches: Cod
 }
 
 // object with its code (code, an eid) patched, the rest as it was
-function withPatchedCode(type: EnemyType, object: DonorObject, code: number, patches: CodePatch[]): DonorObject {
+function withPatchedCode(object: DonorObject, code: number, change: (instructions: Buffer) => Buffer): DonorObject {
   const patchEntry = (entry: Entry): Entry => {
-    const items = entry.items.map((item, index) => (index === CODE_ITEM ? patchedInstructions(type, item, patches) : item));
+    const items = entry.items.map((item, index) => (index === CODE_ITEM ? change(item) : item));
     return { ...entry, items };
   };
   return { ...object, entries: object.entries.map((entry) => (entry.eid === code ? patchEntry(entry) : entry)) };
@@ -351,7 +435,19 @@ function withPatchedCode(type: EnemyType, object: DonorObject, code: number, pat
 // object with the code it spawns by exec slot patched, as level has it in those slots
 function withPatchedChildCode(type: EnemyType, object: DonorObject, level: Level): DonorObject {
   const childPatches = ENEMY_CHILD_CODE_PATCHES[type] ?? [];
-  return childPatches.reduce((patched, [slot, patches]) => withPatchedCode(type, patched, level.nsd.ldat.execMap[slot], patches), object);
+  return childPatches.reduce(
+    (patched, [slot, patches]) => withPatchedCode(patched, level.nsd.ldat.execMap[slot], (instructions) => patchedInstructions(type, instructions, patches)),
+    object,
+  );
+}
+
+// object with its own code (in slot, as level has it) patched and added to, if the enemy has patches
+function withPatchedOwnCode(type: EnemyType, object: DonorObject, level: Level, slot: number): DonorObject {
+  const patches = ENEMY_CODE_PATCHES[type];
+  if (!patches) {
+    return object;
+  }
+  return withPatchedCode(object, level.nsd.ldat.execMap[slot], (instructions) => changedInstructions(type, instructions, patches));
 }
 
 // a kind of enemy's object from the level it's taken from, its code changed to
@@ -361,9 +457,8 @@ function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
   const slot = moved?.donorSlot ?? ENEMY_ENTITIES[type][0];
   const leftOut = (ENEMY_UNUSED_ENTRIES[type] ?? []).map(stringToEid);
   const object = donorObject(level, slot, ENEMY_CHILD_SLOTS[type] ?? [], leftOut);
-  const patches = ENEMY_CODE_PATCHES[type];
-  const unpatched = withPatchedChildCode(type, (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, object), level);
-  const patched = patches ? withPatchedCode(type, unpatched, level.nsd.ldat.execMap[slot], patches) : unpatched;
+  const capped = (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, object);
+  const patched = withPatchedOwnCode(type, withPatchedChildCode(type, capped, level), level, slot);
   if (!moved) {
     return patched;
   }
