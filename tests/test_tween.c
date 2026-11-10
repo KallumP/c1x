@@ -82,18 +82,24 @@ UTEST(tween, at_30_fps_no_frames_are_drawn_between_game_frames) {
 }
 
 UTEST(tween, a_frame_is_due_once_its_slot_comes_round) {
-  ASSERT_FALSE(TweenFrameDue(10, 34, 0, 60)); /* slot 1 is at 17 */
-  ASSERT_TRUE(TweenFrameDue(17, 34, 0, 60));
-  ASSERT_FALSE(TweenFrameDue(20, 34, 1, 60)); /* slot 1 is drawn */
+  ASSERT_FALSE(TweenFrameDue(10, 34, 0, 60, 0)); /* slot 1 is at 17 */
+  ASSERT_TRUE(TweenFrameDue(17, 34, 0, 60, 0));
+  ASSERT_FALSE(TweenFrameDue(20, 34, 1, 60, 0)); /* slot 1 is drawn */
 }
 
 UTEST(tween, no_frame_is_due_at_the_game_frame_itself) {
-  ASSERT_FALSE(TweenFrameDue(34, 34, 1, 60));
-  ASSERT_FALSE(TweenFrameDue(40, 34, 0, 60));
+  ASSERT_FALSE(TweenFrameDue(34, 34, 1, 60, 0));
+  ASSERT_FALSE(TweenFrameDue(40, 34, 0, 60, 0));
+}
+
+UTEST(tween, no_frame_is_drawn_without_time_to_draw_it_before_the_game_frame) {
+  ASSERT_TRUE(TweenFrameDue(17, 34, 0, 60, 10));
+  ASSERT_FALSE(TweenFrameDue(17, 34, 0, 60, 17)); /* it would end when the game frame is due */
+  ASSERT_FALSE(TweenFrameDue(25, 34, 0, 120, 10));
 }
 
 UTEST(tween, a_longer_game_frame_has_more_frames_between) {
-  ASSERT_TRUE(TweenFrameDue(35, 51, 1, 60)); /* the intro's 3-vblank frames */
+  ASSERT_TRUE(TweenFrameDue(35, 51, 1, 60, 0)); /* the intro's 3-vblank frames */
 }
 
 UTEST(tween, lerp_ang_lerps_each_angle) {
