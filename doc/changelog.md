@@ -4,21 +4,8 @@
 
 ### Added
 
-- custom levels can have Up the Creek's river plants and fish
-- custom levels can have Temple Ruins' bats
-- custom levels can have Sunset Vista's leader bats
+- custom levels can have more enemies from the original game
 - custom levels can set how often bats come
-- custom levels can have The Lost City's green and red lizards
-- custom levels can have The Lost City's walking lizard
-- custom levels can have Stormy Ascent's lab assistant
-- custom levels can have Temple Ruins' cobras
-- custom levels can have Heavy Machinery's robot dogs
-- custom levels can have Toxic Waste's barrel roller
-- custom levels can have Castle Machinery's camera robots
-- custom levels can have Slippery Climb's vultures
-- custom levels can have The Lab's electric scientist
-- custom levels can have Cortex Power's gunman
-- custom levels can have The Lab's slime blobs
 - the acid cave cut from the original game, playable as a custom level, and going on past where it was cut off: a crystal geode, a mushroom grotto, a river gorge and a collapsed temple
 - custom level maps keep their UVs and vertex colours
 
@@ -26,10 +13,7 @@
 
 ### Added
 
-- custom levels can have Jungle Rollers' badgers
-- custom levels can have Road to Nowhere's warthog
-- custom levels can have Fumbling in the Dark's hanging and walking spiders
-- custom levels can have The Great Gate's monkey
+- custom levels can have more enemies from the original game
 - custom levels play Jungle Rollers' music
 - custom levels can set how far the camera is from Crash, and how far above him it looks down from
 
@@ -50,10 +34,8 @@
 
 ### Added
 
-- custom levels can have N. Sanity Beach's crab
-- custom levels can have N. Sanity Beach's turtle
+- custom levels can have more enemies from the original game
 - the level editor draws plants, crabs and turtles as themselves instead of a cone and a block
-- custom levels can have The Great Gate's native
 - enemies walk paths you set in the level editor, and the editor warns about a path that leaves the floor or runs through a wall
 
 ### Fixed
@@ -66,8 +48,7 @@
 
 ### Added
 
-- custom levels can have enemies, starting with Jungle Rollers' biting plant
-- custom levels can have Jungle Rollers' rolling stone
+- custom levels can have enemies
 
 ### Fixed
 
