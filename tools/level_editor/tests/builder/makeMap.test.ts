@@ -818,6 +818,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(soundEidsOf(level)).toEqual(expect.arrayContaining(["laf7A", "brl7A", "bnc7A"].map(stringToEid)));
     });
 
+    test("a barrel roller's barrels have their ends capped, as toxic waste's are open tubes", () => {
+      // their 20 side polygons, and a fan of 8 over each end's ring of 10 vertices
+      const { entries } = withBarrelRoller();
+      const polygonCount = (name: string) => entries.get(stringToEid(name))!.items[0].readUInt32LE(0);
+      expect([polygonCount("BaV7G"), polygonCount("BaD7G")]).toEqual([36, 36]);
+    });
+
     test("a level with a barrel roller doesn't have toxic waste's water code", () => {
       const { level, entries } = withBarrelRoller();
       expect(entries.has(stringToEid("WateC"))).toBe(false);
