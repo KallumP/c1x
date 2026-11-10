@@ -108,10 +108,16 @@ function delayFallback(enemy: EnemyType | undefined): number {
   return BAT_DELAY;
 }
 
+// how near crash comes, in metres, before a gunman starts shooting: cortex
+// power's gunmen's (6400 game units at the default scale)
+export const GUNMAN_RANGE = 16;
+export const RANGE_MIN = 2;
+export const RANGE_MAX = 40;
+
 // the enemy settings that are a number in a range, and for each: the enemies
 // that have it (named for messages), its range, whether it's whole, what it is
 // without one (left out of objects.json), and what it means
-export const NUMBER_SETTINGS = ["speed", "start", "count", "delay"] as const;
+export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range"] as const;
 export type NumberSetting = (typeof NUMBER_SETTINGS)[number];
 
 interface NumberSettingRule {
@@ -129,6 +135,7 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   start: { enemies: ["rolling_stone"], enemiesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
   count: { enemies: ["badger", "walking_spider", "bat", "leader_bats"], enemiesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
   delay: { enemies: ["bat", "leader_bats"], enemiesNamed: "bats and leader bats", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks" },
+  range: { enemies: ["gunman"], enemiesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },
 };
 
 // whether an object is an enemy with a number setting
@@ -151,6 +158,7 @@ export interface LevelObject {
   reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping the other way (true, or none)
   count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
   delay?: number;       // the seconds between a bat roost's flocks (BAT_DELAY, LEADER_BATS_DELAY without one)
+  range?: number;       // how near crash comes, in metres, before a gunman shoots (GUNMAN_RANGE without one)
 }
 
 // whether an object is an enemy that moves along a path
@@ -184,7 +192,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
-const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay"];
+const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
