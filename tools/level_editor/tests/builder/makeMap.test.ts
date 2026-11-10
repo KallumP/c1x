@@ -859,7 +859,23 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
 
     test("a gunman isn't linked to another object, as cortex power's first is (by its init flag a)", () => {
-      expect(initFlagsOf(build([enemy("gunman")]).zone, ENEMY_ENTITIES.gunman)).toEqual([0, 0, 0]);
+      expect(initFlagsOf(build([enemy("gunman")]).zone, ENEMY_ENTITIES.gunman)[0]).toBe(0);
+    });
+
+    test("a gunman's range goes into his init flag c, in game units", () => {
+      // 16 m without one; at scale 256
+      const rangeFlag = (gunman: LevelObject) => initFlagsOf(build([gunman]).zone, ENEMY_ENTITIES.gunman)[2];
+      expect(rangeFlag(enemy("gunman"))).toBe(4096);
+      expect(rangeFlag(enemy("gunman", { range: 30.5 }))).toBe(7808);
+    });
+
+    test("a gunman's range is at most what his init flag c holds", () => {
+      const placed = initFlagsOf(build([enemy("gunman", { range: 40 })], { scale: 1000 }).zone, ENEMY_ENTITIES.gunman);
+      expect(placed[2]).toBe(32767);
+    });
+
+    test("a level's gunman code is cortex power's as patched for custom levels", () => {
+      expect(builtCode([enemy("gunman")], "MafiC")).toEqual(patchedDonorCode("gunman", "MafiC"));
     });
   });
 

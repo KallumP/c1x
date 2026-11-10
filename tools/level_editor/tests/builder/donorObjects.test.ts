@@ -270,6 +270,31 @@ describe("river enemies' code from up the creek", () => {
   });
 });
 
+const GUNMAN = stringToEid("MafiC");
+const GUNMAN_SLOT = 12;
+const GUNMAN_NEAR = 0x1d; // where cortex power's gunman code checks crash is near enough to shoot at
+const SLT_RANGE_CONSTANT = 0x09031e1f; // SLT ireg[0xc4], pop(): nearer than its code's 16 m
+const SLT_FLAG_C = 0x09e19e1f; // SLT obj[0xc4], pop(): nearer than its init flag c
+
+// gunman code as cortex power's: other instructions (1s), with its check at its place
+function gunmanCode(check = SLT_RANGE_CONSTANT): number[] {
+  const code = Array<number>(0x30).fill(1);
+  code[GUNMAN_NEAR] = check;
+  return code;
+}
+
+describe("gunmen's code from cortex power", () => {
+  test("a gunman shoots once crash is nearer than his init flag c", () => {
+    const code = codeOf(enemyDonorObjects(new Map([["gunman", oneCodeLevel(0x3, GUNMAN_SLOT, GUNMAN, gunmanCode())]])), GUNMAN);
+    expect(code).toEqual(gunmanCode(SLT_FLAG_C));
+  });
+
+  test("a gunman's code that can't be patched is an error", () => {
+    const level = oneCodeLevel(0x3, GUNMAN_SLOT, GUNMAN, gunmanCode(1));
+    expect(() => enemyDonorObjects(new Map([["gunman", level]]))).toThrow(/gunman/);
+  });
+});
+
 const LAB_ASSISTANT = stringToEid("LabAC");
 const LAB_ASSISTANT_SLOT = 54;
 const THROW_SETUP = 0x202; // where stormy ascent's lab assistant code sets up its throw
