@@ -26,6 +26,7 @@ UTEST(settings, reset_gives_each_setting_its_default) {
       { "fix_model_draw_order",  s.fix_model_draw_order,  0 },
       { "replay_inputs",         s.replay_inputs,         0 },
       { "replay_speed",          s.replay_speed,          1 }, /* normal speed */
+      { "frame_rate",            s.frame_rate,            60 },
     };
 
     for (i = 0; i < sizeof(defaults)/sizeof(defaults[0]); i++) {
@@ -201,6 +202,22 @@ UTEST(settings, boot_level_rejects_names_that_could_leave_the_folder) {
   ASSERT_EQ(-1, SettingsParseLine("boot_level = a.nsd", &s));
   ASSERT_EQ(-1, SettingsParseLine("boot_level = abcdefghijabcdefghijabcdefghijabc", &s)); /* 33 */
   ASSERT_STREQ("", s.boot_level);
+}
+
+UTEST(settings, frame_rate_takes_30_to_240) {
+  pc_settings s;
+
+  SettingsReset(&s);
+  ASSERT_EQ(1, SettingsParseLine("frame_rate = 144", &s));
+  ASSERT_EQ(144u, s.frame_rate);
+  ASSERT_EQ(1, SettingsParseLine("frame_rate = 30", &s));
+  ASSERT_EQ(30u, s.frame_rate);
+  ASSERT_EQ(1, SettingsParseLine("frame_rate = 240", &s));
+  ASSERT_EQ(240u, s.frame_rate);
+  ASSERT_EQ(-1, SettingsParseLine("frame_rate = 29", &s));
+  ASSERT_EQ(-1, SettingsParseLine("frame_rate = 241", &s));
+  ASSERT_EQ(-1, SettingsParseLine("frame_rate = fast", &s));
+  ASSERT_EQ(240u, s.frame_rate);
 }
 
 UTEST(settings, replay_speed_takes_0_to_16) {
