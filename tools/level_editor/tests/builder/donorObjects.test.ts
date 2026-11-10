@@ -108,6 +108,16 @@ describe("moving an object's code to another exec slot", () => {
   test("moving code from a slot the object has none in is an error", () => {
     expect(() => withCodeMoved(crabWithHeader(), 7, MOVED_SLOT, MOVED)).toThrow(/slot 7/);
   });
+
+  test("its data naming it names its new name, the rest of its data as it was", () => {
+    // as the game's code does, at its data's start (the lab's PoRoC names itself twice): the level has nothing under its old name
+    const execMap: number[] = [];
+    execMap[CRAB_SLOT] = CRAB;
+    const pages = [entryPage([entry(CRAB, 11, [CRAB_HEADER, words(1, 2), words(CRAB, MODEL, 7, CRAB)]), entry(MODEL, 2, [text("model")])])];
+    const object = donorObject({ nsd: readNsd(nsdData([], 9, ZONE, execMap)), pages }, CRAB_SLOT);
+    const code = withCodeMoved(object, CRAB_SLOT, MOVED_SLOT, MOVED).entries.find(({ eid }) => eid === MOVED)!;
+    expect(code.items[2]).toEqual(words(MOVED, MODEL, 7, MOVED));
+  });
 });
 
 const WILLC = stringToEid("WillC");
