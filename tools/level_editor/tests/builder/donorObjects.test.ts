@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { donorObject, enemyDonorObjects, withDonorObjects, type DonorObject } from "../../builder/donorObjects";
+import { donorObject, enemyDonorObjects, withCodeMoved, withDonorObjects, type DonorObject } from "../../builder/donorObjects";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import { entriesById, entryPage, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, readNsd, soundPage, texturePage, type Entry, type Level } from "../../builder/levelFiles";
 import { nsdData, texturePageData, words } from "./levelFiles";
@@ -73,6 +73,39 @@ describe("an object from another level (its donor)", () => {
 
   test("a slot the donor has no code in is an error", () => {
     expect(() => donorObject(donorLevel(), 50)).toThrow(/slot 50/);
+  });
+});
+
+describe("moving an object's code to another exec slot", () => {
+  const MOVED_SLOT = 50;
+  const MOVED = stringToEid("CrbMC");
+  const CRAB_HEADER = words(CRAB_SLOT, 0x300);
+
+  // the crab's code with a header as the game's: its exec slot first
+  function crabWithHeader(): DonorObject {
+    const execMap: number[] = [];
+    execMap[CRAB_SLOT] = CRAB;
+    const pages = [entryPage([entry(CRAB, 11, [CRAB_HEADER, words(MODEL)]), entry(MODEL, 2, [text("model")])])];
+    return donorObject({ nsd: readNsd(nsdData([], 9, ZONE, execMap)), pages }, CRAB_SLOT);
+  }
+  const moved = () => withCodeMoved(crabWithHeader(), CRAB_SLOT, MOVED_SLOT, MOVED);
+  const movedCode = () => moved().entries.find(({ eid }) => eid === MOVED)!;
+
+  test("its code is in the new slot under its new name", () => {
+    expect(moved().code).toEqual([[MOVED_SLOT, MOVED]]);
+    expect(eids(moved().entries)).toEqual(new Set([MOVED, MODEL]));
+  });
+
+  test("its code's header names the new slot", () => {
+    expect(movedCode().items[0]).toEqual(words(MOVED_SLOT, 0x300));
+  });
+
+  test("the rest of its code is as it was", () => {
+    expect(movedCode().items[1]).toEqual(words(MODEL));
+  });
+
+  test("moving code from a slot the object has none in is an error", () => {
+    expect(() => withCodeMoved(crabWithHeader(), 7, MOVED_SLOT, MOVED)).toThrow(/slot 7/);
   });
 });
 
