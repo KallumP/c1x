@@ -53,7 +53,7 @@ const PATH_ENEMY_RUNS: Record<PathEnemy, PathEnemyRun> = {
   bird: { length: BIRD_SWOOP, way: rising, step: 150, fromSpot: true },        // slippery climb's birds' 9 points
   electric_scientist: { length: SCIENTIST_WALK, way: towardsSpawn, step: 400 }, // the lab's walking lab assistants' points
   blob: { length: BLOB_HOP, way: towardsSpawn, step: 400 },                    // the lab's blob spawners' points
-  flying_camera: { length: FLYING_CAMERA_RISE, way: rising, step: 400, fromSpot: true }, // castle and heavy machinery's flying cameras' 16 points
+  flying_camera: { length: FLYING_CAMERA_RISE, way: rising, step: 400, fromSpot: true }, // castle and heavy machinery's flying cameras' points
 };
 
 // how far apart a path's points are in the game for an enemy, at its own speed
