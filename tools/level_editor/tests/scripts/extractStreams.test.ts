@@ -1,7 +1,7 @@
-import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import { extractStreams } from "../../scripts/extractStreams";
 
 const SECTOR = 2048;
@@ -56,7 +56,14 @@ function rawSectors(sectors: Buffer[]): Buffer {
   }));
 }
 
-const folder = () => mkdtempSync(join(tmpdir(), "disc-"));
+// temporary folders, deleted after each test
+const madeFolders: string[] = [];
+function folder(): string {
+  const made = mkdtempSync(join(tmpdir(), "disc-"));
+  madeFolders.push(made);
+  return made;
+}
+afterEach(() => { madeFolders.splice(0).forEach((made) => rmSync(made, { recursive: true, force: true })); });
 
 // the files in a folder, none if it isn't there
 function filesIn(path: string): string[] {

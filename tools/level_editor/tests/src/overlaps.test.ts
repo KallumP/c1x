@@ -125,7 +125,9 @@ describe("overlappingBoxes on a big level", () => {
     overlappingBoxes(boxes, SCALE, triangles); // the level's triangles are worked out once, as they load
     const start = performance.now();
     const flagged = overlappingBoxes(boxes, SCALE, triangles);
-    expect(performance.now() - start).toBeLessThan(50);
+    // it takes a few milliseconds; testing every box against every triangle takes about two
+    // seconds. the limit is far above the first, so a busy machine doesn't fail it, and far below the second
+    expect(performance.now() - start).toBeLessThan(200);
     expect(flagged).toEqual(new Set());
   });
 
