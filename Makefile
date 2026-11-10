@@ -106,7 +106,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/pc/config.c
 
 OBJ = $(SRC:.c=.o)
-OUT = c1
+OUT = build/c1
 TEST_OUT = build/tests
 LAUNCHER_OUT = build/launcher
 

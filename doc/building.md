@@ -22,6 +22,10 @@ Ubuntu/Debian:
 - 64-bit: `sudo apt install build-essential gcc-multilib g++-multilib libstdc++6:i386 libgl1-mesa-dev:i386 libsdl2-dev:i386 libfluidsynth-dev:i386`
 - 32-bit: `sudo apt install build-essential libstdc++6 libgl1-mesa-dev libsdl2-dev libfluidsynth-dev`
 
+Fedora (64-bit): `sudo dnf install make gcc gcc-c++ glibc-devel.i686 libstdc++-devel.i686 mesa-libGL-devel.i686 sdl2-compat-devel.i686 fluidsynth-devel.i686`
+
+On Linux, `make` builds the game to `build/c1` and the launcher to `build/launcher`. Run `build/launcher` and click **Play** (see [Launcher](launcher.md)).
+
 Windows (MSYS2):
 
 1. Install [MSYS2](https://www.msys2.org/) (e.g. `winget install MSYS2.MSYS2`).

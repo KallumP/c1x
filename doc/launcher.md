@@ -14,7 +14,7 @@ Run `build/launcher.exe`, by double-clicking it or from any folder. It works on 
 
 ## Game
 
-**Play** saves the settings and controls (see below), then starts `build/c1.exe` from the project folder, so the game finds `streams/`, `settings.cfg` and `controls.cfg` there. The launcher stays open, and the game keeps running if you close it.
+**Play** saves the settings and controls (see below), then starts `build/c1.exe` (`build/c1` on Linux) from the project folder, so the game finds `streams/`, `settings.cfg` and `controls.cfg` there. The launcher stays open, and the game keeps running if you close it.
 
 If the game isn't built, the launcher says so instead of showing **Play**. Build it, then the button appears.
 
