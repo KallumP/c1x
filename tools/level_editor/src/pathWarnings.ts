@@ -1,7 +1,7 @@
 // crabs' and turtles' paths that leave the floor or run through a wall, which the
 // editor warns about: the game walks them along their paths regardless (seen in the game)
 import { enemyPath, pathLength, respaced } from "./enemyPaths";
-import { hasPath, type LevelObject, type Vec3 } from "./objects";
+import { hasPath, type EnemyType, type LevelObject, type Vec3 } from "./objects";
 import { floorBelow, reachesIntoLevel, type Triangle } from "./overlaps";
 
 const CHECK_STEP = 0.1;    // metres between the places checked along a path
@@ -18,22 +18,35 @@ function placesAlong(object: LevelObject, turn: number, scale: number): Vec3[] {
   return respaced(nodes, Math.max(2, Math.ceil(pathLength(nodes) / CHECK_STEP) + 1));
 }
 
-// whether a place along a path is in a wall, or has no floor close below it
-function strays(place: Vec3, triangles: Triangle[]): boolean {
+// the path enemies that hover along their paths, which needn't be over a floor
+const HOVERING: EnemyType[] = ["camera_robot"];
+
+// whether a place along a path is in a wall
+function inWall(place: Vec3, triangles: Triangle[]): boolean {
   const min = place.map((value) => value - CHECK_SIZE) as Vec3;
   const max = place.map((value) => value + CHECK_SIZE) as Vec3;
-  if (reachesIntoLevel(min, max, triangles)) {
-    return true;
-  }
+  return reachesIntoLevel(min, max, triangles);
+}
+
+// whether a place along a path has no floor close below it
+function offTheFloor(place: Vec3, triangles: Triangle[]): boolean {
   const drop = floorBelow(place, triangles);
   return drop === null || drop > WALK_HEIGHT + FLOOR_REACH;
+}
+
+// whether a place along an enemy's path is in a wall, or (unless it hovers) has no floor close below it
+function strays(object: LevelObject, place: Vec3, triangles: Triangle[]): boolean {
+  if (inWall(place, triangles)) {
+    return true;
+  }
+  return !HOVERING.includes(object.enemy!) && offTheFloor(place, triangles);
 }
 
 // the indices of the path enemies (crabs, turtles, natives) whose paths leave the floor or run through a wall
 export function strayingPaths(objects: LevelObject[], turn: number, scale: number, triangles: Triangle[]): Set<number> {
   const straying = new Set<number>();
   objects.forEach((object, index) => {
-    if (hasPath(object) && placesAlong(object, turn, scale).some((place) => strays(place, triangles))) {
+    if (hasPath(object) && placesAlong(object, turn, scale).some((place) => strays(object, place, triangles))) {
       straying.add(index);
     }
   });

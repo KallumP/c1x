@@ -41,6 +41,9 @@ export function cameraFacing(turn: number): Vec3 {
 // across the map, blender +x unturned, turning with the level as the camera does
 const ROLLINGS: Vec3[] = [[1, 0, 0], [0, -1, 0], [-1, 0, 0], [0, 1, 0]];
 
+// straight up (in blender), however the level is turned
+export const rising = (): Vec3 => [0, 0, 1];
+
 export function stoneRolling(turn: number): Vec3 {
   const quarters = Math.round(turn / 90);
   return ROLLINGS[((quarters % 4) + 4) % 4];
@@ -273,6 +276,10 @@ export const ROBOT_DOG_WALK = 1600;
 // barrel roller's path, from him back along the walkway towards crash's start,
 // a straight line there (its default path, src/enemyPaths.ts)
 export const BARREL_ROLL = 4800;
+
+// how far a camera robot rises and falls, in game units: castle machinery's camera
+// robots' paths, straight up and down its shafts (its default path, src/enemyPaths.ts)
+export const CAMERA_ROBOT_RISE = 1200;
 
 // how far a monkey walks back and forth, in game units: the great gate's monkeys'
 // path, a straight line along the game's x (its default path, src/enemyPaths.ts)
