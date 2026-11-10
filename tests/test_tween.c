@@ -60,6 +60,39 @@ UTEST(tween, lerp_vec_lerps_each_axis) {
   ASSERT_EQ(0, out.z);
 }
 
+UTEST(tween, at_60_fps_a_frame_is_drawn_half_way_through_a_game_frame) {
+  ASSERT_EQ(17, TweenSlotTicks(1, 60));
+  ASSERT_EQ(34, TweenSlotTicks(2, 60));
+}
+
+UTEST(tween, at_120_fps_three_frames_are_drawn_between_game_frames) {
+  ASSERT_EQ(0, TweenSlotsDue(7, 120));
+  ASSERT_EQ(1, TweenSlotsDue(9, 120));
+  ASSERT_EQ(3, TweenSlotsDue(26, 120));
+  ASSERT_TRUE(TweenSlotTicks(3, 120) < 34);
+  ASSERT_EQ(34, TweenSlotTicks(4, 120));
+}
+
+UTEST(tween, at_30_fps_no_frames_are_drawn_between_game_frames) {
+  ASSERT_EQ(0, TweenSlotsDue(33, 30));
+  ASSERT_EQ(34, TweenSlotTicks(1, 30));
+}
+
+UTEST(tween, a_frame_is_due_once_its_slot_comes_round) {
+  ASSERT_FALSE(TweenFrameDue(10, 34, 0, 60)); /* slot 1 is at 17 */
+  ASSERT_TRUE(TweenFrameDue(17, 34, 0, 60));
+  ASSERT_FALSE(TweenFrameDue(20, 34, 1, 60)); /* slot 1 is drawn */
+}
+
+UTEST(tween, no_frame_is_due_at_the_game_frame_itself) {
+  ASSERT_FALSE(TweenFrameDue(34, 34, 1, 60));
+  ASSERT_FALSE(TweenFrameDue(40, 34, 0, 60));
+}
+
+UTEST(tween, a_longer_game_frame_has_more_frames_between) {
+  ASSERT_TRUE(TweenFrameDue(35, 51, 1, 60)); /* the intro's 3-vblank frames */
+}
+
 UTEST(tween, lerp_ang_lerps_each_angle) {
   ang a = { .x = 0xF00, .y = 0, .z = 0x100 };
   ang b = { .x = 0x100, .y = 0x200, .z = 0x100 };
