@@ -86,7 +86,7 @@ def crystal_cavern(parts):
     for edge, towards in [(104.5, 1), (125.5, -1)]:  # the ledges' edges over the pool, and which way they face
         wall(parts["dark_moss"], (-8, edge), (0, edge), ACID_LEVEL - 0.2, FLOOR, (0, towards, 0), lambda x, y, z: lit(70, glow=0.4))
     stone = lambda x, y, z: stone_light(z)
-    for index, (x, y) in enumerate([(-4, 106.5), (-2.3, 109.2), (-4.2, 111.9), (-6, 114.6), (-4.1, 117.3), (-2.2, 120), (-4, 122.8)]):
+    for index, (x, y) in enumerate([(-4, 106.5), (-2.3, 109.2), (-4.1, 117.3), (-4, 122.8)]):
         prism(parts["stones"], (x, y), 1.1, 6, ACID_LEVEL - 0.3, FLOOR, stone, cap=parts["stone_tops"])
     rock = lambda x, y, z: lit(wall_light(z, ACID_LEVEL, 8), glow=low_glow(z, 1, 0.3))
     wall(parts["purple_rock"], (-13, 102), (-13, 128), ACID_LEVEL - 0.2, 8, (1, 0, 0), rock)
