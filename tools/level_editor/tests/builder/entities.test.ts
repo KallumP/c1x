@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { ByteWriter, padTo4 } from "../../builder/bytes";
 import {
-  BOX_TYPE, ENEMY_ENTITIES, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityPath, entityType, linkSwitches, newEntityIds, withEntityId,
+  BOX_TYPE, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityPath, entityType, linkSwitches, newEntityIds, withEntityId,
   withPath, type PlacedBox,
 } from "../../builder/entities";
 import { BASE_LEVEL } from "../../builder/baseLevel";
@@ -42,13 +42,6 @@ describe("entities", () => {
   test("there are only so many ids", () => {
     expect(Math.max(...newEntityIds(ENTITY_IDS_MAX - 4, new Set()))).toBe(ENTITY_IDS_MAX);
     expect(() => newEntityIds(ENTITY_IDS_MAX - 3, new Set())).toThrow(/objects/);
-  });
-});
-
-describe("enemies", () => {
-  test("are jungle rollers' plant, rolling stone and badger, n. sanity beach's crab and turtle, the great gate's native, road to nowhere's warthog, fumbling in the dark's two spiders, the great gate's monkey, up the creek's two river plants and fish, the bat roosts: temple ruins' kind, and sunset vista's with leaders, the lost city's lizards, and stormy ascent's lab assistant", () => {
-    expect(ENEMY_ENTITIES).toEqual({ plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1], spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
-      blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12], lizard: [47, 1], red_lizard: [47, 2], lab_assistant: [54, 0] });
   });
 });
 

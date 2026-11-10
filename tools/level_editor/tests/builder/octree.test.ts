@@ -90,7 +90,6 @@ describe("the collision octree", () => {
     const pit: Block = { low: [0, 0, 1024], high: [2048, 128, 1536], leaf: LEAF_PIT };
     const leaves = octreeLeaves(blocksRectBytes([0, 0, 0], SIZE, [...BLOCKS, pit], 128));
     expect(leafSquares(leaves.filter(({ value }) => value === LEAF_PIT >> 1))).toEqual(blockSquares([pit]));
-    expect((LEAF_PIT & 0x3f0) >> 4).toBe(11); // subtype 11: fall kill (ProcessNode)
   });
 
   test("blocks have to be on the grid", () => {

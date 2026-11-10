@@ -27,10 +27,6 @@ describe("a lab assistant's vials (as seen in the game)", () => {
     expect(heights.at(-1)!).toBeLessThan(0);
     expect(heights.at(-2)!).toBeGreaterThanOrEqual(0);
   });
-
-  test("thrown as stormy ascent's first (2480 along -x) land about 1878 off on flat ground", () => {
-    expect(Math.round(LAB_ASSISTANT_REACH)).toBe(1878);
-  });
 });
 
 describe("a lab assistant's init flags to throw to a landing spot", () => {

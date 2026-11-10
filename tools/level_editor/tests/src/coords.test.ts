@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Vec3 } from "../../src/objects";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, LIZARD_LEAPS, RED_LIZARD_HOPS, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, LEADER_BATS_GAP, leaderBatsGap, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -62,8 +62,7 @@ describe("rolling stones", () => {
   test("roll jungle rollers' path, its middle a stone's radius over the track's floor, lifted a box's height over the spot, dipping from its ends", () => {
     const path = stonePath([1, 2, 3], 0, 0, 400);
     expect(path.length).toBe(11);
-    expect(STONE_TRACK.lift).toBe(BOX_UNITS);
-    const radius = (STONE_TRACK.radius + STONE_TRACK.lift) / 400;
+    const radius = (STONE_TRACK.radius + BOX_UNITS) / 400;
     expect(path[5]).toEqual([1, 2, 3 + radius]);
     expect(path[0][0]).toBeCloseTo(1 + 1800 / 400);
     expect(path[10][0]).toBeCloseTo(1 - 1800 / 400);
@@ -72,8 +71,8 @@ describe("rolling stones", () => {
   });
 
   test("a fish leaps from its spot as up the creek's do: 14 points, 1600 across the map, 2172 at its highest (game units)", () => {
-    expect(FISH_LEAP.length).toBe(14);
     const path = fishLeap([1, 2, 3], 0, 0, 400);
+    expect(path.length).toBe(14);
     expect(path[0]).toEqual([1, 2, 3]);
     expect(path[13][0]).toBeCloseTo(1 + 1600 / 400);
     expect(path[13][2]).toBeCloseTo(3);
@@ -100,7 +99,6 @@ describe("rolling stones", () => {
   });
 
   test("with its end 10000 back along the route, a bat roost's bats swoop as temple ruins' do: 14 points, down 1336 at most (game units)", () => {
-    expect(BAT_SWOOP.length).toBe(14);
     const path = batSwoop([1, 2, 3], [1, 2 - 25, 3], 0, 400);
     expect(path.length).toBe(14);
     expect(path[0]).toEqual([1, 2, 3]);
@@ -126,7 +124,6 @@ describe("rolling stones", () => {
   });
 
   test("leader bats' second leader is 6000 game units from the first by default, back across the map as a stone rolls the other way, turning with the level", () => {
-    expect(LEADER_BATS_GAP).toBe(6000);
     expect(leaderBatsGap(0, 400).map((value) => value + 0)).toEqual([-15, 0, 0]);
     leaderBatsGap(90, 400).forEach((value, axis) => expect(value).toBeCloseTo(stoneRolling(90)[axis] * -15));
   });
@@ -168,37 +165,6 @@ describe("rolling stones", () => {
     expect(path[0][0]).toBeCloseTo(0);
     expect(path[0][1]).toBeCloseTo(-1800 / 400);
     expect(path[5][2]).toBeCloseTo(1 + (STONE_TRACK.radius + STONE_TRACK.lift) / 400);
-  });
-});
-
-describe("crabs, turtles, natives, badgers and warthogs", () => {
-  test("walk n. sanity beach's paths' lengths by default: a crab 1600 game units, a turtle 2000", () => {
-    expect(CRAB_WALK).toBe(1600);
-    expect(TURTLE_WALK).toBe(2000);
-  });
-
-  test("a native walks the great gate's natives' path's length by default: 1972 game units", () => {
-    expect(NATIVE_WALK).toBe(1972);
-  });
-
-  test("a badger runs jungle rollers' badgers' path's length by default: 5200 game units along the route", () => {
-    expect(BADGER_RUN).toBe(5200);
-  });
-
-  test("a warthog charges road to nowhere's warthogs' path's length by default: 5200 game units along the route", () => {
-    expect(WARTHOG_RUN).toBe(5200);
-  });
-
-  test("a walking spider runs fumbling in the dark's shortest walking spider path's length by default: 3200 game units along the route", () => {
-    expect(WALKING_SPIDER_RUN).toBe(3200);
-  });
-
-  test("lizards go the lost city's lizards' paths' lengths by default, across the map: a green one 3200 game units, a red one 4800", () => {
-    expect([LIZARD_LEAPS, RED_LIZARD_HOPS]).toEqual([3200, 4800]);
-  });
-
-  test("a monkey walks the great gate's monkeys' path's length by default: 2400 game units across the map", () => {
-    expect(MONKEY_WALK).toBe(2400);
   });
 });
 

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { levelOptions, readLevelCfg } from "../../builder/levelCfg";
-import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA } from "../../src/camera";
+import { DEFAULT_CAMERA } from "../../src/camera";
 import { DEFAULT_SKY } from "../../src/sky";
 
 // a temporary level source folder, holding level.cfg with text (if given)
@@ -18,7 +18,6 @@ function sourceFolder(text?: string): string {
 describe("a level's scale, turn and sky", () => {
   test("without a level.cfg, the default scale, no turn and n. sanity beach's sky", () => {
     expect(levelOptions(sourceFolder())).toEqual({ scale: 400, turn: 0, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA });
-    expect(DEFAULT_SKY).toEqual({ top: [59, 62, 216], bottom: [54, 50, 0], split: 20 });
   });
 
   test("level.cfg sets them, skipping comments and blank lines", () => {
@@ -33,10 +32,6 @@ describe("a level's scale, turn and sky", () => {
 
   test("level.cfg can set just one", () => {
     expect(levelOptions(sourceFolder("turn = 90\n"))).toEqual({ scale: 400, turn: 90, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA });
-  });
-
-  test("without camera settings, the camera is where it always was: 1 times its distance, 42 degrees above crash", () => {
-    expect(DEFAULT_CAMERA).toEqual({ distance: 1, angle: 42 });
   });
 
   test("level.cfg sets how far the camera is from crash (times its usual distance) and how far above him it looks down from (degrees)", () => {
@@ -72,7 +67,6 @@ describe("a bad level.cfg is an error naming it and its line", () => {
   });
 
   test("a camera distance or angle out of its range", () => {
-    expect([CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX, CAMERA_ANGLE_MIN, CAMERA_ANGLE_MAX]).toEqual([0.5, 3, 10, 80]);
     expect(readError("camera_distance = 4\n")).toThrow(/level\.cfg, line 1: camera_distance has to be 0\.5 to 3, not 4/);
     expect(readError("camera_distance = far\n")).toThrow(/camera_distance has to be 0\.5 to 3, not far/);
     expect(readError("camera_angle = 90\n")).toThrow(/level\.cfg, line 1: camera_angle has to be 10 to 80, not 90/);

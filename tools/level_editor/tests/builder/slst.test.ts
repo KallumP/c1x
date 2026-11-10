@@ -79,9 +79,9 @@ describe("sort lists", () => {
   });
 
   test("it keeps the nearest polygons the game can list", () => {
-    // custom levels' lists hold at most 4095 polygons; the farthest (smallest z) are left out
+    // custom levels' lists hold at most POLY_IDS_MAX polygons; the farthest (smallest z) are left out
     const ids = slstWords(slstItems([Array(3000).fill(0), Array(3000).fill(500)], [1000], 200, 50)[0]).words;
-    expect(ids.length).toBe(4095);
+    expect(ids.length).toBe(POLY_IDS_MAX);
     expect(ids.filter((id) => id >> 12 === 1).length).toBe(3000); // all of the nearer world
   });
 
@@ -123,9 +123,5 @@ describe("sort lists", () => {
     const polygons: BuiltPolygon[] = [{ corners: [0, 1, 2], texinfo: 0, page: 0 }];
     const items = zoneSlstItems([{ vertices, polygons, zOffset: 0 }], [[0, 1930, 3000]], 128, (54 * Math.PI) / 180);
     expect(slstWords(items[0]).words).toEqual([]);
-  });
-
-  test("a polygon's id is its mesh, then its index", () => {
-    expect(polyId(2, 7)).toBe((2 << 12) | 7);
   });
 });

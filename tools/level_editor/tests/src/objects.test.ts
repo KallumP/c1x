@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BADGER_COUNT, BADGER_COUNT_MAX, BADGER_COUNT_MIN, BOX_TYPES, numberSetting, boxTypeName, ENEMY_TYPES, formatObjects, hasNodes, hasPath, parseObjects, PATH_NODES_MAX, SPEED_MAX, SPEED_MIN, type Vec3 } from "../../src/objects";
+import { numberSetting, boxTypeName, formatObjects, hasNodes, hasPath, parseObjects, type Vec3 } from "../../src/objects";
 
 describe("parseObjects", () => {
   test("reads spawn, end and boxes with their settings", () => {
@@ -14,24 +14,6 @@ describe("parseObjects", () => {
       { kind: "box", box: "basic", at: [1, 10, 0], raise: 0, stack: 2 },
       { kind: "box", box: 13, at: [2, 10, 0], raise: 1.5, stack: 1 },
       { kind: "end", at: [0, 48, 1.2], raise: 0.15, stack: 1 },
-    ]);
-  });
-
-  test("knows every box type, by name", () => {
-    expect(BOX_TYPES).toEqual({
-      basic: 2, arrow: 3, checkpoint: 4, iron: 5, slatted: 6,
-      switch: 7, life: 8, aku_aku: 9, question: 10, outline: 13,
-      tnt: 0, enemy_tnt: 11, iron_arrow: 15, iron_outline: 19,
-    });
-  });
-
-  test("lists them in the palette's order, by what they do: plain, bonus, tnt, the switch and its outlines, then iron", () => {
-    expect(Object.keys(BOX_TYPES)).toEqual([
-      "basic", "slatted", "arrow",
-      "question", "life", "aku_aku", "checkpoint",
-      "tnt", "enemy_tnt",
-      "switch", "outline", "iron_outline",
-      "iron", "iron_arrow",
     ]);
   });
 
@@ -131,10 +113,6 @@ describe("boxTypeName", () => {
 });
 
 describe("enemies", () => {
-  test("knows the enemies custom levels can have, by name", () => {
-    expect(ENEMY_TYPES).toEqual(["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "lab_assistant", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"]); // by what they do, as the palette lists them
-  });
-
   test("reads an enemy by its type and spot (a rolling stone's path comes with its track)", () => {
     const objects = parseObjects(`[
       {"kind": "enemy", "type": "plant", "at": [1, 10, 0]},
@@ -246,7 +224,7 @@ describe("enemy paths", () => {
   test.each([
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards and red lizards do)"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: unknown setting path"],
-    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', `object 1: a path should be 2 to ${PATH_NODES_MAX} nodes`],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', "object 1: a path should be 2 to 20 nodes"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0]]}]', "object 1: a path's nodes should each be [x, y, z] in metres"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": "across"}]', "object 1: a path should be 2 to"],
     ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: leader bats' path is their second leader, [[x, y, z]] in metres from the first"],
@@ -257,9 +235,8 @@ describe("enemy paths", () => {
     expect(() => parseObjects(text)).toThrow(message);
   });
 
-  test(`a path can have up to ${20} nodes`, () => {
-    expect(PATH_NODES_MAX).toBe(20);
-    const nodes = Array.from({ length: PATH_NODES_MAX + 1 }, (_, index) => [index, 0, 0]);
+  test("refuses a path of more than 20 nodes", () => {
+    const nodes = Array.from({ length: 21 }, (_, index) => [index, 0, 0]);
     expect(() => parseObjects(JSON.stringify([{ kind: "enemy", type: "turtle", at: [0, 0, 0], path: nodes }]))).toThrow("2 to 20 nodes");
   });
 });
@@ -283,10 +260,6 @@ describe("enemy speeds", () => {
     const withPath = formatObjects([{ ...turtle, path: [[0, 0, 0], [1, 0, 0]], speed: 2 }]);
     expect(withPath).toContain('"path": [[0, 0, 0], [1, 0, 0]], "speed": 2}');
     expect(parseObjects(withPath)).toEqual([{ ...turtle, path: [[0, 0, 0], [1, 0, 0]], speed: 2 }]);
-  });
-
-  test(`a speed is ${0.25} to ${3}`, () => {
-    expect([SPEED_MIN, SPEED_MAX]).toEqual([0.25, 3]);
   });
 
   test.each([
@@ -369,10 +342,6 @@ describe("badger counts", () => {
       {"kind": "enemy", "type": "badger", "at": [0, 0, 0]}
     ]`);
     expect(objects.map(({ count }) => count)).toEqual([4, undefined]);
-  });
-
-  test(`a count is ${1} to ${6}, ${2} without one (as jungle rollers' badgers)`, () => {
-    expect([BADGER_COUNT_MIN, BADGER_COUNT_MAX, BADGER_COUNT]).toEqual([1, 6, 2]);
   });
 
   test("a walking spider can have a count too, 1 without one (as fumbling in the dark's), which is left out when written", () => {

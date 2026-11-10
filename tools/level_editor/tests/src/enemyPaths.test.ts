@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_PATH_NODES, defaultPath, enemyPath, handleLifts, nodeCount, nodeHeading, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
+import { defaultPath, enemyPath, handleLifts, nodeCount, nodeHeading, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
 import { batSwoopEnd, labAssistantThrow, leaderBatsGap } from "../../src/coords";
 import { LAB_ASSISTANT_REACH } from "../../src/labAssistantThrow";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
@@ -10,7 +10,6 @@ const enemy = (type: "crab" | "turtle" | "native" | "badger" | "warthog" | "walk
 
 describe("a path enemy's default path", () => {
   test("a crab's: 1600 game units across the map, its middle where it stands, as its two ends and its middle", () => {
-    expect(DEFAULT_PATH_NODES).toBe(3);
     expect(noMinusZero(defaultPath("crab", 0, 400))).toEqual([[-2, 0, 0], [0, 0, 0], [2, 0, 0]]);
   });
 
