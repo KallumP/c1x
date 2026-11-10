@@ -70,8 +70,6 @@
 
 ### Cortex Power
 
-- going near a MafiC causes the game to crash (not seen any more: Cortex Power's MafiC, the gunman, shoots at Crash in a custom level without a crash)
-
 ### Generator Room
 
 ### Toxic Waste
