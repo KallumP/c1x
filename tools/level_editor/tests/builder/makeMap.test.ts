@@ -3,9 +3,10 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { throwFlags } from "../../src/labAssistantThrow";
 import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
-import type { LevelObject } from "../../src/objects";
+import type { EnemyType, LevelObject } from "../../src/objects";
+import { enemyObject } from "../helpers";
+import { readCameraPath, readZoneHeader, readZoneRect } from "./zoneReaders";
 import { BASE_LEVEL } from "../../builder/baseLevel";
-import { readWords } from "../../builder/bytes";
 import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, LEADER_BAT, ENTITY_INIT_FLAGS, entityId, entityPath, entityPosition, entityType, STONE_FAR_END, WARP_PAD } from "../../builder/entities";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
@@ -20,7 +21,7 @@ import { colour5551 } from "../../builder/tpage";
 import { levelEntity, STONE_TRACK_LIFT, stoneTrack } from "../../builder/templates";
 import { readWorldHeader, readWorldPolygon, readWorldVertex, TEXINFOS_AT } from "../../builder/worldGeometry";
 import type { TileRegion, WorldMesh, WorldVertex } from "../../builder/worldMeshes";
-import { ZONE_LOADLIST, ZONE_MIDI, ZONE_NEIGHBORS, ZONE_PATHS_IDX, zoneEntities, zoneOrigin, zoneWorldEids } from "../../builder/zones";
+import { zoneEntities, zoneOrigin, zoneWorldEids } from "../../builder/zones";
 
 const STONE_RGB: [number, number, number] = [90, 90, 100];
 const stone = (): RgbImage => ({ width: 32, height: 32, rgb: new Uint8Array(32 * 32 * 3).map((_, index) => STONE_RGB[index % 3]) });
@@ -82,6 +83,8 @@ const hasStormyAscent = existsSync(`${STREAMS}/s0000022.nsd`); // stormy ascent 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
 const box = (at: [number, number, number], subtype: number, more: Partial<LevelObject> = {}) => object("box", at, { box: subtype, ...more });
+// an enemy at blender (1, 2, 0), on the floor, unless more moves it
+const enemy = (type: EnemyType, more: Partial<LevelObject> = {}) => enemyObject(type, { at: [1, 2, 0], ...more });
 
 interface Built {
   level: Level;
@@ -98,10 +101,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     return { level, entries, zone: entries.get(level.nsd.ldat.zoneSpawn)! };
   }
 
-  const zoneCounts = (zone: Entry) => readWords(zone.items[0], ZONE_PATHS_IDX, 4);
+  const headerOf = (zone: Entry) => readZoneHeader(zone.items[0]);
+  const cameraPathOf = (zone: Entry) => readCameraPath(zone.items[headerOf(zone).pathsIndex]);
+  const zoneZ = (zone: Entry) => readZoneRect(zone.items[1]).at[2];
   const crashAt = (zone: Entry) => entityPosition(zoneEntities(zone)[0]);
   const zonesOf = ({ entries }: Built) => [...entries.values()].filter((entry) => entry.type === ENTRY_ZDAT)
-    .sort((first, second) => second.items[1].readInt32LE(8) - first.items[1].readInt32LE(8)); // from the start (+z)
+    .sort((first, second) => zoneZ(second) - zoneZ(first)); // from the start (+z)
   const warpPads = (built: Built) => zonesOf(built).flatMap((zone) =>
     zoneEntities(zone).filter((item) => entityType(item).join() === WARP_PAD.join()).map((item) => ({ zone, at: entityPosition(item) })));
   const boxes = (zone: Entry) => zoneEntities(zone).filter((item) => entityType(item)[0] === BOX_TYPE)
@@ -113,7 +118,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const built = make();
     const { level, zone } = built;
     expect(level.nsd.ldat.lid).toBe(LID_TEST);
-    const [pathsIndex, pathCount, entityCount] = zoneCounts(zone);
+    const { pathsIndex, pathCount, entityCount } = headerOf(zone);
     expect([pathCount, entityCount]).toEqual([1, 1]);
     expect(entityType(zone.items[pathsIndex + 1])).toEqual([0, 0]); // crash
     expect(level.nsd.ldat.execMap.filter((eid) => eid !== EID_NONE).length).toBe(CORE_EXEC_SLOTS.length);
@@ -129,45 +134,35 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   test("its zones play jungle rollers' music, which it has with its instruments (its second track is aku aku's song at three masks)", () => {
     const { zone, entries } = make();
-    expect(zone.items[0].readUInt32LE(ZONE_MIDI)).toBe(stringToEid("So0cM"));
+    expect(headerOf(zone).midi).toBe(stringToEid("So0cM"));
     expect(["So0cM", "I00cN", "I01cN", "I02cN", "I03cN"].every((name) => entries.has(stringToEid(name)))).toBe(true);
   });
 
   test("its camera is where level.cfg's camera settings put it: its path that far behind and above crash, and the height for the game in the path", () => {
-    const pathOf = (more: MapOptions) => {
-      const { zone } = make(MAP_OBJ, { scale: 256, ...more });
-      return zone.items[zoneCounts(zone)[0]];
-    };
+    const pathOf = (more: MapOptions) => cameraPathOf(make(MAP_OBJ, { scale: 256, ...more }).zone);
     const usual = pathOf({});
     const far = pathOf({ camera: { distance: 2, angle: 42 } });
-    expect(usual.readUInt16LE(38)).toBe(1316);
-    expect(far.readUInt16LE(38)).toBe(2632);
-    const firstPoint = (path: Buffer) => [0, 1, 2].map((field) => path.readInt16LE(50 + 2 * field));
-    expect(firstPoint(far)[1] - firstPoint(usual)[1]).toBeGreaterThan(1000); // higher above the floor
+    expect(usual.followHeight).toBe(1316);
+    expect(far.followHeight).toBe(2632);
+    expect(far.points[0][1] - usual.points[0][1]).toBeGreaterThan(1000); // higher above the floor
   });
 
   test("its camera's zoom, how far behind crash the game keeps it along its path, is its distance back and the 250 the game takes off", () => {
-    const zoomOf = (camera: MapOptions["camera"]) => {
-      const { zone } = make(MAP_OBJ, { scale: 256, camera });
-      return zone.items[zoneCounts(zone)[0]].readInt16LE(36);
-    };
+    const zoomOf = (camera: MapOptions["camera"]) => cameraPathOf(make(MAP_OBJ, { scale: 256, camera }).zone).zoom;
     expect(zoomOf(undefined)).toBe(1700);
     expect(zoomOf({ distance: 2, angle: 42 })).toBe(2 * 1450 + 250); // the game keeps the camera 250 less than its zoom behind crash
     expect(zoomOf({ distance: 1, angle: 70 })).toBeLessThan(1700); // steeper: nearer behind him, higher up
   });
 
   test("its camera tilts down as much more as its angle is steeper", () => {
-    const tiltOf = (angle: number) => {
-      const { zone } = make(MAP_OBJ, { scale: 256, camera: { distance: 1, angle } });
-      return zone.items[zoneCounts(zone)[0]].readInt16LE(50 + 6);
-    };
+    const tiltOf = (angle: number) => cameraPathOf(make(MAP_OBJ, { scale: 256, camera: { distance: 1, angle } }).zone).points[0][3];
     expect(tiltOf(42)).toBe(-181);
     expect(tiltOf(60)).toBe(-181 - Math.round((18 * 4096) / 360));
   });
 
   test("its path uses the follow camera", () => {
     const { zone } = make();
-    expect(zone.items[zoneCounts(zone)[0]].readUInt16LE(32)).toBe(FOLLOW_CAM_MODE);
+    expect(cameraPathOf(zone).camMode).toBe(FOLLOW_CAM_MODE);
   });
 
   test("crash starts on the ground at the spawn marker", () => {
@@ -238,7 +233,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     .map((item) => ({ type: entityType(item), id: entityId(item), path: entityPath(item), initFlagA: item.readInt16LE(ENTITY_INIT_FLAGS) }));
 
   test("a rolling stone starts along its track by its init flag a, which counts through its cycle there and back (seen in the game): 128 x start rolling forward, 256 - 128 x start rolling back; its path the same (rolling -x, so it spins the right way)", () => {
-    const stone = (more: Partial<LevelObject>) => object("enemy", [1, 2, 0], { enemy: "rolling_stone", ...more });
+    const stone = (more: Partial<LevelObject>) => enemy("rolling_stone", more);
     const placed = (more: Partial<LevelObject>) => enemies(make(MAP_OBJ, { scale: 256, objects: [stone(more)] }).zone)[0];
     expect(STONE_FAR_END).toBe(128);
     const flags = [{}, { start: 1 }, { start: 0.5 }, { start: 0.5, reverse: true }, { start: 1, reverse: true }, { reverse: true }]
@@ -249,7 +244,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   test("an enemy goes where it is, as its entity, with an id of its own", () => {
     // blender (1, 2, 0) is the .obj's (1, 0, -2)
-    const built = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "plant" }), box([2, 2, 0], 2)] });
+    const built = make(MAP_OBJ, { scale: 256, objects: [enemy("plant"), box([2, 2, 0], 2)] });
     const [plant] = enemies(built.zone);
     expect(plant.type).toEqual(ENEMY_ENTITIES.plant);
     expect(plant.path.length).toBe(1);
@@ -260,7 +255,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   });
 
   describe("badgers", () => {
-    const badger = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "badger", ...more });
+    const badger = (more: Partial<LevelObject> = {}) => enemy("badger", more);
     const placedPath = (more: Partial<LevelObject> = {}) => enemies(make(MAP_OBJ, { scale: 256, objects: [badger(more)] }).zone)[0].path;
     const steps = (points: Vec3[]) => points.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - points[index][axis])));
     const near = (value: number, wanted: number) => expect(Math.abs(value - wanted)).toBeLessThanOrEqual(8);
@@ -305,14 +300,14 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   });
 
   test("a level with a badger has its code, model and animation (jungle rollers' own)", () => {
-    const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "badger" })] });
+    const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [enemy("badger")] });
     expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.badger[0]]).toBe(stringToEid("PillC"));
     expect(["Pi10G", "Pi10V"].every((name) => entries.has(stringToEid(name)))).toBe(true);
   });
 
   test("rolling stones' tracks have a world mesh of their own in their zone, so they fit however full the map's meshes are", () => {
     const track = stoneTrack(base);
-    const stones = [object("enemy", [1, 2, 0], { enemy: "rolling_stone" }), object("enemy", [-1, 4, 0], { enemy: "rolling_stone" })];
+    const stones = [enemy("rolling_stone"), enemy("rolling_stone", { at: [-1, 4, 0] })];
     const withStones = make(MAP_OBJ, { scale: 256, objects: stones });
     const without = make(MAP_OBJ, { scale: 256 });
     expect(worldsOf(withStones).length).toBe(worldsOf(without).length + 1);
@@ -322,7 +317,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   test("a rolling stone rolls jungle rollers' path along its track, its middle over the stone's spot, lifted a box's height", () => {
     const track = stoneTrack(base);
-    const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "rolling_stone" })] }).zone);
+    const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [enemy("rolling_stone")] }).zone);
     expect(placed.type).toEqual(ENEMY_ENTITIES.rolling_stone);
     // blender (1, 2, 0) is (1408, 128, 1664) in the zone; the track's floor is a box's height over it, under the path's middle
     expect(STONE_TRACK_LIFT).toBe(BOX_HEIGHT);
@@ -334,7 +329,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe.skipIf(!hasBeach)("crabs, from n. sanity beach", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
-    const crab = () => object("enemy", [1, 2, 0], { enemy: "crab" });
+    const crab = () => enemy("crab");
     const withCrab = (more: Partial<MapOptions> = {}) => make(MAP_OBJ, { scale: 256, objects: [crab()], readOtherLevel, ...more });
 
     test("a crab walks n. sanity beach's first crab's path, its middle at the crab's spot", () => {
@@ -359,7 +354,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
 
     test("crabs bring their code once, however many there are", () => {
-      const twoCrabs = make(MAP_OBJ, { scale: 256, objects: [crab(), object("enemy", [-1, 4, 0], { enemy: "crab" })], readOtherLevel });
+      const twoCrabs = make(MAP_OBJ, { scale: 256, objects: [crab(), enemy("crab", { at: [-1, 4, 0] })], readOtherLevel });
       expect(enemies(twoCrabs.zone).length).toBe(2);
       const everyEid = twoCrabs.level.pages.flatMap((page) => (page.type === PAGE_TEXTURE ? [page.eid] : page.entries.map(({ eid }) => eid)));
       expect(everyEid.length).toBe(new Set(everyEid).size);
@@ -370,7 +365,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
 
     test("a crab walks its own path, raised with it, in equal steps about 100 apart", () => {
-      const built = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "crab", raise: 0.5, path: [[0, 0, 0], [2, 0, 0.25]] })], readOtherLevel });
+      const built = make(MAP_OBJ, { scale: 256, objects: [enemy("crab", { raise: 0.5, path: [[0, 0, 0], [2, 0, 0.25]] })], readOtherLevel });
       const [placed] = enemies(built.zone);
       const steps = placed.path.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - placed.path[index][axis])));
       expect(placed.path.length).toBe(6); // 516 units (2 m across, 0.25 m up) in 5 steps
@@ -387,7 +382,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe.skipIf(!hasBeach)("turtles, from n. sanity beach", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
-    const turtle = () => object("enemy", [1, 2, 0], { enemy: "turtle" });
+    const turtle = () => enemy("turtle");
     const withTurtle = (more: Partial<MapOptions> = {}) => make(MAP_OBJ, { scale: 256, objects: [turtle()], readOtherLevel, ...more });
     const soundsOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
 
@@ -418,7 +413,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
 
     test("a level with a crab and a turtle has both, and what they share (texture page, sound) once", () => {
-      const both = make(MAP_OBJ, { scale: 256, objects: [turtle(), object("enemy", [-1, 4, 0], { enemy: "crab" })], readOtherLevel });
+      const both = make(MAP_OBJ, { scale: 256, objects: [turtle(), enemy("crab", { at: [-1, 4, 0] })], readOtherLevel });
       expect(enemies(both.zone).map(({ type }) => type)).toEqual(expect.arrayContaining([ENEMY_ENTITIES.turtle, ENEMY_ENTITIES.crab]));
       const everyEid = both.level.pages.flatMap((page) => (page.type === PAGE_TEXTURE ? [page.eid] : page.entries.map(({ eid }) => eid)));
       expect(everyEid.filter((eid) => eid === stringToEid("Ju49T")).length).toBe(1);
@@ -428,7 +423,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a turtle walks its own path: through its nodes, in equal steps about as long as n. sanity beach's (100)", () => {
       const lPath: Vec3[] = [[0, 0, 0], [0, 2, 0], [2, 2, 0]]; // 2 m along the route, then 2 m across: 1024 units at scale 256
-      const built = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "turtle", path: lPath })], readOtherLevel });
+      const built = make(MAP_OBJ, { scale: 256, objects: [enemy("turtle", { path: lPath })], readOtherLevel });
       const [placed] = enemies(built.zone);
       expect(placed.path.length).toBe(11); // 10 steps of 102.4
       const [start, corner, end] = [placed.path[0], placed.path[5], placed.path[10]];
@@ -444,7 +439,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     test("a turtle's speed spaces its path's points: twice as fast, twice as far apart, the same distance along", () => {
       const path: Vec3[] = [[0, 0, 0], [4, 0, 0]]; // 4 m across: 1024 units at scale 256
       const placedAt = (speed?: number) =>
-        enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "turtle", path, speed })], readOtherLevel }).zone)[0].path;
+        enemies(make(MAP_OBJ, { scale: 256, objects: [enemy("turtle", { path, speed })], readOtherLevel }).zone)[0].path;
       const steps = (points: Vec3[]) => points.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - points[index][axis])));
       const [normal, fast, slow] = [placedAt(), placedAt(2), placedAt(0.5)];
       expect([normal.length, fast.length, slow.length]).toEqual([11, 6, 21]); // steps of 102.4, 204.8 and 51.2
@@ -460,7 +455,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe.skipIf(!hasUpTheCreek)("river plants and fish, from up the creek", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
-    const river = (type: "blue_river_plant" | "green_river_plant" | "fish", more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: type, ...more });
+    const river = (type: "blue_river_plant" | "green_river_plant" | "fish", more: Partial<LevelObject> = {}) => enemy(type, more);
 
     test("a level with a river plant has up the creek's river code (and the water it spawns), its models, animations and sounds", () => {
       const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [river("blue_river_plant")], readOtherLevel });
@@ -521,7 +516,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe.skipIf(!hasStormyAscent)("lab assistants, from stormy ascent", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
-    const assistant = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "lab_assistant", ...more });
+    const assistant = (more: Partial<LevelObject> = {}) => enemy("lab_assistant", more);
 
     // a placed lab assistant's init flags: its facing, and its vials' speeds along the game's x and z
     const assistantFlags = (more: Partial<LevelObject> = {}) => {
@@ -589,7 +584,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe.skipIf(!hasLostCity)("lizards, from the lost city", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
-    const lizard = (type: "lizard" | "red_lizard", more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: type, ...more });
+    const lizard = (type: "lizard" | "red_lizard", more: Partial<LevelObject> = {}) => enemy(type, more);
     const soundsOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
 
     test("a level with a lizard has the lost city's lizard code, both lizards' models and animations, their texture pages and every sound the code plays", () => {
@@ -623,7 +618,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe.skipIf(!hasSunsetVista)("bats, from sunset vista", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
-    const bat = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "bat", raise: 3, ...more });
+    const bat = (more: Partial<LevelObject> = {}) => enemy("bat", { raise: 3, ...more });
     const soundsOf = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
 
     test("a level with a bat has sunset vista's ruins code, its bats' and leaders' models and animations, its texture page and every sound the code plays", () => {
@@ -737,7 +732,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
 
     test.skipIf(!hasFumbling)("a level with bats and spiders has both codes, within the texture pages the game holds", () => {
-      const objects = [bat(), bat({ at: [-1, 4, 0] }), object("enemy", [1, 6, 0], { enemy: "walking_spider" })];
+      const objects = [bat(), bat({ at: [-1, 4, 0] }), enemy("walking_spider", { at: [1, 6, 0] })];
       const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel });
       const { execMap } = level.nsd.ldat;
       expect([execMap[ENEMY_ENTITIES.bat[0]], execMap[ENEMY_ENTITIES.walking_spider[0]]]).toEqual([stringToEid("RuiOC"), stringToEid("SpidC")]);
@@ -746,7 +741,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe.skipIf(!hasFumbling)("spiders, from fumbling in the dark", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
-    const spider = (type: "spider" | "walking_spider", more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: type, ...more });
+    const spider = (type: "spider" | "walking_spider", more: Partial<LevelObject> = {}) => enemy(type, more);
 
     test("a level with a spider has fumbling in the dark's spider code, models and animations", () => {
       const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [spider("spider")], readOtherLevel });
@@ -791,7 +786,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe.skipIf(!hasRoadToNowhere)("warthogs, from road to nowhere", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
-    const warthog = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "warthog", ...more });
+    const warthog = (more: Partial<LevelObject> = {}) => enemy("warthog", more);
     const withWarthog = (more: Partial<LevelObject> = {}) => make(MAP_OBJ, { scale: 256, objects: [warthog(more)], readOtherLevel });
     const soundEids = (level: Level) => level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
 
@@ -825,7 +820,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe.skipIf(!hasGreatGate)("monkeys, from the great gate", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
-    const monkey = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "monkey", ...more });
+    const monkey = (more: Partial<LevelObject> = {}) => enemy("monkey", more);
 
     test("a level with a monkey has the great gate's monkey code, model, animations and chatter", () => {
       const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [monkey()], readOtherLevel });
@@ -856,7 +851,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     test("a level with a monkey and a native reads the great gate once, and has both", () => {
       const read: number[] = [];
       const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
-      const { level } = make(MAP_OBJ, { scale: 256, objects: [monkey(), object("enemy", [-1, 4, 0], { enemy: "native" })], readOtherLevel: readEach });
+      const { level } = make(MAP_OBJ, { scale: 256, objects: [monkey(), enemy("native", { at: [-1, 4, 0] })], readOtherLevel: readEach });
       expect(read).toEqual([0x12]);
       const { execMap } = level.nsd.ldat;
       expect([execMap[ENEMY_ENTITIES.monkey[0]], execMap[ENEMY_ENTITIES.native[0]]]).toEqual([stringToEid("MonkC"), stringToEid("SheNC")]);
@@ -865,7 +860,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe.skipIf(!hasGreatGate)("natives, from the great gate", () => {
     const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
-    const native = () => object("enemy", [1, 2, 0], { enemy: "native" });
+    const native = () => enemy("native");
     const withNative = (more: Partial<MapOptions> = {}) => make(MAP_OBJ, { scale: 256, objects: [native()], readOtherLevel, ...more });
 
     const steps = (points: Vec3[]) => points.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - points[index][axis])));
@@ -884,7 +879,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     test("a native walks its own path in steps about as long as the great gate's (1972 over 4), longer the faster it is", () => {
       const path: Vec3[] = [[0, 0, 0], [8, 0, 0]]; // 8 m across: 2048 units at scale 256
       const placedAt = (speed?: number) =>
-        enemies(make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "native", path, speed })], readOtherLevel }).zone)[0].path;
+        enemies(make(MAP_OBJ, { scale: 256, objects: [enemy("native", { path, speed })], readOtherLevel }).zone)[0].path;
       const [normal, fast] = [placedAt(), placedAt(2)];
       expect([normal.length, fast.length]).toEqual([5, 3]); // steps of 512 and 1024
       steps(normal).forEach((step) => expect(Math.abs(step - 512)).toBeLessThanOrEqual(8));
@@ -905,7 +900,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     test.skipIf(!hasBeach)("a level with a crab and a native reads each's level, has both, and nothing twice", () => {
       const read: number[] = [];
       const readEach = (lid: number) => { read.push(lid); return readLevel(STREAMS, lid); };
-      const both = make(MAP_OBJ, { scale: 256, objects: [native(), object("enemy", [-1, 4, 0], { enemy: "crab" })], readOtherLevel: readEach });
+      const both = make(MAP_OBJ, { scale: 256, objects: [native(), enemy("crab", { at: [-1, 4, 0] })], readOtherLevel: readEach });
       expect(read.sort((first, second) => first - second)).toEqual([0x9, 0x12]);
       expect(enemies(both.zone).map(({ type }) => type)).toEqual(expect.arrayContaining([ENEMY_ENTITIES.native, ENEMY_ENTITIES.crab]));
       const { execMap } = both.level.nsd.ldat;
@@ -918,7 +913,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     test.skipIf(!hasBeach)("a native adds no texture pages (its model is untextured): a crab, a turtle and a native have the crab's and turtle's", () => {
       const texturePages = (objects: LevelObject[]) =>
         make(MAP_OBJ, { scale: 256, objects, readOtherLevel }).level.pages.filter((page) => page.type === PAGE_TEXTURE).map(({ eid }) => eid);
-      const crabAndTurtle = [object("enemy", [-1, 4, 0], { enemy: "crab" }), object("enemy", [0, 3, 0], { enemy: "turtle" })];
+      const crabAndTurtle = [enemy("crab", { at: [-1, 4, 0] }), enemy("turtle", { at: [0, 3, 0] })];
       expect(texturePages([...crabAndTurtle, native()])).toEqual(texturePages(crabAndTurtle));
     });
 
@@ -939,8 +934,8 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   test("a rolling stone comes with jungle rollers' track, its floor under the middle of the path a box's height over the stone's spot", () => {
     const track = stoneTrack(base);
-    const withStone = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "rolling_stone" })] });
-    const withPlant = make(MAP_OBJ, { scale: 256, objects: [object("enemy", [1, 2, 0], { enemy: "plant" })] });
+    const withStone = make(MAP_OBJ, { scale: 256, objects: [enemy("rolling_stone")] });
+    const withPlant = make(MAP_OBJ, { scale: 256, objects: [enemy("plant")] });
     expect(polygonCount(withStone) - polygonCount(withPlant)).toBe(track.polygons.length);
     // blender (1, 2, 0) is (1408, 128, 1664) in the zone. the track's floor under the middle of its
     // path has a corner 58 across (+z) from it, a box's height over the floor, so crash jumps up to it
@@ -978,13 +973,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(make(MAP_OBJ, { scale: 256, objects }).level.nsd.ldat.boxTotal).toBe(2);
   });
 
-  // zone_header's gfx (src/formats/zdat.h), after its 8 worlds, counts, neighbours, load list and display flags
-  const GFX = 4 + 8 * 64 + 16 + 32 + 168 + 4;
-  const skyIn = (zone: Entry) => {
-    const header = zone.items[0];
-    const rgb = (at: number) => [header[GFX + at], header[GFX + at + 1], header[GFX + at + 2]];
-    return { split: header.readUInt32LE(GFX), top: rgb(44), bottom: rgb(48), visibility: header.readUInt32LE(GFX + 8) };
-  };
+  const skyIn = (zone: Entry) => headerOf(zone).sky;
 
   test("every zone has the level's sky, and n. sanity beach's visibility depth", () => {
     const sky = { top: [10, 20, 30] as [number, number, number], bottom: [40, 50, 60] as [number, number, number], split: 100 };
@@ -1002,8 +991,8 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   test("turn runs the map along z", () => {
     // turned a quarter, the 16 m long floor runs along x
-    const rect = make(MAP_OBJ, { scale: 256, turn: 90 }).zone.items[1];
-    expect(rect.readUInt32LE(12)).toBeGreaterThan(rect.readUInt32LE(20));
+    const rect = readZoneRect(make(MAP_OBJ, { scale: 256, turn: 90 }).zone.items[1]);
+    expect(rect.width).toBeGreaterThan(rect.depth);
   });
 
   test("material images become a texture page the zone loads", () => {
@@ -1013,7 +1002,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const plainEids = texturePages(plain.level).map(({ eid }) => eid);
     const added = texturePages(built.level).find(({ eid }) => !plainEids.includes(eid))!;
     expect(readWorldHeader(firstWorld(built).items[0]).pages).toContain(added.eid);
-    expect(built.zone.items[0].readInt32LE(ZONE_LOADLIST + 4)).toBe(texturePages(built.level).length);
+    expect(headerOf(built.zone).loadList.pageCount).toBe(texturePages(built.level).length);
   });
 
   test("textured polygons use their material's tile", () => {
@@ -1035,16 +1024,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   describe("a long map", () => {
     const built = hasBase ? make(LONG_OBJ) : null!;
     const zones = hasBase ? zonesOf(built) : [];
-    const neighbours = (zone: Entry) => readWords(zone.items[0], ZONE_NEIGHBORS, zone.items[0].readUInt32LE(ZONE_PATHS_IDX + 12));
+    const neighbours = (zone: Entry) => headerOf(zone).neighbours;
 
     test("is a chain of zones along the route", () => {
       expect(zones.length).toBe(3);
-      const rects = zones.map((zone) => [0, 4, 8].map((offset) => zone.items[1].readInt32LE(offset)).concat([12, 16, 20].map((offset) => zone.items[1].readUInt32LE(offset))));
+      const rects = zones.map((zone) => readZoneRect(zone.items[1]));
       rects.slice(1).forEach((next, index) => {
-        const [x, y, z, w, h, d] = rects[index];
-        expect(d).toBe(16384);
-        expect(next[2]).toBe(z - 16384); // the next one along -z, touching
-        expect([next[0], next[1], next[3], next[4]]).toEqual([x, y, w, h]);
+        const { at: [x, y, z], width, height, depth } = rects[index];
+        expect(depth).toBe(16384);
+        expect(next.at[2]).toBe(z - 16384); // the next one along -z, touching
+        expect([next.at[0], next.at[1], next.width, next.height]).toEqual([x, y, width, height]);
       });
     });
 
@@ -1054,16 +1043,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
 
     test("its paths lead on to the next zones and back", () => {
-      const links = zones.map((zone) => {
-        const [pathsIndex] = zoneCounts(zone);
-        const path = zone.items[pathsIndex];
-        return Array.from({ length: path.readUInt32LE(8) }, (_, index) => [...path.subarray(12 + 4 * index, 16 + 4 * index)]);
-      });
+      const links = zones.map((zone) => cameraPathOf(zone).links);
       expect(links).toEqual([[[2, 1, 0, 1]], [[1, 1, 0, 2], [2, 2, 0, 1]], [[1, 1, 0, 2]]]);
     });
 
     test("crash is in the zone the level spawns in", () => {
-      expect(zones.map((zone) => zoneCounts(zone)[2])).toEqual([1, 0, 0]);
+      expect(zones.map((zone) => headerOf(zone).entityCount)).toEqual([1, 0, 0]);
       expect(built.level.nsd.ldat.zoneSpawn).toBe(zones[0].eid);
       const z = crashAt(zones[0])[2];
       expect(z >= 0 && z < 16384).toBe(true); // relative to its zone
@@ -1071,7 +1056,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("every zone loads the texture pages", () => {
       for (const zone of zones) {
-        expect(zone.items[0].readInt32LE(ZONE_LOADLIST + 4)).toBe(texturePages(built.level).length);
+        expect(headerOf(zone).loadList.pageCount).toBe(texturePages(built.level).length);
       }
     });
 
