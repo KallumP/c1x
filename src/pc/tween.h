@@ -57,7 +57,7 @@ static inline void TweenLerpVec(vec *a, vec *b, int32_t alpha, vec *out) {
  * frame_rate; slots run on, carried from one game frame to the next
  */
 typedef struct {
-  int64_t phase; /* where the slots were at the game frame's start */
+  int64_t phase; /* where the slots were at the game frame's start, from the slot its own frame took */
   int drawn;     /* the last slot drawn this game frame */
 } tween_pacer;
 
