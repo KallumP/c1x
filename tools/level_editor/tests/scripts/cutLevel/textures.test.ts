@@ -12,7 +12,8 @@ const { page, places } = texturePage(0x12345671, [{ pixels, palette }]);
 const header = (texinfo: Buffer) => Buffer.concat([Buffer.alloc(64), texinfo]); // texinfos start at 64, word 0 here
 
 describe("a cut level's textures", () => {
-  test("a texture info gives its region of the page: where, how big, its palette and the order of its corners", () => {
+  test("a texture info gives its region of the page", () => {
+    // where, how big, its palette and the order of its corners
     const info = readTexinfo(header(texinfoBytes(places[0], 5, { x: 8, y: 4, w: 16, h: 32 })), 0);
     expect(info).toMatchObject({ textured: true, colourMode: 0, layout: 5, x: 64 + 8, y: 4, w: 16, h: 32, clutX: 0, clutY: 1 });
   });

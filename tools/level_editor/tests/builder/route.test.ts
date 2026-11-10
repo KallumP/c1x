@@ -88,7 +88,8 @@ describe("where the camera is from crash", () => {
     expect(cameraOffsets({ distance: 2, angle: 42 })).toEqual({ lead: 2 * CAM_LEAD, height: 2 * CAM_OFFSET[1] });
   });
 
-  test("its angle turns it up or down about crash, the same distance away, that many degrees from where it was", () => {
+  test("its angle turns it about crash, keeping its distance", () => {
+    // up or down, that many degrees from where it was
     const usual = Math.hypot(CAM_LEAD, CAM_OFFSET[1]);
     const degrees = (offsets: { lead: number; height: number }) => (Math.atan2(offsets.height, offsets.lead) * 180) / Math.PI;
     const steep = cameraOffsets({ distance: 1, angle: 60 });

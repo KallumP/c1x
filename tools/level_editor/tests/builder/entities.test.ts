@@ -19,11 +19,11 @@ function entity(type: number, subtype: number, id: number, points: [number, numb
 }
 
 describe("entities", () => {
-  test("their type and subtype", () => {
+  test("an entity's type and subtype are read from it", () => {
     expect(entityType(entity(34, 6, 1, [[0, 0, 0]]))).toEqual([34, 6]);
   });
 
-  test("their id", () => {
+  test("an entity's id is read from it, and can be replaced", () => {
     expect(entityId(entity(34, 6, 77, [[0, 0, 0]]))).toBe(77);
     expect(entityId(withEntityId(entity(34, 6, 77, [[0, 0, 0]]), 78))).toBe(78);
   });
@@ -59,7 +59,8 @@ describe("entity paths", () => {
     expect(written.length).toBe(32); // 20, then 6 a point
   });
 
-  test("are kept on units of 4, and padded to a multiple of 4 bytes as the game's", () => {
+  test("are kept on units of 4, padded to whole words", () => {
+    // a multiple of 4 bytes, as the game's
     const written = withPath(entity(25, 0, 1, [[0, 0, 0], [1, 1, 1]]), [[5, -5, 9]]);
     expect(entityPath(written)).toEqual([[4, -8, 8]]);
     expect(written.length).toBe(28);
@@ -114,7 +115,8 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(templates.textures.length).toBeGreaterThan(1);
   });
 
-  test("every box holds nothing extra, though the level's own may hold a token", () => {
+  test("every box holds nothing extra", () => {
+    // though the level's own may hold a token
     // the first init flag is what a box holds beyond the usual (jungle rollers' ? boxes all hold
     // something, such as tawna's token); 0, the plain box, is what most boxes of every subtype have
     const templates = readTemplates(base);
@@ -182,7 +184,8 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(Math.max(...track.vertices.map(({ at }) => at[2]))).toBe(58);
   });
 
-  test("a lifted track's skirts reach down as far again: only its corners below its floor, in the ground, go lower", () => {
+  test("longer skirts lower only the vertices below the track's floor", () => {
+    // a lifted track's skirts reach down as far again: only its corners in the ground go lower
     const track = stoneTrack(base);
     const lifted = withLongerSkirts(track, 400);
     expect(lifted.polygons).toEqual(track.polygons);
@@ -192,7 +195,8 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(track.vertices.some(({ at }) => at[1] < track.floor)).toBe(true);
   });
 
-  test("a rolling stone's track comes with its path, from its first point, rolling -x and dipping in the middle", () => {
+  test("a rolling stone's track comes with its path", () => {
+    // from its first point, rolling -x and dipping in the middle
     const { path } = stoneTrack(base);
     expect(path.length).toBe(11);
     expect(path[0]).toEqual([0, 0, 0]);
@@ -200,7 +204,7 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(path[5]).toEqual([-1800, -472, 0]);
   });
 
-  test("a piece of terrain as a mesh, moved to where it goes, for the collision", () => {
+  test("a piece of terrain becomes a mesh where it goes, for the collision", () => {
     const track = stoneTrack(base);
     const mesh = pieceMesh(track, [1000, 2000, 3000]);
     expect(mesh.triangles.length).toBe(track.polygons.length);
@@ -212,7 +216,8 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(facingUp.every((y) => y >= 0)).toBe(true);
   });
 
-  test("the track's floor under the middle of its path, where the stone rolls, is its highest flat face there", () => {
+  test("the track's floor under the stone's path is its highest flat face there", () => {
+    // under the middle of its path, where the stone rolls
     const track = stoneTrack(base);
     const middle = track.path[5];
     const floorUnderMiddle = flatCorners(track).flat().filter(([x, , z]) => Math.abs(x - middle[0]) <= 300 && Math.abs(z) <= 300);

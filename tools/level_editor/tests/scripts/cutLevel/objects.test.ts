@@ -18,7 +18,8 @@ describe("a cut level's objects", () => {
     expect(cutLevelObjects(level, OPTIONS).find(({ kind }) => kind === "spawn")!.at).toEqual([1, 0, 2]);
   });
 
-  test("boxes are by their subtype, at their middles (a box's entity is its corner): half a box on across and along", () => {
+  test("boxes are by their subtype, at their middles", () => {
+    // a box's entity is its corner: half a box on across and along
     const boxes = cutLevelObjects(level, OPTIONS).filter(({ kind }) => kind === "box");
     expect(boxes.map(({ box }) => box)).toEqual(["basic", "tnt"]);
     expect(boxes[0].at).toEqual([(800 + 200) / 400, -(-4000 + 200) / 400, 1]);
@@ -35,7 +36,8 @@ describe("a cut level's objects", () => {
 describe("a cut level's platforms (type 11, a box on each)", () => {
   const level = levelOf([entity(0, 0, [0, 0, 0]), entity(11, 0, [800, 340, -4000], [-70, 0, 0]), entity(3, 2, [800, 400, -4000])]);
 
-  test("are fixed pads, their tops where their boxes stand, under the boxes' middles", () => {
+  test("are fixed pads under their boxes", () => {
+    // their tops where their boxes stand, under the boxes' middles
     const pads = platformPads(level, OPTIONS, "stone");
     const corners = pads.faces.flatMap((face) => face.corners);
     expect(Math.max(...corners.map(([, , z]) => z))).toBeCloseTo(400 / 400);

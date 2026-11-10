@@ -12,7 +12,8 @@ const ACID_CAVE = fileURLToPath(new URL("../../../../../streams/s0000004.nsf", i
 describe.skipIf(!existsSync(ACID_CAVE))("exporting the cut acid cave for blender", () => {
   const level = readCutLevel(ACID_CAVE);
 
-  test("its centre is the middle of its objects across, the lowest of them, and crash's spawn along the route", () => {
+  test("its centre is set by its objects and crash's spawn", () => {
+    // the middle of its objects across, the lowest of them, and crash's spawn along the route
     const xs = level.entities.map(({ at }) => at[0]);
     const crash = level.entities.find(({ type }) => type === 0)!;
     expect(sceneCentre(level)).toEqual([(Math.min(...xs) + Math.max(...xs)) / 2, Math.min(...level.entities.map(({ at }) => at[1])), crash.at[2]]);

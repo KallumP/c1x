@@ -76,7 +76,7 @@ describe("overlappingBoxes", () => {
     expect(overlappingBoxes([box([6, 3, 0])], SCALE, pillarTop)).toEqual(new Set());
   });
 
-  test("the spawn and end aren't boxes", () => {
+  test("the spawn and end aren't checked", () => {
     const objects = [newObject("spawn", [0, 0, 0]), newObject("end", [0, 0, 0]), box([0, 0, 0])];
     expect(overlappingBoxes(objects, SCALE, [])).toEqual(new Set());
   });
@@ -122,7 +122,7 @@ describe("overlappingBoxes on a big level", () => {
     expect(flagged).toEqual(new Set());
   });
 
-  test("still flags boxes sunk into its floor", () => {
+  test("flags boxes sunk into its floor", () => {
     const sunk = boxes.map((object, k) => (k % 10 === 0 ? { ...object, at: [object.at[0], object.at[1], -0.5] as Vec3 } : object));
     expect(overlappingBoxes(sunk, SCALE, triangles)).toEqual(new Set(Array.from({ length: 10 }, (_, k) => k * 10)));
   });
@@ -155,7 +155,7 @@ describe("dropToFloor", () => {
     expect(expectJustAbove(box([0, 0, 3]), [...floor, ...step])).toBeCloseTo(1, 1);
   });
 
-  test("counts raise", () => {
+  test("counts the box's raise", () => {
     expect(expectJustAbove(box([0, 0, 2], { raise: 0.5 }), floor)).toBeCloseTo(-0.5, 1);
   });
 

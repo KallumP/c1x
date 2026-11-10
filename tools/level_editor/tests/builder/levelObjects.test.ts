@@ -35,7 +35,7 @@ describe("objects.json", () => {
     expect(readObjectsFile(objectsFolder())).toEqual([]);
   });
 
-  test("its objects", () => {
+  test("reads the objects in it", () => {
     const objects = readObjectsFile(objectsFolder('[{"kind": "end", "at": [0, 40, 1]}]'));
     expect(objects.map(({ kind, at }) => [kind, at])).toEqual([["end", [0, 40, 1]]]);
   });

@@ -60,7 +60,8 @@ describe("an object from another level (its donor)", () => {
     expect(new Map(donorObject(donorLevel(), CRAB_SLOT).code)).toEqual(new Map([[CRAB_SLOT, CRAB], [SPLASH_SLOT, SPLASH]]));
   });
 
-  test("it can bring the code of objects it spawns by their exec slot (child slots), and what that uses, in those slots", () => {
+  test("it brings the code of objects it spawns by exec slot, into those slots", () => {
+    // child slots, and what that code uses
     const object = donorObject(donorLevel(), CRAB_SLOT, [27]);
     expect(new Map(object.code)).toEqual(new Map([[CRAB_SLOT, CRAB], [SPLASH_SLOT, SPLASH], [27, BEACH]]));
     expect(eids(object.entries)).toEqual(new Set([CRAB, MODEL, ANIMATION, SPLASH, BEACH]));
@@ -171,28 +172,30 @@ const codeOf = (objects: DonorObject[], eid: number) => {
 };
 
 describe("enemies' code from other levels", () => {
-  test("a native's starts it at its path's first node and walks it back there, not to the end nearest crash: each pick branches past the other end, dropping its comparison", () => {
+  test("a native from the great gate starts at its path's first node and walks back there", () => {
+    // not to the end nearest crash: each pick branches past the other end, dropping its comparison
     const code = codeOf(enemyDonorObjects(new Map([["native", nativeDonorLevel(nativeCode())]])), NATIVE);
     expect(code).toEqual(nativeCode(BRA_0_DROP_1, BRA_3_DROP_1));
   });
 
-  test("a native's other items are as they were", () => {
+  test("a native's code keeps its other items", () => {
     const items = enemyDonorObjects(new Map([["native", nativeDonorLevel(nativeCode())]]))[0].entries[0].items;
     expect([items[0], items[2]]).toEqual([text("head"), text("data")]);
   });
 
-  test("the level it came from keeps its own", () => {
+  test("patching a native's code leaves its donor level's code alone", () => {
     const level = nativeDonorLevel(nativeCode());
     enemyDonorObjects(new Map([["native", level]]));
     expect(codeOf([donorObject(level, NATIVE_SLOT)], NATIVE)).toEqual(nativeCode());
   });
 
-  test("other enemies' is as it was", () => {
+  test("other enemies' code isn't patched", () => {
     const code = codeOf(enemyDonorObjects(new Map([["crab", nativeDonorLevel(nativeCode())]])), CRAB);
     expect(code).toEqual(nativeCode());
   });
 
-  test("a native's that isn't as the great gate's is an error, as it can't be changed", () => {
+  test("a native's code that can't be patched is an error", () => {
+    // code that isn't as the great gate's
     const level = nativeDonorLevel(nativeCode(1));
     expect(() => enemyDonorObjects(new Map([["native", level]]))).toThrow(/native/);
   });
@@ -220,12 +223,14 @@ function riverCode(check = SLT_PLAYER_HEIGHT): number[] {
 }
 
 describe("river enemies' code from up the creek", () => {
-  test.each(["blue_river_plant", "green_river_plant", "fish"] as const)("a %s's lets a green river plant bite at any height: its check that crash came back down near it always passes", (type) => {
+  test.each(["blue_river_plant", "green_river_plant", "fish"] as const)("a %s's code lets a green river plant bite at any height", (type) => {
+    // its check that crash came back down near it always passes
     const code = codeOf(enemyDonorObjects(new Map([[type, oneCodeLevel(0x18, RIVER_SLOT, RIVER, riverCode())]])), RIVER);
     expect(code).toEqual(riverCode(ORL_TRUE));
   });
 
-  test("a river enemy's that isn't as up the creek's is an error, as it can't be changed", () => {
+  test("a river enemy's code that can't be patched is an error", () => {
+    // code that isn't as up the creek's
     const level = oneCodeLevel(0x18, RIVER_SLOT, RIVER, riverCode(1));
     expect(() => enemyDonorObjects(new Map([["green_river_plant", level]]))).toThrow(/green river/);
   });
@@ -264,13 +269,15 @@ function labAssistantCode(setup = SETUP_BY_PRESET, facing = FACE_BY_SIGN, vialSp
 }
 
 describe("lab assistants' code from stormy ascent", () => {
-  test("a lab assistant's faces by its init flag a and throws its vials at b along the game's x and c along z", () => {
+  test("a lab assistant's code faces and throws by its init flags", () => {
+    // it faces by flag a, and throws its vials at b along the game's x and c along z
     const level = oneCodeLevel(0x22, LAB_ASSISTANT_SLOT, LAB_ASSISTANT, labAssistantCode());
     const code = codeOf(enemyDonorObjects(new Map([["lab_assistant", level]])), LAB_ASSISTANT);
     expect(code).toEqual(labAssistantCode(SETUP_BY_FLAGS, BRA_PAST_FACING, MOVE_THROWER_FLAG_C));
   });
 
-  test("a lab assistant's that isn't as stormy ascent's is an error, as it can't be changed", () => {
+  test("a lab assistant's code that can't be patched is an error", () => {
+    // code that isn't as stormy ascent's
     const level = oneCodeLevel(0x22, LAB_ASSISTANT_SLOT, LAB_ASSISTANT, labAssistantCode(SETUP_BY_PRESET, 1));
     expect(() => enemyDonorObjects(new Map([["lab_assistant", level]]))).toThrow(/lab assistant/);
   });

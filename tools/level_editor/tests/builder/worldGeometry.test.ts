@@ -72,7 +72,8 @@ describe("camera paths", () => {
     expect(path.readUInt16LE(38)).toBe(0); // no follow camera height
   });
 
-  test("a follow camera path keeps the camera's height above crash's floor in its first spare field, for the game", () => {
+  test("a follow camera path keeps the camera's height above crash's floor", () => {
+    // in its first spare field, for the game
     const path = pathBytes({ slst: 0, points: [[0, 0, 0, 0, 0, 0]], camMode: 9, zoom: 1700, averageNodeDistance: 128, followHeight: 2632 });
     expect(path.readUInt16LE(38)).toBe(2632);
   });

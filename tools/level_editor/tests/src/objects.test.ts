@@ -87,7 +87,8 @@ describe("formatObjects", () => {
       "]\n");
   });
 
-  test("writes the spawn first and the end last, keeping the boxes' order (a switch's outline boxes go in order)", () => {
+  test("writes the spawn first and the end last, keeping the boxes' order", () => {
+    // a switch's outline boxes go in order
     const text = formatObjects([
       { kind: "box", box: "basic", at: [1, 0, 0], raise: 0, stack: 1 },
       { kind: "end", at: [0, 9, 0], raise: 0, stack: 1 },
@@ -125,7 +126,7 @@ describe("boxTypeName", () => {
 });
 
 describe("enemies", () => {
-  test("reads an enemy by its type and spot (a rolling stone's path comes with its track)", () => {
+  test("reads an enemy by its type and spot", () => {
     const objects = parseObjects(`[
       {"kind": "enemy", "type": "plant", "at": [1, 10, 0]},
       {"kind": "enemy", "type": "rolling_stone", "at": [-4, 20, 0.5]},
@@ -179,7 +180,8 @@ describe("enemies", () => {
 });
 
 describe("enemy paths", () => {
-  test("a crab, turtle, native or badger can have a path: its nodes, each from where the enemy stands, in metres", () => {
+  test("reads a path enemy's path, its nodes from where it stands", () => {
+    // in metres
     const objects = parseObjects(`[
       {"kind": "enemy", "type": "crab", "at": [2, 30, 0], "path": [[-2, 0, 0], [0, 1, 0], [2, 0, 0]]},
       {"kind": "enemy", "type": "turtle", "at": [3, 40, 0], "path": [[0, -2.5, 0], [0, 2.5, 0.5]]},
@@ -190,17 +192,20 @@ describe("enemy paths", () => {
     expect(objects.map(({ path }) => path)).toEqual([[[-2, 0, 0], [0, 1, 0], [2, 0, 0]], [[0, -2.5, 0], [0, 2.5, 0.5]], [[-1, 0, 0], [1, 0, 0]], [[0, 3, 0], [0, -3, 0]], undefined]);
   });
 
-  test("leader bats can have a path of their second leader: where it hovers, from the first (at, raised), in metres", () => {
+  test("reads leader bats' second leader as their path", () => {
+    // where it hovers, from the first (at, raised), in metres
     const [leaders] = parseObjects('[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "path": [[-14, 2, 0]]}]');
     expect(leaders.path).toEqual([[-14, 2, 0]]);
   });
 
-  test("a lab assistant can have a path of its landing spot: where its vials land, from it (at, raised), in metres", () => {
+  test("reads a lab assistant's landing spot as its path", () => {
+    // where its vials land, from it (at, raised), in metres
     const [assistant] = parseObjects('[{"kind": "enemy", "type": "lab_assistant", "at": [0, 0, 0], "path": [[0, -6, 0]]}]');
     expect(assistant.path).toEqual([[0, -6, 0]]);
   });
 
-  test("a bat roost can have a path of its swoop's end: where its bats' swoop ends, from the roost (at, raised), in metres", () => {
+  test("reads a bat roost's swoop's end as its path", () => {
+    // where its bats' swoop ends, from the roost (at, raised), in metres
     const [roost] = parseObjects('[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "path": [[10, -20, 0]]}]');
     expect(roost.path).toEqual([[10, -20, 0]]);
   });
@@ -250,7 +255,8 @@ describe("enemy paths", () => {
 });
 
 describe("enemy speeds", () => {
-  test("a crab, turtle, native or badger can have a speed: how many times the game's own pace it walks at", () => {
+  test("reads a path enemy's speed", () => {
+    // how many times the game's own pace it walks at
     const objects = parseObjects(`[
       {"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 2},
       {"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "speed": 0.5},
@@ -261,7 +267,7 @@ describe("enemy speeds", () => {
     expect(objects.map(({ speed }) => speed)).toEqual([2, 0.5, 1.5, 2.5, undefined]);
   });
 
-  test("writes a speed after the rest, and leaves out the game's own (1)", () => {
+  test("writes a speed after the rest, leaving out the game's own", () => {
     const turtle = enemyObject("turtle", { at: [1, 2, 0] });
     expect(formatObjects([{ ...turtle, speed: 1.5 }])).toContain('"at": [1, 2, 0], "speed": 1.5}');
     expect(formatObjects([{ ...turtle, speed: 1 }])).toContain('"at": [1, 2, 0]}');
@@ -281,7 +287,8 @@ describe("enemy speeds", () => {
 });
 
 describe("a rolling stone's direction", () => {
-  test("a rolling stone can be reversed, to start at the other end of its track", () => {
+  test("a rolling stone can be reversed", () => {
+    // to start at the other end of its track
     const objects = parseObjects(`[
       {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": true},
       {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": false},
@@ -290,7 +297,8 @@ describe("a rolling stone's direction", () => {
     expect(objects.map(({ reverse }) => reverse)).toEqual([true, undefined, undefined]);
   });
 
-  test("a fish can leap the other way across the map, reversed", () => {
+  test("a fish can be reversed", () => {
+    // to leap the other way across the map
     const [fish] = parseObjects('[{"kind": "enemy", "type": "fish", "at": [0, 0, 0], "reverse": true}]');
     expect(fish.reverse).toBe(true);
   });
@@ -313,7 +321,8 @@ describe("a rolling stone's direction", () => {
 });
 
 describe("a rolling stone's start", () => {
-  test("a rolling stone can start partway along its track: 0 its first end, 1 its far end", () => {
+  test("a rolling stone can start partway along its track", () => {
+    // 0 its first end, 1 its far end
     const objects = parseObjects(`[
       {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 0.5},
       {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 1, "reverse": true},
@@ -342,7 +351,8 @@ describe("a rolling stone's start", () => {
 describe("badger counts", () => {
   const badger = enemyObject("badger", { at: [1, 2, 0] });
 
-  test("a badger can have a count: how many come out in each wave", () => {
+  test("a badger can have a count", () => {
+    // how many come out in each wave
     const objects = parseObjects(`[
       {"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 4},
       {"kind": "enemy", "type": "badger", "at": [0, 0, 0]}
@@ -350,7 +360,8 @@ describe("badger counts", () => {
     expect(objects.map(({ count }) => count)).toEqual([4, undefined]);
   });
 
-  test("a walking spider can have a count too, 1 without one (as fumbling in the dark's), which is left out when written", () => {
+  test("a walking spider can have a count, its default left out when written", () => {
+    // 1 without one, as fumbling in the dark's
     const walker = { ...badger, enemy: "walking_spider" as const };
     expect(parseObjects('[{"kind": "enemy", "type": "walking_spider", "at": [0, 0, 0], "count": 3}]')[0].count).toBe(3);
     expect(numberSetting(walker, "count")).toBe(1);
@@ -358,7 +369,8 @@ describe("badger counts", () => {
     expect(formatObjects([{ ...walker, count: 2 }])).toContain('"count": 2}');
   });
 
-  test("a bat can have a count too: how many bats its roost sends, 4 without one (as temple ruins'), which is left out when written", () => {
+  test("a bat roost can have a count, its default left out when written", () => {
+    // how many bats its roost sends, 4 without one, as temple ruins'
     const bat = { ...badger, enemy: "bat" as const };
     expect(parseObjects('[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "count": 6}]')[0].count).toBe(6);
     expect(numberSetting(bat, "count")).toBe(4);
@@ -366,7 +378,8 @@ describe("badger counts", () => {
     expect(formatObjects([{ ...bat, count: 1 }])).toContain('"count": 1}');
   });
 
-  test("leader bats can have a count too: how many bats each flock has, 5 without one (as sunset vista's), which is left out when written", () => {
+  test("leader bats can have a count, its default left out when written", () => {
+    // how many bats each flock has, 5 without one, as sunset vista's
     const leaders = { ...badger, enemy: "leader_bats" as const };
     expect(parseObjects('[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "count": 2}]')[0].count).toBe(2);
     expect(numberSetting(leaders, "count")).toBe(5);
@@ -374,7 +387,8 @@ describe("badger counts", () => {
     expect(formatObjects([{ ...leaders, count: 3 }])).toContain('"count": 3}');
   });
 
-  test("writes a count after the rest, and leaves out the default (2)", () => {
+  test("writes a badger's count after the rest, leaving out the default", () => {
+    // the default is 2
     expect(formatObjects([{ ...badger, count: 3 }])).toContain('"at": [1, 2, 0], "count": 3}');
     expect(formatObjects([{ ...badger, count: 2 }])).toContain('"at": [1, 2, 0]}');
     const withSpeed = formatObjects([{ ...badger, speed: 2, count: 5 }]);
@@ -396,12 +410,14 @@ describe("badger counts", () => {
 describe("bat roosts' delays", () => {
   const roost = (enemy: "bat" | "leader_bats") => enemyObject(enemy, { at: [1, 2, 0] });
 
-  test("a bat roost or leader bats can have a delay: the seconds between their flocks, in halves of a second or finer", () => {
+  test("a bat roost or leader bats can have a delay", () => {
+    // the seconds between their flocks, in halves of a second or finer
     expect(parseObjects('[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "delay": 3.5}]')[0].delay).toBe(3.5);
     expect(parseObjects('[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "delay": 12}]')[0].delay).toBe(12);
   });
 
-  test("without one, a bat roost's is 10 seconds (temple ruins') and leader bats' 4.5 (sunset vista's), which are left out when written", () => {
+  test("a default delay is left out when written", () => {
+    // a bat roost's is 10 seconds (temple ruins') and leader bats' 4.5 (sunset vista's)
     expect([numberSetting(roost("bat"), "delay"), numberSetting(roost("leader_bats"), "delay")]).toEqual([10, 4.5]);
     expect(formatObjects([{ ...roost("bat"), delay: 10 }])).toContain('"at": [1, 2, 0]}');
     expect(formatObjects([{ ...roost("leader_bats"), delay: 4.5 }])).toContain('"at": [1, 2, 0]}');

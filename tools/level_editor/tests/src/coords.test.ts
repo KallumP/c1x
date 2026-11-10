@@ -3,27 +3,29 @@ import type { Vec3 } from "../../src/objects";
 import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
-  test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
+  test("blenderToView turns blender's (x, y, z) into the viewport's (x, z, -y)", () => {
+    // the viewport has the .obj's axes, y up
     expect(blenderToView([1, 2, 3])).toEqual([1, 3, -2]);
   });
 
-  test("back again", () => {
+  test("viewToBlender undoes blenderToView", () => {
     expect(viewToBlender([1, 3, -2])).toEqual([1, 2, 3]);
     expect(viewToBlender(blenderToView([-4.5, 9.5, 0.6]))).toEqual([-4.5, 9.5, 0.6]);
   });
 
-  test("no -0 from a 0 coming back", () => {
+  test("converting 0 back gives 0, not -0", () => {
     expect(Object.is(viewToBlender([0, 0, 0])[1], 0)).toBe(true);
   });
 });
 
 describe("boxes", () => {
-  test("a box is 400 game units, in blender metres at the level's scale", () => {
+  test("a box's size in metres follows the level's scale", () => {
+    // a box is 400 game units
     expect(boxSize(400)).toBe(1);
     expect(boxSize(2000)).toBe(0.2);
   });
 
-  test("a stack's boxes stand on the ground it's at, raised, one on another", () => {
+  test("a stack's boxes stand one on another from its raised spot", () => {
     expect(stackCentres([1, 2, 3], 0, 1, 400)).toEqual([[1, 2, 3.5]]);
     expect(stackCentres([1, 2, 3], 2.5, 2, 400)).toEqual([[1, 2, 6], [1, 2, 7]]);
     expect(stackCentres([0, 0, 0], 0, 2, 2000)).toEqual([[0, 0, 0.1], [0, 0, 0.30000000000000004]]);
@@ -48,7 +50,8 @@ describe("the camera", () => {
 });
 
 describe("rolling stones", () => {
-  test("roll across the map: along +x unturned, turning with the level as the camera does", () => {
+  test("roll across the camera's view, turning with the level", () => {
+    // along +x unturned
     expect(stoneRolling(0)).toEqual([1, 0, 0]);
     expect(stoneRolling(90)).toEqual([0, -1, 0]);
     expect(stoneRolling(180)).toEqual([-1, 0, 0]);
@@ -59,7 +62,8 @@ describe("rolling stones", () => {
     }
   });
 
-  test("roll jungle rollers' path, its middle a stone's radius over the track's floor, lifted a box's height over the spot, dipping from its ends", () => {
+  test("a stone's path dips from its ends to its middle over its spot", () => {
+    // jungle rollers' path: its middle a stone's radius over the track's floor, lifted a box's height over the spot
     const path = stonePath([1, 2, 3], 0, 0, 400);
     expect(path.length).toBe(11);
     const radius = (STONE_TRACK.radius + BOX_UNITS) / 400;
@@ -70,7 +74,8 @@ describe("rolling stones", () => {
     expect(path.every(([, y]) => y === 2)).toBe(true);
   });
 
-  test("a fish leaps from its spot as up the creek's do: 14 points, 1600 across the map, 2172 at its highest (game units)", () => {
+  test("a fish leaps across the map from its spot", () => {
+    // as up the creek's do: 14 points, 1600 across the map, 2172 at its highest (game units)
     const path = fishLeap([1, 2, 3], 0, 0, 400);
     expect(path.length).toBe(14);
     expect(path[0]).toEqual([1, 2, 3]);
@@ -80,7 +85,8 @@ describe("rolling stones", () => {
     expect(path.every(([, y]) => y === 2)).toBe(true);
   });
 
-  test("a fish's leap turns with the level, across the map as a stone rolls, and lifts with raise", () => {
+  test("a fish's leap turns with the level and lifts with raise", () => {
+    // across the map, as a stone rolls
     const path = fishLeap([0, 0, 0], 1, 90, 400);
     expect(path[13][0]).toBeCloseTo(0);
     expect(path[13][1]).toBeCloseTo(-1600 / 400);
@@ -93,12 +99,14 @@ describe("rolling stones", () => {
     expect(Math.max(...path.map(([, , z]) => z))).toBeCloseTo(3 + 2172 / 400);
   });
 
-  test("a bat roost's swoop ends 10000 game units back along the way the camera faces by default, turning with the level", () => {
+  test("a bat roost's swoop ends back along the camera's facing by default", () => {
+    // 10000 game units, turning with the level
     expect(batSwoopEnd(0, 400).map((value) => value + 0)).toEqual([0, -25, 0]);
     batSwoopEnd(90, 400).forEach((value, axis) => expect(value).toBeCloseTo(cameraFacing(90)[axis] * -25));
   });
 
-  test("with its end 10000 back along the route, a bat roost's bats swoop as temple ruins' do: 14 points, down 1336 at most (game units)", () => {
+  test("a bat roost's bats follow the game's swoop to its end", () => {
+    // as temple ruins' do, its end 10000 back along the route: 14 points, down 1336 at most (game units)
     const path = batSwoop([1, 2, 3], [1, 2 - 25, 3], 0, 400);
     expect(path.length).toBe(14);
     expect(path[0]).toEqual([1, 2, 3]);
@@ -108,7 +116,8 @@ describe("rolling stones", () => {
     });
   });
 
-  test("the swoop stretches and turns to its end wherever it is, its dip kept, rising or falling to it, each step split to keep its points about as far apart", () => {
+  test("a swoop stretches and turns to reach its end", () => {
+    // wherever it is, its dip kept, rising or falling to it, each step split to keep its points about as far apart
     const path = batSwoop([0, 0, 0], [50, 0, 1], 0, 400);
     expect(path.length).toBe(27);
     [50, 0, 1].forEach((value, axis) => expect(path.at(-1)![axis]).toBeCloseTo(value));
@@ -117,18 +126,21 @@ describe("rolling stones", () => {
     [(2 * along) / 400, 0, up / 400 + (2 * along) / 20000].forEach((value, axis) => expect(path[2][axis]).toBeCloseTo(value));
   });
 
-  test("a shorter swoop keeps temple ruins' 14 points, closer together", () => {
+  test("a shorter swoop keeps its points, closer together", () => {
+    // temple ruins' 14 points
     const path = batSwoop([0, 0, 0], [0, -10, 0], 0, 400);
     expect(path.length).toBe(14);
     expect(path.at(-1)![1]).toBeCloseTo(-10);
   });
 
-  test("leader bats' second leader is 6000 game units from the first by default, back across the map as a stone rolls the other way, turning with the level", () => {
+  test("leader bats' second leader is back across the map from the first by default", () => {
+    // 6000 game units, the other way from a rolling stone, turning with the level
     expect(leaderBatsGap(0, 400).map((value) => value + 0)).toEqual([-15, 0, 0]);
     leaderBatsGap(90, 400).forEach((value, axis) => expect(value).toBeCloseTo(stoneRolling(90)[axis] * -15));
   });
 
-  test("with the leaders 6000 apart, the bats fly as sunset vista's do: from 1700 over the first leader and 200 before it, down past it, to the second and up 1700 again, 400 behind them (game units)", () => {
+  test("leader bats' bats fly the game's flight between the leaders", () => {
+    // as sunset vista's do, the leaders 6000 apart: from 1700 over the first leader and 200 before it, down past it, to the second and up 1700 again, 400 behind them (game units)
     const first: Vec3 = [1, 2, 3];
     const flight = leaderBatsFlight(first, [1 - 15, 2, 3], 0, 400);
     expect(flight.length).toBe(13);
@@ -139,7 +151,8 @@ describe("rolling stones", () => {
     });
   });
 
-  test("the bats fly to the second leader wherever it is: along the route, further and higher, in steps of at most 800 between the dive and the climb", () => {
+  test("the bats' flight stretches to reach the second leader", () => {
+    // wherever it is: along the route, further and higher, in steps of at most 800 between the dive and the climb
     const flight = leaderBatsFlight([0, 0, 0], [0, 20, 1], 0, 400);
     [0, -200 / 400 - 1, 1700 / 400].forEach((value, axis) => expect(flight[0][axis]).toBeCloseTo(value));
     [0, 20 + 200 / 400 - 1, 1 + 1700 / 400].forEach((value, axis) => expect(flight.at(-1)![axis]).toBeCloseTo(value));
@@ -149,13 +162,14 @@ describe("rolling stones", () => {
     run.slice(1).forEach((point, step) => expect(Math.hypot(point[0] - run[step][0], point[1] - run[step][1])).toBeLessThanOrEqual(800 / 400 + 1e-9));
   });
 
-  test("leaders closer together than the dive and climb take: the bats run between them at their middle", () => {
+  test("between leaders too close for the dive and climb, the bats turn at their middle", () => {
     const flight = leaderBatsFlight([0, 0, 0], [-1, 0, 0], 0, 400);
     expect(flight.length).toBe(7);
     expect(flight[3][0]).toBeCloseTo(-0.5);
   });
 
-  test("a lab assistant throws back along the game's x (every throw custom levels get does), across the map the other way from a rolling stone, turning with the level", () => {
+  test("a lab assistant throws the other way from a rolling stone", () => {
+    // back along the game's x (every throw custom levels get does), turning with the level
     expect(labAssistantThrow(0)).toEqual([-1, 0, 0]);
     expect(labAssistantThrow(90)).toEqual(stoneRolling(90).map((value) => -value + 0));
   });
@@ -183,7 +197,7 @@ describe("enemies facing the player", () => {
     expect(turned(enemyTurn(turn)).side).toEqual(blenderToView(stoneRolling(turn)).map((value) => value + 0));
   });
 
-  test("unturned, it isn't turned", () => {
+  test("an enemy in an unturned level isn't turned", () => {
     expect(enemyTurn(0)).toBe(0);
   });
 });

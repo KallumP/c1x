@@ -221,7 +221,8 @@ describe("textured faces with their own UVs", () => {
   const regionsOf = (mesh: Mesh, piece: number) =>
     worldMeshes(mesh, { piece, ground: GROUND, side: SIDE, tile: 256, textured: new Set(["stone"]) })[0].polygons.map(({ texture }) => texture).filter(isTileRegion);
 
-  test("keep them: the whole image on the face, in place of a projected part of it", () => {
+  test("keep them, the whole image on the face", () => {
+    // in place of a projected part of it
     const [region] = regionsOf(uvFloor([[0, 0], [0, 1], [1, 0]]), 2048);
     expect(region).toMatchObject({ x: 0, y: 0, w: 64, h: 64 });
     expect(LAYOUTS[region.layout]).toEqual([[0, 1], [0, 0], [1, 1]]);
@@ -234,7 +235,8 @@ describe("textured faces with their own UVs", () => {
     expect(regions.some(({ w, h }) => w < 64 || h < 64)).toBe(true);
   });
 
-  test("a small face isn't sliced across a piece's edge: its image stays whole (a sliced piece's region is only the nearest the game can address)", () => {
+  test("a small face across a piece's edge keeps its image whole", () => {
+    // it isn't sliced: a sliced piece's region is only the nearest the game can address
     // a 400 triangle from z 300 to 700, across the piece edge at 512
     const small: Mesh = {
       vertices: [[0, 0, 300], [400, 0, 300], [0, 0, 700]],
@@ -270,7 +272,8 @@ describe("tile regions", () => {
     expect(LAYOUTS[tileRegion(startingElsewhere, UP, 1024).layout]).toEqual([[1, 1], [0, 0], [1, 0]]);
   });
 
-  test("from a face's UVs: the part of the image under them (v up, as .obj has it), and the corners where they are", () => {
+  test("from a face's UVs are the part of the image under them", () => {
+    // v up, as .obj has it, and the corners where they are
     const whole = uvTileRegion([[0, 1], [1, 1], [0, 0]]);
     expect(whole).toMatchObject({ x: 0, y: 0, w: 64, h: 64 });
     expect(LAYOUTS[whole.layout]).toEqual([[0, 0], [1, 0], [0, 1]]);

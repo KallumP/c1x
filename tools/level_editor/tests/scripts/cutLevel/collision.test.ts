@@ -15,7 +15,8 @@ const volume = (solids: CutSolid[], leaf: number) =>
   solids.filter((solid) => solid.leaf === leaf).reduce((sum, { low, high }) => sum + (high[0] - low[0]) * (high[1] - low[1]) * (high[2] - low[2]), 0);
 
 describe("a cut level's collision (its zones' octrees)", () => {
-  test("is read back into the solid boxes it was made of, by leaf, at their places in the level", () => {
+  test("is read back into the solid boxes it was made of", () => {
+    // by leaf, at their places in the level
     const solids = zoneSolids(zoneWith([
       { low: [0, 0, 0], high: [512, 128, 1024], leaf: LEAF_FLOOR },
       { low: [512, 0, 0], high: [1024, 256, 256], leaf: LEAF_GROUND },
@@ -31,14 +32,15 @@ describe("a cut level's collision floors", () => {
   const levelOf = (solids: CutSolid[]): CutLevel => ({ worlds: [], texturePages: new Map(), entities: [], solids });
   const OPTIONS = { centre: [0, 0, 0] as Vec3, scale: 400 };
 
-  test("are quads on the tops of its floor leaves, facing up, in a collision object (solid, not drawn)", () => {
+  test("are upward quads on its floor leaves' tops, in a collision object", () => {
+    // solid, not drawn
     const floors = collisionFloors(levelOf([{ low: [0, 0, 0], high: [400, 400, 400], leaf: LEAF_FLOOR }]), OPTIONS);
     expect(floors.name.startsWith("collision")).toBe(true);
     expect(floors.faces.length).toBe(2);
     expect(floors.faces.flatMap(({ corners }) => corners).every(([, , z]) => z === 1)).toBe(true);
   });
 
-  test("leave out tops with a floor leaf right on them, and other leaves (ground, under the acid, and rock)", () => {
+  test("leave out covered tops and ground leaves", () => {
     const floors = collisionFloors(levelOf([
       { low: [0, 0, 0], high: [400, 400, 400], leaf: LEAF_FLOOR },
       { low: [0, 400, 0], high: [400, 800, 400], leaf: LEAF_FLOOR },

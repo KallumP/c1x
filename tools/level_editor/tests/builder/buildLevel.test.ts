@@ -127,11 +127,13 @@ describe("building a level", () => {
   };
   const hasStreams = ["s0000009", "s000000c"].every((file) => existsSync(join(STREAMS, `${file}.nsd`)));
 
-  test.skipIf(!hasStreams)("a level with a crab takes it from n. sanity beach in the streams folder", () => {
+  test.skipIf(!hasStreams)("a level with an enemy takes its code from the streams folder", () => {
+    // a crab, from n. sanity beach
     expect(quietBuild(crabLevel(), STREAMS)).toEqual({ ok: true, output: expect.stringMatching(/^wrote /) });
   });
 
-  test.skipIf(!hasStreams)("a level with a crab, without n. sanity beach in the streams folder, stops with a message saying so", () => {
+  test.skipIf(!hasStreams)("a level whose enemy's donor level is missing stops with a message saying so", () => {
+    // a crab, without n. sanity beach in the streams folder
     const streams = newFolder("streams");
     ["nsd", "nsf"].forEach((extension) => copyFileSync(join(STREAMS, `s000000c.${extension}`), join(streams, `s000000c.${extension}`)));
     expect(quietBuild(crabLevel(), streams)).toEqual({ ok: false, output: expect.stringMatching(/N\. Sanity Beach \(s0000009\.nsd\).*crab/) });

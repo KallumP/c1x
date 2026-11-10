@@ -16,7 +16,8 @@ function sourceFolder(text?: string): string {
 }
 
 describe("a level's scale, turn and sky", () => {
-  test("without a level.cfg, the default scale, no turn and n. sanity beach's sky", () => {
+  test("without a level.cfg, a level has the default options", () => {
+    // the default scale, no turn and n. sanity beach's sky
     expect(levelOptions(sourceFolder())).toEqual({ scale: 400, turn: 0, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA });
   });
 
@@ -24,7 +25,8 @@ describe("a level's scale, turn and sky", () => {
     expect(levelOptions(sourceFolder("# the castle\n\nturn = 270\nscale=2000\n"))).toEqual({ scale: 2000, turn: 270, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA });
   });
 
-  test("level.cfg sets the sky: its top and bottom colours, and how far down the screen they split", () => {
+  test("level.cfg sets the sky", () => {
+    // its top and bottom colours, and how far down the screen they split
     const folder = sourceFolder("sky_top = 10, 20, 30\nsky_bottom=0,0,255\nsky_split = 100\n");
     expect(levelOptions(folder).sky).toEqual({ top: [10, 20, 30], bottom: [0, 0, 255], split: 100 });
     expect(levelOptions(sourceFolder("sky_split = 0\n")).sky).toEqual({ ...DEFAULT_SKY, split: 0 });
@@ -34,7 +36,8 @@ describe("a level's scale, turn and sky", () => {
     expect(levelOptions(sourceFolder("turn = 90\n"))).toEqual({ scale: 400, turn: 90, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA });
   });
 
-  test("level.cfg sets how far the camera is from crash (times its usual distance) and how far above him it looks down from (degrees)", () => {
+  test("level.cfg sets the camera's distance and angle", () => {
+    // how far the camera is from crash (times its usual distance), and how far above him it looks down from (degrees)
     expect(levelOptions(sourceFolder("camera_distance = 1.5\ncamera_angle = 30\n")).camera).toEqual({ distance: 1.5, angle: 30 });
     expect(levelOptions(sourceFolder("camera_angle = 60\n")).camera).toEqual({ distance: 1, angle: 60 });
   });

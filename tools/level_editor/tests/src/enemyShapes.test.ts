@@ -87,7 +87,8 @@ describe("enemy shapes", () => {
     expect(partsNamed("spider", "thread").length).toBeGreaterThan(0);
   });
 
-  test("the river plants are one shape with the same red jaws, their leaves blue or green", () => {
+  test("the river plants differ only in their leaves' colour", () => {
+    // one shape with the same red jaws, their leaves blue or green
     const [blue, green] = [ENEMY_SHAPES.blue_river_plant, ENEMY_SHAPES.green_river_plant];
     expect(green.map(({ colour, ...shape }) => shape)).toEqual(blue.map(({ colour, ...shape }) => shape));
     const colours = (parts: typeof blue, name: string) => new Set(parts.filter((part) => part.name === name).map((part) => part.colour));
@@ -96,7 +97,8 @@ describe("enemy shapes", () => {
     expect([...colours(blue, "leaf")].some((colour) => colours(green, "leaf").has(colour))).toBe(false);
   });
 
-  test("a river plant is three toothed petals a third of a turn apart, one behind and two towards the player, round a bud in its middle", () => {
+  test("a river plant is three petals a third of a turn apart round a bud", () => {
+    // toothed petals, one behind and two towards the player, the bud in its middle
     const angleOf = ({ at: [x, , z] }: { at: number[] }) => Math.round((Math.atan2(x, z) * 180) / Math.PI);
     const parts = ENEMY_SHAPES.blue_river_plant;
     const petals = parts.filter((part) => part.name === "jaw");
@@ -106,7 +108,8 @@ describe("enemy shapes", () => {
     expect(Math.hypot(buds[0].at[0], buds[0].at[2])).toBeLessThan(1);
   });
 
-  test("each river plant petal rises away from the plant's middle: its highest point is further out than its middle", () => {
+  test("each river plant petal rises away from the plant's middle", () => {
+    // its highest point is further out than its middle
     const petals = ENEMY_SHAPES.blue_river_plant.filter((part) => part.name === "jaw");
     petals.forEach((petal) => {
       const positions = partGeometry(petal).getAttribute("position");
@@ -121,7 +124,8 @@ describe("enemy shapes", () => {
     });
   });
 
-  test("the lizards differ by colour: green and red", () => {
+  test("the lizards differ by colour", () => {
+    // green and red
     const colours = (type: "lizard" | "red_lizard") => ENEMY_SHAPES[type].map(({ colour }) => colour);
     expect(colours("lizard")).not.toEqual(colours("red_lizard"));
   });

@@ -28,8 +28,11 @@ describe("crabs' and turtles' paths that leave the floor or run through a wall",
     expect(strayingPaths([turtle([[0, 0, 0], [4, 0, 0]])], 0, SCALE, [...floor, ...wall])).toEqual(new Set([0]));
   });
 
-  test("a path up onto a raised floor, its nodes on each, is fine; one under it isn't", () => {
+  test("a path onto a raised floor, its nodes on each, is fine", () => {
     expect(strayingPaths([turtle([[0, 4, 1], [3, 4, 1]])], 0, SCALE, [...floor, ...ledge])).toEqual(new Set());
+  });
+
+  test("a path under a raised floor is flagged", () => {
     expect(strayingPaths([turtle([[0, 4, 0], [3, 4, 0]])], 0, SCALE, [...floor, ...ledge])).toEqual(new Set([0]));
   });
 

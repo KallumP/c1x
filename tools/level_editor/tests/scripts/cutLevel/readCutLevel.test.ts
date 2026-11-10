@@ -9,7 +9,8 @@ const hasAcidCave = existsSync(ACID_CAVE);
 describe.skipIf(!hasAcidCave)("the cut acid cave (s0000004), read from its pages alone", () => {
   const level = readCutLevel(ACID_CAVE);
 
-  test("has its five world meshes, each with its origin, vertices and polygons", () => {
+  test("has its world meshes, each with its origin, vertices and polygons", () => {
+    // the acid cave has five
     expect(level.worlds.map(({ name }) => name).sort()).toEqual(["k0_4W", "k1_4W", "k2_4W", "k3_4W", "k4_4W"]);
     const k0 = level.worlds.find(({ name }) => name === "k0_4W")!;
     expect(k0.origin).toEqual([13450, 5800, 36581]);
@@ -17,11 +18,13 @@ describe.skipIf(!hasAcidCave)("the cut acid cave (s0000004), read from its pages
     expect(k0.vertices.length).toBeGreaterThan(0);
   });
 
-  test("has its seven texture pages, by entry id", () => {
+  test("has its texture pages, by entry id", () => {
+    // the acid cave has seven
     expect(level.texturePages.size).toBe(7);
   });
 
-  test("has its seven zones' entities, at their places in the level: crash's spawn in k0_4Z", () => {
+  test("has its zones' entities at their places in the level", () => {
+    // seven zones; crash's spawn in k0_4Z
     const crash = level.entities.filter(({ type }) => type === 0);
     expect(crash.length).toBe(1);
     expect(crash[0].zone).toBe("k0_4Z");

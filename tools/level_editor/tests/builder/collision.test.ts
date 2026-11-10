@@ -79,7 +79,7 @@ describe("collision cells", () => {
     expect(top("wall")).toBeLessThanOrEqual(top("floor"));
   });
 
-  test("a wall one cell over the floor beside it is a lip crash steps onto, not a wall", () => {
+  test("a wall one cell over the floor beside it is a lip crash steps onto", () => {
     // sand at 250 rounds to the cell top at 256, a bank wall to 330 rounds to 384: 20 cm apart in
     // the map, a cell apart in the octree. crash can step up a floor cell (land_offset, about 244)
     const sand = floorMesh(0, 0, 512, 256, 250);
@@ -89,7 +89,7 @@ describe("collision cells", () => {
     expect(cells.get([3, 0, 0])).toBe("wall"); // the bank's cells under the sand stay wall
   });
 
-  test("a wall more than a cell over the floor beside it stays a wall", () => {
+  test("a wall more than a cell over the floor beside it is a wall", () => {
     const sand = floorMesh(0, 0, 512, 256, 250);
     const wall = quadMesh([[512, 0, 0], [512, 600, 0], [512, 600, 256], [512, 0, 256]]);
     const cells = cellsOf(merged(sand, wall));

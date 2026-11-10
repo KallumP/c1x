@@ -17,7 +17,7 @@ describe("a level's sky", () => {
     expect(formatRgb([59, 62, 216])).toBe("59, 62, 216");
   });
 
-  test("splits on the screen's 216 rows", () => {
+  test("a split is a whole row from 0 to 216", () => {
     expect([0, 20, 216].every(isSkySplit)).toBe(true);
     expect([-1, 217, 1.5].some(isSkySplit)).toBe(false);
   });
@@ -28,7 +28,7 @@ describe("a level's sky", () => {
     expect(isSameSky(DEFAULT_SKY, { ...DEFAULT_SKY, split: 21 })).toBe(false);
   });
 
-  test("a colour as a colour picker's #rrggbb, and back", () => {
+  test("converts a colour to a colour picker's #rrggbb and back", () => {
     expect(rgbToHex([59, 62, 216])).toBe("#3b3ed8");
     expect(rgbToHex([0, 0, 0])).toBe("#000000");
     expect(hexToRgb("#3b3ed8")).toEqual([59, 62, 216]);

@@ -11,7 +11,8 @@ function withObjects(objects: LevelObject[]): EditorState {
 }
 
 describe("placeableKind", () => {
-  test("is the palette kind a thing to place is under: the spawn, the end, a box or an enemy", () => {
+  test("sorts a thing to place into its palette kind", () => {
+    // the spawn, the end, a box or an enemy
     expect(["spawn", "end", "basic", "tnt", "crab", "walking_spider"].map((what) => placeableKind(what as Placeable)))
       .toEqual(["spawn", "end", "box", "box", "enemy", "enemy"]);
   });
@@ -32,14 +33,16 @@ describe("new enemies", () => {
     expect(newObject(enemy, [1, 2, 3])).toEqual(enemyObject(enemy, { at: [1, 2, 3] }));
   });
 
-  test("a bat roost starts raised so its bats' swoop comes down to crash's height, not under the floor: its lowest point 600 game units over the floor, at the level's scale", () => {
+  test("a new bat roost starts raised so its bats' swoop stays above the floor", () => {
+    // its lowest point 600 game units over the floor, at the level's scale
     const lowest = -Math.min(...BAT_SWOOP.map(([, up]) => up));
     expect(newObject("bat", [1, 2, 3], 400)).toEqual({ kind: "enemy", enemy: "bat", at: [1, 2, 3], raise: (lowest + 600) / 400, stack: 1 });
     expect(newObject("bat", [1, 2, 3], 2000).raise).toBeCloseTo((lowest + 600) / 2000);
     expect(newObject("bat", [1, 2, 3]).raise).toBeCloseTo((lowest + 600) / DEFAULT_SCALE);
   });
 
-  test("leader bats start with their first leader 600 game units over the floor, where crash can spin it and its bats fly at him, at the level's scale", () => {
+  test("new leader bats start raised to where crash can spin their first leader", () => {
+    // 600 game units over the floor, at the level's scale, where its bats fly at him
     expect(newObject("leader_bats", [1, 2, 3], 400).raise).toBeCloseTo(600 / 400);
     expect(newObject("leader_bats", [1, 2, 3], 2000).raise).toBeCloseTo(600 / 2000);
   });
@@ -116,7 +119,8 @@ describe("undo and redo", () => {
     expect(state.objects).toEqual([box(1)]);
   });
 
-  test("a drag is one change: a checkpoint, then moves that aren't recorded", () => {
+  test("a drag undoes as one change", () => {
+    // a checkpoint, then moves that aren't recorded
     const dragged = run(withObjects([box(1)]),
       { type: "checkpoint" },
       { type: "update", index: 0, changes: { at: [2, 0, 0] }, record: false },
@@ -130,7 +134,7 @@ describe("undo and redo", () => {
     expect(state.objects).toEqual([box(1)]);
   });
 
-  test("undoing an add leaves nothing selected that's gone", () => {
+  test("undoing an add lets go of the added object", () => {
     const state = run(withObjects([box(1)]), { type: "add", object: box(2) }, { type: "undo" });
     expect(state.selected).toBeNull();
   });
@@ -153,7 +157,7 @@ describe("a path's nodes", () => {
     expect([state.selected, state.selectedNode]).toEqual([1, 2]);
   });
 
-  test("nothing has a node selected to start with, or after selecting an object", () => {
+  test("no node is selected on opening or after selecting an object", () => {
     expect(withObjects([crab]).selectedNode).toBeNull();
     const nodeSelected = editorReducer(withCrabSelected(), { type: "selectNode", index: 1, node: 2 });
     expect(editorReducer(nodeSelected, { type: "select", index: 1 }).selectedNode).toBeNull();
@@ -193,7 +197,7 @@ describe("dragging", () => {
     expect(changes).toEqual({ path: [[0, 0, 0], [3, 3, 0]] });
   });
 
-  test("an object is moved by how far the pointer has moved since the drag began, from where it was then", () => {
+  test("an object moves by how far the pointer has moved since the drag began", () => {
     expect(draggedBy(crab, null, [5, 5, 0], [6, 7, 0.5], 0, 400)).toEqual({ at: [2, 4, 3.5] });
   });
 
@@ -201,7 +205,7 @@ describe("dragging", () => {
     expect(draggedBy(crab, null, [9, 9, 1], [9, 9, 1], 0, 400)).toEqual({ at: [1, 2, 3] });
   });
 
-  test("a path's node is moved by how far the pointer has moved, from where it was then", () => {
+  test("a path's node moves by how far the pointer has moved since the drag began", () => {
     const changes = draggedBy({ ...crab, path: [[0, 0, 0], [1, 0, 0]] }, 1, [10, 10, 0], [11, 12, 0], 0, 400);
     expect(changes).toEqual({ path: [[0, 0, 0], [2, 2, 0]] });
   });
@@ -216,7 +220,7 @@ describe("dragging", () => {
 });
 
 describe("sliding a path's node count down", () => {
-  test("lets go of a selected node the path no longer has, though the slide isn't recorded yet", () => {
+  test("lets go of a selected node the path no longer has, before the slide is recorded", () => {
     const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0], [2, 0, 0], [3, 0, 0]];
     let state = editorReducer(withObjects([{ ...newObject("turtle", [0, 0, 0]), path }]), { type: "selectNode", index: 0, node: 3 });
     state = editorReducer(state, { type: "checkpoint" });
