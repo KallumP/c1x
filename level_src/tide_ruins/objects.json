@@ -31,7 +31,6 @@
   {"kind": "enemy", "type": "plant", "at": [5, 49.5, 0.9]},
   {"kind": "enemy", "type": "bat", "at": [0, 52, 0.9], "raise": 4.84},
   {"kind": "enemy", "type": "leader_bats", "at": [7.5, 29, 0], "raise": 1.5},
-  {"kind": "enemy", "type": "lab_assistant", "at": [8, 44, 0.6]},
 
   {"kind": "end", "at": [0, 50, 1.2], "raise": 0.35}
 ]
