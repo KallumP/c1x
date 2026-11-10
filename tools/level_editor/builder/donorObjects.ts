@@ -35,6 +35,7 @@ const TOXIC_WASTE: DonorLevel = { lid: 0x7, name: "Toxic Waste", file: "s0000007
 const CORTEX_POWER: DonorLevel = { lid: 0x3, name: "Cortex Power", file: "s0000003" };
 const CASTLE_MACHINERY: DonorLevel = { lid: 0x37, name: "Castle Machinery", file: "s0000037" };
 const SLIPPERY_CLIMB: DonorLevel = { lid: 0x2e, name: "Slippery Climb", file: "s000002e" };
+const THE_LAB: DonorLevel = { lid: 0x29, name: "The Lab", file: "s0000029" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -60,6 +61,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   gunman: CORTEX_POWER,
   camera_robot: CASTLE_MACHINERY,
   bird: SLIPPERY_CLIMB,
+  electric_scientist: THE_LAB,
 };
 
 export interface DonorObject {
@@ -278,6 +280,14 @@ const GUNMAN_CODE_PATCHES: CodePatch[] = [
 // toxic waste's barrel roller throws his barrels (BaraC, slot 16)
 const ENEMY_CHILD_SLOTS: Partial<Record<EnemyType, number[]>> = {
   barrel_roller: [16],
+  electric_scientist: [9],
+};
+
+// the code an enemy spawns by exec slot that moves to another slot under another
+// name, as an enemy's own code can (see MOVED_ENEMY_CODE): the lab's walking lab
+// assistant's spark, the lab's PoRoC, as heavy machinery's (the robot dog's) has slot 9 and the name
+const MOVED_CHILD_CODE: Partial<Record<EnemyType, { from: number; to: number; name: string }[]>> = {
+  electric_scientist: [{ from: 9, to: 44, name: "SprkC" }],
 };
 
 // entries an enemy's entries name but its code never uses, left out: toxic
@@ -472,7 +482,46 @@ function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
   if (!moved) {
     return patched;
   }
-  return withCodeMoved(patched, slot, ENEMY_ENTITIES[type][0], stringToEid(moved.name));
+  return withChildCodeMoved(type, withCodeMoved(patched, slot, ENEMY_ENTITIES[type][0], stringToEid(moved.name)), slot);
+}
+
+const SPAWN_OPCODES = [0x8a, 0x91]; // CHLD: its exec slot in bits 12-19
+
+// an instruction spawning from a moved exec slot made to spawn from where it moved to
+function withSpawnSlotMoved(instruction: number, moves: Map<number, number>): number {
+  if (!SPAWN_OPCODES.includes(instruction >>> 24)) {
+    return instruction;
+  }
+  const to = moves.get((instruction >>> 12) & 0xff);
+  if (to === undefined) {
+    return instruction;
+  }
+  return ((instruction & ~(0xff << 12)) | (to << 12)) >>> 0;
+}
+
+// object with each of its pieces of code spawning from moved exec slots where they moved to
+function withSpawnSlotsMoved(object: DonorObject, moves: Map<number, number>): DonorObject {
+  const codeEids = new Set(object.code.map(([, eid]) => eid));
+  const moveSpawns = (entry: Entry): Entry => {
+    const instructions = Buffer.from(entry.items[CODE_ITEM]);
+    for (let at = 0; at < instructions.length; at += 4) {
+      instructions.writeUInt32LE(withSpawnSlotMoved(instructions.readUInt32LE(at), moves), at);
+    }
+    return { ...entry, items: entry.items.map((item, index) => (index === CODE_ITEM ? instructions : item)) };
+  };
+  return { ...object, entries: object.entries.map((entry) => (codeEids.has(entry.eid) ? moveSpawns(entry) : entry)) };
+}
+
+// object (its own code moved from donorSlot) with the code it spawns moved too
+// (MOVED_CHILD_CODE), and its code spawning from where each moved to
+function withChildCodeMoved(type: EnemyType, object: DonorObject, donorSlot: number): DonorObject {
+  const childMoves = MOVED_CHILD_CODE[type] ?? [];
+  if (childMoves.length === 0) {
+    return object;
+  }
+  const moved = childMoves.reduce((withMoved, { from, to, name }) => withCodeMoved(withMoved, from, to, stringToEid(name)), object);
+  const moves = new Map([[donorSlot, ENEMY_ENTITIES[type][0]], ...childMoves.map(({ from, to }): [number, number] => [from, to])]);
+  return withSpawnSlotsMoved(moved, moves);
 }
 
 // each kind of enemy's object, from the level it's taken from

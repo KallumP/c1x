@@ -50,6 +50,7 @@ export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
 // their slot in custom levels is ENEMY_ENTITIES' (one no level uses)
 export const MOVED_ENEMY_CODE: Partial<Record<EnemyType, { donorSlot: number; name: string }>> = {
   snake: { donorSlot: 25, name: "SnakC" },
+  electric_scientist: { donorSlot: 54, name: "LabEC" }, // the lab's LabAC: stormy ascent's lab assistant has slot 54 and the name
 };
 
 // an enemy's entity type and subtype in the level it's taken from
