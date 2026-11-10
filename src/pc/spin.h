@@ -13,5 +13,7 @@
 #define SPIN_STAMP_MEMORY 14   /* his spin stamp: memory[14] */
 
 extern int SpinsLeft(uint32_t frames_elapsed, uint32_t spin_stamp);
+extern int SpinRefillFrames(uint32_t frames_elapsed, uint32_t spin_stamp);
+extern int SpinFramesAsTenths(int frames);
 
 #endif /* _PC_SPIN_H_ */
