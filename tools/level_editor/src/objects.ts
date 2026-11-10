@@ -20,8 +20,8 @@ export const BOX_TYPES = {
 export type BoxType = keyof typeof BOX_TYPES;
 export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 
-// the enemies custom levels can have, by name, in the order the palette lists
-// them: by what they do. the level build places them by their entity
+// the enemies custom levels can have, by name (the palette lists them by their
+// names, src/objectNames.ts), by what they do. the level build places them by their entity
 // (builder/entities.ts), and takes those jungle rollers hasn't from the level
 // they're in (builder/donorObjects.ts). staying at their spot:
 // - plant: jungle rollers' biting plant, standing still

@@ -3,6 +3,7 @@
 // places the type last picked of it and lists its types to pick another
 import { useState } from "react";
 import { placeableKind, type Placeable, type PlaceableKind, type Tool } from "../editor";
+import { placeableName, placeablesByName } from "../objectNames";
 import { BOX_TYPES, ENEMY_TYPES, type BoxType, type EnemyType } from "../objects";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, SPAWN_COLOUR } from "../objectStyles";
 import "./Palette.css";
@@ -10,11 +11,10 @@ import "./Palette.css";
 const GRID_SIZES = [0, 0.25, 0.5, 1];
 const BOX_TYPE_NAMES = Object.keys(BOX_TYPES) as BoxType[];
 
-const nameOf = (what: Placeable) => what.replace("_", " ");
-
 type TypedKind = "box" | "enemy"; // the kinds with types to pick from
 const isTypedKind = (kind: PlaceableKind | null): kind is TypedKind => kind === "box" || kind === "enemy";
-const KIND_TYPES: Record<TypedKind, Placeable[]> = { box: BOX_TYPE_NAMES, enemy: [...ENEMY_TYPES] };
+// each kind's types, in alphabetical order of their names
+const KIND_TYPES: Record<TypedKind, Placeable[]> = { box: placeablesByName(BOX_TYPE_NAMES), enemy: placeablesByName([...ENEMY_TYPES]) };
 const KIND_TYPE_HEADINGS: Record<TypedKind, string> = { box: "Box type", enemy: "Enemy type" };
 
 // what a tool places, if anything
@@ -66,7 +66,7 @@ export default function Palette({ tool, onTool, grid, onGrid }: {
   // a kind's label: box and enemy with the type they place
   const kindLabel = (kind: PlaceableKind, what: Placeable) => {
     if (isTypedKind(kind)) {
-      return `${kind}: ${nameOf(what)}`;
+      return `${kind}: ${placeableName(what)}`;
     }
     return kind;
   };
@@ -88,7 +88,7 @@ export default function Palette({ tool, onTool, grid, onGrid }: {
   const renderTypes = (kind: TypedKind) => (
     <div className="types">
       <h3>{KIND_TYPE_HEADINGS[kind]}</h3>
-      {KIND_TYPES[kind].map((what) => renderToolButton(what, nameOf(what), placing === what, () => place(what), colourOf(what)))}
+      {KIND_TYPES[kind].map((what) => renderToolButton(what, placeableName(what), placing === what, () => place(what), colourOf(what)))}
     </div>
   );
 
