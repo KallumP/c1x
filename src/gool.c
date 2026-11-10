@@ -15,6 +15,7 @@
 #include "pc/fling.h"
 #include "pc/shield.h"
 #include "pc/tween.h"
+#include "pc/frames.h"
 int CardControl(int op, int part_idx) { return 1; }
 
 /* forward declarations for unexported funcs */
@@ -991,7 +992,7 @@ void GoolUpdateObjects(int flag) {
 
   object_bound_count = 0;
   draw_count_ro = draw_count;
-  frames_elapsed = context.draw_stamp / 34;
+  frames_elapsed = GameFramesElapsed(context.draw_stamp); /* pc: starts part way, see pc/frames.h */
   if (!crash) { return; }
   GoolRecordObjectPoses(); /* pc */
   for (i=0;i<8;i++) {
