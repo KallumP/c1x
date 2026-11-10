@@ -294,6 +294,11 @@ export const SCIENTIST_WALK = 4800;
 // line there (its default path, src/enemyPaths.ts)
 export const BLOB_HOP = 5200;
 
+// how far a flying camera floats up and down, in game units: short of castle machinery's
+// and heavy machinery's (6400 most often, straight up or down), so it stays in sight, as
+// camera robots and birds do (its default path, src/enemyPaths.ts)
+export const FLYING_CAMERA_RISE = 1200;
+
 // how far a monkey walks back and forth, in game units: the great gate's monkeys'
 // path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const MONKEY_WALK = 2400;

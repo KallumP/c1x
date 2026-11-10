@@ -11,91 +11,96 @@ const SPOT: Vec3 = [1, 2, 3];
 describe("a path enemy's default path", () => {
   test("a crab's runs across the map, its middle where it stands", () => {
     // 1600 game units, as its two ends and its middle
-    expect(defaultPath("crab", 0, 400).map(noMinusZero)).toEqual([[-2, 0, 0], [0, 0, 0], [2, 0, 0]]);
+    expect(defaultPath("crab", 0, 400).map(noMinusZero)).toEqual([[-2, 0, 0], [2, 0, 0]]);
   });
 
   test("a turtle's runs along the route, the way the camera faces", () => {
     // 2000 game units
-    expect(defaultPath("turtle", 0, 400).map(noMinusZero)).toEqual([[0, -2.5, 0], [0, 0, 0], [0, 2.5, 0]]);
+    expect(defaultPath("turtle", 0, 400).map(noMinusZero)).toEqual([[0, -2.5, 0], [0, 2.5, 0]]);
   });
 
   test("a native's runs across the map", () => {
     // 1972 game units, as the great gate's natives walk
-    expect(defaultPath("native", 0, 400).map(noMinusZero)).toEqual([[-2.465, 0, 0], [0, 0, 0], [2.465, 0, 0]]);
+    expect(defaultPath("native", 0, 400).map(noMinusZero)).toEqual([[-2.465, 0, 0], [2.465, 0, 0]]);
   });
 
   test("a badger's runs along the route from ahead back towards the spawn", () => {
     // 5200 game units, as jungle rollers' badgers run
-    expect(defaultPath("badger", 0, 400).map(noMinusZero)).toEqual([[0, 6.5, 0], [0, 0, 0], [0, -6.5, 0]]);
+    expect(defaultPath("badger", 0, 400).map(noMinusZero)).toEqual([[0, 6.5, 0], [0, -6.5, 0]]);
   });
 
   test("a warthog's runs along the route, the way the camera faces", () => {
     // 5200 game units, as road to nowhere's warthogs charge
-    expect(defaultPath("warthog", 0, 400).map(noMinusZero)).toEqual([[0, -6.5, 0], [0, 0, 0], [0, 6.5, 0]]);
+    expect(defaultPath("warthog", 0, 400).map(noMinusZero)).toEqual([[0, -6.5, 0], [0, 6.5, 0]]);
   });
 
   test("a walking spider's runs along the route from ahead back towards the spawn", () => {
     // 3200 game units, as fumbling in the dark's run
-    expect(defaultPath("walking_spider", 0, 400).map(noMinusZero)).toEqual([[0, 4, 0], [0, 0, 0], [0, -4, 0]]);
+    expect(defaultPath("walking_spider", 0, 400).map(noMinusZero)).toEqual([[0, 4, 0], [0, -4, 0]]);
   });
 
   test("a monkey's runs across the map", () => {
     // 2400 game units, as the great gate's monkeys walk
-    expect(defaultPath("monkey", 0, 400).map(noMinusZero)).toEqual([[-3, 0, 0], [0, 0, 0], [3, 0, 0]]);
+    expect(defaultPath("monkey", 0, 400).map(noMinusZero)).toEqual([[-3, 0, 0], [3, 0, 0]]);
   });
 
   test("a lizard's runs across the map", () => {
     // 3200 game units, as the lost city's green lizards leap
-    expect(defaultPath("lizard", 0, 400).map(noMinusZero)).toEqual([[-4, 0, 0], [0, 0, 0], [4, 0, 0]]);
+    expect(defaultPath("lizard", 0, 400).map(noMinusZero)).toEqual([[-4, 0, 0], [4, 0, 0]]);
   });
 
   test("a walking lizard's runs across the map", () => {
     // 800 game units, as the lost city's walking lizards pace
-    expect(defaultPath("walking_lizard", 0, 400).map(noMinusZero)).toEqual([[-1, 0, 0], [0, 0, 0], [1, 0, 0]]);
+    expect(defaultPath("walking_lizard", 0, 400).map(noMinusZero)).toEqual([[-1, 0, 0], [1, 0, 0]]);
   });
 
   test("a red lizard's runs across the map", () => {
     // 4800 game units, as the lost city's red lizards hop
-    expect(defaultPath("red_lizard", 0, 400).map(noMinusZero)).toEqual([[-6, 0, 0], [0, 0, 0], [6, 0, 0]]);
+    expect(defaultPath("red_lizard", 0, 400).map(noMinusZero)).toEqual([[-6, 0, 0], [6, 0, 0]]);
   });
 
   test("a robot dog's runs along the route", () => {
     // 1600 game units, heavy machinery's robot dogs' longest path, along the way crash runs there
-    expect(defaultPath("robot_dog", 0, 400).map(noMinusZero)).toEqual([[0, -2, 0], [0, 0, 0], [0, 2, 0]]);
+    expect(defaultPath("robot_dog", 0, 400).map(noMinusZero)).toEqual([[0, -2, 0], [0, 2, 0]]);
   });
 
   test("a barrel roller's runs from him back towards the spawn", () => {
     // 4800 game units, toxic waste's first barrel roller's barrels' path, which he stands at the start of
-    expect(defaultPath("barrel_roller", 0, 400).map(noMinusZero)).toEqual([[0, 6, 0], [0, 0, 0], [0, -6, 0]]);
+    expect(defaultPath("barrel_roller", 0, 400).map(noMinusZero)).toEqual([[0, 6, 0], [0, -6, 0]]);
   });
 
   test("a camera robot's rises from its spot", () => {
     // 1200 game units, as castle machinery's camera robots rise and fall
-    expect(defaultPath("camera_robot", 0, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 1.5], [0, 0, 3]]);
-    expect(defaultPath("camera_robot", 90, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 1.5], [0, 0, 3]]);
+    expect(defaultPath("camera_robot", 0, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 3]]);
+    expect(defaultPath("camera_robot", 90, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 3]]);
   });
 
   test("a bird's rises from its spot", () => {
     // 1200 game units, as slippery climb's birds swoop up and down
-    expect(defaultPath("bird", 0, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 1.5], [0, 0, 3]]);
+    expect(defaultPath("bird", 0, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 3]]);
   });
 
   test("an electric scientist's runs along the route back towards the spawn", () => {
     // 4800 game units, the lab's walking lab assistants' paths
-    expect(defaultPath("electric_scientist", 0, 400).map(noMinusZero)).toEqual([[0, 6, 0], [0, 0, 0], [0, -6, 0]]);
+    expect(defaultPath("electric_scientist", 0, 400).map(noMinusZero)).toEqual([[0, 6, 0], [0, -6, 0]]);
   });
 
   test("a blob's runs back towards the spawn, the way its blobs come", () => {
     // 5200 game units, the lab's blob spawners' paths (13 steps of 400), which the blobs come along from its first node
-    expect(defaultPath("blob", 0, 400).map(noMinusZero)).toEqual([[0, 6.5, 0], [0, 0, 0], [0, -6.5, 0]]);
+    expect(defaultPath("blob", 0, 400).map(noMinusZero)).toEqual([[0, 6.5, 0], [0, -6.5, 0]]);
+  });
+
+  test("a flying camera's rises from its spot", () => {
+    // 1200 game units, short of the game's own (6400 most often), so it stays in sight, as camera robots' and birds' do
+    expect(defaultPath("flying_camera", 0, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 3]]);
   });
 
   test("turns with the level", () => {
-    expect(defaultPath("crab", 90, 400).map(noMinusZero)).toEqual([[0, 2, 0], [0, 0, 0], [0, -2, 0]]);
+    expect(defaultPath("crab", 90, 400).map(noMinusZero)).toEqual([[0, 2, 0], [0, -2, 0]]);
   });
 
   test("is longer in metres at a smaller scale", () => {
-    expect(defaultPath("turtle", 90, 200).map(noMinusZero)).toEqual([[-5, 0, 0], [0, 0, 0], [5, 0, 0]]);
+    expect(defaultPath("turtle", 90, 200).map(noMinusZero)).toEqual([[-5, 0, 0], [5, 0, 0]]);
   });
 });
 
@@ -148,7 +153,7 @@ describe("an enemy's path", () => {
     // leader bats' is their second leader, a bat roost's its swoop's end, a path enemy's which node of how many
     expect(nodeHeading(enemyObject("leader_bats"), 0)).toBe("leader 2");
     expect(nodeHeading(enemyObject("bat"), 0)).toBe("swoop's end");
-    expect(nodeHeading(enemyObject("crab"), 1)).toBe("node 2 of 3");
+    expect(nodeHeading(enemyObject("crab"), 1)).toBe("node 2 of 2");
   });
 
   test("its length runs along all its nodes", () => {
@@ -181,7 +186,7 @@ describe("moving a node", () => {
 
   test("an enemy without a path of its own gets its default path, with that node moved", () => {
     const moved = withNodeAt(enemyObject("crab", { at: SPOT }), 0, [1, 4, 3], 0, 400);
-    expect(moved.map(noMinusZero)).toEqual([[0, 2, 0], [0, 0, 0], [2, 0, 0]]);
+    expect(moved.map(noMinusZero)).toEqual([[0, 2, 0], [2, 0, 0]]);
   });
 });
 
@@ -223,7 +228,7 @@ describe("turning a path round", () => {
   });
 
   test("an enemy without a path of its own gets its default path, turned round", () => {
-    expect(turnedRound(enemyObject("crab"), 0, 400).map(noMinusZero)).toEqual([[2, 0, 0], [0, 0, 0], [-2, 0, 0]]);
+    expect(turnedRound(enemyObject("crab"), 0, 400).map(noMinusZero)).toEqual([[2, 0, 0], [-2, 0, 0]]);
   });
 
   test("a node keeps its place, counted from the other end", () => {

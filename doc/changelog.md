@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-10
+
+### Changed
+
+- the level editor's enemy paths start with 2 nodes
+
 ## 2026-11-09
 
 ### Added

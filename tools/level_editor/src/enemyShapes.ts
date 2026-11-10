@@ -18,7 +18,7 @@ export type ShapePart = Primitive & {
 };
 
 type ModelledEnemy = Exclude<EnemyType, "rolling_stone">; // the leader bats' shape is its leaders'
-type StandingEnemy = Exclude<ModelledEnemy, "spider" | "bat" | "leader_bats">; // all but the spider hanging on its thread and the flying bats
+type StandingEnemy = Exclude<ModelledEnemy, "spider" | "bat" | "leader_bats" | "flying_camera">; // all but the spider hanging on its thread and the flying bats and camera
 
 const PLANT_COLOURS = { leaf: "#2f7d32", stem: "#4f9a2f", jaw: "#6bb33a", mouth: "#b0233a", tooth: "#f4f1e0", soil: "#6b4a2b" };
 const TURTLE_COLOURS = { shell: "#b8282a", spot: "#2fa58c", skin: "#b5a35a", eye: "#f4f1e0", pupil: "#1a1a1a" };
@@ -43,6 +43,7 @@ const BIRD_COLOURS = { feather: "#6b5038", wing: "#54402e", head: "#8a7a6a", bea
 const SPARK_COLOUR = "#7af0f0";
 const BARREL_COLOURS = { wood: "#a0712e", hoop: "#4a3a2a" };
 const BLOB_COLOURS = { slime: "#e8d23a", sheen: "#f8f0a0", spot: "#c8a62a" };
+const FLYING_CAMERA_COLOURS = { body: "#5c6152", rim: "#8c1f1f", lens: "#e8ecef", light: "#3a7ad8" };
 const ROBOT_DOG_COLOURS = { body: "#5a5c66", shell: "#3a3b42", leg: "#2c2d33", eye: "#f2e21a" };
 const COBRA_COLOURS = { scale: "#2f5fa8", belly: "#d8c08a", eye: "#c8302a", fang: "#f4f1e0" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
@@ -443,6 +444,18 @@ function electricScientist(): ShapePart[] {
   return [...labAssistant().filter((part) => part.colour !== LAB_ASSISTANT_COLOURS.vial), ...bothSides([spark])];
 }
 
+// heavy and castle machinery's flying camera (Psr5G): a grey ball, a barrel out
+// front with a red rim round its white lens, facing +z, and a blue light on top
+function flyingCamera(): ShapePart[] {
+  return [
+    ball(1, [0, 200, 0], FLYING_CAMERA_COLOURS.body, { stretch: [200, 200, 180] }),
+    rod(110, 110, 90, [0, 200, 170], FLYING_CAMERA_COLOURS.body, { turn: [Math.PI / 2, 0, 0] }),
+    rod(85, 85, 20, [0, 200, 215], FLYING_CAMERA_COLOURS.rim, { turn: [Math.PI / 2, 0, 0] }),
+    ball(1, [0, 200, 220], FLYING_CAMERA_COLOURS.lens, { stretch: [60, 60, 8], name: "eye" }),
+    ball(1, [0, 420, 0], FLYING_CAMERA_COLOURS.light, { stretch: [45, 50, 45] }),
+  ];
+}
+
 // the lab's yellow slime blob (Fr1FG), round as it is halfway through a hop: its
 // body, a sheen on top and darker spots, inside its outline
 function blob(): ShapePart[] {
@@ -789,14 +802,18 @@ const BAT_BELOW_SPOT = 361;
 // and sunset vista's leader bat (Ba2wG, its first frame in Ba2wV)
 const LEADER_BAT_HEIGHT = 394;
 const LEADER_BAT_BELOW_SPOT = 262;
+// and heavy machinery's flying camera (Psr5G, its first frame in Psr5V), its spot its middle
+const FLYING_CAMERA_HEIGHT = 494;
+const FLYING_CAMERA_BELOW_SPOT = 219;
 
 // each enemy's shape: the standing ones', the spider hanging as the walking
-// spider's body, and the bat about its spot as the game's
+// spider's body, and the bats and flying camera about their spots as the game's
 export const ENEMY_SHAPES: Record<ModelledEnemy, ShapePart[]> = {
   ...STANDING_SHAPES,
   spider: hangingSpider(STANDING_SHAPES.walking_spider),
   bat: lifted(scaledToHeight(standingOnFloor(bat()), BAT_HEIGHT), -BAT_BELOW_SPOT),
   leader_bats: lifted(scaledToHeight(standingOnFloor(leaderBat()), LEADER_BAT_HEIGHT), -LEADER_BAT_BELOW_SPOT),
+  flying_camera: lifted(scaledToHeight(standingOnFloor(flyingCamera()), FLYING_CAMERA_HEIGHT), -FLYING_CAMERA_BELOW_SPOT),
 };
 
 // a barrel roller's barrel, as big as toxic waste's, on the floor
