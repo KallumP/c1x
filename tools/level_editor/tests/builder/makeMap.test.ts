@@ -895,6 +895,29 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasHeavyMachinery)("flying cameras, from heavy machinery (castle machinery's are the same)", () => {
+    test("a level with a flying camera has heavy machinery's robot code and the flying camera's model and animation", () => {
+      const { level, entries, zone } = build([enemy("flying_camera")]);
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.flying_camera[0]]).toBe(stringToEid("PoRoC"));
+      expect(["Psr5G", "Psr5V"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(enemies(zone)[0].type).toEqual([9, 6]);
+    });
+
+    test("by default a flying camera floats up 6400 (16 m at scale 400) from its spot, in steps of 400", () => {
+      const [placed] = enemies(build([enemy("flying_camera")]).zone);
+      placed.path.forEach(([x, , z]) => expectNear([x, z], [SPOT_X, SPOT_Z], 8));
+      expectNear(placed.path[0][1], FLOOR_Y, 8);
+      expectNear(placed.path.at(-1)![1], FLOOR_Y + 6400, 8);
+      stepLengths(placed.path).forEach((step) => expectNear(step, 400, 8));
+    });
+
+    test("a level with a flying camera and a robot dog has the one robot code for both", () => {
+      const { level, zone } = build([enemy("flying_camera"), enemy("robot_dog", { at: [1, 6, 0] })]);
+      expect(level.nsd.ldat.execMap[9]).toBe(stringToEid("PoRoC"));
+      expect(enemies(zone).map(({ type }) => type)).toEqual(expect.arrayContaining([[9, 6], [9, 0]]));
+    });
+  });
+
   describe.skipIf(!hasToxicWaste)("barrel rollers, from toxic waste", () => {
     const withBarrelRoller = (more: Partial<LevelObject> = {}) => build([enemy("barrel_roller", more)]);
 
