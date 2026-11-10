@@ -5,10 +5,6 @@ import { BOX_TYPES, ENEMY_TYPES, type BoxType } from "../../src/objects";
 describe("the names the palette shows", () => {
   test.each([
     ["snake", "Cobra"],
-    ["bat", "Bat roost"],
-    ["spider", "Hanging spider"],
-    ["lizard", "Green lizard"],
-    ["blue_river_plant", "Blue river plant"],
     ["question", "Question mark"],
     ["life", "Extra life"],
     ["tnt", "TNT"],
@@ -24,7 +20,30 @@ describe("the names the palette shows", () => {
   });
 
   test("a type without a name of its own is named by its id in words", () => {
-    expect(placeableName("walking_lizard" as BoxType)).toBe("Walking lizard");
+    expect(placeableName("gunman")).toBe("Gunman");
+    expect(placeableName("camera_robot")).toBe("Camera robot");
+  });
+
+  // variants of one thing: the thing, then which in brackets, so they sit together in the list
+  test.each([
+    ["lizard", "Lizard (green)"],
+    ["red_lizard", "Lizard (red)"],
+    ["walking_lizard", "Lizard (walking)"],
+    ["blue_river_plant", "River plant (blue)"],
+    ["green_river_plant", "River plant (green)"],
+    ["spider", "Spider (hanging)"],
+    ["walking_spider", "Spider (walking)"],
+    ["bat", "Bats (roost)"],
+    ["leader_bats", "Bats (leaders)"],
+    ["lab_assistant", "Lab assistant"],
+    ["electric_scientist", "Lab assistant (electric)"],
+    ["iron", "Iron"],
+    ["iron_arrow", "Iron (arrow)"],
+    ["iron_outline", "Iron (outline)"],
+    ["tnt", "TNT"],
+    ["enemy_tnt", "TNT (enemy)"],
+  ] as const)("the variant %s is named %s", (what, name) => {
+    expect(placeableName(what)).toBe(name);
   });
 
   test("types are listed in alphabetical order of their names", () => {
