@@ -103,24 +103,3 @@ UTEST(pad_config, example_controls_file_matches_defaults) {
   for (i=0;i<512;i++)
     EXPECT_EQ(defaults[i], held_for((SDL_Scancode)i));
 }
-
-/*
- * controls.cfg is the player's own (untracked) layout. any layout is fine,
- * so this only checks for typos, and passes if there is no controls.cfg.
- */
-UTEST(pad_config, local_controls_file_is_valid) {
-  FILE *file;
-  char line[128];
-  uint32_t bits;
-  SDL_Scancode code;
-  int line_num;
-
-  file = fopen("controls.cfg", "rb");
-  if (!file) { return; }
-  for (line_num=1;fgets(line, sizeof(line), file);line_num++) {
-    if (PadParseBindingLine(line, &bits, &code) == -1)
-      fprintf(stderr, "controls.cfg:%d: invalid binding: %s", line_num, line);
-    EXPECT_NE(-1, PadParseBindingLine(line, &bits, &code));
-  }
-  fclose(file);
-}

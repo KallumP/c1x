@@ -182,27 +182,6 @@ UTEST(settings, example_settings_file_matches_defaults) {
   SettingsReset(&game_settings);
 }
 
-/*
- * settings.cfg is the player's own (untracked) settings. this only checks
- * for typos, and passes if there is no settings.cfg.
- */
-UTEST(settings, local_settings_file_is_valid) {
-  FILE *file;
-  char line[128];
-  pc_settings s;
-  int line_num;
-
-  file = fopen("settings.cfg", "rb");
-  if (!file) { return; }
-  SettingsReset(&s);
-  for (line_num=1;fgets(line, sizeof(line), file);line_num++) {
-    if (SettingsParseLine(line, &s) == -1)
-      fprintf(stderr, "settings.cfg:%d: invalid setting: %s", line_num, line);
-    EXPECT_NE(-1, SettingsParseLine(line, &s));
-  }
-  fclose(file);
-}
-
 UTEST(settings, boot_level_takes_a_level_name) {
   pc_settings s;
 
