@@ -69,6 +69,13 @@ export interface DonorObject {
   entries: Entry[];                    // its code, models, animations and the like, from entry pages
   sounds: Entry[];                     // the sounds it plays, from the donor's sound pages
   texturePages: Page[];                // the texture pages its models use
+  crashAnimations?: CrashAnimation[];  // crash's animations it needs that the base level's crash lacks
+}
+
+// one of crash's animations: where it is in crash's animations item, and the animation (its eid) to put there
+export interface CrashAnimation {
+  at: number;
+  eid: number;
 }
 
 // the entries of the given kind of page that are among eids
@@ -202,10 +209,31 @@ export function withDonorObjects(level: Level, donors: DonorObject[]): Level {
   const sounds = newEntries((donor) => donor.sounds);
   const texturePages = donors.flatMap((donor) => donor.texturePages).filter((page) => isNewTo(present, page.eid, page.data));
   const ldat = { ...level.nsd.ldat, execMap: execMapWith(level.nsd.ldat.execMap, donors) };
+  const crashAnimations = donors.flatMap((donor) => donor.crashAnimations ?? []);
   return {
     nsd: { ...level.nsd, ldat },
-    pages: [...level.pages, ...packEntries(entries), ...packEntries(sounds, soundPage), ...texturePages],
+    pages: [...pagesWithCrashAnimations(level.pages, crashAnimations), ...packEntries(entries), ...packEntries(sounds, soundPage), ...texturePages],
   };
+}
+
+const CRASH_CODE = stringToEid("WillC");
+const ANIMATION_EID = 4; // an animation's eid, after its type and length
+
+// crash's code with each of animations put in its place in its animations item (its last)
+function crashWithAnimations(crash: Entry, animations: CrashAnimation[]): Entry {
+  const last = crash.items.length - 1;
+  const animationsItem = Buffer.from(crash.items[last]);
+  animations.forEach(({ at, eid }) => animationsItem.writeUInt32LE(eid, at + ANIMATION_EID));
+  return { ...crash, items: crash.items.map((item, index) => (index === last ? animationsItem : item)) };
+}
+
+// pages with crash's code, wherever it is in their entries, given animations
+function pagesWithCrashAnimations(pages: Page[], animations: CrashAnimation[]): Page[] {
+  if (animations.length === 0) {
+    return pages;
+  }
+  const withAnimations = (entry: Entry) => (entry.eid === CRASH_CODE ? crashWithAnimations(entry, animations) : entry);
+  return pages.map((page) => (page.type === PAGE_ENTRIES ? { ...page, entries: page.entries.map(withAnimations) } : page));
 }
 
 const enemyName = (type: EnemyType) => type.replace("_", " ");
@@ -329,6 +357,27 @@ const ENEMY_UNUSED_ENTRIES: Partial<Record<EnemyType, string[]>> = {
 const ENEMY_CAPPED_MODELS: Partial<Record<EnemyType, [model: string, animation: string][]>> = {
   barrel_roller: [["BaV7G", "BaV7V"], ["BaD7G", "BaD7V"]],
 };
+
+// crash's animations an enemy plays on him that the base level's crash (WillC)
+// has only a placeholder for: where each is in crash's animations item, and the
+// donor's animation to put there. the lab's walking lab assistant's spark
+// shocks crash (WS10V), and reads its model's vertices: without it, spinning
+// him as he sparks would look up a model the level hasn't, and crash the game
+const ENEMY_CRASH_ANIMATIONS: Partial<Record<EnemyType, { at: number; animation: string }[]>> = {
+  electric_scientist: [{ at: 72, animation: "WS10V" }],
+};
+
+// object with the crash animations its enemy needs (ENEMY_CRASH_ANIMATIONS) and
+// their models, but not their texture pages: crash's own, which the level has
+function withCrashAnimationEntries(type: EnemyType, object: DonorObject, level: Level): DonorObject {
+  const animations = ENEMY_CRASH_ANIMATIONS[type] ?? [];
+  if (animations.length === 0) {
+    return object;
+  }
+  const crashAnimations = animations.map(({ at, animation }) => ({ at, eid: stringToEid(animation) }));
+  const used = reachableEids(level, crashAnimations.map(({ eid }) => eid));
+  return { ...object, entries: [...object.entries, ...entriesInPages(level, PAGE_ENTRIES, used)], crashAnimations };
+}
 
 // object with its model named model capped at its ends, as animation's first
 // frame has it (if the object has that model)
@@ -498,7 +547,7 @@ function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
   const slot = moved?.donorSlot ?? ENEMY_ENTITIES[type][0];
   const leftOut = (ENEMY_UNUSED_ENTRIES[type] ?? []).map(stringToEid);
   const object = donorObject(level, slot, ENEMY_CHILD_SLOTS[type] ?? [], leftOut);
-  const capped = (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, object);
+  const capped = (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, withCrashAnimationEntries(type, object, level));
   const patched = withPatchedOwnCode(type, withPatchedChildCode(type, capped, level), level, slot);
   if (!moved) {
     return patched;
