@@ -69,14 +69,14 @@ export function rawPagesById(level: Level): Map<number, Page> {
 }
 
 // the eids reachable from keep, through the eids each entry mentions
-export function reachableEids(level: Level, keep: number[]): Set<number> {
+export function reachableEids(level: Level, keep: number[], leftOut: Set<number> = new Set()): Set<number> {
   const entries = entriesById(level);
   const allEids = new Set([...entries.keys(), ...rawPagesById(level).keys()]);
   const kept = new Set<number>();
   const toVisit = keep.filter((eid) => allEids.has(eid));
   while (toVisit.length) {
     const eid = toVisit.pop()!;
-    if (kept.has(eid)) {
+    if (kept.has(eid) || leftOut.has(eid)) {
       continue;
     }
     kept.add(eid);

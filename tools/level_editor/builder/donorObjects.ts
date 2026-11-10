@@ -83,9 +83,10 @@ function codeInSlot(donor: Level, slot: number): number {
 
 // the object whose code is in exec slot slot in the donor level, and what it
 // uses there, with the code in childSlots: objects it spawns by their exec slot
-// (which its entries don't name), and what they use
-export function donorObject(donor: Level, slot: number, childSlots: number[] = []): DonorObject {
-  const used = reachableEids(donor, [slot, ...childSlots].map((codeSlot) => codeInSlot(donor, codeSlot)));
+// (which its entries don't name), and what they use; but not the entries in
+// leftOut, which its entries name but it never uses, nor what only they use
+export function donorObject(donor: Level, slot: number, childSlots: number[] = [], leftOut: number[] = []): DonorObject {
+  const used = reachableEids(donor, [slot, ...childSlots].map((codeSlot) => codeInSlot(donor, codeSlot)), new Set(leftOut));
   const entries = entriesInPages(donor, PAGE_ENTRIES, used);
   const texturePages = [...rawPagesById(donor)].filter(([eid, page]) => used.has(eid) && page.type === PAGE_TEXTURE).map(([, page]) => page);
   return { code: codeSlots(donor, entries), entries, sounds: entriesInPages(donor, PAGE_SOUNDS, used), texturePages };
@@ -256,6 +257,19 @@ const LAB_ASSISTANT_CODE_PATCHES: CodePatch[] = [
   { at: 0x28a, was: 0x11800e13, now: 0x11d19e13 }, // MOVE creator[0xc4], obj[0xac]: a vial's speed along z
 ];
 
+// the code each enemy spawns by its exec slot, which its entries don't name:
+// toxic waste's barrel roller throws his barrels (BaraC, slot 16)
+const ENEMY_CHILD_SLOTS: Partial<Record<EnemyType, number[]>> = {
+  barrel_roller: [16],
+};
+
+// entries an enemy's entries name but its code never uses, left out: toxic
+// waste's barrel roller's data names its WateC, which differs from up the
+// creek's (the river enemies') in the same exec slot, so the two would clash
+const ENEMY_UNUSED_ENTRIES: Partial<Record<EnemyType, string[]>> = {
+  barrel_roller: ["WateC"],
+};
+
 const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = {
   native: NATIVE_CODE_PATCHES,
   blue_river_plant: RIVER_CODE_PATCHES,
@@ -290,7 +304,8 @@ function withPatchedCode(type: EnemyType, object: DonorObject, code: number, pat
 function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
   const moved = MOVED_ENEMY_CODE[type];
   const slot = moved?.donorSlot ?? ENEMY_ENTITIES[type][0];
-  const object = donorObject(level, slot);
+  const leftOut = (ENEMY_UNUSED_ENTRIES[type] ?? []).map(stringToEid);
+  const object = donorObject(level, slot, ENEMY_CHILD_SLOTS[type] ?? [], leftOut);
   const patches = ENEMY_CODE_PATCHES[type];
   const patched = patches ? withPatchedCode(type, object, level.nsd.ldat.execMap[slot], patches) : object;
   if (!moved) {
