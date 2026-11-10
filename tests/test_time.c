@@ -110,3 +110,27 @@ UTEST(time, real_clock_starts_near_0) {
   ASSERT_GE(ticks, 0);
   ASSERT_LT(ticks, TicksIn(60)); /* within a minute of the tests starting */
 }
+
+/* what WaitCallback saw */
+static int wait_calls;
+static int32_t wait_last_elapsed, wait_last_ticks;
+
+static void WaitCallback(int32_t elapsed, int32_t ticks) {
+  wait_calls++;
+  wait_last_elapsed = elapsed;
+  wait_last_ticks = ticks;
+}
+
+UTEST(time, waiting_a_frame_calls_back_with_the_ticks_waited_so_far) {
+  TimeSetFixed(1);
+  SetTicksElapsed(100);
+  TimeWaitFrame(34);
+  wait_calls = 0;
+  TimeWaitFrameWith(34, WaitCallback);
+  ASSERT_GT(wait_calls, 1);
+  ASSERT_EQ(34, wait_last_ticks);
+  ASSERT_LT(wait_last_elapsed, 34);
+  ASSERT_GE(wait_last_elapsed, 25); /* called until the frame is nearly up */
+  ASSERT_EQ(168, GetTicksElapsed());
+  TimeSetFixed(0);
+}
