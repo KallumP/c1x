@@ -141,6 +141,7 @@ describe("enemies", () => {
       {"kind": "enemy", "type": "robot_dog", "at": [12, 130, 0]},
       {"kind": "enemy", "type": "barrel_roller", "at": [13, 140, 0]},
       {"kind": "enemy", "type": "walking_lizard", "at": [16, 170, 0]},
+      {"kind": "enemy", "type": "camera_robot", "at": [17, 180, 0]},
       {"kind": "enemy", "type": "gunman", "at": [14, 150, 0]},
       {"kind": "enemy", "type": "lab_assistant", "at": [10, 110, 0]},
       {"kind": "enemy", "type": "snake", "at": [11, 120, 0]}
@@ -159,6 +160,7 @@ describe("enemies", () => {
       { kind: "enemy", enemy: "robot_dog", at: [12, 130, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "barrel_roller", at: [13, 140, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "walking_lizard", at: [16, 170, 0], raise: 0, stack: 1 },
+      { kind: "enemy", enemy: "camera_robot", at: [17, 180, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "gunman", at: [14, 150, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "lab_assistant", at: [10, 110, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "snake", at: [11, 120, 0], raise: 0, stack: 1 },
@@ -166,9 +168,9 @@ describe("enemies", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, snake, gunman, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, walking_lizard, robot_dog, barrel_roller, badger, walking_spider, bat, leader_bats, rolling_stone)"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, snake, gunman, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, walking_lizard, robot_dog, barrel_roller, camera_robot, badger, walking_spider, bat, leader_bats, rolling_stone)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
-    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs and barrel rollers do)"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers and camera robots do)"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -227,6 +229,7 @@ describe("enemy paths", () => {
     ["robot_dog", true, true],
     ["barrel_roller", true, true],
     ["walking_lizard", true, true],
+    ["camera_robot", true, true],
     ["leader_bats", true, false],
     ["bat", true, false],
     ["lab_assistant", true, false],
@@ -250,7 +253,7 @@ describe("enemy paths", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs and barrel rollers do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers and camera robots do)"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', "object 1: a path should be 2 to 20 nodes"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0]]}]', "object 1: a path's nodes should each be [x, y, z] in metres"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": "across"}]', "object 1: a path should be 2 to"],
@@ -291,7 +294,7 @@ describe("enemy speeds", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs and barrel rollers do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers and camera robots do)"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 4}]', "object 1: speed should be 0.25 to 3 (times the game's own pace)"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 0.1}]', "object 1: speed should be 0.25 to 3"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": "fast"}]', "object 1: speed should be 0.25 to 3"],
