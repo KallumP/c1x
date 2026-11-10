@@ -99,7 +99,7 @@ UTEST(pad_config, example_controls_file_matches_defaults) {
   for (i=0;i<512;i++)
     defaults[i] = held_for((SDL_Scancode)i);
   /* run from the project root */
-  ASSERT_EQ(16, PadLoadBindings("controls.example.cfg"));
+  ASSERT_EQ(PAD_BUTTON_COUNT, PadLoadBindings("controls.example.cfg")); /* a line per button */
   for (i=0;i<512;i++)
     EXPECT_EQ(defaults[i], held_for((SDL_Scancode)i));
 }

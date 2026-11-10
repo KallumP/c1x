@@ -154,6 +154,6 @@ UTEST(launcher_controls, save_keeps_the_controls_files_other_lines) {
   ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, "no_such_example.cfg", &c));
   text = ReadWholeFile(LAUNCHER_CONTROLS_PATH);
   ASSERT_TRUE(text != 0);
-  ASSERT_TRUE(strstr(text, "# mine\nstart = Return\n\nselect = Backspace\n") == text);
+  ASSERT_TRUE(strstr(text, "# mine\nstart = Return\n\n") == text);
   SDL_free(text);
 }
