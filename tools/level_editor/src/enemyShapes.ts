@@ -563,12 +563,12 @@ export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 const RIVER_PLANT_HEIGHT = 400;
 
 const GAME_HEIGHTS: Record<StandingEnemy, number> = {
-  plant: 720, hidden_plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
+  plant: 720, snake: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
   blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, lab_assistant: 1203,
 };
 
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
-  plant, hidden_plant: plant, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
+  plant, snake: plant, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
   blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
   lizard, red_lizard: redLizard, lab_assistant: labAssistant,
 };

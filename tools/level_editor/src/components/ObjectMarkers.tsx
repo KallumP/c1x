@@ -36,10 +36,9 @@ const LEADER_BAT_TOP = shapeBounds(ENEMY_SHAPES.leader_bats).max[1];
 const BAT_TOP = shapeBounds(ENEMY_SHAPES.bat).max[1];
 const LANDING_SIZE = 0.35;   // a lab assistant's landing spot's ring's radius, of a box's size
 const VIAL_COLOUR = "#d0409a"; // its vials' pink, for their flight and landing spot
-const HIDDEN_OPACITY = 0.4;  // a hidden plant drawn faded: it's in the ground until crash comes near
 
 // the enemies that stay at their spot, drawn there
-const SPOT_ENEMIES = ["plant", "blue_river_plant", "green_river_plant", "spider"] as const;
+const SPOT_ENEMIES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake"] as const;
 type SpotEnemy = (typeof SPOT_ENEMIES)[number];
 const isSpotEnemy = (enemy: string | undefined): enemy is SpotEnemy => SPOT_ENEMIES.some((spotEnemy) => spotEnemy === enemy);
 
@@ -161,12 +160,8 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // an enemy that stays where it's placed, facing the player: a plant, a river plant, or a spider hanging there
+  // an enemy that stays where it's placed, facing the player: a plant, a river plant, a spider hanging there, or a cobra
   const renderAtSpot = (object: LevelObject, index: number, enemy: SpotEnemy) => renderShapeModel(ENEMY_SHAPES[enemy], base(object), index);
-
-  // a hidden plant: the plant at its spot, faded, as it's hidden until crash comes near
-  const renderHiddenPlant = (object: LevelObject, index: number) =>
-    renderShapeModel(ENEMY_SHAPES.hidden_plant, base(object), index, undefined, enemyTurn(turn), HIDDEN_OPACITY);
 
   // a fish: at its spot, where it leaps from, facing the way it leaps (across the
   // map, or back reversed), with the line of its leap, and faded where it lands
@@ -391,9 +386,6 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     }
     if (isSpotEnemy(object.enemy)) {
       return renderAtSpot(object, index, object.enemy);
-    }
-    if (object.enemy === "hidden_plant") {
-      return renderHiddenPlant(object, index);
     }
     if (object.enemy === "fish") {
       return renderFish(object, index);

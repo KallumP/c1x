@@ -3,8 +3,8 @@
 // uses there (models, animations, sounds and texture pages), and any object it spawns
 import type { EnemyType, LevelObject } from "../src/objects";
 import { packEntries, rawPagesById, reachableEids } from "./cutLevel";
-import { ENEMY_ENTITIES } from "./entities";
-import { EID_NONE, eidToString } from "./entryIds";
+import { ENEMY_ENTITIES, MOVED_ENEMY_CODE } from "./entities";
+import { EID_NONE, eidToString, stringToEid } from "./entryIds";
 import { ENTRY_GOOL, entriesById, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, soundPage, type Entry, type Level, type Page } from "./levelFiles";
 import { entryBytes } from "./levelWriting";
 
@@ -27,6 +27,7 @@ const THE_LOST_CITY: DonorLevel = { lid: 0x20, name: "The Lost City", file: "s00
 // its lab assistants' code differs from the lab's, whose walkers spawn an object
 // (by exec slot 9) that crashes a custom level
 const STORMY_ASCENT: DonorLevel = { lid: 0x22, name: "Stormy Ascent", file: "s0000022" };
+const TEMPLE_RUINS: DonorLevel = { lid: 0x1c, name: "Temple Ruins", file: "s000001c" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -45,6 +46,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   lizard: THE_LOST_CITY,
   red_lizard: THE_LOST_CITY,
   lab_assistant: STORMY_ASCENT,
+  snake: TEMPLE_RUINS,
 };
 
 export interface DonorObject {
@@ -280,12 +282,18 @@ function withPatchedCode(type: EnemyType, object: DonorObject, code: number, pat
   return { ...object, entries: object.entries.map((entry) => (entry.eid === code ? patchEntry(entry) : entry)) };
 }
 
-// a kind of enemy's object from the level it's taken from, its code changed to suit custom levels
+// a kind of enemy's object from the level it's taken from, its code changed to
+// suit custom levels, and moved to its own exec slot if it has one there
 function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
-  const slot = ENEMY_ENTITIES[type][0];
+  const moved = MOVED_ENEMY_CODE[type];
+  const slot = moved?.donorSlot ?? ENEMY_ENTITIES[type][0];
   const object = donorObject(level, slot);
   const patches = ENEMY_CODE_PATCHES[type];
-  return patches ? withPatchedCode(type, object, level.nsd.ldat.execMap[slot], patches) : object;
+  const patched = patches ? withPatchedCode(type, object, level.nsd.ldat.execMap[slot], patches) : object;
+  if (!moved) {
+    return patched;
+  }
+  return withCodeMoved(patched, slot, ENEMY_ENTITIES[type][0], stringToEid(moved.name));
 }
 
 // each kind of enemy's object, from the level it's taken from
