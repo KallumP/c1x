@@ -103,3 +103,85 @@ UTEST(tween, lerp_ang_lerps_each_angle) {
   ASSERT_EQ(0x100, out.y);
   ASSERT_EQ(0x100, out.z);
 }
+
+/* a pose at x along each axis, turned by a, at scale s */
+static tween_pose Pose(int32_t x, int32_t a, int32_t s) {
+  tween_pose pose;
+  int i;
+
+  for (i = 0; i < 3; i++) {
+    pose.trans.c[i] = x;
+    pose.rot.c[i] = a;
+    pose.scale.c[i] = s;
+  }
+  return pose;
+}
+
+UTEST(tween_poses, a_pose_is_drawn_part_way_from_the_last_game_frame) {
+  tween_pose before, now, out;
+
+  TweenForgetAll();
+  before = Pose(0, 0x000, 0x1000);
+  now = Pose(1000, 0x100, 0x2000);
+  TweenRecord(5, &before);
+  TweenPoseAt(5, &now, TWEEN_ONE/2, &out);
+  ASSERT_EQ(500, out.trans.x);
+  ASSERT_EQ(0x80, out.rot.y);
+  ASSERT_EQ(0x1800, out.scale.z);
+}
+
+UTEST(tween_poses, an_object_without_a_last_pose_is_drawn_where_it_is) {
+  tween_pose now, out;
+
+  TweenForgetAll();
+  now = Pose(1000, 0x100, 0x1000);
+  TweenPoseAt(7, &now, TWEEN_ONE/2, &out);
+  ASSERT_EQ(1000, out.trans.x);
+  ASSERT_EQ(0x100, out.rot.x);
+}
+
+UTEST(tween_poses, a_new_object_in_a_slot_is_not_tweened_from_the_old_one) {
+  tween_pose before, now, out;
+
+  TweenForgetAll();
+  before = Pose(0, 0, 0x1000);
+  now = Pose(1000, 0, 0x1000);
+  TweenRecord(3, &before);
+  TweenForget(3);
+  TweenPoseAt(3, &now, TWEEN_ONE/2, &out);
+  ASSERT_EQ(1000, out.trans.x);
+}
+
+UTEST(tween_poses, a_jump_is_not_tweened) {
+  tween_pose before, now, out;
+
+  TweenForgetAll();
+  before = Pose(0, 0, 0x1000);
+  now = Pose(TWEEN_JUMP*2, 0, 0x1000);
+  TweenRecord(1, &before);
+  TweenPoseAt(1, &now, TWEEN_ONE/2, &out);
+  ASSERT_EQ(TWEEN_JUMP*2, out.trans.x);
+}
+
+UTEST(tween_poses, a_flip_is_not_tweened) {
+  tween_pose before, now, out;
+
+  TweenForgetAll();
+  before = Pose(0, 0, 0x1000);
+  now = Pose(0, 0, -0x1000);
+  TweenRecord(2, &before);
+  TweenPoseAt(2, &now, TWEEN_ONE/2, &out);
+  ASSERT_EQ(-0x1000, out.scale.x);
+}
+
+UTEST(tween_poses, slots_out_of_range_are_drawn_where_they_are) {
+  tween_pose before, now, out;
+
+  TweenForgetAll();
+  before = Pose(0, 0, 0x1000);
+  now = Pose(1000, 0, 0x1000);
+  TweenRecord(TWEEN_SLOTS, &before);
+  TweenRecord(-1, &before);
+  TweenPoseAt(TWEEN_SLOTS, &now, TWEEN_ONE/2, &out);
+  ASSERT_EQ(1000, out.trans.x);
+}
