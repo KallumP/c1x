@@ -967,6 +967,34 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasTheLab)("blobs, from the lab", () => {
+    const withBlob = (more: Partial<LevelObject> = {}) => build([enemy("blob", more)]);
+
+    test("a level with a blob has the lab's blob code, model, animations and sounds", () => {
+      const { level, entries } = withBlob();
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.blob[0]]).toBe(stringToEid("frogC"));
+      expect(["Fr1FG", "Fr1FV", "Fr2FV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(soundEidsOf(level)).toEqual(expect.arrayContaining(["jl2rA", "jl3rA"].map(stringToEid)));
+    });
+
+    test("by default blobs come from half their path from its spot, away from the spawn, back past it in the lab's steps", () => {
+      const THE_LAB_STEP = 400;
+      const [placed] = enemies(withBlob().zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.blob);
+      const hops = placed.path.slice(0, -1);
+      hops.forEach(([x, y]) => expectNear([x, y], [SPOT_X, FLOOR_Y], 8));
+      expect(hops[0][2]).toBeLessThan(hops.at(-1)![2]); // the spawn is the +z way
+      expectNear((hops[0][2] + hops.at(-1)![2]) / 2, SPOT_Z, 8);
+      stepLengths(hops).forEach((step) => expectNear(step, THE_LAB_STEP, 8));
+    });
+
+    test("a blob's path ends 800 below its last node, where its blobs sink into the floor, as the lab's do", () => {
+      const [placed] = enemies(withBlob().zone);
+      const [last, sunk] = placed.path.slice(-2);
+      expect(sunk).toEqual([last[0], last[1] - 800, last[2]]);
+    });
+  });
+
   describe.skipIf(!hasCortexPower)("gunmen, from cortex power", () => {
     test("a level with a gunman has cortex power's gunman code, models and sounds", () => {
       const { level, entries } = build([enemy("gunman")]);

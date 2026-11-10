@@ -1,6 +1,6 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
-import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, BIRD_SWOOP, CAMERA_ROBOT_RISE, cameraFacing, labAssistantThrow, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, rising, ROBOT_DOG_WALK, SCIENTIST_WALK, WALKING_LIZARD_PACE, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, BIRD_SWOOP, BLOB_HOP, CAMERA_ROBOT_RISE, cameraFacing, labAssistantThrow, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, rising, ROBOT_DOG_WALK, SCIENTIST_WALK, WALKING_LIZARD_PACE, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
 import { LAB_ASSISTANT_REACH } from "./labAssistantThrow";
 import { hasOneNode, PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
@@ -52,6 +52,7 @@ const PATH_ENEMY_RUNS: Record<PathEnemy, PathEnemyRun> = {
   camera_robot: { length: CAMERA_ROBOT_RISE, way: rising, step: 75, fromSpot: true }, // castle machinery's camera robots' points, on average
   bird: { length: BIRD_SWOOP, way: rising, step: 150, fromSpot: true },        // slippery climb's birds' 9 points
   electric_scientist: { length: SCIENTIST_WALK, way: towardsSpawn, step: 400 }, // the lab's walking lab assistants' points
+  blob: { length: BLOB_HOP, way: towardsSpawn, step: 400 },                    // the lab's blob spawners' points
 };
 
 // how far apart a path's points are in the game for an enemy, at its own speed

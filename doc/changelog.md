@@ -18,6 +18,7 @@
 - custom levels can have Slippery Climb's vultures, which swoop up and down
 - custom levels can have The Lab's electric scientist, sparks crackling at his hands
 - custom levels can have Cortex Power's gunman, who shoots at Crash
+- custom levels can have The Lab's slime blobs, which hop at Crash
 - the acid cave cut from the original game, playable as a custom level, and going on past where it was cut off: a crystal geode, a mushroom grotto, a river gorge and a collapsed temple
 - custom level maps keep their UVs and vertex colours
 

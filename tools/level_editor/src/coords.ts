@@ -289,6 +289,11 @@ export const BIRD_SWOOP = 1200;
 // assistants' paths, back along the route towards crash's start (its default path, src/enemyPaths.ts)
 export const SCIENTIST_WALK = 4800;
 
+// how far a blob hops, in game units: the lab's blob spawners' paths, 13 steps
+// of 400 from where its blobs come out back towards crash's start, a straight
+// line there (its default path, src/enemyPaths.ts)
+export const BLOB_HOP = 5200;
+
 // how far a monkey walks back and forth, in game units: the great gate's monkeys'
 // path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const MONKEY_WALK = 2400;

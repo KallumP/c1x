@@ -62,6 +62,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   camera_robot: CASTLE_MACHINERY,
   bird: SLIPPERY_CLIMB,
   electric_scientist: THE_LAB,
+  blob: THE_LAB,
 };
 
 export interface DonorObject {

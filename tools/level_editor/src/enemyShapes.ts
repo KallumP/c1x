@@ -42,6 +42,7 @@ const CAMERA_ROBOT_COLOURS = { body: "#4a4c55", light: "#c8302a", spike: "#d8dce
 const BIRD_COLOURS = { feather: "#6b5038", wing: "#54402e", head: "#8a7a6a", beak: "#d8a030", eye: "#f4f1e0" };
 const SPARK_COLOUR = "#7af0f0";
 const BARREL_COLOURS = { wood: "#a0712e", hoop: "#4a3a2a" };
+const BLOB_COLOURS = { slime: "#e8d23a", sheen: "#f8f0a0", spot: "#c8a62a" };
 const ROBOT_DOG_COLOURS = { body: "#5a5c66", shell: "#3a3b42", leg: "#2c2d33", eye: "#f2e21a" };
 const COBRA_COLOURS = { scale: "#2f5fa8", belly: "#d8c08a", eye: "#c8302a", fang: "#f4f1e0" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
@@ -442,6 +443,18 @@ function electricScientist(): ShapePart[] {
   return [...labAssistant().filter((part) => part.colour !== LAB_ASSISTANT_COLOURS.vial), ...bothSides([spark])];
 }
 
+// the lab's yellow slime blob (Fr1FG), round as it is halfway through a hop: its
+// body, a sheen on top and darker spots, inside its outline
+function blob(): ShapePart[] {
+  return [
+    ball(1, [0, 175, 0], BLOB_COLOURS.slime, { stretch: [180, 175, 180] }),
+    ball(1, [-50, 260, 60], BLOB_COLOURS.sheen, { stretch: [60, 40, 50] }),
+    ball(30, [90, 160, 110], BLOB_COLOURS.spot),
+    ball(25, [-110, 120, 90], BLOB_COLOURS.spot),
+    ball(25, [40, 90, -130], BLOB_COLOURS.spot),
+  ];
+}
+
 // one of the robot dog's sides: a front and a back leg, splayed out, and an eye
 function robotDogSide(): ShapePart[] {
   return [
@@ -756,13 +769,13 @@ const RIVER_PLANT_HEIGHT = 400;
 
 const GAME_HEIGHTS: Record<StandingEnemy, number> = {
   plant: 720, snake: 558, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
-  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, walking_lizard: 419, lab_assistant: 1203, robot_dog: 557, barrel_roller: 1069, gunman: 1181, camera_robot: 469, bird: 450, electric_scientist: 1180,
+  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, walking_lizard: 419, lab_assistant: 1203, robot_dog: 557, barrel_roller: 1069, gunman: 1181, camera_robot: 469, bird: 450, electric_scientist: 1180, blob: 350,
 };
 
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
   plant, snake: cobra, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
   blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
-  lizard, red_lizard: redLizard, walking_lizard: walkingLizard, lab_assistant: labAssistant, robot_dog: robotDog, barrel_roller: barrelRoller, gunman, camera_robot: cameraRobot, bird, electric_scientist: electricScientist,
+  lizard, red_lizard: redLizard, walking_lizard: walkingLizard, lab_assistant: labAssistant, robot_dog: robotDog, barrel_roller: barrelRoller, gunman, camera_robot: cameraRobot, bird, electric_scientist: electricScientist, blob,
 };
 
 // each standing enemy's shape, on the floor, as tall as the game's model
