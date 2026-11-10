@@ -44,6 +44,7 @@ export const ENEMY_COLOURS: Record<EnemyType, string> = {
   leader_bats: "#8a3b5e",
   lizard: "#7fa83a",
   red_lizard: "#b8433a",
+  walking_lizard: "#5f7a2a",
   robot_dog: "#7a7f8c",
   barrel_roller: "#9a6b2e",
   gunman: "#4a4458",

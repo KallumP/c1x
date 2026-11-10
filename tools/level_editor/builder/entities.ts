@@ -38,7 +38,7 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   plant: [25, 0], snake: [26, 1], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
-  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12], lizard: [47, 1], red_lizard: [47, 2], lab_assistant: [54, 0], robot_dog: [9, 0], barrel_roller: [17, 0], gunman: [12, 0],
+  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12], lizard: [47, 1], red_lizard: [47, 2], walking_lizard: [46, 5], lab_assistant: [54, 0], robot_dog: [9, 0], barrel_roller: [17, 0], gunman: [12, 0],
 };
 // enemies whose code goes in another exec slot in custom levels than in their
 // level, under another name, as jungle rollers' own code has its slot and name:
