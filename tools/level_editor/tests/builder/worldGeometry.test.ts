@@ -1,8 +1,21 @@
 import { describe, expect, test } from "vitest";
 import { ByteWriter } from "../../builder/bytes";
 import { stringToEid } from "../../builder/entryIds";
-import { pathBytes, type PathLink } from "../../builder/paths";
-import { readWorldPolygon, readWorldVertex, worldHeaderBytes, worldPolygonBytes, worldVertexBytes } from "../../builder/worldGeometry";
+import { pathBytes, type PathLink, type PathPoint } from "../../builder/paths";
+import {
+  readWorldHeader, readWorldPolygon, readWorldVertex, TEXINFOS_AT, WGEO_PAGES, worldHeaderBytes, worldPolygonBytes, worldVertexBytes,
+} from "../../builder/worldGeometry";
+import { readCameraPath } from "./zoneReaders";
+
+// a mesh header to build on: an origin and counts a header replaces, then its texture
+// pages in their slots and texinfos, which it keeps
+function headerTemplate(pages: number[], texinfos: Buffer): Buffer {
+  const writer = new ByteWriter().s32(1).s32(2).s32(3).u32(99).u32(99).u32(texinfos.length / 4).u32(pages.length).u32(0);
+  for (let slot = 0; slot < WGEO_PAGES; slot++) {
+    writer.u32(pages[slot] ?? 0);
+  }
+  return writer.bytes(texinfos).toBuffer();
+}
 
 // (x, y, z, r, g, b) the way SwTransformWorlds reads a wgeo vertex
 function decodeVertex(data: Buffer): number[] {
@@ -28,23 +41,23 @@ describe("world mesh geometry", () => {
   });
 
   test("a header keeps the template's textures", () => {
-    const template = new ByteWriter().s32(1).s32(2).s32(3).u32(99).u32(99).u32(2).u32(1).u32(0)
-      .u32(stringToEid("Ju89T")).u32(0).u32(0).u32(0).u32(0).u32(0).u32(0).u32(0)
-      .bytes(Buffer.from("TEX!TEX?", "latin1")).toBuffer();
+    const template = headerTemplate([stringToEid("Ju89T")], Buffer.from("TEX!TEX?", "latin1"));
     const header = worldHeaderBytes(template, [10, 20, 30], 4, 5);
-    const fields = [0, 4, 8].map((offset) => header.readInt32LE(offset))
-      .concat([12, 16, 20, 24, 28].map((offset) => header.readUInt32LE(offset)));
-    expect(fields).toEqual([10, 20, 30, 4, 5, 2, 1, 0]);
-    expect(header.subarray(32).equals(template.subarray(32))).toBe(true);
+    expect(readWorldHeader(header)).toEqual({
+      origin: [10, 20, 30], polygonCount: 4, vertexCount: 5, texinfoWords: 2, pageCount: 1, isBackdrop: 0, pages: readWorldHeader(template).pages,
+    });
+    expect(header.subarray(TEXINFOS_AT).equals(template.subarray(TEXINFOS_AT))).toBe(true);
   });
 
   test("a header adds texture pages in its free slots, and texinfos after its own", () => {
-    const template = new ByteWriter().s32(0).s32(0).s32(0).u32(0).u32(0).u32(2).u32(1).u32(0)
-      .u32(111).u32(0).u32(0).u32(0).u32(0).u32(0).u32(0).u32(0).bytes(Buffer.alloc(8, 0xaa)).toBuffer();
-    const header = worldHeaderBytes(template, [0, 0, 0], 1, 1, [222, 333], Buffer.alloc(16, 0xbb));
-    expect([header.readUInt32LE(20), header.readUInt32LE(24)]).toEqual([2 + 4, 1 + 2]);
-    expect([32, 36, 40, 44].map((offset) => header.readUInt32LE(offset))).toEqual([111, 222, 333, 0]);
-    expect(header.subarray(64).equals(Buffer.concat([Buffer.alloc(8, 0xaa), Buffer.alloc(16, 0xbb)]))).toBe(true);
+    const ownTexinfos = Buffer.alloc(8, 0xaa);
+    const moreTexinfos = Buffer.alloc(16, 0xbb);
+    const header = worldHeaderBytes(headerTemplate([111], ownTexinfos), [0, 0, 0], 1, 1, [222, 333], moreTexinfos);
+    const { texinfoWords, pageCount, pages } = readWorldHeader(header);
+    expect(texinfoWords).toBe((ownTexinfos.length + moreTexinfos.length) / 4);
+    expect(pageCount).toBe(3); // its own one and the two added
+    expect(pages.slice(0, 4)).toEqual([111, 222, 333, 0]);
+    expect(header.subarray(TEXINFOS_AT).equals(Buffer.concat([ownTexinfos, moreTexinfos]))).toBe(true);
   });
 });
 
@@ -54,26 +67,23 @@ describe("camera paths", () => {
     // path before, arriving at its end (goal 2), relation 2 the path after, arriving at its start (goal 1)
     const links: PathLink[] = [[1, 1, 0, 2], [2, 2, 0, 1]];
     const path = pathBytes({ slst: 0, points: [[0, 0, 0, 0, 0, 0]], camMode: 5, zoom: 1700, averageNodeDistance: 128, links });
-    expect(path.readUInt32LE(8)).toBe(2);
-    expect([0, 1].map((index) => [...path.subarray(12 + 4 * index, 16 + 4 * index)])).toEqual(links);
-    expect(path.readUInt16LE(30)).toBe(1); // the rest is where it was
+    const fields = readCameraPath(path);
+    expect(fields.links).toEqual(links);
+    expect(fields.length).toBe(1); // the fields after the links are where they belong
   });
 
-  test("a path without neighbours", () => {
-    const points: [number, number, number, number, number, number][] = [[10, 20, 30, 0, 0, 0], [40, 50, 60, 0, 0, 0]];
+  test("a path without neighbours keeps its sort list, mode and points", () => {
+    const points: PathPoint[] = [[10, 20, 30, 0, 0, 0], [40, 50, 60, 0, 0, 0]];
     const slst = stringToEid("Flr0S");
     const path = pathBytes({ slst, points, camMode: 5, zoom: 1700, averageNodeDistance: 400 });
-    expect([path.readUInt32LE(0), path.readUInt32LE(4), path.readUInt32LE(8)]).toEqual([slst, 0, 0]);
-    expect(path.readUInt16LE(30)).toBe(2); // length
-    expect(path.readUInt16LE(32)).toBe(5); // cam mode
-    const readPoint = (index: number) => Array.from({ length: 6 }, (_, field) => path.readInt16LE(50 + 12 * index + 2 * field));
-    expect([readPoint(0), readPoint(1)]).toEqual(points);
+    expect(readCameraPath(path)).toEqual({ slst, links: [], length: 2, camMode: 5, zoom: 1700, followHeight: 0, points });
+    expect(path.readUInt32LE(4)).toBe(0); // its second word, unused
     expect(path.length % 4).toBe(0);
-    expect(path.readUInt16LE(38)).toBe(0); // no follow camera height
   });
 
-  test("a follow camera path keeps the camera's height above crash's floor in its first spare field, for the game", () => {
+  test("a follow camera path keeps the camera's height above crash's floor", () => {
+    // in its first spare field, for the game
     const path = pathBytes({ slst: 0, points: [[0, 0, 0, 0, 0, 0]], camMode: 9, zoom: 1700, averageNodeDistance: 128, followHeight: 2632 });
-    expect(path.readUInt16LE(38)).toBe(2632);
+    expect(readCameraPath(path).followHeight).toBe(2632);
   });
 });

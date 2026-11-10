@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { placeOnFloor, towardsViewer } from "../../src/placing";
+import { noMinusZero } from "../helpers";
 
 const UP: [number, number, number] = [0, 1, 0];
 
@@ -9,7 +10,7 @@ describe("towardsViewer", () => {
   });
 
   test("turns round a normal facing away, as faces are drawn from both sides", () => {
-    expect(towardsViewer([0, -1, 0], [0.2, -0.9, 0])).toEqual([-0, 1, -0]);
+    expect(noMinusZero(towardsViewer([0, -1, 0], [0.2, -0.9, 0]))).toEqual([0, 1, 0]);
   });
 });
 

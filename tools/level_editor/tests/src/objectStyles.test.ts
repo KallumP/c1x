@@ -10,7 +10,7 @@ describe("boxStyle", () => {
 
   test("only outline boxes are drawn as their edges, iron outlines included", () => {
     expect(boxStyle("outline").wireframe).toBe(true);
-    expect(boxStyle(13).wireframe).toBe(true);
+    expect(boxStyle(BOX_TYPES.outline).wireframe).toBe(true);
     expect(boxStyle("iron_outline").wireframe).toBe(true);
     expect(boxStyle("basic").wireframe).toBe(false);
     expect(boxStyle("iron_arrow").wireframe).toBe(false);

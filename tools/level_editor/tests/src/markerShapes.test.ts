@@ -3,7 +3,8 @@ import { shapeBounds } from "../../src/enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../../src/markerShapes";
 
 describe("crash's shape, for the spawn", () => {
-  test("stands on the floor, as tall as crash in the game (665), about a third as wide", () => {
+  test("stands on the floor, as tall as crash in the game", () => {
+    // 665, about a third as wide
     const { min, max } = shapeBounds(CRASH_SHAPE);
     expect(min[1]).toBeCloseTo(0);
     expect(max[1]).toBeCloseTo(665, -1);
@@ -20,7 +21,8 @@ describe("crash's shape, for the spawn", () => {
 });
 
 describe("the warp pad's shape, for the end", () => {
-  test("lies flat on the floor, as wide as the game's pad (radius 400)", () => {
+  test("lies flat on the floor, as wide as the game's pad", () => {
+    // radius 400
     const { min, max } = shapeBounds(WARP_PAD_SHAPE);
     expect(min[1]).toBeCloseTo(0);
     expect(max[1]).toBeLessThan(200);

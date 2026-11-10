@@ -34,35 +34,51 @@ static uint8_t *CreateOneToneVab(uint8_t tone_vol, uint8_t prog_vol) {
   return (uint8_t*)va;
 }
 
+/* the soundfont VabToSf2 makes of a one tone vab (to free), and its size */
+static uint8_t *ConvertOneToneVab(uint8_t tone_vol, uint8_t prog_vol, size_t *size) {
+  uint8_t *vab, *sf2;
+
+  vab = CreateOneToneVab(tone_vol, prog_vol);
+  sf2 = calloc(1, SF2_BUFFER_SIZE);
+  *size = VabToSf2(vab, sf2);
+  free(vab);
+  return sf2;
+}
+
+/* the data of the first chunk with id in sf2 (setting its size), or 0 */
+static uint8_t *FindChunk(uint8_t *sf2, size_t size, const char *id, uint32_t *chunk_size) {
+  size_t i;
+
+  for (i=0;i+8<=size;i++) {
+    if (memcmp(&sf2[i], id, 4) != 0) { continue; }
+    memcpy(chunk_size, &sf2[i+4], 4);
+    return &sf2[i+8];
+  }
+  return 0;
+}
+
 /* the amount of the first instrument generator with oper, or NO_GENERATOR */
 static int FindInstrumentGenerator(uint8_t *sf2, size_t size, SFGenerator oper) {
   sfInstGenList *gen, *end;
   uint32_t chunk_size;
-  size_t i;
 
-  for (i=0;i+8<=size;i++) {
-    if (memcmp(&sf2[i], "igen", 4) != 0) { continue; }
-    memcpy(&chunk_size, &sf2[i+4], 4);
-    gen = (sfInstGenList*)&sf2[i+8];
-    end = (sfInstGenList*)&sf2[i+8+chunk_size];
-    for (;gen<end;gen++) {
-      if (gen->sfGenOper == oper) { return gen->genAmount.shAmount; }
-    }
+  gen = (sfInstGenList*)FindChunk(sf2, size, "igen", &chunk_size);
+  if (!gen) { return NO_GENERATOR; }
+  end = (sfInstGenList*)((uint8_t*)gen + chunk_size);
+  for (;gen<end;gen++) {
+    if (gen->sfGenOper == oper) { return gen->genAmount.shAmount; }
   }
   return NO_GENERATOR;
 }
 
 static int ToneGenerator(uint8_t tone_vol, uint8_t prog_vol, SFGenerator oper) {
-  uint8_t *vab, *sf2;
+  uint8_t *sf2;
   size_t size;
   int amount;
 
-  vab = CreateOneToneVab(tone_vol, prog_vol);
-  sf2 = calloc(1, SF2_BUFFER_SIZE);
-  size = VabToSf2(vab, sf2);
+  sf2 = ConvertOneToneVab(tone_vol, prog_vol, &size);
   amount = FindInstrumentGenerator(sf2, size, oper);
   free(sf2);
-  free(vab);
   return amount;
 }
 
@@ -78,12 +94,8 @@ UTEST(vab_to_sf2, a_full_volume_tone_is_not_attenuated) {
   ASSERT_EQ(0, ToneAttenuation(127, 127));
 }
 
-UTEST(vab_to_sf2, a_quieter_tone_is_attenuated_by_its_volume) {
-  ASSERT_EQ(FluidSynthAttenuation(VabVolumeToAttenuation(75, 127)), ToneAttenuation(75, 127));
-}
-
-UTEST(vab_to_sf2, a_quieter_program_attenuates_its_tones) {
-  ASSERT_EQ(FluidSynthAttenuation(VabVolumeToAttenuation(127, 30)), ToneAttenuation(127, 30));
+UTEST(vab_to_sf2, a_tone_is_attenuated_by_its_tone_and_program_volumes) {
+  ASSERT_EQ(FluidSynthAttenuation(VabVolumeToAttenuation(75, 30)), ToneAttenuation(75, 30));
 }
 
 #define LINEAR_VELOCITY_ATTENUATION 480 /* centibels; half fluidsynth's default 960 */
@@ -92,18 +104,14 @@ UTEST(vab_to_sf2, a_quieter_program_attenuates_its_tones) {
 static int FindInstrumentModulator(uint8_t *sf2, size_t size, SFGenerator dest, sfInstModList *mod) {
   sfInstModList *record, *end;
   uint32_t chunk_size;
-  size_t i;
 
-  for (i=0;i+8<=size;i++) {
-    if (memcmp(&sf2[i], "imod", 4) != 0) { continue; }
-    memcpy(&chunk_size, &sf2[i+4], 4);
-    record = (sfInstModList*)&sf2[i+8];
-    end = (sfInstModList*)&sf2[i+8+chunk_size];
-    for (;record<end;record++) {
-      if (record->sfModDestOper != dest) { continue; }
-      *mod = *record;
-      return 1;
-    }
+  record = (sfInstModList*)FindChunk(sf2, size, "imod", &chunk_size);
+  if (!record) { return 0; }
+  end = (sfInstModList*)((uint8_t*)record + chunk_size);
+  for (;record<end;record++) {
+    if (record->sfModDestOper != dest) { continue; }
+    *mod = *record;
+    return 1;
   }
   return 0;
 }
@@ -115,24 +123,26 @@ static int FindInstrumentModulator(uint8_t *sf2, size_t size, SFGenerator dest, 
  * half the amount
  */
 UTEST(vab_to_sf2, a_tone_scales_its_amplitude_linearly_with_velocity) {
-  uint8_t *vab, *sf2;
+  const sfInstModList expected = {
+    .sfModSrcOper = {
+      .index = noteOnVel, .cc = 0,
+      .direction = 1, /* max to min */
+      .polarity = 0, /* unipolar */
+      .type = concave
+    },
+    .sfModDestOper = initialAttenuation,
+    .modAmount = LINEAR_VELOCITY_ATTENUATION,
+    .sfModAmtSrcOper = { .index = noController },
+    .sfModTransOper = 0
+  };
   sfInstModList mod;
+  uint8_t *sf2;
   size_t size;
   int found;
 
-  vab = CreateOneToneVab(127, 127);
-  sf2 = calloc(1, SF2_BUFFER_SIZE);
-  size = VabToSf2(vab, sf2);
+  sf2 = ConvertOneToneVab(127, 127, &size);
   found = FindInstrumentModulator(sf2, size, initialAttenuation, &mod);
   free(sf2);
-  free(vab);
   ASSERT_TRUE(found);
-  ASSERT_EQ((int)noteOnVel, (int)mod.sfModSrcOper.index);
-  ASSERT_EQ(0, (int)mod.sfModSrcOper.cc);
-  ASSERT_EQ(1, (int)mod.sfModSrcOper.direction); /* max to min */
-  ASSERT_EQ(0, (int)mod.sfModSrcOper.polarity); /* unipolar */
-  ASSERT_EQ((int)concave, (int)mod.sfModSrcOper.type);
-  ASSERT_EQ(LINEAR_VELOCITY_ATTENUATION, (int)mod.modAmount);
-  ASSERT_EQ((int)noController, (int)mod.sfModAmtSrcOper.index);
-  ASSERT_EQ(0, (int)mod.sfModTransOper);
+  ASSERT_EQ(0, memcmp(&expected, &mod, sizeof(mod)));
 }

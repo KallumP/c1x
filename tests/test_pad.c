@@ -6,6 +6,9 @@
 /* key state normally filled in by src/pc/init.c, indexed by SDL scancode */
 uint8_t keys[512];
 
+/* SwPadRead's held buttons are its upper 16 bits */
+#define HELD(buttons) ((uint32_t)(buttons) << 16)
+
 static void press(SDL_Scancode code) {
   keys[code] = 1;
 }
@@ -15,16 +18,16 @@ UTEST(pad, nothing_held_when_no_keys_pressed) {
   ASSERT_EQ(0u, SwPadRead(0));
 }
 
-UTEST(pad, letter_key_maps_to_button) {
+UTEST(pad, z_presses_cross) {
   memset(keys, 0, sizeof(keys));
   press(SDL_SCANCODE_Z);
-  ASSERT_EQ((uint32_t)PAD_CROSS << 16, SwPadRead(0));
+  ASSERT_EQ(HELD(PAD_CROSS), SwPadRead(0));
 }
 
-UTEST(pad, arrow_key_maps_to_button) {
+UTEST(pad, up_arrow_presses_up) {
   memset(keys, 0, sizeof(keys));
   press(SDL_SCANCODE_UP);
-  ASSERT_EQ((uint32_t)PAD_UP << 16, SwPadRead(0));
+  ASSERT_EQ(HELD(PAD_UP), SwPadRead(0));
 }
 
 UTEST(pad, held_buttons_combine) {
@@ -32,7 +35,7 @@ UTEST(pad, held_buttons_combine) {
   press(SDL_SCANCODE_Z);
   press(SDL_SCANCODE_LEFT);
   press(SDL_SCANCODE_RETURN);
-  ASSERT_EQ((uint32_t)(PAD_CROSS | PAD_LEFT | PAD_START) << 16, SwPadRead(0));
+  ASSERT_EQ(HELD(PAD_CROSS | PAD_LEFT | PAD_START), SwPadRead(0));
 }
 
 UTEST(pad, only_player_one_is_read) {

@@ -15,7 +15,8 @@ const volume = (solids: CutSolid[], leaf: number) =>
   solids.filter((solid) => solid.leaf === leaf).reduce((sum, { low, high }) => sum + (high[0] - low[0]) * (high[1] - low[1]) * (high[2] - low[2]), 0);
 
 describe("a cut level's collision (its zones' octrees)", () => {
-  test("is read back into the solid boxes it was made of, by leaf, at their places in the level", () => {
+  test("is read back into the solid boxes it was made of", () => {
+    // by leaf, at their places in the level
     const solids = zoneSolids(zoneWith([
       { low: [0, 0, 0], high: [512, 128, 1024], leaf: LEAF_FLOOR },
       { low: [512, 0, 0], high: [1024, 256, 256], leaf: LEAF_GROUND },
@@ -31,14 +32,15 @@ describe("a cut level's collision floors", () => {
   const levelOf = (solids: CutSolid[]): CutLevel => ({ worlds: [], texturePages: new Map(), entities: [], solids });
   const OPTIONS = { centre: [0, 0, 0] as Vec3, scale: 400 };
 
-  test("are quads on the tops of its floor leaves, facing up, in a collision object (solid, not drawn)", () => {
+  test("are upward quads on its floor leaves' tops, in a collision object", () => {
+    // solid, not drawn
     const floors = collisionFloors(levelOf([{ low: [0, 0, 0], high: [400, 400, 400], leaf: LEAF_FLOOR }]), OPTIONS);
     expect(floors.name.startsWith("collision")).toBe(true);
     expect(floors.faces.length).toBe(2);
     expect(floors.faces.flatMap(({ corners }) => corners).every(([, , z]) => z === 1)).toBe(true);
   });
 
-  test("leave out tops with a floor leaf right on them, and other leaves (ground, under the acid, and rock)", () => {
+  test("leave out covered tops and ground leaves", () => {
     const floors = collisionFloors(levelOf([
       { low: [0, 0, 0], high: [400, 400, 400], leaf: LEAF_FLOOR },
       { low: [0, 400, 0], high: [400, 800, 400], leaf: LEAF_FLOOR },
@@ -52,8 +54,11 @@ describe("a cut level's collision floors", () => {
 const ACID_CAVE = fileURLToPath(new URL("../../../../../streams/s0000004.nsf", import.meta.url));
 
 describe.skipIf(!existsSync(ACID_CAVE))("the acid cave's collision", () => {
-  test("has floor where its path is, which its mesh may have holes in", () => {
-    const solids = readCutLevel(ACID_CAVE).solids;
-    expect(solids.filter(({ leaf }) => leaf === LEAF_FLOOR).length).toBeGreaterThan(1000);
+  test("has floor under crash's spawn", () => {
+    // its path has floor, though its mesh may have holes in it
+    const { solids, entities } = readCutLevel(ACID_CAVE);
+    const [x, y, z] = entities.find(({ type }) => type === 0)!.at;
+    const isUnderSpawn = ({ low, high }: CutSolid) => low[0] <= x && x < high[0] && low[2] <= z && z < high[2] && high[1] <= y;
+    expect(solids.filter(({ leaf }) => leaf === LEAF_FLOOR).some(isUnderSpawn)).toBe(true);
   });
 });

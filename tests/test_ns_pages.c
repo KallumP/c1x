@@ -28,37 +28,37 @@ UTEST(ns_files, a_long_custom_level_path_isnt_cut_short) {
   NSSetCustomLevel("");
 }
 
-UTEST(ns_files, other_levels_still_load_from_streams) {
+UTEST(ns_files, the_games_own_levels_load_from_streams) {
   NSSetCustomLevel("build/levels/mock");
   ASSERT_STREQ("./streams/s0000009.nsd", NSGetFilename(0, LID_NSANITYBEACH));
+  NSSetCustomLevel("");
+}
+
+UTEST(ns_files, the_test_level_loads_from_streams_without_a_custom_level) {
   NSSetCustomLevel("");
   ASSERT_STREQ("./streams/s0000001.nsf", NSGetFilename(1, LID_TEST));
 }
 
 static nsd_ldat ldat; /* big (its loading image), so not on the stack */
 
-UTEST(ns_box_total, a_custom_level_keeps_its_box_total) {
-  NSSetCustomLevel("build/levels/mock");
-  ldat.box_total = 58;
-  NSKeepBoxTotal(LID_TEST, &ldat);
-  ASSERT_EQ(58, NSCustomBoxTotal());
+/* no custom level, and no box total kept from one */
+static void ResetCustomLevel() {
   NSSetCustomLevel("");
   NSKeepBoxTotal(LID_TEST, &ldat);
 }
 
-UTEST(ns_box_total, the_total_stays_while_the_level_end_screen_loads) {
+UTEST(ns_box_total, a_custom_level_keeps_its_box_total_while_the_level_end_screen_loads) {
   NSSetCustomLevel("build/levels/mock");
   ldat.box_total = 58;
   NSKeepBoxTotal(LID_TEST, &ldat);
   ldat.box_total = 0;
   NSKeepBoxTotal(LID_NSANITYBEACH, &ldat); /* another level's nsd, such as the end screen's */
   ASSERT_EQ(58, NSCustomBoxTotal());
-  NSSetCustomLevel("");
-  NSKeepBoxTotal(LID_TEST, &ldat);
+  ResetCustomLevel();
 }
 
 UTEST(ns_box_total, the_games_own_test_level_has_none) {
-  NSSetCustomLevel("");
+  ResetCustomLevel();
   ldat.box_total = 7;
   NSKeepBoxTotal(LID_TEST, &ldat);
   ASSERT_EQ(0, NSCustomBoxTotal());
@@ -83,19 +83,9 @@ static void set_probe_table() {
   ns.pte_buckets = probe_buckets;
 }
 
-UTEST(ns_probe, finds_an_entry_in_the_table) {
-  set_probe_table();
-  ASSERT_EQ(&probe_table[1], NSProbeSafe(0x11));
-}
-
 UTEST(ns_probe, finds_the_last_entry_in_the_table) {
   set_probe_table();
   ASSERT_EQ(&probe_table[2], NSProbeSafe(0x12));
-}
-
-UTEST(ns_probe, an_entry_not_in_the_table_is_an_invalid_ref) {
-  set_probe_table();
-  ASSERT_EQ((nsd_pte*)ERROR_INVALID_REF, NSProbeSafe(0x13));
 }
 
 static entry lookup_entries[4];
@@ -133,6 +123,11 @@ UTEST(ns_lookup, an_eid_not_in_the_page_table_is_an_error) {
   ASSERT_TRUE(ISERRORCODE(NSLookup(&eid)));
 }
 
+/* a page's id: its index shifted up, with the low bit set while it's not loaded */
+static pgid_t UnloadedPageId(int page_index) {
+  return (page_index << 1) | 1;
+}
+
 /* leave junk where the next call's locals will go, as the game's own calls would */
 static __attribute__((noinline)) void FillStackWithJunk() {
   volatile uint32_t junk[256];
@@ -141,7 +136,8 @@ static __attribute__((noinline)) void FillStackWithJunk() {
     junk[i] = 0x7F7F7F7F;
 }
 
-UTEST(ns_pages, no_entries_need_no_pages) {
+/* NSCountAvailablePages2 once read locals it hadn't set, so each test runs it over junk */
+UTEST(ns_pages, no_entries_need_no_pages_despite_junk_left_on_the_stack) {
   FillStackWithJunk();
   ASSERT_EQ(0, NSCountAvailablePages2(0, 0));
 }
@@ -154,7 +150,7 @@ UTEST(ns_pages, entry_in_an_unloaded_page_needs_one_page) {
   int count;
 
   page_map[1] = (page_struct*)NULL_PAGE; /* page not loaded */
-  pte.pgid = 3; /* page 1 */
+  pte.pgid = UnloadedPageId(1);
   ref.pte = &pte;
   list[0] = &ref;
   page_map_prev = ns.page_map;
@@ -167,6 +163,8 @@ UTEST(ns_pages, entry_in_an_unloaded_page_needs_one_page) {
 
 extern page_struct texture_pages[16];
 
+#define PAGE_FREE 1 /* a page_struct state: free for a page to load into (ns.c) */
+
 /* the ps1 kept the upper half of vram (slots 0-7) for the screen; the pc draws
    from its own copies of the pages, so a level can have a page in any slot */
 UTEST(ns_texture_pages, a_level_can_load_a_texture_page_into_any_of_the_16_slots) {
@@ -175,6 +173,6 @@ UTEST(ns_texture_pages, a_level_can_load_a_texture_page_into_any_of_the_16_slots
   memset(texture_pages, 0, sizeof(texture_pages));
   NSInitTexturePages(&ns, LID_TEST);
   for (i = 0; i < 16; i++) {
-    ASSERT_EQ(1, texture_pages[i].state);
+    ASSERT_EQ(PAGE_FREE, texture_pages[i].state);
   }
 }

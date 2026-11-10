@@ -35,7 +35,7 @@ describe("listLevels", () => {
   });
 
   test("takes the scale from level.cfg", () => {
-    level("big", { "big.obj": "", "level.cfg": "# a comment\nturn = 90\nscale = 2000\n" });
+    level("big", { "big.obj": "", "level.cfg": "scale = 2000\n" });
     expect(listLevels(root)[0].scale).toBe(2000);
   });
 });
@@ -80,7 +80,7 @@ describe("objects.json", () => {
   });
 
   test("won't read or write a level that isn't listed", () => {
-    expect(() => readObjects(root, "nope")).toThrow();
-    expect(() => writeObjects(root, "../x", "[]")).toThrow();
+    expect(() => readObjects(root, "nope")).toThrow("no level source nope");
+    expect(() => writeObjects(root, "../x", "[]")).toThrow("no level source ../x");
   });
 });

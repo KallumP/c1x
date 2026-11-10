@@ -1,27 +1,14 @@
 #include "utest.h"
-#include <sys/stat.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
 #include "launcher/levels.h"
+#include "test_files.h"
 
 #define TEST_LEVELS_FOLDER "build/test_launcher_levels"
 
-static void MakeFolder(const char *path) {
-#ifdef _WIN32
-  mkdir(path);
-#else
-  mkdir(path, 0777);
-#endif
-}
-
 static void MakeEmptyFile(const char *name) {
   char path[256];
-  FILE *file;
 
   snprintf(path, sizeof(path), "%s/%s", TEST_LEVELS_FOLDER, name);
-  file = fopen(path, "wb");
-  if (file) { fclose(file); }
+  WriteWholeFile(path, "");
 }
 
 UTEST(launcher_levels, lists_built_levels_by_name_in_order) {

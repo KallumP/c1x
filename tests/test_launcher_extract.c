@@ -1,31 +1,13 @@
 #include "utest.h"
-#include <sys/stat.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
 #include "launcher/extract.h"
+#include "test_files.h"
 
 #define TEST_EXTRACT_REPO "build/test_launcher_extract"
-
-static void MakeFolder(const char *path) {
-#ifdef _WIN32
-  mkdir(path);
-#else
-  mkdir(path, 0777);
-#endif
-}
-
-static void MakeRepoWithNodeModules(void) {
-  MakeFolder(TEST_EXTRACT_REPO);
-  MakeFolder(TEST_EXTRACT_REPO "/tools");
-  MakeFolder(TEST_EXTRACT_REPO "/tools/level_editor");
-  MakeFolder(TEST_EXTRACT_REPO "/tools/level_editor/node_modules");
-}
 
 UTEST(launcher_extract, extracts_the_quoted_disc_image) {
   char command[512];
 
-  MakeRepoWithNodeModules();
+  MakeRepoWithNodeModules(TEST_EXTRACT_REPO);
   ASSERT_TRUE(ExtractStreamsCommand(TEST_EXTRACT_REPO, "C:/games/crash 1.bin",
     command, sizeof(command)));
 #ifdef _WIN32

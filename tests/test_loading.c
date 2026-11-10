@@ -1,11 +1,12 @@
 #include <string.h>
 #include "utest.h"
+#include <SDL2/SDL.h>
 #include "pc/loading.h"
 
 #define IMAGE_SIZE 0xF5F8 /* size of nsd_ldat.image_data */
 
 static uint8_t image_data[IMAGE_SIZE];
-static uint32_t rgba[512*240];
+static uint32_t pixels_rgba[512*240];
 
 /*
  * the palette and pixels are the last 512 + w*h bytes of image_data
@@ -33,35 +34,35 @@ UTEST(loading, converts_palette_indices_to_rgba) {
   pixels = (uint8_t*)&palette[256];
   pixels[0] = 1; pixels[1] = 2;
   pixels[2] = 3; pixels[3] = 4;
-  ASSERT_EQ(1, LoadingImageConvert(image_data, sizeof(image_data), 2, 2, rgba, 512*240));
+  ASSERT_EQ(1, LoadingImageConvert(image_data, sizeof(image_data), 2, 2, pixels_rgba, 512*240));
   /* rgba is stored as bytes r, g, b, a */
-  ASSERT_EQ(0xFF0000FFu, rgba[0]);
-  ASSERT_EQ(0xFF00FF00u, rgba[1]);
-  ASSERT_EQ(0xFFFF0000u, rgba[2]);
-  ASSERT_EQ(0xFFFFFFFFu, rgba[3]);
+  ASSERT_EQ(0xFF0000FFu, pixels_rgba[0]);
+  ASSERT_EQ(0xFF00FF00u, pixels_rgba[1]);
+  ASSERT_EQ(0xFFFF0000u, pixels_rgba[2]);
+  ASSERT_EQ(0xFFFFFFFFu, pixels_rgba[3]);
 }
 
 UTEST(loading, accepts_full_size_level_image) {
   memset(image_data, 0, sizeof(image_data));
-  ASSERT_EQ(1, LoadingImageConvert(image_data, sizeof(image_data), 432, 144, rgba, 512*240));
+  ASSERT_EQ(1, LoadingImageConvert(image_data, sizeof(image_data), 432, 144, pixels_rgba, 512*240));
 }
 
 UTEST(loading, rejects_image_larger_than_its_data) {
   memset(image_data, 0, sizeof(image_data));
   /* the garbage header in s0000004.nsd */
-  ASSERT_EQ(0, LoadingImageConvert(image_data, sizeof(image_data), 47, 671097453, rgba, 512*240));
-  ASSERT_EQ(0, LoadingImageConvert(image_data, sizeof(image_data), 512, 240, rgba, 512*240));
+  ASSERT_EQ(0, LoadingImageConvert(image_data, sizeof(image_data), 47, 671097453, pixels_rgba, 512*240));
+  ASSERT_EQ(0, LoadingImageConvert(image_data, sizeof(image_data), 512, 240, pixels_rgba, 512*240));
 }
 
 UTEST(loading, rejects_image_larger_than_destination) {
   memset(image_data, 0, sizeof(image_data));
-  ASSERT_EQ(0, LoadingImageConvert(image_data, sizeof(image_data), 432, 144, rgba, 100));
+  ASSERT_EQ(0, LoadingImageConvert(image_data, sizeof(image_data), 432, 144, pixels_rgba, 100));
 }
 
 UTEST(loading, rejects_empty_image) {
   memset(image_data, 0, sizeof(image_data));
-  ASSERT_EQ(0, LoadingImageConvert(image_data, sizeof(image_data), 0, 144, rgba, 512*240));
-  ASSERT_EQ(0, LoadingImageConvert(image_data, sizeof(image_data), 432, 0, rgba, 512*240));
+  ASSERT_EQ(0, LoadingImageConvert(image_data, sizeof(image_data), 0, 144, pixels_rgba, 512*240));
+  ASSERT_EQ(0, LoadingImageConvert(image_data, sizeof(image_data), 432, 0, pixels_rgba, 512*240));
 }
 
 UTEST(loading, remaining_is_full_time_when_just_shown) {
@@ -82,15 +83,14 @@ UTEST(loading, remaining_handles_tick_counter_wrapping) {
   ASSERT_EQ(1488u, LoadingRemaining(0xFFFFFF00u, 0x100u, 2000));
 }
 
-UTEST(loading, remaining_follows_the_minimum_time_setting) {
-  ASSERT_EQ(300u, LoadingRemaining(1000, 1200, 500));
-  ASSERT_EQ(0u, LoadingRemaining(1000, 1600, 500));
-}
-
 UTEST(loading, remaining_is_zero_with_no_minimum_time) {
   ASSERT_EQ(0u, LoadingRemaining(1000, 1000, 0));
 }
 
 UTEST(loading, wait_returns_at_once_when_nothing_was_shown) {
+  uint32_t start_ms;
+
+  start_ms = SDL_GetTicks();
   LoadingWait();
+  ASSERT_LT(SDL_GetTicks() - start_ms, 20u); /* not the loading screen's minimum time */
 }

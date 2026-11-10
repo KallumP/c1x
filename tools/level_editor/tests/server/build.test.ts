@@ -28,7 +28,8 @@ function addBase(): void {
 }
 
 describe("buildLevel", () => {
-  test.skipIf(!hasBase)("builds the level's folder into the repo's build/levels, and gives what it said", async () => {
+  test.skipIf(!hasBase)("builds the level's folder into the repo's build/levels", async () => {
+    // and gives what it said
     addBase();
     const levels = join(repo, "build", "levels");
     expect(await buildLevel(repo, "lvl")).toEqual({ ok: true, output: `wrote ${join(levels, "lvl")}\n` });
@@ -42,7 +43,7 @@ describe("buildLevel", () => {
     expect(result.output).toMatch(/level\.cfg, line 1: scale has to be a whole number/);
   });
 
-  test("isn't ok without the base level in the repo's streams, saying which it is", async () => {
+  test("says which base level is missing from the repo's streams", async () => {
     const result = await buildLevel(repo, "lvl");
     expect(result.ok).toBe(false);
     expect(result.output).toMatch(/Jungle Rollers \(s000000c\.nsd\)/);

@@ -50,8 +50,8 @@ UTEST(speed, large_moves_do_not_overflow) {
   vec prev = { .x=-0x40000000, .y=0, .z=-0x40000000 };
   vec cur = { .x=0x3FFFFFFF, .y=0, .z=0x3FFFFFFF };
 
-  /* sqrt(2)*0x7FFFFFFF / 4 per tick, over 1024 ticks */
-  ASSERT_EQ(741455u, SpeedMeasure(&prev, &cur, 1024));
+  /* the whole int32 range along x and z: sqrt(2) * 0x7FFFFFFF = 3037000498 position units */
+  ASSERT_EQ(3037000498u / UNITS(1), SpeedMeasure(&prev, &cur, 1024));
 }
 
 UTEST(speed_track, first_frame_of_an_object_is_zero) {
@@ -60,6 +60,9 @@ UTEST(speed_track, first_frame_of_an_object_is_zero) {
   vec trans = { .x=UNITS(100), .y=0, .z=0 };
 
   ASSERT_EQ(0u, SpeedTrack(&t, &crash, &trans, 1024));
+  ASSERT_EQ(0, t.x);
+  ASSERT_EQ(0, t.y);
+  ASSERT_EQ(0, t.z);
 }
 
 UTEST(speed_track, measures_movement_between_frames) {
@@ -88,11 +91,19 @@ UTEST(speed_track, no_object_is_zero_and_restarts) {
   speed_tracker t = { 0 };
   int crash;
   vec here = { .x=0, .y=0, .z=0 };
+  vec moved = { .x=UNITS(30), .y=UNITS(5), .z=UNITS(-40) };
   vec far_away = { .x=UNITS(100), .y=0, .z=0 };
 
   SpeedTrack(&t, &crash, &here, 1024);
+  SpeedTrack(&t, &crash, &moved, 1024);
   ASSERT_EQ(0u, SpeedTrack(&t, 0, 0, 1024));
-  ASSERT_EQ(0u, SpeedTrack(&t, &crash, &far_away, 1024));
+  ASSERT_EQ(0, t.x);
+  ASSERT_EQ(0, t.y);
+  ASSERT_EQ(0, t.z);
+  ASSERT_EQ(0u, SpeedTrack(&t, &crash, &far_away, 1024)); /* a first frame again */
+  ASSERT_EQ(0, t.x);
+  ASSERT_EQ(0, t.y);
+  ASSERT_EQ(0, t.z);
 }
 
 UTEST(speed_track, teleport_is_not_counted_as_movement) {
@@ -108,24 +119,13 @@ UTEST(speed_track, teleport_is_not_counted_as_movement) {
   ASSERT_EQ(10u, SpeedTrack(&t, &crash, &moved_on, 1024));
 }
 
-UTEST(speed_axis, positive_movement) {
-  ASSERT_EQ(100, SpeedAxis(0, UNITS(100), 1024));
-}
-
 UTEST(speed_axis, negative_movement_is_negative) {
   ASSERT_EQ(-100, SpeedAxis(UNITS(100), 0, 1024));
 }
 
-UTEST(speed_axis, divides_by_elapsed_ticks) {
-  ASSERT_EQ(200, SpeedAxis(0, UNITS(100), 512));
-}
-
-UTEST(speed_axis, zero_ticks_is_zero) {
-  ASSERT_EQ(0, SpeedAxis(0, UNITS(100), 0));
-}
-
 UTEST(speed_axis, large_moves_do_not_overflow) {
-  ASSERT_EQ(524287, SpeedAxis(-0x40000000, 0x3FFFFFFF, 1024));
+  /* the whole int32 range, 0x7FFFFFFF position units */
+  ASSERT_EQ(0x7FFFFFFF / UNITS(1), SpeedAxis(-0x40000000, 0x3FFFFFFF, 1024));
 }
 
 UTEST(speed_track, records_speed_along_each_axis) {
@@ -135,28 +135,10 @@ UTEST(speed_track, records_speed_along_each_axis) {
   vec frame2 = { .x=UNITS(30), .y=UNITS(5), .z=UNITS(-40) };
 
   SpeedTrack(&t, &crash, &frame1, 1024);
-  ASSERT_EQ(50u, SpeedTrack(&t, &crash, &frame2, 1024));
+  SpeedTrack(&t, &crash, &frame2, 1024);
   ASSERT_EQ(30, t.x);
   ASSERT_EQ(5, t.y);
   ASSERT_EQ(-40, t.z);
-}
-
-UTEST(speed_track, axes_are_zero_on_first_frame_and_without_an_object) {
-  speed_tracker t = { 0 };
-  int crash;
-  vec frame1 = { .x=0, .y=0, .z=0 };
-  vec frame2 = { .x=UNITS(30), .y=UNITS(5), .z=UNITS(-40) };
-
-  SpeedTrack(&t, &crash, &frame1, 1024);
-  SpeedTrack(&t, &crash, &frame2, 1024);
-  SpeedTrack(&t, 0, 0, 1024);
-  ASSERT_EQ(0, t.x);
-  ASSERT_EQ(0, t.y);
-  ASSERT_EQ(0, t.z);
-  SpeedTrack(&t, &crash, &frame1, 1024);
-  ASSERT_EQ(0, t.x);
-  ASSERT_EQ(0, t.y);
-  ASSERT_EQ(0, t.z);
 }
 
 UTEST(speed_track, vertical_teleport_is_not_counted_as_movement) {

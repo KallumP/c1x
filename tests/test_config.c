@@ -1,17 +1,9 @@
 #include <string.h>
 #include "utest.h"
 #include "pc/config.h"
+#include "test_files.h"
 
 #define CONFIG_TEST_PATH "build/test_config.cfg"
-
-/* write contents to the test config file */
-static void write_file(const char *contents) {
-  FILE *file;
-
-  file = fopen(CONFIG_TEST_PATH, "wb");
-  fputs(contents, file);
-  fclose(file);
-}
 
 UTEST(config, splits_name_and_value) {
   char buf[128], *name, *value;
@@ -96,7 +88,7 @@ UTEST(config, load_passes_each_line_with_its_number) {
   recorder rec;
 
   memset(&rec, 0, sizeof(rec));
-  write_file("# comment\r\n\r\nfirst = 1\r\nsecond = two words\r\n");
+  WriteWholeFile(CONFIG_TEST_PATH, "# comment\r\n\r\nfirst = 1\r\nsecond = two words\r\n");
   ASSERT_EQ(2, ConfigLoad(CONFIG_TEST_PATH, "setting", "name = value", record_line, &rec));
   ASSERT_EQ(2, rec.calls);
   ASSERT_EQ(4, rec.last_line_num);
@@ -109,7 +101,7 @@ UTEST(config, load_counts_only_applied_lines) {
 
   memset(&rec, 0, sizeof(rec));
   /* malformed line, handler-rejected line, handler-skipped line, good line */
-  write_file("no equals\nbad = 1\nskip = 1\ngood = 1\n");
+  WriteWholeFile(CONFIG_TEST_PATH, "no equals\nbad = 1\nskip = 1\ngood = 1\n");
   ASSERT_EQ(1, ConfigLoad(CONFIG_TEST_PATH, "setting", "name = value", record_line, &rec));
   ASSERT_EQ(1, rec.calls);
   ASSERT_EQ(4, rec.last_line_num);

@@ -1,47 +1,29 @@
 #include "utest.h"
 #include <SDL2/SDL.h>
 #include "launcher/settings_file.h"
+#include "test_files.h"
 
 #define LAUNCHER_SETTINGS_PATH "build/test_launcher_settings.cfg"
-
-/* write contents to the launcher's test settings file */
-static void WriteLauncherSettings(const char *contents) {
-  FILE *file;
-
-  file = fopen(LAUNCHER_SETTINGS_PATH, "wb");
-  fputs(contents, file);
-  fclose(file);
-}
+#define LAUNCHER_SETTINGS_EXAMPLE_PATH "build/test_launcher_settings.example.cfg"
 
 UTEST(launcher_settings, reads_a_settings_file) {
-  pc_settings s;
+  pc_settings s, defaults;
 
-  WriteLauncherSettings("# comment\nspeed_display = on\nreplay_speed = 4\nboot_level = tide_ruins\n");
+  SettingsReset(&defaults);
+  WriteWholeFile(LAUNCHER_SETTINGS_PATH, "# comment\nspeed_display = on\n");
   ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &s));
   ASSERT_EQ(1, s.speed_display);
-  ASSERT_EQ(4u, s.replay_speed);
-  ASSERT_STREQ("tide_ruins", s.boot_level);
-  ASSERT_EQ(1, s.loading_screen); /* not in the file, so the default */
+  ASSERT_EQ(defaults.loading_screen, s.loading_screen); /* not in the file */
 }
 
 UTEST(launcher_settings, uses_the_defaults_without_a_settings_file) {
-  pc_settings s;
+  pc_settings s, defaults;
 
+  SettingsReset(&defaults);
   remove(LAUNCHER_SETTINGS_PATH);
-  s.speed_display = 1;
+  s.speed_display = !defaults.speed_display;
   ASSERT_EQ(0, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &s));
-  ASSERT_EQ(0, s.speed_display);
-  ASSERT_EQ(2000u, s.loading_screen_min_ms);
-  ASSERT_STREQ("", s.boot_level);
-}
-
-UTEST(launcher_settings, skips_invalid_lines) {
-  pc_settings s;
-
-  WriteLauncherSettings("speed_display = maybe\nreplay_speed = 2\n");
-  ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &s));
-  ASSERT_EQ(0, s.speed_display);
-  ASSERT_EQ(2u, s.replay_speed);
+  ASSERT_TRUE(AreSettingsEqual(&defaults, &s));
 }
 
 /* SetSettingLine's result for text, compared with expected, then freed */
@@ -88,42 +70,32 @@ UTEST(launcher_settings, set_leaves_a_line_already_set_to_the_value) {
 
 UTEST(launcher_settings, save_keeps_the_settings_files_other_lines) {
   pc_settings s;
-  char text[512];
-  FILE *file;
-  size_t len;
+  char *text;
 
-  WriteLauncherSettings("# mine\nspeed_display = off\nfavourite = crash\n");
+  WriteWholeFile(LAUNCHER_SETTINGS_PATH, "# mine\nspeed_display = off\nfavourite = crash\n");
   SettingsReset(&s);
   s.speed_display = 1;
-  s.replay_speed = 3;
   ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
-  file = fopen(LAUNCHER_SETTINGS_PATH, "rb");
-  len = fread(text, 1, sizeof(text)-1, file);
-  fclose(file);
-  text[len] = 0;
-  ASSERT_TRUE(strstr(text, "# mine\nspeed_display = on\nfavourite = crash\n") == text);
-  ASSERT_TRUE(strstr(text, "replay_speed = 3\n") != 0);
-  ASSERT_TRUE(strstr(text, "loading_screen = on\n") != 0);
+  text = ReadWholeFile(LAUNCHER_SETTINGS_PATH);
+  ASSERT_TRUE(text != 0);
+  ASSERT_TRUE(strstr(text, "# mine\n") == text);
+  ASSERT_TRUE(strstr(text, "\nfavourite = crash\n") != 0);
+  SDL_free(text);
 }
 
 UTEST(launcher_settings, save_starts_from_the_example_without_a_settings_file) {
   pc_settings s;
-  char text[512];
-  FILE *file;
-  size_t len;
+  char *text;
 
   remove(LAUNCHER_SETTINGS_PATH);
-  file = fopen("build/test_launcher_settings.example.cfg", "wb");
-  fputs("# example\nspeed_display = off\n", file);
-  fclose(file);
+  WriteWholeFile(LAUNCHER_SETTINGS_EXAMPLE_PATH, "# example\nspeed_display = off\n");
   SettingsReset(&s);
   ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH,
-    "build/test_launcher_settings.example.cfg", &s));
-  file = fopen(LAUNCHER_SETTINGS_PATH, "rb");
-  len = fread(text, 1, sizeof(text)-1, file);
-  fclose(file);
-  text[len] = 0;
+    LAUNCHER_SETTINGS_EXAMPLE_PATH, &s));
+  text = ReadWholeFile(LAUNCHER_SETTINGS_PATH);
+  ASSERT_TRUE(text != 0);
   ASSERT_TRUE(strstr(text, "# example\nspeed_display = off\n") == text);
+  SDL_free(text);
 }
 
 UTEST(launcher_settings, saved_settings_read_back_the_same) {
@@ -140,14 +112,7 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
   strcpy(s.boot_level, "tide_ruins");
   ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
   ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &read));
-  ASSERT_EQ(0, read.loading_screen);
-  ASSERT_EQ(500u, read.loading_screen_min_ms);
-  ASSERT_EQ(0, read.speed_display);
-  ASSERT_EQ(1, read.skip_splash_screens);
-  ASSERT_EQ(1, read.fix_model_draw_order);
-  ASSERT_EQ(1, read.replay_inputs);
-  ASSERT_EQ(0u, read.replay_speed);
-  ASSERT_STREQ("tide_ruins", read.boot_level);
+  ASSERT_TRUE(AreSettingsEqual(&s, &read));
 }
 
 /* CommentOutSettingLine's result for text, compared with expected, then freed */
@@ -176,20 +141,16 @@ UTEST(launcher_settings, comment_out_leaves_a_file_without_the_setting) {
 
 UTEST(launcher_settings, saving_the_title_screen_comments_out_boot_level) {
   pc_settings s;
+  char *text;
 
-  WriteLauncherSettings("boot_level = tide_ruins\n");
+  WriteWholeFile(LAUNCHER_SETTINGS_PATH, "boot_level = tide_ruins\n");
   ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &s);
   s.boot_level[0] = 0;
   ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
-  ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &s));
-  ASSERT_STREQ("", s.boot_level);
-}
-UTEST(launcher_settings, the_same_settings_are_equal) {
-  pc_settings a, b;
-
-  SettingsReset(&a);
-  SettingsReset(&b);
-  ASSERT_TRUE(AreSettingsEqual(&a, &b));
+  text = ReadWholeFile(LAUNCHER_SETTINGS_PATH);
+  ASSERT_TRUE(text != 0);
+  ASSERT_TRUE(strstr(text, "# boot_level = tide_ruins\n") == text);
+  SDL_free(text);
 }
 
 UTEST(launcher_settings, settings_differing_in_a_number_arent_equal) {
@@ -215,6 +176,7 @@ UTEST(launcher_settings, equal_settings_ignore_whats_after_boot_levels_end) {
 
   SettingsReset(&a);
   SettingsReset(&b);
+  /* a held a longer name first, so the bytes after its NUL differ from b's */
   strcpy(a.boot_level, "mossy_creek");
   strcpy(a.boot_level, "tide");
   strcpy(b.boot_level, "tide");

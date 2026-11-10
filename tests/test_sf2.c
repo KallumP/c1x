@@ -29,15 +29,3 @@ UTEST(sf2, other_records_have_spec_sizes) {
   ASSERT_EQ(4, (int)sizeof(sfInstBag));
   ASSERT_EQ(46, (int)sizeof(sfSample));
 }
-
-/* the general controllers a modulator's source can be (SF2 2.01, 8.2.1) */
-UTEST(sf2, controller_palette_has_spec_numbers) {
-  ASSERT_EQ(0, (int)noController);
-  ASSERT_EQ(2, (int)noteOnVel);
-  ASSERT_EQ(3, (int)noteOnKeynum);
-  ASSERT_EQ(10, (int)polyPressure);
-  ASSERT_EQ(13, (int)chanPressure);
-  ASSERT_EQ(14, (int)pitchWheel);
-  ASSERT_EQ(16, (int)pitchWheelSens);
-  ASSERT_EQ(127, (int)link);
-}

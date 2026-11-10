@@ -30,6 +30,19 @@ function isInOneSlice(world: WorldMesh, polygon: WorldPolygon, axis: number, siz
   return floorDivide(Math.min(...coordinates), size) === floorDivide(Math.max(...coordinates) - 1, size);
 }
 
+// two triangles share the diagonal z = 2x in "slicing leaves no cracks"
+const isOnDiagonal = (corner: Vec3) => corner[2] === 2 * corner[0];
+
+// which side of that diagonal a polygon is on, by its middle
+function sideOfDiagonal(corners: Vec3[]): "left" | "right" {
+  const middleX = corners.reduce((sum, corner) => sum + corner[0], 0) / corners.length;
+  const middleZ = corners.reduce((sum, corner) => sum + corner[2], 0) / corners.length;
+  if (middleZ > 2 * middleX) {
+    return "left";
+  }
+  return "right";
+}
+
 const WALL = quadMesh([[0, 0, 512], [1024, 0, 512], [1024, 768, 512], [0, 768, 512]]);
 const EAST_WALL = quadMesh([[512, 0, 0], [512, 256, 0], [512, 256, 256], [512, 0, 256]]);
 
@@ -79,14 +92,14 @@ describe("world meshes", () => {
       { corners: [0, 1, 3], object: null, material: null },
     ]);
     const [world] = worldsOf(mesh);
-    const sides = [new Set<string>(), new Set<string>()];
+    const edgeCorners = { left: new Set<string>(), right: new Set<string>() };
     for (const polygon of world.polygons) {
       const corners = cornersOf(world, polygon);
-      const isLeft = corners.reduce((sum, corner) => sum + 2 * corner[0], 0) < corners.reduce((sum, corner) => sum + corner[2], 0);
-      corners.filter((corner) => corner[2] === 2 * corner[0]).forEach((corner) => sides[isLeft ? 1 : 0].add(corner.join()));
+      const side = sideOfDiagonal(corners);
+      corners.filter(isOnDiagonal).forEach((corner) => edgeCorners[side].add(corner.join()));
     }
-    expect(sides[0]).toEqual(sides[1]);
-    expect(sides[0].size).toBeGreaterThan(2);
+    expect(edgeCorners.left).toEqual(edgeCorners.right);
+    expect(edgeCorners.left.size).toBeGreaterThan(2);
   });
 
   test("vertices are on multiples of 8", () => {
@@ -116,10 +129,9 @@ describe("world meshes", () => {
 
   test("polygons facing away from the camera aren't drawn", () => {
     // the camera always looks along -z, so it never sees a face pointing that way
-    const corners: Vec3[] = [[0, 0, 256], [256, 0, 256], [256, 256, 256], [0, 256, 256]];
-    const one = quadMesh(corners);
-    const other = quadMesh([...corners].reverse());
-    const [away, towards] = normal(one, one.triangles[0])![2] < 0 ? [one, other] : [other, one];
+    const towards = quadMesh([[0, 0, 256], [256, 0, 256], [256, 256, 256], [0, 256, 256]]); // anticlockwise seen from +z
+    const away = quadMesh([[0, 256, 256], [256, 256, 256], [256, 0, 256], [0, 0, 256]]); // anticlockwise seen from -z
+    expect(normal(away, away.triangles[0])![2]).toBeLessThan(0);
     expect(worldsOf(away)).toEqual([]);
     expect(worldsOf(towards)).not.toEqual([]);
   });
@@ -145,7 +157,7 @@ describe("world meshes", () => {
   });
 
   test("too many meshes for a zone is an error", () => {
-    expect(() => worldMeshes(manyFloors(), { piece: 256, ground: GROUND, side: SIDE, worldsMax: 1 })).toThrow();
+    expect(() => worldMeshes(manyFloors(), { piece: 256, ground: GROUND, side: SIDE, worldsMax: 1 })).toThrow(/world meshes.*more than 1; use fewer faces/);
   });
 
   test("a zone's meshes are the pieces in it, relative to it", () => {
@@ -213,7 +225,7 @@ describe("textured materials", () => {
 
 describe("textured faces with their own UVs", () => {
   // a 1024 floor triangle in stone, the whole image on it, upside down from how it'd be projected
-  const uvFloor = (uvs: [number, number][]): Mesh => ({
+  const uvFloor = (uvs?: [number, number][]): Mesh => ({
     vertices: [[0, 0, 0], [1024, 0, 0], [0, 0, 1024]],
     triangles: [{ corners: [0, 2, 1], object: null, material: "stone", uvs }],
     materialLibraries: [],
@@ -221,7 +233,8 @@ describe("textured faces with their own UVs", () => {
   const regionsOf = (mesh: Mesh, piece: number) =>
     worldMeshes(mesh, { piece, ground: GROUND, side: SIDE, tile: 256, textured: new Set(["stone"]) })[0].polygons.map(({ texture }) => texture).filter(isTileRegion);
 
-  test("keep them: the whole image on the face, in place of a projected part of it", () => {
+  test("keep them, the whole image on the face", () => {
+    // in place of a projected part of it
     const [region] = regionsOf(uvFloor([[0, 0], [0, 1], [1, 0]]), 2048);
     expect(region).toMatchObject({ x: 0, y: 0, w: 64, h: 64 });
     expect(LAYOUTS[region.layout]).toEqual([[0, 1], [0, 0], [1, 1]]);
@@ -234,7 +247,8 @@ describe("textured faces with their own UVs", () => {
     expect(regions.some(({ w, h }) => w < 64 || h < 64)).toBe(true);
   });
 
-  test("a small face isn't sliced across a piece's edge: its image stays whole (a sliced piece's region is only the nearest the game can address)", () => {
+  test("a small face across a piece's edge keeps its image whole", () => {
+    // it isn't sliced: a sliced piece's region is only the nearest the game can address
     // a 400 triangle from z 300 to 700, across the piece edge at 512
     const small: Mesh = {
       vertices: [[0, 0, 300], [400, 0, 300], [0, 0, 700]],
@@ -248,7 +262,7 @@ describe("textured faces with their own UVs", () => {
 
   test("UVs beyond the image (repeating it) are projected as usual", () => {
     const [region] = regionsOf(uvFloor([[0, 0], [0, 4], [4, 0]]), 2048);
-    const [projected] = regionsOf(uvFloor(undefined as unknown as [number, number][]), 2048);
+    const [projected] = regionsOf(uvFloor(), 2048);
     expect(region).toEqual(projected);
   });
 });
@@ -270,7 +284,8 @@ describe("tile regions", () => {
     expect(LAYOUTS[tileRegion(startingElsewhere, UP, 1024).layout]).toEqual([[1, 1], [0, 0], [1, 0]]);
   });
 
-  test("from a face's UVs: the part of the image under them (v up, as .obj has it), and the corners where they are", () => {
+  test("from a face's UVs are the part of the image under them", () => {
+    // v up, as .obj has it, and the corners where they are
     const whole = uvTileRegion([[0, 1], [1, 1], [0, 0]]);
     expect(whole).toMatchObject({ x: 0, y: 0, w: 64, h: 64 });
     expect(LAYOUTS[whole.layout]).toEqual([[0, 0], [1, 0], [0, 1]]);

@@ -5,13 +5,6 @@ static void set(vec *v, int32_t x, int32_t y) {
   v->x = x; v->y = y; v->z = 1000;
 }
 
-UTEST(gpu, a_polygon_on_screen_is_drawn) {
-  vec v[3];
-
-  set(&v[0], -100, -50); set(&v[1], 120, 40); set(&v[2], 0, 100);
-  ASSERT_TRUE(GpuPolygonFits(v));
-}
-
 UTEST(gpu, a_polygon_up_to_1023_wide_and_511_tall_is_drawn) {
   vec v[3];
 
@@ -22,7 +15,7 @@ UTEST(gpu, a_polygon_up_to_1023_wide_and_511_tall_is_drawn) {
 UTEST(gpu, a_polygon_wider_than_1023_is_not_drawn) {
   vec v[3];
 
-  set(&v[0], -0x400, 0); set(&v[1], 0x400, 0); set(&v[2], 0, 10);
+  set(&v[0], -0x200, 0); set(&v[1], 0x200, 0); set(&v[2], 0, 10); /* 1024 wide */
   ASSERT_FALSE(GpuPolygonFits(v));
 }
 

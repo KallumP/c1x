@@ -34,7 +34,7 @@ describe("byte writer", () => {
 });
 
 describe("reading an nsd", () => {
-  test("its page table and level header", () => {
+  test("reads its page table and level header", () => {
     const zone = stringToEid("a5_9Z");
     const nsd = readNsd(nsdData([[1, WILLC], [3, zone]], 9, zone, [WILLC]));
     expect(nsd.pageCount).toBe(1);
@@ -47,7 +47,7 @@ describe("reading an nsd", () => {
 });
 
 describe("reading pages", () => {
-  test("an entry and its items", () => {
+  test("reads an entry and its items", () => {
     const pages = readPages(pageData(1, [entryData(WILLC, 11, [text("head"), text("code!!")])]), 1);
     expect(pages.length).toBe(1);
     expect(pages[0].type).toBe(0);
@@ -56,7 +56,7 @@ describe("reading pages", () => {
     expect(entry.items).toEqual([text("head"), text("code!!")]);
   });
 
-  test("several entries in a page", () => {
+  test("reads several entries in a page", () => {
     const a = entryData(stringToEid("AaaaA"), 7, [text("1")]);
     const b = entryData(stringToEid("BbbbB"), 3, [text("22"), text("333")]);
     const [page] = readPages(pageData(1, [a, b]), 1);

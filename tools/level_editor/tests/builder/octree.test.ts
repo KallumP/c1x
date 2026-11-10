@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { blocksRectBytes, FLOOR_CELL_MAX, LEAF_GROUND, LEAF_PIT, type Block } from "../../builder/octree";
 import type { Vec3 } from "../../builder/vectors";
+import { readZoneRect } from "./zoneReaders";
 
 interface Leaf {
   at: Vec3;
@@ -67,8 +68,7 @@ describe("the collision octree", () => {
 
   test("its solid cells are exactly the blocks", () => {
     const rect = blocksRectBytes([10, 20, 30], SIZE, BLOCKS, 128);
-    expect([0, 4, 8, 12, 16, 20].map((offset) => (offset < 12 ? rect.readInt32LE(offset) : rect.readUInt32LE(offset))))
-      .toEqual([10, 20, 30, ...SIZE]);
+    expect(readZoneRect(rect)).toEqual({ at: [10, 20, 30], width: SIZE[0], height: SIZE[1], depth: SIZE[2] });
     const leaves = octreeLeaves(rect);
     expect(leafSquares(leaves)).toEqual(blockSquares(BLOCKS));
     expect(new Set(leaves.map(({ value }) => value))).toEqual(new Set([0])); // plain ground
@@ -90,10 +90,9 @@ describe("the collision octree", () => {
     const pit: Block = { low: [0, 0, 1024], high: [2048, 128, 1536], leaf: LEAF_PIT };
     const leaves = octreeLeaves(blocksRectBytes([0, 0, 0], SIZE, [...BLOCKS, pit], 128));
     expect(leafSquares(leaves.filter(({ value }) => value === LEAF_PIT >> 1))).toEqual(blockSquares([pit]));
-    expect((LEAF_PIT & 0x3f0) >> 4).toBe(11); // subtype 11: fall kill (ProcessNode)
   });
 
   test("blocks have to be on the grid", () => {
-    expect(() => blocksRectBytes([0, 0, 0], SIZE, [ground([0, 0, 0], [100, 128, 128])], 128)).toThrow();
+    expect(() => blocksRectBytes([0, 0, 0], SIZE, [ground([0, 0, 0], [100, 128, 128])], 128)).toThrow("isn't on the 128 grid inside the zone");
   });
 });

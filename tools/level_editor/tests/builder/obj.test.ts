@@ -31,7 +31,8 @@ describe("reading a .obj", () => {
     expect(mesh.vertices.length).toBe(7);
   });
 
-  test("vertex colours (blender's v x y z r g b, 0 to 1) are read as 0 to 255, none where a vertex has none", () => {
+  test("vertex colours are read as 0 to 255, none where a vertex has none", () => {
+    // blender's v x y z r g b, 0 to 1
     const mesh = readObj(["v 0 0 0 1 0.5 0", "v 1 0 0", "v 0 0 1 0.2 0.4 0.6", "f 1 2 3"].join("\n"), 256);
     expect(mesh.colours).toEqual([[255, 128, 0], null, [51, 102, 153]]);
   });
@@ -69,7 +70,7 @@ describe("reading a .obj", () => {
   });
 
   test("turn has to be a multiple of 90", () => {
-    expect(() => readObj("v 1 2 0\n", 1, 45)).toThrow();
+    expect(() => readObj("v 1 2 0\n", 1, 45)).toThrow("turn (45) has to be a multiple of 90 degrees");
   });
 
   test("a face with a missing vertex is an error", () => {

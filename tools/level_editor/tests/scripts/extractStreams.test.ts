@@ -1,7 +1,7 @@
-import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import { extractStreams } from "../../scripts/extractStreams";
 
 const SECTOR = 2048;
@@ -56,7 +56,22 @@ function rawSectors(sectors: Buffer[]): Buffer {
   }));
 }
 
-const folder = () => mkdtempSync(join(tmpdir(), "disc-"));
+// temporary folders, deleted after each test
+const madeFolders: string[] = [];
+function folder(): string {
+  const made = mkdtempSync(join(tmpdir(), "disc-"));
+  madeFolders.push(made);
+  return made;
+}
+afterEach(() => { madeFolders.splice(0).forEach((made) => rmSync(made, { recursive: true, force: true })); });
+
+// the files in a folder, none if it isn't there
+function filesIn(path: string): string[] {
+  if (!existsSync(path)) {
+    return [];
+  }
+  return readdirSync(path);
+}
 
 function extracted(image: Buffer): { count: number; out: string } {
   const where = folder();
@@ -67,7 +82,8 @@ function extracted(image: Buffer): { count: number; out: string } {
 }
 
 describe("extracting the game's files from a disc image", () => {
-  test("an .iso's S0-S3 .NSD and .NSF files, in lower case", () => {
+  test("takes an .iso's stream files, named in lower case", () => {
+    // S0-S3 .NSD and .NSF
     const { count, out } = extracted(Buffer.concat(discSectors()));
     expect(count).toBe(2);
     expect(readdirSync(out).sort()).toEqual(["s0000009.nsd", "s0000009.nsf"]);
@@ -75,7 +91,8 @@ describe("extracting the game's files from a disc image", () => {
     expect([...readFileSync(join(out, "s0000009.nsf"))]).toEqual([...Array(SECTOR).fill(0xaa), 0xbb, 0xbb, 0xbb]);
   });
 
-  test("a raw .bin of 2352 byte sectors", () => {
+  test("reads a raw .bin", () => {
+    // 2352 byte sectors
     const { count, out } = extracted(rawSectors(discSectors()));
     expect(count).toBe(2);
     expect(readFileSync(join(out, "s0000009.nsd"), "latin1")).toBe("nsd!!");
@@ -95,6 +112,6 @@ describe("extracting the game's files from a disc image", () => {
     const where = folder();
     writeFileSync(join(where, "other.iso"), Buffer.concat(sectors));
     expect(() => extractStreams(join(where, "other.iso"), join(where, "streams"))).toThrow(/no \.NSD\/\.NSF files found/);
-    expect(existsSync(join(where, "streams")) && readdirSync(join(where, "streams")).length).toBeFalsy();
+    expect(filesIn(join(where, "streams"))).toEqual([]);
   });
 });

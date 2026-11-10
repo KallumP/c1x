@@ -10,6 +10,35 @@
 #define WAIT_30_SECONDS "sleep 30"
 #endif
 
+/* text with its trailing line ending (\n or \r\n) removed */
+static void TrimLineEnding(char *text) {
+  size_t length;
+
+  length = strlen(text);
+  while (length > 0 && (text[length-1] == '\n' || text[length-1] == '\r')) {
+    text[--length] = 0;
+  }
+}
+
+/* whether text ends with end */
+static int EndsWith(const char *text, const char *end) {
+  size_t text_length, end_length;
+
+  text_length = strlen(text);
+  end_length = strlen(end);
+  if (end_length > text_length) { return 0; }
+  return strcmp(text + text_length - end_length, end) == 0;
+}
+
+/* whether path's last folder is name */
+static int EndsWithFolder(const char *path, const char *name) {
+  char with_slash[64], with_backslash[64];
+
+  snprintf(with_slash, sizeof(with_slash), "/%s", name);
+  snprintf(with_backslash, sizeof(with_backslash), "\\%s", name);
+  return EndsWith(path, with_slash) || EndsWith(path, with_backslash);
+}
+
 /* wait up to 10 seconds for p to finish; returns 0 if it didn't */
 static int WaitForProcess(process *p) {
   int waited;
@@ -52,20 +81,24 @@ UTEST(launcher_process, runs_in_the_folder_given) {
   ASSERT_TRUE(p != 0);
   ASSERT_TRUE(WaitForProcess(p));
   ProcessCopyOutput(p, output, sizeof(output));
-  ASSERT_TRUE(strstr(output, "tests") != 0);
+  TrimLineEnding(output);
+  ASSERT_TRUE(EndsWithFolder(output, "tests"));
   ProcessFree(p);
 }
+
+#define ALPHABET "abcdefghijklmnopqrstuvwxyz"
 
 UTEST(launcher_process, keeps_the_end_of_long_output) {
   char output[8];
   process *p;
 
-  p = ProcessRun(".", "echo abcdefghijklmnopqrstuvwxyz");
+  p = ProcessRun(".", "echo " ALPHABET);
   ASSERT_TRUE(p != 0);
   ASSERT_TRUE(WaitForProcess(p));
   ProcessCopyOutput(p, output, sizeof(output));
-  ASSERT_EQ(7u, strlen(output));
-  ASSERT_TRUE(strstr("uvwxyz\r\n", output) != 0 || strstr("tuvwxyz\n", output) != 0);
+  ASSERT_EQ(sizeof(output)-1, strlen(output));
+  TrimLineEnding(output);
+  ASSERT_TRUE(EndsWith(ALPHABET, output));
   ProcessFree(p);
 }
 

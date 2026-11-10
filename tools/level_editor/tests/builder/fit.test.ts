@@ -33,7 +33,7 @@ describe("fitting a map into a zone", () => {
 
   test("the triangles are kept", () => {
     const mesh = boxMesh(0, 0, 0, 1, 1, 1);
-    expect(fit(mesh, 128, 0).mesh.triangles).toBe(mesh.triangles);
+    expect(fit(mesh, 128, 0).mesh.triangles).toEqual(mesh.triangles);
   });
 
   test("margin leaves room around the mesh", () => {
@@ -44,7 +44,7 @@ describe("fitting a map into a zone", () => {
 
   test("too big for a world mesh is an error", () => {
     // world mesh vertices are 13 bits of multiples of 8 (src/formats/wgeo.h)
-    expect(() => fit(boxMesh(0, 0, 0, 40000, 10, 10), 128, 0)).toThrow();
+    expect(() => fit(boxMesh(0, 0, 0, 40000, 10, 10), 128, 0)).toThrow("the map is 40000 zone units along x, more than 32760; scale it down");
   });
 
   test("a side is at most 128 cells", () => {
@@ -62,7 +62,7 @@ describe("fitting a map into a zone", () => {
     expect(() => fit(boxMesh(0, 0, 0, 20000, 10, 40000), 128, 0, 128, true)).toThrow(TooBig);
   });
 
-  test("a short route is one zone", () => {
+  test("a route shorter than a zone fits like a plain map", () => {
     expect(fit(boxMesh(0, 0, 0, 1000, 140, 5000), 128, 0, 0, true).size).toEqual([1024, 256, 8192]);
   });
 

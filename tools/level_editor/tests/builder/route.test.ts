@@ -59,8 +59,12 @@ describe("crash's spawn", () => {
   });
 
   test("the walk goes up and down gentle steps", () => {
-    const steps = merged(...Array.from({ length: 8 }, (_, k) => floorMesh(0, k * 512, 2048, k * 512 + 512, 256 + 128 * (k % 2))));
-    expect(spawnOn(steps)[2]).toBe(4096 - 64 - 12 * 128);
+    // eight floors 512 long along z, every other one a cell higher: steps crash can walk
+    const staircase = merged(...Array.from({ length: 8 }, (_, k) => floorMesh(0, k * 512, 2048, k * 512 + 512, 256 + 128 * (k % 2))));
+    // the walk starts in the middle of the cell at the +z end, and runs the whole way, so crash
+    // starts about CAM_LEAD (12 cells) along it, as on a flat floor
+    const walkStart = 4096 - 64;
+    expect(spawnOn(staircase)[2]).toBe(walkStart - 12 * 128);
   });
 
   test("the middle across is the middle of the floors, not of the zone", () => {
@@ -75,12 +79,12 @@ describe("crash's spawn", () => {
   });
 
   test("no ground is an error", () => {
-    expect(() => spawnPoint(meshOf([], []), new Cells(), 128)).toThrow();
+    expect(() => spawnPoint(meshOf([], []), new Cells(), 128)).toThrow("the map has no ground for crash to start on");
   });
 });
 
 describe("where the camera is from crash", () => {
-  test("as it always was without camera settings: CAM_LEAD behind him and CAM_OFFSET's height above", () => {
+  test("default camera settings keep the standard follow distance and height", () => {
     expect(cameraOffsets(DEFAULT_CAMERA)).toEqual({ lead: CAM_LEAD, height: CAM_OFFSET[1] });
   });
 
@@ -88,7 +92,8 @@ describe("where the camera is from crash", () => {
     expect(cameraOffsets({ distance: 2, angle: 42 })).toEqual({ lead: 2 * CAM_LEAD, height: 2 * CAM_OFFSET[1] });
   });
 
-  test("its angle turns it up or down about crash, the same distance away, that many degrees from where it was", () => {
+  test("its angle turns it about crash, keeping its distance", () => {
+    // up or down, that many degrees from where it was
     const usual = Math.hypot(CAM_LEAD, CAM_OFFSET[1]);
     const degrees = (offsets: { lead: number; height: number }) => (Math.atan2(offsets.height, offsets.lead) * 180) / Math.PI;
     const steep = cameraOffsets({ distance: 1, angle: 60 });

@@ -1,8 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { shortcutToRun } from "../../../src/hooks/useShortcuts";
-
-const press = (key: string, held: { ctrl?: boolean; shift?: boolean } = {}) =>
-  ({ key, ctrlKey: !!held.ctrl, metaKey: false, shiftKey: !!held.shift });
+import { press } from "./press";
 
 describe("shortcutToRun", () => {
   const save = () => {};
@@ -25,7 +23,8 @@ describe("shortcutToRun", () => {
     expect(shortcutToRun(shortcuts, press("s", { ctrl: true }), true)).toBe(save);
   });
 
-  test("runs function keys while typing, as they type nothing (F5 would reload the page)", () => {
+  test("runs function keys while typing", () => {
+    // they type nothing, and F5 would reload the page
     expect(shortcutToRun(shortcuts, press("F5"), true)).toBe(buildAndBoot);
   });
 });
