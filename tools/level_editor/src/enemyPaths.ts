@@ -1,6 +1,6 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
-import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, cameraFacing, labAssistantThrow, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, ROBOT_DOG_WALK, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, cameraFacing, labAssistantThrow, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, ROBOT_DOG_WALK, WALKING_LIZARD_PACE, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
 import { LAB_ASSISTANT_REACH } from "./labAssistantThrow";
 import { hasOneNode, PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
@@ -45,6 +45,7 @@ const PATH_ENEMY_RUNS: Record<PathEnemy, PathEnemyRun> = {
   monkey: { length: MONKEY_WALK, way: stoneRolling, step: 480 },             // the great gate's monkeys' points
   lizard: { length: LIZARD_LEAPS, way: stoneRolling, step: 1600 },          // the lost city's green lizards' leaps
   red_lizard: { length: RED_LIZARD_HOPS, way: stoneRolling, step: 800 },    // the lost city's red lizards' hops
+  walking_lizard: { length: WALKING_LIZARD_PACE, way: stoneRolling, step: 400 }, // the lost city's walking lizards' points
   robot_dog: { length: ROBOT_DOG_WALK, way: cameraFacing, step: 400 },       // heavy machinery's robot dogs' points, mostly
   barrel_roller: { length: BARREL_ROLL, way: towardsSpawn, step: 400 },       // toxic waste's barrel rollers' points
 };

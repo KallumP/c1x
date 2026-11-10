@@ -260,6 +260,9 @@ export const WALKING_SPIDER_RUN = 3200;
 // (their default paths, src/enemyPaths.ts)
 export const LIZARD_LEAPS = 3200;
 export const RED_LIZARD_HOPS = 4800;
+// how far a walking lizard paces back and forth, in game units: the lost city's
+// walking lizards' paths, 3 points 400 apart along the game's x
+export const WALKING_LIZARD_PACE = 800;
 
 // how far a robot dog walks back and forth, in game units: heavy machinery's
 // robot dogs' longest path, a straight line along the game's x there, the way

@@ -592,6 +592,31 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       stepLengths(placed.path).forEach((length) => expectNear(length, step, 8));
     });
 
+    test("a level with a walking lizard has the lost city's ruins code and its walk, keeping jungle rollers' own shadow", () => {
+      const { level, entries } = build([enemy("walking_lizard")]);
+      const { execMap } = level.nsd.ldat;
+      expect(execMap[ENEMY_ENTITIES.walking_lizard[0]]).toBe(stringToEid("RWaOC"));
+      expect(["Ig1wG", "Ig1wV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(execMap[29]).toBe(stringToEid("ShadC")); // the shadow it spawns, jungle rollers' as well as the lost city's
+    });
+
+    test("a walking lizard brings only its own texture page, not the lost city's other ruins objects", () => {
+      // RWaOC is all the lost city's ruins objects: their models take three more pages
+      const { level, entries } = build([enemy("walking_lizard")]);
+      const pageNames = texturePages(level).map((page) => page.eid);
+      expect(pageNames).toContain(stringToEid("Ru1wT"));
+      expect(["Ru2wT", "Ru3wT", "Ru6wT"].some((name) => pageNames.includes(stringToEid(name)))).toBe(false);
+      expect(["Rw1wG", "Rp1wG", "Li1wG"].some((name) => entries.has(stringToEid(name)))).toBe(false);
+    });
+
+    test("by default a walking lizard paces across the map, centred on its spot, in the lost city's steps", () => {
+      const [placed] = enemies(build([enemy("walking_lizard")]).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.walking_lizard);
+      placed.path.forEach(([, y, z]) => expectNear([y, z], [FLOOR_Y, SPOT_Z], 8));
+      expectNear((placed.path[0][0] + placed.path.at(-1)![0]) / 2, SPOT_X, 8);
+      stepLengths(placed.path).forEach((length) => expectNear(length, 400, 8));
+    });
+
     test("a level with both lizards reads the lost city once", () => {
       const reader = recordingReader();
       build([enemy("lizard"), enemy("red_lizard", { at: [-1, 4, 0] })], { readOtherLevel: reader.readOtherLevel });

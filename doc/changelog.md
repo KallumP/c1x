@@ -9,6 +9,7 @@
 - custom levels can have Sunset Vista's bats, which fly past in flocks until Crash spins both their leaders, wherever the level puts them
 - custom levels can set how often bats come
 - custom levels can have The Lost City's lizards: a green one that leaps back and forth, and a red one that hops after Crash
+- custom levels can have The Lost City's spiky walking lizard, which paces back and forth
 - custom levels can have Stormy Ascent's lab assistant, who throws flaming vials wherever the level aims them
 - custom levels can have Temple Ruins' cobras, which rise to strike at Crash as he passes
 - custom levels can have Heavy Machinery's robot dogs, which patrol back and forth along Crash's way

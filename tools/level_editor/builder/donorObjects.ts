@@ -50,6 +50,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   leader_bats: SUNSET_VISTA,
   lizard: THE_LOST_CITY,
   red_lizard: THE_LOST_CITY,
+  walking_lizard: THE_LOST_CITY,
   lab_assistant: STORMY_ASCENT,
   snake: TEMPLE_RUINS,
   robot_dog: HEAVY_MACHINERY,
@@ -277,9 +278,14 @@ const ENEMY_CHILD_SLOTS: Partial<Record<EnemyType, number[]>> = {
 
 // entries an enemy's entries name but its code never uses, left out: toxic
 // waste's barrel roller's data names its WateC, which differs from up the
-// creek's (the river enemies') in the same exec slot, so the two would clash
+// creek's (the river enemies') in the same exec slot, so the two would clash.
+// the lost city's ruins objects' code (RWaOC) names all their models, but a
+// walking lizard (subtype 5) only uses its own (Ig1wG, walking Ig1wV): the rest
+// would bring three more texture pages
+const RUINS_OBJECT_MODELS = ["Li1w", "Rw1w", "Rw2w", "Rw3w", "Rw4w", "Rp1w", "Rp2w", "Rp3w", "Rp4w", "Rp5w", "Rp7w"];
 const ENEMY_UNUSED_ENTRIES: Partial<Record<EnemyType, string[]>> = {
   barrel_roller: ["WateC"],
+  walking_lizard: RUINS_OBJECT_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
 };
 
 // models that come with end caps (see endCaps.ts), and the animation whose first
