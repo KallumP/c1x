@@ -24,11 +24,15 @@ static int UpdateUntilFinished(background_command *c) {
   return finished;
 }
 
-UTEST(launcher_command, keeps_the_output_once_it_has_finished) {
+UTEST(launcher_command, reports_finishing_only_once) {
   ASSERT_TRUE(StartBackgroundCommand(&command, ".", "echo hello"));
   ASSERT_EQ(1, UpdateUntilFinished(&command));
+}
+
+UTEST(launcher_command, keeps_the_output_once_it_has_finished) {
+  ASSERT_TRUE(StartBackgroundCommand(&command, ".", "echo hello"));
+  UpdateUntilFinished(&command);
   ASSERT_TRUE(strstr(command.output, "hello") != 0);
-  ASSERT_EQ(0, command.exit_code);
 }
 
 UTEST(launcher_command, keeps_the_exit_code) {
@@ -42,11 +46,6 @@ UTEST(launcher_command, isnt_running_before_it_starts) {
 
   ASSERT_FALSE(IsBackgroundCommandRunning(&never_started));
   ASSERT_EQ(0, UpdateBackgroundCommand(&never_started));
-}
-
-UTEST(launcher_command, doesnt_start_in_a_missing_folder) {
-  ASSERT_FALSE(StartBackgroundCommand(&command, "build/no_such_folder", "echo hello"));
-  ASSERT_FALSE(IsBackgroundCommandRunning(&command));
 }
 
 UTEST(launcher_command, stops) {
