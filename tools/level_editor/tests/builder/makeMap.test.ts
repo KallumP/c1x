@@ -841,6 +841,26 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect([execMap[SCIENTIST_SLOT], execMap[SPARK_SLOT], execMap[54], execMap[9]]).toEqual(["LabEC", "SprkC", "LabAC", "PoRoC"].map(stringToEid));
     });
 
+    // crash's (WillC's) animations: the one his sparks play on him, which the base level's crash has only a placeholder for
+    const CRASH_SHOCKED_AT = 72;
+    const crashShockedAnimation = (entries: Map<number, Entry>) => {
+      const animations = entries.get(stringToEid("WillC"))!.items.at(-1)!;
+      return animations.readUInt32LE(CRASH_SHOCKED_AT + 4);
+    };
+
+    test("a level with an electric scientist has the lab's crash shocked by his sparks, and crash's code plays it", () => {
+      const { entries } = build([enemy("electric_scientist")]);
+      expect(crashShockedAnimation(entries)).toBe(stringToEid("WS10V"));
+      expect(["WS10V", "WS10G"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
+
+    test("a level without an electric scientist keeps the base level's crash code", () => {
+      const { entries } = build([enemy("crab")]);
+      const baseCrash = entriesById(readLevel(STREAMS, BASE_LEVEL.lid)).get(stringToEid("WillC"))!;
+      expect(entries.get(stringToEid("WillC"))!.items).toEqual(baseCrash.items);
+      expect(entries.has(stringToEid("WS10V"))).toBe(false);
+    });
+
     test("by default an electric scientist walks along the route, centred on its spot, in the lab's steps", () => {
       const [placed] = enemies(build([enemy("electric_scientist")]).zone);
       expect(placed.type).toEqual(ENEMY_ENTITIES.electric_scientist);
