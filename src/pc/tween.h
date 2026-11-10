@@ -53,36 +53,21 @@ static inline void TweenLerpVec(vec *a, vec *b, int32_t alpha, vec *out) {
 }
 
 /*
- * pacing. a game frame (FRAME_TICKS) is split into slots, one per frame drawn
- * at frame_rate; slot n starts this many ticks into the game frame
+ * pacing frames between game frames. a slot is when a frame is due at
+ * frame_rate; slots run on, carried from one game frame to the next
  */
-static inline int32_t TweenSlotTicks(int slot, uint32_t frame_rate) {
-  return (slot * FRAME_TICKS * 30) / (int32_t)frame_rate;
-}
+typedef struct {
+  int64_t phase; /* where the slots were at the game frame's start, from the slot its own frame took */
+  int drawn;     /* the last slot drawn this game frame */
+} tween_pacer;
 
-/* the last slot started by elapsed ticks into the game frame */
-static inline int TweenSlotsDue(int32_t elapsed, uint32_t frame_rate) {
-  int slot;
-
-  slot = 0;
-  while (TweenSlotTicks(slot+1, frame_rate) <= elapsed)
-    slot++;
-  return slot;
-}
-
-/*
- * whether to draw a frame between game frames now: a slot has started since
- * the last one drawn (drawn), it starts before the game frame is due, and one
- * taking draw_ticks to draw would be done before then
- */
-static inline int TweenFrameDue(int32_t elapsed, int32_t frame_ticks, int drawn,
-                                uint32_t frame_rate, int32_t draw_ticks) {
-  int slot;
-
-  if (elapsed + draw_ticks >= frame_ticks) { return 0; }
-  slot = TweenSlotsDue(elapsed, frame_rate);
-  return slot > drawn && TweenSlotTicks(slot, frame_rate) < frame_ticks;
-}
+extern void TweenPacerReset(tween_pacer *p);
+extern int TweenSlotsDue(const tween_pacer *p, int32_t elapsed, uint32_t frame_rate);
+extern int32_t TweenSlotTicks(const tween_pacer *p, int slot, uint32_t frame_rate);
+extern int TweenFrameDue(const tween_pacer *p, int32_t elapsed, int32_t frame_ticks,
+  uint32_t frame_rate, int32_t draw_ticks);
+extern void TweenPacerDrew(tween_pacer *p, int32_t elapsed, uint32_t frame_rate);
+extern void TweenPacerNextGameFrame(tween_pacer *p, int32_t frame_ticks, uint32_t frame_rate);
 
 static inline void TweenLerpAng(ang *a, ang *b, int32_t alpha, ang *out) {
   int i;

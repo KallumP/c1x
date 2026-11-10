@@ -15,6 +15,7 @@
 ### Fixed
 
 - Crash starting the game with few or no spins when booting straight into a level
+- the game drawing more frames a second than the frame rate set, such as 152 at 144
 
 ## 2026-11-09
 

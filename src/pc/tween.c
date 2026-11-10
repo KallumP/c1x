@@ -75,3 +75,85 @@ void TweenRecordCamera(const tween_pose *drawn) {
 void TweenCameraAt(int32_t alpha, tween_pose *out) {
   TweenPoseAt(TWEEN_CAMERA_SLOT, &drawn_camera, alpha, out);
 }
+
+/*
+ * slots are timed in units of ticks x frame_rate x 0x8000: the clock runs at
+ * 34000000/0x8000 ticks a second (pc/time.c), so a slot (1/frame_rate of a
+ * second) is TWEEN_SLOT_UNITS of them, at any frame rate
+ */
+#define TWEEN_SLOT_UNITS 34000000
+
+static int64_t SlotUnitsPerTick(uint32_t frame_rate) {
+  return (int64_t)frame_rate * 0x8000;
+}
+
+/* the smallest whole number of slots at or past units (which may be negative) */
+static int64_t SlotsCeil(int64_t units) {
+  if (units <= 0) { return -((-units) / TWEEN_SLOT_UNITS); }
+  return (units + TWEEN_SLOT_UNITS - 1) / TWEEN_SLOT_UNITS;
+}
+
+void TweenPacerReset(tween_pacer *p) {
+  p->phase = 0;
+  p->drawn = 0;
+}
+
+/* how many ticks into the game frame the slot starts */
+int32_t TweenSlotTicks(const tween_pacer *p, int slot, uint32_t frame_rate) {
+  int64_t units, per_tick;
+
+  units = ((int64_t)slot * TWEEN_SLOT_UNITS) - p->phase;
+  per_tick = SlotUnitsPerTick(frame_rate);
+  return (int32_t)((units + per_tick - 1) / per_tick);
+}
+
+/* the last slot started by elapsed ticks into the game frame (0: none since the game frame) */
+int TweenSlotsDue(const tween_pacer *p, int32_t elapsed, uint32_t frame_rate) {
+  int64_t units;
+
+  units = p->phase + ((int64_t)elapsed * SlotUnitsPerTick(frame_rate));
+  if (units < TWEEN_SLOT_UNITS) { return 0; }
+  return (int)(units / TWEEN_SLOT_UNITS);
+}
+
+int TweenFrameDue(const tween_pacer *p, int32_t elapsed, int32_t frame_ticks,
+  uint32_t frame_rate, int32_t draw_ticks) {
+  int slot;
+
+  if (elapsed + draw_ticks >= frame_ticks) { return 0; }
+  slot = TweenSlotsDue(p, elapsed, frame_rate);
+  return slot > p->drawn && TweenSlotTicks(p, slot, frame_rate) < frame_ticks;
+}
+
+/* a frame was drawn between game frames, elapsed ticks in: its slot (and any missed) are done */
+void TweenPacerDrew(tween_pacer *p, int32_t elapsed, uint32_t frame_rate) {
+  p->drawn = TweenSlotsDue(p, elapsed, frame_rate);
+}
+
+/*
+ * the slot the next game frame's own frame takes, the game frame being end
+ * units in: the last one started by then if it wasn't drawn (too late in the
+ * game frame to draw), else the next one
+ */
+static int64_t GameFrameSlot(const tween_pacer *p, int64_t end) {
+  int64_t started;
+
+  started = SlotsCeil(end);
+  if (started * TWEEN_SLOT_UNITS > end)
+    started--; /* the last started, not the next */
+  if (started > p->drawn) { return started; }
+  return SlotsCeil(end);
+}
+
+/*
+ * move on to the next game frame, frame_ticks after this one. its own frame
+ * takes a slot, and the time from that slot carries over, so the slots don't
+ * start afresh (and round up) each game frame
+ */
+void TweenPacerNextGameFrame(tween_pacer *p, int32_t frame_ticks, uint32_t frame_rate) {
+  int64_t end;
+
+  end = p->phase + ((int64_t)frame_ticks * SlotUnitsPerTick(frame_rate));
+  p->phase = end - (GameFrameSlot(p, end) * TWEEN_SLOT_UNITS);
+  p->drawn = 0;
+}
