@@ -371,17 +371,27 @@ describe("the barrel roller's code from toxic waste", () => {
   const BARREL = stringToEid("Bar1G"); // a model the barrels' code uses
   const WATER = stringToEid("WateC");
   const BARRELS_SLOT = 16;
+  const BARREL_HURTS = 0x2f; // where a rolling barrel works out how far from its path's end it stops flattening crash
+  const SUB_FIVE_POINTS = 0x01805e2e; // SUB 0x500, obj[0x118]: its path's length less 5 points
+  const SUB_NOTHING = 0x01800e2e; // SUB 0, obj[0x118]: its path's length
+
+  // the barrels' code as toxic waste's: other instructions (1s), with its check at its place
+  function barrelCode(check = SUB_FIVE_POINTS): number[] {
+    const code = Array<number>(0x40).fill(1);
+    code[BARREL_HURTS] = check;
+    return code;
+  }
 
   // the barrel roller's code, naming the water code in its data; it spawns its
   // barrels by their exec slot, not by name; the barrels' code uses their model
-  function toxicWaste(): Level {
+  function toxicWaste(barrelCheck = SUB_FIVE_POINTS): Level {
     const execMap: number[] = [];
     execMap[ENEMY_ENTITIES.barrel_roller[0]] = ROLLER;
     execMap[BARRELS_SLOT] = BARRELS;
     execMap[55] = WATER;
     const pages = [entryPage([
       entry(ROLLER, 11, [text("head"), words(1, 2, 3), words(ROLLER, WATER)]),
-      entry(BARRELS, 11, [text("head"), words(BARREL)]),
+      entry(BARRELS, 11, [text("head"), words(...barrelCode(barrelCheck)), words(BARREL)]),
       entry(BARREL, 2, [text("barrel")]),
       entry(WATER, 11, [text("water")]),
     ])];
@@ -397,5 +407,14 @@ describe("the barrel roller's code from toxic waste", () => {
   test("a barrel roller leaves out the water code his data names but his code never uses", () => {
     expect(eids(roller.entries).has(WATER)).toBe(false);
     expect(roller.code.some(([, eid]) => eid === WATER)).toBe(false);
+  });
+
+  test("a barrel flattens crash all the way to its path's end", () => {
+    // toxic waste's stop 5 points short, where they fall off the walkway's end
+    expect(codeOf([roller], BARRELS)).toEqual(barrelCode(SUB_NOTHING));
+  });
+
+  test("barrels' code that can't be patched is an error", () => {
+    expect(() => enemyDonorObjects(new Map([["barrel_roller", toxicWaste(1)]]))).toThrow(/barrel roller/);
   });
 });

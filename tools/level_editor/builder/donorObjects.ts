@@ -304,6 +304,20 @@ function withCappedModel(object: DonorObject, [model, animation]: [string, strin
   return { ...object, entries: object.entries.map((entry) => (entry === modelEntry ? capped : entry)) };
 }
 
+// toxic waste's barrels (BaraC) stop flattening crash 5 points short of their
+// path's end, where they fall off the walkway's end there. a custom level's
+// trail ends on the floor, its points spaced out by its speed, so that left
+// its last stretch harmless (about 10 m of acid_cave's): now they flatten him
+// all the way to the end
+const BARREL_CODE_PATCHES: CodePatch[] = [
+  { at: 0x2f, was: 0x01805e2e, now: 0x01800e2e }, // SUB 0x500, obj[0x118] becomes SUB 0, obj[0x118]: its path's whole length
+];
+
+// the code each enemy spawns by its exec slot, changed to suit custom levels
+const ENEMY_CHILD_CODE_PATCHES: Partial<Record<EnemyType, [slot: number, patches: CodePatch[]][]>> = {
+  barrel_roller: [[16, BARREL_CODE_PATCHES]],
+};
+
 const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = {
   native: NATIVE_CODE_PATCHES,
   blue_river_plant: RIVER_CODE_PATCHES,
@@ -334,6 +348,12 @@ function withPatchedCode(type: EnemyType, object: DonorObject, code: number, pat
   return { ...object, entries: object.entries.map((entry) => (entry.eid === code ? patchEntry(entry) : entry)) };
 }
 
+// object with the code it spawns by exec slot patched, as level has it in those slots
+function withPatchedChildCode(type: EnemyType, object: DonorObject, level: Level): DonorObject {
+  const childPatches = ENEMY_CHILD_CODE_PATCHES[type] ?? [];
+  return childPatches.reduce((patched, [slot, patches]) => withPatchedCode(type, patched, level.nsd.ldat.execMap[slot], patches), object);
+}
+
 // a kind of enemy's object from the level it's taken from, its code changed to
 // suit custom levels, and moved to its own exec slot if it has one there
 function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
@@ -342,7 +362,7 @@ function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
   const leftOut = (ENEMY_UNUSED_ENTRIES[type] ?? []).map(stringToEid);
   const object = donorObject(level, slot, ENEMY_CHILD_SLOTS[type] ?? [], leftOut);
   const patches = ENEMY_CODE_PATCHES[type];
-  const unpatched = (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, object);
+  const unpatched = withPatchedChildCode(type, (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, object), level);
   const patched = patches ? withPatchedCode(type, unpatched, level.nsd.ldat.execMap[slot], patches) : unpatched;
   if (!moved) {
     return patched;
