@@ -689,16 +689,36 @@ static const char *GuiLineBreak(int len) {
   return "";
 }
 
+static int GuiIsCrashPlaying() {
+  return game_state == GAME_STATE_PLAYING && crash;
+}
+
 /* how many spins crash has left, or 0 when he isn't playing */
 static int GuiCrashSpinsLeft() {
-  if (game_state != GAME_STATE_PLAYING || !crash) { return 0; }
+  if (!GuiIsCrashPlaying()) { return 0; }
   return SpinsLeft(frames_elapsed, crash->memory[SPIN_STAMP_MEMORY]);
+}
+
+/* tenths of a second until crash's next spin refills, or 0 */
+static int GuiCrashSpinRefillTenths() {
+  if (!GuiIsCrashPlaying()) { return 0; }
+  return SpinFramesAsTenths(SpinRefillFrames(frames_elapsed, crash->memory[SPIN_STAMP_MEMORY]));
+}
+
+/* the spin display's lines: spins left, and seconds until the next refills */
+static int GuiSpinText(char *text, size_t size, const char *line_break) {
+  int tenths;
+
+  tenths = GuiCrashSpinRefillTenths();
+  return snprintf(text, size, "%sspins %6d\nrefill %3d.%d", line_break,
+    GuiCrashSpinsLeft(), tenths / 10, tenths % 10);
 }
 
 /*
  * text in the top right corner: REPLAYING INPUTS while replaying recorded inputs,
  * the frames drawn a second when fps_display is on in settings.cfg,
- * crash's speed when speed_display is on, and his spins left when spin_display is on
+ * crash's speed when speed_display is on, and his spins left (and when the next
+ * refills) when spin_display is on
  */
 static void GuiCornerOverlay() {
   static speed_tracker crash_speed;
@@ -724,7 +744,7 @@ static void GuiCornerOverlay() {
       speed, crash_speed.x, crash_speed.y, crash_speed.z);
   }
   if (game_settings.spin_display)
-    snprintf(&text[len], sizeof(text) - len, "%sspins %6d", GuiLineBreak(len), GuiCrashSpinsLeft());
+    GuiSpinText(&text[len], sizeof(text) - len, GuiLineBreak(len));
   if (text[0])
     GuiIgCornerText(text);
 }
