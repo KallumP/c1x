@@ -21,7 +21,7 @@ describe("enemy shapes", () => {
   // the sizes of the game's models: jungle rollers' JuPcG and Pi10V, n. sanity beach's Cr19G and
   // Tu19G, the great gate's Na1iV and Mo1fG, road to nowhere's WarHV, fumbling in the dark's Sp1sV,
   // up the creek's RV1fV and RF1fV, temple ruins' Ba1sG, sunset vista's Ba2wG, the lost city's
-  // LizgG and LizrG, and stormy ascent's LW1EG; a bat's spot is above its lowest point, as the game's
+  // LizgG and LizrG, stormy ascent's LW1EG, and temple ruins' cobra JuPsG (its first frame in JupsV); a bat's spot is above its lowest point, as the game's
   // (a river plant's petals are lower than the game's first frame rears its back one, 602)
   test.each<ShapeSize>([
     { enemy: "plant", bottom: 0, top: 720, across: [760, 900] },
@@ -39,6 +39,7 @@ describe("enemy shapes", () => {
     { enemy: "lizard", bottom: 0, top: 763, across: [560, 700], long: [880, 1080] },
     { enemy: "red_lizard", bottom: 0, top: 763, across: [560, 700], long: [880, 1080] },
     { enemy: "lab_assistant", bottom: 0, top: 1203, across: [340, 460], long: [470, 610] },
+    { enemy: "snake", bottom: 0, top: 558, across: [240, 320], long: [230, 310] },
   ])("the $enemy is as big as the game's, the same both sides", ({ enemy, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(ENEMY_SHAPES[enemy]);
     expect(min[1]).toBeCloseTo(bottom);
@@ -66,6 +67,7 @@ describe("enemy shapes", () => {
     ["lizard", "eye"],
     ["red_lizard", "eye"],
     ["lab_assistant", "eye"],
+    ["snake", "eye"],
   ] as const)("the %s faces +z: its %s is in front of its middle", (enemy, front) => {
     const parts = partsNamed(enemy, front);
     expect(parts.length).toBeGreaterThan(0);

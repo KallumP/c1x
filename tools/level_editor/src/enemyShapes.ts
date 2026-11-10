@@ -35,6 +35,7 @@ const LIZARD_SKINS = { lizard: "#6f9a32", red_lizard: "#b0402e" };
 const LIZARD_COLOURS = { belly: "#d8c27a", claw: "#e8e0c8", eye: "#f2d36b", pupil: "#1a1a1a" };
 const LAB_ASSISTANT_COLOURS = { coat: "#e6e8ee", trousers: "#3a3f55", shoe: "#1f1f24", skin: "#e0b48c", eye: "#1a1a1a", vial: "#d0409a" };
 const BAT_COLOURS = { body: "#3a2c34", wing: "#5a3a3e", ear: "#2a1e26", eye: "#f2d36b" };
+const COBRA_COLOURS = { scale: "#2f5fa8", belly: "#d8c08a", eye: "#c8302a", fang: "#f4f1e0" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
 export const ball = (radius: number, at: Vec3, colour: string, extra: Partial<ShapePart> = {}): ShapePart =>
@@ -272,6 +273,37 @@ function labAssistant(): ShapePart[] {
     ball(1, [0, 700, 0], LAB_ASSISTANT_COLOURS.coat, { stretch: [140, 330, 150] }),
     ball(85, [0, 1110, 20], LAB_ASSISTANT_COLOURS.skin),
     rod(15, 15, 120, [165, 760, 330], LAB_ASSISTANT_COLOURS.vial),
+  ];
+}
+
+// the cobra's body coiled on the floor, three rings getting smaller upwards
+function cobraCoil(): ShapePart[] {
+  return [
+    ball(1, [0, 35, 0], COBRA_COLOURS.scale, { stretch: [130, 35, 125] }),
+    ball(1, [0, 95, 0], COBRA_COLOURS.scale, { stretch: [105, 32, 100] }),
+    ball(1, [0, 150, 0], COBRA_COLOURS.scale, { stretch: [80, 30, 78] }),
+  ];
+}
+
+// the cobra's head, leaning out towards the player, with its eyes and fangs
+function cobraHead(): ShapePart[] {
+  return [
+    ball(1, [0, 500, 75], COBRA_COLOURS.scale, { name: "head", stretch: [45, 30, 65] }),
+    ...bothSides([
+      ball(10, [28, 515, 115], COBRA_COLOURS.eye, { name: "eye" }),
+      rod(0, 6, 30, [14, 470, 125], COBRA_COLOURS.fang, { turn: [Math.PI, 0, 0] }),
+    ]),
+  ];
+}
+
+// temple ruins' cobra, risen out of its coil: its neck up into a spread hood, facing +z
+function cobra(): ShapePart[] {
+  return [
+    ...cobraCoil(),
+    rod(32, 42, 280, [0, 300, 10], COBRA_COLOURS.scale, { turn: [0.15, 0, 0] }),
+    ball(1, [0, 430, 30], COBRA_COLOURS.scale, { stretch: [85, 110, 22] }),
+    ball(1, [0, 330, 45], COBRA_COLOURS.belly, { stretch: [40, 100, 10] }),
+    ...cobraHead(),
   ];
 }
 
@@ -555,7 +587,8 @@ export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 // WarHV), fumbling in the dark's walking spider (Sp1sG, its first frame in
 // Sp1sV), the great gate's monkey (Mo1fG, its first frame in Mo3fV), and up the
 // creek's river plants (RV1fG and Rv1fG, their first frames in RV1fV and Rv1fV)
-// and fish (RF1fG, its first frame in RF1fV), each vertex times 4, times its
+// and fish (RF1fG, its first frame in RF1fV), and temple ruins' cobra (JuPsG,
+// its first frame in JupsV, standing), each vertex times 4, times its
 // tgeo's scale / 4096
 // a river plant's height: its first frame in the game (RV1fV) rears its back
 // petal up 602, but the editor's lies lower, so it's as tall as makes it as wide
@@ -563,12 +596,12 @@ export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 const RIVER_PLANT_HEIGHT = 400;
 
 const GAME_HEIGHTS: Record<StandingEnemy, number> = {
-  plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
+  plant: 720, snake: 558, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
   blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, lab_assistant: 1203,
 };
 
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
-  plant, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
+  plant, snake: cobra, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
   blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
   lizard, red_lizard: redLizard, lab_assistant: labAssistant,
 };

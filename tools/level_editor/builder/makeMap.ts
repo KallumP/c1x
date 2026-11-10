@@ -12,8 +12,8 @@ import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
 import {
-  BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
-  LEADER_BAT, WARP_PAD, withEntityId, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
+  BOX_HEIGHT, BOX_TYPE, donorEntityType, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
+  LEADER_BAT, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
@@ -147,6 +147,12 @@ function batRoostExample(donor: Level): Buffer {
   return withSubtype(roost, ENEMY_ENTITIES.bat[1]);
 }
 
+// an enemy's entity from the level it's taken from, of its type in custom levels
+// (another than its own if its code moves there: see MOVED_ENEMY_CODE)
+function donorEnemyEntity(donor: Level, type: EnemyType): Buffer {
+  return withEntityType(levelEntity(donor, ...donorEntityType(type)), ENEMY_ENTITIES[type][0]);
+}
+
 
 // entities each enemy takes: a leader bats roost and its two leaders, one for the rest
 function entitiesFor(enemy: LevelObject): number {
@@ -157,8 +163,8 @@ function entitiesFor(enemy: LevelObject): number {
 }
 
 // the enemies that stay at their spot: jungle rollers' plant, up the creek's two
-// river plants, and the spider hanging there
-const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider"];
+// river plants, the spider hanging there, and temple ruins' cobra
+const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake"];
 
 // places objects in the level: where they are in it, which zone they're in, and their entities
 class ObjectPlacer {
@@ -390,7 +396,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
       return batRoostExample(donor);
     }
     if (donor) {
-      return levelEntity(donor, ...ENEMY_ENTITIES[type]);
+      return donorEnemyEntity(donor, type);
     }
     return templates.entity(...ENEMY_ENTITIES[type]);
   };

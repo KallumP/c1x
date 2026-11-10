@@ -30,12 +30,28 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // sends them whether crash is near or not, stopped by killing its two leader
 // bats (subtype 14), and the lost city's lizards LizaC: subtype 1 green, leaping
 // back and forth along its path, subtype 2 red, hopping along it after crash,
-// and stormy ascent's lab assistant LabAC subtype 0, throwing vials across the map
+// and stormy ascent's lab assistant LabAC subtype 0, throwing vials across the map,
+// and temple ruins' cobra, subtype 1 of its PlanC, in slot 26 (see MOVED_ENEMY_CODE)
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
-  plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
+  plant: [25, 0], snake: [26, 1], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
   blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12], lizard: [47, 1], red_lizard: [47, 2], lab_assistant: [54, 0],
 };
+// enemies whose code goes in another exec slot in custom levels than in their
+// level, under another name, as jungle rollers' own code has its slot and name:
+// temple ruins' cobra is its PlanC, in slot 25, as jungle rollers' plant is.
+// donorSlot is its slot in its level, name its code's name in custom levels.
+// their slot in custom levels is ENEMY_ENTITIES' (one no level uses)
+export const MOVED_ENEMY_CODE: Partial<Record<EnemyType, { donorSlot: number; name: string }>> = {
+  snake: { donorSlot: 25, name: "SnakC" },
+};
+
+// an enemy's entity type and subtype in the level it's taken from
+export function donorEntityType(enemy: EnemyType): [number, number] {
+  const [type, subtype] = ENEMY_ENTITIES[enemy];
+  return [MOVED_ENEMY_CODE[enemy]?.donorSlot ?? type, subtype];
+}
+
 // sunset vista's leader bat (RuiOC subtype 14): two hover where a leader bats
 // roost's bats come in and go out, and killing both stops it; its first init
 // flag is its roost's entity id
@@ -76,6 +92,7 @@ function withField(item: Buffer, write: (copy: Buffer) => void): Buffer {
 
 export const withEntityId = (item: Buffer, id: number) => withField(item, (copy) => copy.writeUInt16LE(id, ENTITY_ID));
 export const withSubtype = (item: Buffer, subtype: number) => withField(item, (copy) => { copy[ENTITY_TYPE + 1] = subtype; });
+export const withEntityType = (item: Buffer, type: number) => withField(item, (copy) => { copy[ENTITY_TYPE] = type; });
 
 // the entity with its first point at (x, y, z), zone units relative to its zone
 export function withPosition(item: Buffer, [x, y, z]: Vec3): Buffer {

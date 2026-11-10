@@ -10,6 +10,7 @@
 - custom levels can set how often bats come
 - custom levels can have The Lost City's lizards: a green one that leaps back and forth, and a red one that hops after Crash
 - custom levels can have Stormy Ascent's lab assistant, who throws flaming vials wherever the level aims them
+- custom levels can have Temple Ruins' cobras, which rise to strike at Crash as he passes
 - the acid cave cut from the original game, playable as a custom level, and going on past where it was cut off: a crystal geode, a mushroom grotto, a river gorge and a collapsed temple
 - custom level maps keep their UVs and vertex colours
 

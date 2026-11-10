@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { donorObject, enemyDonorObjects, withDonorObjects, type DonorObject } from "../../builder/donorObjects";
+import { donorObject, enemyDonorObjects, withCodeMoved, withDonorObjects, type DonorObject } from "../../builder/donorObjects";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
+import { ENEMY_ENTITIES } from "../../builder/entities";
 import { entriesById, entryPage, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, readNsd, soundPage, texturePage, type Entry, type Level } from "../../builder/levelFiles";
 import { nsdData, texturePageData, words } from "./levelFiles";
 
@@ -73,6 +74,39 @@ describe("an object from another level (its donor)", () => {
 
   test("a slot the donor has no code in is an error", () => {
     expect(() => donorObject(donorLevel(), 50)).toThrow(/slot 50/);
+  });
+});
+
+describe("moving an object's code to another exec slot", () => {
+  const MOVED_SLOT = 50;
+  const MOVED = stringToEid("CrbMC");
+  const CRAB_HEADER = words(CRAB_SLOT, 0x300);
+
+  // the crab's code with a header as the game's: its exec slot first
+  function crabWithHeader(): DonorObject {
+    const execMap: number[] = [];
+    execMap[CRAB_SLOT] = CRAB;
+    const pages = [entryPage([entry(CRAB, 11, [CRAB_HEADER, words(MODEL)]), entry(MODEL, 2, [text("model")])])];
+    return donorObject({ nsd: readNsd(nsdData([], 9, ZONE, execMap)), pages }, CRAB_SLOT);
+  }
+  const moved = () => withCodeMoved(crabWithHeader(), CRAB_SLOT, MOVED_SLOT, MOVED);
+  const movedCode = () => moved().entries.find(({ eid }) => eid === MOVED)!;
+
+  test("its code is in the new slot under its new name", () => {
+    expect(moved().code).toEqual([[MOVED_SLOT, MOVED]]);
+    expect(eids(moved().entries)).toEqual(new Set([MOVED, MODEL]));
+  });
+
+  test("its code's header names the new slot", () => {
+    expect(movedCode().items[0]).toEqual(words(MOVED_SLOT, 0x300));
+  });
+
+  test("the rest of its code is as it was", () => {
+    expect(movedCode().items[1]).toEqual(words(MODEL));
+  });
+
+  test("moving code from a slot the object has none in is an error", () => {
+    expect(() => withCodeMoved(crabWithHeader(), 7, MOVED_SLOT, MOVED)).toThrow(/slot 7/);
   });
 });
 
@@ -280,5 +314,28 @@ describe("lab assistants' code from stormy ascent", () => {
     // code that isn't as stormy ascent's
     const level = oneCodeLevel(0x22, LAB_ASSISTANT_SLOT, LAB_ASSISTANT, labAssistantCode(SETUP_BY_PRESET, 1));
     expect(() => enemyDonorObjects(new Map([["lab_assistant", level]]))).toThrow(/lab assistant/);
+  });
+});
+
+describe("the cobra's code from temple ruins", () => {
+  const COBRA = stringToEid("PlanC"); // temple ruins' cobra, the same name as jungle rollers' plant
+  const COBRA_SLOT = 25;              // and the same exec slot
+
+  // temple ruins' cobra code, its header naming its slot
+  function cobraLevel(): Level {
+    const execMap: number[] = [];
+    execMap[COBRA_SLOT] = COBRA;
+    const pages = [entryPage([entry(COBRA, 11, [words(COBRA_SLOT, 0x300), words(1, 2, 3)])])];
+    return { nsd: readNsd(nsdData([], 0x1c, ZONE, execMap)), pages };
+  }
+  const [cobra] = enemyDonorObjects(new Map([["snake", cobraLevel()]]));
+
+  test("a snake's code goes in its own exec slot, under a name of its own, out of the plant's way", () => {
+    expect(cobra.code).toEqual([[ENEMY_ENTITIES.snake[0], stringToEid("SnakC")]]);
+    expect(ENEMY_ENTITIES.snake[0]).not.toBe(ENEMY_ENTITIES.plant[0]);
+  });
+
+  test("a snake's code's header names its own slot", () => {
+    expect(cobra.entries[0].items[0]).toEqual(words(ENEMY_ENTITIES.snake[0], 0x300));
   });
 });
