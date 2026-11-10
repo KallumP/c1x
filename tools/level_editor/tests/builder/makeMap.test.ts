@@ -61,6 +61,7 @@ const hasLostCity = existsSync(`${STREAMS}/s0000020.nsd`); // the lost city (0x2
 const hasStormyAscent = existsSync(`${STREAMS}/s0000022.nsd`); // stormy ascent (0x22)
 const hasTempleRuins = existsSync(`${STREAMS}/s000001c.nsd`); // temple ruins (0x1c)
 const hasHeavyMachinery = existsSync(`${STREAMS}/s0000006.nsd`); // heavy machinery (0x6)
+const hasToxicWaste = existsSync(`${STREAMS}/s0000007.nsd`); // toxic waste (0x7)
 
 const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
 
@@ -803,6 +804,41 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     test("a robot dog has heavy machinery's robot dogs' init flags", () => {
       // flag b its size (12 x 256: 0.75)
       expect(initFlagsOf(withRobotDog().zone, ENEMY_ENTITIES.robot_dog)).toEqual([200, 12, 0]);
+    });
+  });
+
+  describe.skipIf(!hasToxicWaste)("barrel rollers, from toxic waste", () => {
+    const withBarrelRoller = (more: Partial<LevelObject> = {}) => build([enemy("barrel_roller", more)]);
+
+    test("a level with a barrel roller has toxic waste's barrel roller and barrels, their models and sounds", () => {
+      const { level, entries } = withBarrelRoller();
+      const { execMap } = level.nsd.ldat;
+      expect([execMap[ENEMY_ENTITIES.barrel_roller[0]], execMap[16]]).toEqual([stringToEid("FatsC"), stringToEid("BaraC")]);
+      expect(["Fat1G", "Fat2G", "BaV7G", "BaD7G"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(soundEidsOf(level)).toEqual(expect.arrayContaining(["laf7A", "brl7A", "bnc7A"].map(stringToEid)));
+    });
+
+    test("a barrel roller's barrels have their ends capped, as toxic waste's are open tubes", () => {
+      // their 20 side polygons, and a fan of 8 over each end's ring of 10 vertices
+      const { entries } = withBarrelRoller();
+      const polygonCount = (name: string) => entries.get(stringToEid(name))!.items[0].readUInt32LE(0);
+      expect([polygonCount("BaV7G"), polygonCount("BaD7G")]).toEqual([36, 36]);
+    });
+
+    test("a level with a barrel roller doesn't have toxic waste's water code", () => {
+      const { level, entries } = withBarrelRoller();
+      expect(entries.has(stringToEid("WateC"))).toBe(false);
+      expect(level.nsd.ldat.execMap[55]).toBe(EID_NONE);
+    });
+
+    test("by default a barrel roller stands half his barrels' path from his spot, away from the spawn, and they roll back past it in toxic waste's steps", () => {
+      const TOXIC_WASTE_STEP = 400;
+      const [placed] = enemies(withBarrelRoller().zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.barrel_roller);
+      placed.path.forEach(([x, y]) => expectNear([x, y], [SPOT_X, FLOOR_Y], 8));
+      expect(placed.path[0][2]).toBeLessThan(placed.path.at(-1)![2]); // the spawn is the +z way
+      expectNear((placed.path[0][2] + placed.path.at(-1)![2]) / 2, SPOT_Z, 8);
+      stepLengths(placed.path).forEach((step) => expectNear(step, TOXIC_WASTE_STEP, 8));
     });
   });
 

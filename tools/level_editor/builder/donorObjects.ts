@@ -3,6 +3,7 @@
 // uses there (models, animations, sounds and texture pages), and any object it spawns
 import type { EnemyType, LevelObject } from "../src/objects";
 import { packEntries, rawPagesById, reachableEids } from "./cutLevel";
+import { withEndCaps } from "./endCaps";
 import { ENEMY_ENTITIES, MOVED_ENEMY_CODE } from "./entities";
 import { EID_NONE, eidToString, stringToEid } from "./entryIds";
 import { ENTRY_GOOL, entriesById, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, soundPage, type Entry, type Level, type Page } from "./levelFiles";
@@ -30,6 +31,7 @@ const STORMY_ASCENT: DonorLevel = { lid: 0x22, name: "Stormy Ascent", file: "s00
 const TEMPLE_RUINS: DonorLevel = { lid: 0x1c, name: "Temple Ruins", file: "s000001c" };
 // its robot dogs' code is PoRoC, as the lab's walkers' child object is, but not the same
 const HEAVY_MACHINERY: DonorLevel = { lid: 0x6, name: "Heavy Machinery", file: "s0000006" };
+const TOXIC_WASTE: DonorLevel = { lid: 0x7, name: "Toxic Waste", file: "s0000007" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -50,6 +52,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   lab_assistant: STORMY_ASCENT,
   snake: TEMPLE_RUINS,
   robot_dog: HEAVY_MACHINERY,
+  barrel_roller: TOXIC_WASTE,
 };
 
 export interface DonorObject {
@@ -83,9 +86,10 @@ function codeInSlot(donor: Level, slot: number): number {
 
 // the object whose code is in exec slot slot in the donor level, and what it
 // uses there, with the code in childSlots: objects it spawns by their exec slot
-// (which its entries don't name), and what they use
-export function donorObject(donor: Level, slot: number, childSlots: number[] = []): DonorObject {
-  const used = reachableEids(donor, [slot, ...childSlots].map((codeSlot) => codeInSlot(donor, codeSlot)));
+// (which its entries don't name), and what they use; but not the entries in
+// leftOut, which its entries name but it never uses, nor what only they use
+export function donorObject(donor: Level, slot: number, childSlots: number[] = [], leftOut: number[] = []): DonorObject {
+  const used = reachableEids(donor, [slot, ...childSlots].map((codeSlot) => codeInSlot(donor, codeSlot)), new Set(leftOut));
   const entries = entriesInPages(donor, PAGE_ENTRIES, used);
   const texturePages = [...rawPagesById(donor)].filter(([eid, page]) => used.has(eid) && page.type === PAGE_TEXTURE).map(([, page]) => page);
   return { code: codeSlots(donor, entries), entries, sounds: entriesInPages(donor, PAGE_SOUNDS, used), texturePages };
@@ -256,6 +260,41 @@ const LAB_ASSISTANT_CODE_PATCHES: CodePatch[] = [
   { at: 0x28a, was: 0x11800e13, now: 0x11d19e13 }, // MOVE creator[0xc4], obj[0xac]: a vial's speed along z
 ];
 
+// the code each enemy spawns by its exec slot, which its entries don't name:
+// toxic waste's barrel roller throws his barrels (BaraC, slot 16)
+const ENEMY_CHILD_SLOTS: Partial<Record<EnemyType, number[]>> = {
+  barrel_roller: [16],
+};
+
+// entries an enemy's entries name but its code never uses, left out: toxic
+// waste's barrel roller's data names its WateC, which differs from up the
+// creek's (the river enemies') in the same exec slot, so the two would clash
+const ENEMY_UNUSED_ENTRIES: Partial<Record<EnemyType, string[]>> = {
+  barrel_roller: ["WateC"],
+};
+
+// models that come with end caps (see endCaps.ts), and the animation whose first
+// frame has their vertices: toxic waste's barrels are open tubes, as the game
+// only shows them rolling straight at the camera, but custom levels' don't
+const ENEMY_CAPPED_MODELS: Partial<Record<EnemyType, [model: string, animation: string][]>> = {
+  barrel_roller: [["BaV7G", "BaV7V"], ["BaD7G", "BaD7V"]],
+};
+
+// object with its model named model capped at its ends, as animation's first
+// frame has it (if the object has that model)
+function withCappedModel(object: DonorObject, [model, animation]: [string, string]): DonorObject {
+  const entryNamed = (name: string) => object.entries.find(({ eid }) => eid === stringToEid(name));
+  const [modelEntry, animationEntry] = [entryNamed(model), entryNamed(animation)];
+  if (!modelEntry) {
+    return object;
+  }
+  if (!animationEntry) {
+    throw new Error(`${animation} should come with ${model}, to cap its ends`);
+  }
+  const capped = withEndCaps(modelEntry, animationEntry.items[0]);
+  return { ...object, entries: object.entries.map((entry) => (entry === modelEntry ? capped : entry)) };
+}
+
 const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = {
   native: NATIVE_CODE_PATCHES,
   blue_river_plant: RIVER_CODE_PATCHES,
@@ -290,9 +329,11 @@ function withPatchedCode(type: EnemyType, object: DonorObject, code: number, pat
 function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
   const moved = MOVED_ENEMY_CODE[type];
   const slot = moved?.donorSlot ?? ENEMY_ENTITIES[type][0];
-  const object = donorObject(level, slot);
+  const leftOut = (ENEMY_UNUSED_ENTRIES[type] ?? []).map(stringToEid);
+  const object = donorObject(level, slot, ENEMY_CHILD_SLOTS[type] ?? [], leftOut);
   const patches = ENEMY_CODE_PATCHES[type];
-  const patched = patches ? withPatchedCode(type, object, level.nsd.ldat.execMap[slot], patches) : object;
+  const unpatched = (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, object);
+  const patched = patches ? withPatchedCode(type, unpatched, level.nsd.ldat.execMap[slot], patches) : unpatched;
   if (!moved) {
     return patched;
   }

@@ -3,7 +3,7 @@ import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
-import { ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
+import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
@@ -348,7 +348,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   // walking spider the way it runs (into its path at the start, on out of it at
   // the far end, where it goes down out of sight); a crab or native the player
   const endFacing = (enemy: PathEnemy, end: Vec3, next: Vec3, endIndex: number) => {
-    const runsOnce = enemy === "badger" || enemy === "walking_spider";
+    const runsOnce = enemy === "badger" || enemy === "walking_spider" || enemy === "barrel_roller";
     if (FACES_ITS_WAY.includes(enemy) || (runsOnce && endIndex === 0)) {
       return facingFrom(end, next, turn);
     }
@@ -356,6 +356,15 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
       return facingFrom(next, end, turn);
     }
     return enemyTurn(turn);
+  };
+
+  // what's drawn at an end of an enemy's path: the enemy, but a barrel at the far
+  // end of a barrel roller's, where his barrels roll to (he stays at the first)
+  const endShape = (enemy: PathEnemy, endIndex: number) => {
+    if (enemy === "barrel_roller" && endIndex === 1) {
+      return BARREL_SHAPE;
+    }
+    return ENEMY_SHAPES[enemy];
   };
 
   // a crab, turtle, native or badger: at the first and last nodes of its path,
@@ -373,7 +382,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     return (
       <>
         {ends.map(({ end, next }, endIndex) =>
-          renderShapeModel(ENEMY_SHAPES[enemy], blenderToView(end), index, endIndex, endFacing(enemy, end, next, endIndex), endIndex === 0 ? 1 : FAR_END_OPACITY))}
+          renderShapeModel(endShape(enemy, endIndex), blenderToView(end), index, endIndex, endFacing(enemy, end, next, endIndex), endIndex === 0 ? 1 : FAR_END_OPACITY))}
         <Line points={line} color={pathWarnings.has(index) ? WARNING_COLOUR : colour} lineWidth={2} />
         {index === selected && renderPathHandles(positions, index, enemy, colour)}
       </>
