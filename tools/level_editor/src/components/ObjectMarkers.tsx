@@ -27,7 +27,7 @@ const walkerSize = (parts: ShapePart[]) => {
   return { height: max[1], reach: Math.max(-min[0], max[0], -min[2], max[2]) };
 };
 // the path enemies that turn to face the way they go (seen in the game)
-const FACES_ITS_WAY: PathEnemy[] = ["turtle", "warthog", "monkey", "lizard", "red_lizard", "walking_lizard", "robot_dog"];
+const FACES_ITS_WAY: PathEnemy[] = ["turtle", "warthog", "monkey", "lizard", "red_lizard", "walking_lizard", "robot_dog", "electric_scientist"];
 
 const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
 
