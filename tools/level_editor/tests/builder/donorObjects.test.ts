@@ -343,7 +343,7 @@ describe("the cobra's code from temple ruins", () => {
 describe("the barrel roller's code from toxic waste", () => {
   const ROLLER = stringToEid("FatsC");
   const BARRELS = stringToEid("BaraC");
-  const BARREL = stringToEid("BaV7G");
+  const BARREL = stringToEid("Bar1G"); // a model the barrels' code uses
   const WATER = stringToEid("WateC");
   const BARRELS_SLOT = 16;
 
