@@ -112,11 +112,20 @@ function asSpawner(entity: Buffer, enemy: LevelObject, run: Vec3[], drop: number
 // other way round, so they start at the editor's first node as the rest do
 const STARTS_AT_FAR_END: EnemyType[] = ["monkey"];
 
+// how far down below its last node the path goes for the enemies the game sinks
+// out of sight at its end, in game units: the lab's blobs, into the floor (its
+// blob spawners' paths' last points are 800 below the rest)
+const SINKING_DROPS: Partial<Record<EnemyType, number>> = { blob: 800 };
+
 // a path enemy's entity running run (a badger or walking spider as its spawner)
 function pathEnemyEntity(entity: Buffer, enemy: LevelObject, run: Vec3[]): Buffer {
   const drop = SPAWNER_DROPS[enemy.enemy!];
   if (drop !== undefined) {
     return asSpawner(entity, enemy, run, drop);
+  }
+  const sinking = SINKING_DROPS[enemy.enemy!];
+  if (sinking !== undefined) {
+    return withPath(entity, withDrop(run, sinking));
   }
   if (STARTS_AT_FAR_END.includes(enemy.enemy!)) {
     return withPath(entity, [...run].reverse());
