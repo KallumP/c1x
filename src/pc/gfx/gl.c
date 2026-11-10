@@ -22,6 +22,7 @@ static PFNGLBLENDEQUATIONPROC pglBlendEquation;
 #include "pc/time.h"
 #include "pc/replay.h"
 #include "pc/pace.h"
+#include "pc/tween.h"
 
 #ifdef CFLAGS_GUI
 #include "ext/gui.h"
@@ -531,6 +532,132 @@ static int32_t GLFrameTicks() {
   return FrameTicks(lid, frame++);
 }
 
+/* brightness: draw the fade overlay and move the fade on a step */
+static void GLDrawFade() {
+  if (fade_counter == 0) { return; }
+  if (fade_counter < -2) {
+    fade_counter += fade_step;
+    GLDrawOverlay(fade_counter + 256);
+    if (fade_counter == 0 && !(cur_display_flags & 0x200000))
+      fade_counter = -2;
+  }
+  else if (fade_counter < 0) {
+    GLDrawOverlay(256);
+    fade_counter = -1;
+  }
+  else {
+    fade_counter -= fade_step;
+    GLDrawOverlay(fade_counter);
+  }
+}
+
+/* pc: draw the fade overlay as it is, for a frame between game frames */
+static void GLDrawFadeStill() {
+  if (fade_counter == 0) { return; }
+  if (fade_counter < -2)
+    GLDrawOverlay(fade_counter + 256);
+  else if (fade_counter < 0)
+    GLDrawOverlay(256);
+  else
+    GLDrawOverlay(fade_counter);
+}
+
+/* simulate draw area clipping behavior in orig impl */
+static void GLDrawBorders() {
+  GLDrawRect(0, 0, 512, 12, 0, 0, 0);
+  GLDrawRect(0, 228, 512, 12, 0, 0, 0);
+}
+
+/*
+ * pc: drawing frames between game frames (see pc/tween.h). the game sets
+ * tween_draw to draw the terrain and objects part way from the last game
+ * frame; frames are drawn while GLUpdate waits for the next game frame
+ */
+static void (*tween_draw)(int32_t alpha) = 0;
+static int tween_frames_drawn = 0; /* slots drawn since the last game frame */
+
+void GLSetTweenDraw(void (*draw)(int32_t alpha)) {
+  tween_draw = draw;
+}
+
+/* whether to draw frames between game frames, now */
+static int GLIsTweening() {
+  if (!tween_draw || game_settings.frame_rate <= SETTINGS_FRAME_RATE_MIN) { return 0; }
+  if (TimeGetSpeed() != 1) { return 0; } /* a fast replay */
+  if (!ns.ldat || ns.ldat->lid == LID_TITLE) { return 0; } /* the title screen draws more than objects */
+  return ns.draw_skip_counter == 0 && pbak_state == 0;
+}
+
+/*
+ * how long the last frame (between, or the game's own) took to draw and
+ * show, in real ticks, so a frame between is only started with time to
+ * finish it before the game frame is due
+ */
+static int32_t draw_ticks = 0;
+static int32_t draw_start = 0;
+
+static void GLStartTimingDraw() {
+  draw_start = TimeRealTicks();
+}
+
+static void GLStopTimingDraw() {
+  draw_ticks = TimeRealTicks() - draw_start;
+}
+
+/*
+ * draw (and show) a frame alpha of the way from the last game frame, into the
+ * prims after the game frame's, then put the game frame's ot back
+ */
+static void GLDrawTweenFrame(int32_t alpha) {
+  static gl_context game_frame;
+
+  game_frame = context;
+  GLResetOT(context.ot, 2048);
+  GLClear();
+  (*tween_draw)(alpha);
+  TexturesUpdate();
+  GLDraw(context.ot);
+  GLDrawFadeStill();
+  GLDrawBorders();
+#ifdef CFLAGS_GUI
+  if (igGetDrawData())
+    ImGui_ImplOpenGL2_RenderDrawData(igGetDrawData()); /* the last game frame's */
+#endif
+  if (callbacks.post_update)
+    (*callbacks.post_update)();
+  context = game_frame;
+}
+
+/* draw a frame between game frames if one is due, elapsed ticks into a game frame of ticks */
+static void GLDrawBetweenFrames(int32_t elapsed, int32_t ticks) {
+  uint32_t rate;
+
+  rate = game_settings.frame_rate;
+  if (!TweenFrameDue(elapsed, ticks, tween_frames_drawn, rate, draw_ticks)) { return; }
+  tween_frames_drawn = TweenSlotsDue(elapsed, rate);
+  GLStartTimingDraw();
+  GLDrawTweenFrame(TweenAlpha(elapsed, ticks));
+  GLStopTimingDraw();
+}
+
+/* wait until the game frame is due, frame_ticks after the last, drawing frames between if on */
+static void GLWaitForFrame(int32_t frame_ticks) {
+  void (*between)(int32_t, int32_t);
+  int32_t elapsed;
+
+  tween_frames_drawn = 0;
+  between = 0;
+  if (GLIsTweening())
+    between = GLDrawBetweenFrames;
+  if (TimeIsFixed()) { /* recording or replaying inputs? */
+    TimeWaitFrameWith(frame_ticks, between);
+    return;
+  }
+  while ((elapsed = GetTicksElapsed() - context.draw_stamp) < frame_ticks) {
+    if (between) { (*between)(elapsed, frame_ticks); }
+  }
+}
+
 void GLUpdate() {
   zone_header *header;
   rgb8 fill;
@@ -559,44 +686,24 @@ void GLUpdate() {
   else
     ticks_cur_frame = 17; /* default to 17 */
   frame_ticks = GLFrameTicks(); /* pc: 34, unless drawing at the PS1's pace */
-  if (TimeIsFixed()) /* recording or replaying inputs? */
-    TimeWaitFrame(frame_ticks);
-  else {
-    while (ticks_elapsed - context.draw_stamp < frame_ticks) {
-      ticks_elapsed = GetTicksElapsed();
-    }
-  }
+  GLWaitForFrame(frame_ticks);
   if (pbak_state == 2)
     SetTicksElapsed(cur_pbak_frame->ticks_elapsed);
   ticks_elapsed = GetTicksElapsed();
   elapsed_since = ticks_elapsed - context.draw_stamp; /* time elapsed between draws */
   context.draw_stamp = ticks_elapsed;
   context.ticks_per_frame = GLRoundTicks(elapsed_since); /* record rounded tick count */
+  GLStartTimingDraw();
   TexturesUpdate();
+  if (tween_frames_drawn)
+    GLClear(); /* the frames drawn between left their own picture */
   if (ns.draw_skip_counter > 0)
     ns.draw_skip_counter--;
   if (ns.draw_skip_counter == 0)
     GLDraw(context.ot);
   GLResetPrims(&context);
-  if (fade_counter != 0) { /* brightness */
-    if (fade_counter < -2) {
-      fade_counter += fade_step;
-      GLDrawOverlay(fade_counter + 256);
-      if (fade_counter == 0 && !(cur_display_flags & 0x200000))
-        fade_counter = -2;
-    }
-    else if (fade_counter < 0) {
-      GLDrawOverlay(256);
-      fade_counter = -1;
-    }
-    else {
-      fade_counter -= fade_step;
-      GLDrawOverlay(fade_counter);
-    }
-  }
-  /* simulate draw area clipping behavior in orig impl */
-  GLDrawRect(0, 0, 512, 12, 0, 0, 0);
-  GLDrawRect(0, 228, 512, 12, 0, 0, 0);
+  GLDrawFade();
+  GLDrawBorders();
 #ifdef CFLAGS_GUI
   GuiUpdate();
   GuiDraw();
@@ -604,4 +711,5 @@ void GLUpdate() {
 #endif
   if (callbacks.post_update)
     (*callbacks.post_update)();
+  GLStopTimingDraw();
 }

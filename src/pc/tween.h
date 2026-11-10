@@ -72,13 +72,14 @@ static inline int TweenSlotsDue(int32_t elapsed, uint32_t frame_rate) {
 
 /*
  * whether to draw a frame between game frames now: a slot has started since
- * the last one drawn (drawn) and it starts before the game frame is due
+ * the last one drawn (drawn), it starts before the game frame is due, and one
+ * taking draw_ticks to draw would be done before then
  */
 static inline int TweenFrameDue(int32_t elapsed, int32_t frame_ticks, int drawn,
-                                uint32_t frame_rate) {
+                                uint32_t frame_rate, int32_t draw_ticks) {
   int slot;
 
-  if (elapsed >= frame_ticks) { return 0; }
+  if (elapsed + draw_ticks >= frame_ticks) { return 0; }
   slot = TweenSlotsDue(elapsed, frame_rate);
   return slot > drawn && TweenSlotTicks(slot, frame_rate) < frame_ticks;
 }

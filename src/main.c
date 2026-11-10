@@ -182,6 +182,7 @@ void CoreLoop(lid_t lid) {
   LevelInitGlobals();
   NSInit(&ns, lid);
   CoreObjectsCreate();
+  GLSetTweenDraw(CoreDrawTweened); /* pc: frames between game frames */
   do {
     lid = ns.ldat->lid;
     is_pause_lid = lid != LID_TITLE && lid != LID_LEVELEND && lid != LID_INTRO;
