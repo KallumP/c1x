@@ -147,6 +147,12 @@ function batRoostExample(donor: Level): Buffer {
   return withSubtype(roost, ENEMY_ENTITIES.bat[1]);
 }
 
+// a gunman as cortex power's are, without its first's link (its init flag a, the
+// entity id of an object there it reacts to)
+function gunmanExample(donor: Level): Buffer {
+  return withInitFlagA(donorEnemyEntity(donor, "gunman"), 0);
+}
+
 // an enemy's entity from the level it's taken from, of its type in custom levels
 // (another than its own if its code moves there: see MOVED_ENEMY_CODE)
 function donorEnemyEntity(donor: Level, type: EnemyType): Buffer {
@@ -163,8 +169,8 @@ function entitiesFor(enemy: LevelObject): number {
 }
 
 // the enemies that stay at their spot: jungle rollers' plant, up the creek's two
-// river plants, the spider hanging there, and temple ruins' cobra
-const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake"];
+// river plants, the spider hanging there, temple ruins' cobra and cortex power's gunman
+const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake", "gunman"];
 
 // places objects in the level: where they are in it, which zone they're in, and their entities
 class ObjectPlacer {
@@ -392,6 +398,9 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   // an enemy's entity as its own level has it: its donor level's, or jungle rollers'
   const enemyExample = (type: EnemyType) => {
     const donor = donorLevels.get(type);
+    if (donor && type === "gunman") {
+      return gunmanExample(donor);
+    }
     if (donor && type === "bat") {
       return batRoostExample(donor);
     }
