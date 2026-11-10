@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "geom.h"
+#include "pc/pace.h"
 
 /*
  * drawing frames between game frames (pc). the game runs at 30 fps; while
@@ -49,6 +50,37 @@ static inline void TweenLerpVec(vec *a, vec *b, int32_t alpha, vec *out) {
 
   for (i = 0; i < 3; i++)
     out->c[i] = TweenLerp(a->c[i], b->c[i], alpha);
+}
+
+/*
+ * pacing. a game frame (FRAME_TICKS) is split into slots, one per frame drawn
+ * at frame_rate; slot n starts this many ticks into the game frame
+ */
+static inline int32_t TweenSlotTicks(int slot, uint32_t frame_rate) {
+  return (slot * FRAME_TICKS * 30) / (int32_t)frame_rate;
+}
+
+/* the last slot started by elapsed ticks into the game frame */
+static inline int TweenSlotsDue(int32_t elapsed, uint32_t frame_rate) {
+  int slot;
+
+  slot = 0;
+  while (TweenSlotTicks(slot+1, frame_rate) <= elapsed)
+    slot++;
+  return slot;
+}
+
+/*
+ * whether to draw a frame between game frames now: a slot has started since
+ * the last one drawn (drawn) and it starts before the game frame is due
+ */
+static inline int TweenFrameDue(int32_t elapsed, int32_t frame_ticks, int drawn,
+                                uint32_t frame_rate) {
+  int slot;
+
+  if (elapsed >= frame_ticks) { return 0; }
+  slot = TweenSlotsDue(elapsed, frame_rate);
+  return slot > drawn && TweenSlotTicks(slot, frame_rate) < frame_ticks;
 }
 
 static inline void TweenLerpAng(ang *a, ang *b, int32_t alpha, ang *out) {
