@@ -124,6 +124,7 @@ static char *SettingsTextWith(char *text, const pc_settings *s) {
   text = ReplaceOnOffLine(text, "fix_model_draw_order", s->fix_model_draw_order);
   text = ReplaceOnOffLine(text, "replay_inputs", s->replay_inputs);
   text = ReplaceNumberLine(text, "replay_speed", s->replay_speed);
+  text = ReplaceNumberLine(text, "frame_rate", s->frame_rate);
   if (s->boot_level[0]) {
     text = ReplaceSettingLine(text, "boot_level", s->boot_level);
   }
@@ -160,5 +161,6 @@ int AreSettingsEqual(const pc_settings *a, const pc_settings *b) {
     && a->fix_model_draw_order == b->fix_model_draw_order
     && a->replay_inputs == b->replay_inputs
     && a->replay_speed == b->replay_speed
+    && a->frame_rate == b->frame_rate
     && SDL_strcmp(a->boot_level, b->boot_level) == 0;
 }

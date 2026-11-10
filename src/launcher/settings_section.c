@@ -83,8 +83,9 @@ static void DrawOnOff(const char *label, int *setting, const char *tooltip) {
   DrawTooltip(tooltip);
 }
 
-static void DrawNumber(const char *label, uint32_t *setting, uint32_t step,
-  uint32_t max, const char *tooltip) {
+/* a number field kept from min to max */
+static void DrawNumberFrom(const char *label, uint32_t *setting, uint32_t step,
+  uint32_t min, uint32_t max, const char *tooltip) {
   uint32_t step_fast;
 
   BeginFieldRow(label, tooltip);
@@ -93,9 +94,15 @@ static void DrawNumber(const char *label, uint32_t *setting, uint32_t step,
   igPushID_Str(label);
   if (igInputScalar("##number", ImGuiDataType_U32, setting, &step, &step_fast, "%u", 0)) {
     if (*setting > max) { *setting = max; }
+    if (*setting < min) { *setting = min; }
   }
   igPopID();
   DrawTooltip(tooltip);
+}
+
+static void DrawNumber(const char *label, uint32_t *setting, uint32_t step,
+  uint32_t max, const char *tooltip) {
+  DrawNumberFrom(label, setting, step, 0, max, tooltip);
 }
 
 static void DrawBootLevelChoice(const char *name, const char *level) {
@@ -157,6 +164,9 @@ static void DrawFields() {
     "Play back the newest recording in build/recorded_inputs/ instead of recording.");
   DrawNumber("Replay speed", &settings.replay_speed, 1, SETTINGS_REPLAY_SPEED_MAX,
     "How many times normal speed replays play at, or 0 for as fast as possible.");
+  DrawNumberFrom("Frame rate", &settings.frame_rate, 10, SETTINGS_FRAME_RATE_MIN,
+    SETTINGS_FRAME_RATE_MAX,
+    "Frames drawn a second (30 to 240). The game still runs at 30, so it plays the same.");
   DrawBootLevel();
   EndFieldRows();
 }
