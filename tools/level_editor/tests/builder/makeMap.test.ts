@@ -877,13 +877,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(soundEidsOf(level)).toEqual(expect.arrayContaining(["R1H6A"].map(stringToEid)));
     });
 
-    test("by default a camera robot rises 3 m from its spot, in castle machinery's steps", () => {
-      // 1200 at scale 400 is 768 at the test's 256
+    test("by default a camera robot rises 1200 (3 m at scale 400) from its spot, in castle machinery's steps", () => {
+      // 1200 game units, whatever the scale
       const [placed] = enemies(build([enemy("camera_robot")]).zone);
       expect(placed.type).toEqual(ENEMY_ENTITIES.camera_robot);
       placed.path.forEach(([x, , z]) => expectNear([x, z], [SPOT_X, SPOT_Z], 8));
       expectNear(placed.path[0][1], FLOOR_Y, 8);
-      expectNear(placed.path.at(-1)![1], FLOOR_Y + 768, 8);
+      expectNear(placed.path.at(-1)![1], FLOOR_Y + 1200, 8);
       stepLengths(placed.path).forEach((step) => expectNear(step, 75, 8));
     });
   });
