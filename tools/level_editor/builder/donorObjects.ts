@@ -105,12 +105,24 @@ export function donorObject(donor: Level, slot: number, childSlots: number[] = [
 }
 
 const CODE_HEADER = 0; // a code entry's item holding its header, its exec slot (its type) first
+const CODE_DATA = 2;   // and its data: eids and constants, the code's own eid first
 
 // a code header naming exec slot slot
 function headerInSlot(header: Buffer, slot: number): Buffer {
   const moved = Buffer.from(header);
   moved.writeUInt32LE(slot, 0);
   return moved;
+}
+
+// an item of words with each word that's from made to
+function withWordRenamed(item: Buffer, from: number, to: number): Buffer {
+  const renamed = Buffer.from(item);
+  for (let at = 0; at + 4 <= renamed.length; at += 4) {
+    if (renamed.readUInt32LE(at) === from) {
+      renamed.writeUInt32LE(to, at);
+    }
+  }
+  return renamed;
 }
 
 // object with its code in exec slot from moved to exec slot to, named eid there
@@ -122,11 +134,20 @@ export function withCodeMoved(object: DonorObject, from: number, to: number, eid
   if (code === undefined) {
     throw new Error(`the object has no code in exec slot ${from} to move`);
   }
+  const movedItem = (item: Buffer, index: number) => {
+    if (index === CODE_HEADER) {
+      return headerInSlot(item, to);
+    }
+    if (index === CODE_DATA) {
+      return withWordRenamed(item, code, eid);
+    }
+    return item;
+  };
   const moveEntry = (entry: Entry): Entry => {
     if (entry.eid !== code) {
       return entry;
     }
-    return { ...entry, eid, items: entry.items.map((item, index) => (index === CODE_HEADER ? headerInSlot(item, to) : item)) };
+    return { ...entry, eid, items: entry.items.map(movedItem) };
   };
   return {
     ...object,
