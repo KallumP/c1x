@@ -35,6 +35,7 @@ const LIZARD_SKINS = { lizard: "#6f9a32", red_lizard: "#b0402e" };
 const LIZARD_COLOURS = { belly: "#d8c27a", claw: "#e8e0c8", eye: "#f2d36b", pupil: "#1a1a1a" };
 const LAB_ASSISTANT_COLOURS = { coat: "#e6e8ee", trousers: "#3a3f55", shoe: "#1f1f24", skin: "#e0b48c", eye: "#1a1a1a", vial: "#d0409a" };
 const BAT_COLOURS = { body: "#3a2c34", wing: "#5a3a3e", ear: "#2a1e26", eye: "#f2d36b" };
+const ROBOT_DOG_COLOURS = { body: "#5a5c66", shell: "#3a3b42", leg: "#2c2d33", eye: "#f2e21a" };
 const COBRA_COLOURS = { scale: "#2f5fa8", belly: "#d8c08a", eye: "#c8302a", fang: "#f4f1e0" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
@@ -304,6 +305,27 @@ function cobra(): ShapePart[] {
     ball(1, [0, 430, 30], COBRA_COLOURS.scale, { stretch: [85, 110, 22] }),
     ball(1, [0, 330, 45], COBRA_COLOURS.belly, { stretch: [40, 100, 10] }),
     ...cobraHead(),
+  ];
+}
+
+// one of the robot dog's sides: a front and a back leg, splayed out, and an eye
+function robotDogSide(): ShapePart[] {
+  return [
+    rod(30, 40, 200, [250, 100, 180], ROBOT_DOG_COLOURS.leg, { turn: [0, 0, 0.5] }),
+    rod(30, 40, 200, [250, 100, -180], ROBOT_DOG_COLOURS.leg, { turn: [0, 0, 0.5] }),
+    ball(22, [40, 320, 355], ROBOT_DOG_COLOURS.eye, { name: "eye" }),
+  ];
+}
+
+// heavy machinery's grey robot dog: a low body under a darker shell, its head
+// out towards +z with yellow eyes, a spike on its back, on four splayed legs
+function robotDog(): ShapePart[] {
+  return [
+    ...bothSides(robotDogSide()),
+    ball(1, [0, 260, 0], ROBOT_DOG_COLOURS.body, { stretch: [260, 120, 300] }),
+    ball(1, [0, 340, -20], ROBOT_DOG_COLOURS.shell, { stretch: [220, 80, 250] }),
+    ball(1, [0, 290, 260], ROBOT_DOG_COLOURS.body, { name: "head", stretch: [110, 80, 120] }),
+    rod(0, 40, 160, [0, 440, 40], ROBOT_DOG_COLOURS.shell),
   ];
 }
 
@@ -588,7 +610,8 @@ export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 // Sp1sV), the great gate's monkey (Mo1fG, its first frame in Mo3fV), and up the
 // creek's river plants (RV1fG and Rv1fG, their first frames in RV1fV and Rv1fV)
 // and fish (RF1fG, its first frame in RF1fV), and temple ruins' cobra (JuPsG,
-// its first frame in JupsV, standing), each vertex times 4, times its
+// its first frame in JupsV, standing), and heavy machinery's robot dog (PRS1G,
+// its first frame in PRSSV, at the 0.75 scale its init flag b gives it), each vertex times 4, times its
 // tgeo's scale / 4096
 // a river plant's height: its first frame in the game (RV1fV) rears its back
 // petal up 602, but the editor's lies lower, so it's as tall as makes it as wide
@@ -597,13 +620,13 @@ const RIVER_PLANT_HEIGHT = 400;
 
 const GAME_HEIGHTS: Record<StandingEnemy, number> = {
   plant: 720, snake: 558, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
-  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, lab_assistant: 1203, robot_dog: 742,
+  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, lab_assistant: 1203, robot_dog: 557,
 };
 
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
   plant, snake: cobra, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
   blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
-  lizard, red_lizard: redLizard, lab_assistant: labAssistant, robot_dog: crab,
+  lizard, red_lizard: redLizard, lab_assistant: labAssistant, robot_dog: robotDog,
 };
 
 // each standing enemy's shape, on the floor, as tall as the game's model
