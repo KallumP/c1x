@@ -90,4 +90,18 @@ static inline void TweenLerpAng(ang *a, ang *b, int32_t alpha, ang *out) {
     out->c[i] = TweenLerpAngle(a->c[i], b->c[i], alpha);
 }
 
+/* where an object is drawn: its position, rotation and scale */
+typedef struct {
+  vec trans;
+  ang rot;
+  vec scale;
+} tween_pose;
+
+#define TWEEN_SLOTS 128 /* poses kept, one per object (GOOL_OBJECT_COUNT, plus the player) */
+
+extern void TweenForgetAll();
+extern void TweenForget(int slot);
+extern void TweenRecord(int slot, const tween_pose *pose);
+extern void TweenPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out);
+
 #endif /* _PC_TWEEN_H_ */

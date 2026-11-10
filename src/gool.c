@@ -14,6 +14,7 @@
 #include "pc/levelend.h"
 #include "pc/fling.h"
 #include "pc/shield.h"
+#include "pc/tween.h"
 int CardControl(int op, int part_idx) { return 1; }
 
 /* forward declarations for unexported funcs */
@@ -719,6 +720,7 @@ gool_object *GoolObjectCreate(void *parent, int exec, int subtype, int argc, uin
       return child;
   }
   GoolObjectAddChild(_parent, child);
+  TweenForget(GoolObjectTweenSlot(child)); /* pc: not tweened from the slot's last object */
   child->handle.subtype = 3;
   GoolObjectInit(child, exec, subtype, argc, argv);
   zone = child->zone ? child->zone : cur_zone;
@@ -944,6 +946,36 @@ void GoolObjectLocalBound(gool_object *obj, vec *scale) {
   obj->scale = *scale;
 }
 
+/* pc: the object's slot in the tween pose table (pc/tween.h) */
+int GoolObjectTweenSlot(gool_object *obj) {
+  if (obj == player) { return GOOL_OBJECT_COUNT; }
+  return obj - objects;
+}
+
+/* pc: where the object is drawn */
+void GoolObjectPose(gool_object *obj, tween_pose *pose) {
+  pose->trans = obj->trans;
+  pose->rot = obj->rot;
+  pose->scale = obj->scale;
+}
+
+static void GoolRecordObjectPose(gool_object *obj) {
+  tween_pose pose;
+
+  if (obj->handle.subtype != 3) { return; }
+  GoolObjectPose(obj, &pose);
+  TweenRecord(GoolObjectTweenSlot(obj), &pose);
+}
+
+/* pc: keep where every object is, before the game frame moves them, to tween from */
+static void GoolRecordObjectPoses() {
+  int i;
+
+  GoolRecordObjectPose(player);
+  for (i=0;i<GOOL_OBJECT_COUNT;i++)
+    GoolRecordObjectPose(&objects[i]);
+}
+
 //----- (8001D5EC) --------------------------------------------------------
 void GoolUpdateObjects(int flag) {
   gool_handle *handle;
@@ -953,6 +985,7 @@ void GoolUpdateObjects(int flag) {
   draw_count_ro = draw_count;
   frames_elapsed = context.draw_stamp / 34;
   if (!crash) { return; }
+  GoolRecordObjectPoses(); /* pc */
   for (i=0;i<8;i++) {
     handle = &handles[i];
     GoolObjectHandleTraverseTreePreorder(
