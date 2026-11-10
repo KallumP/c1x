@@ -1,6 +1,6 @@
 .app {
   display: grid;
-  grid-template: "toolbar toolbar toolbar" auto "palette viewport panel" 1fr / 150px 1fr auto;
+  grid-template: "toolbar toolbar toolbar" auto "palette viewport panel" 1fr / 190px 1fr auto;
   height: 100%;
 }
 

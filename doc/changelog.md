@@ -4,21 +4,8 @@
 
 ### Added
 
-- custom levels can have Up the Creek's biting river plants and its leaping fish
-- custom levels can have Temple Ruins' bats, which swoop down at Crash from wherever the level sends them
-- custom levels can have Sunset Vista's bats, which fly past in flocks until Crash spins both their leaders, wherever the level puts them
+- custom levels can have more enemies from the original game
 - custom levels can set how often bats come
-- custom levels can have The Lost City's lizards: a green one that leaps back and forth, and a red one that hops after Crash
-- custom levels can have The Lost City's spiky walking lizard, which paces back and forth
-- custom levels can have Stormy Ascent's lab assistant, who throws flaming vials wherever the level aims them
-- custom levels can have Temple Ruins' cobras, which rise to strike at Crash as he passes
-- custom levels can have Heavy Machinery's robot dogs, which patrol back and forth along Crash's way
-- custom levels can have Toxic Waste's barrel roller, who rolls barrels down Crash's way
-- custom levels can have Castle Machinery's spiked camera robots, which hover up and down
-- custom levels can have Slippery Climb's vultures, which swoop up and down
-- custom levels can have The Lab's electric scientist, sparks crackling at his hands
-- custom levels can have Cortex Power's gunman, who shoots at Crash
-- custom levels can have The Lab's slime blobs, which hop at Crash
 - the acid cave cut from the original game, playable as a custom level, and going on past where it was cut off: a crystal geode, a mushroom grotto, a river gorge and a collapsed temple
 - custom level maps keep their UVs and vertex colours
 
@@ -26,10 +13,7 @@
 
 ### Added
 
-- custom levels can have Jungle Rollers' badgers, which pop out of the ground and run at Crash, as many at once as you like
-- custom levels can have Road to Nowhere's warthog, which charges back and forth at Crash; jump over it
-- custom levels can have Fumbling in the Dark's spiders: one that drops from its thread, and walking ones that run at Crash
-- custom levels can have The Great Gate's monkey, which scurries across Crash's way and taunts him
+- custom levels can have more enemies from the original game
 - custom levels play Jungle Rollers' music
 - custom levels can set how far the camera is from Crash, and how far above him it looks down from
 
@@ -50,10 +34,8 @@
 
 ### Added
 
-- custom levels can have N. Sanity Beach's crab, which walks back and forth
-- custom levels can have N. Sanity Beach's turtle; jump on it to flip it, then stand on it
+- custom levels can have more enemies from the original game
 - the level editor draws plants, crabs and turtles as themselves instead of a cone and a block
-- custom levels can have The Great Gate's native, which walks out to block Crash with its shield; spin it from the side or behind
 - enemies walk paths you set in the level editor, and the editor warns about a path that leaves the floor or runs through a wall
 
 ### Fixed
@@ -66,8 +48,7 @@
 
 ### Added
 
-- custom levels can have enemies, starting with Jungle Rollers' biting plant, placed in the level editor
-- custom levels can have Jungle Rollers' rolling stone, which comes with its stone track and rolls back and forth along it
+- custom levels can have enemies
 
 ### Fixed
 
