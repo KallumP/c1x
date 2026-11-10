@@ -57,6 +57,7 @@
   {"kind": "enemy", "type": "plant", "at": [3.844, 107, 1.615]},
   {"kind": "enemy", "type": "blue_river_plant", "at": [0.559, 88.55, -0.538]},
   {"kind": "enemy", "type": "leader_bats", "at": [14.903, 26.128, -1], "raise": 1.5, "path": [[-29.038, -0.099, 0]]},
+  {"kind": "enemy", "type": "blob", "at": [5.5, 10.5, 0.055]},
 
   {"kind": "end", "at": [-4.32, 108, 1.25], "raise": 0.3}
 ]
