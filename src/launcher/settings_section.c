@@ -175,6 +175,8 @@ static void DrawFields() {
     "Frames drawn a second. The game logic still runs at 30 fps, so it plays the same.");
   DrawOnOff("FPS display", &settings.fps_display,
     "Show how many frames are drawn a second in the top right corner.");
+  DrawOnOff("Spin display", &settings.spin_display,
+    "Show how many spins Crash has left in the top right corner.");
   DrawBootLevel();
   EndFieldRows();
 }
