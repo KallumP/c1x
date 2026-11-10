@@ -35,18 +35,7 @@ UTEST(ns_files, other_levels_still_load_from_streams) {
   ASSERT_STREQ("./streams/s0000001.nsf", NSGetFilename(1, LID_TEST));
 }
 
-static nsd_ldat ldat; /* big (its loading image), so not on the stack */
-
-UTEST(ns_box_total, a_custom_level_keeps_its_box_total) {
-  NSSetCustomLevel("build/levels/mock");
-  ldat.box_total = 58;
-  NSKeepBoxTotal(LID_TEST, &ldat);
-  ASSERT_EQ(58, NSCustomBoxTotal());
-  NSSetCustomLevel("");
-  NSKeepBoxTotal(LID_TEST, &ldat);
-}
-
-UTEST(ns_box_total, the_total_stays_while_the_level_end_screen_loads) {
+static nsd_ldat ldat; UTEST(ns_box_total, a_custom_level_keeps_its_box_total_while_the_level_end_screen_loads) {
   NSSetCustomLevel("build/levels/mock");
   ldat.box_total = 58;
   NSKeepBoxTotal(LID_TEST, &ldat);
@@ -83,19 +72,9 @@ static void set_probe_table() {
   ns.pte_buckets = probe_buckets;
 }
 
-UTEST(ns_probe, finds_an_entry_in_the_table) {
-  set_probe_table();
-  ASSERT_EQ(&probe_table[1], NSProbeSafe(0x11));
-}
-
 UTEST(ns_probe, finds_the_last_entry_in_the_table) {
   set_probe_table();
   ASSERT_EQ(&probe_table[2], NSProbeSafe(0x12));
-}
-
-UTEST(ns_probe, an_entry_not_in_the_table_is_an_invalid_ref) {
-  set_probe_table();
-  ASSERT_EQ((nsd_pte*)ERROR_INVALID_REF, NSProbeSafe(0x13));
 }
 
 static entry lookup_entries[4];

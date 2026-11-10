@@ -11,7 +11,7 @@ UTEST(magnitude, squares_and_adds_three_scaled_down) {
 }
 
 /* a sound 75 m ahead of the camera, as the audio code scales it (/32): 240000 */
-UTEST(magnitude, a_far_off_sound_is_far_off) {
+UTEST(magnitude, a_sound_75_m_away_does_not_overflow) {
   ASSERT_EQ((uint32_t)(((int64_t)240000 * 240000) >> 13), SwSqrMagnitude2(0, 240000));
   ASSERT_EQ((uint32_t)(((int64_t)240000 * 240000 * 2) >> 20), SwSqrMagnitude3(0, 240000, 240000));
 }

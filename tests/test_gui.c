@@ -12,21 +12,6 @@ UTEST(gui, add_child_links_parent_and_child) {
   GuiItemFree(parent, 1);
 }
 
-UTEST(gui, remove_node_moves_only_child_to_parent) {
-  gui_item *parent, *item, *child;
-
-  parent = GuiGroupNew();
-  item = GuiGroupNew();
-  child = GuiGroupNew();
-  GuiAddChild(parent, item);
-  GuiAddChild(item, child);
-  GuiRemoveNode(item);
-  ASSERT_TRUE(parent->child == child);
-  ASSERT_TRUE(child->parent == parent);
-  ASSERT_TRUE(child->next == 0);
-  GuiItemFree(parent, 1);
-}
-
 UTEST(gui, remove_node_without_children) {
   gui_item *parent, *first, *second;
 

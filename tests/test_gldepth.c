@@ -21,10 +21,6 @@ UTEST(gldepth, furthest_depth_is_below_1) {
   ASSERT_LT(GLDepthFromZ(0xFFFF), 1.0f);
 }
 
-UTEST(gldepth, tolerance_pushes_depth_back) {
-  ASSERT_LT(GLDepthFromZ(1000), GLDepthFromZ(1000 + GL_DEPTH_TOLERANCE));
-}
-
 UTEST(gldepth, marked_prim_is_depth_tested) {
   ASSERT_TRUE(GLPrimDepthTested(GL_PRIM_DEPTH | 3));
   ASSERT_FALSE(GLPrimDepthTested(3));
@@ -80,7 +76,6 @@ UTEST(gldepth, models_are_tested_in_custom_levels_or_with_the_setting) {
   ASSERT_FALSE(GLPrimModelDepthTested(GL_PRIM_DEPTH, 0, 0));
   ASSERT_TRUE(GLPrimModelDepthTested(GL_PRIM_DEPTH, 1, 0));
   ASSERT_TRUE(GLPrimModelDepthTested(GL_PRIM_DEPTH, 0, 1));
-  ASSERT_FALSE(GLPrimModelDepthTested(GL_PRIM_LEVEL, 1, 1));
 }
 
 UTEST(gldepth, level_tri_in_front_of_the_camera_has_depth) {

@@ -15,9 +15,23 @@ UTEST(follow, moves_at_most_a_step_a_frame) {
   ASSERT_EQ(-FOLLOW_CAM_STEP_MAX, FollowCamOffset(0, -100 * FOLLOW_CAM_STEP_MAX));
 }
 
+#define CRASH_RUN_A_FRAME (140 << 8) /* about how far crash runs sideways a frame */
+
+/* how far the camera trails crash after he's run sideways for some frames */
+static int32_t TrailAfterRunning(int frames) {
+  int32_t offset = 0, crash_x = 0;
+  int i;
+
+  for (i=0;i<frames;i++) {
+    crash_x += CRASH_RUN_A_FRAME;
+    offset = FollowCamOffset(offset, crash_x);
+  }
+  return crash_x - offset;
+}
+
 UTEST(follow, keeps_up_with_crash_running_sideways) {
-  /* crash runs about 140 zone units (35840 game units) a frame */
-  ASSERT_GT(FOLLOW_CAM_STEP_MAX, 140 << 8);
+  /* it trails him by a steady distance, rather than falling ever further behind */
+  ASSERT_EQ(TrailAfterRunning(100), TrailAfterRunning(200));
 }
 
 UTEST(follow, reaches_the_target_in_the_end) {
@@ -51,11 +65,15 @@ UTEST(follow, starts_at_its_paths_height) {
   ASSERT_EQ(1000 + FOLLOW_CAM_HEIGHT, FollowCamHeight(FOLLOW_CAM_NO_HEIGHT, 1000, 1000 + FOLLOW_CAM_HEIGHT, FOLLOW_CAM_HEIGHT));
 }
 
-UTEST(follow, eases_towards_its_usual_height_above_crashs_floor) {
-  int32_t target = 6000 + FOLLOW_CAM_HEIGHT;
+UTEST(follow, eases_towards_its_height_above_crashs_floor) {
+  int32_t floor_y = 6000, path_y = 1000, height = 1000;
+  int32_t level_sets = FollowCamAbove(2632);
 
-  ASSERT_EQ(FollowCamOffset(1000, target), FollowCamHeight(1000, 6000, 1000, FOLLOW_CAM_HEIGHT));
-  ASSERT_EQ(target, FollowCamHeight(target, 6000, 1000, FOLLOW_CAM_HEIGHT));
+  ASSERT_EQ(FollowCamOffset(height, floor_y + FOLLOW_CAM_HEIGHT),
+    FollowCamHeight(height, floor_y, path_y, FOLLOW_CAM_HEIGHT));
+  ASSERT_EQ(FollowCamOffset(height, floor_y + level_sets),
+    FollowCamHeight(height, floor_y, path_y, level_sets));
+  ASSERT_EQ(floor_y + level_sets, FollowCamHeight(floor_y + level_sets, floor_y, path_y, level_sets));
 }
 
 UTEST(follow, keeps_its_height_when_its_paths_height_jumps) {
@@ -65,13 +83,6 @@ UTEST(follow, keeps_its_height_when_its_paths_height_jumps) {
   ASSERT_EQ(height, FollowCamHeight(height, 1000, 1000 + FOLLOW_CAM_HEIGHT, FOLLOW_CAM_HEIGHT));
   ASSERT_EQ(height, FollowCamHeight(height, 1000, 2000000 + FOLLOW_CAM_HEIGHT, FOLLOW_CAM_HEIGHT));
   ASSERT_EQ(height, FollowCamHeight(height, 1000, -2000000, FOLLOW_CAM_HEIGHT));
-}
-
-UTEST(follow, keeps_the_height_its_level_sets_above_crashs_floor) {
-  int32_t above = 2632 << 8;
-
-  ASSERT_EQ(6000 + above, FollowCamHeight(6000 + above, 6000, 1000, above));
-  ASSERT_EQ(FollowCamOffset(1000, 6000 + above), FollowCamHeight(1000, 6000, 1000, above));
 }
 
 UTEST(follow, its_height_above_crash_is_the_one_its_path_keeps_or_the_usual_one) {
