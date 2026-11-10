@@ -36,11 +36,12 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // and toxic waste's barrel roller FatsC subtype 0, rolling barrels (BaraC) down his path,
 // and cortex power's gunman MafiC subtype 0, shooting at crash,
 // and castle machinery's camera robot PoREC subtype 0, hovering back and forth along its path,
-// and slippery climb's bird, subtype 15 of its castle objects CasOC, flying back and forth along its path
+// and slippery climb's bird, subtype 15 of its castle objects CasOC, flying back and forth along its path,
+// and the lab's walking lab assistant, subtype 1 of its LabAC, in slot 24 (see MOVED_ENEMY_CODE)
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   plant: [25, 0], snake: [26, 1], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
-  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12], lizard: [47, 1], red_lizard: [47, 2], walking_lizard: [46, 5], lab_assistant: [54, 0], robot_dog: [9, 0], barrel_roller: [17, 0], gunman: [12, 0], camera_robot: [10, 0], bird: [53, 15],
+  blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12], lizard: [47, 1], red_lizard: [47, 2], walking_lizard: [46, 5], lab_assistant: [54, 0], robot_dog: [9, 0], barrel_roller: [17, 0], gunman: [12, 0], camera_robot: [10, 0], bird: [53, 15], electric_scientist: [24, 1],
 };
 // enemies whose code goes in another exec slot in custom levels than in their
 // level, under another name, as jungle rollers' own code has its slot and name:
