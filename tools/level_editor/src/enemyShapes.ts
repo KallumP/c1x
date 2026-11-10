@@ -38,6 +38,7 @@ const LAB_ASSISTANT_COLOURS = { coat: "#e6e8ee", trousers: "#3a3f55", shoe: "#1f
 const BAT_COLOURS = { body: "#3a2c34", wing: "#5a3a3e", ear: "#2a1e26", eye: "#f2d36b" };
 const GUNMAN_COLOURS = { coat: "#1f2236", shirt: "#e8e4dc", tie: "#b8283a", skin: "#c8a070", hat: "#6b3a1c", eye: "#1a1a1a", gun: "#b8bcc4" };
 const BARREL_ROLLER_COLOURS = { suit: "#2e2f36", shirt: "#e8e4dc", tie: "#c86a8a", skin: "#d9a87e", hat: "#6b2a1c", eye: "#1a1a1a" };
+const CAMERA_ROBOT_COLOURS = { body: "#4a4c55", light: "#c8302a", spike: "#d8dce4", stalk: "#2c2d33" };
 const BARREL_COLOURS = { wood: "#a0712e", hoop: "#4a3a2a" };
 const ROBOT_DOG_COLOURS = { body: "#5a5c66", shell: "#3a3b42", leg: "#2c2d33", eye: "#f2e21a" };
 const COBRA_COLOURS = { scale: "#2f5fa8", belly: "#d8c08a", eye: "#c8302a", fang: "#f4f1e0" };
@@ -396,6 +397,22 @@ function barrel(): ShapePart[] {
   ];
 }
 
+// castle machinery's camera robot (PRE1G): a dark grey ball, a ring of red lights
+// and spikes round its middle, and a periscope stalk on top
+function cameraRobot(): ShapePart[] {
+  const light = (x: number, z: number) => ball(28, [x, 190, z], CAMERA_ROBOT_COLOURS.light);
+  return [
+    ball(1, [0, 190, 0], CAMERA_ROBOT_COLOURS.body, { stretch: [230, 190, 230] }),
+    ...[[215, 0], [-215, 0], [0, 215], [0, -215]].map(([x, z]) => light(x, z)),
+    ball(1, [285, 190, 0], CAMERA_ROBOT_COLOURS.spike, { stretch: [60, 18, 18] }),
+    ball(1, [-285, 190, 0], CAMERA_ROBOT_COLOURS.spike, { stretch: [60, 18, 18] }),
+    ball(1, [0, 190, 285], CAMERA_ROBOT_COLOURS.spike, { stretch: [18, 18, 60] }),
+    ball(1, [0, 190, -285], CAMERA_ROBOT_COLOURS.spike, { stretch: [18, 18, 60] }),
+    rod(25, 25, 120, [0, 400, 0], CAMERA_ROBOT_COLOURS.stalk),
+    ball(1, [0, 449, 25], CAMERA_ROBOT_COLOURS.stalk, { stretch: [30, 20, 45] }),
+  ];
+}
+
 // one of the robot dog's sides: a front and a back leg, splayed out, and an eye
 function robotDogSide(): ShapePart[] {
   return [
@@ -710,13 +727,13 @@ const RIVER_PLANT_HEIGHT = 400;
 
 const GAME_HEIGHTS: Record<StandingEnemy, number> = {
   plant: 720, snake: 558, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
-  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, walking_lizard: 419, lab_assistant: 1203, robot_dog: 557, barrel_roller: 1069, gunman: 1181,
+  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, walking_lizard: 419, lab_assistant: 1203, robot_dog: 557, barrel_roller: 1069, gunman: 1181, camera_robot: 469,
 };
 
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
   plant, snake: cobra, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
   blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
-  lizard, red_lizard: redLizard, walking_lizard: walkingLizard, lab_assistant: labAssistant, robot_dog: robotDog, barrel_roller: barrelRoller, gunman,
+  lizard, red_lizard: redLizard, walking_lizard: walkingLizard, lab_assistant: labAssistant, robot_dog: robotDog, barrel_roller: barrelRoller, gunman, camera_robot: cameraRobot,
 };
 
 // each standing enemy's shape, on the floor, as tall as the game's model

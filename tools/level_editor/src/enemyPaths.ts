@@ -1,6 +1,6 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
-import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, cameraFacing, labAssistantThrow, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, ROBOT_DOG_WALK, WALKING_LIZARD_PACE, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, CAMERA_ROBOT_RISE, cameraFacing, labAssistantThrow, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, rising, ROBOT_DOG_WALK, WALKING_LIZARD_PACE, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
 import { LAB_ASSISTANT_REACH } from "./labAssistantThrow";
 import { hasOneNode, PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
@@ -30,6 +30,7 @@ interface PathEnemyRun {
   length: number;
   way: (turn: number) => Vec3;
   step: number;
+  fromSpot?: boolean; // whether its default path starts at its spot (rather than having its middle there)
 }
 
 // crabs, natives, monkeys and lizards go across the map, as their levels have them; turtles and
@@ -48,6 +49,7 @@ const PATH_ENEMY_RUNS: Record<PathEnemy, PathEnemyRun> = {
   walking_lizard: { length: WALKING_LIZARD_PACE, way: stoneRolling, step: 400 }, // the lost city's walking lizards' points
   robot_dog: { length: ROBOT_DOG_WALK, way: cameraFacing, step: 400 },       // heavy machinery's robot dogs' points, mostly
   barrel_roller: { length: BARREL_ROLL, way: towardsSpawn, step: 400 },       // toxic waste's barrel rollers' points
+  camera_robot: { length: CAMERA_ROBOT_RISE, way: rising, step: 75, fromSpot: true }, // castle machinery's camera robots' points, on average
 };
 
 // how far apart a path's points are in the game for an enemy, at its own speed
@@ -56,9 +58,12 @@ export const pathStep = (enemy: PathEnemy) => PATH_ENEMY_RUNS[enemy].step;
 // a path enemy's path without one of its own: its own level's length,
 // straight, its middle where it stands, in equal steps
 export function defaultPath(enemy: PathEnemy, turn: number, scale: number): Vec3[] {
-  const { length, way } = PATH_ENEMY_RUNS[enemy];
-  const half = scaled(way(turn), length / 2 / scale);
-  return straightNodes(scaled(half, -1), half, DEFAULT_PATH_NODES);
+  const { length, way, fromSpot } = PATH_ENEMY_RUNS[enemy];
+  const whole = scaled(way(turn), length / scale);
+  if (fromSpot) {
+    return straightNodes([0, 0, 0], whole, DEFAULT_PATH_NODES);
+  }
+  return straightNodes(scaled(whole, -0.5), scaled(whole, 0.5), DEFAULT_PATH_NODES);
 }
 
 // an enemy's nodes without a path of its own: leader bats' second leader

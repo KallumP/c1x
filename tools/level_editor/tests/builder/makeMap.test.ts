@@ -63,6 +63,7 @@ const hasTempleRuins = existsSync(`${STREAMS}/s000001c.nsd`); // temple ruins (0
 const hasHeavyMachinery = existsSync(`${STREAMS}/s0000006.nsd`); // heavy machinery (0x6)
 const hasToxicWaste = existsSync(`${STREAMS}/s0000007.nsd`); // toxic waste (0x7)
 const hasCortexPower = existsSync(`${STREAMS}/s0000003.nsd`); // cortex power (0x3)
+const hasCastleMachinery = existsSync(`${STREAMS}/s0000037.nsd`); // castle machinery (0x37)
 
 const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
 
@@ -865,6 +866,25 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(placed.path[0][2]).toBeLessThan(placed.path.at(-1)![2]); // the spawn is the +z way
       expectNear((placed.path[0][2] + placed.path.at(-1)![2]) / 2, SPOT_Z, 8);
       stepLengths(placed.path).forEach((step) => expectNear(step, TOXIC_WASTE_STEP, 8));
+    });
+  });
+
+  describe.skipIf(!hasCastleMachinery)("camera robots, from castle machinery", () => {
+    test("a level with a camera robot has castle machinery's camera robot code, model, animations and sounds", () => {
+      const { level, entries } = build([enemy("camera_robot")]);
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.camera_robot[0]]).toBe(stringToEid("PoREC"));
+      expect(["PRE1G", "PREAV", "PRESV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(soundEidsOf(level)).toEqual(expect.arrayContaining(["R1H6A"].map(stringToEid)));
+    });
+
+    test("by default a camera robot rises 1200 (3 m at scale 400) from its spot, in castle machinery's steps", () => {
+      // 1200 game units, whatever the scale
+      const [placed] = enemies(build([enemy("camera_robot")]).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.camera_robot);
+      placed.path.forEach(([x, , z]) => expectNear([x, z], [SPOT_X, SPOT_Z], 8));
+      expectNear(placed.path[0][1], FLOOR_Y, 8);
+      expectNear(placed.path.at(-1)![1], FLOOR_Y + 1200, 8);
+      stepLengths(placed.path).forEach((step) => expectNear(step, 75, 8));
     });
   });
 

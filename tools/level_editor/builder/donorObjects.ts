@@ -33,6 +33,7 @@ const TEMPLE_RUINS: DonorLevel = { lid: 0x1c, name: "Temple Ruins", file: "s0000
 const HEAVY_MACHINERY: DonorLevel = { lid: 0x6, name: "Heavy Machinery", file: "s0000006" };
 const TOXIC_WASTE: DonorLevel = { lid: 0x7, name: "Toxic Waste", file: "s0000007" };
 const CORTEX_POWER: DonorLevel = { lid: 0x3, name: "Cortex Power", file: "s0000003" };
+const CASTLE_MACHINERY: DonorLevel = { lid: 0x37, name: "Castle Machinery", file: "s0000037" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -56,6 +57,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   robot_dog: HEAVY_MACHINERY,
   barrel_roller: TOXIC_WASTE,
   gunman: CORTEX_POWER,
+  camera_robot: CASTLE_MACHINERY,
 };
 
 export interface DonorObject {

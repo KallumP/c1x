@@ -14,6 +14,7 @@
 - custom levels can have Temple Ruins' cobras, which rise to strike at Crash as he passes
 - custom levels can have Heavy Machinery's robot dogs, which patrol back and forth along Crash's way
 - custom levels can have Toxic Waste's barrel roller, who rolls barrels down Crash's way
+- custom levels can have Castle Machinery's spiked camera robots, which hover up and down
 - custom levels can have Cortex Power's gunman, who shoots at Crash
 - the acid cave cut from the original game, playable as a custom level, and going on past where it was cut off: a crystal geode, a mushroom grotto, a river gorge and a collapsed temple
 - custom level maps keep their UVs and vertex colours
