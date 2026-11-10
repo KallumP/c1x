@@ -35,6 +35,7 @@ const LIZARD_SKINS = { lizard: "#6f9a32", red_lizard: "#b0402e" };
 const LIZARD_COLOURS = { belly: "#d8c27a", claw: "#e8e0c8", eye: "#f2d36b", pupil: "#1a1a1a" };
 const LAB_ASSISTANT_COLOURS = { coat: "#e6e8ee", trousers: "#3a3f55", shoe: "#1f1f24", skin: "#e0b48c", eye: "#1a1a1a", vial: "#d0409a" };
 const BAT_COLOURS = { body: "#3a2c34", wing: "#5a3a3e", ear: "#2a1e26", eye: "#f2d36b" };
+const GUNMAN_COLOURS = { coat: "#1f2236", shirt: "#e8e4dc", tie: "#b8283a", skin: "#c8a070", hat: "#6b3a1c", eye: "#1a1a1a", gun: "#b8bcc4" };
 const BARREL_ROLLER_COLOURS = { suit: "#2e2f36", shirt: "#e8e4dc", tie: "#c86a8a", skin: "#d9a87e", hat: "#6b2a1c", eye: "#1a1a1a" };
 const BARREL_COLOURS = { wood: "#a0712e", hoop: "#4a3a2a" };
 const ROBOT_DOG_COLOURS = { body: "#5a5c66", shell: "#3a3b42", leg: "#2c2d33", eye: "#f2e21a" };
@@ -307,6 +308,31 @@ function cobra(): ShapePart[] {
     ball(1, [0, 430, 30], COBRA_COLOURS.scale, { stretch: [85, 110, 22] }),
     ball(1, [0, 330, 45], COBRA_COLOURS.belly, { stretch: [40, 100, 10] }),
     ...cobraHead(),
+  ];
+}
+
+// one of the gunman's sides: an arm raised, its hand holding a pistol up, an eye
+function gunmanSide(): ShapePart[] {
+  return [
+    rod(30, 35, 280, [150, 900, 20], GUNMAN_COLOURS.coat, { turn: [0, 0, -0.35] }),
+    ball(30, [215, 1030, 30], GUNMAN_COLOURS.skin),
+    rod(15, 15, 180, [230, 1120, 30], GUNMAN_COLOURS.gun),
+    ball(14, [30, 1060, 80], GUNMAN_COLOURS.eye, { name: "eye" }),
+  ];
+}
+
+// cortex power's gunman: a slim gangster in a long dark coat and a hat, a
+// pistol raised in each hand, facing +z
+function gunman(): ShapePart[] {
+  return [
+    ...bothSides(gunmanSide()),
+    rod(70, 190, 700, [0, 350, 0], GUNMAN_COLOURS.coat),
+    rod(110, 90, 300, [0, 800, 0], GUNMAN_COLOURS.coat),
+    ball(1, [0, 830, 95], GUNMAN_COLOURS.shirt, { stretch: [45, 120, 15] }),
+    rod(18, 10, 200, [0, 820, 108], GUNMAN_COLOURS.tie),
+    ball(85, [0, 1040, 10], GUNMAN_COLOURS.skin, { name: "head" }),
+    rod(120, 120, 20, [0, 1120, 10], GUNMAN_COLOURS.hat),
+    rod(75, 75, 80, [0, 1170, 10], GUNMAN_COLOURS.hat),
   ];
 }
 
@@ -649,7 +675,8 @@ export function standingOnFloor(parts: ShapePart[]): ShapePart[] {
 // and fish (RF1fG, its first frame in RF1fV), and temple ruins' cobra (JuPsG,
 // its first frame in JupsV, standing), and heavy machinery's robot dog (PRS1G,
 // its first frame in PRSSV, at the 0.75 scale its init flag b gives it), and toxic
-// waste's barrel roller (Fat1G, its first frame in FaS1V), each vertex times 4, times its
+// waste's barrel roller (Fat1G, its first frame in FaS1V), and cortex power's gunman
+// (SlimG, standing in SliMV), each vertex times 4, times its
 // tgeo's scale / 4096
 // a river plant's height: its first frame in the game (RV1fV) rears its back
 // petal up 602, but the editor's lies lower, so it's as tall as makes it as wide
@@ -664,7 +691,7 @@ const GAME_HEIGHTS: Record<StandingEnemy, number> = {
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
   plant, snake: cobra, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
   blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
-  lizard, red_lizard: redLizard, lab_assistant: labAssistant, robot_dog: robotDog, barrel_roller: barrelRoller, gunman: labAssistant,
+  lizard, red_lizard: redLizard, lab_assistant: labAssistant, robot_dog: robotDog, barrel_roller: barrelRoller, gunman,
 };
 
 // each standing enemy's shape, on the floor, as tall as the game's model
