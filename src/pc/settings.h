@@ -6,6 +6,8 @@
 #define SETTINGS_LOADING_SCREEN_MAX_MS 60000
 #define SETTINGS_REPLAY_SPEED_MAX      16
 #define SETTINGS_BOOT_LEVEL_MAX        31
+#define SETTINGS_FRAME_RATE_MIN        30 /* the game's own frame rate: nothing drawn between game frames */
+#define SETTINGS_FRAME_RATE_MAX        240
 #define LEVELS_DIR "levels" /* next to the executable; built levels to boot into, by name */
 
 /* game settings (pc), read from settings.cfg */
@@ -17,6 +19,7 @@ typedef struct {
   int fix_model_draw_order;       /* depth test 3d models against each other */
   int replay_inputs;              /* replay the newest recording instead of recording */
   uint32_t replay_speed;          /* times normal speed, 0 = as fast as possible */
+  uint32_t frame_rate;            /* frames drawn a second; the game itself runs at 30 */
   char boot_level[SETTINGS_BOOT_LEVEL_MAX+1]; /* custom level to boot into, or "" */
 } pc_settings;
 

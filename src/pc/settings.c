@@ -13,6 +13,7 @@ pc_settings game_settings = {
   .fix_model_draw_order = 0,
   .replay_inputs = 0,
   .replay_speed = 1,
+  .frame_rate = 60,
   .boot_level = ""
 };
 
@@ -25,6 +26,7 @@ void SettingsReset(pc_settings *s) {
   s->fix_model_draw_order = 0;
   s->replay_inputs = 0;
   s->replay_speed = 1;
+  s->frame_rate = 60;
   s->boot_level[0] = 0;
 }
 
@@ -64,6 +66,16 @@ static int SettingsParseNumber(const char *value, uint32_t max, uint32_t *num) {
   return 1;
 }
 
+/* parse a number from min to max into num; returns 0 if it isn't one */
+static int SettingsParseNumberFrom(const char *value, uint32_t min, uint32_t max,
+                                   uint32_t *num) {
+  uint32_t n;
+
+  if (!SettingsParseNumber(value, max, &n) || n < min) { return 0; }
+  *num = n;
+  return 1;
+}
+
 /* apply one setting; returns 1, or -1 if the name or value is invalid */
 static int SettingsApply(const char *name, const char *value, pc_settings *s) {
   if (SDL_strcasecmp(name, "loading_screen") == 0)
@@ -82,6 +94,9 @@ static int SettingsApply(const char *name, const char *value, pc_settings *s) {
   if (SDL_strcasecmp(name, "replay_speed") == 0)
     return SettingsParseNumber(value, SETTINGS_REPLAY_SPEED_MAX,
       &s->replay_speed) ? 1 : -1;
+  if (SDL_strcasecmp(name, "frame_rate") == 0)
+    return SettingsParseNumberFrom(value, SETTINGS_FRAME_RATE_MIN,
+      SETTINGS_FRAME_RATE_MAX, &s->frame_rate) ? 1 : -1;
   if (SDL_strcasecmp(name, "boot_level") == 0)
     return SettingsParseLevelName(value, s->boot_level) ? 1 : -1;
   return -1;
