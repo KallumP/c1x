@@ -295,6 +295,71 @@ describe("gunmen's code from cortex power", () => {
   });
 });
 
+const LIZARD = stringToEid("LizaC");
+const LIZARD_SLOT = 47;
+const LIZARD_LENGTH = 0x20c; // the lost city's lizard code's instructions
+const GREEN_SETS_X = 0x55; // where a green lizard's leap sets its x for the frame
+const RED_SETS_X = 0xa6; // and a red lizard's hop
+const MOVE_TO_X = 0x11e1fe08; // MOVE pop(), obj[0x80]
+
+// lizard code as the lost city's: other instructions (1s), with its leaps' and hops' x at their places
+function lizardCode(length = LIZARD_LENGTH): number[] {
+  const code = Array<number>(length).fill(1);
+  code[GREEN_SETS_X] = MOVE_TO_X;
+  code[RED_SETS_X] = MOVE_TO_X;
+  return code;
+}
+
+// whether an instruction is a branch (BRA), going 512 either way
+const isBranch = (instruction: number) => ((instruction & ~0x3ff) >>> 0) === 0x82094000;
+
+// where a branch (BRA) at at goes
+function branchTarget(at: number, instruction: number): number {
+  expect(isBranch(instruction)).toBe(true);
+  const offset = instruction & 0x3ff;
+  if (offset >= 0x200) {
+    return at + 1 + offset - 0x400;
+  }
+  return at + 1 + offset;
+}
+
+// the instructions a branch at at goes to, up to and including the branch back
+function branchedTo(code: number[], at: number): { block: number[]; back: number } {
+  const start = branchTarget(at, code[at]);
+  const end = code.findIndex((instruction, index) => index >= start && isBranch(instruction));
+  return { block: code.slice(start, end), back: branchTarget(end, code[end]) };
+}
+
+describe.each(["lizard", "red_lizard"] as const)("lizards' code from the lost city (%s)", (type) => {
+  const code = () => codeOf(enemyDonorObjects(new Map([[type, oneCodeLevel(0x20, LIZARD_SLOT, LIZARD, lizardCode())]])), LIZARD);
+
+  test("a green lizard's leap moves its z along its path as it does its x, and the line it keeps near with it", () => {
+    // x then z: start z (0x10($fp)) + (target z (0x1c) - start z) × the leap's frame (0x20) / its frames;
+    // then its line (obj[0x188]), which its z keeps within 1 m of, there too
+    const { block, back } = branchedTo(code(), GREEN_SETS_X);
+    expect(block).toEqual([MOVE_TO_X, 0x01b04b07, 0x1500cb08, 0x02e1fe1f, 0x0300de1f, 0x00e1fb04, 0x11e1fe0a, 0x11e0ae4a]);
+    expect(back).toBe(GREEN_SETS_X + 1);
+  });
+
+  test("a red lizard's hop moves the line it keeps near along its path as it does its x", () => {
+    // its z keeps within 1 m of its line (obj[0x188]), drifting towards crash's: the same, 4 bytes on, into its line
+    const { block, back } = branchedTo(code(), RED_SETS_X);
+    expect(block).toEqual([MOVE_TO_X, 0x01b05b08, 0x1500cb09, 0x02e1fe1f, 0x0300de1f, 0x00e1fb05, 0x11e1fe4a]);
+    expect(back).toBe(RED_SETS_X + 1);
+  });
+
+  test("the rest of a lizard's code is as it was", () => {
+    const patched = code();
+    expect(patched.slice(0, LIZARD_LENGTH).filter((_, index) => index !== GREEN_SETS_X && index !== RED_SETS_X)).toEqual(
+      lizardCode().filter((_, index) => index !== GREEN_SETS_X && index !== RED_SETS_X));
+  });
+
+  test("lizard code of another length is an error", () => {
+    const level = oneCodeLevel(0x20, LIZARD_SLOT, LIZARD, lizardCode(LIZARD_LENGTH + 1));
+    expect(() => enemyDonorObjects(new Map([[type, level]]))).toThrow(/lizard/);
+  });
+});
+
 const LAB_ASSISTANT = stringToEid("LabAC");
 const LAB_ASSISTANT_SLOT = 54;
 const THROW_SETUP = 0x202; // where stormy ascent's lab assistant code sets up its throw
