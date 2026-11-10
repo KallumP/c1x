@@ -172,9 +172,9 @@ static void DrawFields() {
     "How many times normal speed replays play at, or 0 for as fast as possible.");
   DrawSlider("Frame rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
     SETTINGS_FRAME_RATE_MAX,
-    "Frames drawn a second. The game still runs at 30, so it plays the same.");
+    "Frames drawn a second. The game logic still runs at 30 fps, so it plays the same.");
   DrawOnOff("FPS display", &settings.fps_display,
-    "Show how many frames are drawn a second in the top right corner. The game logic still runs at 30.");
+    "Show how many frames are drawn a second in the top right corner.");
   DrawBootLevel();
   EndFieldRows();
 }
