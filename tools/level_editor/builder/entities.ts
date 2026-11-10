@@ -18,7 +18,9 @@ export const CRASH: [number, number] = [0, 0];
 export const WARP_PAD: [number, number] = [32, 1]; // WarpC: the warp pad that ends a level, as on n. sanity beach
 export const BOX_TYPE = 34;      // BoxsC: boxes, by subtype
 export const BOX_HEIGHT = 400;   // a box on top of another is this much higher (GoolObjectSpawn in src/gool.c)
-// each enemy's entity type (its exec map slot) and subtype: the plant PlanC, the
+// each enemy's entity type (its exec map slot) and subtype: the plant PlanC (subtype
+// 1 the hidden plant, as in temple ruins, coming up out of the ground when crash
+// comes near), the
 // rolling stone JunOC, the crab CrabC, the turtle TurtC, the native SheNC, and
 // the badger PillC (an invisible spawner that sends badgers along its path), the
 // warthog WartC, and the spiders SpidC: subtype 1 drops from its thread, subtype
@@ -32,7 +34,7 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // back and forth along its path, subtype 2 red, hopping along it after crash,
 // and stormy ascent's lab assistant LabAC subtype 0, throwing vials across the map
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
-  plant: [25, 0], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
+  plant: [25, 0], hidden_plant: [25, 1], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
   blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12], lizard: [47, 1], red_lizard: [47, 2], lab_assistant: [54, 0],
 };
