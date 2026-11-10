@@ -21,7 +21,7 @@ describe("enemy shapes", () => {
   // the sizes of the game's models: jungle rollers' JuPcG and Pi10V, n. sanity beach's Cr19G and
   // Tu19G, the great gate's Na1iV and Mo1fG, road to nowhere's WarHV, fumbling in the dark's Sp1sV,
   // up the creek's RV1fV and RF1fV, temple ruins' Ba1sG, sunset vista's Ba2wG, the lost city's
-  // LizgG and LizrG, stormy ascent's LW1EG, temple ruins' cobra JuPsG (its first frame in JupsV), heavy machinery's robot dog PRS1G (its first frame in PRSSV, at its 0.75 scale), toxic waste's barrel roller Fat1G (its first frame in FaS1V, without the barrel he holds out), cortex power's gunman SlimG (standing, SliMV), and the lost city's walking lizard Ig1wG (its first frame in Ig1wV); a bat's spot is above its lowest point, as the game's
+  // LizgG and LizrG, stormy ascent's LW1EG, temple ruins' cobra JuPsG (its first frame in JupsV), heavy machinery's robot dog PRS1G (its first frame in PRSSV, at its 0.75 scale), toxic waste's barrel roller Fat1G (its first frame in FaS1V, without the barrel he holds out), cortex power's gunman SlimG (standing, SliMV), the lost city's walking lizard Ig1wG (its first frame in Ig1wV), and castle machinery's camera robot PRE1G (its spikes too, its first frame in PRESV); a bat's spot is above its lowest point, as the game's
   // (a river plant's petals are lower than the game's first frame rears its back one, 602)
   test.each<ShapeSize>([
     { enemy: "plant", bottom: 0, top: 720, across: [760, 900] },
@@ -44,6 +44,7 @@ describe("enemy shapes", () => {
     { enemy: "barrel_roller", bottom: 0, top: 1069, across: [850, 1100], long: [550, 760] },
     { enemy: "gunman", bottom: 0, top: 1181, across: [450, 560], long: [360, 470] },
     { enemy: "walking_lizard", bottom: 0, top: 419, across: [600, 720], long: [1150, 1340] },
+    { enemy: "camera_robot", bottom: 0, top: 469, across: [640, 730], long: [640, 730] },
   ])("the $enemy is as big as the game's, the same both sides", ({ enemy, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(ENEMY_SHAPES[enemy]);
     expect(min[1]).toBeCloseTo(bottom);
