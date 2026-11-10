@@ -418,6 +418,30 @@ describe("badger counts", () => {
   });
 });
 
+describe("gunmen's ranges", () => {
+  const gunman = () => enemyObject("gunman", { at: [1, 2, 0] });
+
+  test("a gunman can have a range", () => {
+    // how near crash comes, in metres, before he starts shooting
+    expect(parseObjects('[{"kind": "enemy", "type": "gunman", "at": [0, 0, 0], "range": 24.5}]')[0].range).toBe(24.5);
+  });
+
+  test("a default range is left out when written", () => {
+    // cortex power's gunmen's: 16 metres
+    expect(numberSetting(gunman(), "range")).toBe(16);
+    expect(formatObjects([{ ...gunman(), range: 16 }])).toContain('"at": [1, 2, 0]}');
+    expect(formatObjects([{ ...gunman(), range: 30 }])).toContain('"range": 30}');
+  });
+
+  test.each([
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "range": 20}]', "object 1: a plant has no range (gunmen do)"],
+    ['[{"kind": "enemy", "type": "gunman", "at": [0, 0, 0], "range": 1}]', "object 1: range should be 2 to 40 (how near crash comes, in metres, before he shoots)"],
+    ['[{"kind": "enemy", "type": "gunman", "at": [0, 0, 0], "range": 41}]', "object 1: range should be 2 to 40"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+});
+
 describe("bat roosts' delays", () => {
   const roost = (enemy: "bat" | "leader_bats") => enemyObject(enemy, { at: [1, 2, 0] });
 
