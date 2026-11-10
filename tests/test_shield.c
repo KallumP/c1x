@@ -44,8 +44,10 @@ UTEST(shield, a_native_on_a_path_along_x_pushes_crash_away_along_x) {
   way_plus = ShieldPushWay(&native, &(vec){ 300, 0, 50 }, &start, &end);
   way_minus = ShieldPushWay(&native, &(vec){ -300, 0, 50 }, &start, &end);
 
-  ASSERT_TRUE(way_plus.x > 0 && way_plus.z == 0);
-  ASSERT_TRUE(way_minus.x < 0 && way_minus.z == 0);
+  ASSERT_GT(way_plus.x, 0);
+  ASSERT_EQ(0, way_plus.z);
+  ASSERT_LT(way_minus.x, 0);
+  ASSERT_EQ(0, way_minus.z);
 }
 
 UTEST(shield, a_native_on_a_path_along_z_pushes_crash_away_along_z_from_either_side) {
@@ -55,20 +57,24 @@ UTEST(shield, a_native_on_a_path_along_z_pushes_crash_away_along_z_from_either_s
   ahead = ShieldPushWay(&native, &(vec){ 50, 0, 300 }, &start, &end);
   behind = ShieldPushWay(&native, &(vec){ 50, 0, -300 }, &start, &end);
 
-  ASSERT_TRUE(ahead.z > 0 && ahead.x == 0);
-  ASSERT_TRUE(behind.z < 0 && behind.x == 0);
+  ASSERT_GT(ahead.z, 0);
+  ASSERT_EQ(0, ahead.x);
+  ASSERT_LT(behind.z, 0);
+  ASSERT_EQ(0, behind.x);
 }
 
 UTEST(shield, a_native_on_a_slanted_path_pushes_crash_along_it) {
   vec native = at(0, 0, 0), start = at(-1000, 0, -1000), end = at(1000, 0, 1000);
   vec way = ShieldPushWay(&native, &(vec){ 300, 0, 200 }, &start, &end);
 
-  ASSERT_TRUE(way.x > 0 && way.x == way.z);
+  ASSERT_GT(way.x, 0);
+  ASSERT_EQ(way.x, way.z);
 }
 
 UTEST(shield, a_native_whose_path_has_no_length_pushes_along_x) {
   vec native = at(0, 0, 0), spot = at(0, 0, 0);
   vec way = ShieldPushWay(&native, &(vec){ -300, 0, 900 }, &spot, &spot);
 
-  ASSERT_TRUE(way.x < 0 && way.z == 0);
+  ASSERT_LT(way.x, 0);
+  ASSERT_EQ(0, way.z);
 }
