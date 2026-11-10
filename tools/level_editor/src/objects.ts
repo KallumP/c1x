@@ -38,6 +38,7 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - warthog: road to nowhere's, charging once crash comes near
 // - lizard: the lost city's green lizard, leaping back and forth along its path
 // - red_lizard: the lost city's red lizard, hopping along its path after crash
+// - robot_dog: heavy machinery's grey robot dog, along the route
 // running out along their path, count at a time, when crash comes near:
 // - badger: jungle rollers'
 // - walking_spider: fumbling in the dark's
@@ -45,13 +46,13 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - leader_bats: sunset vista's, from a roost, flying across between two leader bats: kill both and they stop
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track
-export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake", "fish", "lab_assistant", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
+export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake", "fish", "lab_assistant", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "robot_dog", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
 
 // the enemies that move along a path of nodes, and how many nodes it can have
-export const PATH_ENEMIES = ["crab", "turtle", "native", "badger", "warthog", "walking_spider", "monkey", "lizard", "red_lizard"] as const satisfies readonly EnemyType[];
+export const PATH_ENEMIES = ["crab", "turtle", "native", "badger", "warthog", "walking_spider", "monkey", "lizard", "red_lizard", "robot_dog"] as const satisfies readonly EnemyType[];
 export type PathEnemy = (typeof PATH_ENEMIES)[number];
 export const isPathEnemy = (type: EnemyType | undefined): type is PathEnemy => PATH_ENEMIES.some((enemy) => enemy === type);
 export const PATH_NODES_MAX = 20;

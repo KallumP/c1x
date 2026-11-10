@@ -261,6 +261,11 @@ export const WALKING_SPIDER_RUN = 3200;
 export const LIZARD_LEAPS = 3200;
 export const RED_LIZARD_HOPS = 4800;
 
+// how far a robot dog walks back and forth, in game units: heavy machinery's
+// robot dogs' longest path, a straight line along the game's x there, the way
+// crash runs in that side-on level (its default path, src/enemyPaths.ts)
+export const ROBOT_DOG_WALK = 1600;
+
 // how far a monkey walks back and forth, in game units: the great gate's monkeys'
 // path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const MONKEY_WALK = 2400;
