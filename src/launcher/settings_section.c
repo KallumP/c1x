@@ -173,6 +173,8 @@ static void DrawFields() {
   DrawSlider("Frame rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
     SETTINGS_FRAME_RATE_MAX,
     "Frames drawn a second. The game still runs at 30, so it plays the same.");
+  DrawOnOff("FPS display", &settings.fps_display,
+    "Show how many frames are drawn a second in the top right corner.");
   DrawBootLevel();
   EndFieldRows();
 }
