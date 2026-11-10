@@ -59,6 +59,7 @@ const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x
 const hasSunsetVista = existsSync(`${STREAMS}/s0000023.nsd`); // sunset vista (0x23)
 const hasLostCity = existsSync(`${STREAMS}/s0000020.nsd`); // the lost city (0x20)
 const hasStormyAscent = existsSync(`${STREAMS}/s0000022.nsd`); // stormy ascent (0x22)
+const hasTempleRuins = existsSync(`${STREAMS}/s000001c.nsd`); // temple ruins (0x1c)
 
 const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
 
@@ -280,11 +281,20 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(plant.id).not.toBe(boxes(built.zone)[0].id);
   });
 
-  test("a hidden plant is jungle rollers' plant of the subtype that hides, at its spot", () => {
-    const [plant] = enemies(build([enemy("hidden_plant")]).zone);
-    expect(plant.type).toEqual([ENEMY_ENTITIES.plant[0], 1]);
-    expect(plant.path.length).toBe(1);
-    expectNear(plant.path[0], SPOT_IN_ZONE, 16);
+  describe.skipIf(!hasTempleRuins)("snakes, from temple ruins", () => {
+    test("a snake is temple ruins' cobra, in its own exec slot, at its spot", () => {
+      const [snake] = enemies(build([enemy("snake")]).zone);
+      expect(snake.type).toEqual([ENEMY_ENTITIES.snake[0], 1]);
+      expect(snake.path.length).toBe(1);
+      expectNear(snake.path[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a level with a snake has temple ruins' cobra and its models, and jungle rollers' plant", () => {
+      const { level, entries } = build([enemy("snake"), enemy("plant", { at: [-1, 4, 0] })]);
+      const { execMap } = level.nsd.ldat;
+      expect([execMap[ENEMY_ENTITIES.plant[0]], execMap[ENEMY_ENTITIES.snake[0]]]).toEqual([stringToEid("PlanC"), stringToEid("SnakC")]);
+      expect(["JuPsG", "JuPsV", "JupsV", "JuPcG"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
   });
 
   describe("badgers", () => {

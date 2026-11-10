@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { donorObject, enemyDonorObjects, withCodeMoved, withDonorObjects, type DonorObject } from "../../builder/donorObjects";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
+import { ENEMY_ENTITIES } from "../../builder/entities";
 import { entriesById, entryPage, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, readNsd, soundPage, texturePage, type Entry, type Level } from "../../builder/levelFiles";
 import { nsdData, texturePageData, words } from "./levelFiles";
 
@@ -313,5 +314,28 @@ describe("lab assistants' code from stormy ascent", () => {
     // code that isn't as stormy ascent's
     const level = oneCodeLevel(0x22, LAB_ASSISTANT_SLOT, LAB_ASSISTANT, labAssistantCode(SETUP_BY_PRESET, 1));
     expect(() => enemyDonorObjects(new Map([["lab_assistant", level]]))).toThrow(/lab assistant/);
+  });
+});
+
+describe("the cobra's code from temple ruins", () => {
+  const COBRA = stringToEid("PlanC"); // temple ruins' cobra, the same name as jungle rollers' plant
+  const COBRA_SLOT = 25;              // and the same exec slot
+
+  // temple ruins' cobra code, its header naming its slot
+  function cobraLevel(): Level {
+    const execMap: number[] = [];
+    execMap[COBRA_SLOT] = COBRA;
+    const pages = [entryPage([entry(COBRA, 11, [words(COBRA_SLOT, 0x300), words(1, 2, 3)])])];
+    return { nsd: readNsd(nsdData([], 0x1c, ZONE, execMap)), pages };
+  }
+  const [cobra] = enemyDonorObjects(new Map([["snake", cobraLevel()]]));
+
+  test("a snake's code goes in its own exec slot, under a name of its own, out of the plant's way", () => {
+    expect(cobra.code).toEqual([[ENEMY_ENTITIES.snake[0], stringToEid("SnakC")]]);
+    expect(ENEMY_ENTITIES.snake[0]).not.toBe(ENEMY_ENTITIES.plant[0]);
+  });
+
+  test("a snake's code's header names its own slot", () => {
+    expect(cobra.entries[0].items[0]).toEqual(words(ENEMY_ENTITIES.snake[0], 0x300));
   });
 });
