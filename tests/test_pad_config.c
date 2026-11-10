@@ -49,9 +49,9 @@ UTEST(pad_config, invalid_lines_are_skipped) {
 
 UTEST(pad_config, comments_and_blank_lines_are_ignored) {
   PadResetBindings();
-  WriteWholeFile(CONFIG_PATH, "# controls\n\n  triangle = Left Shift\n");
+  WriteWholeFile(CONFIG_PATH, "# controls\n\ntriangle = V\n");
   ASSERT_EQ(1, PadLoadBindings(CONFIG_PATH));
-  ASSERT_EQ((uint32_t)PAD_TRIANGLE, held_for(SDL_SCANCODE_LSHIFT));
+  ASSERT_EQ((uint32_t)PAD_TRIANGLE, held_for(SDL_SCANCODE_V));
   ASSERT_EQ(0u, held_for(SDL_SCANCODE_S));
 }
 

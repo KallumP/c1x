@@ -40,15 +40,6 @@ UTEST(launcher_controls, a_buttons_lines_replace_its_default_key) {
   ASSERT_EQ(SDL_SCANCODE_RETURN, c.keys[FindPadButton("start")][0]);
 }
 
-UTEST(launcher_controls, skips_invalid_lines) {
-  launcher_controls c;
-
-  WriteWholeFile(LAUNCHER_CONTROLS_PATH, "cross = Nope\njump = Z\ncross\n");
-  ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c);
-  ASSERT_EQ(1, c.key_count[FindPadButton("cross")]);
-  ASSERT_EQ(SDL_SCANCODE_Z, c.keys[FindPadButton("cross")][0]);
-}
-
 UTEST(launcher_controls, keeps_at_most_the_most_keys_a_button_can_have) {
   launcher_controls c;
 

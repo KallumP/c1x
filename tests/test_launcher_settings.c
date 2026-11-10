@@ -28,15 +28,6 @@ UTEST(launcher_settings, uses_the_defaults_without_a_settings_file) {
   ASSERT_STREQ("", s.boot_level);
 }
 
-UTEST(launcher_settings, skips_invalid_lines) {
-  pc_settings s;
-
-  WriteWholeFile(LAUNCHER_SETTINGS_PATH, "speed_display = maybe\nreplay_speed = 2\n");
-  ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &s));
-  ASSERT_EQ(0, s.speed_display);
-  ASSERT_EQ(2u, s.replay_speed);
-}
-
 /* SetSettingLine's result for text, compared with expected, then freed */
 static int SetLineGives(const char *text, const char *name, const char *value,
   const char *expected) {

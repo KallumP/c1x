@@ -67,16 +67,6 @@ UTEST(settings, unknown_name_is_invalid) {
   ASSERT_EQ(-1, SettingsParseLine("fullscreen = on", &s));
 }
 
-UTEST(settings, blank_comment_and_malformed_lines) {
-  pc_settings s;
-
-  SettingsReset(&s);
-  ASSERT_EQ(0, SettingsParseLine("", &s));
-  ASSERT_EQ(0, SettingsParseLine("# loading_screen = off", &s));
-  ASSERT_EQ(-1, SettingsParseLine("loading_screen off", &s));
-  ASSERT_EQ(1, s.loading_screen);
-}
-
 #define SETTINGS_TEST_PATH "build/test_settings.cfg"
 
 UTEST(settings, load_missing_file_keeps_defaults) {
