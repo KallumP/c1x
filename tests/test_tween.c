@@ -200,3 +200,26 @@ UTEST(tween_poses, the_camera_is_laid_out_as_a_pose) {
   ASSERT_EQ(offsetof(tween_pose, rot), offsetof(cam_state, rot));
   ASSERT_EQ(offsetof(tween_pose, scale), offsetof(cam_state, scale));
 }
+
+UTEST(tween_poses, the_camera_is_tweened_between_the_last_two_it_was_drawn_at) {
+  tween_pose first, second, out;
+
+  TweenForgetAll();
+  first = Pose(0, 0x000, 0x1000);
+  second = Pose(1000, 0x100, 0x1000);
+  TweenRecordCamera(&first);
+  TweenRecordCamera(&second);
+  TweenCameraAt(TWEEN_ONE/4, &out);
+  ASSERT_EQ(250, out.trans.x);
+  ASSERT_EQ(0x40, out.rot.z);
+}
+
+UTEST(tween_poses, the_first_camera_is_drawn_where_it_is) {
+  tween_pose first, out;
+
+  TweenForgetAll();
+  first = Pose(1000, 0x100, 0x1000);
+  TweenRecordCamera(&first);
+  TweenCameraAt(TWEEN_ONE/4, &out);
+  ASSERT_EQ(1000, out.trans.x);
+}
