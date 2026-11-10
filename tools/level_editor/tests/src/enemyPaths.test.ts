@@ -49,6 +49,11 @@ describe("a path enemy's default path", () => {
     expect(defaultPath("lizard", 0, 400).map(noMinusZero)).toEqual([[-4, 0, 0], [0, 0, 0], [4, 0, 0]]);
   });
 
+  test("a walking lizard's runs across the map", () => {
+    // 800 game units, as the lost city's walking lizards pace
+    expect(defaultPath("walking_lizard", 0, 400).map(noMinusZero)).toEqual([[-1, 0, 0], [0, 0, 0], [1, 0, 0]]);
+  });
+
   test("a red lizard's runs across the map", () => {
     // 4800 game units, as the lost city's red lizards hop
     expect(defaultPath("red_lizard", 0, 400).map(noMinusZero)).toEqual([[-6, 0, 0], [0, 0, 0], [6, 0, 0]]);
