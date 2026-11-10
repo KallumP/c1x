@@ -16,7 +16,10 @@
 #include "pc/settings.h"
 #include "pc/speed.h"
 #include "pc/fps.h"
+#include "pc/spin.h"
 #include "pc/replay.h"
+
+extern uint32_t frames_elapsed; /* gool.c */
 
 extern ns_struct ns;
 extern gool_handle handles[8];
@@ -686,10 +689,36 @@ static const char *GuiLineBreak(int len) {
   return "";
 }
 
+static int GuiIsCrashPlaying() {
+  return game_state == GAME_STATE_PLAYING && crash;
+}
+
+/* how many spins crash has left, or 0 when he isn't playing */
+static int GuiCrashSpinsLeft() {
+  if (!GuiIsCrashPlaying()) { return 0; }
+  return SpinsLeft(frames_elapsed, crash->memory[SPIN_STAMP_MEMORY]);
+}
+
+/* tenths of a second until crash's next spin refills, or 0 */
+static int GuiCrashSpinRefillTenths() {
+  if (!GuiIsCrashPlaying()) { return 0; }
+  return SpinFramesAsTenths(SpinRefillFrames(frames_elapsed, crash->memory[SPIN_STAMP_MEMORY]));
+}
+
+/* the spin display's lines: spins left, and seconds until the next refills */
+static int GuiSpinText(char *text, size_t size, const char *line_break) {
+  int tenths;
+
+  tenths = GuiCrashSpinRefillTenths();
+  return snprintf(text, size, "%sspins %6d\nrefill %3d.%d", line_break,
+    GuiCrashSpinsLeft(), tenths / 10, tenths % 10);
+}
+
 /*
  * text in the top right corner: REPLAYING INPUTS while replaying recorded inputs,
- * the frames drawn a second when fps_display is on in settings.cfg, and
- * crash's speed when speed_display is on
+ * the frames drawn a second when fps_display is on in settings.cfg,
+ * crash's speed when speed_display is on, and his spins left (and when the next
+ * refills) when spin_display is on
  */
 static void GuiCornerOverlay() {
   static speed_tracker crash_speed;
@@ -710,10 +739,12 @@ static void GuiCornerOverlay() {
     speed = SpeedTrack(&crash_speed, obj, obj ? &obj->trans : 0,
       min(context.ticks_per_frame, 0x66));
     /* total horizontal speed, then the signed speed along each axis (y is up) */
-    snprintf(&text[len], sizeof(text) - len,
+    len += snprintf(&text[len], sizeof(text) - len,
       "%sspeed %6u\nx     %6d\ny     %6d\nz     %6d", GuiLineBreak(len),
       speed, crash_speed.x, crash_speed.y, crash_speed.z);
   }
+  if (game_settings.spin_display)
+    GuiSpinText(&text[len], sizeof(text) - len, GuiLineBreak(len));
   if (text[0])
     GuiIgCornerText(text);
 }

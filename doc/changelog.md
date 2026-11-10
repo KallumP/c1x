@@ -6,10 +6,15 @@
 
 - smoother play at up to 240 frames a second (60 by default), set in the launcher; the game still plays exactly as at 30
 - an option to show the frame rate in the top right corner
+- an option to show how many spins Crash has left, and when the next comes back, in the top right corner
 
 ### Changed
 
 - the level editor's enemy paths start with 2 nodes
+
+### Fixed
+
+- Crash starting the game with few or no spins when booting straight into a level
 
 ## 2026-11-09
 

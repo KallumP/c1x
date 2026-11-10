@@ -23,6 +23,7 @@ UTEST(settings, reset_gives_each_setting_its_default) {
       { "loading_screen_min_ms", s.loading_screen_min_ms, 2000 }, /* 2 seconds */
       { "speed_display",         s.speed_display,         0 },
       { "fps_display",           s.fps_display,           0 },
+      { "spin_display",          s.spin_display,          0 },
       { "skip_splash_screens",   s.skip_splash_screens,   0 },
       { "fix_model_draw_order",  s.fix_model_draw_order,  0 },
       { "replay_inputs",         s.replay_inputs,         0 },
@@ -45,6 +46,7 @@ static const struct {
   { "loading_screen",       offsetof(pc_settings, loading_screen) },
   { "speed_display",        offsetof(pc_settings, speed_display) },
   { "fps_display",          offsetof(pc_settings, fps_display) },
+  { "spin_display",         offsetof(pc_settings, spin_display) },
   { "skip_splash_screens",  offsetof(pc_settings, skip_splash_screens) },
   { "fix_model_draw_order", offsetof(pc_settings, fix_model_draw_order) },
   { "replay_inputs",        offsetof(pc_settings, replay_inputs) },

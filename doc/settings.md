@@ -8,6 +8,7 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | `loading_screen_min_ms` | `2000` | Keep the loading screen up for at least this many milliseconds (up to `60000`), as levels load much faster than from the PS1's CD. `0` shows it only while loading. |
 | `speed_display` | `off` | Show how fast Crash is moving in the top right corner. |
 | `fps_display` | `off` | Show how many frames are drawn a second in the top right corner (see `frame_rate`). |
+| `spin_display` | `off` | Show how many spins Crash has left in the top right corner, and the seconds until the next comes back. He holds up to 5, and each comes back 2 seconds after it's used. |
 | `skip_splash_screens` | `off` | Go straight to the main menu, skipping the Sony, Universal and Naughty Dog screens. |
 | `fix_model_draw_order` | `off` | Draw 3D models in front of or behind each other by their actual depth, so a crate can't be drawn over Crash in front of it. `off` keeps the original game's order. |
 | `replay_inputs` | `off` | Play back the newest recording (see below) instead of recording this run. |

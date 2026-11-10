@@ -10,6 +10,7 @@ pc_settings game_settings = {
   .loading_screen_min_ms = 2000,
   .speed_display = 0,
   .fps_display = 0,
+  .spin_display = 0,
   .skip_splash_screens = 0,
   .fix_model_draw_order = 0,
   .replay_inputs = 0,
@@ -24,6 +25,7 @@ void SettingsReset(pc_settings *s) {
   s->loading_screen_min_ms = 2000;
   s->speed_display = 0;
   s->fps_display = 0;
+  s->spin_display = 0;
   s->skip_splash_screens = 0;
   s->fix_model_draw_order = 0;
   s->replay_inputs = 0;
@@ -89,6 +91,8 @@ static int SettingsApply(const char *name, const char *value, pc_settings *s) {
     return SettingsParseOnOff(value, &s->speed_display) ? 1 : -1;
   if (SDL_strcasecmp(name, "fps_display") == 0)
     return SettingsParseOnOff(value, &s->fps_display) ? 1 : -1;
+  if (SDL_strcasecmp(name, "spin_display") == 0)
+    return SettingsParseOnOff(value, &s->spin_display) ? 1 : -1;
   if (SDL_strcasecmp(name, "skip_splash_screens") == 0)
     return SettingsParseOnOff(value, &s->skip_splash_screens) ? 1 : -1;
   if (SDL_strcasecmp(name, "fix_model_draw_order") == 0)
