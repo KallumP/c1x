@@ -144,6 +144,7 @@ describe("enemies", () => {
       {"kind": "enemy", "type": "camera_robot", "at": [17, 180, 0]},
       {"kind": "enemy", "type": "bird", "at": [18, 190, 0]},
       {"kind": "enemy", "type": "electric_scientist", "at": [19, 200, 0]},
+      {"kind": "enemy", "type": "blob", "at": [15, 160, 0]},
       {"kind": "enemy", "type": "gunman", "at": [14, 150, 0]},
       {"kind": "enemy", "type": "lab_assistant", "at": [10, 110, 0]},
       {"kind": "enemy", "type": "snake", "at": [11, 120, 0]}
@@ -165,6 +166,7 @@ describe("enemies", () => {
       { kind: "enemy", enemy: "camera_robot", at: [17, 180, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "bird", at: [18, 190, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "electric_scientist", at: [19, 200, 0], raise: 0, stack: 1 },
+      { kind: "enemy", enemy: "blob", at: [15, 160, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "gunman", at: [14, 150, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "lab_assistant", at: [10, 110, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "snake", at: [11, 120, 0], raise: 0, stack: 1 },
@@ -172,7 +174,7 @@ describe("enemies", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, snake, gunman, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, walking_lizard, robot_dog, barrel_roller, camera_robot, bird, electric_scientist, badger, walking_spider, bat, leader_bats, rolling_stone)"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, snake, gunman, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, walking_lizard, robot_dog, barrel_roller, camera_robot, bird, electric_scientist, blob, badger, walking_spider, bat, leader_bats, rolling_stone)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds and electric scientists do)"],
   ])("refuses %s", (text, message) => {
@@ -236,6 +238,7 @@ describe("enemy paths", () => {
     ["camera_robot", true, true],
     ["bird", true, true],
     ["electric_scientist", true, true],
+    ["blob", true, true],
     ["leader_bats", true, false],
     ["bat", true, false],
     ["lab_assistant", true, false],

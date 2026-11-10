@@ -85,6 +85,11 @@ describe("a path enemy's default path", () => {
     expect(defaultPath("electric_scientist", 0, 400).map(noMinusZero)).toEqual([[0, 6, 0], [0, 0, 0], [0, -6, 0]]);
   });
 
+  test("a blob's runs back towards the spawn, the way its blobs come", () => {
+    // 5200 game units, the lab's blob spawners' paths (13 steps of 400), which the blobs come along from its first node
+    expect(defaultPath("blob", 0, 400).map(noMinusZero)).toEqual([[0, 6.5, 0], [0, 0, 0], [0, -6.5, 0]]);
+  });
+
   test("turns with the level", () => {
     expect(defaultPath("crab", 90, 400).map(noMinusZero)).toEqual([[0, 2, 0], [0, 0, 0], [0, -2, 0]]);
   });
