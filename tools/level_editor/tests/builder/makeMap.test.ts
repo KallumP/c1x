@@ -61,6 +61,7 @@ const hasLostCity = existsSync(`${STREAMS}/s0000020.nsd`); // the lost city (0x2
 const hasStormyAscent = existsSync(`${STREAMS}/s0000022.nsd`); // stormy ascent (0x22)
 const hasTempleRuins = existsSync(`${STREAMS}/s000001c.nsd`); // temple ruins (0x1c)
 const hasHeavyMachinery = existsSync(`${STREAMS}/s0000006.nsd`); // heavy machinery (0x6)
+const hasTheLab = existsSync(`${STREAMS}/s0000029.nsd`); // the lab (0x29)
 const hasToxicWaste = existsSync(`${STREAMS}/s0000007.nsd`); // toxic waste (0x7)
 const hasCortexPower = existsSync(`${STREAMS}/s0000003.nsd`); // cortex power (0x3)
 const hasCastleMachinery = existsSync(`${STREAMS}/s0000037.nsd`); // castle machinery (0x37)
@@ -807,6 +808,65 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a level without warthogs has none of their code", () => {
       expect(build().level.nsd.ldat.execMap[ENEMY_ENTITIES.warthog[0]]).toBe(EID_NONE);
+    });
+  });
+
+  describe.skipIf(!hasTheLab)("electric scientists, from the lab", () => {
+    const SCIENTIST_SLOT = 24; // the lab's LabAC (slot 54 there), moved: stormy ascent's lab assistant has 54
+    const SPARK_SLOT = 44; // the lab's PoRoC (slot 9 there), moved: heavy machinery's robot dog has 9
+    // the exec slots a piece of code spawns from (CHLD's slot, bits 12-19)
+    const spawnSlots = (code: Buffer) => new Set(Array.from({ length: code.length / 4 }, (_, index) => code.readUInt32LE(index * 4))
+      .filter((instruction) => instruction >>> 24 === 0x8a || instruction >>> 24 === 0x91)
+      .map((instruction) => (instruction >>> 12) & 0xff));
+
+    test("a level with an electric scientist has the lab's walking lab assistant and its spark, each in its own slot under its own name", () => {
+      const { level, entries } = build([enemy("electric_scientist")]);
+      const { execMap } = level.nsd.ldat;
+      expect([execMap[SCIENTIST_SLOT], execMap[SPARK_SLOT]]).toEqual([stringToEid("LabEC"), stringToEid("SprkC")]);
+      expect([execMap[54], execMap[9]]).toEqual([EID_NONE, EID_NONE]);
+      expect(["LW1EG", "Ls1FG", "Ls2FG"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
+
+    test("an electric scientist's code spawns its vials and spark from their moved slots", () => {
+      const { entries } = build([enemy("electric_scientist")]);
+      const scientist = spawnSlots(entries.get(stringToEid("LabEC"))!.items[1]);
+      expect(scientist.has(SCIENTIST_SLOT) && scientist.has(SPARK_SLOT)).toBe(true);
+      expect(scientist.has(54) || scientist.has(9)).toBe(false);
+      expect(spawnSlots(entries.get(stringToEid("SprkC"))!.items[1]).has(9)).toBe(false);
+    });
+
+    test.skipIf(!hasStormyAscent || !hasHeavyMachinery)("a level with an electric scientist, a lab assistant and a robot dog has all three's code", () => {
+      const { level } = build([enemy("electric_scientist"), enemy("lab_assistant", { at: [-1, 4, 0] }), enemy("robot_dog", { at: [1, 6, 0] })]);
+      const { execMap } = level.nsd.ldat;
+      expect([execMap[SCIENTIST_SLOT], execMap[SPARK_SLOT], execMap[54], execMap[9]]).toEqual(["LabEC", "SprkC", "LabAC", "PoRoC"].map(stringToEid));
+    });
+
+    // crash's (WillC's) animations: the one his sparks play on him, which the base level's crash has only a placeholder for
+    const CRASH_SHOCKED_AT = 72;
+    const crashShockedAnimation = (entries: Map<number, Entry>) => {
+      const animations = entries.get(stringToEid("WillC"))!.items.at(-1)!;
+      return animations.readUInt32LE(CRASH_SHOCKED_AT + 4);
+    };
+
+    test("a level with an electric scientist has the lab's crash shocked by his sparks, and crash's code plays it", () => {
+      const { entries } = build([enemy("electric_scientist")]);
+      expect(crashShockedAnimation(entries)).toBe(stringToEid("WS10V"));
+      expect(["WS10V", "WS10G"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
+
+    test("a level without an electric scientist keeps the base level's crash code", () => {
+      const { entries } = build([enemy("crab")]);
+      const baseCrash = entriesById(readLevel(STREAMS, BASE_LEVEL.lid)).get(stringToEid("WillC"))!;
+      expect(entries.get(stringToEid("WillC"))!.items).toEqual(baseCrash.items);
+      expect(entries.has(stringToEid("WS10V"))).toBe(false);
+    });
+
+    test("by default an electric scientist walks along the route, centred on its spot, in the lab's steps", () => {
+      const [placed] = enemies(build([enemy("electric_scientist")]).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.electric_scientist);
+      placed.path.forEach(([x, y]) => expectNear([x, y], [SPOT_X, FLOOR_Y], 8));
+      expectNear((placed.path[0][2] + placed.path.at(-1)![2]) / 2, SPOT_Z, 8);
+      stepLengths(placed.path).forEach((step) => expectNear(step, 400, 8));
     });
   });
 

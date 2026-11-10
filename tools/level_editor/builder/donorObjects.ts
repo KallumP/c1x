@@ -35,6 +35,7 @@ const TOXIC_WASTE: DonorLevel = { lid: 0x7, name: "Toxic Waste", file: "s0000007
 const CORTEX_POWER: DonorLevel = { lid: 0x3, name: "Cortex Power", file: "s0000003" };
 const CASTLE_MACHINERY: DonorLevel = { lid: 0x37, name: "Castle Machinery", file: "s0000037" };
 const SLIPPERY_CLIMB: DonorLevel = { lid: 0x2e, name: "Slippery Climb", file: "s000002e" };
+const THE_LAB: DonorLevel = { lid: 0x29, name: "The Lab", file: "s0000029" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -60,6 +61,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   gunman: CORTEX_POWER,
   camera_robot: CASTLE_MACHINERY,
   bird: SLIPPERY_CLIMB,
+  electric_scientist: THE_LAB,
 };
 
 export interface DonorObject {
@@ -67,6 +69,13 @@ export interface DonorObject {
   entries: Entry[];                    // its code, models, animations and the like, from entry pages
   sounds: Entry[];                     // the sounds it plays, from the donor's sound pages
   texturePages: Page[];                // the texture pages its models use
+  crashAnimations?: CrashAnimation[];  // crash's animations it needs that the base level's crash lacks
+}
+
+// one of crash's animations: where it is in crash's animations item, and the animation (its eid) to put there
+export interface CrashAnimation {
+  at: number;
+  eid: number;
 }
 
 // the entries of the given kind of page that are among eids
@@ -103,12 +112,24 @@ export function donorObject(donor: Level, slot: number, childSlots: number[] = [
 }
 
 const CODE_HEADER = 0; // a code entry's item holding its header, its exec slot (its type) first
+const CODE_DATA = 2;   // and its data: eids and constants, the code's own eid first
 
 // a code header naming exec slot slot
 function headerInSlot(header: Buffer, slot: number): Buffer {
   const moved = Buffer.from(header);
   moved.writeUInt32LE(slot, 0);
   return moved;
+}
+
+// an item of words with each word that's from made to
+function withWordRenamed(item: Buffer, from: number, to: number): Buffer {
+  const renamed = Buffer.from(item);
+  for (let at = 0; at + 4 <= renamed.length; at += 4) {
+    if (renamed.readUInt32LE(at) === from) {
+      renamed.writeUInt32LE(to, at);
+    }
+  }
+  return renamed;
 }
 
 // object with its code in exec slot from moved to exec slot to, named eid there
@@ -120,11 +141,20 @@ export function withCodeMoved(object: DonorObject, from: number, to: number, eid
   if (code === undefined) {
     throw new Error(`the object has no code in exec slot ${from} to move`);
   }
+  const movedItem = (item: Buffer, index: number) => {
+    if (index === CODE_HEADER) {
+      return headerInSlot(item, to);
+    }
+    if (index === CODE_DATA) {
+      return withWordRenamed(item, code, eid);
+    }
+    return item;
+  };
   const moveEntry = (entry: Entry): Entry => {
     if (entry.eid !== code) {
       return entry;
     }
-    return { ...entry, eid, items: entry.items.map((item, index) => (index === CODE_HEADER ? headerInSlot(item, to) : item)) };
+    return { ...entry, eid, items: entry.items.map(movedItem) };
   };
   return {
     ...object,
@@ -179,10 +209,31 @@ export function withDonorObjects(level: Level, donors: DonorObject[]): Level {
   const sounds = newEntries((donor) => donor.sounds);
   const texturePages = donors.flatMap((donor) => donor.texturePages).filter((page) => isNewTo(present, page.eid, page.data));
   const ldat = { ...level.nsd.ldat, execMap: execMapWith(level.nsd.ldat.execMap, donors) };
+  const crashAnimations = donors.flatMap((donor) => donor.crashAnimations ?? []);
   return {
     nsd: { ...level.nsd, ldat },
-    pages: [...level.pages, ...packEntries(entries), ...packEntries(sounds, soundPage), ...texturePages],
+    pages: [...pagesWithCrashAnimations(level.pages, crashAnimations), ...packEntries(entries), ...packEntries(sounds, soundPage), ...texturePages],
   };
+}
+
+const CRASH_CODE = stringToEid("WillC");
+const ANIMATION_EID = 4; // an animation's eid, after its type and length
+
+// crash's code with each of animations put in its place in its animations item (its last)
+function crashWithAnimations(crash: Entry, animations: CrashAnimation[]): Entry {
+  const last = crash.items.length - 1;
+  const animationsItem = Buffer.from(crash.items[last]);
+  animations.forEach(({ at, eid }) => animationsItem.writeUInt32LE(eid, at + ANIMATION_EID));
+  return { ...crash, items: crash.items.map((item, index) => (index === last ? animationsItem : item)) };
+}
+
+// pages with crash's code, wherever it is in their entries, given animations
+function pagesWithCrashAnimations(pages: Page[], animations: CrashAnimation[]): Page[] {
+  if (animations.length === 0) {
+    return pages;
+  }
+  const withAnimations = (entry: Entry) => (entry.eid === CRASH_CODE ? crashWithAnimations(entry, animations) : entry);
+  return pages.map((page) => (page.type === PAGE_ENTRIES ? { ...page, entries: page.entries.map(withAnimations) } : page));
 }
 
 const enemyName = (type: EnemyType) => type.replace("_", " ");
@@ -278,6 +329,14 @@ const GUNMAN_CODE_PATCHES: CodePatch[] = [
 // toxic waste's barrel roller throws his barrels (BaraC, slot 16)
 const ENEMY_CHILD_SLOTS: Partial<Record<EnemyType, number[]>> = {
   barrel_roller: [16],
+  electric_scientist: [9],
+};
+
+// the code an enemy spawns by exec slot that moves to another slot under another
+// name, as an enemy's own code can (see MOVED_ENEMY_CODE): the lab's walking lab
+// assistant's spark, the lab's PoRoC, as heavy machinery's (the robot dog's) has slot 9 and the name
+const MOVED_CHILD_CODE: Partial<Record<EnemyType, { from: number; to: number; name: string }[]>> = {
+  electric_scientist: [{ from: 9, to: 44, name: "SprkC" }],
 };
 
 // entries an enemy's entries name but its code never uses, left out: toxic
@@ -298,6 +357,27 @@ const ENEMY_UNUSED_ENTRIES: Partial<Record<EnemyType, string[]>> = {
 const ENEMY_CAPPED_MODELS: Partial<Record<EnemyType, [model: string, animation: string][]>> = {
   barrel_roller: [["BaV7G", "BaV7V"], ["BaD7G", "BaD7V"]],
 };
+
+// crash's animations an enemy plays on him that the base level's crash (WillC)
+// has only a placeholder for: where each is in crash's animations item, and the
+// donor's animation to put there. the lab's walking lab assistant's spark
+// shocks crash (WS10V), and reads its model's vertices: without it, spinning
+// him as he sparks would look up a model the level hasn't, and crash the game
+const ENEMY_CRASH_ANIMATIONS: Partial<Record<EnemyType, { at: number; animation: string }[]>> = {
+  electric_scientist: [{ at: 72, animation: "WS10V" }],
+};
+
+// object with the crash animations its enemy needs (ENEMY_CRASH_ANIMATIONS) and
+// their models, but not their texture pages: crash's own, which the level has
+function withCrashAnimationEntries(type: EnemyType, object: DonorObject, level: Level): DonorObject {
+  const animations = ENEMY_CRASH_ANIMATIONS[type] ?? [];
+  if (animations.length === 0) {
+    return object;
+  }
+  const crashAnimations = animations.map(({ at, animation }) => ({ at, eid: stringToEid(animation) }));
+  const used = reachableEids(level, crashAnimations.map(({ eid }) => eid));
+  return { ...object, entries: [...object.entries, ...entriesInPages(level, PAGE_ENTRIES, used)], crashAnimations };
+}
 
 // object with its model named model capped at its ends, as animation's first
 // frame has it (if the object has that model)
@@ -467,12 +547,51 @@ function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
   const slot = moved?.donorSlot ?? ENEMY_ENTITIES[type][0];
   const leftOut = (ENEMY_UNUSED_ENTRIES[type] ?? []).map(stringToEid);
   const object = donorObject(level, slot, ENEMY_CHILD_SLOTS[type] ?? [], leftOut);
-  const capped = (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, object);
+  const capped = (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, withCrashAnimationEntries(type, object, level));
   const patched = withPatchedOwnCode(type, withPatchedChildCode(type, capped, level), level, slot);
   if (!moved) {
     return patched;
   }
-  return withCodeMoved(patched, slot, ENEMY_ENTITIES[type][0], stringToEid(moved.name));
+  return withChildCodeMoved(type, withCodeMoved(patched, slot, ENEMY_ENTITIES[type][0], stringToEid(moved.name)), slot);
+}
+
+const SPAWN_OPCODES = [0x8a, 0x91]; // CHLD: its exec slot in bits 12-19
+
+// an instruction spawning from a moved exec slot made to spawn from where it moved to
+function withSpawnSlotMoved(instruction: number, moves: Map<number, number>): number {
+  if (!SPAWN_OPCODES.includes(instruction >>> 24)) {
+    return instruction;
+  }
+  const to = moves.get((instruction >>> 12) & 0xff);
+  if (to === undefined) {
+    return instruction;
+  }
+  return ((instruction & ~(0xff << 12)) | (to << 12)) >>> 0;
+}
+
+// object with each of its pieces of code spawning from moved exec slots where they moved to
+function withSpawnSlotsMoved(object: DonorObject, moves: Map<number, number>): DonorObject {
+  const codeEids = new Set(object.code.map(([, eid]) => eid));
+  const moveSpawns = (entry: Entry): Entry => {
+    const instructions = Buffer.from(entry.items[CODE_ITEM]);
+    for (let at = 0; at < instructions.length; at += 4) {
+      instructions.writeUInt32LE(withSpawnSlotMoved(instructions.readUInt32LE(at), moves), at);
+    }
+    return { ...entry, items: entry.items.map((item, index) => (index === CODE_ITEM ? instructions : item)) };
+  };
+  return { ...object, entries: object.entries.map((entry) => (codeEids.has(entry.eid) ? moveSpawns(entry) : entry)) };
+}
+
+// object (its own code moved from donorSlot) with the code it spawns moved too
+// (MOVED_CHILD_CODE), and its code spawning from where each moved to
+function withChildCodeMoved(type: EnemyType, object: DonorObject, donorSlot: number): DonorObject {
+  const childMoves = MOVED_CHILD_CODE[type] ?? [];
+  if (childMoves.length === 0) {
+    return object;
+  }
+  const moved = childMoves.reduce((withMoved, { from, to, name }) => withCodeMoved(withMoved, from, to, stringToEid(name)), object);
+  const moves = new Map([[donorSlot, ENEMY_ENTITIES[type][0]], ...childMoves.map(({ from, to }): [number, number] => [from, to])]);
+  return withSpawnSlotsMoved(moved, moves);
 }
 
 // each kind of enemy's object, from the level it's taken from

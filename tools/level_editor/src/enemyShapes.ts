@@ -40,6 +40,7 @@ const GUNMAN_COLOURS = { coat: "#1f2236", shirt: "#e8e4dc", tie: "#b8283a", skin
 const BARREL_ROLLER_COLOURS = { suit: "#2e2f36", shirt: "#e8e4dc", tie: "#c86a8a", skin: "#d9a87e", hat: "#6b2a1c", eye: "#1a1a1a" };
 const CAMERA_ROBOT_COLOURS = { body: "#4a4c55", light: "#c8302a", spike: "#d8dce4", stalk: "#2c2d33" };
 const BIRD_COLOURS = { feather: "#6b5038", wing: "#54402e", head: "#8a7a6a", beak: "#d8a030", eye: "#f4f1e0" };
+const SPARK_COLOUR = "#7af0f0";
 const BARREL_COLOURS = { wood: "#a0712e", hoop: "#4a3a2a" };
 const ROBOT_DOG_COLOURS = { body: "#5a5c66", shell: "#3a3b42", leg: "#2c2d33", eye: "#f2e21a" };
 const COBRA_COLOURS = { scale: "#2f5fa8", belly: "#d8c08a", eye: "#c8302a", fang: "#f4f1e0" };
@@ -434,6 +435,13 @@ function bird(): ShapePart[] {
   ];
 }
 
+// the lab's walking lab assistant: the lab assistant without his vial, an
+// electric spark crackling at each hand, facing +z
+function electricScientist(): ShapePart[] {
+  const spark = ball(1, [165, 760, 330], SPARK_COLOUR, { stretch: [75, 75, 75], name: "spark" });
+  return [...labAssistant().filter((part) => part.colour !== LAB_ASSISTANT_COLOURS.vial), ...bothSides([spark])];
+}
+
 // one of the robot dog's sides: a front and a back leg, splayed out, and an eye
 function robotDogSide(): ShapePart[] {
   return [
@@ -748,13 +756,13 @@ const RIVER_PLANT_HEIGHT = 400;
 
 const GAME_HEIGHTS: Record<StandingEnemy, number> = {
   plant: 720, snake: 558, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
-  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, walking_lizard: 419, lab_assistant: 1203, robot_dog: 557, barrel_roller: 1069, gunman: 1181, camera_robot: 469, bird: 450,
+  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, walking_lizard: 419, lab_assistant: 1203, robot_dog: 557, barrel_roller: 1069, gunman: 1181, camera_robot: 469, bird: 450, electric_scientist: 1180,
 };
 
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
   plant, snake: cobra, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
   blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
-  lizard, red_lizard: redLizard, walking_lizard: walkingLizard, lab_assistant: labAssistant, robot_dog: robotDog, barrel_roller: barrelRoller, gunman, camera_robot: cameraRobot, bird,
+  lizard, red_lizard: redLizard, walking_lizard: walkingLizard, lab_assistant: labAssistant, robot_dog: robotDog, barrel_roller: barrelRoller, gunman, camera_robot: cameraRobot, bird, electric_scientist: electricScientist,
 };
 
 // each standing enemy's shape, on the floor, as tall as the game's model

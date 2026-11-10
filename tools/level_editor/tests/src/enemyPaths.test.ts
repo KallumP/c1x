@@ -80,6 +80,11 @@ describe("a path enemy's default path", () => {
     expect(defaultPath("bird", 0, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 1.5], [0, 0, 3]]);
   });
 
+  test("an electric scientist's runs along the route back towards the spawn", () => {
+    // 4800 game units, the lab's walking lab assistants' paths
+    expect(defaultPath("electric_scientist", 0, 400).map(noMinusZero)).toEqual([[0, 6, 0], [0, 0, 0], [0, -6, 0]]);
+  });
+
   test("turns with the level", () => {
     expect(defaultPath("crab", 90, 400).map(noMinusZero)).toEqual([[0, 2, 0], [0, 0, 0], [0, -2, 0]]);
   });

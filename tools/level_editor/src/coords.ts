@@ -285,6 +285,10 @@ export const CAMERA_ROBOT_RISE = 1200;
 // straight up and down beside its climb (its default path, src/enemyPaths.ts)
 export const BIRD_SWOOP = 1200;
 
+// how far an electric scientist walks, in game units: the lab's walking lab
+// assistants' paths, back along the route towards crash's start (its default path, src/enemyPaths.ts)
+export const SCIENTIST_WALK = 4800;
+
 // how far a monkey walks back and forth, in game units: the great gate's monkeys'
 // path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const MONKEY_WALK = 2400;
