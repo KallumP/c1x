@@ -75,6 +75,11 @@ describe("a path enemy's default path", () => {
     expect(defaultPath("camera_robot", 90, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 1.5], [0, 0, 3]]);
   });
 
+  test("a bird's rises from its spot", () => {
+    // 1200 game units, as slippery climb's birds swoop up and down
+    expect(defaultPath("bird", 0, 400).map(noMinusZero)).toEqual([[0, 0, 0], [0, 0, 1.5], [0, 0, 3]]);
+  });
+
   test("turns with the level", () => {
     expect(defaultPath("crab", 90, 400).map(noMinusZero)).toEqual([[0, 2, 0], [0, 0, 0], [0, -2, 0]]);
   });
