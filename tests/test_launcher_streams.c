@@ -1,27 +1,14 @@
 #include "utest.h"
-#include <sys/stat.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
 #include "launcher/streams.h"
+#include "test_files.h"
 
 #define TEST_STREAMS_REPO "build/test_launcher_streams"
 
-static void MakeFolder(const char *path) {
-#ifdef _WIN32
-  mkdir(path);
-#else
-  mkdir(path, 0777);
-#endif
-}
-
 static void MakeEmptyStreamFile(const char *name) {
   char path[256];
-  FILE *file;
 
   snprintf(path, sizeof(path), "%s/streams/%s", TEST_STREAMS_REPO, name);
-  file = fopen(path, "wb");
-  if (file) { fclose(file); }
+  WriteWholeFile(path, "");
 }
 
 static void MakeEveryStreamFile(void) {

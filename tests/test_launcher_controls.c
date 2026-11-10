@@ -1,16 +1,9 @@
 #include "utest.h"
 #include <SDL2/SDL.h>
 #include "launcher/controls_file.h"
+#include "test_files.h"
 
 #define LAUNCHER_CONTROLS_PATH "build/test_launcher_controls.cfg"
-
-static void WriteLauncherControls(const char *contents) {
-  FILE *file;
-
-  file = fopen(LAUNCHER_CONTROLS_PATH, "wb");
-  fputs(contents, file);
-  fclose(file);
-}
 
 UTEST(launcher_controls, every_button_has_its_default_key) {
   launcher_controls c;
@@ -38,7 +31,7 @@ UTEST(launcher_controls, a_buttons_lines_replace_its_default_key) {
   launcher_controls c;
   int cross;
 
-  WriteLauncherControls("# my keys\ncross = Space\nsquare = X\ncross = K\n");
+  WriteWholeFile(LAUNCHER_CONTROLS_PATH, "# my keys\ncross = Space\nsquare = X\ncross = K\n");
   ASSERT_EQ(1, ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c));
   cross = FindPadButton("cross");
   ASSERT_EQ(2, c.key_count[cross]);
@@ -50,7 +43,7 @@ UTEST(launcher_controls, a_buttons_lines_replace_its_default_key) {
 UTEST(launcher_controls, skips_invalid_lines) {
   launcher_controls c;
 
-  WriteLauncherControls("cross = Nope\njump = Z\ncross\n");
+  WriteWholeFile(LAUNCHER_CONTROLS_PATH, "cross = Nope\njump = Z\ncross\n");
   ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c);
   ASSERT_EQ(1, c.key_count[FindPadButton("cross")]);
   ASSERT_EQ(SDL_SCANCODE_Z, c.keys[FindPadButton("cross")][0]);
@@ -59,7 +52,7 @@ UTEST(launcher_controls, skips_invalid_lines) {
 UTEST(launcher_controls, keeps_at_most_the_most_keys_a_button_can_have) {
   launcher_controls c;
 
-  WriteLauncherControls("cross = A\ncross = B\ncross = C\ncross = D\ncross = E\n");
+  WriteWholeFile(LAUNCHER_CONTROLS_PATH, "cross = A\ncross = B\ncross = C\ncross = D\ncross = E\n");
   ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c);
   ASSERT_EQ(BUTTON_KEYS_MAX, c.key_count[FindPadButton("cross")]);
 }
@@ -150,15 +143,11 @@ UTEST(launcher_controls, save_starts_from_the_example_without_a_controls_file) {
   char *text;
 
   remove(LAUNCHER_CONTROLS_PATH);
-  {
-    FILE *file = fopen(LAUNCHER_CONTROLS_EXAMPLE_PATH, "wb");
-    fputs("# example keys\ncross    = Z\n", file);
-    fclose(file);
-  }
+  WriteWholeFile(LAUNCHER_CONTROLS_EXAMPLE_PATH, "# example keys\ncross    = Z\n");
   ResetControls(&c);
   c.keys[FindPadButton("cross")][0] = SDL_SCANCODE_K;
   ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, LAUNCHER_CONTROLS_EXAMPLE_PATH, &c));
-  text = SDL_LoadFile(LAUNCHER_CONTROLS_PATH, 0);
+  text = ReadWholeFile(LAUNCHER_CONTROLS_PATH);
   ASSERT_TRUE(text != 0);
   ASSERT_TRUE(strstr(text, "# example keys\ncross    = K\n") == text);
   SDL_free(text);
@@ -168,11 +157,12 @@ UTEST(launcher_controls, save_keeps_the_controls_files_other_lines) {
   launcher_controls c;
   char *text;
 
-  WriteLauncherControls("# mine\nstart = Return\n\nselect = Space\n");
+  WriteWholeFile(LAUNCHER_CONTROLS_PATH, "# mine\nstart = Return\n\nselect = Space\n");
   ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c);
   c.keys[FindPadButton("select")][0] = SDL_SCANCODE_BACKSPACE;
   ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, "no_such_example.cfg", &c));
-  text = SDL_LoadFile(LAUNCHER_CONTROLS_PATH, 0);
+  text = ReadWholeFile(LAUNCHER_CONTROLS_PATH);
+  ASSERT_TRUE(text != 0);
   ASSERT_TRUE(strstr(text, "# mine\nstart = Return\n\nselect = Backspace\n") == text);
   SDL_free(text);
 }

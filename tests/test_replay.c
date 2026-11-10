@@ -3,6 +3,7 @@
 #include "pc/replay.h"
 #include "pc/pad.h"
 #include "pc/time.h"
+#include "test_files.h"
 
 #define TEST_REPLAY "build/test_replay.inputs"
 
@@ -167,11 +168,9 @@ UTEST(replay, replay_of_a_missing_file_fails_cleanly) {
 
 static void TouchFile(const char *name) {
   char path[256];
-  FILE *file;
 
   snprintf(path, sizeof(path), "%s/%s", TEST_REC_DIR, name);
-  file = fopen(path, "wb");
-  if (file) { fclose(file); }
+  WriteWholeFile(path, "");
 }
 
 static void RemoveFile(const char *name) {

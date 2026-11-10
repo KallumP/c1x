@@ -1,9 +1,6 @@
 #include "utest.h"
-#include <sys/stat.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
 #include "launcher/game.h"
+#include "test_files.h"
 
 UTEST(launcher_game, game_is_in_the_build_folder) {
   char path[256];
@@ -17,21 +14,9 @@ UTEST(launcher_game, game_is_in_the_build_folder) {
 }
 
 UTEST(launcher_game, a_repo_with_the_game_built_has_it) {
-  FILE *file;
-
-  file = fopen("build/test_launcher_game/build/" GAME_FILE_NAME, "wb");
-  if (!file) {
-#ifdef _WIN32
-    mkdir("build/test_launcher_game");
-    mkdir("build/test_launcher_game/build");
-#else
-    mkdir("build/test_launcher_game", 0777);
-    mkdir("build/test_launcher_game/build", 0777);
-#endif
-    file = fopen("build/test_launcher_game/build/" GAME_FILE_NAME, "wb");
-  }
-  ASSERT_TRUE(file != 0);
-  fclose(file);
+  MakeFolder("build/test_launcher_game");
+  MakeFolder("build/test_launcher_game/build");
+  WriteWholeFile("build/test_launcher_game/build/" GAME_FILE_NAME, "");
   ASSERT_TRUE(IsGameBuilt("build/test_launcher_game"));
 }
 

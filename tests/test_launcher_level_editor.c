@@ -1,19 +1,8 @@
 #include "utest.h"
-#include <sys/stat.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
 #include "launcher/level_editor.h"
+#include "test_files.h"
 
 #define TEST_EDITOR_REPO "build/test_launcher_level_editor"
-
-static void MakeFolder(const char *path) {
-#ifdef _WIN32
-  mkdir(path);
-#else
-  mkdir(path, 0777);
-#endif
-}
 
 UTEST(launcher_level_editor, is_in_the_tools_folder) {
   char folder[256];
@@ -23,10 +12,7 @@ UTEST(launcher_level_editor, is_in_the_tools_folder) {
 }
 
 UTEST(launcher_level_editor, its_packages_are_installed_with_node_modules) {
-  MakeFolder(TEST_EDITOR_REPO);
-  MakeFolder(TEST_EDITOR_REPO "/tools");
-  MakeFolder(TEST_EDITOR_REPO "/tools/level_editor");
-  MakeFolder(TEST_EDITOR_REPO "/tools/level_editor/node_modules");
+  MakeRepoWithNodeModules(TEST_EDITOR_REPO);
   ASSERT_TRUE(AreLevelEditorPackagesInstalled(TEST_EDITOR_REPO));
 }
 
