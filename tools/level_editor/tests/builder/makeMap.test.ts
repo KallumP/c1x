@@ -280,6 +280,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(plant.id).not.toBe(boxes(built.zone)[0].id);
   });
 
+  test("a hidden plant is jungle rollers' plant of the subtype that hides, at its spot", () => {
+    const [plant] = enemies(build([enemy("hidden_plant")]).zone);
+    expect(plant.type).toEqual([ENEMY_ENTITIES.plant[0], 1]);
+    expect(plant.path.length).toBe(1);
+    expectNear(plant.path[0], SPOT_IN_ZONE, 16);
+  });
+
   describe("badgers", () => {
     const placedPath = (more: Partial<LevelObject> = {}) => enemies(build([enemy("badger", more)]).zone)[0].path;
     const JUNGLE_ROLLERS_BADGER_STEP = 400;
