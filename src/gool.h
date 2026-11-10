@@ -351,6 +351,7 @@ extern int GoolObjectTerminate(gool_object*,int);
 extern void GoolZoneObjectsTerminate(entry*);
 extern void GoolUpdateObjects(int);
 extern int GoolObjectTweenSlot(gool_object*);
+extern void GoolDrawObjectsTweened(int32_t);
 extern int GoolSendEvent(gool_object*,gool_object*,uint32_t,int,uint32_t*);
 extern int16_t GoolObjectRotate(int16_t,int16_t,int32_t,gool_object*);
 extern int16_t GoolObjectRotate2(int16_t,int16_t,int32_t,gool_object*);
