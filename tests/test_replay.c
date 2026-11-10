@@ -3,9 +3,13 @@
 #include "pc/replay.h"
 #include "pc/pad.h"
 #include "pc/time.h"
+#include "pc/pace.h"
 #include "test_files.h"
 
 #define TEST_REPLAY "build/test_replay.inputs"
+#define RECORDED_LEVEL 0x19 /* any level id; the replay must start in the same one */
+#define OTHER_LEVEL    0x09
+#define RECORDED_SEED  12345
 
 extern uint8_t keys[512]; /* defined in test_pad.c */
 
@@ -26,13 +30,13 @@ UTEST(replay, start_recording_fixes_the_clock_and_writes_the_header) {
   replay_header header;
   replay_frame frames[1];
 
-  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, 0x19, 12345));
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   ASSERT_TRUE(TimeIsFixed());
   ReplayStop();
   ASSERT_EQ(0, ReadRecording(&header, frames, 1));
   ASSERT_EQ((uint32_t)REPLAY_MAGIC, header.magic);
-  ASSERT_EQ(0x19u, header.lid);
-  ASSERT_EQ(12345u, header.seed);
+  ASSERT_EQ((uint32_t)RECORDED_LEVEL, header.lid);
+  ASSERT_EQ((uint32_t)RECORDED_SEED, header.seed);
 }
 
 UTEST(replay, each_update_records_the_clock_and_the_buttons_held) {
@@ -42,24 +46,24 @@ UTEST(replay, each_update_records_the_clock_and_the_buttons_held) {
 
   memset(keys, 0, sizeof(keys));
   PadResetBindings();
-  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, 0x19, 12345));
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   start = GetTicksElapsed();
   keys[SDL_SCANCODE_Z] = 1;
   ReplayUpdate();
   keys[SDL_SCANCODE_Z] = 0;
-  TimeAdvance(34);
+  TimeAdvance(FRAME_TICKS);
   ReplayUpdate();
   ReplayStop();
   ASSERT_EQ(2, ReadRecording(&header, frames, 3));
   ASSERT_EQ(start, header.start_ticks);
   ASSERT_EQ(start, frames[0].ticks);
   ASSERT_EQ((uint32_t)PAD_CROSS << 16, frames[0].held);
-  ASSERT_EQ(start + 34, frames[1].ticks);
+  ASSERT_EQ(start + FRAME_TICKS, frames[1].ticks);
   ASSERT_EQ(0u, frames[1].held);
 }
 
 UTEST(replay, stopping_goes_back_to_the_real_clock) {
-  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, 0x19, 12345));
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   ReplayStop();
   ASSERT_FALSE(TimeIsFixed());
 }
@@ -70,12 +74,12 @@ static void Record(uint32_t lid, SDL_Scancode *held, int count) {
 
   memset(keys, 0, sizeof(keys));
   PadResetBindings();
-  ReplayStart(TEST_REPLAY, REPLAY_RECORD, lid, 12345);
+  ReplayStart(TEST_REPLAY, REPLAY_RECORD, lid, RECORDED_SEED);
   for (i=0;i<count;i++) {
     memset(keys, 0, sizeof(keys));
     if (held[i]) { keys[held[i]] = 1; }
     ReplayUpdate();
-    TimeWaitFrame(34);
+    TimeWaitFrame(FRAME_TICKS);
   }
   ReplayStop();
   memset(keys, 0, sizeof(keys));
@@ -84,12 +88,12 @@ static void Record(uint32_t lid, SDL_Scancode *held, int count) {
 UTEST(replay, replay_feeds_the_recorded_buttons_instead_of_the_keyboard) {
   SDL_Scancode held[2] = { SDL_SCANCODE_Z, 0 };
 
-  Record(0x19, held, 2);
-  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, 0x19, 12345));
+  Record(RECORDED_LEVEL, held, 2);
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
   keys[SDL_SCANCODE_LEFT] = 1; /* ignored while replaying */
   ReplayUpdate();
   ASSERT_EQ((uint32_t)PAD_CROSS << 16, SwPadRead(0));
-  TimeWaitFrame(34);
+  TimeWaitFrame(FRAME_TICKS);
   ReplayUpdate();
   ASSERT_EQ(0u, SwPadRead(0));
   ReplayStop();
@@ -101,10 +105,10 @@ UTEST(replay, replay_starts_on_the_fixed_clock_at_the_recorded_time) {
   replay_header header;
   replay_frame frames[1];
 
-  Record(0x19, held, 1);
+  Record(RECORDED_LEVEL, held, 1);
   ASSERT_EQ(1, ReadRecording(&header, frames, 1));
   SetTicksElapsed(header.start_ticks + 1000);
-  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, 0x19, 12345));
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
   ASSERT_TRUE(TimeIsFixed());
   ASSERT_EQ(header.start_ticks, GetTicksElapsed());
   ReplayStop();
@@ -113,11 +117,11 @@ UTEST(replay, replay_starts_on_the_fixed_clock_at_the_recorded_time) {
 UTEST(replay, keyboard_and_real_clock_take_over_at_the_end_of_the_recording) {
   SDL_Scancode held[1] = { SDL_SCANCODE_Z };
 
-  Record(0x19, held, 1);
-  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, 0x19, 12345));
+  Record(RECORDED_LEVEL, held, 1);
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
   ReplayUpdate(); /* the only recorded frame */
   ASSERT_EQ((uint32_t)PAD_CROSS << 16, SwPadRead(0));
-  TimeWaitFrame(34);
+  TimeWaitFrame(FRAME_TICKS);
   keys[SDL_SCANCODE_LEFT] = 1;
   ReplayUpdate(); /* past the end */
   ASSERT_EQ((uint32_t)PAD_LEFT << 16, SwPadRead(0));
@@ -128,8 +132,8 @@ UTEST(replay, keyboard_and_real_clock_take_over_at_the_end_of_the_recording) {
 UTEST(replay, ending_a_replay_goes_back_to_normal_speed) {
   SDL_Scancode held[1] = { 0 };
 
-  Record(0x19, held, 1);
-  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, 0x19, 12345));
+  Record(RECORDED_LEVEL, held, 1);
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
   TimeSetSpeed(8);
   ReplayUpdate(); /* the only recorded frame */
   ReplayUpdate(); /* past the end */
@@ -139,12 +143,12 @@ UTEST(replay, ending_a_replay_goes_back_to_normal_speed) {
 UTEST(replay, is_playing_only_while_replaying) {
   SDL_Scancode held[1] = { 0 };
 
-  Record(0x19, held, 1);
+  Record(RECORDED_LEVEL, held, 1);
   ASSERT_FALSE(ReplayIsPlaying());
-  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, 0x19, 12345));
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   ASSERT_FALSE(ReplayIsPlaying()); /* recording isn't replaying */
   ReplayStop();
-  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, 0x19, 12345));
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
   ASSERT_TRUE(ReplayIsPlaying());
   ReplayUpdate(); /* nothing recorded, so this is past the end */
   ASSERT_FALSE(ReplayIsPlaying());
@@ -153,14 +157,14 @@ UTEST(replay, is_playing_only_while_replaying) {
 UTEST(replay, replay_refuses_a_recording_from_another_boot_level) {
   SDL_Scancode held[1] = { 0 };
 
-  Record(0x19, held, 1);
-  ASSERT_EQ(0, ReplayStart(TEST_REPLAY, REPLAY_PLAY, 0x09, 12345));
+  Record(RECORDED_LEVEL, held, 1);
+  ASSERT_EQ(0, ReplayStart(TEST_REPLAY, REPLAY_PLAY, OTHER_LEVEL, RECORDED_SEED));
   ASSERT_FALSE(TimeIsFixed());
 }
 
 UTEST(replay, replay_of_a_missing_file_fails_cleanly) {
   remove("build/no_such_file.inputs");
-  ASSERT_EQ(0, ReplayStart("build/no_such_file.inputs", REPLAY_PLAY, 0x19, 12345));
+  ASSERT_EQ(0, ReplayStart("build/no_such_file.inputs", REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
   ASSERT_FALSE(TimeIsFixed());
 }
 
@@ -220,52 +224,6 @@ UTEST(replay, making_a_folder_that_exists_is_fine) {
 }
 
 UTEST(replay, start_fails_cleanly_for_a_bad_path) {
-  ASSERT_EQ(0, ReplayStart("build/no/such/dir/test.inputs", REPLAY_RECORD, 0x19, 12345));
+  ASSERT_EQ(0, ReplayStart("build/no/such/dir/test.inputs", REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   ASSERT_FALSE(TimeIsFixed());
-}
-
-UTEST(replay, recording_writes_the_header_then_each_frame) {
-  replay_recorder r = { 0 };
-  replay_header header = { .lid = 9, .seed = 1234, .start_ticks = 5678 };
-  replay_header header_read;
-  replay_frame frames_read[3];
-  FILE *file;
-  size_t count;
-
-  ASSERT_EQ(1, ReplayRecordStart(&r, TEST_REPLAY, &header));
-  ReplayRecordFrame(&r, 34, 0x10);
-  ReplayRecordFrame(&r, 68, 0x30);
-  ReplayRecordStop(&r);
-  ASSERT_TRUE(r.file == 0);
-
-  file = fopen(TEST_REPLAY, "rb");
-  ASSERT_TRUE(file != 0);
-  ASSERT_EQ(1u, fread(&header_read, sizeof(header_read), 1, file));
-  count = fread(frames_read, sizeof(replay_frame), 3, file);
-  fclose(file);
-  ASSERT_EQ((uint32_t)REPLAY_MAGIC, header_read.magic);
-  ASSERT_EQ(9u, header_read.lid);
-  ASSERT_EQ(1234u, header_read.seed);
-  ASSERT_EQ(5678, header_read.start_ticks);
-  ASSERT_EQ(2u, count);
-  ASSERT_EQ(34, frames_read[0].ticks);
-  ASSERT_EQ(0x10u, frames_read[0].held);
-  ASSERT_EQ(68, frames_read[1].ticks);
-  ASSERT_EQ(0x30u, frames_read[1].held);
-}
-
-UTEST(replay, recording_to_a_bad_path_fails) {
-  replay_recorder r = { 0 };
-  replay_header header = { 0 };
-
-  ASSERT_EQ(0, ReplayRecordStart(&r, "build/no/such/dir/test.inputs", &header));
-  ASSERT_TRUE(r.file == 0);
-}
-
-UTEST(replay, frames_are_ignored_when_not_recording) {
-  replay_recorder r = { 0 };
-
-  ReplayRecordFrame(&r, 34, 0x10); /* must not crash */
-  ReplayRecordStop(&r);
-  ASSERT_TRUE(r.file == 0);
 }
