@@ -32,7 +32,8 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // back and forth along its path, subtype 2 red, hopping along it after crash,
 // and stormy ascent's lab assistant LabAC subtype 0, throwing vials across the map,
 // and temple ruins' cobra, subtype 1 of its PlanC, in slot 26 (see MOVED_ENEMY_CODE),
-// and heavy machinery's grey robot dog PoRoC subtype 0, walking back and forth along its path
+// and heavy machinery's grey robot dog PoRoC subtype 0, walking back and forth along its path,
+// and toxic waste's barrel roller FatsC subtype 0, rolling barrels (BaraC) down his path
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   plant: [25, 0], snake: [26, 1], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],

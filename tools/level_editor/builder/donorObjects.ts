@@ -30,6 +30,7 @@ const STORMY_ASCENT: DonorLevel = { lid: 0x22, name: "Stormy Ascent", file: "s00
 const TEMPLE_RUINS: DonorLevel = { lid: 0x1c, name: "Temple Ruins", file: "s000001c" };
 // its robot dogs' code is PoRoC, as the lab's walkers' child object is, but not the same
 const HEAVY_MACHINERY: DonorLevel = { lid: 0x6, name: "Heavy Machinery", file: "s0000006" };
+const TOXIC_WASTE: DonorLevel = { lid: 0x7, name: "Toxic Waste", file: "s0000007" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -50,6 +51,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   lab_assistant: STORMY_ASCENT,
   snake: TEMPLE_RUINS,
   robot_dog: HEAVY_MACHINERY,
+  barrel_roller: TOXIC_WASTE,
 };
 
 export interface DonorObject {
