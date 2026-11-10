@@ -147,6 +147,12 @@ function batRoostExample(donor: Level): Buffer {
   return withSubtype(roost, ENEMY_ENTITIES.bat[1]);
 }
 
+// a hidden plant: jungle rollers' plant of the subtype that hides in the ground
+// (as temple ruins' do), as jungle rollers has none of them
+function hiddenPlantExample(templates: Templates): Buffer {
+  return withSubtype(templates.entity(...ENEMY_ENTITIES.plant), ENEMY_ENTITIES.hidden_plant[1]);
+}
+
 
 // entities each enemy takes: a leader bats roost and its two leaders, one for the rest
 function entitiesFor(enemy: LevelObject): number {
@@ -156,9 +162,9 @@ function entitiesFor(enemy: LevelObject): number {
   return 1;
 }
 
-// the enemies that stay at their spot: jungle rollers' plant, up the creek's two
-// river plants, and the spider hanging there
-const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider"];
+// the enemies that stay at their spot: jungle rollers' plant and hidden plant, up
+// the creek's two river plants, and the spider hanging there
+const STANDING_ENEMIES: EnemyType[] = ["plant", "hidden_plant", "blue_river_plant", "green_river_plant", "spider"];
 
 // places objects in the level: where they are in it, which zone they're in, and their entities
 class ObjectPlacer {
@@ -386,6 +392,9 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   // an enemy's entity as its own level has it: its donor level's, or jungle rollers'
   const enemyExample = (type: EnemyType) => {
     const donor = donorLevels.get(type);
+    if (type === "hidden_plant") {
+      return hiddenPlantExample(templates);
+    }
     if (donor && type === "bat") {
       return batRoostExample(donor);
     }
