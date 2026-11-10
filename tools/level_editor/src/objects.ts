@@ -47,6 +47,7 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // hovering back and forth along their path:
 // - camera_robot: castle machinery's grey robot with a periscope camera, rising and falling
 // - bird: slippery climb's brown bird, flapping up and down
+// - flying_camera: castle machinery's and heavy machinery's grey ball with a camera lens, floating up and down
 // coming along their path at crash, one at a time, from its first node:
 // - blob: the lab's yellow slime blobs, hopping
 // running out along their path, count at a time, when crash comes near:
@@ -56,13 +57,13 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - leader_bats: sunset vista's, from a roost, flying across between two leader bats: kill both and they stop
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track
-export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake", "gunman", "fish", "lab_assistant", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "walking_lizard", "robot_dog", "barrel_roller", "camera_robot", "bird", "electric_scientist", "blob", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
+export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake", "gunman", "fish", "lab_assistant", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "walking_lizard", "robot_dog", "barrel_roller", "camera_robot", "bird", "electric_scientist", "blob", "flying_camera", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
 
 // the enemies that move along a path of nodes, and how many nodes it can have
-export const PATH_ENEMIES = ["crab", "turtle", "native", "badger", "warthog", "walking_spider", "monkey", "lizard", "red_lizard", "walking_lizard", "robot_dog", "barrel_roller", "camera_robot", "bird", "electric_scientist", "blob"] as const satisfies readonly EnemyType[];
+export const PATH_ENEMIES = ["crab", "turtle", "native", "badger", "warthog", "walking_spider", "monkey", "lizard", "red_lizard", "walking_lizard", "robot_dog", "barrel_roller", "camera_robot", "bird", "electric_scientist", "blob", "flying_camera"] as const satisfies readonly EnemyType[];
 export type PathEnemy = (typeof PATH_ENEMIES)[number];
 export const isPathEnemy = (type: EnemyType | undefined): type is PathEnemy => PATH_ENEMIES.some((enemy) => enemy === type);
 export const PATH_NODES_MAX = 20;

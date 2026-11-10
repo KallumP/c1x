@@ -19,7 +19,7 @@ function placesAlong(object: LevelObject, turn: number, scale: number): Vec3[] {
 }
 
 // the path enemies that hover along their paths, which needn't be over a floor
-const HOVERING: EnemyType[] = ["camera_robot", "bird"];
+const HOVERING: EnemyType[] = ["camera_robot", "bird", "flying_camera"];
 
 // whether a place along a path is in a wall
 function inWall(place: Vec3, triangles: Triangle[]): boolean {
