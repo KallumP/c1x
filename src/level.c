@@ -50,6 +50,7 @@ extern uint32_t screen_proj;
 #include "pc/time.h"
 #include "pc/gfx/soft.h"
 #include "pc/follow.h"
+#include "pc/rebound.h"
 extern sw_transform_struct params;
 
 //----- (800253A0) --------------------------------------------------------
@@ -774,12 +775,14 @@ uint16_t ZoneReboundVector(vec *va, vec *vb) {
   entry *neighbor;
   rect _rect;
   uint16_t root, node;
-  int i;
+  int i, steps;
 
   if (!vb->x && !vb->y && !vb->z) { return 0; }
   header = (zone_header*)cur_zone->items[0];
   i = 0;
-  while (1) { /* this will loop endlessly while ZoneFindNode returns 0 */
+  for (steps=0;;steps++) { /* this will loop endlessly while ZoneFindNode returns 0 */
+    if (ReboundGivesUp(ns.ldat->lid, steps)) { return 1; }
+    i = ReboundSearchFrom(ns.ldat->lid, i);
     while (i<header->neighbor_count) {
       neighbor = NSLookup(&header->neighbors[i]);
       z_rect = (zone_rect*)neighbor->items[1];

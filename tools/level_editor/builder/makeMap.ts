@@ -147,6 +147,21 @@ function batRoostExample(donor: Level): Buffer {
   return withSubtype(roost, ENEMY_ENTITIES.bat[1]);
 }
 
+// a gunman as cortex power's are, without its first's link (its init flag a, the
+// entity id of an object there it reacts to)
+function gunmanExample(donor: Level): Buffer {
+  return withInitFlagA(donorEnemyEntity(donor, "gunman"), 0);
+}
+
+const INIT_FLAG_MAX = 32767; // an entity's init flags are 16 bits, signed
+
+// a gunman's entity with his range (how near crash comes before he shoots) in
+// his init flag c, in game units: his code is patched to read it there
+function gunmanEntity(entity: Buffer, enemy: LevelObject, scale: number): Buffer {
+  const range = Math.round(numberSetting(enemy, "range") * scale);
+  return withInitFlagC(entity, Math.min(range, INIT_FLAG_MAX));
+}
+
 // an enemy's entity from the level it's taken from, of its type in custom levels
 // (another than its own if its code moves there: see MOVED_ENEMY_CODE)
 function donorEnemyEntity(donor: Level, type: EnemyType): Buffer {
@@ -163,7 +178,8 @@ function entitiesFor(enemy: LevelObject): number {
 }
 
 // the enemies that stay at their spot: jungle rollers' plant, up the creek's two
-// river plants, the spider hanging there, and temple ruins' cobra
+// river plants, the spider hanging there and temple ruins' cobra (and cortex
+// power's gunman, with his range)
 const STANDING_ENEMIES: EnemyType[] = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake"];
 
 // places objects in the level: where they are in it, which zone they're in, and their entities
@@ -214,6 +230,11 @@ class ObjectPlacer {
   placeAtSpot(enemy: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(enemy));
     this.entities[zone].push(withPosition(withEntityId(example, this.ids.shift()!), at));
+  }
+
+  // cortex power's gunman (example) at his spot, shooting once crash comes within his range
+  placeGunman(enemy: LevelObject, example: Buffer): void {
+    this.placeAtSpot(enemy, gunmanEntity(example, enemy, this.scale));
   }
 
   // stormy ascent's lab assistant (example) at its spot, facing its landing spot
@@ -392,6 +413,9 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   // an enemy's entity as its own level has it: its donor level's, or jungle rollers'
   const enemyExample = (type: EnemyType) => {
     const donor = donorLevels.get(type);
+    if (donor && type === "gunman") {
+      return gunmanExample(donor);
+    }
     if (donor && type === "bat") {
       return batRoostExample(donor);
     }
@@ -401,6 +425,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     return templates.entity(...ENEMY_ENTITIES[type]);
   };
   enemies.filter((enemy) => STANDING_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeAtSpot(enemy, enemyExample(enemy.enemy!)));
+  enemies.filter((enemy) => enemy.enemy === "gunman").forEach((enemy) => placer.placeGunman(enemy, enemyExample("gunman")));
   enemies.filter((enemy) => enemy.enemy === "lab_assistant").forEach((enemy) => placer.placeLabAssistant(enemy, enemyExample("lab_assistant")));
   enemies.filter((enemy) => OWN_PATH_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeWithItsPath(enemy, enemyExample(enemy.enemy!)));
   enemies.filter((enemy) => enemy.enemy === "bat").forEach((enemy) => placer.placeBatRoost(enemy, enemyExample("bat")));

@@ -62,6 +62,7 @@ const hasStormyAscent = existsSync(`${STREAMS}/s0000022.nsd`); // stormy ascent 
 const hasTempleRuins = existsSync(`${STREAMS}/s000001c.nsd`); // temple ruins (0x1c)
 const hasHeavyMachinery = existsSync(`${STREAMS}/s0000006.nsd`); // heavy machinery (0x6)
 const hasToxicWaste = existsSync(`${STREAMS}/s0000007.nsd`); // toxic waste (0x7)
+const hasCortexPower = existsSync(`${STREAMS}/s0000003.nsd`); // cortex power (0x3)
 
 const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
 
@@ -839,6 +840,42 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(placed.path[0][2]).toBeLessThan(placed.path.at(-1)![2]); // the spawn is the +z way
       expectNear((placed.path[0][2] + placed.path.at(-1)![2]) / 2, SPOT_Z, 8);
       stepLengths(placed.path).forEach((step) => expectNear(step, TOXIC_WASTE_STEP, 8));
+    });
+  });
+
+  describe.skipIf(!hasCortexPower)("gunmen, from cortex power", () => {
+    test("a level with a gunman has cortex power's gunman code, models and sounds", () => {
+      const { level, entries } = build([enemy("gunman")]);
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.gunman[0]]).toBe(stringToEid("MafiC"));
+      expect(["SlimG", "MTraG", "SliMV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(soundEidsOf(level)).toEqual(expect.arrayContaining(["gun3A", "laf3A"].map(stringToEid)));
+    });
+
+    test("a gunman stands at his spot", () => {
+      const [placed] = enemies(build([enemy("gunman")]).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.gunman);
+      expect(placed.path.length).toBe(1);
+      expectNear(placed.path[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a gunman isn't linked to another object, as cortex power's first is (by its init flag a)", () => {
+      expect(initFlagsOf(build([enemy("gunman")]).zone, ENEMY_ENTITIES.gunman)[0]).toBe(0);
+    });
+
+    test("a gunman's range goes into his init flag c, in game units", () => {
+      // 16 m without one; at scale 256
+      const rangeFlag = (gunman: LevelObject) => initFlagsOf(build([gunman]).zone, ENEMY_ENTITIES.gunman)[2];
+      expect(rangeFlag(enemy("gunman"))).toBe(4096);
+      expect(rangeFlag(enemy("gunman", { range: 30.5 }))).toBe(7808);
+    });
+
+    test("a gunman's range is at most what his init flag c holds", () => {
+      const placed = initFlagsOf(build([enemy("gunman", { range: 40 })], { scale: 1000 }).zone, ENEMY_ENTITIES.gunman);
+      expect(placed[2]).toBe(32767);
+    });
+
+    test("a level's gunman code is cortex power's as patched for custom levels", () => {
+      expect(builtCode([enemy("gunman")], "MafiC")).toEqual(patchedDonorCode("gunman", "MafiC"));
     });
   });
 

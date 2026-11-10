@@ -38,7 +38,7 @@ const LANDING_SIZE = 0.35;   // a lab assistant's landing spot's ring's radius, 
 const VIAL_COLOUR = "#d0409a"; // its vials' pink, for their flight and landing spot
 
 // the enemies that stay at their spot, drawn there
-const SPOT_ENEMIES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake"] as const;
+const SPOT_ENEMIES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake", "gunman"] as const;
 type SpotEnemy = (typeof SPOT_ENEMIES)[number];
 const isSpotEnemy = (enemy: string | undefined): enemy is SpotEnemy => SPOT_ENEMIES.some((spotEnemy) => spotEnemy === enemy);
 
@@ -160,7 +160,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // an enemy that stays where it's placed, facing the player: a plant, a river plant, a spider hanging there, or a cobra
+  // an enemy that stays where it's placed, facing the player: a plant, a river plant, a spider hanging there, a cobra or a gunman
   const renderAtSpot = (object: LevelObject, index: number, enemy: SpotEnemy) => renderShapeModel(ENEMY_SHAPES[enemy], base(object), index);
 
   // a fish: at its spot, where it leaps from, facing the way it leaps (across the

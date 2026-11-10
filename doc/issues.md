@@ -70,8 +70,6 @@
 
 ### Cortex Power
 
-- going near a MafiC causes the game to crash
-
 ### Generator Room
 
 ### Toxic Waste
