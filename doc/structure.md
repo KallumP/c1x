@@ -55,6 +55,8 @@ Project structure is listed below, including descriptions for each file.
 │   │   │── settings.c,h     # game settings (settings.cfg loading)
 │   │   │── loading.c,h      # level loading screen image conversion and minimum display time
 │   │   │── speed.c,h        # crash's speed measurement for the speed display
+│   │   │── spin.c,h         # crash's spins left and next refill, for the spin display
+│   │   │── frames.h         # game frames elapsed, started part way as on a ps1
 │   │   │── follow.c,h       # the follow camera's sideways offset (cam_mode 9, custom levels)
 │   │   └── time.c,h         # tick counter
 │   ├── common.h             # common includes, macros, and codes
