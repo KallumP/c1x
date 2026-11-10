@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { ENEMY_SHAPES, partGeometry, shapeBounds } from "../../src/enemyShapes";
+import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds } from "../../src/enemyShapes";
 import { expectNear } from "../helpers";
 
 type EnemyShapeName = keyof typeof ENEMY_SHAPES;
@@ -21,7 +21,7 @@ describe("enemy shapes", () => {
   // the sizes of the game's models: jungle rollers' JuPcG and Pi10V, n. sanity beach's Cr19G and
   // Tu19G, the great gate's Na1iV and Mo1fG, road to nowhere's WarHV, fumbling in the dark's Sp1sV,
   // up the creek's RV1fV and RF1fV, temple ruins' Ba1sG, sunset vista's Ba2wG, the lost city's
-  // LizgG and LizrG, stormy ascent's LW1EG, temple ruins' cobra JuPsG (its first frame in JupsV), and heavy machinery's robot dog PRS1G (its first frame in PRSSV, at its 0.75 scale); a bat's spot is above its lowest point, as the game's
+  // LizgG and LizrG, stormy ascent's LW1EG, temple ruins' cobra JuPsG (its first frame in JupsV), heavy machinery's robot dog PRS1G (its first frame in PRSSV, at its 0.75 scale), and toxic waste's barrel roller Fat1G (its first frame in FaS1V, without the barrel he holds out); a bat's spot is above its lowest point, as the game's
   // (a river plant's petals are lower than the game's first frame rears its back one, 602)
   test.each<ShapeSize>([
     { enemy: "plant", bottom: 0, top: 720, across: [760, 900] },
@@ -41,6 +41,7 @@ describe("enemy shapes", () => {
     { enemy: "lab_assistant", bottom: 0, top: 1203, across: [340, 460], long: [470, 610] },
     { enemy: "snake", bottom: 0, top: 558, across: [240, 320], long: [230, 310] },
     { enemy: "robot_dog", bottom: 0, top: 557, across: [620, 750], long: [630, 770] },
+    { enemy: "barrel_roller", bottom: 0, top: 1069, across: [850, 1100], long: [550, 760] },
   ])("the $enemy is as big as the game's, the same both sides", ({ enemy, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(ENEMY_SHAPES[enemy]);
     expect(min[1]).toBeCloseTo(bottom);
@@ -70,10 +71,20 @@ describe("enemy shapes", () => {
     ["lab_assistant", "eye"],
     ["snake", "eye"],
     ["robot_dog", "eye"],
+    ["barrel_roller", "eye"],
   ] as const)("the %s faces +z: its %s is in front of its middle", (enemy, front) => {
     const parts = partsNamed(enemy, front);
     expect(parts.length).toBeGreaterThan(0);
     expect(parts.every((part) => part.at[2] > 0)).toBe(true);
+  });
+
+  test("a barrel roller's barrel lies on its side, as big as toxic waste's", () => {
+    // BaV7G: 595 along its axis, which lies across (x), 370 high, 389 across it
+    const { min, max } = shapeBounds(BARREL_SHAPE);
+    expect(min[1]).toBeCloseTo(0);
+    expectWithin(max[0] - min[0], [560, 630]);
+    expectWithin(max[1], [350, 400]);
+    expectWithin(max[2] - min[2], [350, 420]);
   });
 
   test("the badger's tail is behind its middle", () => {
