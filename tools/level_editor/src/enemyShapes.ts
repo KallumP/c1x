@@ -32,6 +32,7 @@ const RIVER_PLANT_LEAVES = { blue: "#4a6478", green: "#2f7d32" };
 const FISH_COLOURS = { body: "#23306e", fin: "#e08a2a", eye: "#f4f1e0", pupil: "#1a1a1a" };
 // the lost city's lizards: green (LizgG) and red (LizrG), their bellies and eyes the same
 const LIZARD_SKINS = { lizard: "#6f9a32", red_lizard: "#b0402e" };
+const WALKING_LIZARD_COLOURS = { skin: "#5f7a2a", spike: "#a0552a", eye: "#c8302a" };
 const LIZARD_COLOURS = { belly: "#d8c27a", claw: "#e8e0c8", eye: "#f2d36b", pupil: "#1a1a1a" };
 const LAB_ASSISTANT_COLOURS = { coat: "#e6e8ee", trousers: "#3a3f55", shoe: "#1f1f24", skin: "#e0b48c", eye: "#1a1a1a", vial: "#d0409a" };
 const BAT_COLOURS = { body: "#3a2c34", wing: "#5a3a3e", ear: "#2a1e26", eye: "#f2d36b" };
@@ -254,6 +255,30 @@ function lizardOf(skin: string): ShapePart[] {
     ball(1, [0, 420, 60], LIZARD_COLOURS.belly, { stretch: [80, 140, 90] }),
     ball(1, [0, 640, 120], skin, { stretch: [80, 70, 130] }),
     ball(1, [0, 300, -420], skin, { stretch: [50, 50, 300] }),
+  ];
+}
+
+// one of the walking lizard's sides: a front and a back leg, splayed out, and an eye
+function walkingLizardSide(): ShapePart[] {
+  return [
+    ball(1, [200, 150, 200], WALKING_LIZARD_COLOURS.skin, { stretch: [90, 50, 50] }),
+    ball(1, [290, 30, 230], WALKING_LIZARD_COLOURS.skin, { stretch: [40, 30, 60] }),
+    ball(1, [200, 150, -200], WALKING_LIZARD_COLOURS.skin, { stretch: [90, 50, 50] }),
+    ball(1, [290, 30, -170], WALKING_LIZARD_COLOURS.skin, { stretch: [40, 30, 60] }),
+    ball(18, [55, 285, 490], WALKING_LIZARD_COLOURS.eye, { name: "eye" }),
+  ];
+}
+
+// the lost city's walking lizard (Ig1wG): on all fours, spikes down its back, a
+// long tail behind, facing +z
+function walkingLizard(): ShapePart[] {
+  const spike = (z: number) => ball(1, [0, 360, z], WALKING_LIZARD_COLOURS.spike, { stretch: [15, 59, 25] });
+  return [
+    ...bothSides(walkingLizardSide()),
+    ball(1, [0, 200, 0], WALKING_LIZARD_COLOURS.skin, { stretch: [190, 130, 330] }),
+    ball(1, [0, 230, 420], WALKING_LIZARD_COLOURS.skin, { stretch: [100, 90, 100] }),
+    ball(1, [0, 140, -480], WALKING_LIZARD_COLOURS.skin, { stretch: [60, 50, 240] }),
+    ...[-200, -50, 100, 250].map(spike),
   ];
 }
 
@@ -685,13 +710,13 @@ const RIVER_PLANT_HEIGHT = 400;
 
 const GAME_HEIGHTS: Record<StandingEnemy, number> = {
   plant: 720, snake: 558, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
-  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, walking_lizard: 763, lab_assistant: 1203, robot_dog: 557, barrel_roller: 1069, gunman: 1181,
+  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, walking_lizard: 419, lab_assistant: 1203, robot_dog: 557, barrel_roller: 1069, gunman: 1181,
 };
 
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
   plant, snake: cobra, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
   blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
-  lizard, red_lizard: redLizard, walking_lizard: lizard, lab_assistant: labAssistant, robot_dog: robotDog, barrel_roller: barrelRoller, gunman,
+  lizard, red_lizard: redLizard, walking_lizard: walkingLizard, lab_assistant: labAssistant, robot_dog: robotDog, barrel_roller: barrelRoller, gunman,
 };
 
 // each standing enemy's shape, on the floor, as tall as the game's model
