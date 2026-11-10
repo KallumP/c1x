@@ -14,6 +14,7 @@
 #include "pc/levelend.h"
 #include "pc/fling.h"
 #include "pc/shield.h"
+#include "pc/tween.h"
 int CardControl(int op, int part_idx) { return 1; }
 
 /* forward declarations for unexported funcs */
@@ -22,6 +23,7 @@ int GoolObjectInit(gool_object*,int,int,int,int*);
 int GoolObjectKill(gool_object*,int);
 int GoolObjectPushFrame(gool_object*,int,uint32_t);
 int GoolObjectUpdate(gool_object*,int);
+static int GoolObjectIsDisplayed(gool_object*,uint32_t);
 void GoolObjectTransform(gool_object*);
 int GoolObjectColors(gool_object*);
 int GoolObjectBound(gool_object*);
@@ -719,6 +721,7 @@ gool_object *GoolObjectCreate(void *parent, int exec, int subtype, int argc, uin
       return child;
   }
   GoolObjectAddChild(_parent, child);
+  TweenForget(GoolObjectTweenSlot(child)); /* pc: not tweened from the slot's last object */
   child->handle.subtype = 3;
   GoolObjectInit(child, exec, subtype, argc, argv);
   zone = child->zone ? child->zone : cur_zone;
@@ -944,6 +947,43 @@ void GoolObjectLocalBound(gool_object *obj, vec *scale) {
   obj->scale = *scale;
 }
 
+/* pc: the object's slot in the tween pose table (pc/tween.h) */
+int GoolObjectTweenSlot(gool_object *obj) {
+  if (obj == player) { return GOOL_OBJECT_COUNT; }
+  return obj - objects;
+}
+
+/* pc: where the object is drawn */
+void GoolObjectPose(gool_object *obj, tween_pose *pose) {
+  pose->trans = obj->trans;
+  pose->rot = obj->rot;
+  pose->scale = obj->scale;
+}
+
+/* pc: move the object to pose, to draw it there */
+static void GoolSetObjectPose(gool_object *obj, tween_pose *pose) {
+  obj->trans = pose->trans;
+  obj->rot = pose->rot;
+  obj->scale = pose->scale;
+}
+
+static void GoolRecordObjectPose(gool_object *obj) {
+  tween_pose pose;
+
+  if (obj->handle.subtype != 3) { return; }
+  GoolObjectPose(obj, &pose);
+  TweenRecord(GoolObjectTweenSlot(obj), &pose);
+}
+
+/* pc: keep where every object is, before the game frame moves them, to tween from */
+static void GoolRecordObjectPoses() {
+  int i;
+
+  GoolRecordObjectPose(player);
+  for (i=0;i<GOOL_OBJECT_COUNT;i++)
+    GoolRecordObjectPose(&objects[i]);
+}
+
 //----- (8001D5EC) --------------------------------------------------------
 void GoolUpdateObjects(int flag) {
   gool_handle *handle;
@@ -953,6 +993,7 @@ void GoolUpdateObjects(int flag) {
   draw_count_ro = draw_count;
   frames_elapsed = context.draw_stamp / 34;
   if (!crash) { return; }
+  GoolRecordObjectPoses(); /* pc */
   for (i=0;i<8;i++) {
     handle = &handles[i];
     GoolObjectHandleTraverseTreePreorder(
@@ -1071,7 +1112,7 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
   gool_state_ref response;
   uint32_t status_b, category, flags;
   uint32_t top, timestamp, wait;
-  int animate, display;
+  int animate;
   int elapsed_since;
   int res;
 
@@ -1159,36 +1200,67 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
       obj->status_a &= ~GOOL_FLAG_FIRST_FRAME; /* clear first frame flag */
     }
   }
-  /* if object has no anim sequence, is not displayable (visible?), or global display flag is clear */
+  if (GoolObjectIsDisplayed(obj, status_b))
+    GoolObjectTransform(obj);
+  cur_obj = 0; /* indicate that there is no 'current object' to display */
+  return SUCCESS;
+}
+
+/*
+ * whether to display (draw) the object, with its status b flags (split out
+ * of GoolObjectUpdate, pc). not if it has no anim sequence, is invisible, or
+ * the global display flag (or its category's) is clear
+ */
+static int GoolObjectIsDisplayed(gool_object *obj, uint32_t status_b) {
+  gool_header *header;
+
   if (!obj->anim_seq ||
       (status_b & GOOL_FLAG_INVISIBLE) ||
-      !(cur_display_flags & GOOL_FLAG_DISPLAY)) {
-    cur_obj = 0; /* indicate that there is no 'current object' to display */
-    return SUCCESS; /* ...and don't render or display the object */
-  }
+      !(cur_display_flags & GOOL_FLAG_DISPLAY))
+    return 0;
   if (((status_b & GOOL_FLAG_FORCE_UPDATE) ||
       (obj->state_flags & GOOL_FLAG_MENUTEXT_STATE))
        && (cur_display_flags & GOOL_FLAG_FORCE_DISP_MENUS))
-    display = 1;
-  else {
-    header = (gool_header*)obj->global->items[0];
-    category = header->category;
-    switch (category) {
-    case 0x100: display = cur_display_flags & GOOL_FLAG_DISPLAY_C1;   break;
-    case 0x300: display = cur_display_flags & GOOL_FLAG_DISPLAY_C356; break;
-    case 0x400: display = cur_display_flags & GOOL_FLAG_DISPLAY_C4;   break;
-    case 0x500: display = cur_display_flags & GOOL_FLAG_DISPLAY_C356; break;
-    case 0x600: display = cur_display_flags & GOOL_FLAG_DISPLAY_C356; break;
-    case 0x200: display = cur_display_flags & GOOL_FLAG_DISPLAY_C2;   break;
-    default:
-      display = 0;
-      break;
-    }
+    return 1;
+  header = (gool_header*)obj->global->items[0];
+  switch (header->category) {
+  case 0x100: return cur_display_flags & GOOL_FLAG_DISPLAY_C1;
+  case 0x300: return cur_display_flags & GOOL_FLAG_DISPLAY_C356;
+  case 0x400: return cur_display_flags & GOOL_FLAG_DISPLAY_C4;
+  case 0x500: return cur_display_flags & GOOL_FLAG_DISPLAY_C356;
+  case 0x600: return cur_display_flags & GOOL_FLAG_DISPLAY_C356;
+  case 0x200: return cur_display_flags & GOOL_FLAG_DISPLAY_C2;
+  default:    return 0;
   }
-  if (display)
-    GoolObjectTransform(obj);
+}
+
+/* pc: draw the object (only) in its pose alpha of the way from the last game frame */
+static int GoolObjectDrawTweened(gool_object *obj, int alpha) {
+  tween_pose now, drawn;
+
+  if (obj->handle.subtype != 3) { return SUCCESS; }
+  if (!GoolObjectIsDisplayed(obj, obj->status_b)) { return SUCCESS; }
+  GoolObjectPose(obj, &now);
+  TweenPoseAt(GoolObjectTweenSlot(obj), &now, alpha, &drawn);
+  GoolSetObjectPose(obj, &drawn);
+  cur_obj = obj;
+  GoolObjectTransform(obj);
   cur_obj = 0;
+  GoolSetObjectPose(obj, &now);
   return SUCCESS;
+}
+
+/* pc: draw every object, without updating them, part way (alpha) from the last game frame */
+void GoolDrawObjectsTweened(int32_t alpha) {
+  int i;
+
+  if (!crash) { return; }
+  for (i=0;i<8;i++) {
+    GoolObjectHandleTraverseTreePreorder(
+      OBJECT(&handles[i]),
+      GoolObjectDrawTweened,
+      alpha);
+  }
 }
 
 //----- (8001DE78) --------------------------------------------------------

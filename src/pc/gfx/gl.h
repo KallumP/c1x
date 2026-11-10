@@ -43,6 +43,7 @@ extern void **GLGetPrimsTail();
 extern void GLResetOT(void *ot, int len);
 extern void GLClear();
 extern void GLUpdate();
+extern void GLSetTweenDraw(void (*draw)(int32_t alpha));
 #ifdef CFLAGS_DRAW_EXTENSIONS
 extern int GLCreateTexture(dim2 dim, uint8_t *buf);
 extern void GLDeleteTexture(int texid);

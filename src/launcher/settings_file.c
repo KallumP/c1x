@@ -120,10 +120,12 @@ static char *SettingsTextWith(char *text, const pc_settings *s) {
   text = ReplaceOnOffLine(text, "loading_screen", s->loading_screen);
   text = ReplaceNumberLine(text, "loading_screen_min_ms", s->loading_screen_min_ms);
   text = ReplaceOnOffLine(text, "speed_display", s->speed_display);
+  text = ReplaceOnOffLine(text, "fps_display", s->fps_display);
   text = ReplaceOnOffLine(text, "skip_splash_screens", s->skip_splash_screens);
   text = ReplaceOnOffLine(text, "fix_model_draw_order", s->fix_model_draw_order);
   text = ReplaceOnOffLine(text, "replay_inputs", s->replay_inputs);
   text = ReplaceNumberLine(text, "replay_speed", s->replay_speed);
+  text = ReplaceNumberLine(text, "frame_rate", s->frame_rate);
   if (s->boot_level[0]) {
     text = ReplaceSettingLine(text, "boot_level", s->boot_level);
   }
@@ -156,9 +158,11 @@ int AreSettingsEqual(const pc_settings *a, const pc_settings *b) {
   return a->loading_screen == b->loading_screen
     && a->loading_screen_min_ms == b->loading_screen_min_ms
     && a->speed_display == b->speed_display
+    && a->fps_display == b->fps_display
     && a->skip_splash_screens == b->skip_splash_screens
     && a->fix_model_draw_order == b->fix_model_draw_order
     && a->replay_inputs == b->replay_inputs
     && a->replay_speed == b->replay_speed
+    && a->frame_rate == b->frame_rate
     && SDL_strcmp(a->boot_level, b->boot_level) == 0;
 }

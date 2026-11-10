@@ -2,6 +2,11 @@
 
 ## 2026-11-10
 
+### Added
+
+- smoother play at up to 240 frames a second (60 by default), set in the launcher; the game still plays exactly as at 30
+- an option to show the frame rate in the top right corner
+
 ### Changed
 
 - the level editor's enemy paths start with 2 nodes

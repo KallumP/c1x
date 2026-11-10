@@ -14,6 +14,7 @@
 #include "pc/time.h"
 #include "pc/settings.h"
 #include "pc/replay.h"
+#include "pc/fps.h"
 
 #define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 768
@@ -39,6 +40,10 @@ void SDLInit() {
     WINDOW_WIDTH, WINDOW_HEIGHT,
     SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
   ogl_context = SDL_GL_CreateContext(window);
+  /* frames are drawn between game frames on their own timing (see pc/tween.h), so
+     a swap mustn't wait for the screen: that would push the game frame past its time */
+  if (game_settings.frame_rate > SETTINGS_FRAME_RATE_MIN)
+    SDL_GL_SetSwapInterval(0);
 #ifdef CFLAGS_GUI
   igCreateContext(0);
   ImGui_ImplSDL2_InitForOpenGL(window, ogl_context);
@@ -88,6 +93,7 @@ void SDLUpdate() {
 
 void SDLSwap() {
   SDL_GL_SwapWindow(window);
+  FpsCountShownFrame(SDL_GetTicks());
 }
 
 void SDLInput(gl_input *input) {

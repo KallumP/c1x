@@ -16,6 +16,7 @@
 
 #include "pc/init.h"
 #include "pc/time.h"
+#include "pc/tween.h"
 #include "pc/gfx/gl.h"
 #include "pc/gfx/soft.h" // for ext only
 
@@ -113,6 +114,62 @@ void CoreObjectsCreate() {
   LevelInitMisc(1);
 }
 
+/* draw the current zone's worlds (the terrain), split out of CoreLoop (pc) */
+static void CoreDrawWorlds(void *ot) {
+  zone_header *header;
+
+  header = (zone_header*)cur_zone->items[0];
+  terrain_reach = REACH_UNKNOWN; /* pc: until the terrain is drawn, below */
+  if (!(cur_display_flags & GOOL_FLAG_DISPLAY_WORLDS) || !header->world_count || wgeom_disabled)
+    return;
+  if (header->flags & ZONE_FLAG_DARK2)
+    GfxTransformWorldsDark2(ot);
+  else if ((header->flags & ZONE_FLAG_FOG_LIGHTNING) == ZONE_FLAG_FOG_LIGHTNING)
+    GfxTransformWorldsDark(ot);
+  else if (header->flags & ZONE_FLAG_FOG)
+    GfxTransformWorldsFog(ot);
+  else if (header->flags & ZONE_FLAG_RIPPLE)
+    GfxTransformWorldsRipple(ot);
+  else if (header->flags & ZONE_FLAG_LIGHTNING)
+    GfxTransformWorldsLightning(ot);
+  else
+    GfxTransformWorlds(ot);
+}
+
+static void CoreSetCamera(tween_pose *pose) {
+  cam.trans = pose->trans;
+  cam.rot = pose->rot;
+  cam.scale = pose->scale;
+}
+
+/*
+ * pc: draw a frame between game frames, alpha of the way from the last one
+ * to the current one: the terrain and objects, from a camera part way. no
+ * game state moves on: the camera and everything worked out from it are put
+ * back as the game frame left them, and paused keeps the ripple still
+ */
+static void CoreDrawTweened(int32_t alpha) {
+  cam_state game_cam;
+  tween_pose drawn_cam;
+  int32_t game_shake;
+  int game_paused;
+
+  game_cam = cam;
+  game_shake = screen_shake;
+  game_paused = paused;
+  TweenCameraAt(alpha, &drawn_cam);
+  CoreSetCamera(&drawn_cam);
+  paused = 1;
+  GfxUpdateMatrices();
+  CoreDrawWorlds(context.ot);
+  GoolDrawObjectsTweened(alpha);
+  cam = game_cam;
+  screen_shake = game_shake;
+  GfxUpdateMatrices(); /* back to the game frame's */
+  screen_shake = game_shake;
+  paused = game_paused;
+}
+
 //----- (80011FC4) --------------------------------------------------------
 void CoreLoop(lid_t lid) {
   int is_pause_lid, can_pause;
@@ -125,6 +182,7 @@ void CoreLoop(lid_t lid) {
   LevelInitGlobals();
   NSInit(&ns, lid);
   CoreObjectsCreate();
+  GLSetTweenDraw(CoreDrawTweened); /* pc: frames between game frames */
   do {
     lid = ns.ldat->lid;
     is_pause_lid = lid != LID_TITLE && lid != LID_LEVELEND && lid != LID_INTRO;
@@ -189,6 +247,7 @@ void CoreLoop(lid_t lid) {
         checkpoint_id = -1;
       }
       NSInit(&ns, lid);
+      TweenForgetAll(); /* pc: nothing in the new level is tweened from the old one */
       CoreObjectsCreate();
       if (bonus_return2) {
         next_lid = -2;
@@ -210,23 +269,10 @@ void CoreLoop(lid_t lid) {
       CamUpdate();
     }
     GfxUpdateMatrices();
+    TweenRecordCamera((tween_pose*)&cam); /* pc: drawn at, to tween from next game frame */
     ot = context.ot;
     header = (zone_header*)cur_zone->items[0];
-    terrain_reach = REACH_UNKNOWN; /* pc: until the terrain is drawn, below */
-    if ((cur_display_flags & GOOL_FLAG_DISPLAY_WORLDS) && header->world_count && !wgeom_disabled) {
-      if (header->flags & ZONE_FLAG_DARK2)
-        GfxTransformWorldsDark2(ot);
-      else if ((header->flags & ZONE_FLAG_FOG_LIGHTNING) == ZONE_FLAG_FOG_LIGHTNING)
-        GfxTransformWorldsDark(ot);
-      else if (header->flags & ZONE_FLAG_FOG)
-        GfxTransformWorldsFog(ot);
-      else if (header->flags & ZONE_FLAG_RIPPLE)
-        GfxTransformWorldsRipple(ot);
-      else if (header->flags & ZONE_FLAG_LIGHTNING)
-        GfxTransformWorldsLightning(ot);
-      else
-        GfxTransformWorlds(ot);
-    }
+    CoreDrawWorlds(ot);
     GoolUpdateObjects(!paused);
 #if defined(CFLAGS_DRAW_EXTENSIONS)
     if (pads[0].tapped & 4)

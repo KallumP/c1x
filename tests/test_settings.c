@@ -22,10 +22,12 @@ UTEST(settings, reset_gives_each_setting_its_default) {
       { "loading_screen",        s.loading_screen,        1 },
       { "loading_screen_min_ms", s.loading_screen_min_ms, 2000 }, /* 2 seconds */
       { "speed_display",         s.speed_display,         0 },
+      { "fps_display",           s.fps_display,           0 },
       { "skip_splash_screens",   s.skip_splash_screens,   0 },
       { "fix_model_draw_order",  s.fix_model_draw_order,  0 },
       { "replay_inputs",         s.replay_inputs,         0 },
       { "replay_speed",          s.replay_speed,          1 }, /* normal speed */
+      { "frame_rate",            s.frame_rate,            60 },
     };
 
     for (i = 0; i < sizeof(defaults)/sizeof(defaults[0]); i++) {
@@ -42,6 +44,7 @@ static const struct {
 } on_off_settings[] = {
   { "loading_screen",       offsetof(pc_settings, loading_screen) },
   { "speed_display",        offsetof(pc_settings, speed_display) },
+  { "fps_display",          offsetof(pc_settings, fps_display) },
   { "skip_splash_screens",  offsetof(pc_settings, skip_splash_screens) },
   { "fix_model_draw_order", offsetof(pc_settings, fix_model_draw_order) },
   { "replay_inputs",        offsetof(pc_settings, replay_inputs) },
@@ -201,6 +204,22 @@ UTEST(settings, boot_level_rejects_names_that_could_leave_the_folder) {
   ASSERT_EQ(-1, SettingsParseLine("boot_level = a.nsd", &s));
   ASSERT_EQ(-1, SettingsParseLine("boot_level = abcdefghijabcdefghijabcdefghijabc", &s)); /* 33 */
   ASSERT_STREQ("", s.boot_level);
+}
+
+UTEST(settings, frame_rate_takes_30_to_240) {
+  pc_settings s;
+
+  SettingsReset(&s);
+  ASSERT_EQ(1, SettingsParseLine("frame_rate = 144", &s));
+  ASSERT_EQ(144u, s.frame_rate);
+  ASSERT_EQ(1, SettingsParseLine("frame_rate = 30", &s));
+  ASSERT_EQ(30u, s.frame_rate);
+  ASSERT_EQ(1, SettingsParseLine("frame_rate = 240", &s));
+  ASSERT_EQ(240u, s.frame_rate);
+  ASSERT_EQ(-1, SettingsParseLine("frame_rate = 29", &s));
+  ASSERT_EQ(-1, SettingsParseLine("frame_rate = 241", &s));
+  ASSERT_EQ(-1, SettingsParseLine("frame_rate = fast", &s));
+  ASSERT_EQ(240u, s.frame_rate);
 }
 
 UTEST(settings, replay_speed_takes_0_to_16) {

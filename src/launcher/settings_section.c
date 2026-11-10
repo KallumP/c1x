@@ -13,6 +13,7 @@
 #include "paths.h"
 
 #define NUMBER_WIDTH 160.0f
+#define SLIDER_WIDTH 320.0f
 #define BOOT_LEVEL_WIDTH 240.0f
 #define TITLE_SCREEN "title screen"
 #define CHANGE_CHECK_MS 500 /* how often to look for settings.cfg changing */
@@ -98,6 +99,18 @@ static void DrawNumber(const char *label, uint32_t *setting, uint32_t step,
   DrawTooltip(tooltip);
 }
 
+/* a slider from min to max (ctrl+click to type a value, still kept in range) */
+static void DrawSlider(const char *label, uint32_t *setting, uint32_t min,
+  uint32_t max, const char *tooltip) {
+  BeginFieldRow(label, tooltip);
+  igSetNextItemWidth(SLIDER_WIDTH);
+  igPushID_Str(label);
+  igSliderScalar("##slider", ImGuiDataType_U32, setting, &min, &max, "%u",
+    ImGuiSliderFlags_AlwaysClamp);
+  igPopID();
+  DrawTooltip(tooltip);
+}
+
 static void DrawBootLevelChoice(const char *name, const char *level) {
   bool selected;
 
@@ -157,6 +170,11 @@ static void DrawFields() {
     "Play back the newest recording in build/recorded_inputs/ instead of recording.");
   DrawNumber("Replay speed", &settings.replay_speed, 1, SETTINGS_REPLAY_SPEED_MAX,
     "How many times normal speed replays play at, or 0 for as fast as possible.");
+  DrawSlider("Frame rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
+    SETTINGS_FRAME_RATE_MAX,
+    "Frames drawn a second. The game still runs at 30, so it plays the same.");
+  DrawOnOff("FPS display", &settings.fps_display,
+    "Show how many frames are drawn a second in the top right corner.");
   DrawBootLevel();
   EndFieldRows();
 }

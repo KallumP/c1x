@@ -109,10 +109,14 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
   s.fix_model_draw_order = 1;
   s.replay_inputs = 1;
   s.replay_speed = 0;
+  s.frame_rate = 144;
+  s.fps_display = 1;
   strcpy(s.boot_level, "tide_ruins");
   ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
   ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &read));
   ASSERT_TRUE(AreSettingsEqual(&s, &read));
+  ASSERT_EQ(144u, read.frame_rate);
+  ASSERT_EQ(1, read.fps_display);
 }
 
 /* CommentOutSettingLine's result for text, compared with expected, then freed */
@@ -159,6 +163,24 @@ UTEST(launcher_settings, settings_differing_in_a_number_arent_equal) {
   SettingsReset(&a);
   SettingsReset(&b);
   b.replay_speed = 4;
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, settings_differing_in_frame_rate_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  b.frame_rate = 120;
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, settings_differing_in_fps_display_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  b.fps_display = 1;
   ASSERT_FALSE(AreSettingsEqual(&a, &b));
 }
 

@@ -99,15 +99,27 @@ static uint32_t speed = 1; /* times normal speed, 0 = as fast as possible */
 /*
  * wait until a frame's worth of real time (divided by the speed) has passed
  * since the last call, then move the fixed clock on that frame. a slow frame
- * isn't made up for, so game time only ever moves a whole frame at a time
+ * isn't made up for, so game time only ever moves a whole frame at a time.
+ * calls wait (if given) over and over while waiting, with the real ticks
+ * waited so far and the ticks to wait, to draw in the meantime
  */
-void TimeWaitFrame(int32_t ticks) {
+void TimeWaitFrameWith(int32_t ticks, void (*wait)(int32_t elapsed, int32_t ticks)) {
   static int32_t real_stamp = 0;
+  int32_t wait_ticks, elapsed;
 
-  if (speed)
-    while (GetTicks() - real_stamp < ticks / (int32_t)speed);
+  if (speed) {
+    wait_ticks = ticks / (int32_t)speed;
+    while ((elapsed = GetTicks() - real_stamp) < wait_ticks) {
+      if (wait) { (*wait)(elapsed, wait_ticks); }
+    }
+  }
   real_stamp = GetTicks();
   fixed_ticks += ticks;
+}
+
+/* TimeWaitFrameWith, without drawing while waiting */
+void TimeWaitFrame(int32_t ticks) {
+  TimeWaitFrameWith(ticks, 0);
 }
 
 /* how fast TimeWaitFrame lets the fixed clock run, for replays */
