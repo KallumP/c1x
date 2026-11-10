@@ -1,5 +1,8 @@
+#include <stddef.h>
 #include "utest.h"
 #include "pc/tween.h"
+#include "gfx.h"
+#include "gool.h"
 
 UTEST(tween, alpha_runs_from_0_to_one_over_a_frame) {
   ASSERT_EQ(0, TweenAlpha(0, 34));
@@ -184,4 +187,16 @@ UTEST(tween_poses, slots_out_of_range_are_drawn_where_they_are) {
   TweenRecord(-1, &before);
   TweenPoseAt(TWEEN_SLOTS, &now, TWEEN_ONE/2, &out);
   ASSERT_EQ(1000, out.trans.x);
+}
+
+UTEST(tween_poses, every_object_and_the_camera_have_their_own_slot) {
+  ASSERT_LT(GOOL_OBJECT_COUNT, TWEEN_SLOTS); /* the player's */
+  ASSERT_GT(TWEEN_CAMERA_SLOT, GOOL_OBJECT_COUNT);
+  ASSERT_LT(TWEEN_CAMERA_SLOT, TWEEN_SLOTS);
+}
+
+UTEST(tween_poses, the_camera_is_laid_out_as_a_pose) {
+  ASSERT_EQ(offsetof(tween_pose, trans), offsetof(cam_state, trans));
+  ASSERT_EQ(offsetof(tween_pose, rot), offsetof(cam_state, rot));
+  ASSERT_EQ(offsetof(tween_pose, scale), offsetof(cam_state, scale));
 }
