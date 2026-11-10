@@ -262,6 +262,13 @@ const LAB_ASSISTANT_CODE_PATCHES: CodePatch[] = [
   { at: 0x28a, was: 0x11800e13, now: 0x11d19e13 }, // MOVE creator[0xc4], obj[0xac]: a vial's speed along z
 ];
 
+// cortex power's gunman (MafiC subtype 0) starts shooting once crash is nearer
+// than his code's 16 m (ireg[0xc4]) and not more than 5 m past him; now he
+// reads how near from his init flag c (in game units, as the game shifts it)
+const GUNMAN_CODE_PATCHES: CodePatch[] = [
+  { at: 0x1d, was: 0x09031e1f, now: 0x09e19e1f }, // SLT ireg[0xc4], pop() becomes SLT obj[0xc4], pop(): his flag c
+];
+
 // the code each enemy spawns by its exec slot, which its entries don't name:
 // toxic waste's barrel roller throws his barrels (BaraC, slot 16)
 const ENEMY_CHILD_SLOTS: Partial<Record<EnemyType, number[]>> = {
@@ -303,6 +310,7 @@ const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = {
   green_river_plant: RIVER_CODE_PATCHES,
   fish: RIVER_CODE_PATCHES,
   lab_assistant: LAB_ASSISTANT_CODE_PATCHES,
+  gunman: GUNMAN_CODE_PATCHES,
 };
 
 // instructions with patches made; an error if one isn't what the patch expects
