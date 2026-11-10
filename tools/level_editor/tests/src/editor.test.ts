@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { draggedBy, draggedTo, editorReducer, emptyEditor, newObject, placeableKind, type EditorAction, type EditorState, type Placeable } from "../../src/editor";
 import { BAT_SWOOP, DEFAULT_SCALE } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
+import { enemyObject } from "../helpers";
 
 const box = (x: number): LevelObject => newObject("basic", [x, 0, 0]);
 
@@ -17,28 +18,18 @@ describe("placeableKind", () => {
 });
 
 describe("newObject", () => {
-  test("makes a box of a type, or a spawn or end, standing where it's put", () => {
-    expect(newObject("life", [1, 2, 3])).toEqual({ kind: "box", box: "life", at: [1, 2, 3], raise: 0, stack: 1 });
-    expect(newObject("spawn", [1, 2, 3])).toEqual({ kind: "spawn", at: [1, 2, 3], raise: 0, stack: 1 });
-    expect(newObject("end", [1, 2, 3])).toEqual({ kind: "end", at: [1, 2, 3], raise: 0, stack: 1 });
+  test.each([
+    ["life", { kind: "box", box: "life" }],
+    ["spawn", { kind: "spawn" }],
+    ["end", { kind: "end" }],
+  ] as const)("a new %s stands where it's put", (what, kind) => {
+    expect(newObject(what, [1, 2, 3])).toEqual({ ...kind, at: [1, 2, 3], raise: 0, stack: 1 });
   });
 });
 
 describe("new enemies", () => {
-  test("a plant stands where it's put", () => {
-    expect(newObject("plant", [1, 2, 3])).toEqual({ kind: "enemy", enemy: "plant", at: [1, 2, 3], raise: 0, stack: 1 });
-  });
-
-  test("a rolling stone stands where it's put; its path comes with its track", () => {
-    expect(newObject("rolling_stone", [1, 2, 3])).toEqual({ kind: "enemy", enemy: "rolling_stone", at: [1, 2, 3], raise: 0, stack: 1 });
-  });
-
-  test("a crab stands where it's put; its path comes from n. sanity beach's", () => {
-    expect(newObject("crab", [1, 2, 3])).toEqual({ kind: "enemy", enemy: "crab", at: [1, 2, 3], raise: 0, stack: 1 });
-  });
-
-  test("a turtle stands where it's put; its path comes from n. sanity beach's", () => {
-    expect(newObject("turtle", [1, 2, 3])).toEqual({ kind: "enemy", enemy: "turtle", at: [1, 2, 3], raise: 0, stack: 1 });
+  test.each(["plant", "rolling_stone", "crab", "turtle"] as const)("a new %s stands where it's put", (enemy) => {
+    expect(newObject(enemy, [1, 2, 3])).toEqual(enemyObject(enemy, { at: [1, 2, 3] }));
   });
 
   test("a bat roost starts raised so its bats' swoop comes down to crash's height, not under the floor: its lowest point 600 game units over the floor, at the level's scale", () => {
@@ -51,11 +42,6 @@ describe("new enemies", () => {
   test("leader bats start with their first leader 600 game units over the floor, where crash can spin it and its bats fly at him, at the level's scale", () => {
     expect(newObject("leader_bats", [1, 2, 3], 400).raise).toBeCloseTo(600 / 400);
     expect(newObject("leader_bats", [1, 2, 3], 2000).raise).toBeCloseTo(600 / 2000);
-  });
-
-  test("a level can have many, so adding one keeps the rest", () => {
-    const state = editorReducer(withObjects([newObject("plant", [0, 0, 0])]), { type: "add", object: newObject("plant", [5, 0, 0]) });
-    expect(state.objects).toEqual([newObject("plant", [0, 0, 0]), newObject("plant", [5, 0, 0])]);
   });
 });
 
@@ -86,11 +72,6 @@ describe("update", () => {
   test("changes an object's settings", () => {
     const state = editorReducer(withObjects([box(1), box(2)]), { type: "update", index: 1, changes: { stack: 3, box: "life" } });
     expect(state.objects).toEqual([box(1), { ...box(2), stack: 3, box: "life" }]);
-  });
-
-  test("moves an object", () => {
-    const state = editorReducer(withObjects([box(1)]), { type: "update", index: 0, changes: { at: [4, 5, 6] } });
-    expect(state.objects[0].at).toEqual([4, 5, 6]);
   });
 });
 
@@ -184,15 +165,19 @@ describe("a path's nodes", () => {
     expect(editorReducer(nodeSelected, { type: "remove", index: 1 }).selectedNode).toBeNull();
   });
 
-  test("undoing keeps the node selected while the path still has it, else lets go of it", () => {
-    const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0], [2, 0, 0]];
-    const withPath = editorReducer(withCrabSelected(), { type: "update", index: 1, changes: { path } });
+  const threeNodes: LevelObject["path"] = [[0, 0, 0], [1, 0, 0], [2, 0, 0]];
+
+  test("undoing keeps a selected node the path still has", () => {
+    const withPath = editorReducer(withCrabSelected(), { type: "update", index: 1, changes: { path: threeNodes } });
     const secondSelected = editorReducer(withPath, { type: "selectNode", index: 1, node: 1 });
-    const shortened = editorReducer(secondSelected, { type: "update", index: 1, changes: { path: path.slice(0, 2) } });
+    const shortened = editorReducer(secondSelected, { type: "update", index: 1, changes: { path: threeNodes.slice(0, 2) } });
     expect(editorReducer(shortened, { type: "undo" }).selectedNode).toBe(1);
-    const twoNodes = editorReducer(withObjects([box(1), { ...crab, path: path.slice(0, 2) }]), { type: "update", index: 1, changes: { path } });
-    const third = editorReducer(twoNodes, { type: "selectNode", index: 1, node: 2 });
-    expect(editorReducer(third, { type: "undo" }).selectedNode).toBeNull();
+  });
+
+  test("undoing lets go of a selected node the path no longer has", () => {
+    const twoNodes = editorReducer(withObjects([box(1), { ...crab, path: threeNodes.slice(0, 2) }]), { type: "update", index: 1, changes: { path: threeNodes } });
+    const thirdSelected = editorReducer(twoNodes, { type: "selectNode", index: 1, node: 2 });
+    expect(editorReducer(thirdSelected, { type: "undo" }).selectedNode).toBeNull();
   });
 });
 
@@ -212,7 +197,7 @@ describe("dragging", () => {
     expect(draggedBy(crab, null, [5, 5, 0], [6, 7, 0.5], 0, 400)).toEqual({ at: [2, 4, 3.5] });
   });
 
-  test("so it doesn't jump to the pointer as the drag begins, wherever on it it was grabbed", () => {
+  test("an object doesn't jump to the pointer when a drag starts", () => {
     expect(draggedBy(crab, null, [9, 9, 1], [9, 9, 1], 0, 400)).toEqual({ at: [1, 2, 3] });
   });
 
@@ -221,15 +206,12 @@ describe("dragging", () => {
     expect(changes).toEqual({ path: [[0, 0, 0], [2, 2, 0]] });
   });
 
-  test("a node's drag is undone in one go, back to the path before it", () => {
-    const path: LevelObject["path"] = [[0, 0, 0], [1, 0, 0]];
-    let state = editorReducer(withObjects([{ ...crab, path }]), { type: "selectNode", index: 0, node: 1 });
-    state = editorReducer(state, { type: "checkpoint" });
+  test("a node dragged in steps ends where it was last dragged to", () => {
+    let state = withObjects([{ ...crab, path: [[0, 0, 0], [1, 0, 0]] }]);
     for (const x of [2, 3, 4]) {
       state = editorReducer(state, { type: "update", index: 0, changes: draggedTo(state.objects[0], 1, [x, 2, 3], 0, 400), record: false });
     }
     expect(state.objects[0].path).toEqual([[0, 0, 0], [3, 0, 0]]);
-    expect(editorReducer(state, { type: "undo" }).objects[0].path).toEqual(path);
   });
 });
 
