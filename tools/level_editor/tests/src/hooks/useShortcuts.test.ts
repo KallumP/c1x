@@ -1,8 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { shortcutToRun } from "../../../src/hooks/useShortcuts";
-
-const press = (key: string, held: { ctrl?: boolean; shift?: boolean } = {}) =>
-  ({ key, ctrlKey: !!held.ctrl, metaKey: false, shiftKey: !!held.shift });
+import { press } from "./press";
 
 describe("shortcutToRun", () => {
   const save = () => {};

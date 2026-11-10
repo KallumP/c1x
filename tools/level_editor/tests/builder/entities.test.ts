@@ -8,6 +8,7 @@ import {
 } from "../../builder/entities";
 import { BASE_LEVEL } from "../../builder/baseLevel";
 import { readLevel } from "../../builder/levelFiles";
+import { cross, subtract } from "../../builder/vectors";
 import { pieceMesh, readTemplates, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece } from "../../builder/templates";
 
 // an entity as a zone stores it: parent zone, spawn flags, group, id, point count,
@@ -68,36 +69,35 @@ describe("entity paths", () => {
 });
 
 describe("switches", () => {
+  // an outline box's second init flag marks where it is in its switch's chain
+  const FIRST_IN_CHAIN = 12;
+  const LATER_IN_CHAIN = 4;
   const initFlags = (item: Buffer) => [item.readInt16LE(ENTITY_INIT_FLAGS + 2), item.readInt16LE(ENTITY_INIT_FLAGS + 4)];
+
+  // the boxes as placed: each zone's entities in order
+  const placedBoxes = (entities: Buffer[][]): PlacedBox[] => entities.flatMap((zone, zoneIndex) =>
+    zone.map((item, index) => ({ subtype: entityType(item)[1], zone: zoneIndex, index, id: entityId(item) })));
 
   test("a switch makes the level's outline boxes solid, along a chain of their ids", () => {
     // on n. sanity beach, the ! box's third init flag is the id of the first outline box, and each
-    // outline box's is the next one's (0 for the last); the first is also marked 12, the rest 4
+    // outline box's is the next one's (0 for the last)
     const entities = [[entity(BOX_TYPE, 13, 10, []), entity(BOX_TYPE, 7, 11, [])], [entity(BOX_TYPE, 13, 12, []), entity(BOX_TYPE, 13, 13, [])]];
-    const placed: PlacedBox[] = [
-      { subtype: 13, zone: 0, index: 0, id: 10 }, { subtype: 7, zone: 0, index: 1, id: 11 },
-      { subtype: 13, zone: 1, index: 0, id: 12 }, { subtype: 13, zone: 1, index: 1, id: 13 },
-    ];
-    linkSwitches(entities, placed);
+    linkSwitches(entities, placedBoxes(entities));
     expect(initFlags(entities[0][1])[1]).toBe(10);
-    expect([entities[0][0], entities[1][0], entities[1][1]].map(initFlags)).toEqual([[12, 12], [4, 13], [4, 0]]);
+    expect([entities[0][0], entities[1][0], entities[1][1]].map(initFlags)).toEqual([[FIRST_IN_CHAIN, 12], [LATER_IN_CHAIN, 13], [LATER_IN_CHAIN, 0]]);
   });
 
   test("iron outlines are in the same chain as outlines, in the order they're placed", () => {
     // as in generator room, where the ! box's chain goes outline, iron outline, iron outline, outline, ...
     const entities = [[entity(BOX_TYPE, 7, 10, []), entity(BOX_TYPE, 13, 11, []), entity(BOX_TYPE, 19, 12, []), entity(BOX_TYPE, 13, 13, [])]];
-    const placed: PlacedBox[] = [
-      { subtype: 7, zone: 0, index: 0, id: 10 }, { subtype: 13, zone: 0, index: 1, id: 11 },
-      { subtype: 19, zone: 0, index: 2, id: 12 }, { subtype: 13, zone: 0, index: 3, id: 13 },
-    ];
-    linkSwitches(entities, placed);
+    linkSwitches(entities, placedBoxes(entities));
     expect(initFlags(entities[0][0])[1]).toBe(11);
-    expect(entities[0].slice(1).map(initFlags)).toEqual([[12, 12], [4, 13], [4, 0]]);
+    expect(entities[0].slice(1).map(initFlags)).toEqual([[FIRST_IN_CHAIN, 12], [LATER_IN_CHAIN, 13], [LATER_IN_CHAIN, 0]]);
   });
 
   test("a switch without outline boxes links to none", () => {
     const entities = [[entity(BOX_TYPE, 7, 10, [])]];
-    linkSwitches(entities, [{ subtype: 7, zone: 0, index: 0, id: 10 }]);
+    linkSwitches(entities, placedBoxes(entities));
     expect(initFlags(entities[0][0])[1]).toBe(0);
   });
 });
@@ -157,25 +157,28 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
   // a polygon's corners, if it lies more flat than upright (the groove's floor, not its skirts)
   const flatCorners = (piece: MapPiece) => piece.polygons.map(({ corners }) => corners.map((corner) => piece.vertices[corner].at))
     .filter(([a, b, c]) => {
-      const [u, v] = [b.map((value, axis) => value - a[axis]), c.map((value, axis) => value - a[axis])];
-      const normal = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+      const normal = cross(subtract(b, a), subtract(c, a));
       return Math.abs(normal[1]) > 0.7 * Math.hypot(...normal);
     });
+
+  // the lowest and highest of values are within low to high
+  function expectSpanWithin(values: number[], low: number, high: number): void {
+    expect(Math.min(...values)).toBeGreaterThanOrEqual(low);
+    expect(Math.max(...values)).toBeLessThanOrEqual(high);
+  }
 
   test("a rolling stone's track is the groove in the base level's terrain along its path", () => {
     const track = stoneTrack(base);
     expect(track.polygons.length).toBeGreaterThan(40);
     expect(track.polygons.length).toBeLessThan(400);
     const [xs, ys, zs] = [0, 1, 2].map((axis) => track.vertices.map(({ at }) => at[axis]));
-    // relative to the path's first point: along the path (-x) and a little past its ends, across it, and down
-    expect(Math.min(...xs)).toBeLessThan(-3600);
+    // relative to the path's first point, which runs PATH_LENGTH along -x
+    const PATH_LENGTH = 3600;
+    expect(Math.min(...xs)).toBeLessThan(-PATH_LENGTH); // past both its ends
     expect(Math.max(...xs)).toBeGreaterThan(0);
-    expect(Math.min(...xs)).toBeGreaterThanOrEqual(-4640);
-    expect(Math.max(...xs)).toBeLessThanOrEqual(1030);
-    expect(Math.min(...zs)).toBeGreaterThanOrEqual(-350);
-    expect(Math.max(...zs)).toBeLessThanOrEqual(60);
-    expect(Math.min(...ys)).toBeGreaterThanOrEqual(-1900);
-    expect(Math.max(...ys)).toBeLessThanOrEqual(100);
+    expectSpanWithin(xs, -4640, 1030); // but only a little
+    expectSpanWithin(zs, -350, 60); // across it: the groove, not the banks
+    expectSpanWithin(ys, -1900, 100); // down into the ground
     expectTexturedFromBase(track);
   });
 
@@ -211,9 +214,9 @@ describe.skipIf(!hasBase)("what custom levels take from the base level", () => {
     expect(mesh.vertices[track.polygons[0].corners[1]]).toEqual(track.vertices[track.polygons[0].corners[1]].at.map((value, axis) => value + [1000, 2000, 3000][axis]));
     expect(mesh.triangles.every(({ object, material }) => object === null && material === null)).toBe(true);
     // faces up, so the collision makes the groove's floor a floor whichever way the base level winds its corners
-    const facingUp = mesh.triangles.map(({ corners }) => corners.map((corner) => mesh.vertices[corner])).map(([p, q, r]) =>
-      (q[2] - p[2]) * (r[0] - p[0]) - (q[0] - p[0]) * (r[2] - p[2]));
-    expect(facingUp.every((y) => y >= 0)).toBe(true);
+    const upward = mesh.triangles.map(({ corners }) => corners.map((corner) => mesh.vertices[corner]))
+      .map(([p, q, r]) => cross(subtract(q, p), subtract(r, p))[1]);
+    expect(upward.every((y) => y >= 0)).toBe(true);
   });
 
   test("the track's floor under the stone's path is its highest flat face there", () => {

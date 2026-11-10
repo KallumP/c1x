@@ -59,8 +59,12 @@ describe("crash's spawn", () => {
   });
 
   test("the walk goes up and down gentle steps", () => {
-    const steps = merged(...Array.from({ length: 8 }, (_, k) => floorMesh(0, k * 512, 2048, k * 512 + 512, 256 + 128 * (k % 2))));
-    expect(spawnOn(steps)[2]).toBe(4096 - 64 - 12 * 128);
+    // eight floors 512 long along z, every other one a cell higher: steps crash can walk
+    const staircase = merged(...Array.from({ length: 8 }, (_, k) => floorMesh(0, k * 512, 2048, k * 512 + 512, 256 + 128 * (k % 2))));
+    // the walk starts in the middle of the cell at the +z end, and runs the whole way, so crash
+    // starts about CAM_LEAD (12 cells) along it, as on a flat floor
+    const walkStart = 4096 - 64;
+    expect(spawnOn(staircase)[2]).toBe(walkStart - 12 * 128);
   });
 
   test("the middle across is the middle of the floors, not of the zone", () => {

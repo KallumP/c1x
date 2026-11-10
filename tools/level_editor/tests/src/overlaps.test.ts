@@ -11,6 +11,10 @@ type Tri = [Vec3, Vec3, Vec3];
 const MIN: Vec3 = [0, 0, 0];
 const MAX: Vec3 = [1, 1, 1];
 
+// a floor 100 m square at height 0, and a 2 m square step 1 m up in its middle
+const FLOOR: Tri[] = [[[-50, -50, 0], [50, -50, 0], [-50, 50, 0]], [[50, -50, 0], [50, 50, 0], [-50, 50, 0]]];
+const STEP: Tri[] = [[[-1, -1, 1], [1, -1, 1], [-1, 1, 1]], [[1, -1, 1], [1, 1, 1], [-1, 1, 1]]];
+
 describe("triangleTouchesBox", () => {
   test("a triangle through the box does", () => {
     expect(triangleTouchesBox([[-1, 0.5, -1], [2, 0.5, -1], [0.5, 0.5, 3]], MIN, MAX)).toBe(true);
@@ -31,14 +35,13 @@ describe("triangleTouchesBox", () => {
 });
 
 describe("overlappingBoxes", () => {
-  const floor: Tri[] = [[[-50, -50, 0], [50, -50, 0], [-50, 50, 0]], [[50, -50, 0], [50, 50, 0], [-50, 50, 0]]];
 
   test("a box standing on the floor is fine", () => {
-    expect(overlappingBoxes([box([0, 0, 0])], SCALE, floor)).toEqual(new Set());
+    expect(overlappingBoxes([box([0, 0, 0])], SCALE, FLOOR)).toEqual(new Set());
   });
 
   test("boxes side by side, touching, are fine", () => {
-    expect(overlappingBoxes([box([0, 0, 0]), box([1, 0, 0])], SCALE, floor)).toEqual(new Set());
+    expect(overlappingBoxes([box([0, 0, 0]), box([1, 0, 0])], SCALE, FLOOR)).toEqual(new Set());
   });
 
   test("boxes in each other are both flagged", () => {
@@ -92,27 +95,31 @@ describe("overlappingBoxes", () => {
   });
 });
 
-// a rolling floor of small triangles, 30 m across and 250 m along, and a box every 2.5 m along it
+// a rolling floor of small triangles, 30 m across and 250 m along, and a box every 2.5 m along it:
+// over 18000 triangles, the size of sunset_canyon
+const BIG_LEVEL_WIDTH = 30;
+const BIG_LEVEL_LENGTH = 250;
+const CELL_ACROSS = 0.64; // each grid cell is two triangles
+const CELL_ALONG = 1.28;
+const BOX_COUNT = 100;
+const BOX_SPACING = 2.5;
+
 function bigLevel(): { triangles: Tri[]; boxes: LevelObject[] } {
   const height = (x: number, y: number) => 0.3 * Math.sin(x * 0.7) + 0.3 * Math.cos(y * 0.4);
   const point = (x: number, y: number): Vec3 => [x, y, height(x, y)];
   const triangles: Tri[] = [];
-  for (let y = 0; y < 250; y += 1.28) {
-    for (let x = -15; x < 15; x += 0.64) {
-      const [a, b, c, d] = [point(x, y), point(x + 0.64, y), point(x + 0.64, y + 1.28), point(x, y + 1.28)];
+  for (let y = 0; y < BIG_LEVEL_LENGTH; y += CELL_ALONG) {
+    for (let x = -BIG_LEVEL_WIDTH / 2; x < BIG_LEVEL_WIDTH / 2; x += CELL_ACROSS) {
+      const [a, b, c, d] = [point(x, y), point(x + CELL_ACROSS, y), point(x + CELL_ACROSS, y + CELL_ALONG), point(x, y + CELL_ALONG)];
       triangles.push([a, b, c], [a, c, d]);
     }
   }
-  const boxes = Array.from({ length: 100 }, (_, k) => box([(k % 5) * 2 - 4, k * 2.5, 1]));
+  const boxes = Array.from({ length: BOX_COUNT }, (_, k) => box([(k % 5) * 2 - 4, k * BOX_SPACING, 1]));
   return { triangles, boxes };
 }
 
 describe("overlappingBoxes on a big level", () => {
   const { triangles, boxes } = bigLevel();
-
-  test("is the size of sunset_canyon", () => {
-    expect(triangles.length).toBeGreaterThan(18000);
-  });
 
   test("checks every box fast enough to keep up with a drag", () => {
     overlappingBoxes(boxes, SCALE, triangles); // the level's triangles are worked out once, as they load
@@ -129,7 +136,6 @@ describe("overlappingBoxes on a big level", () => {
 });
 
 describe("dropToFloor", () => {
-  const floor: Tri[] = [[[-50, -50, 0], [50, -50, 0], [-50, 50, 0]], [[50, -50, 0], [50, 50, 0], [-50, 50, 0]]];
   const clips = (object: LevelObject, z: number, triangles: Tri[]) =>
     overlappingBoxes([{ ...object, at: [object.at[0], object.at[1], z] }], SCALE, triangles).size > 0;
 
@@ -143,57 +149,54 @@ describe("dropToFloor", () => {
   }
 
   test("lowers a box above the floor until it's just above it", () => {
-    expect(expectJustAbove(box([0, 0, 2]), floor)).toBeCloseTo(0, 1);
+    expect(expectJustAbove(box([0, 0, 2]), FLOOR)).toBeCloseTo(0, 1);
   });
 
   test("raises a box in the floor until it's just above it", () => {
-    expect(expectJustAbove(box([0, 0, -0.5]), floor)).toBeCloseTo(0, 1);
+    expect(expectJustAbove(box([0, 0, -0.5]), FLOOR)).toBeCloseTo(0, 1);
   });
 
   test("lands on the highest floor below it", () => {
-    const step: Tri[] = [[[-1, -1, 1], [1, -1, 1], [-1, 1, 1]], [[1, -1, 1], [1, 1, 1], [-1, 1, 1]]];
-    expect(expectJustAbove(box([0, 0, 3]), [...floor, ...step])).toBeCloseTo(1, 1);
+    expect(expectJustAbove(box([0, 0, 3]), [...FLOOR, ...STEP])).toBeCloseTo(1, 1);
   });
 
   test("counts the box's raise", () => {
-    expect(expectJustAbove(box([0, 0, 2], { raise: 0.5 }), floor)).toBeCloseTo(-0.5, 1);
+    expect(expectJustAbove(box([0, 0, 2], { raise: 0.5 }), FLOOR)).toBeCloseTo(-0.5, 1);
   });
 
   test("goes past a wall through the box", () => {
     const wall: Tri[] = [[[0, -5, -5], [0, 5, -5], [0, -5, 5]], [[0, 5, -5], [0, 5, 5], [0, -5, 5]]];
-    const z = dropToFloor(box([0, 0, 2]), SCALE, [...floor, ...wall]);
+    const z = dropToFloor(box([0, 0, 2]), SCALE, [...FLOOR, ...wall]);
     expect(z).toBeCloseTo(0, 1);
   });
 
   test("is null with no floor below it", () => {
-    expect(dropToFloor(box([100, 100, 2]), SCALE, floor)).toBeNull();
+    expect(dropToFloor(box([100, 100, 2]), SCALE, FLOOR)).toBeNull();
   });
 
   test("is rounded to the millimetre", () => {
-    const z = dropToFloor(box([0, 0, 1.2345]), SCALE, floor)!;
+    const z = dropToFloor(box([0, 0, 1.2345]), SCALE, FLOOR)!;
     expect(Math.round(z * 1000) / 1000).toBe(z);
   });
 });
 
 describe("floorAbove", () => {
-  const floor: Tri[] = [[[-50, -50, 0], [50, -50, 0], [-50, 50, 0]], [[50, -50, 0], [50, 50, 0], [-50, 50, 0]]];
-  const step: Tri[] = [[[-1, -1, 1], [1, -1, 1], [-1, 1, 1]], [[1, -1, 1], [1, 1, 1], [-1, 1, 1]]];
 
   test("is how far a point under the ground is below the floor's surface", () => {
-    expect(floorAbove([0, 0, -0.5], floor)).toBeCloseTo(0.5);
+    expect(floorAbove([0, 0, -0.5], FLOOR)).toBeCloseTo(0.5);
   });
 
   test("is the nearest floor above: a step's top over the floor", () => {
-    expect(floorAbove([0, 0, 0.25], [...floor, ...step])).toBeCloseTo(0.75);
+    expect(floorAbove([0, 0, 0.25], [...FLOOR, ...STEP])).toBeCloseTo(0.75);
   });
 
   test("is null for a point above the ground", () => {
-    expect(floorAbove([0, 0, 2], floor)).toBeNull();
-    expect(floorAbove([5, 5, 0.5], [...floor, ...step])).toBeNull();
+    expect(floorAbove([0, 0, 2], FLOOR)).toBeNull();
+    expect(floorAbove([5, 5, 0.5], [...FLOOR, ...STEP])).toBeNull();
   });
 
   test("is null under an overhang: the face above is the underside of something", () => {
-    const overhang: Tri[] = step.map(([a, b, c]) => [a, c, b]);
+    const overhang: Tri[] = STEP.map(([a, b, c]) => [a, c, b]);
     expect(floorAbove([0, 0, 0.5], overhang)).toBeNull();
   });
 });

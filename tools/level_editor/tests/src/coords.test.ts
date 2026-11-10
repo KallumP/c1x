@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Vec3 } from "../../src/objects";
 import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { expectCloseTo, noMinusZero } from "../helpers";
 
 describe("blender and the viewport", () => {
   test("blenderToView turns blender's (x, y, z) into the viewport's (x, z, -y)", () => {
@@ -28,7 +29,7 @@ describe("boxes", () => {
   test("a stack's boxes stand one on another from its raised spot", () => {
     expect(stackCentres([1, 2, 3], 0, 1, 400)).toEqual([[1, 2, 3.5]]);
     expect(stackCentres([1, 2, 3], 2.5, 2, 400)).toEqual([[1, 2, 6], [1, 2, 7]]);
-    expect(stackCentres([0, 0, 0], 0, 2, 2000)).toEqual([[0, 0, 0.1], [0, 0, 0.30000000000000004]]);
+    expect(stackCentres([0, 0, 0], 0, 2, 2000).map(noMinusZero)).toEqual([[0, 0, 0.1], [0, 0, 0.3]]);
   });
 });
 
@@ -58,7 +59,7 @@ describe("rolling stones", () => {
     expect(stoneRolling(270)).toEqual([0, 1, 0]);
     for (const turn of [0, 90, 180, 270]) {
       const [a, b] = [stoneRolling(turn), cameraFacing(turn)];
-      expect(a[0] * b[0] + a[1] * b[1] + 0).toBe(0); // across the way the camera faces (+ 0 turns -0 into 0)
+      expect(a[0] * b[0] + a[1] * b[1]).toBeCloseTo(0); // across the way the camera faces
     }
   });
 
@@ -101,8 +102,8 @@ describe("rolling stones", () => {
 
   test("a bat roost's swoop ends back along the camera's facing by default", () => {
     // 10000 game units, turning with the level
-    expect(batSwoopEnd(0, 400).map((value) => value + 0)).toEqual([0, -25, 0]);
-    batSwoopEnd(90, 400).forEach((value, axis) => expect(value).toBeCloseTo(cameraFacing(90)[axis] * -25));
+    expect(noMinusZero(batSwoopEnd(0, 400))).toEqual([0, -25, 0]);
+    expectCloseTo(batSwoopEnd(90, 400), cameraFacing(90).map((value) => value * -25));
   });
 
   test("a bat roost's bats follow the game's swoop to its end", () => {
@@ -110,9 +111,9 @@ describe("rolling stones", () => {
     const path = batSwoop([1, 2, 3], [1, 2 - 25, 3], 0, 400);
     expect(path.length).toBe(14);
     expect(path[0]).toEqual([1, 2, 3]);
-    path.forEach(([x, y, z], point) => {
-      const [along, up] = BAT_SWOOP[point];
-      [1, 2 - along / 400, 3 + up / 400].forEach((value, axis) => expect([x, y, z][axis]).toBeCloseTo(value));
+    path.forEach((point, index) => {
+      const [along, up] = BAT_SWOOP[index];
+      expectCloseTo(point, [1, 2 - along / 400, 3 + up / 400]);
     });
   });
 
@@ -120,10 +121,10 @@ describe("rolling stones", () => {
     // wherever it is, its dip kept, rising or falling to it, each step split to keep its points about as far apart
     const path = batSwoop([0, 0, 0], [50, 0, 1], 0, 400);
     expect(path.length).toBe(27);
-    [50, 0, 1].forEach((value, axis) => expect(path.at(-1)![axis]).toBeCloseTo(value));
+    expectCloseTo(path.at(-1)!, [50, 0, 1]);
     expect(path.every(([, y]) => Math.abs(y) < 1e-9)).toBe(true);
     const [along, up] = BAT_SWOOP[1];
-    [(2 * along) / 400, 0, up / 400 + (2 * along) / 20000].forEach((value, axis) => expect(path[2][axis]).toBeCloseTo(value));
+    expectCloseTo(path[2], [(2 * along) / 400, 0, up / 400 + (2 * along) / 20000]);
   });
 
   test("a shorter swoop keeps its points, closer together", () => {
@@ -135,8 +136,8 @@ describe("rolling stones", () => {
 
   test("leader bats' second leader is back across the map from the first by default", () => {
     // 6000 game units, the other way from a rolling stone, turning with the level
-    expect(leaderBatsGap(0, 400).map((value) => value + 0)).toEqual([-15, 0, 0]);
-    leaderBatsGap(90, 400).forEach((value, axis) => expect(value).toBeCloseTo(stoneRolling(90)[axis] * -15));
+    expect(noMinusZero(leaderBatsGap(0, 400))).toEqual([-15, 0, 0]);
+    expectCloseTo(leaderBatsGap(90, 400), stoneRolling(90).map((value) => value * -15));
   });
 
   test("leader bats' bats fly the game's flight between the leaders", () => {
@@ -144,18 +145,19 @@ describe("rolling stones", () => {
     const first: Vec3 = [1, 2, 3];
     const flight = leaderBatsFlight(first, [1 - 15, 2, 3], 0, 400);
     expect(flight.length).toBe(13);
-    [1 + 200 / 400, 2 - 1, 3 + 1700 / 400].forEach((value, axis) => expect(flight[0][axis]).toBeCloseTo(value));
-    flight.forEach(([x, y, z], point) => {
-      const [across, up] = LEADER_BATS_FLIGHT[point];
-      [flight[0][0] + across / 400, flight[0][1], flight[0][2] + up / 400].forEach((value, axis) => expect([x, y, z][axis]).toBeCloseTo(value));
+    const [startX, startY, startZ] = flight[0];
+    expectCloseTo(flight[0], [1 + 200 / 400, 2 - 1, 3 + 1700 / 400]);
+    flight.forEach((point, index) => {
+      const [across, up] = LEADER_BATS_FLIGHT[index];
+      expectCloseTo(point, [startX + across / 400, startY, startZ + up / 400]);
     });
   });
 
   test("the bats' flight stretches to reach the second leader", () => {
     // wherever it is: along the route, further and higher, in steps of at most 800 between the dive and the climb
     const flight = leaderBatsFlight([0, 0, 0], [0, 20, 1], 0, 400);
-    [0, -200 / 400 - 1, 1700 / 400].forEach((value, axis) => expect(flight[0][axis]).toBeCloseTo(value));
-    [0, 20 + 200 / 400 - 1, 1 + 1700 / 400].forEach((value, axis) => expect(flight.at(-1)![axis]).toBeCloseTo(value));
+    expectCloseTo(flight[0], [0, -200 / 400 - 1, 1700 / 400]);
+    expectCloseTo(flight.at(-1)!, [0, 20 + 200 / 400 - 1, 1 + 1700 / 400]);
     const run = flight.slice(3, -3);
     expect(run[0][1]).toBeCloseTo(600 / 400 - 1);
     expect(run.at(-1)![1]).toBeCloseTo(20 - 600 / 400 - 1);
@@ -171,7 +173,7 @@ describe("rolling stones", () => {
   test("a lab assistant throws the other way from a rolling stone", () => {
     // back along the game's x (every throw custom levels get does), turning with the level
     expect(labAssistantThrow(0)).toEqual([-1, 0, 0]);
-    expect(labAssistantThrow(90)).toEqual(stoneRolling(90).map((value) => -value + 0));
+    expectCloseTo(labAssistantThrow(90), stoneRolling(90).map((value) => -value));
   });
 
   test("a stone's path turns with the level and lifts with raise", () => {
@@ -184,17 +186,17 @@ describe("rolling stones", () => {
 
 describe("enemies facing the player", () => {
   const turned = (yaw: number): { front: number[]; side: number[] } => ({
-    front: [Math.sin(yaw), 0, Math.cos(yaw)].map((value) => Math.round(value) + 0),
-    side: [Math.cos(yaw), 0, -Math.sin(yaw)].map((value) => Math.round(value) + 0),
+    front: noMinusZero([Math.sin(yaw), 0, Math.cos(yaw)]),
+    side: noMinusZero([Math.cos(yaw), 0, -Math.sin(yaw)]),
   });
 
   test.each([0, 90, 180, 270])("at a turn of %i, an enemy's front (+z) faces back along the camera's facing", (turn) => {
     const [dx, dy, dz] = blenderToView(cameraFacing(turn));
-    expect(turned(enemyTurn(turn)).front).toEqual([-dx + 0, dy, -dz + 0]);
+    expect(turned(enemyTurn(turn)).front).toEqual(noMinusZero([-dx, dy, -dz]));
   });
 
   test.each([0, 90, 180, 270])("at a turn of %i, its side (+x) lies along the way a crab walks", (turn) => {
-    expect(turned(enemyTurn(turn)).side).toEqual(blenderToView(stoneRolling(turn)).map((value) => value + 0));
+    expect(turned(enemyTurn(turn)).side).toEqual(noMinusZero(blenderToView(stoneRolling(turn))));
   });
 
   test("an enemy in an unturned level isn't turned", () => {
@@ -203,10 +205,10 @@ describe("enemies facing the player", () => {
 });
 
 describe("an enemy facing the way it walks", () => {
-  const front = (yaw: number) => [Math.sin(yaw), 0, Math.cos(yaw)].map((value) => Math.round(value * 1000) / 1000 + 0);
+  const front = (yaw: number) => noMinusZero([Math.sin(yaw), 0, Math.cos(yaw)]);
 
   test("turns its front (+z) from one place (in blender) towards another", () => {
-    expect(front(facingFrom([0, 0, 0], [0, 1, 0]))).toEqual(blenderToView([0, 1, 0]).map((value) => value + 0));
+    expect(front(facingFrom([0, 0, 0], [0, 1, 0]))).toEqual(noMinusZero(blenderToView([0, 1, 0])));
     expect(front(facingFrom([0, 0, 0], [-1, 0, 0]))).toEqual([-1, 0, 0]);
     expect(front(facingFrom([1, 1, 0], [2, 2, 5]))).toEqual([0.707, 0, -0.707]); // level, whatever the height
   });

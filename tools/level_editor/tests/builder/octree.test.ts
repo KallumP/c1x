@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { blocksRectBytes, FLOOR_CELL_MAX, LEAF_GROUND, LEAF_PIT, type Block } from "../../builder/octree";
 import type { Vec3 } from "../../builder/vectors";
+import { readZoneRect } from "./zoneReaders";
 
 interface Leaf {
   at: Vec3;
@@ -67,8 +68,7 @@ describe("the collision octree", () => {
 
   test("its solid cells are exactly the blocks", () => {
     const rect = blocksRectBytes([10, 20, 30], SIZE, BLOCKS, 128);
-    expect([0, 4, 8, 12, 16, 20].map((offset) => (offset < 12 ? rect.readInt32LE(offset) : rect.readUInt32LE(offset))))
-      .toEqual([10, 20, 30, ...SIZE]);
+    expect(readZoneRect(rect)).toEqual({ at: [10, 20, 30], width: SIZE[0], height: SIZE[1], depth: SIZE[2] });
     const leaves = octreeLeaves(rect);
     expect(leafSquares(leaves)).toEqual(blockSquares(BLOCKS));
     expect(new Set(leaves.map(({ value }) => value))).toEqual(new Set([0])); // plain ground

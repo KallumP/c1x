@@ -87,6 +87,11 @@ function readUvMap(): number[][] {
   return [...body.matchAll(quad)].slice(0, 600).map((match) => match.slice(1).map(Number));
 }
 
+// which corner of a width by height region each of a uv_map quad's first three points is: [0 or 1, 0 or 1]
+function cornerLayout(quad: number[], width: number, height: number): number[][] {
+  return [0, 1, 2].map((point) => [Math.floor(quad[2 * point] / (width - 1)), Math.floor(quad[2 * point + 1] / (height - 1))]);
+}
+
 // a texture info's colinfo and rgninfo fields; bitfields are listed high bits first in src/geom.h
 function decodeTexinfo(data: Buffer) {
   const flags = data[3];
@@ -107,8 +112,7 @@ describe("texture infos", () => {
     expect(uvMap.length).toBe(600);
     LAYOUTS.forEach((corners, layout) => {
       const quad = uvMap[layout * 25 + 24]; // the 64x64 one
-      const quadCorners = [0, 1, 2].map((i) => [Math.floor(quad[2 * i] / 63), Math.floor(quad[2 * i + 1] / 63)]);
-      expect(quadCorners).toEqual(corners);
+      expect(cornerLayout(quad, 64, 64)).toEqual(corners);
     });
   });
 
@@ -119,8 +123,7 @@ describe("texture infos", () => {
         const xs = [quad[0], quad[2], quad[4]];
         const ys = [quad[1], quad[3], quad[5]];
         expect([Math.max(...xs), Math.max(...ys)]).toEqual([w - 1, h - 1]); // triangles use 3 points
-        const quadCorners = [0, 1, 2].map((i) => [Math.floor(xs[i] / (w - 1)), Math.floor(ys[i] / (h - 1))]);
-        expect(quadCorners).toEqual(LAYOUTS[layout]);
+        expect(cornerLayout(quad, w, h)).toEqual(LAYOUTS[layout]);
       }
     }
   });

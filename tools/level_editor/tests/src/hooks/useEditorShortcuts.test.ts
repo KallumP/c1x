@@ -2,9 +2,7 @@ import { describe, expect, test } from "vitest";
 import { emptyEditor } from "../../../src/editor";
 import { editorShortcuts } from "../../../src/hooks/useEditorShortcuts";
 import { shortcutToRun } from "../../../src/hooks/useShortcuts";
-
-const press = (key: string, held: { ctrl?: boolean; shift?: boolean } = {}) =>
-  ({ key, ctrlKey: !!held.ctrl, metaKey: false, shiftKey: !!held.shift });
+import { press } from "./press";
 
 describe("the editor's shortcuts", () => {
   const actions = { stopPlacing: () => {}, save: () => {}, build: () => {}, buildAndBoot: () => {} };

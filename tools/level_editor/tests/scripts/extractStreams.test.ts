@@ -58,6 +58,14 @@ function rawSectors(sectors: Buffer[]): Buffer {
 
 const folder = () => mkdtempSync(join(tmpdir(), "disc-"));
 
+// the files in a folder, none if it isn't there
+function filesIn(path: string): string[] {
+  if (!existsSync(path)) {
+    return [];
+  }
+  return readdirSync(path);
+}
+
 function extracted(image: Buffer): { count: number; out: string } {
   const where = folder();
   const imagePath = join(where, "crash.bin");
@@ -97,6 +105,6 @@ describe("extracting the game's files from a disc image", () => {
     const where = folder();
     writeFileSync(join(where, "other.iso"), Buffer.concat(sectors));
     expect(() => extractStreams(join(where, "other.iso"), join(where, "streams"))).toThrow(/no \.NSD\/\.NSF files found/);
-    expect(existsSync(join(where, "streams")) && readdirSync(join(where, "streams")).length).toBeFalsy();
+    expect(filesIn(join(where, "streams"))).toEqual([]);
   });
 });
