@@ -12,7 +12,7 @@ import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_SOUNDS, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
 import { CORE_EXEC_SLOTS } from "../../builder/cutLevel";
-import { donorObject } from "../../builder/donorObjects";
+import { donorObject, ENEMY_DONORS, enemyDonorObjects } from "../../builder/donorObjects";
 import type { Vec3 } from "../../builder/vectors";
 import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
 import { textureWorlds } from "../../builder/mapTextures";
@@ -456,6 +456,15 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  // a piece of code's instructions (by its name) in the level built with objects
+  const builtCode = (objects: LevelObject[], code: string) => build(objects).entries.get(stringToEid(code))!.items[1];
+  // and in the level an enemy is taken from, as patched for custom levels (donorObjects.test.ts has the patches)
+  const patchedDonorCode = (type: EnemyType, code: string) => {
+    const donor = readOtherLevel(ENEMY_DONORS[type]!.lid);
+    const entries = enemyDonorObjects(new Map([[type, donor]])).flatMap((object) => object.entries);
+    return entries.find(({ eid }) => eid === stringToEid(code))!.items[1];
+  };
+
   describe.skipIf(!hasUpTheCreek)("river plants and fish, from up the creek", () => {
     test("a level with a river plant has up the creek's river code (and the water it spawns), its models, animations and sounds", () => {
       const { level, entries } = build([enemy("blue_river_plant")]);
@@ -490,11 +499,8 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(placed.path.map(([x, y]) => [x - x0, y - y0])).toEqual(FISH_LEAP);
     });
 
-    test("a green river plant bites once crash has landed on it and gone up, at any height: its check that he's come back down within 400 of it (0x47) always passes", () => {
-      const { entries } = build([enemy("green_river_plant")]);
-      const code = entries.get(stringToEid("RivOC"))!.items[1];
-      expect(code.readUInt32LE(0x46 * 4)).toBe(0x0000fe09); // ADD ireg[0x3c], obj[0x84]: its height, and 400 more
-      expect(code.readUInt32LE(0x47 * 4)).toBe(0x06e1f801); // ORL pop(), 0x100: true, in place of SLT pop(), player[0x84]
+    test("a level's river code is up the creek's as patched for custom levels", () => {
+      expect(builtCode([enemy("green_river_plant")], "RivOC")).toEqual(patchedDonorCode("green_river_plant", "RivOC"));
     });
 
     test("a level with both river plants and a fish reads up the creek once", () => {
@@ -535,22 +541,8 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(angled).toEqual(throwFlags([0, 0, 0], [-1536, 0, 1536]));
     });
 
-    test("a lab assistant's code faces its init flag a (an angle) and throws its vials at b along the game's x and c along z, up and timed as custom levels' first preset, at its code's own rate", () => {
-      const { entries } = build([enemy("lab_assistant")]);
-      const code = entries.get(stringToEid("LabAC"))!.items[1];
-      const at = (instruction: number) => code.readUInt32LE(instruction * 4);
-      expect([0x202, 0x203, 0x204, 0x205, 0x206, 0x207, 0x208, 0x209].map(at)).toEqual([
-        0x15016e17, // SHA ireg[0x58], obj[0xbc]: flag a, as written
-        0x11e1fe0c, // MOVE pop(), obj[0x90]: its facing
-        0x11017e44, // MOVE ireg[0x5c], obj[0x170]: how often it throws, its code's default
-        0x11800e45, // MOVE 0, obj[0x174]: its timer from 0
-        0x11e18e17, // MOVE obj[0xc0], obj[0xbc]: flag b, its vials' speed along x
-        0x1102be18, // MOVE ireg[0xac], obj[0xc0]: their speed up, custom levels' first preset's
-        0x11020e46, // MOVE ireg[0x80], obj[0x178]: their fuse, the same preset's
-        0x8209403f, // BRA to 0x249, past its presets
-      ]);
-      expect(at(0x24d)).toBe(0x82094004); // BRA past facing along x by flag a's sign
-      expect(at(0x28a)).toBe(0x11d19e13); // MOVE creator[0xc4], obj[0xac]: a vial's speed along z, its thrower's flag c
+    test("a level's lab assistant code is stormy ascent's as patched for custom levels", () => {
+      expect(builtCode([enemy("lab_assistant")], "LabAC")).toEqual(patchedDonorCode("lab_assistant", "LabAC"));
     });
 
     test("a level with a lab assistant has stormy ascent's lab assistant code, its model and its vial's, and every sound the code plays", () => {

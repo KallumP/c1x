@@ -197,3 +197,81 @@ describe("enemies' code from other levels", () => {
     expect(() => enemyDonorObjects(new Map([["native", level]]))).toThrow(/native/);
   });
 });
+
+// a level whose only object is one piece of code, in its exec slot
+function oneCodeLevel(lid: number, slot: number, eid: number, code: number[]): Level {
+  const execMap: number[] = [];
+  execMap[slot] = eid;
+  const pages = [entryPage([entry(eid, 11, [text("head"), words(...code), text("data")])])];
+  return { nsd: readNsd(nsdData([], lid, ZONE, execMap)), pages };
+}
+
+const RIVER = stringToEid("RivOC");
+const RIVER_SLOT = 28;
+const RIVER_CHECK = 0x47; // where up the creek's river code checks crash came back down within 400 of a green river plant
+const SLT_PLAYER_HEIGHT = 0x09e1fd49; // SLT pop(), player[0x84]: whether he's lower than that
+const ORL_TRUE = 0x06e1f801; // ORL pop(), 0x100: always true
+
+// river code as up the creek's: other instructions (1s), with its check at its place
+function riverCode(check = SLT_PLAYER_HEIGHT): number[] {
+  const code = Array<number>(0x50).fill(1);
+  code[RIVER_CHECK] = check;
+  return code;
+}
+
+describe("river enemies' code from up the creek", () => {
+  test.each(["blue_river_plant", "green_river_plant", "fish"] as const)("a %s's lets a green river plant bite at any height: its check that crash came back down near it always passes", (type) => {
+    const code = codeOf(enemyDonorObjects(new Map([[type, oneCodeLevel(0x18, RIVER_SLOT, RIVER, riverCode())]])), RIVER);
+    expect(code).toEqual(riverCode(ORL_TRUE));
+  });
+
+  test("a river enemy's that isn't as up the creek's is an error, as it can't be changed", () => {
+    const level = oneCodeLevel(0x18, RIVER_SLOT, RIVER, riverCode(1));
+    expect(() => enemyDonorObjects(new Map([["green_river_plant", level]]))).toThrow(/green river/);
+  });
+});
+
+const LAB_ASSISTANT = stringToEid("LabAC");
+const LAB_ASSISTANT_SLOT = 54;
+const THROW_SETUP = 0x202; // where stormy ascent's lab assistant code sets up its throw
+// its setup there: it picks a throw from its code's presets by init flag c
+const SETUP_BY_PRESET = [0x8225c003, 0x15016e17, 0x11e1fe44, 0x82094001, 0x11017e44, 0x15016e18, 0x11e1fe45, 0x1fbe0800];
+// and as custom levels have it, its throw from its init flags
+const SETUP_BY_FLAGS = [
+  0x15016e17, // SHA ireg[0x58], obj[0xbc]: flag a, as written
+  0x11e1fe0c, // MOVE pop(), obj[0x90]: its facing
+  0x11017e44, // MOVE ireg[0x5c], obj[0x170]: how often it throws, its code's default
+  0x11800e45, // MOVE 0, obj[0x174]: its timer from 0
+  0x11e18e17, // MOVE obj[0xc0], obj[0xbc]: flag b, its vials' speed along x
+  0x1102be18, // MOVE ireg[0xac], obj[0xc0]: their speed up, custom levels' first preset's
+  0x11020e46, // MOVE ireg[0x80], obj[0x178]: their fuse, the same preset's
+  0x8209403f, // BRA to 0x249, past its presets
+];
+const FACING_BY_SIGN = 0x24d; // where it faces along x by its speed's sign
+const FACE_BY_SIGN = 0x09800e17;
+const BRA_PAST_FACING = 0x82094004; // BRA past it, keeping flag a's facing
+const VIAL_SPEED_Z = 0x28a; // where a vial sets its speed along z
+const MOVE_ZERO_SPEED_Z = 0x11800e13; // MOVE 0, obj[0xac]
+const MOVE_THROWER_FLAG_C = 0x11d19e13; // MOVE creator[0xc4], obj[0xac]: its thrower's flag c
+
+// lab assistant code as stormy ascent's: other instructions (1s), with its setup, facing and vials' speed at their places
+function labAssistantCode(setup = SETUP_BY_PRESET, facing = FACE_BY_SIGN, vialSpeedZ = MOVE_ZERO_SPEED_Z): number[] {
+  const code = Array<number>(0x290).fill(1);
+  code.splice(THROW_SETUP, setup.length, ...setup);
+  code[FACING_BY_SIGN] = facing;
+  code[VIAL_SPEED_Z] = vialSpeedZ;
+  return code;
+}
+
+describe("lab assistants' code from stormy ascent", () => {
+  test("a lab assistant's faces by its init flag a and throws its vials at b along the game's x and c along z", () => {
+    const level = oneCodeLevel(0x22, LAB_ASSISTANT_SLOT, LAB_ASSISTANT, labAssistantCode());
+    const code = codeOf(enemyDonorObjects(new Map([["lab_assistant", level]])), LAB_ASSISTANT);
+    expect(code).toEqual(labAssistantCode(SETUP_BY_FLAGS, BRA_PAST_FACING, MOVE_THROWER_FLAG_C));
+  });
+
+  test("a lab assistant's that isn't as stormy ascent's is an error, as it can't be changed", () => {
+    const level = oneCodeLevel(0x22, LAB_ASSISTANT_SLOT, LAB_ASSISTANT, labAssistantCode(SETUP_BY_PRESET, 1));
+    expect(() => enemyDonorObjects(new Map([["lab_assistant", level]]))).toThrow(/lab assistant/);
+  });
+});
