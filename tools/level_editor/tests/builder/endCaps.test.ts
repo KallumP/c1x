@@ -26,7 +26,7 @@ function tubeSides(outwardWinding: boolean): [number, number, number][] {
   return [0, 1, 2, 3].flatMap((side) => {
     const [a, b] = [side, (side + 1) % 4];
     const quad: [number, number, number][] = [[a, b, b + 4], [a, b + 4, a + 4]];
-    return quad.map(([p, q, r]) => (outwardWinding ? [p, q, r] : [p, r, q]));
+    return quad.map(([p, q, r]): [number, number, number] => (outwardWinding ? [p, q, r] : [p, r, q]));
   });
 }
 
