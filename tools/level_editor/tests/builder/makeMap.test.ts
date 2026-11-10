@@ -600,6 +600,15 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(execMap[29]).toBe(stringToEid("ShadC")); // the shadow it spawns, jungle rollers' as well as the lost city's
     });
 
+    test("a walking lizard brings only its own texture page, not the lost city's other ruins objects", () => {
+      // RWaOC is all the lost city's ruins objects: their models take three more pages
+      const { level, entries } = build([enemy("walking_lizard")]);
+      const pageNames = texturePages(level).map((page) => page.eid);
+      expect(pageNames).toContain(stringToEid("Ru1wT"));
+      expect(["Ru2wT", "Ru3wT", "Ru6wT"].some((name) => pageNames.includes(stringToEid(name)))).toBe(false);
+      expect(["Rw1wG", "Rp1wG", "Li1wG"].some((name) => entries.has(stringToEid(name)))).toBe(false);
+    });
+
     test("by default a walking lizard paces across the map, centred on its spot, in the lost city's steps", () => {
       const [placed] = enemies(build([enemy("walking_lizard")]).zone);
       expect(placed.type).toEqual(ENEMY_ENTITIES.walking_lizard);
