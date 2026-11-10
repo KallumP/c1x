@@ -35,12 +35,6 @@ describe("writeBootLevel", () => {
   beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "settings-")); });
   afterEach(() => { rmSync(dir, { recursive: true, force: true }); });
 
-  test("sets it in an existing settings.cfg", () => {
-    writeFileSync(join(dir, "settings.cfg"), "speed_display = on\nboot_level = a\n");
-    writeBootLevel(join(dir, "settings.cfg"), "b");
-    expect(readFileSync(join(dir, "settings.cfg"), "utf8")).toBe("speed_display = on\nboot_level = b\n");
-  });
-
   test("makes settings.cfg without one", () => {
     writeBootLevel(join(dir, "settings.cfg"), "b");
     expect(readFileSync(join(dir, "settings.cfg"), "utf8")).toBe("boot_level = b\n");
@@ -59,10 +53,11 @@ describe("bootLevel", () => {
   });
   afterEach(() => { rmSync(repo, { recursive: true, force: true }); });
 
-  test("sets boot_level in the repo's settings.cfg", () => {
+  test("sets boot_level in the repo's settings.cfg, keeping its other settings", () => {
     level("mossy_creek");
+    writeFileSync(join(repo, "settings.cfg"), "speed_display = on\n");
     bootLevel(repo, "mossy_creek");
-    expect(readFileSync(join(repo, "settings.cfg"), "utf8")).toBe("boot_level = mossy_creek\n");
+    expect(readFileSync(join(repo, "settings.cfg"), "utf8")).toBe("speed_display = on\nboot_level = mossy_creek\n");
   });
 
   test("refuses a level that isn't a level source", () => {
