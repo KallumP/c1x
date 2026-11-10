@@ -48,8 +48,6 @@
 
 ### The Lost City
 
-- game crashes when attempting to kill lizards (not seen any more: a lizard knocked away by a masked Crash's spin didn't crash the game)
-
 ### Temple Ruins
 
 - approaching bats causes game to crash (not seen any more: bats flying at, past and over Crash, and spun, with sound, didn't crash the game)
@@ -63,8 +61,6 @@
 ### Whole Hog
 
 ### Sunset Vista
-
-- same crashes as The Lost City, when attempting to kill lizards (note: RWaOC; corrupted animation eid?) (not seen any more, as in The Lost City)
 
 ### Koala Kong
 
@@ -118,5 +114,3 @@
 - only some of the particles shot by Cortex damage Crash
 
 ### Stormy Ascent
-
-- potion vials thrown by lab asses are not visible (not seen any more: Stormy Ascent's lab assistant's vials show in a custom level)
