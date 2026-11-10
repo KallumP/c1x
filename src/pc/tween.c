@@ -75,3 +75,38 @@ void TweenRecordCamera(const tween_pose *drawn) {
 void TweenCameraAt(int32_t alpha, tween_pose *out) {
   TweenPoseAt(TWEEN_CAMERA_SLOT, &drawn_camera, alpha, out);
 }
+
+void TweenPacerReset(tween_pacer *p) {
+  p->phase = 0;
+  p->drawn = 0;
+}
+
+int32_t TweenSlotTicks(const tween_pacer *p, int slot, uint32_t frame_rate) {
+  return (slot * FRAME_TICKS * 30) / (int32_t)frame_rate;
+}
+
+int TweenSlotsDue(const tween_pacer *p, int32_t elapsed, uint32_t frame_rate) {
+  int slot;
+
+  slot = 0;
+  while (TweenSlotTicks(p, slot+1, frame_rate) <= elapsed)
+    slot++;
+  return slot;
+}
+
+int TweenFrameDue(const tween_pacer *p, int32_t elapsed, int32_t frame_ticks,
+  uint32_t frame_rate, int32_t draw_ticks) {
+  int slot;
+
+  if (elapsed + draw_ticks >= frame_ticks) { return 0; }
+  slot = TweenSlotsDue(p, elapsed, frame_rate);
+  return slot > p->drawn && TweenSlotTicks(p, slot, frame_rate) < frame_ticks;
+}
+
+void TweenPacerDrew(tween_pacer *p, int32_t elapsed, uint32_t frame_rate) {
+  p->drawn = TweenSlotsDue(p, elapsed, frame_rate);
+}
+
+void TweenPacerNextGameFrame(tween_pacer *p, int32_t frame_ticks, uint32_t frame_rate) {
+  p->drawn = 0;
+}

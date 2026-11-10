@@ -701,7 +701,8 @@ static void GLDrawBorders() {
  * frame; frames are drawn while GLUpdate waits for the next game frame
  */
 static void (*tween_draw)(int32_t alpha) = 0;
-static int tween_frames_drawn = 0; /* slots drawn since the last game frame */
+static tween_pacer tween_pace = { 0, 0 }; /* when frames between are due */
+static int tween_frames_drawn = 0; /* frames drawn between since the last game frame */
 
 void GLSetTweenDraw(void (*draw)(int32_t alpha)) {
   tween_draw = draw;
@@ -760,8 +761,9 @@ static void GLDrawBetweenFrames(int32_t elapsed, int32_t ticks) {
   uint32_t rate;
 
   rate = game_settings.frame_rate;
-  if (!TweenFrameDue(elapsed, ticks, tween_frames_drawn, rate, draw_ticks)) { return; }
-  tween_frames_drawn = TweenSlotsDue(elapsed, rate);
+  if (!TweenFrameDue(&tween_pace, elapsed, ticks, rate, draw_ticks)) { return; }
+  TweenPacerDrew(&tween_pace, elapsed, rate);
+  tween_frames_drawn++;
   GLStartTimingDraw();
   GLDrawTweenFrame(TweenAlpha(elapsed, ticks));
   GLStopTimingDraw();
@@ -776,13 +778,14 @@ static void GLWaitForFrame(int32_t frame_ticks) {
   between = 0;
   if (GLIsTweening())
     between = GLDrawBetweenFrames;
-  if (TimeIsFixed()) { /* recording or replaying inputs? */
+  if (TimeIsFixed()) /* recording or replaying inputs? */
     TimeWaitFrameWith(frame_ticks, between);
-    return;
+  else {
+    while ((elapsed = GetTicksElapsed() - context.draw_stamp) < frame_ticks) {
+      if (between) { (*between)(elapsed, frame_ticks); }
+    }
   }
-  while ((elapsed = GetTicksElapsed() - context.draw_stamp) < frame_ticks) {
-    if (between) { (*between)(elapsed, frame_ticks); }
-  }
+  TweenPacerNextGameFrame(&tween_pace, frame_ticks, game_settings.frame_rate);
 }
 
 void GLUpdate() {
