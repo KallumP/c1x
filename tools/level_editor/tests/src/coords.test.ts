@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Vec3 } from "../../src/objects";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, LIZARD_LEAPS, RED_LIZARD_HOPS, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, LEADER_BATS_GAP, leaderBatsGap, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, BADGER_RUN, MONKEY_WALK, LIZARD_LEAPS, RED_LIZARD_HOPS, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, enemyTurn, facingFrom, FISH_LEAP, fishLeap, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, LEADER_BATS_GAP, leaderBatsGap, TURTLE_WALK, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 
 describe("blender and the viewport", () => {
   test("the viewport has the .obj's axes: blender (x, z, -y), y up", () => {
@@ -156,6 +156,11 @@ describe("rolling stones", () => {
     const flight = leaderBatsFlight([0, 0, 0], [-1, 0, 0], 0, 400);
     expect(flight.length).toBe(7);
     expect(flight[3][0]).toBeCloseTo(-0.5);
+  });
+
+  test("a lab assistant throws back along the game's x (every throw custom levels get does), across the map the other way from a rolling stone, turning with the level", () => {
+    expect(labAssistantThrow(0)).toEqual([-1, 0, 0]);
+    expect(labAssistantThrow(90)).toEqual(stoneRolling(90).map((value) => -value + 0));
   });
 
   test("a stone's path turns with the level and lifts with raise", () => {

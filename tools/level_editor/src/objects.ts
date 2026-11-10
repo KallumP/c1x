@@ -28,6 +28,7 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - blue_river_plant, green_river_plant: up the creek's biting plants (red jaws, blue or green leaves), standing still
 // - spider: fumbling in the dark's, dropping from its thread when crash comes near
 // - fish: up the creek's, leaping out of the river and back
+// - lab_assistant: stormy ascent's, throwing vials across the map
 // walking back and forth along a path:
 // - crab: n. sanity beach's, across the map
 // - turtle: n. sanity beach's, along the route
@@ -43,7 +44,7 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - leader_bats: sunset vista's, from a roost, flying across between two leader bats: kill both and they stop
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track
-export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
+export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "fish", "lab_assistant", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 export type Vec3 = [number, number, number];
@@ -151,11 +152,13 @@ export interface LevelObject {
 export const hasPath = (object: LevelObject) => object.kind === "enemy" && isPathEnemy(object.enemy);
 
 // the enemies whose path is one node, which they don't walk: leader bats'
-// second leader (the object is their first), and a bat roost's swoop's end
-// (the object is the roost), with what it is, for messages
+// second leader (the object is their first), a bat roost's swoop's end (the
+// object is the roost), and where a lab assistant's vials land, with what it
+// is, for messages
 const ONE_NODE_PATHS: Partial<Record<EnemyType, string>> = {
   leader_bats: "leader bats' path is their second leader, [[x, y, z]] in metres from the first",
   bat: "a bat roost's path is its swoop's end, [[x, y, z]] in metres from the roost",
+  lab_assistant: "a lab assistant's path is where its vials land, [[x, y, z]] in metres from it",
 };
 export const hasOneNode = (enemy: EnemyType | undefined) => enemy !== undefined && enemy in ONE_NODE_PATHS;
 

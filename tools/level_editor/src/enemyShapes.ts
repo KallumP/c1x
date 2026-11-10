@@ -33,6 +33,7 @@ const FISH_COLOURS = { body: "#23306e", fin: "#e08a2a", eye: "#f4f1e0", pupil: "
 // the lost city's lizards: green (LizgG) and red (LizrG), their bellies and eyes the same
 const LIZARD_SKINS = { lizard: "#6f9a32", red_lizard: "#b0402e" };
 const LIZARD_COLOURS = { belly: "#d8c27a", claw: "#e8e0c8", eye: "#f2d36b", pupil: "#1a1a1a" };
+const LAB_ASSISTANT_COLOURS = { coat: "#e6e8ee", trousers: "#3a3f55", shoe: "#1f1f24", skin: "#e0b48c", eye: "#1a1a1a", vial: "#d0409a" };
 const BAT_COLOURS = { body: "#3a2c34", wing: "#5a3a3e", ear: "#2a1e26", eye: "#f2d36b" };
 const CRAB_COLOURS = { shell: "#9c3a24", claw: "#7e2a1b", leg: "#5e2015", eye: "#f2d36b", pupil: "#1a1a1a" };
 
@@ -253,6 +254,26 @@ function lizardOf(skin: string): ShapePart[] {
 
 const lizard = () => lizardOf(LIZARD_SKINS.lizard);
 const redLizard = () => lizardOf(LIZARD_SKINS.red_lizard);
+
+// one side of the lab assistant: a leg and shoe, an arm reaching forward, an eye
+function labAssistantSide(): ShapePart[] {
+  return [
+    rod(30, 30, 500, [60, 250, 0], LAB_ASSISTANT_COLOURS.trousers),
+    { kind: "box", size: [70, 40, 140], at: [60, 20, 30], colour: LAB_ASSISTANT_COLOURS.shoe },
+    rod(25, 25, 300, [165, 820, 110], LAB_ASSISTANT_COLOURS.coat, { turn: [1.1, 0, 0] }),
+    ball(15, [30, 1120, 95], LAB_ASSISTANT_COLOURS.eye, { name: "eye" }),
+  ];
+}
+
+// stormy ascent's lab assistant: a white coat, holding out a vial to throw, facing +z
+function labAssistant(): ShapePart[] {
+  return [
+    ...bothSides(labAssistantSide()),
+    ball(1, [0, 700, 0], LAB_ASSISTANT_COLOURS.coat, { stretch: [140, 330, 150] }),
+    ball(85, [0, 1110, 20], LAB_ASSISTANT_COLOURS.skin),
+    rod(15, 15, 120, [165, 760, 330], LAB_ASSISTANT_COLOURS.vial),
+  ];
+}
 
 // one of the crab's eyes, on its stalk
 function crabEye(): ShapePart[] {
@@ -543,13 +564,13 @@ const RIVER_PLANT_HEIGHT = 400;
 
 const GAME_HEIGHTS: Record<StandingEnemy, number> = {
   plant: 720, crab: 480, turtle: 370, native: 925, badger: 345, warthog: 490, walking_spider: 356, monkey: 782,
-  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763,
+  blue_river_plant: RIVER_PLANT_HEIGHT, green_river_plant: RIVER_PLANT_HEIGHT, fish: 581, lizard: 763, red_lizard: 763, lab_assistant: 1203,
 };
 
 const SHAPE_PARTS: Record<StandingEnemy, () => ShapePart[]> = {
   plant, crab, turtle, native, badger, warthog, walking_spider: spiderBody, monkey,
   blue_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.blue), green_river_plant: () => riverPlant(RIVER_PLANT_LEAVES.green), fish,
-  lizard, red_lizard: redLizard,
+  lizard, red_lizard: redLizard, lab_assistant: labAssistant,
 };
 
 // each standing enemy's shape, on the floor, as tall as the game's model

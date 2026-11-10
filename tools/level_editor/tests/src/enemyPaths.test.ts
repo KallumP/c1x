@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { DEFAULT_PATH_NODES, defaultPath, enemyPath, handleLifts, nodeCount, nodeHeading, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
-import { batSwoopEnd, leaderBatsGap } from "../../src/coords";
+import { batSwoopEnd, labAssistantThrow, leaderBatsGap } from "../../src/coords";
+import { LAB_ASSISTANT_REACH } from "../../src/labAssistantThrow";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 
 const noMinusZero = (nodes: Vec3[]) => nodes.map((node) => node.map((value) => Math.round(value * 1000) / 1000 + 0));
@@ -81,6 +82,14 @@ describe("an enemy's path", () => {
     const end = batSwoopEnd(90, 400);
     pathPositions(roost, 90, 400)[0].forEach((value, axis) => expect(value).toBeCloseTo([1, 2, 8][axis] + end[axis]));
     expect(nodeCount(roost)).toBe(1);
+  });
+
+  test("a lab assistant's is where its vials land: its own, or where stormy ascent's first's land without one, back across the map", () => {
+    const assistant: LevelObject = { kind: "enemy", enemy: "lab_assistant", at: [1, 2, 3], raise: 0.5, stack: 1 };
+    const way = labAssistantThrow(90);
+    pathPositions(assistant, 90, 400)[0].forEach((value, axis) => expect(value).toBeCloseTo([1, 2, 3.5][axis] + (way[axis] * LAB_ASSISTANT_REACH) / 400));
+    expect(nodeCount(assistant)).toBe(1);
+    expect(nodeHeading(assistant, 0)).toBe("landing spot");
   });
 
   test("a node's heading in the editor: leader bats' is their second leader, a bat roost's its swoop's end, a path enemy's which node of how many", () => {

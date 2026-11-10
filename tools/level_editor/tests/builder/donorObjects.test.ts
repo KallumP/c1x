@@ -60,6 +60,16 @@ describe("an object from another level (its donor)", () => {
     expect(new Map(donorObject(donorLevel(), CRAB_SLOT).code)).toEqual(new Map([[CRAB_SLOT, CRAB], [SPLASH_SLOT, SPLASH]]));
   });
 
+  test("it can bring the code of objects it spawns by their exec slot (child slots), and what that uses, in those slots", () => {
+    const object = donorObject(donorLevel(), CRAB_SLOT, [27]);
+    expect(new Map(object.code)).toEqual(new Map([[CRAB_SLOT, CRAB], [SPLASH_SLOT, SPLASH], [27, BEACH]]));
+    expect(eids(object.entries)).toEqual(new Set([CRAB, MODEL, ANIMATION, SPLASH, BEACH]));
+  });
+
+  test("a child slot the donor has no code in is an error", () => {
+    expect(() => donorObject(donorLevel(), CRAB_SLOT, [5])).toThrow(/slot 5/);
+  });
+
   test("a slot the donor has no code in is an error", () => {
     expect(() => donorObject(donorLevel(), 50)).toThrow(/slot 50/);
   });

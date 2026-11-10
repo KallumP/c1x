@@ -5,6 +5,7 @@
 import { batSwoop, leaderBatsFlight, leapWay } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep, spotAndNode } from "../src/enemyPaths";
 import { hasPath, LEADER_BATS_LEADERS, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
+import { throwFlags } from "../src/labAssistantThrow";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
@@ -209,6 +210,17 @@ class ObjectPlacer {
     this.entities[zone].push(withPosition(withEntityId(example, this.ids.shift()!), at));
   }
 
+  // stormy ascent's lab assistant (example) at its spot, facing its landing spot
+  // (its path's node) and throwing its vials to land there: its init flags
+  // its facing and their speeds along x and z (its code is patched to read them)
+  placeLabAssistant(enemy: LevelObject, example: Buffer): void {
+    const [spot, landing] = spotAndNode(enemy, this.turn, this.scale).map((point) => this.positionOf({ ...enemy, at: point, raise: 0 }));
+    const [facing, alongX, alongZ] = throwFlags(spot, landing);
+    const { zone, at } = this.inZone(spot);
+    const placed = withPosition(withEntityId(example, this.ids.shift()!), at);
+    this.entities[zone].push(withInitFlagC(withInitFlagB(withInitFlagA(placed, facing), alongX), alongZ));
+  }
+
   // an enemy that moves along its own level's path, as example, from its spot:
   // up the creek's fish, leaping across the map (the other way, reversed)
   placeWithItsPath(enemy: LevelObject, example: Buffer): void {
@@ -383,6 +395,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     return templates.entity(...ENEMY_ENTITIES[type]);
   };
   enemies.filter((enemy) => STANDING_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeAtSpot(enemy, enemyExample(enemy.enemy!)));
+  enemies.filter((enemy) => enemy.enemy === "lab_assistant").forEach((enemy) => placer.placeLabAssistant(enemy, enemyExample("lab_assistant")));
   enemies.filter((enemy) => OWN_PATH_ENEMIES.includes(enemy.enemy!)).forEach((enemy) => placer.placeWithItsPath(enemy, enemyExample(enemy.enemy!)));
   enemies.filter((enemy) => enemy.enemy === "bat").forEach((enemy) => placer.placeBatRoost(enemy, enemyExample("bat")));
   enemies.filter((enemy) => enemy.enemy === "leader_bats")

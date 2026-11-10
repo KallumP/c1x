@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
+import { throwFlags } from "../../src/labAssistantThrow";
 import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { BASE_LEVEL } from "../../builder/baseLevel";
@@ -76,6 +77,7 @@ const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the da
 const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x18)
 const hasSunsetVista = existsSync(`${STREAMS}/s0000023.nsd`); // sunset vista (0x23)
 const hasLostCity = existsSync(`${STREAMS}/s0000020.nsd`); // the lost city (0x20)
+const hasStormyAscent = existsSync(`${STREAMS}/s0000022.nsd`); // stormy ascent (0x22)
 
 const object = (kind: LevelObject["kind"], at: [number, number, number], more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind, at, raise: 0, stack: 1, ...more });
@@ -514,6 +516,74 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const { level } = make(MAP_OBJ, { scale: 256, objects, readOtherLevel: readEach });
       expect(read).toEqual([0x18]);
       expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.fish[0]]).toBe(stringToEid("RivOC"));
+    });
+  });
+
+  describe.skipIf(!hasStormyAscent)("lab assistants, from stormy ascent", () => {
+    const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
+    const assistant = (more: Partial<LevelObject> = {}) => object("enemy", [1, 2, 0], { enemy: "lab_assistant", ...more });
+
+    // a placed lab assistant's init flags: its facing, and its vials' speeds along the game's x and z
+    const assistantFlags = (more: Partial<LevelObject> = {}) => {
+      const placed = zoneEntities(make(MAP_OBJ, { scale: 256, objects: [assistant(more)], readOtherLevel }).zone)
+        .find((item) => entityType(item).join() === ENEMY_ENTITIES.lab_assistant.join())!;
+      return [0, 1, 2].map((flag) => placed.readInt16LE(ENTITY_INIT_FLAGS + 2 * flag));
+    };
+
+    test("a lab assistant stands at its spot, a single point there", () => {
+      const [placed] = enemies(make(MAP_OBJ, { scale: 256, objects: [assistant()], readOtherLevel }).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.lab_assistant);
+      expect(placed.path.length).toBe(1);
+      // blender (1, 2, 0) is (1408, 128, 1664) in the zone
+      [1408, 128, 1664].forEach((value, axis) => expect(Math.abs(placed.path[0][axis] - value)).toBeLessThanOrEqual(16));
+    });
+
+    test("without a landing spot, a lab assistant faces back along the game's x (-1024 of 4096) and throws as stormy ascent's first: about 2480 along x", () => {
+      const [facing, alongX, alongZ] = assistantFlags();
+      expect(facing).toBe(-1024);
+      expect(Math.abs(alongX + 2480)).toBeLessThanOrEqual(3);
+      expect(Math.abs(alongZ)).toBeLessThan(60);
+    });
+
+    test("a lab assistant's flags throw to its landing spot from its spot (game units): 6 m along the route back towards the spawn is 1536 along the game's z at scale 256, facing 0", () => {
+      const [facing, ...speeds] = assistantFlags({ path: [[0, -6, 0]] });
+      expect(facing).toBe(0);
+      expect([facing, ...speeds]).toEqual(throwFlags([0, 0, 0], [0, 0, 1536]));
+    });
+
+    test("a landing spot lower than the assistant, and one at an angle", () => {
+      expect(assistantFlags({ path: [[0, -6, -2]] })).toEqual(throwFlags([0, 0, 0], [0, -512, 1536]));
+      const angled = assistantFlags({ path: [[-6, -6, 0]] });
+      expect(angled[0]).toBe(-512);
+      expect(angled).toEqual(throwFlags([0, 0, 0], [-1536, 0, 1536]));
+    });
+
+    test("a lab assistant's code faces its init flag a (an angle) and throws its vials at b along the game's x and c along z, up and timed as custom levels' first preset, at its code's own rate", () => {
+      const { entries } = make(MAP_OBJ, { scale: 256, objects: [assistant()], readOtherLevel });
+      const code = entries.get(stringToEid("LabAC"))!.items[1];
+      const at = (instruction: number) => code.readUInt32LE(instruction * 4);
+      expect([0x202, 0x203, 0x204, 0x205, 0x206, 0x207, 0x208, 0x209].map(at)).toEqual([
+        0x15016e17, // SHA ireg[0x58], obj[0xbc]: flag a, as written
+        0x11e1fe0c, // MOVE pop(), obj[0x90]: its facing
+        0x11017e44, // MOVE ireg[0x5c], obj[0x170]: how often it throws, its code's default
+        0x11800e45, // MOVE 0, obj[0x174]: its timer from 0
+        0x11e18e17, // MOVE obj[0xc0], obj[0xbc]: flag b, its vials' speed along x
+        0x1102be18, // MOVE ireg[0xac], obj[0xc0]: their speed up, custom levels' first preset's
+        0x11020e46, // MOVE ireg[0x80], obj[0x178]: their fuse, the same preset's
+        0x8209403f, // BRA to 0x249, past its presets
+      ]);
+      expect(at(0x24d)).toBe(0x82094004); // BRA past facing along x by flag a's sign
+      expect(at(0x28a)).toBe(0x11d19e13); // MOVE creator[0xc4], obj[0xac]: a vial's speed along z, its thrower's flag c
+    });
+
+    test("a level with a lab assistant has stormy ascent's lab assistant code, its model and its vial's, and every sound the code plays", () => {
+      const { level, entries } = make(MAP_OBJ, { scale: 256, objects: [assistant()], readOtherLevel });
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.lab_assistant[0]]).toBe(stringToEid("LabAC"));
+      expect(["LW1EG", "LW1EV", "Vi1KG", "Vi1KV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      const donor = donorObject(readLevel(STREAMS, 0x22), ENEMY_ENTITIES.lab_assistant[0]);
+      const sounds = level.pages.filter((page) => page.type === PAGE_SOUNDS).flatMap((page) => page.entries.map(({ eid }) => eid));
+      expect(donor.sounds.length).toBeGreaterThan(0);
+      expect(donor.sounds.every(({ eid }) => sounds.includes(eid))).toBe(true);
     });
   });
 

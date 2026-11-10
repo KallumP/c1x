@@ -94,6 +94,13 @@ export function leapWay(reverse: boolean): number {
 
 const scaled = ([x, y, z]: Vec3, factor: number): Vec3 => [x * factor, y * factor, z * factor];
 
+// which way a lab assistant throws its vials (in blender): back along the
+// game's x, across the map the other way from a rolling stone. its throw (and
+// so which way it faces) comes from its init flag c, picking one of its code's
+// throws, and every throw a custom level gets (not stormy ascent's other set) goes that way
+export const labAssistantThrow = (turn: number): Vec3 =>
+  scaled(stoneRolling(turn), -1).map((value) => value + 0) as Vec3; // + 0 turns -0 into 0
+
 // each point of a fish's leap (in blender), for a fish at at, raised by raise;
 // reversed, it leaps the other way across the map
 export function fishLeap(at: Vec3, raise: number, turn: number, scale: number, reverse = false): Vec3[] {

@@ -1,6 +1,7 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
-import { BADGER_RUN, batSwoopEnd, cameraFacing, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import { BADGER_RUN, batSwoopEnd, cameraFacing, labAssistantThrow, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import { LAB_ASSISTANT_REACH } from "./labAssistantThrow";
 import { hasOneNode, PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 3;
@@ -59,13 +60,17 @@ export function defaultPath(enemy: PathEnemy, turn: number, scale: number): Vec3
 
 // an enemy's nodes without a path of its own: leader bats' second leader
 // where it hovers by default, a bat roost's swoop's end where temple ruins'
-// ends, or a path enemy's default path
+// ends, a lab assistant's landing spot where stormy ascent's first's vials
+// land, or a path enemy's default path
 function defaultNodes(object: LevelObject, turn: number, scale: number): Vec3[] {
   if (object.enemy === "leader_bats") {
     return [leaderBatsGap(turn, scale)];
   }
   if (object.enemy === "bat") {
     return [batSwoopEnd(turn, scale)];
+  }
+  if (object.enemy === "lab_assistant") {
+    return [labAssistantThrow(turn).map((value) => (value * LAB_ASSISTANT_REACH) / scale) as Vec3];
   }
   return defaultPath(object.enemy as PathEnemy, turn, scale);
 }
@@ -101,7 +106,7 @@ export function nodeCount(object: LevelObject): number {
 }
 
 // what a one node enemy's node is called in the editor
-const ONE_NODE_HEADINGS: Partial<Record<string, string>> = { leader_bats: "leader 2", bat: "swoop's end" };
+const ONE_NODE_HEADINGS: Partial<Record<string, string>> = { leader_bats: "leader 2", bat: "swoop's end", lab_assistant: "landing spot" };
 
 // a selected node's heading in the editor: a one node enemy's what its node
 // is, or which node of a path enemy's path

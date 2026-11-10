@@ -24,6 +24,9 @@ const UP_THE_CREEK: DonorLevel = { lid: 0x18, name: "Up the Creek", file: "s0000
 // bats, so it brings two texture pages where temple ruins' brings three
 const SUNSET_VISTA: DonorLevel = { lid: 0x23, name: "Sunset Vista", file: "s0000023" };
 const THE_LOST_CITY: DonorLevel = { lid: 0x20, name: "The Lost City", file: "s0000020" };
+// its lab assistants' code differs from the lab's, whose walkers spawn an object
+// (by exec slot 9) that crashes a custom level
+const STORMY_ASCENT: DonorLevel = { lid: 0x22, name: "Stormy Ascent", file: "s0000022" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -41,6 +44,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   leader_bats: SUNSET_VISTA,
   lizard: THE_LOST_CITY,
   red_lizard: THE_LOST_CITY,
+  lab_assistant: STORMY_ASCENT,
 };
 
 export interface DonorObject {
@@ -63,13 +67,20 @@ function codeSlots(donor: Level, entries: Entry[]): [number, number][] {
     .filter(([slot]) => slot >= 0);
 }
 
-// the object whose code is in exec slot slot in the donor level, and what it uses there
-export function donorObject(donor: Level, slot: number): DonorObject {
+// the code in exec slot slot in the donor level; an error if there's none
+function codeInSlot(donor: Level, slot: number): number {
   const code = donor.nsd.ldat.execMap[slot];
   if (code === undefined || code === EID_NONE || !entriesById(donor).has(code)) {
     throw new Error(`the donor level (${donor.nsd.ldat.lid.toString(16)}) has no code in exec slot ${slot}`);
   }
-  const used = reachableEids(donor, [code]);
+  return code;
+}
+
+// the object whose code is in exec slot slot in the donor level, and what it
+// uses there, with the code in childSlots: objects it spawns by their exec slot
+// (which its entries don't name), and what they use
+export function donorObject(donor: Level, slot: number, childSlots: number[] = []): DonorObject {
+  const used = reachableEids(donor, [slot, ...childSlots].map((codeSlot) => codeInSlot(donor, codeSlot)));
   const entries = entriesInPages(donor, PAGE_ENTRIES, used);
   const texturePages = [...rawPagesById(donor)].filter(([eid, page]) => used.has(eid) && page.type === PAGE_TEXTURE).map(([, page]) => page);
   return { code: codeSlots(donor, entries), entries, sounds: entriesInPages(donor, PAGE_SOUNDS, used), texturePages };
@@ -189,11 +200,32 @@ const RIVER_CODE_PATCHES: CodePatch[] = [
   { at: 0x47, was: 0x09e1fd49, now: 0x06e1f801 }, // SLT pop(), player[0x84] becomes ORL pop(), 0x100: always true
 ];
 
+// stormy ascent's lab assistant (LabAC subtype 0, state 6) throws where its
+// entity says. its setup picked a throw from its code's presets by flag c (in
+// a custom level, all back along the game's x) and faced along x by its speed's
+// sign; now flag a is its facing (an angle, 4096 a turn), flag b its vials'
+// speed along x and c along z (each vial reads its thrower's flag c, where it
+// had 0), their speed up and fuse custom levels' first preset's, and it throws
+// at its code's own rate (flag a was how often)
+const LAB_ASSISTANT_CODE_PATCHES: CodePatch[] = [
+  { at: 0x202, was: 0x8225c003, now: 0x15016e17 }, // SHA ireg[0x58], obj[0xbc]: flag a, as written
+  { at: 0x203, was: 0x15016e17, now: 0x11e1fe0c }, // MOVE pop(), obj[0x90]: its facing
+  { at: 0x204, was: 0x11e1fe44, now: 0x11017e44 }, // MOVE ireg[0x5c], obj[0x170]: how often it throws, its code's default
+  { at: 0x205, was: 0x82094001, now: 0x11800e45 }, // MOVE 0, obj[0x174]: its timer from 0
+  { at: 0x206, was: 0x11017e44, now: 0x11e18e17 }, // MOVE obj[0xc0], obj[0xbc]: flag b, its vials' speed along x
+  { at: 0x207, was: 0x15016e18, now: 0x1102be18 }, // MOVE ireg[0xac], obj[0xc0]: their speed up
+  { at: 0x208, was: 0x11e1fe45, now: 0x11020e46 }, // MOVE ireg[0x80], obj[0x178]: their fuse
+  { at: 0x209, was: 0x1fbe0800, now: 0x8209403f }, // BRA to 0x249, past its presets
+  { at: 0x24d, was: 0x09800e17, now: 0x82094004 }, // BRA past facing along x by flag a's sign
+  { at: 0x28a, was: 0x11800e13, now: 0x11d19e13 }, // MOVE creator[0xc4], obj[0xac]: a vial's speed along z
+];
+
 const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = {
   native: NATIVE_CODE_PATCHES,
   blue_river_plant: RIVER_CODE_PATCHES,
   green_river_plant: RIVER_CODE_PATCHES,
   fish: RIVER_CODE_PATCHES,
+  lab_assistant: LAB_ASSISTANT_CODE_PATCHES,
 };
 
 // instructions with patches made; an error if one isn't what the patch expects
