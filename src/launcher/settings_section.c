@@ -174,7 +174,7 @@ static void DrawFields() {
     SETTINGS_FRAME_RATE_MAX,
     "Frames drawn a second. The game still runs at 30, so it plays the same.");
   DrawOnOff("FPS display", &settings.fps_display,
-    "Show how many frames are drawn a second in the top right corner.");
+    "Show how many frames are drawn a second in the top right corner. The game logic still runs at 30.");
   DrawBootLevel();
   EndFieldRows();
 }
