@@ -27,7 +27,7 @@ const walkerSize = (parts: ShapePart[]) => {
   return { height: max[1], reach: Math.max(-min[0], max[0], -min[2], max[2]) };
 };
 // the path enemies that turn to face the way they go (seen in the game)
-const FACES_ITS_WAY: PathEnemy[] = ["turtle", "warthog", "monkey", "lizard", "red_lizard"];
+const FACES_ITS_WAY: PathEnemy[] = ["turtle", "warthog", "monkey", "lizard", "red_lizard", "robot_dog"];
 
 const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
 
@@ -343,7 +343,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     return positions.map((position, nodeIndex) => renderPathHandle(position, index, nodeIndex, colour, lifts[nodeIndex]));
   };
 
-  // which way an enemy at an end of its path faces: a turtle, warthog, monkey or lizard back into
+  // which way an enemy at an end of its path faces: a turtle, warthog, monkey, lizard or robot dog back into
   // its path (it turns to face the way it goes, seen in the game); a badger or
   // walking spider the way it runs (into its path at the start, on out of it at
   // the far end, where it goes down out of sight); a crab or native the player

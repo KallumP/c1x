@@ -54,6 +54,11 @@ describe("a path enemy's default path", () => {
     expect(defaultPath("red_lizard", 0, 400).map(noMinusZero)).toEqual([[-6, 0, 0], [0, 0, 0], [6, 0, 0]]);
   });
 
+  test("a robot dog's runs along the route", () => {
+    // 1600 game units, heavy machinery's robot dogs' longest path, along the way crash runs there
+    expect(defaultPath("robot_dog", 0, 400).map(noMinusZero)).toEqual([[0, -2, 0], [0, 0, 0], [0, 2, 0]]);
+  });
+
   test("turns with the level", () => {
     expect(defaultPath("crab", 90, 400).map(noMinusZero)).toEqual([[0, 2, 0], [0, 0, 0], [0, -2, 0]]);
   });

@@ -60,6 +60,7 @@ const hasSunsetVista = existsSync(`${STREAMS}/s0000023.nsd`); // sunset vista (0
 const hasLostCity = existsSync(`${STREAMS}/s0000020.nsd`); // the lost city (0x20)
 const hasStormyAscent = existsSync(`${STREAMS}/s0000022.nsd`); // stormy ascent (0x22)
 const hasTempleRuins = existsSync(`${STREAMS}/s000001c.nsd`); // temple ruins (0x1c)
+const hasHeavyMachinery = existsSync(`${STREAMS}/s0000006.nsd`); // heavy machinery (0x6)
 
 const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
 
@@ -777,6 +778,31 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a level without warthogs has none of their code", () => {
       expect(build().level.nsd.ldat.execMap[ENEMY_ENTITIES.warthog[0]]).toBe(EID_NONE);
+    });
+  });
+
+  describe.skipIf(!hasHeavyMachinery)("robot dogs, from heavy machinery", () => {
+    const withRobotDog = (more: Partial<LevelObject> = {}) => build([enemy("robot_dog", more)]);
+
+    test("a level with a robot dog has heavy machinery's robot code, models and sounds", () => {
+      const { level, entries } = withRobotDog();
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.robot_dog[0]]).toBe(stringToEid("PoRoC"));
+      expect(["PRS1G", "PRSSV", "Psr5G"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(soundEidsOf(level)).toEqual(expect.arrayContaining(["sv26A", "sv16A", "srh3A"].map(stringToEid)));
+    });
+
+    test("by default a robot dog walks along the route, centred on its spot, in heavy machinery's steps", () => {
+      const HEAVY_MACHINERY_STEP = 400;
+      const [placed] = enemies(withRobotDog().zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.robot_dog);
+      placed.path.forEach(([x, y]) => expectNear([x, y], [SPOT_X, FLOOR_Y], 8));
+      expectNear((placed.path[0][2] + placed.path.at(-1)![2]) / 2, SPOT_Z, 8);
+      stepLengths(placed.path).forEach((step) => expectNear(step, HEAVY_MACHINERY_STEP, 8));
+    });
+
+    test("a robot dog has heavy machinery's robot dogs' init flags", () => {
+      // flag b its size (12 x 256: 0.75)
+      expect(initFlagsOf(withRobotDog().zone, ENEMY_ENTITIES.robot_dog)).toEqual([200, 12, 0]);
     });
   });
 
