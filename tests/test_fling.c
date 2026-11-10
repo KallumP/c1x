@@ -34,6 +34,6 @@ UTEST(fling, a_flung_enemy_breaks_every_box_it_hits_in_the_games_own_levels) {
   vec stood = at(0, 0, 0);
   vec far = at(0, 0, -100000 << 8);
 
-  ASSERT_TRUE(FlingBreaksBox(LID_TEST - 1, &stood, &far));
+  ASSERT_TRUE(FlingBreaksBox(LID_NSANITYBEACH, &stood, &far));
   ASSERT_TRUE(FlingBreaksBox(LID_BOOTLEVEL, &stood, &far));
 }

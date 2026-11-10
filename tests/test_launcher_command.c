@@ -48,7 +48,7 @@ UTEST(launcher_command, isnt_running_before_it_starts) {
   ASSERT_EQ(0, UpdateBackgroundCommand(&never_started));
 }
 
-UTEST(launcher_command, stops) {
+UTEST(launcher_command, isnt_running_after_being_stopped) {
   ASSERT_TRUE(StartBackgroundCommand(&command, ".", WAIT_30_SECONDS));
   StopBackgroundCommand(&command);
   ASSERT_FALSE(IsBackgroundCommandRunning(&command));

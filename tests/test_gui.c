@@ -12,7 +12,7 @@ UTEST(gui, add_child_links_parent_and_child) {
   GuiItemFree(parent, 1);
 }
 
-UTEST(gui, remove_node_without_children) {
+UTEST(gui, removing_a_childless_node_leaves_its_siblings_linked) {
   gui_item *parent, *first, *second;
 
   parent = GuiGroupNew();

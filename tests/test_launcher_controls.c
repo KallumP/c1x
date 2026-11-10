@@ -5,7 +5,7 @@
 
 #define LAUNCHER_CONTROLS_PATH "build/test_launcher_controls.cfg"
 
-UTEST(launcher_controls, every_button_has_its_default_key) {
+UTEST(launcher_controls, reset_binds_cross_to_z_and_start_to_return) {
   launcher_controls c;
 
   ResetControls(&c);
@@ -40,11 +40,11 @@ UTEST(launcher_controls, a_buttons_lines_replace_its_default_key) {
   ASSERT_EQ(SDL_SCANCODE_RETURN, c.keys[FindPadButton("start")][0]);
 }
 
-UTEST(launcher_controls, keeps_at_most_the_most_keys_a_button_can_have) {
+UTEST(launcher_controls, extra_keys_past_the_limit_are_dropped) {
   launcher_controls c;
 
   WriteWholeFile(LAUNCHER_CONTROLS_PATH, "cross = A\ncross = B\ncross = C\ncross = D\ncross = E\n");
-  ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c);
+  ASSERT_EQ(1, ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c));
   ASSERT_EQ(BUTTON_KEYS_MAX, c.key_count[FindPadButton("cross")]);
 }
 
@@ -125,7 +125,7 @@ UTEST(launcher_controls, saved_controls_read_back_the_same) {
   c.keys[cross][1] = SDL_SCANCODE_KP_2;
   c.key_count[cross] = 2;
   ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, "no_such_example.cfg", &c));
-  ReadControlsFile(LAUNCHER_CONTROLS_PATH, &read);
+  ASSERT_EQ(1, ReadControlsFile(LAUNCHER_CONTROLS_PATH, &read));
   ASSERT_TRUE(AreControlsEqual(&c, &read));
 }
 
@@ -149,7 +149,7 @@ UTEST(launcher_controls, save_keeps_the_controls_files_other_lines) {
   char *text;
 
   WriteWholeFile(LAUNCHER_CONTROLS_PATH, "# mine\nstart = Return\n\nselect = Space\n");
-  ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c);
+  ASSERT_EQ(1, ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c));
   c.keys[FindPadButton("select")][0] = SDL_SCANCODE_BACKSPACE;
   ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, "no_such_example.cfg", &c));
   text = ReadWholeFile(LAUNCHER_CONTROLS_PATH);

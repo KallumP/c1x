@@ -23,6 +23,16 @@ static void MakeEveryStreamFile(void) {
   }
 }
 
+/* whether files lists name */
+static int ListsFile(const stream_files *files, const char *name) {
+  int i;
+
+  for (i = 0; i < files->count; i++) {
+    if (strcmp(files->names[i], name) == 0) { return 1; }
+  }
+  return 0;
+}
+
 UTEST(launcher_streams, names_a_level_file_as_the_game_opens_it) {
   char name[STREAM_FILE_NAME_MAX];
 
@@ -35,8 +45,8 @@ UTEST(launcher_streams, a_repo_without_streams_misses_every_file) {
 
   ListMissingStreamFiles("build/no_such_repo", &missing);
   ASSERT_EQ(STREAM_FILE_COUNT, missing.count);
-  ASSERT_STREQ("s0000003.nsd", missing.names[0]);
-  ASSERT_STREQ("s0000003.nsf", missing.names[1]);
+  ASSERT_TRUE(ListsFile(&missing, "s0000003.nsd"));
+  ASSERT_TRUE(ListsFile(&missing, "s0000003.nsf"));
 }
 
 UTEST(launcher_streams, a_repo_with_every_file_misses_none) {

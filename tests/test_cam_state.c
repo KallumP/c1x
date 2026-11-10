@@ -14,7 +14,7 @@ UTEST(cam_state, is_laid_out_as_the_start_of_gool_vectors) {
   ASSERT_EQ(offsetof(gool_vectors, scale), offsetof(cam_state, scale));
 }
 
-UTEST(cam_state, the_names_are_its_parts) {
+UTEST(cam_state, cam_globals_alias_the_cam_struct_fields) {
   ASSERT_EQ((void*)&cam.trans, (void*)&cam_trans);
   ASSERT_EQ((void*)&cam.scale, (void*)&cam_scale);
   ASSERT_EQ((void*)&cam_prev.rot, (void*)&cam_rot_prev);

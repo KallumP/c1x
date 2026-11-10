@@ -54,7 +54,7 @@ UTEST(voice, the_intros_first_line_starts_about_500_ms_in) {
   ASSERT_EQ(12, VoiceKeyOnFrames(LID_INTRO, 15)); /* 12 frames at 24 fps */
 }
 
-UTEST(voice, every_other_key_on_frame_is_kept) {
+UTEST(voice, other_key_on_frames_are_unchanged) {
   ASSERT_EQ(147, VoiceKeyOnFrames(LID_INTRO, 147));
   ASSERT_EQ(15, VoiceKeyOnFrames(LID_TITLE, 15));
   ASSERT_EQ(0, VoiceKeyOnFrames(LID_INTRO, 0));

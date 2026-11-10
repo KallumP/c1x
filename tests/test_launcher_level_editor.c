@@ -16,6 +16,6 @@ UTEST(launcher_level_editor, its_packages_are_installed_with_node_modules) {
   ASSERT_TRUE(AreLevelEditorPackagesInstalled(TEST_EDITOR_REPO));
 }
 
-UTEST(launcher_level_editor, its_packages_arent_installed_without) {
+UTEST(launcher_level_editor, packages_arent_installed_without_node_modules) {
   ASSERT_FALSE(AreLevelEditorPackagesInstalled("build/no_such_repo"));
 }
