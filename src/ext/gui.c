@@ -15,6 +15,7 @@
 #include "pc/gfx/gl.h"
 #include "pc/settings.h"
 #include "pc/speed.h"
+#include "pc/fps.h"
 #include "pc/replay.h"
 
 extern ns_struct ns;
@@ -679,9 +680,16 @@ void GuiUpdate() {
   }
 }
 
+/* what goes before a corner text line: a line break, unless it's the first */
+static const char *GuiLineBreak(int len) {
+  if (len) { return "\n"; }
+  return "";
+}
+
 /*
  * text in the top right corner: REPLAYING INPUTS while replaying recorded inputs,
- * and crash's speed when speed_display is on in settings.cfg
+ * the frames drawn a second when fps_display is on in settings.cfg, and
+ * crash's speed when speed_display is on
  */
 static void GuiCornerOverlay() {
   static speed_tracker crash_speed;
@@ -694,6 +702,8 @@ static void GuiCornerOverlay() {
   text[0] = 0;
   if (ReplayIsPlaying())
     len += snprintf(text, sizeof(text), "REPLAYING INPUTS");
+  if (game_settings.fps_display)
+    len += snprintf(&text[len], sizeof(text) - len, "%sfps   %6u", GuiLineBreak(len), FpsShown());
   if (game_settings.speed_display) {
     obj = game_state == GAME_STATE_PLAYING ? crash : 0;
     /* same frame time as GoolObjectPhysics, so open running matches velocity */
@@ -701,7 +711,7 @@ static void GuiCornerOverlay() {
       min(context.ticks_per_frame, 0x66));
     /* total horizontal speed, then the signed speed along each axis (y is up) */
     snprintf(&text[len], sizeof(text) - len,
-      "%sspeed %6u\nx     %6d\ny     %6d\nz     %6d", len ? "\n" : "",
+      "%sspeed %6u\nx     %6d\ny     %6d\nz     %6d", GuiLineBreak(len),
       speed, crash_speed.x, crash_speed.y, crash_speed.z);
   }
   if (text[0])

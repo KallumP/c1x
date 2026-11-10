@@ -14,6 +14,7 @@
 #include "pc/time.h"
 #include "pc/settings.h"
 #include "pc/replay.h"
+#include "pc/fps.h"
 
 #define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 768
@@ -92,6 +93,7 @@ void SDLUpdate() {
 
 void SDLSwap() {
   SDL_GL_SwapWindow(window);
+  FpsCountShownFrame(SDL_GetTicks());
 }
 
 void SDLInput(gl_input *input) {
