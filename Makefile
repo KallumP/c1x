@@ -28,6 +28,7 @@ SRC =	src/ns.c \
 	src/pc/replay.c \
 	src/pc/follow.c \
 	src/pc/tween.c \
+	src/pc/fps.c \
 	src/pc/levelend.c \
 	src/pc/gfx/tex.c \
 	src/pc/gfx/soft.c \
@@ -57,6 +58,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/replay.c \
 	src/pc/follow.c \
 	src/pc/tween.c \
+	src/pc/fps.c \
 	src/pc/levelend.c \
 	src/pc/sound/mix.c \
 	src/pc/sound/util.c \
