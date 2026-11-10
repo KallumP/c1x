@@ -12,7 +12,7 @@
   {"kind": "box", "type": "question", "at": [8, 27.5, 0.066]},
   {"kind": "box", "type": "aku_aku", "at": [7, 27.5, 0.316], "raise": -0.25},
   {"kind": "box", "type": "life", "at": [8, 26.5, 0.039], "raise": 0.03},
-  {"kind": "box", "type": "iron_outline", "at": [-11.5, 41.5, -1.31]},
+  {"kind": "box", "type": "iron_outline", "at": [-11, 39.5, -10.351]},
   {"kind": "box", "type": "basic", "at": [-6.5, 34.5, -1.31]},
   {"kind": "box", "type": "outline", "at": [-1.5, 41.5, -1.31]},
   {"kind": "box", "type": "iron_outline", "at": [-9.5, 39, -1.31]},
@@ -68,6 +68,10 @@
   {"kind": "enemy", "type": "lab_assistant", "at": [-9.5, 23.5, 0.788], "path": [[5.306, 0, -0.496]]},
   {"kind": "enemy", "type": "lab_assistant", "at": [-3.5, 6.5, 1.634], "path": [[3.806, 3.5, -1.225]]},
   {"kind": "enemy", "type": "walking_lizard", "at": [8.5, 22, 0.102], "path": [[-3, 2.5, -0.102], [0, 1, 0.185], [2, -1.5, -0.031]]},
+  {"kind": "enemy", "type": "camera_robot", "at": [-5.25, 48.25, -1.31]},
+  {"kind": "enemy", "type": "camera_robot", "at": [-4.75, 55.95, -1.31]},
+  {"kind": "enemy", "type": "camera_robot", "at": [0, 135.75, -3.3]},
+  {"kind": "enemy", "type": "camera_robot", "at": [-3.5, 146.25, -3.3]},
 
   {"kind": "end", "at": [-4, 235, -2.1]}
 ]
