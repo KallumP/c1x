@@ -281,6 +281,10 @@ export const BARREL_ROLL = 4800;
 // robots' paths, straight up and down its shafts (its default path, src/enemyPaths.ts)
 export const CAMERA_ROBOT_RISE = 1200;
 
+// how far a bird swoops up and down, in game units: slippery climb's birds' paths,
+// straight up and down beside its climb (its default path, src/enemyPaths.ts)
+export const BIRD_SWOOP = 1200;
+
 // how far a monkey walks back and forth, in game units: the great gate's monkeys'
 // path, a straight line along the game's x (its default path, src/enemyPaths.ts)
 export const MONKEY_WALK = 2400;

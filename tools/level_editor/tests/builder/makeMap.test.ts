@@ -64,6 +64,7 @@ const hasHeavyMachinery = existsSync(`${STREAMS}/s0000006.nsd`); // heavy machin
 const hasToxicWaste = existsSync(`${STREAMS}/s0000007.nsd`); // toxic waste (0x7)
 const hasCortexPower = existsSync(`${STREAMS}/s0000003.nsd`); // cortex power (0x3)
 const hasCastleMachinery = existsSync(`${STREAMS}/s0000037.nsd`); // castle machinery (0x37)
+const hasSlipperyClimb = existsSync(`${STREAMS}/s000002e.nsd`); // slippery climb (0x2e)
 
 const readOtherLevel = (lid: number) => readLevel(STREAMS, lid);
 
@@ -885,6 +886,24 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(placed.path[0][1], FLOOR_Y, 8);
       expectNear(placed.path.at(-1)![1], FLOOR_Y + 1200, 8);
       stepLengths(placed.path).forEach((step) => expectNear(step, 75, 8));
+    });
+  });
+
+  describe.skipIf(!hasSlipperyClimb)("birds, from slippery climb", () => {
+    test("a level with a bird has slippery climb's castle objects code, the bird's model, flapping and sounds", () => {
+      const { level, entries } = build([enemy("bird")]);
+      expect(level.nsd.ldat.execMap[ENEMY_ENTITIES.bird[0]]).toBe(stringToEid("CasOC"));
+      expect(["Cb1yG", "Cb1yV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(soundEidsOf(level)).toEqual(expect.arrayContaining(["lt3rA"].map(stringToEid)));
+    });
+
+    test("by default a bird flies up 1200 (3 m at scale 400) from its spot, in slippery climb's steps", () => {
+      const [placed] = enemies(build([enemy("bird")]).zone);
+      expect(placed.type).toEqual(ENEMY_ENTITIES.bird);
+      placed.path.forEach(([x, , z]) => expectNear([x, z], [SPOT_X, SPOT_Z], 8));
+      expectNear(placed.path[0][1], FLOOR_Y, 8);
+      expectNear(placed.path.at(-1)![1], FLOOR_Y + 1200, 8);
+      stepLengths(placed.path).forEach((step) => expectNear(step, 150, 8));
     });
   });
 
