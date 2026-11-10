@@ -14,9 +14,8 @@ describe.skipIf(!existsSync(ACID_CAVE))("exporting the cut acid cave for blender
 
   test("its centre is set by its objects and crash's spawn", () => {
     // the middle of its objects across, the lowest of them, and crash's spawn along the route
-    const xs = level.entities.map(({ at }) => at[0]);
-    const crash = level.entities.find(({ type }) => type === 0)!;
-    expect(sceneCentre(level)).toEqual([(Math.min(...xs) + Math.max(...xs)) / 2, Math.min(...level.entities.map(({ at }) => at[1])), crash.at[2]]);
+    // crash's spawn is at z 35999 (see readCutLevel.test.ts)
+    expect(sceneCentre(level)).toEqual([12697.5, 1539, 35999]);
   });
 
   test("writes each material's image as a png, and the scene for blender beside them", () => {

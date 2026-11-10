@@ -93,6 +93,6 @@ describe("the collision octree", () => {
   });
 
   test("blocks have to be on the grid", () => {
-    expect(() => blocksRectBytes([0, 0, 0], SIZE, [ground([0, 0, 0], [100, 128, 128])], 128)).toThrow();
+    expect(() => blocksRectBytes([0, 0, 0], SIZE, [ground([0, 0, 0], [100, 128, 128])], 128)).toThrow("isn't on the 128 grid inside the zone");
   });
 });

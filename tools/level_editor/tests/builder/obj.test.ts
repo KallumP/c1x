@@ -70,7 +70,7 @@ describe("reading a .obj", () => {
   });
 
   test("turn has to be a multiple of 90", () => {
-    expect(() => readObj("v 1 2 0\n", 1, 45)).toThrow();
+    expect(() => readObj("v 1 2 0\n", 1, 45)).toThrow("turn (45) has to be a multiple of 90 degrees");
   });
 
   test("a face with a missing vertex is an error", () => {

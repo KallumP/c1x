@@ -18,5 +18,5 @@ test("a wall facing z takes them from x and y", () => {
 
 test("each triangle is projected on its own", () => {
   const two = [0, 0, 0, 1, 0, 0, 0, 0, 1, /* then a wall */ 2, 0, 0, 2, 0, 1, 2, 1, 0];
-  expect(boxUvs(two)).toHaveLength(12);
+  expect(Array.from(boxUvs(two))).toEqual([0, 0, 1, 0, 0, 1, /* the wall's, as alone */ 0, 0, 1, 0, 0, 1]);
 });

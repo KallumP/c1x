@@ -157,7 +157,7 @@ describe("world meshes", () => {
   });
 
   test("too many meshes for a zone is an error", () => {
-    expect(() => worldMeshes(manyFloors(), { piece: 256, ground: GROUND, side: SIDE, worldsMax: 1 })).toThrow();
+    expect(() => worldMeshes(manyFloors(), { piece: 256, ground: GROUND, side: SIDE, worldsMax: 1 })).toThrow(/world meshes.*more than 1; use fewer faces/);
   });
 
   test("a zone's meshes are the pieces in it, relative to it", () => {

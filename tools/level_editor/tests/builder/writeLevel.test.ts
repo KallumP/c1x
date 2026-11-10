@@ -64,7 +64,7 @@ describe("writing a level", () => {
   });
 
   test("too many entries for a page is an error", () => {
-    expect(() => entryPageBytes([{ eid: WILLC, type: 11, items: [Buffer.alloc(PAGE_SIZE)] }], 0)).toThrow();
+    expect(() => entryPageBytes([{ eid: WILLC, type: 11, items: [Buffer.alloc(PAGE_SIZE)] }], 0)).toThrow(/entries take \d+ bytes, more than a page/);
   });
 });
 

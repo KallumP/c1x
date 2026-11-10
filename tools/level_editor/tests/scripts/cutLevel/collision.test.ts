@@ -54,8 +54,11 @@ describe("a cut level's collision floors", () => {
 const ACID_CAVE = fileURLToPath(new URL("../../../../../streams/s0000004.nsf", import.meta.url));
 
 describe.skipIf(!existsSync(ACID_CAVE))("the acid cave's collision", () => {
-  test("has floor where its path is, which its mesh may have holes in", () => {
-    const solids = readCutLevel(ACID_CAVE).solids;
-    expect(solids.filter(({ leaf }) => leaf === LEAF_FLOOR).length).toBeGreaterThan(1000);
+  test("has floor under crash's spawn", () => {
+    // its path has floor, though its mesh may have holes in it
+    const { solids, entities } = readCutLevel(ACID_CAVE);
+    const [x, y, z] = entities.find(({ type }) => type === 0)!.at;
+    const isUnderSpawn = ({ low, high }: CutSolid) => low[0] <= x && x < high[0] && low[2] <= z && z < high[2] && high[1] <= y;
+    expect(solids.filter(({ leaf }) => leaf === LEAF_FLOOR).some(isUnderSpawn)).toBe(true);
   });
 });

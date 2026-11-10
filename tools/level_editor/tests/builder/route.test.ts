@@ -79,7 +79,7 @@ describe("crash's spawn", () => {
   });
 
   test("no ground is an error", () => {
-    expect(() => spawnPoint(meshOf([], []), new Cells(), 128)).toThrow();
+    expect(() => spawnPoint(meshOf([], []), new Cells(), 128)).toThrow("the map has no ground for crash to start on");
   });
 });
 

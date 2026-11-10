@@ -74,7 +74,7 @@ describe("texture pages", () => {
   });
 
   test("more tiles than a page holds is an error", () => {
-    expect(() => texturePage(EID, testTiles(TILES_PER_PAGE + 1))).toThrow();
+    expect(() => texturePage(EID, testTiles(TILES_PER_PAGE + 1))).toThrow(`${TILES_PER_PAGE + 1} tiles, more than a page holds (${TILES_PER_PAGE})`);
   });
 });
 
@@ -142,7 +142,7 @@ describe("texture infos", () => {
   test("a region has to fit the game's steps", () => {
     const place: Place = { segment: 0, offsX: 8, offsY: 0, clutX: 0, clutY: 1 };
     for (const [x, y, w, h] of [[4, 0, 32, 32], [0, 2, 32, 32], [0, 0, 24, 32], [0, 0, 32, 2], [48, 0, 32, 32]]) {
-      expect(() => texinfoBytes(place, 0, { x, y, w, h })).toThrow();
+      expect(() => texinfoBytes(place, 0, { x, y, w, h })).toThrow("isn't one the game can address in a tile");
     }
   });
 });
