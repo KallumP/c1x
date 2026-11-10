@@ -28,6 +28,8 @@ const THE_LOST_CITY: DonorLevel = { lid: 0x20, name: "The Lost City", file: "s00
 // (by exec slot 9) that crashes a custom level
 const STORMY_ASCENT: DonorLevel = { lid: 0x22, name: "Stormy Ascent", file: "s0000022" };
 const TEMPLE_RUINS: DonorLevel = { lid: 0x1c, name: "Temple Ruins", file: "s000001c" };
+// its robot dogs' code is PoRoC, as the lab's walkers' child object is, but not the same
+const HEAVY_MACHINERY: DonorLevel = { lid: 0x6, name: "Heavy Machinery", file: "s0000006" };
 
 // the level each enemy jungle rollers doesn't have is taken from
 export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
@@ -47,6 +49,7 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   red_lizard: THE_LOST_CITY,
   lab_assistant: STORMY_ASCENT,
   snake: TEMPLE_RUINS,
+  robot_dog: HEAVY_MACHINERY,
 };
 
 export interface DonorObject {
