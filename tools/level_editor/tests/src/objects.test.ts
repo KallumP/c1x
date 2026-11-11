@@ -305,7 +305,7 @@ describe("enemy speeds", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras, and sliding pillars do)"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 4}]', "object 1: speed should be 0.25 to 3 (times the game's own pace)"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 0.1}]', "object 1: speed should be 0.25 to 3"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": "fast"}]', "object 1: speed should be 0.25 to 3"],
@@ -630,7 +630,7 @@ describe("obstacle paths", () => {
     ['[{"kind": "obstacle", "type": "lily_pad", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a lily_pad has no path (leaves and sliding pillars do)"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', "object 1: a path should be 2 to 20 nodes"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0], [1, 0, 0]]}]', "object 1: a path's nodes should each be [x, y, z]"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: a leaf has no speed"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });

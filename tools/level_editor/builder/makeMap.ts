@@ -199,10 +199,29 @@ function obstacleTiming(obstacle: LevelObject): [number, number] {
 // floating leaf's drift's, or a sliding pillar's slide's
 function ownPathShares(obstacle: LevelObject): number[] {
   if (obstacle.obstacle === "sliding_pillar") {
-    return pillarSlideShares();
+    return sharesAtSpeed(pillarSlideShares(), numberSetting(obstacle, "speed"));
   }
   return leafDriftShares();
 }
+
+// shares (how far along a path each point is) for a path taken at speed times
+// its pace: the game moves through its points at its own rate, so faster has
+// fewer (at least 2), each as far along as the eased path is by then
+function sharesAtSpeed(shares: number[], speed: number): number[] {
+  const steps = Math.max(1, Math.round((shares.length - 1) / speed));
+  return Array.from({ length: steps + 1 }, (_, point) => shareAt(shares, (point * (shares.length - 1)) / steps));
+}
+
+// how far along a path it is at a fractional point (between two of shares)
+function shareAt(shares: number[], point: number): number {
+  const before = Math.floor(point);
+  const after = Math.min(shares.length - 1, before + 1);
+  return shares[before] + (shares[after] - shares[before]) * (point - before);
+}
+
+// whether an obstacle moves along its nodes (its own path, or a sliding
+// pillar's two ends, at its speed), not its own level's path as it is
+const onItsNodes = (obstacle: LevelObject) => obstacle.path !== undefined || obstacle.obstacle === "sliding_pillar";
 
 // how far over its spot a timed obstacle is placed
 function timedObstacleHang(obstacle: LevelObject): number {
@@ -517,8 +536,8 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const obstacleOf = (obstacle: LevelObject) => obstacleExample(donorLevels.get(obstacle.obstacle!)!, obstacle.obstacle!);
   slides.forEach((slide) => placer.placeSlide(slide, obstacleOf(slide), slidePath(slide, scale)));
   timed.forEach((obstacle) => placer.placeTimedObstacle(obstacle, obstacleOf(obstacle)));
-  movers.filter((obstacle) => !obstacle.path).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
-  movers.filter((obstacle) => obstacle.path).forEach((obstacle) => placer.placeOnItsNodes(obstacle, obstacleOf(obstacle)));
+  movers.filter((obstacle) => !onItsNodes(obstacle)).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
+  movers.filter(onItsNodes).forEach((obstacle) => placer.placeOnItsNodes(obstacle, obstacleOf(obstacle)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   enemies.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
