@@ -32,5 +32,8 @@
   {"kind": "enemy", "type": "snake", "at": [0, 42, 1.2]},
   {"kind": "enemy", "type": "leader_bats", "at": [7.5, 29.5, 0], "raise": 1.5},
 
+  {"kind": "platform", "type": "leaf", "at": [-5.3, 17, 0]},
+  {"kind": "platform", "type": "lily_pad", "at": [-8.5, 43, 0]},
+
   {"kind": "end", "at": [0, 50, 1.2], "raise": 0.35}
 ]
