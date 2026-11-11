@@ -152,11 +152,12 @@ export const SLIDE_LENGTH_MAX = 20;
 export const SLIDE_ANGLE = 14;
 export const SLIDE_ANGLE_MIN = 5;
 export const SLIDE_ANGLE_MAX = 30;
+export const SLIDE_ROTATION_MAX = 359; // degrees anticlockwise seen from above, from across the map (0)
 
 // the enemy settings that are a number in a range, and for each: the enemies
 // that have it (named for messages), its range, whether it's whole, what it is
 // without one (left out of objects.json), and what it means
-export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range", "length", "angle"] as const;
+export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range", "length", "angle", "rotation"] as const;
 export type NumberSetting = (typeof NUMBER_SETTINGS)[number];
 
 interface NumberSettingRule {
@@ -176,6 +177,7 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   delay: { types: ["bat", "leader_bats"], typesNamed: "bats and leader bats", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks" },
   length: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_LENGTH_MIN, max: SLIDE_LENGTH_MAX, whole: false, fallback: () => SLIDE_LENGTH, meaning: "how long it is, in metres" },
   angle: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_ANGLE_MIN, max: SLIDE_ANGLE_MAX, whole: false, fallback: () => SLIDE_ANGLE, meaning: "how steeply it slopes, in degrees" },
+  rotation: { types: ["mossy_slide"], typesNamed: "mossy slides", min: 0, max: SLIDE_ROTATION_MAX, whole: false, fallback: () => 0, meaning: "which way it slides down, in degrees anticlockwise from across the map" },
   range: { types: ["gunman"], typesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },
 };
 
@@ -197,9 +199,10 @@ export interface LevelObject {
   path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised); leader bats' second leader, from their first
   speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
-  reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping (or a mossy slide sloping) the other way (true, or none)
+  reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping the other way (true, or none)
   length?: number;      // how long a mossy slide is, in metres (SLIDE_LENGTH without one)
   angle?: number;       // how steeply a mossy slide slopes, in degrees (SLIDE_ANGLE without one)
+  rotation?: number;    // which way a mossy slide slides down: degrees anticlockwise seen from above, from across the map (0 without one)
   count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
   delay?: number;       // the seconds between a bat roost's flocks (BAT_DELAY, LEADER_BATS_DELAY without one)
   range?: number;       // how near crash comes, in metres, before a gunman shoots (GUNMAN_RANGE without one)
@@ -238,7 +241,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
-const OBSTACLE_SETTINGS = ["type", "path", "start", "reverse", "length", "angle"];
+const OBSTACLE_SETTINGS = ["type", "path", "start", "reverse", "length", "angle", "rotation"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
 // a word with "a" or "an" before it, as it sounds: "a box", "an enemy"
@@ -355,7 +358,7 @@ function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetti
 
 // the enemies and obstacles that can be reversed: a rolling stone rolls back towards its first
 // end first, and a fish leaps the other way across the map
-const REVERSIBLE: ObjectType[] = ["rolling_stone", "fish", "mossy_slide"];
+const REVERSIBLE: ObjectType[] = ["rolling_stone", "fish"];
 
 // whether a rolling stone or fish is reversed, from its fields in objects.json
 function readReverse(fields: Record<string, unknown>, type: ObjectType, objectNumber: number): Pick<LevelObject, "reverse"> {

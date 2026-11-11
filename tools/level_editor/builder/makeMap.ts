@@ -183,7 +183,7 @@ const obstacleExample = (donor: Level, type: ObstacleType): Buffer => levelEntit
 
 // a mossy slide's slider's path along its slope, as long (metres, at scale) and steep as it's set
 const slidePath = (slide: LevelObject, scale: number) =>
-  mossySlidePath(numberSetting(slide, "length") * scale, numberSetting(slide, "angle"), slide.reverse === true);
+  mossySlidePath(numberSetting(slide, "length") * scale, numberSetting(slide, "angle"), numberSetting(slide, "rotation"));
 
 // entities each enemy takes: a leader bats roost and its two leaders, one for the rest
 function entitiesFor(enemy: LevelObject): number {

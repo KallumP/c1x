@@ -143,10 +143,12 @@ export function leafDrift(at: Vec3, raise: number, turn: number, scale: number):
 }
 
 // where a mossy slide's slope ends (in blender), for a slide whose top end is
-// at at, raised by raise: length metres across the map (back across it
-// reversed) and down at angle degrees
-export function mossySlideEnd(at: Vec3, raise: number, turn: number, length: number, angle: number, reverse: boolean): Vec3 {
-  const way = scaled(stoneRolling(turn), leapWay(reverse));
+// at at, raised by raise: length metres along the floor, across the map (as a
+// stone rolls) turned rotation degrees anticlockwise seen from above (90 the
+// way the camera faces), and down at angle degrees
+export function mossySlideEnd(at: Vec3, raise: number, turn: number, length: number, angle: number, rotation: number): Vec3 {
+  const radians = (rotation * Math.PI) / 180;
+  const way = [0, 1, 2].map((axis) => stoneRolling(turn)[axis] * Math.cos(radians) + cameraFacing(turn)[axis] * Math.sin(radians));
   const down = -length * Math.tan((angle * Math.PI) / 180);
   return [0, 1, 2].map((axis) => at[axis] + way[axis] * length + rising()[axis] * (raise + down) + 0) as Vec3; // + 0 turns -0 into 0
 }

@@ -450,7 +450,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   const renderMossySlide = (object: LevelObject, index: number) => {
     const [x, y, z] = object.at;
     const top = blenderToView([x, y, z + object.raise]);
-    const bottom = blenderToView(mossySlideEnd(object.at, object.raise, turn, numberSetting(object, "length"), numberSetting(object, "angle"), object.reverse === true));
+    const bottom = blenderToView(mossySlideEnd(object.at, object.raise, turn, numberSetting(object, "length"), numberSetting(object, "angle"), numberSetting(object, "rotation")));
     const centre = top.map((value, axis) => (value + bottom[axis]) / 2) as Vec3;
     const [dx, dy, dz] = bottom.map((value, axis) => value - top[axis]);
     const flat = Math.hypot(dx, dz);
