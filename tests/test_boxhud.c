@@ -20,6 +20,8 @@ static tgeo_texinfo CrateFace() {
 static gool_object counter, source;
 static box_hud_icon icon;
 
+#define WUMPA_SCALE 0x1400 /* the wumpa counter's icon scale */
+
 /* a lives counter as its start code leaves it, at the top right showing crash's lives */
 static void StartLivesCounter() {
   memset(&counter, 0, sizeof(counter));
@@ -31,28 +33,40 @@ static void StartLivesCounter() {
 
 UTEST(boxhud, the_counter_shows_the_source_not_crash) {
   StartLivesCounter();
-  BoxHudSetUpCounter(&counter, &source, &icon);
+  BoxHudSetUpCounter(&counter, &source, &icon, WUMPA_SCALE);
   ASSERT_TRUE(counter.player == &source);
   ASSERT_EQ((uint32_t)(HUD_COUNT_REG << 8), counter.regs[HUD_SHOWN_REG_IDX]);
 }
 
 UTEST(boxhud, the_counter_sits_at_the_top_middle) {
   StartLivesCounter();
-  BoxHudSetUpCounter(&counter, &source, &icon);
+  BoxHudSetUpCounter(&counter, &source, &icon, WUMPA_SCALE);
   ASSERT_EQ(BOX_HUD_X, counter.trans.x);
 }
 
 UTEST(boxhud, the_counter_shows_the_crate_icon) {
   StartLivesCounter();
-  BoxHudSetUpCounter(&counter, &source, &icon);
+  BoxHudSetUpCounter(&counter, &source, &icon, WUMPA_SCALE);
   ASSERT_TRUE(counter.anim_seq == (gool_anim*)&icon);
   ASSERT_EQ(0u, counter.anim_frame);
+}
+
+UTEST(boxhud, the_crate_icon_is_as_wide_as_the_wumpa) {
+  StartLivesCounter();
+  BoxHudSetUpCounter(&counter, &source, &icon, WUMPA_SCALE);
+  ASSERT_EQ(WUMPA_SCALE, counter.scale.x);
+}
+
+UTEST(boxhud, the_crate_icon_is_square_though_sprites_are_drawn_5_8_as_tall) {
+  StartLivesCounter();
+  BoxHudSetUpCounter(&counter, &source, &icon, WUMPA_SCALE);
+  ASSERT_EQ(WUMPA_SCALE * 8 / 5, counter.scale.y);
 }
 
 UTEST(boxhud, the_counter_starts_on_the_boxes_already_broken_so_it_doesnt_slide_in) {
   StartLivesCounter();
   BoxHudShowBoxes(&source, 12 << 8);
-  BoxHudSetUpCounter(&counter, &source, &icon);
+  BoxHudSetUpCounter(&counter, &source, &icon, WUMPA_SCALE);
   ASSERT_EQ(source.regs[HUD_COUNT_REG], counter.regs[HUD_COUNT_REG]);
 }
 
