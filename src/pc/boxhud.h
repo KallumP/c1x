@@ -32,6 +32,10 @@ typedef struct {
 
 extern void BoxHudMakeIcon(box_hud_icon *icon, tgeo_texinfo *crate_face);
 extern void BoxHudSetUpCounter(gool_object *counter, gool_object *source, box_hud_icon *icon);
-extern void BoxHudShowBoxes(gool_object *source, int box_count);
+extern void BoxHudShowBoxes(gool_object *source, int boxes_broken);
+
+/* in the game (boxhud_game.c) */
+extern void BoxHudCreate();
+extern void BoxHudUpdate();
 
 #endif /* _PC_BOXHUD_H_ */

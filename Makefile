@@ -32,6 +32,7 @@ SRC =	src/ns.c \
 	src/pc/spin.c \
 	src/pc/levelend.c \
 	src/pc/boxhud.c \
+	src/pc/boxhud_game.c \
 	src/pc/gfx/tex.c \
 	src/pc/gfx/soft.c \
 	src/pc/gfx/gl.c \

@@ -17,6 +17,7 @@
 #include "pc/init.h"
 #include "pc/time.h"
 #include "pc/tween.h"
+#include "pc/boxhud.h"
 #include "pc/gfx/gl.h"
 #include "pc/gfx/soft.h" // for ext only
 
@@ -106,8 +107,10 @@ void CoreObjectsCreate() {
     NSOpen(&ns.ldat->exec_map[0], 0, 1);
     NSOpen(&ns.ldat->exec_map[5], 0, 1);
     NSOpen(&ns.ldat->exec_map[29], 0, 1);
-    if (cur_lid != LID_THEGREATHALL) /* not the great hall? */
+    if (cur_lid != LID_THEGREATHALL) { /* not the great hall? */
       NSOpen(&ns.ldat->exec_map[34], 0, 1); /* load boxes code */
+      BoxHudCreate(); /* pc: the box counter, when box_display is on */
+    }
     NSOpen(&ns.ldat->exec_map[3], 0, 1);
     NSOpen(&ns.ldat->exec_map[4], 0, 1);
   }
@@ -274,6 +277,7 @@ void CoreLoop(lid_t lid) {
     header = (zone_header*)cur_zone->items[0];
     CoreDrawWorlds(ot);
     GoolUpdateObjects(!paused);
+    BoxHudUpdate(); /* pc */
 #if defined(CFLAGS_DRAW_EXTENSIONS)
     if (pads[0].tapped & 4)
       draw_octrees = !draw_octrees;
