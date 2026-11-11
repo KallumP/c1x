@@ -225,10 +225,23 @@ function rotatingPlatform(): ShapePart[] {
   return [{ kind: "box", size: [742, 172, 1039], at: [0, -117, 480], colour: RUINS_COLOURS.platform }];
 }
 
+const SLAMMING_WALL = { across: 1200, tall: 1031, deep: 606 };
+const WALL_COLOURS = { stone: "#8a6a3a", face: "#5a3a20" };
+
+// temple ruins' slamming walls (RcLsG and RcRsG), shut: two carved stone halves
+// 1200 across and 1031 tall, meeting at their spot
+function slammingWalls(): ShapePart[] {
+  const { across, tall, deep } = SLAMMING_WALL;
+  const half = (way: number): ShapePart => ({ kind: "box", size: [across - 20, tall, deep], at: [(way * across) / 2, tall / 2, 0], colour: WALL_COLOURS.stone });
+  const face = (way: number): ShapePart => ({ kind: "box", size: [across / 3, tall / 3, 10], at: [(way * across) / 2, tall / 2, deep / 2], colour: WALL_COLOURS.face });
+  return [half(-1), half(1), face(-1), face(1)];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
 export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit(), dropping_pillar: pillar(), sliding_pillar: pillar(),
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
-  rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform() };
+  rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
+  slamming_walls: slammingWalls() };

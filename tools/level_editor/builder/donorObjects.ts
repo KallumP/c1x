@@ -81,6 +81,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   pushing_platform: SUNSET_VISTA,
   rotating_pots: SUNSET_VISTA,
   rotating_platforms: SUNSET_VISTA,
+  slamming_walls: TEMPLE_RUINS,
 };
 
 export interface DonorObject {

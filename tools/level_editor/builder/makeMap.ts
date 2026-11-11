@@ -13,7 +13,7 @@ import { EntryTooBig } from "./cutLevel";
 import { objectDonorLevels, objectDonorObjects } from "./donorObjects";
 import {
   BOX_HEIGHT, BOX_TYPE, donorEntityType, donorObstacleType, ENTITY_INIT_FLAGS, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
-  LEADER_BAT, OBSTACLE_ENTITIES, withNoRotationFromFlags, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
+  LEADER_BAT, OBSTACLE_ENTITIES, SLAMMING_WALL_LEFT, withNoRotationFromFlags, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
@@ -312,6 +312,10 @@ function reverseBit(obstacle: LevelObject): number {
   return 0;
 }
 
+// how far either side of their spot temple ruins' slamming walls' halves
+// start, across the map (game units): each slides in this far to meet there
+const SLAMMING_WALL_GAP = 1200;
+
 // how far over its spot a timed obstacle is placed
 function timedObstacleHang(obstacle: LevelObject): number {
   if (obstacle.obstacle === "falling_spiked_log") {
@@ -401,6 +405,16 @@ class ObjectPlacer {
     const { zone, at } = this.inZone(spot);
     const placed = withPosition(withEntityId(example, this.ids.shift()!), at);
     this.entities[zone].push(withInitFlagC(withInitFlagB(withInitFlagA(placed, facing), alongX), alongZ));
+  }
+
+  // slamming walls: their right half (right) SLAMMING_WALL_GAP across the map
+  // from their spot and their left half (left) as far the other way, each
+  // sliding in along its own level's path to meet at the spot
+  placeSlammingWalls(walls: LevelObject, right: Buffer, left: Buffer): void {
+    const { zone, at } = this.inZone(this.positionOf(walls));
+    const beside = (way: number): Vec3 => [at[0] + way * SLAMMING_WALL_GAP, at[1], at[2]];
+    this.entities[zone].push(withPathFrom(withEntityId(right, this.ids.shift()!), beside(1)));
+    this.entities[zone].push(withPathFrom(withEntityId(left, this.ids.shift()!), beside(-1)));
   }
 
   // a spiked log or fire pit (example) at its spot, a falling log hung over it
@@ -621,11 +635,13 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     .forEach((enemy) => placer.placeLeaderBats(enemy, enemyExample("leader_bats"), levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT)));
   const slides = obstacles.filter((obstacle) => obstacle.obstacle === "mossy_slide");
   const timed = obstacles.filter((obstacle) => TIMED_OBSTACLES.includes(obstacle.obstacle!));
-  const placedApart: ObstacleType[] = ["rolling_stone", "mossy_slide", ...TIMED_OBSTACLES];
+  const placedApart: ObstacleType[] = ["rolling_stone", "mossy_slide", "slamming_walls", ...TIMED_OBSTACLES];
   const movers = obstacles.filter((obstacle) => !placedApart.includes(obstacle.obstacle!)); // the rest, from their levels
   const obstacleOf = (obstacle: LevelObject) => obstacleExample(donorLevels.get(obstacle.obstacle!)!, obstacle.obstacle!);
   slides.forEach((slide) => placer.placeSlide(slide, obstacleOf(slide), slidePath(slide, scale)));
   timed.forEach((obstacle) => placer.placeTimedObstacle(obstacle, obstacleOf(obstacle)));
+  obstacles.filter((obstacle) => obstacle.obstacle === "slamming_walls")
+    .forEach((walls) => placer.placeSlammingWalls(walls, obstacleOf(walls), levelEntity(donorLevels.get("slamming_walls")!, ...SLAMMING_WALL_LEFT)));
   movers.filter((obstacle) => !onItsNodes(obstacle)).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
   movers.filter(onItsNodes).forEach((obstacle) => placer.placeOnItsNodes(obstacle, obstacleOf(obstacle)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
