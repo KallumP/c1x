@@ -66,6 +66,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   flying_camera: HEAVY_MACHINERY, // its PoRoC (the robot dog's) is the same as castle machinery's
   lily_pad: UP_THE_CREEK,
   leaf: UP_THE_CREEK,
+  wooden_peg: THE_GREAT_GATE,
 };
 
 export interface DonorObject {

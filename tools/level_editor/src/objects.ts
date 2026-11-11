@@ -66,7 +66,9 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // (builder/donorObjects.ts). these move along their own level's path from their spot:
 // - lily_pad: up the creek's, sinking while crash stands on it
 // - leaf: up the creek's floating leaf, drifting back and forth
-export const OBSTACLE_TYPES = ["lily_pad", "leaf"] as const;
+// standing at their spot:
+// - wooden_peg: the great gate's totem peg, folded up until crash spins it, then a step for a while
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)

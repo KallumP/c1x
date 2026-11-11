@@ -509,8 +509,8 @@ describe("obstacles", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf)"],
-    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf)"],
+    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg)"],
+    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg)"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed (an obstacle takes kind, at, raise, type, path)"],
     ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
   ])("refuses %s", (text, message) => {
@@ -519,6 +519,15 @@ describe("obstacles", () => {
 
   test("an enemy's unknown setting says an enemy", () => {
     expect(() => parseObjects('[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]')).toThrow("(an enemy takes");
+  });
+});
+
+describe("wooden pegs", () => {
+  test("a wooden peg is an obstacle, with no path", () => {
+    expect(parseObjects('[{"kind": "obstacle", "type": "wooden_peg", "at": [1, 2, 0], "raise": 1}]'))
+      .toEqual([{ kind: "obstacle", obstacle: "wooden_peg", at: [1, 2, 0], raise: 1, stack: 1 }]);
+    expect(() => parseObjects('[{"kind": "obstacle", "type": "wooden_peg", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]'))
+      .toThrow("a wooden_peg has no path");
   });
 });
 

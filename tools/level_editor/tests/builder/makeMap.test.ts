@@ -592,6 +592,28 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasGreatGate)("wooden pegs, from the great gate", () => {
+    test("a level with a wooden peg has the great gate's totem code (WalOC), and its models", () => {
+      const { level, entries } = build([obstacle("wooden_peg")]);
+      expect(level.nsd.ldat.execMap[OBSTACLE_ENTITIES.wooden_peg[0]]).toBe(stringToEid("WalOC"));
+      expect(["WP1iG", "WS1iG"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
+
+    test("a wooden peg stands at its spot", () => {
+      const placed = zoneEntities(build([obstacle("wooden_peg")]).zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.wooden_peg));
+      expect(placed.length).toBe(1);
+      const path = entityPath(placed[0]);
+      expect(path.length).toBe(1);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a level with wooden pegs and natives reads the great gate once", () => {
+      const reader = recordingReader();
+      build([enemy("native"), obstacle("wooden_peg", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
+      expect(reader.read).toEqual([0x12]);
+    });
+  });
+
   describe.skipIf(!hasStormyAscent)("lab assistants, from stormy ascent", () => {
     // a placed lab assistant's init flags: its facing, and its vials' speeds along the game's x and z
     const assistantFlags = (more: Partial<LevelObject> = {}) => initFlagsOf(build([enemy("lab_assistant", more)]).zone, ENEMY_ENTITIES.lab_assistant);
