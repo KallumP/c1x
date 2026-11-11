@@ -40,6 +40,8 @@
   {"kind": "obstacle", "type": "lily_pad", "at": [9.653, 49.173, -1.2]},
   {"kind": "obstacle", "type": "lily_pad", "at": [9.871, 1.342, -1.2]},
   {"kind": "obstacle", "type": "lily_pad", "at": [-9.632, 1.31, -1.2]},
+  {"kind": "obstacle", "type": "mossy_slide", "at": [7, 17, 1.8], "length": 6, "rotation": 270},
+  {"kind": "obstacle", "type": "mossy_slide", "at": [7, 21, 1.8], "length": 6, "rotation": 90},
 
   {"kind": "end", "at": [0, 50, 1.2], "raise": 0.35}
 ]
