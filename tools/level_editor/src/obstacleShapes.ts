@@ -6,7 +6,7 @@ import type { ObstacleType, Vec3 } from "./objects";
 const LILY_PAD_COLOURS = { leaf: "#2f6b2a", bud: "#c8b83a" };
 const LEAF_COLOURS = { leaf: "#2e7a2c", vein: "#1f4f1e", stalk: "#6b5a2a" };
 const PEG_COLOURS = { log: "#8a5a32", end: "#c89a5e" };
-const SPIKED_LOG_COLOURS = { log: "#7a5530", spike: "#d8d0b8" };
+const SPIKED_LOG_COLOURS = { log: "#7a5530", spike: "#d8d0b8", arrow: "#ffd23a" };
 
 // one of a lily pad's four round leaves, x and z out from its middle
 const lilyPadLeaf = (x: number, z: number) => ball(1, [x, 50, z], LILY_PAD_COLOURS.leaf, { stretch: [270, 50, 270] });
@@ -65,20 +65,61 @@ function spikeRing(height: number): ShapePart[] {
   ];
 }
 
+type PushWay = "up" | "down";
+
+const ARROW = { gap: 250, shaft: 350, shaftRadius: 70, head: 300, headRadius: 200 }; // over a spiked log
+const POINT_RADIUS = SPIKED_LOG_RADIUS * 0.6;
+
+// a spiked log's point: on top of its body (from bottom) pointing up, or under it pointing down
+function logPoint(way: PushWay, bottom: number): ShapePart {
+  if (way === "up") {
+    return { ...rod(0, POINT_RADIUS, SPIKED_LOG_TIP, [0, bottom + SPIKED_LOG_TIP / 2, 0], SPIKED_LOG_COLOURS.spike), name: "point" };
+  }
+  return { ...rod(POINT_RADIUS, 0, SPIKED_LOG_TIP, [0, SPIKED_LOG_TIP / 2, 0], SPIKED_LOG_COLOURS.spike), name: "point" };
+}
+
+// an arrow's shaft and head, each middle at its height (up from the floor)
+const arrowShaft = (height: number): ShapePart =>
+  ({ ...rod(ARROW.shaftRadius, ARROW.shaftRadius, ARROW.shaft, [0, height, 0], SPIKED_LOG_COLOURS.arrow), name: "arrow" });
+const arrowHead = (height: number, turn: Vec3): ShapePart =>
+  ({ ...rod(0, ARROW.headRadius, ARROW.head, [0, height, 0], SPIKED_LOG_COLOURS.arrow, { turn }), name: "arrow" });
+
+// an arrow from above a spiked log (above, its top) pointing the way it pushes:
+// up, its head over its shaft, or down, its head under it
+function pushArrow(way: PushWay, above: number): ShapePart[] {
+  const bottom = above + ARROW.gap;
+  if (way === "up") {
+    return [arrowShaft(bottom + ARROW.shaft / 2), arrowHead(bottom + ARROW.shaft + ARROW.head / 2, [0, 0, 0])];
+  }
+  return [arrowHead(bottom + ARROW.head / 2, [Math.PI, 0, 0]), arrowShaft(bottom + ARROW.head + ARROW.shaft / 2)];
+}
+
+// how far up a spiked log's body starts: over its point, if that's at its bottom
+function logBodyBottom(way: PushWay): number {
+  if (way === "down") {
+    return SPIKED_LOG_TIP;
+  }
+  return 0;
+}
+
 // the great gate's spiked log (SL1iG), standing on the floor at its spot and
-// height tall: an upright log 800 across with rings of spikes up it, its top a spike
-function spikedLog(height: number): ShapePart[] {
+// height tall, at the far end of its push: an upright log 800 across with
+// rings of spikes up it, its point the way it pushes (up at its top, or down
+// on the floor), and an arrow over it pointing that way
+function spikedLog(height: number, way: PushWay): ShapePart[] {
   const body = height - SPIKED_LOG_TIP;
+  const bodyBottom = logBodyBottom(way);
   const ringCount = Math.floor((body - SPIKE_GAP / 2) / SPIKE_GAP);
-  const rings = Array.from({ length: ringCount }, (_, ring) => spikeRing((ring + 1) * SPIKE_GAP)).flat();
+  const rings = Array.from({ length: ringCount }, (_, ring) => spikeRing(bodyBottom + (ring + 1) * SPIKE_GAP)).flat();
   return [
-    rod(SPIKED_LOG_RADIUS, SPIKED_LOG_RADIUS, body, [0, body / 2, 0], SPIKED_LOG_COLOURS.log),
-    rod(0, SPIKED_LOG_RADIUS * 0.6, SPIKED_LOG_TIP, [0, body + SPIKED_LOG_TIP / 2, 0], SPIKED_LOG_COLOURS.spike),
+    rod(SPIKED_LOG_RADIUS, SPIKED_LOG_RADIUS, body, [0, bodyBottom + body / 2, 0], SPIKED_LOG_COLOURS.log),
+    logPoint(way, body),
     ...rings,
+    ...pushArrow(way, height),
   ];
 }
 
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
-export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT) };
+export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down") };
