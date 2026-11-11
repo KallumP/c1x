@@ -68,11 +68,27 @@ interface FittedMap {
   spans: Span[];
 }
 
+// a zone's world meshes, and the first of those drawn over the floor (see
+// TRACKS_NEARER): its mossy slides' planks' and its rolling stones' tracks'
+interface ZoneMeshes {
+  meshes: WorldMesh[];
+  nearerFrom: number;
+}
+
+// the empty mesh kept for a zone's rolling stones' tracks, if it has any
+function tracksMeshesFor(hasTracks: boolean): WorldMesh[] {
+  if (hasTracks) {
+    return [{ vertices: [], polygons: [] }];
+  }
+  return [];
+}
+
 // each zone's world meshes; with more than one zone, each lists the next's too,
-// so half as many. a zone with rolling stones (trackZones) ends with an empty
-// one, kept for their tracks, so they fit however full the map's meshes are,
-// and are drawn over the floor (see TRACKS_NEARER)
-function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, textured: Set<string>, trackZones: Set<number>): WorldMesh[][] {
+// so half as many. after the map's, a zone's mossy slides' planks (in planks,
+// the map's frame) have their own, and a zone with rolling stones (trackZones)
+// ends with an empty one, kept for their tracks, so they fit however full the
+// map's meshes are. both are drawn over the floor
+function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, textured: Set<string>, trackZones: Set<number>, planks: Mesh): ZoneMeshes[] {
   const texinfoWords = readWorldHeader(templates.world.items[0]).texinfoWords;
   const options = {
     piece: MAP_PIECE,
@@ -84,10 +100,11 @@ function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, tex
     worldsMax: spans.length === 1 ? WORLDS_MAX : WORLDS_MAX / 2,
   };
   return spans.map((span, zone) => {
-    if (!trackZones.has(zone)) {
-      return worldMeshes(fitted.mesh, { ...options, span });
-    }
-    return [...worldMeshes(fitted.mesh, { ...options, span, worldsMax: options.worldsMax - 1 }), { vertices: [], polygons: [] }];
+    const plankMeshes = worldMeshes(planks, { ...options, span });
+    const tracksMeshes = tracksMeshesFor(trackZones.has(zone));
+    const worldsMax = options.worldsMax - plankMeshes.length - tracksMeshes.length;
+    const mapMeshes = worldMeshes(fitted.mesh, { ...options, span, worldsMax });
+    return { meshes: [...mapMeshes, ...plankMeshes, ...tracksMeshes], nearerFrom: mapMeshes.length };
   });
 }
 
@@ -405,16 +422,15 @@ function withStoneTracks(worlds: Worlds, stones: LevelObject[], track: StoneTrac
   }, worlds);
 }
 
-// how much nearer the sort list draws rolling stones' tracks than they are
-// (along z): it draws farthest first by the polygons' middles, which for the
-// long floor tiles under them can be nearer than theirs, covering them; half a
-// map piece more is clear of the tiles they stand over
+// how much nearer the sort list draws rolling stones' tracks and mossy slides'
+// planks than they are (along z): it draws farthest first by the polygons'
+// middles, which for the long floor tiles under them can be nearer than theirs,
+// covering them; half a map piece more is clear of the tiles they stand over
 const TRACKS_NEARER = MAP_PIECE / 2;
 
-// how much nearer each of a zone's count meshes is drawn: its last, with the
-// tracks, if it has them (hasTracks)
-function tracksNearer(count: number, hasTracks: boolean): number[] {
-  return Array.from({ length: count }, (_, index) => Number(hasTracks && index === count - 1) * TRACKS_NEARER);
+// how much nearer each of a zone's meshes is drawn: those from nearerFrom on, its planks' and tracks'
+function tracksNearer({ meshes, nearerFrom }: ZoneMeshes): number[] {
+  return meshes.map((_, index) => Number(index >= nearerFrom) * TRACKS_NEARER);
 }
 
 // a mossy slide's plank, as long (metres, at scale) and steep as it's set
@@ -425,14 +441,13 @@ const slidePlank = (slide: LevelObject, scale: number) =>
 const slidePath = (slide: LevelObject, scale: number) =>
   mossySlidePath(numberSetting(slide, "length") * scale, numberSetting(slide, "angle"), slide.reverse === true);
 
-// the map with each mossy slide's plank added to its mesh where it slopes from
-// (its spot), so it's drawn, textured and solid as the map is
-function withSlidePlanks(map: FittedMap, slides: LevelObject[], placer: ObjectPlacer, scale: number): FittedMap {
-  if (slides.length === 0) {
-    return map;
-  }
-  const planks = slides.map((slide) => ({ plank: slidePlank(slide, scale), at: placer.positionOf(slide) }));
-  return { ...map, fitted: { ...map.fitted, mesh: withPlanks(map.fitted.mesh, planks) } };
+const NO_MESH: Mesh = { vertices: [], triangles: [], materialLibraries: [] };
+
+// each mossy slide's plank where it slopes from (its spot), in the map's frame,
+// added to mesh: the map's, for the collision, so crash stands on them, or none,
+// for them alone, drawn as the map is (in meshes of their own)
+function withSlidePlanks(mesh: Mesh, slides: LevelObject[], placer: ObjectPlacer, scale: number): Mesh {
+  return withPlanks(mesh, slides.map((slide) => ({ plank: slidePlank(slide, scale), at: placer.positionOf(slide) })));
 }
 
 // the map's images, and the mossy slides' if it has any
@@ -473,16 +488,17 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const entityCount = Number(end !== undefined) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0) + obstacles.length;
   const placer = new ObjectPlacer(map, templates, scale, turn, entityCount);
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
-  const planked = withSlidePlanks(map, slides, placer, scale);
+  const solid = withSlidePlanks(fitted.mesh, slides, placer, scale);
   const mapImages = withSlideImages(images, slides);
-  const cells = solidCells(planked.fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
+  const cells = solidCells(solid, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
 
   const trackZones = new Set(stones.map((stone) => placer.zoneOf(stone)));
-  const zoneWorlds = zoneWorldMeshes(planked, templates, new Set(mapImages.keys()), trackZones);
+  const zoneMeshes = zoneWorldMeshes(map, templates, new Set(mapImages.keys()), trackZones, withSlidePlanks(NO_MESH, slides, placer, scale));
+  const zoneWorlds = zoneMeshes.map(({ meshes }) => meshes);
   const template = templates.world.items[0];
   const { pages, ...textured } = textureWorlds(zoneWorlds.flat(), mapImages, template);
 
-  const start = spawn ? placer.positionOf(spawn) : spawnPoint(planked.fitted.mesh, cells, MAP_CELL);
+  const start = spawn ? placer.positionOf(spawn) : spawnPoint(solid, cells, MAP_CELL);
   const spawnZone = placer.placeCrash(start);
   boxes.forEach((box) => placer.placeBoxStack(box));
   linkSwitches(placer.entities, placer.placedBoxes);
@@ -537,7 +553,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
         texinfos: withBase.texinfos.slice(first, first + count),
         points: paths[index],
         entities: placer.entities[index],
-        nearer: tracksNearer(count, trackZones.has(index)),
+        nearer: tracksNearer(zoneMeshes[index]),
       };
       first += count;
       return plan;
