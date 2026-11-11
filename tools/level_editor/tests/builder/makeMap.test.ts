@@ -682,6 +682,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(colourWords(model).every((word) => (word & NO_CULL) !== 0)).toBe(true);
     });
 
+    // spawn flags bit 0: the game doesn't take its init flags as its rotation
+    // (src/gool.c), as its timing in them would turn it (a fire pit tipped into the floor)
+    test.each(["fire_pit", "rising_spiked_log", "falling_spiked_log"] as const)("a %s isn't turned by the timing in its init flags", (type) => {
+      const placed = zoneEntities(build([obstacle(type)]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES[type]))!;
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
+
     test("a level without a fire pit keeps the base level's crash code", () => {
       const { entries } = build([obstacle("wooden_peg")]);
       const baseCrash = entriesById(readLevel(STREAMS, BASE_LEVEL.lid)).get(stringToEid("WillC"))!;
