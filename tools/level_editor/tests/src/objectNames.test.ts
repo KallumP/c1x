@@ -22,7 +22,7 @@ describe("the names the palette shows", () => {
   test.each([
     ["lily_pad", "Lily pad"],
     ["leaf", "Floating leaf"],
-  ] as const)("the %s platform is named %s", (what, name) => {
+  ] as const)("the %s obstacle is named %s", (what, name) => {
     expect(placeableName(what)).toBe(name);
   });
 

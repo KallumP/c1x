@@ -28,13 +28,13 @@ describe("newObject", () => {
   });
 });
 
-describe("platforms", () => {
-  test("a platform is placed under its own kind", () => {
-    expect(["lily_pad", "leaf"].map((what) => placeableKind(what as Placeable))).toEqual(["platform", "platform"]);
+describe("obstacles", () => {
+  test("an obstacle is placed under its own kind", () => {
+    expect(["lily_pad", "leaf"].map((what) => placeableKind(what as Placeable))).toEqual(["obstacle", "obstacle"]);
   });
 
-  test.each(["lily_pad", "leaf"] as const)("a new %s is where it's put", (platform) => {
-    expect(newObject(platform, [1, 2, 3])).toEqual(obstacleObject(platform, { at: [1, 2, 3] }));
+  test.each(["lily_pad", "leaf"] as const)("a new %s is where it's put", (obstacle) => {
+    expect(newObject(obstacle, [1, 2, 3])).toEqual(obstacleObject(obstacle, { at: [1, 2, 3] }));
   });
 });
 
