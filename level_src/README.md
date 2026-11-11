@@ -19,7 +19,7 @@ An object in `objects.json` has a `kind`:
 - `end`: the warp pad that ends the level (one at most)
 - `box`: a box, by its `type` (see [Boxes](#boxes)); `stack` makes a stack of them
 - `enemy`: an enemy, by its `type` (see [Enemies](#enemies))
-- `platform`: something Crash stands on that moves, by its `type` (see [Platforms](#platforms))
+- `obstacle`: something that moves, which Crash stands on, by its `type` (see [Obstacles](#obstacles))
 
 Each object also has `at`, where it is in Blender, and can have `raise`, how far above that it is. The [level editor](../doc/custom_levels.md#2-place-objects-in-the-level-editor) writes all of these for you. Custom levels are built from Jungle Rollers, which has every kind of box, and its plant, rolling stone and badger. Other enemies are taken from the level they're in, such as the crab from N. Sanity Beach, so the game's files for that level have to be in `streams/` too.
 
@@ -78,7 +78,7 @@ A crab's, turtle's, native's, warthog's, monkey's or lizard's `path` is the node
 
 A crab's, turtle's, native's, badger's, warthog's, walking spider's, monkey's or lizard's `speed` is how many times the game's own pace it walks at, 0.25 to 3 (1 by default). It's the same all along its path, wherever the nodes are. Its legs don't move any faster, so a fast one looks like it's sliding. A lizard's speed sets how far apart the points it leaps or hops between are, so a fast one goes further each time.
 
-### Platforms
+### Obstacles
 
 Both come from Up the Creek, with its river plants and fish (its files need to be in `streams/`), and take the same three texture pages as them, however many of each a level has. Neither needs water under it.
 

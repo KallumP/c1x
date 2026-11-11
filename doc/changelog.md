@@ -4,7 +4,7 @@
 
 ### Added
 
-- platforms for custom levels: Up the Creek's sinking lily pads and floating leaves
+- obstacles for custom levels: Up the Creek's sinking lily pads and floating leaves
 - fullscreen, set in the launcher or switched with Alt+Enter while playing
 - build custom levels from the launcher's new Levels tab, without Node.js
 - an option to show how many of a level's boxes Crash has broken (such as 12/49), with the lives and wumpa counters
