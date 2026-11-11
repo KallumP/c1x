@@ -4,7 +4,7 @@
 
 ### Added
 
-- an option to show how many boxes Crash has broken, with the lives and wumpa counters
+- an option to show how many of a level's boxes Crash has broken (such as 12/49), with the lives and wumpa counters
 
 ## 2026-11-10
 
