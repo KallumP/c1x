@@ -36,6 +36,8 @@ const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
   rotation: { label: "rotation °", step: 5 },
   every: { label: "every s", step: 0.5 },
   offset: { label: "offset s", step: 0.5 },
+  platforms: { label: "platforms", step: 1 },
+  radius: { label: "radius m", step: 0.5 },
 };
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 // the enemies reversed across the map, and what their Reverse direction button does

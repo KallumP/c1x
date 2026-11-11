@@ -4,7 +4,7 @@
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { batSwoop, leafDriftShares, leaderBatsFlight, leapWay, pillarSlideShares } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep, pointAlongShare, spotAndNode } from "../src/enemyPaths";
-import { hasPath, LEADER_BATS_LEADERS, numberSetting, GATES, TIMED_OBSTACLES, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
+import { hasPath, LEADER_BATS_LEADERS, numberSetting, GATES, ROTATING_OBSTACLES, TIMED_OBSTACLES, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
 import { throwFlags } from "../src/labAssistantThrow";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
@@ -286,6 +286,32 @@ function withBlockTop(entity: Buffer, obstacle: LevelObject): Buffer {
   return withInitFlagC(entity, entity.readInt16LE(ENTITY_INIT_FLAGS + 4) | BLOCK_WITH_TOP);
 }
 
+// a rotating obstacle's init flag C: how many go round (bits 12 to 14), the
+// other way round (bit 11), and how far out (bits 0 to 9, in 4s of game units)
+const ROTATING_COUNT_SHIFT = 12;
+const ROTATING_REVERSE_BIT = 1 << 11;
+const ROTATING_RADIUS_UNIT = 4;
+const ROTATING_RADIUS_MAX_UNITS = 0x3ff;
+
+// entity with a rotating obstacle's platforms, way round and radius in its
+// init flag C; any other obstacle's as it is
+function withRotation(entity: Buffer, obstacle: LevelObject, scale: number): Buffer {
+  if (!ROTATING_OBSTACLES.includes(obstacle.obstacle!)) {
+    return entity;
+  }
+  const radius = Math.min(ROTATING_RADIUS_MAX_UNITS, Math.round((numberSetting(obstacle, "radius") * scale) / ROTATING_RADIUS_UNIT));
+  const count = numberSetting(obstacle, "platforms") << ROTATING_COUNT_SHIFT;
+  return withInitFlagC(entity, count | reverseBit(obstacle) | radius);
+}
+
+// a rotating obstacle's bit for going the other way round
+function reverseBit(obstacle: LevelObject): number {
+  if (obstacle.reverse) {
+    return ROTATING_REVERSE_BIT;
+  }
+  return 0;
+}
+
 // how far over its spot a timed obstacle is placed
 function timedObstacleHang(obstacle: LevelObject): number {
   if (obstacle.obstacle === "falling_spiked_log") {
@@ -384,7 +410,7 @@ class ObjectPlacer {
     const hung: Vec3 = [at[0], at[1] + timedObstacleHang(obstacle), at[2]];
     const [every, into] = obstacleTiming(obstacle);
     const placed = withNoRotationFromFlags(withPosition(withEntityId(example, this.ids.shift()!), hung));
-    this.entities[zone].push(withBlockTop(withInitFlagB(withInitFlagA(placed, every), into), obstacle));
+    this.entities[zone].push(withRotation(withBlockTop(withInitFlagB(withInitFlagA(placed, every), into), obstacle), obstacle, this.scale));
   }
 
   // an enemy or obstacle that moves along its own level's path, as example, from

@@ -5,10 +5,10 @@ import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, 
 import { boxStyle, ENEMY_COLOURS, OBSTACLE_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
-import { OBSTACLE_SHAPES } from "../obstacleShapes";
+import { OBSTACLE_SHAPES, type ModelledObstacle } from "../obstacleShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
-import { GATES, isPathEnemy, isPathObstacle, numberSetting, PATH_ENEMIES, PATH_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
+import { GATES, isPathEnemy, isPathObstacle, numberSetting, PATH_ENEMIES, PATH_OBSTACLES, ROTATING_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
@@ -33,6 +33,8 @@ const walkerSize = (parts: ShapePart[]) => {
 const FACES_ITS_WAY: PathEnemy[] = ["turtle", "warthog", "monkey", "lizard", "red_lizard", "walking_lizard", "robot_dog", "electric_scientist"];
 
 const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
+const CIRCLE_POINTS = 32; // the points of the circle rotating obstacles go round, drawn
+
 // a path obstacle's size (a leaf's or sliding pillar's), as a walker's, for the handles of the nodes under it
 const PATH_OBSTACLE_SIZES = Object.fromEntries(PATH_OBSTACLES.map((obstacle) => [obstacle, walkerSize(OBSTACLE_SHAPES[obstacle])])) as Record<PathObstacle, ReturnType<typeof walkerSize>>;
 
@@ -475,11 +477,33 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
+  // rotating pots or platforms: as many as go round, spread round the circle
+  // they go round (as far out as set, level), facing the way round, and the circle
+  const renderRotating = (object: LevelObject, index: number) => {
+    const type = object.obstacle as ModelledObstacle;
+    const [x, y, z] = object.at;
+    const middle: Vec3 = [x, y, z + object.raise];
+    const radius = numberSetting(object, "radius");
+    const pointAt = (angle: number): Vec3 => [middle[0] + radius * Math.cos(angle), middle[1] + radius * Math.sin(angle), middle[2]];
+    const count = numberSetting(object, "platforms");
+    const angles = Array.from({ length: count }, (_, platform) => (2 * Math.PI * platform) / count);
+    const circle = Array.from({ length: CIRCLE_POINTS + 1 }, (_, point) => blenderToView(pointAt((2 * Math.PI * point) / CIRCLE_POINTS)));
+    return (
+      <>
+        {angles.map((angle, platform) => renderShapeModel(OBSTACLE_SHAPES[type], blenderToView(pointAt(angle)), index, platform))}
+        <Line points={circle} color={pathColour(index, OBSTACLE_COLOURS[type])} lineWidth={2} />
+      </>
+    );
+  };
+
   // a leaf or sliding pillar with its path, a rolling stone on its track, a mossy slide as its slope, and the rest at their
   // spots (a lily pad where it sinks from, a wooden peg opened out)
   const renderObstacle = (object: LevelObject, index: number) => {
     if (isPathObstacle(object.obstacle)) {
       return renderPathObstacle(object, index);
+    }
+    if (ROTATING_OBSTACLES.includes(object.obstacle!)) {
+      return renderRotating(object, index);
     }
     if (object.obstacle === "rolling_stone") {
       return renderRollingStone(object, index);

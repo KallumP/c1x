@@ -83,7 +83,10 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // sunset vista's, pushing out towards the camera and back from their spot:
 // - pushing_block: a big stone block, shoving crash
 // - pushing_platform: a stone platform, to stand on
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform"] as const;
+// and its platforms going round their spot:
+// - rotating_pots: stone pots
+// - rotating_platforms: flat stone platforms
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
@@ -178,7 +181,23 @@ export const SPIKED_LOG_EVERY = 6;
 export const TIMED_EVERY_MIN = 2;
 export const TIMED_EVERY_MAX = 20;
 export const SPIKED_LOGS: ObstacleType[] = ["rising_spiked_log", "falling_spiked_log"];
-export const TIMED_OBSTACLES: ObstacleType[] = [...SPIKED_LOGS, "fire_pit", "pushing_block", "pushing_platform"];
+export const ROTATING_OBSTACLES: ObstacleType[] = ["rotating_pots", "rotating_platforms"];
+export const TIMED_OBSTACLES: ObstacleType[] = [...SPIKED_LOGS, "fire_pit", "pushing_block", "pushing_platform", ...ROTATING_OBSTACLES];
+
+// how many rotating pots or platforms go round, and how far out (metres): sunset
+// vista's (3 pots or 2 platforms, mostly 350 out in 4s of game units) without them
+export const ROTATING_PLATFORMS_MAX = 7;
+export const ROTATING_RADIUS = 3.5;
+export const ROTATING_RADIUS_MIN = 1;
+export const ROTATING_RADIUS_MAX = 10;
+
+// how many go round a rotating obstacle without a platforms
+function platformsFallback(type: ObjectType | undefined): number {
+  if (type === "rotating_pots") {
+    return 3;
+  }
+  return 2;
+}
 
 // the seconds between a timed obstacle's pushes or flames without an every
 const everyFallback = (type: ObjectType | undefined): number => TIMED_EVERY[type!] ?? SPIKED_LOG_EVERY;
@@ -186,7 +205,7 @@ const everyFallback = (type: ObjectType | undefined): number => TIMED_EVERY[type
 // the enemy settings that are a number in a range, and for each: the enemies
 // that have it (named for messages), its range, whether it's whole, what it is
 // without one (left out of objects.json), and what it means
-export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range", "length", "angle", "rotation", "every", "offset"] as const;
+export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range", "length", "angle", "rotation", "every", "offset", "platforms", "radius"] as const;
 export type NumberSetting = (typeof NUMBER_SETTINGS)[number];
 
 interface NumberSettingRule {
@@ -208,8 +227,10 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   length: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_LENGTH_MIN, max: SLIDE_LENGTH_MAX, whole: false, fallback: () => SLIDE_LENGTH, meaning: "how long it is, in metres" },
   angle: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_ANGLE_MIN, max: SLIDE_ANGLE_MAX, whole: false, fallback: () => SLIDE_ANGLE, meaning: "how steeply it slopes, in degrees" },
   rotation: { types: ["mossy_slide", ...GATES], typesNamed: "mossy slides and gates", min: 0, max: SLIDE_ROTATION_MAX, whole: false, fallback: () => 0, meaning: "which way it slides down, from across the map, or falls, from towards the camera: degrees anticlockwise seen from above" },
-  every: { types: TIMED_OBSTACLES, typesNamed: "spiked logs, fire pits, and pushing blocks and platforms", min: TIMED_EVERY_MIN, max: TIMED_EVERY_MAX, whole: false, fallback: everyFallback, meaning: "the seconds between its pushes or flames" },
-  offset: { types: TIMED_OBSTACLES, typesNamed: "spiked logs, fire pits, and pushing blocks and platforms", min: 0, max: TIMED_EVERY_MAX, whole: false, fallback: () => 0, meaning: "the seconds its pushes or flames are put off by" },
+  every: { types: TIMED_OBSTACLES, typesNamed: "spiked logs, fire pits, pushing blocks and platforms, and rotating pots and platforms", min: TIMED_EVERY_MIN, max: TIMED_EVERY_MAX, whole: false, fallback: everyFallback, meaning: "the seconds between its pushes or flames" },
+  offset: { types: TIMED_OBSTACLES, typesNamed: "spiked logs, fire pits, pushing blocks and platforms, and rotating pots and platforms", min: 0, max: TIMED_EVERY_MAX, whole: false, fallback: () => 0, meaning: "the seconds its pushes or flames are put off by" },
+  platforms: { types: ROTATING_OBSTACLES, typesNamed: "rotating pots and platforms", min: 1, max: ROTATING_PLATFORMS_MAX, whole: true, fallback: platformsFallback, meaning: "how many go round" },
+  radius: { types: ROTATING_OBSTACLES, typesNamed: "rotating pots and platforms", min: ROTATING_RADIUS_MIN, max: ROTATING_RADIUS_MAX, whole: false, fallback: () => ROTATING_RADIUS, meaning: "how far out they go round, in metres" },
   range: { types: ["gunman"], typesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },
 };
 
@@ -239,6 +260,8 @@ export interface LevelObject {
   length?: number;      // how long a mossy slide is, in metres (SLIDE_LENGTH without one)
   angle?: number;       // how steeply a mossy slide slopes, in degrees (SLIDE_ANGLE without one)
   rotation?: number;    // which way a mossy slide slides down: degrees anticlockwise seen from above, from across the map (0 without one)
+  platforms?: number;   // how many rotating pots or platforms go round (platformsFallback without one)
+  radius?: number;      // how far out rotating pots or platforms go round, in metres (ROTATING_RADIUS without one)
   count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
   every?: number;       // the seconds between a timed obstacle's pushes or flames (its own level's without one: see TIMED_EVERY)
   offset?: number;      // the seconds a spiked log's pushes are put off by, so a row can push in turn (0 without one)
@@ -279,7 +302,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
-const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset"];
+const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset", "platforms", "radius"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
 // a word with "a" or "an" before it, as it sounds: "a box", "an enemy"
@@ -397,7 +420,7 @@ function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetti
 
 // the enemies and obstacles that can be reversed: a rolling stone rolls back towards its first
 // end first, and a fish leaps the other way across the map
-const REVERSIBLE: ObjectType[] = ["rolling_stone", "fish"];
+const REVERSIBLE: ObjectType[] = ["rolling_stone", "fish", "rotating_pots", "rotating_platforms"];
 
 // whether a rolling stone or fish is reversed, from its fields in objects.json
 function readReverse(fields: Record<string, unknown>, type: ObjectType, objectNumber: number): Pick<LevelObject, "reverse"> {
