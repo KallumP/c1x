@@ -12,14 +12,7 @@
 #endif
 #include "extract.h"
 #include "disc_image.h"
-#include "level_editor.h"
 #include "paths.h"
-
-#ifdef _WIN32
-#define QUOTE '"'  /* cmd.exe */
-#else
-#define QUOTE '\'' /* sh, which expands nothing in single quotes */
-#endif
 
 #define FOLDER_ENTRIES_MAX 512
 #define STREAM_FILES_MAX 512
@@ -29,19 +22,6 @@ typedef struct {
   disc_entry files[STREAM_FILES_MAX];
   int count;
 } stream_file_list;
-
-/* the command extracting image's files, installing the script's packages
-   first if need be; returns 0 for no image, or one that can't be quoted */
-int ExtractStreamsCommand(const char *repo, const char *image, char *command,
-  size_t size) {
-  const char *install;
-
-  if (!image[0] || SDL_strchr(image, QUOTE)) { return 0; }
-  install = AreLevelEditorPackagesInstalled(repo) ? "" : "npm install && ";
-  SDL_snprintf(command, size, "%snpm run extract-streams -- %c%s%c",
-    install, QUOTE, image, QUOTE);
-  return 1;
-}
 
 static int IsStreamFolder(const disc_entry *entry) {
   static const char *names[] = { "S0", "S1", "S2", "S3" };

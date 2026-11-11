@@ -103,6 +103,8 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/levels.c \
 	src/launcher/streams.c \
 	src/launcher/extract.c \
+	src/launcher/disc_image.c \
+	src/launcher/extraction.c \
 	src/launcher/extract_section.c \
 	src/launcher/file_dialog.c \
 	src/launcher/node.c \

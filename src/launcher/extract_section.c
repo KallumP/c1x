@@ -1,43 +1,32 @@
 /*
  * extracting the game's files from a disc image, from the launcher's game
- * section: a disc image field, Browse, and Extract showing the output
+ * section: a disc image field, Browse, and Extract saying how it went
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "extract_section.h"
-#include "extract.h"
-#include "level_editor.h"
+#include "extraction.h"
 #include "file_dialog.h"
 #include "paths.h"
-#include "command.h"
 #include "ui.h"
 
 static char image[PATH_MAX_LEN];
-static background_command extraction;
-static char problem[PATH_MAX_LEN + 64]; /* why the last extraction failed, or "" */
+static extraction job;
+static char problem[PATH_MAX_LEN + 64]; /* why the extraction couldn't start, or "" */
 
-static void StartExtraction(const char *repo) {
-  char command[PATH_MAX_LEN + 64];
-  char folder[PATH_MAX_LEN];
+static void StartExtractingImage(const char *repo) {
+  char streams[PATH_MAX_LEN];
 
   problem[0] = 0;
-  if (!ExtractStreamsCommand(repo, image, command, sizeof(command))) {
-    SDL_strlcpy(problem, image[0] ? "That disc image's path has a quote in it."
-      : "Choose a disc image first.", sizeof(problem));
+  if (!image[0]) {
+    SDL_strlcpy(problem, "Choose a disc image first.", sizeof(problem));
     return;
   }
-  LevelEditorFolder(repo, folder, sizeof(folder));
-  if (!StartBackgroundCommand(&extraction, folder, command)) { SDL_snprintf(problem, sizeof(problem), "Couldn't run npm in %s.", folder); }
-}
-
-/* returns 1 on the frame the extraction finishes having worked */
-static int UpdateExtraction(void) {
-  if (!UpdateBackgroundCommand(&extraction)) { return 0; }
-  if (extraction.exit_code != 0) {
-    SDL_strlcpy(problem, "The extraction failed; its output says why.", sizeof(problem));
+  JoinPath(streams, sizeof(streams), repo, "streams");
+  if (!StartExtraction(&job, image, streams)) {
+    SDL_strlcpy(problem, "Couldn't start extracting.", sizeof(problem));
   }
-  return extraction.exit_code == 0;
 }
 
 static void DrawImageField(void) {
@@ -51,13 +40,25 @@ static void DrawImageField(void) {
 }
 
 static void DrawExtractButton(const char *repo) {
-  int running = IsBackgroundCommandRunning(&extraction);
+  int running = IsExtractionRunning(&job);
+  const char *label = "Extract";
 
+  if (running) { label = "Extracting..."; }
   igBeginDisabled(running);
-  if (igButton(running ? "Extracting..." : "Extract", (ImVec2){120, 0})) {
-    StartExtraction(repo);
-  }
+  if (igButton(label, (ImVec2){120, 0})) { StartExtractingImage(repo); }
   igEndDisabled();
+}
+
+static void DrawExtractionResult(void) {
+  if (problem[0]) {
+    igTextColored(PROBLEM_COLOUR, "%s", problem);
+  } else if (!IsExtractionRunning(&job) && job.message[0]) {
+    if (job.file_count < 0) {
+      igTextColored(PROBLEM_COLOUR, "%s", job.message);
+    } else {
+      igTextWrapped("%s", job.message);
+    }
+  }
 }
 
 /* returns 1 when an extraction has just finished, so the files can be checked again */
@@ -67,8 +68,7 @@ int DrawExtractStreams(const char *repo) {
   igText("Disc image (.bin or .iso):");
   DrawImageField();
   DrawExtractButton(repo);
-  finished = UpdateExtraction();
-  if (problem[0]) { igTextColored(PROBLEM_COLOUR, "%s", problem); }
-  DrawCommandOutput("extract_output", &extraction);
-  return finished;
+  finished = UpdateExtraction(&job);
+  DrawExtractionResult();
+  return finished && job.file_count > 0;
 }

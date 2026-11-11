@@ -3,9 +3,6 @@
 
 #include <stddef.h>
 
-extern int ExtractStreamsCommand(const char *repo, const char *image, char *command,
-  size_t size);
-
 /* copies the game's files from the disc image into out_folder; how many, or
    -1 with message saying why not (message says what was done either way) */
 extern int ExtractStreams(const char *image, const char *out_folder, char *message,
