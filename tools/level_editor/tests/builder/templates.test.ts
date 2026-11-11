@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { entityId, entityPath, entityType } from "../../builder/entities";
 import { readLevel } from "../../builder/levelFiles";
-import { levelEntity, mossySlope } from "../../builder/templates";
+import { levelEntity, mossyPlank, mossySlats, mossySlope } from "../../builder/templates";
 import { stringToEid } from "../../builder/entryIds";
 import { expectNear } from "../helpers";
 
@@ -53,5 +53,46 @@ describe.skipIf(!hasGreatGate)("the great gate's mossy slides' planks", () => {
       expect(x * Math.sign(across)).toBeGreaterThanOrEqual(-20);
       expect(x * Math.sign(across)).toBeLessThanOrEqual(Math.abs(slope.path.at(-1)![0]) + 20);
     });
+  });
+});
+
+describe.skipIf(!hasGreatGate)("a mossy plank made of the great gate's slats", () => {
+  const gate = hasGreatGate ? readLevel(STREAMS, THE_GREAT_GATE) : null!;
+  const slats = hasGreatGate ? mossySlats(gate) : [];
+  const tan = (degrees: number) => Math.tan((degrees * Math.PI) / 180);
+
+  test("its three slats, each from its start, on the great gate's texture page", () => {
+    expect(slats.map(({ width }) => width)).toEqual([304, 232, 264]);
+    slats.forEach((slat) => {
+      expect(slat.polygons.length).toBeGreaterThan(3);
+      expect(slat.polygons.every(({ page }) => page === stringToEid("Vi1iT"))).toBe(true);
+      slat.vertices.forEach(({ at: [x] }) => expect(x).toBeGreaterThanOrEqual(-1));
+      slat.vertices.forEach(({ at: [x] }) => expect(x).toBeLessThanOrEqual(slat.width + 1));
+    });
+  });
+
+  test.each([
+    { length: 4000, angle: 20 },
+    { length: 1500, angle: 8 },
+  ])("a plank $length long at $angle degrees: slats in turn down its slope, the slider's path along it", ({ length, angle }) => {
+    const plank = mossyPlank(slats, length, angle, false);
+    const xs = plank.vertices.map(({ at: [x] }) => x);
+    expect(Math.min(...xs)).toBeGreaterThanOrEqual(-1);
+    expect(Math.max(...xs)).toBeGreaterThanOrEqual(length);
+    expect(Math.max(...xs)).toBeLessThan(length + 305);
+    plank.vertices.forEach(({ at: [x, y] }) => expect(Math.abs(y + x * tan(angle))).toBeLessThan(700));
+    expect(plank.path[0]).toEqual([0, 0, 0]);
+    const [endX, endY, endZ] = plank.path.at(-1)!;
+    expectNear(endX, Math.max(...xs) + 400, 1);
+    expectNear(endY, -endX * tan(angle), 1);
+    expect(endZ).toBe(0);
+    plank.path.slice(1).forEach(([x], point) => expectNear(x - plank.path[point][0], 450, 60));
+  });
+
+  test("reversed, it runs back across the map: mirrored, its triangles wound the other way so they still face out", () => {
+    const [forward, back] = [mossyPlank(slats, 3000, 15, false), mossyPlank(slats, 3000, 15, true)];
+    expect(back.vertices.map(({ at: [x, y, z] }) => [-x + 0, y, z])).toEqual(forward.vertices.map(({ at }) => at));
+    expect(back.polygons.map(({ corners: [a, b, c] }) => [a, c, b])).toEqual(forward.polygons.map(({ corners }) => corners));
+    expect(back.path.map(([x, y, z]) => [-x + 0, y, z])).toEqual(forward.path);
   });
 });
