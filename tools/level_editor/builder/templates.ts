@@ -298,12 +298,12 @@ const LONG_SLIDE_POINTS = 9;  // its long slides' paths (3600 units across), and
 const SHORT_SLIDE_POINTS = 5;
 
 // how far round a slide's line its plank reaches (game units): its slats' tops
-// a little over it, their log ends under it, and its width either side; the
-// posts and ground further down aren't the plank's
-const PLANK_ABOVE = 120;
-const PLANK_BELOW = 360;
-const PLANK_SIDE = 700;
-const PLANK_BEYOND = 400; // past the ends of its path
+// over it, their sides and log ends under it, and its width either side; the
+// posts and ground further down aren't the plank's, nor the landings past its ends
+const PLANK_ABOVE = 300;
+const PLANK_BELOW = 500;
+const PLANK_SIDE = 800;
+const PLANK_BEYOND = 20; // past the ends of its path
 
 // a mossy slide's plank, its vertices relative to its path's first point, and that path, from there
 export interface MossySlope extends MapPiece {
