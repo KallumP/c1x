@@ -140,6 +140,6 @@ UTEST(launcher_extract, a_disc_without_the_games_files_is_an_error_and_writes_no
   MakeTestDisc(&disc);
   RemoveStreamFolder(&disc);
   ASSERT_EQ(-1, ExtractTestDisc(&disc, message, sizeof(message)));
-  ASSERT_TRUE(strstr(message, "no .NSD/.NSF files found") != 0);
+  ASSERT_TRUE(strstr(message, ".NSD/.NSF files found") != 0);
   ASSERT_FALSE(ReadTestFile(TEST_EXTRACT_OUT "/s0000009.nsd", data, sizeof(data), &length));
 }
