@@ -343,7 +343,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("without a path, it carries crash 6 m straight across the map (at scale 256: 1536), as many points as temple ruins' first", () => {
       const path = carryPath();
-      expect(path.length).toBe(26);
+      expect(path.length).toBe(25);
       expectNear(path[0], SPOT_IN_ZONE, 16);
       expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 1536, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
     });

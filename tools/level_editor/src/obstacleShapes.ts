@@ -250,6 +250,15 @@ function risingPillar(): ShapePart[] {
   ];
 }
 
+// temple ruins' carrying platform (PlPsG): a short stone column 794 across,
+// its mossy top at its spot, 481 down
+function carryingPlatform(): ShapePart[] {
+  return [
+    rod(397, 330, 421, [0, -60 - 421 / 2, 0], PILLAR_COLOURS.stone),
+    rod(397, 397, 60, [0, -30, 0], PILLAR_COLOURS.moss),
+  ];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
@@ -257,4 +266,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls(), rising_pillar: risingPillar() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform() };

@@ -73,6 +73,11 @@ export function defaultPath(enemy: PathEnemy, turn: number, scale: number): Vec3
 // a floating leaf's nodes without a path of its own: its drift, as up the creek's first leaf's
 const leafDriftNodes = (turn: number, scale: number) => leafDrift([0, 0, 0], 0, turn, scale);
 
+// a carrying platform's nodes without a path of its own: CARRY_LENGTH metres
+// straight across the map (temple ruins' curve and drop 6 m, which few maps suit)
+const CARRY_LENGTH = 6;
+const carryingNodes = (turn: number): Vec3[] => [[0, 0, 0], scaled(stoneRolling(turn), CARRY_LENGTH)];
+
 // a sliding pillar's nodes without a path of its own: its slide's two ends, as boulder dash's
 function pillarSlideNodes(turn: number, scale: number): Vec3[] {
   const [length] = PILLAR_SLIDE[PILLAR_SLIDE.length - 1];
@@ -89,6 +94,9 @@ function defaultNodes(object: LevelObject, turn: number, scale: number): Vec3[] 
   }
   if (object.obstacle === "sliding_pillar") {
     return pillarSlideNodes(turn, scale);
+  }
+  if (object.obstacle === "carrying_platform") {
+    return carryingNodes(turn);
   }
   if (object.enemy === "leader_bats") {
     return [leaderBatsGap(turn, scale)];
@@ -132,7 +140,7 @@ export function nodeCount(object: LevelObject): number {
   if (object.obstacle === "leaf") {
     return LEAF_DRIFT.length;
   }
-  if (object.obstacle === "sliding_pillar") {
+  if (object.obstacle === "sliding_pillar" || object.obstacle === "carrying_platform") {
     return 2;
   }
   return DEFAULT_PATH_NODES;
