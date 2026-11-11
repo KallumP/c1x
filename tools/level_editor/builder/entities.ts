@@ -50,7 +50,7 @@ export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
 // and the great gate's objects WalOC, subtype 0 its totem's wooden peg, and
 // jungle rollers' own JunOC, subtype 6 its rolling stone, and the great gate's
 // WalOC subtype 2, its mossy slide's invisible slider
-export const OBSTACLE_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2], wooden_peg: [33, 0], rolling_stone: [22, 6], mossy_slide: [33, 2], rising_spiked_log: [33, 3], falling_spiked_log: [33, 4] };
+export const OBSTACLE_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2], wooden_peg: [33, 0], rolling_stone: [22, 6], mossy_slide: [33, 2], rising_spiked_log: [33, 3], falling_spiked_log: [33, 4], fire_pit: [33, 5] };
 
 // an enemy's or obstacle's entity type and subtype
 export function objectEntity(type: ObjectType): [number, number] {
@@ -156,6 +156,13 @@ export function withPathFrom(item: Buffer, at: Vec3, xWay = 1): Buffer {
 }
 
 // a box's first init flag is what it holds beyond the usual (a token, say); 0 for nothing
+// an entity's spawn flags (after its zone pointer): bit 0 has the game leave
+// its rotation alone rather than take it from its init flags (src/gool.c),
+// for an entity whose init flags are settings (its timing), not its rotation
+const ENTITY_SPAWN_FLAGS = 4;
+const SPAWN_NO_ROTATION = 1;
+export const withNoRotationFromFlags = (item: Buffer) =>
+  withField(item, (copy) => copy.writeUInt16LE(copy.readUInt16LE(ENTITY_SPAWN_FLAGS) | SPAWN_NO_ROTATION, ENTITY_SPAWN_FLAGS));
 export const withInitFlagA = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS));
 export const withInitFlagB = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 2));
 export const withInitFlagC = (item: Buffer, value: number) => withField(item, (copy) => copy.writeInt16LE(value, ENTITY_INIT_FLAGS + 4));

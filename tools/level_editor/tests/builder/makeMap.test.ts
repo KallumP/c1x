@@ -618,6 +618,85 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasGreatGate)("fire pits, from the great gate", () => {
+    // what crash's code (its constants, item 2, from 0x80) names for when he's
+    // set alight: the great gate's crash burning, his model, and his sounds
+    const CRASH_FIRE = ["WF10V", "WF10G", "BDC0A", "BLI0A", "WF20V", "BDA0A", "WF30V", "WF40V", "WF50V"];
+    const crashFireEntries = (entries: Map<number, Entry>) => {
+      const constants = entries.get(stringToEid("WillC"))!.items[2];
+      return CRASH_FIRE.map((_, index) => constants.readUInt32LE(0x80 + 4 * index));
+    };
+
+    test("a fire pit is the great gate's WalOC subtype 5, standing at its spot", () => {
+      const { level, zone } = build([obstacle("fire_pit")]);
+      expect(OBSTACLE_ENTITIES.fire_pit).toEqual([33, 5]);
+      expect(level.nsd.ldat.execMap[33]).toBe(stringToEid("WalOC"));
+      const placed = zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.fire_pit));
+      expect(placed.length).toBe(1);
+      expect(entityPath(placed[0]).length).toBe(1);
+      expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a level with a fire pit has the great gate's crash on fire, and crash's code opens it", () => {
+      const { entries } = build([obstacle("fire_pit")]);
+      expect(crashFireEntries(entries)).toEqual(CRASH_FIRE.map(stringToEid));
+      expect(CRASH_FIRE.filter((name) => !entries.has(stringToEid(name)))).toEqual([]);
+    });
+
+    test("and crash's animations (his code's last item, from 0x94, every 8 bytes) play him burning", () => {
+      const animations = build([obstacle("fire_pit")]).entries.get(stringToEid("WillC"))!.items.at(-1)!;
+      const burning = [0, 1, 2, 3, 4].map((index) => animations.readUInt32LE(0x94 + 8 * index));
+      expect(burning).toEqual(["WF10V", "WF20V", "WF30V", "WF40V", "WF50V"].map(stringToEid));
+    });
+
+    // init flag A: the frames between its flames; B: the frames into them it starts
+    test.each([
+      { more: {}, flags: [120, 0] },
+      { more: { every: 3, offset: 1 }, flags: [90, 60] },
+    ])("a fire pit ($more) has its flames' timing in its init flags", ({ more, flags }) => {
+      expect(initFlagsOf(build([obstacle("fire_pit", more)]).zone, OBSTACLE_ENTITIES.fire_pit).slice(0, 2)).toEqual(flags);
+    });
+
+    // its flame (WalOC subtype 6, spawned by it) timed itself by its own init
+    // flags, which a spawned object hasn't: it reads its parent's (the pit's)
+    test.each(["fire_pit", "wooden_peg", "rising_spiked_log"] as const)("the great gate's objects' code, with a %s, has the flame read its fire pit's timing", (type) => {
+      const code = build([obstacle(type)]).entries.get(stringToEid("WalOC"))!.items[1];
+      const at = (index: number) => code.readUInt32LE(index * 4);
+      expect([at(0x203), at(0x204), at(0x208), at(0x209)]).toEqual([0x82094000, 0x15017c57, 0x82094000, 0x15017c58]);
+    });
+
+    // each texture info's colour word, after the model's header (poly count, scale, texinfo count)
+    const colourWords = (model: Entry) => {
+      const header = model.items[0];
+      const words: number[] = [];
+      for (let at = 20; at + 4 <= header.length; at += (header.readUInt32LE(at) >>> 31) ? 8 : 4) {
+        words.push(header.readUInt32LE(at));
+      }
+      return words;
+    };
+    const NO_CULL = 1 << 28;
+
+    test.each(["fire_pit", "wooden_peg"] as const)("with a %s, the fire pit's bowl (WT1iG) is drawn from both sides, so its top can't be seen through close up", (type) => {
+      const model = build([obstacle(type)]).entries.get(stringToEid("WT1iG"))!;
+      expect(colourWords(model).length).toBeGreaterThan(0);
+      expect(colourWords(model).every((word) => (word & NO_CULL) !== 0)).toBe(true);
+    });
+
+    // spawn flags bit 0: the game doesn't take its init flags as its rotation
+    // (src/gool.c), as its timing in them would turn it (a fire pit tipped into the floor)
+    test.each(["fire_pit", "rising_spiked_log", "falling_spiked_log"] as const)("a %s isn't turned by the timing in its init flags", (type) => {
+      const placed = zoneEntities(build([obstacle(type)]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES[type]))!;
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
+
+    test("a level without a fire pit keeps the base level's crash code", () => {
+      const { entries } = build([obstacle("wooden_peg")]);
+      const baseCrash = entriesById(readLevel(STREAMS, BASE_LEVEL.lid)).get(stringToEid("WillC"))!;
+      expect(entries.get(stringToEid("WillC"))!.items).toEqual(baseCrash.items);
+      expect(entries.has(stringToEid("WF10V"))).toBe(false);
+    });
+  });
+
   describe.skipIf(!hasGreatGate)("spiked logs, from the great gate", () => {
     test.each([
       { type: "rising_spiked_log", subtype: 3 },

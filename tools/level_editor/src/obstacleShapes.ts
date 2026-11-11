@@ -7,6 +7,7 @@ const LILY_PAD_COLOURS = { leaf: "#2f6b2a", bud: "#c8b83a" };
 const LEAF_COLOURS = { leaf: "#2e7a2c", vein: "#1f4f1e", stalk: "#6b5a2a" };
 const PEG_COLOURS = { log: "#8a5a32", end: "#c89a5e" };
 const SPIKED_LOG_COLOURS = { log: "#7a5530", spike: "#d8d0b8", arrow: "#ffd23a" };
+const FIRE_PIT_COLOURS = { bowl: "#b8321e", rim: "#e0a030", flame: "#ff8a1f" };
 
 // one of a lily pad's four round leaves, x and z out from its middle
 const lilyPadLeaf = (x: number, z: number) => ball(1, [x, 50, z], LILY_PAD_COLOURS.leaf, { stretch: [270, 50, 270] });
@@ -119,7 +120,26 @@ function spikedLog(height: number, way: PushWay): ShapePart[] {
   ];
 }
 
+// the great gate's fire pit (WT1iG), by its vertices: a dish 494 across, 40 to
+// 239 over its spot and 300 to 650 out towards the player from it, on stems
+// down to the floor (68 under its spot) at 8 and 793 out
+const FIRE_PIT = { radius: 247, dishBottom: 40, top: 239, rim: 30, middle: 475, dishLong: 350, floor: -68, stems: [33, 768], stemTop: 100 }; // stems their radius in from the ends (8 and 793)
+const STEM_RADIUS = 25;
+
+function firePit(): ShapePart[] {
+  const { radius, dishBottom, top, rim, middle, dishLong, floor, stems, stemTop } = FIRE_PIT;
+  const oval = { stretch: [1, 1, dishLong / (2 * radius)] as Vec3 };
+  const dishHeight = top - rim - dishBottom;
+  const stem = (along: number): ShapePart => rod(STEM_RADIUS, STEM_RADIUS, stemTop - floor, [0, (stemTop + floor) / 2, along], FIRE_PIT_COLOURS.rim);
+  return [
+    rod(radius, radius * 0.5, dishHeight, [0, dishBottom + dishHeight / 2, middle], FIRE_PIT_COLOURS.bowl, oval),
+    rod(radius, radius, rim, [0, top - rim / 2, middle], FIRE_PIT_COLOURS.rim, oval),
+    rod(radius * 0.8, radius * 0.8, 4, [0, top - 2, middle], FIRE_PIT_COLOURS.flame, oval),
+    ...stems.map(stem),
+  ];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
-export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down") };
+export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit() };

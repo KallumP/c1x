@@ -3,6 +3,7 @@
 // uses there (models, animations, sounds and texture pages), and any object it spawns
 import { objectType, type ObjectType, type LevelObject } from "../src/objects";
 import { packEntries, rawPagesById, reachableEids } from "./cutLevel";
+import { withBothSidesDrawn } from "./bothSides";
 import { withEndCaps } from "./endCaps";
 import { MOVED_ENEMY_CODE, objectEntity } from "./entities";
 import { EID_NONE, eidToString, stringToEid } from "./entryIds";
@@ -70,6 +71,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   mossy_slide: THE_GREAT_GATE,
   rising_spiked_log: THE_GREAT_GATE,
   falling_spiked_log: THE_GREAT_GATE,
+  fire_pit: THE_GREAT_GATE,
 };
 
 export interface DonorObject {
@@ -77,11 +79,12 @@ export interface DonorObject {
   entries: Entry[];                    // its code, models, animations and the like, from entry pages
   sounds: Entry[];                     // the sounds it plays, from the donor's sound pages
   texturePages: Page[];                // the texture pages its models use
-  crashAnimations?: CrashAnimation[];  // crash's animations it needs that the base level's crash lacks
+  crashEntries?: CrashEntry[];         // the entries it needs crash's code to name that the base level's crash lacks
 }
 
-// one of crash's animations: where it is in crash's animations item, and the animation (its eid) to put there
-export interface CrashAnimation {
+// an entry crash's code names: which of its items, where in it (bytes), and the entry (its eid) to put there
+export interface CrashEntry {
+  item: number;
   at: number;
   eid: number;
 }
@@ -217,31 +220,32 @@ export function withDonorObjects(level: Level, donors: DonorObject[]): Level {
   const sounds = newEntries((donor) => donor.sounds);
   const texturePages = donors.flatMap((donor) => donor.texturePages).filter((page) => isNewTo(present, page.eid, page.data));
   const ldat = { ...level.nsd.ldat, execMap: execMapWith(level.nsd.ldat.execMap, donors) };
-  const crashAnimations = donors.flatMap((donor) => donor.crashAnimations ?? []);
+  const crashEntries = donors.flatMap((donor) => donor.crashEntries ?? []);
   return {
     nsd: { ...level.nsd, ldat },
-    pages: [...pagesWithCrashAnimations(level.pages, crashAnimations), ...packEntries(entries), ...packEntries(sounds, soundPage), ...texturePages],
+    pages: [...pagesWithCrashEntries(level.pages, crashEntries), ...packEntries(entries), ...packEntries(sounds, soundPage), ...texturePages],
   };
 }
 
 const CRASH_CODE = stringToEid("WillC");
-const ANIMATION_EID = 4; // an animation's eid, after its type and length
+const CRASH_CONSTANTS = 2;  // crash's code's items: its constants (its code's ireg[])
+const CRASH_ANIMATIONS = 5; // and its animations, each its type and length, then its eid
+const ANIMATION_EID = 4;
 
-// crash's code with each of animations put in its place in its animations item (its last)
-function crashWithAnimations(crash: Entry, animations: CrashAnimation[]): Entry {
-  const last = crash.items.length - 1;
-  const animationsItem = Buffer.from(crash.items[last]);
-  animations.forEach(({ at, eid }) => animationsItem.writeUInt32LE(eid, at + ANIMATION_EID));
-  return { ...crash, items: crash.items.map((item, index) => (index === last ? animationsItem : item)) };
+// crash's code with each of entries put in its place
+function crashWithEntries(crash: Entry, entries: CrashEntry[]): Entry {
+  const items = crash.items.map((item) => Buffer.from(item));
+  entries.forEach(({ item, at, eid }) => items[item].writeUInt32LE(eid, at));
+  return { ...crash, items };
 }
 
-// pages with crash's code, wherever it is in their entries, given animations
-function pagesWithCrashAnimations(pages: Page[], animations: CrashAnimation[]): Page[] {
-  if (animations.length === 0) {
+// pages with crash's code, wherever it is in their entries, given entries
+function pagesWithCrashEntries(pages: Page[], entries: CrashEntry[]): Page[] {
+  if (entries.length === 0) {
     return pages;
   }
-  const withAnimations = (entry: Entry) => (entry.eid === CRASH_CODE ? crashWithAnimations(entry, animations) : entry);
-  return pages.map((page) => (page.type === PAGE_ENTRIES ? { ...page, entries: page.entries.map(withAnimations) } : page));
+  const withEntries = (entry: Entry) => (entry.eid === CRASH_CODE ? crashWithEntries(entry, entries) : entry);
+  return pages.map((page) => (page.type === PAGE_ENTRIES ? { ...page, entries: page.entries.map(withEntries) } : page));
 }
 
 const objectName = (type: ObjectType) => type.replace("_", " ");
@@ -374,25 +378,66 @@ const ENEMY_CAPPED_MODELS: Partial<Record<ObjectType, [model: string, animation:
   barrel_roller: [["BaV7G", "BaV7V"], ["BaD7G", "BaD7V"]],
 };
 
-// crash's animations an enemy plays on him that the base level's crash (WillC)
-// has only a placeholder for: where each is in crash's animations item, and the
-// donor's animation to put there. the lab's walking lab assistant's spark
+// the entries an object needs crash's code (WillC) to name, where the base
+// level's crash has only a placeholder: which item of it, where in it, and
+// the donor's entry to put there. the lab's walking lab assistant's spark
 // shocks crash (WS10V), and reads its model's vertices: without it, spinning
-// him as he sparks would look up a model the level hasn't, and crash the game
-const ENEMY_CRASH_ANIMATIONS: Partial<Record<ObjectType, { at: number; animation: string }[]>> = {
-  electric_scientist: [{ at: 72, animation: "WS10V" }],
+// him as he sparks would look up a model the level hasn't, and crash the
+// game. the great gate's fire pit sets him alight: his code opens his burning
+// animations, model and sounds from its constants (from 0x80), and plays the
+// animations from his animations item (from 0x90, each 8 bytes). jungle
+// rollers' name entries no level has, and the game crashes looking them up
+const CRASH_BURNING = ["WF10V", "WF10G", "BDC0A", "BLI0A", "WF20V", "BDA0A", "WF30V", "WF40V", "WF50V"];
+const CRASH_BURNING_AT = 0x80;
+const CRASH_BURNING_ANIMATIONS = ["WF10V", "WF20V", "WF30V", "WF40V", "WF50V"];
+const CRASH_BURNING_ANIMATIONS_AT = 0x90;
+const ANIMATION_BYTES = 8;
+const crashBurning = [
+  ...CRASH_BURNING.map((name, index) => ({ item: CRASH_CONSTANTS, at: CRASH_BURNING_AT + 4 * index, name })),
+  ...CRASH_BURNING_ANIMATIONS.map((name, index) => ({ item: CRASH_ANIMATIONS, at: CRASH_BURNING_ANIMATIONS_AT + ANIMATION_BYTES * index + ANIMATION_EID, name })),
+];
+const OBJECT_CRASH_ENTRIES: Partial<Record<ObjectType, { item: number; at: number; name: string }[]>> = {
+  electric_scientist: [{ item: CRASH_ANIMATIONS, at: 72 + ANIMATION_EID, name: "WS10V" }],
+  fire_pit: crashBurning,
 };
 
-// object with the crash animations its enemy needs (ENEMY_CRASH_ANIMATIONS) and
-// their models, but not their texture pages: crash's own, which the level has
-function withCrashAnimationEntries(type: ObjectType, object: DonorObject, level: Level): DonorObject {
-  const animations = ENEMY_CRASH_ANIMATIONS[type] ?? [];
-  if (animations.length === 0) {
+// object with the entries it needs crash's code to name (OBJECT_CRASH_ENTRIES),
+// what they use, and their sounds, but not their texture pages: crash's own, which the level has
+function withCrashEntries(type: ObjectType, object: DonorObject, level: Level): DonorObject {
+  const named = OBJECT_CRASH_ENTRIES[type] ?? [];
+  if (named.length === 0) {
     return object;
   }
-  const crashAnimations = animations.map(({ at, animation }) => ({ at, eid: stringToEid(animation) }));
-  const used = reachableEids(level, crashAnimations.map(({ eid }) => eid));
-  return { ...object, entries: [...object.entries, ...entriesInPages(level, PAGE_ENTRIES, used)], crashAnimations };
+  const crashEntries = named.map(({ item, at, name }) => ({ item, at, eid: stringToEid(name) }));
+  const used = reachableEids(level, crashEntries.map(({ eid }) => eid));
+  const entries = [...object.entries, ...entriesInPages(level, PAGE_ENTRIES, used)];
+  const sounds = [...object.sounds, ...entriesInPages(level, PAGE_SOUNDS, used)];
+  return { ...object, entries, sounds, crashEntries };
+}
+
+// models drawn from both sides (see bothSides.ts): the great gate's fire pit's
+// bowl (WT1iG), open at its top, which close up was see-through. every great
+// gate object that brings it changes it the same, or the two would clash
+const GATE_BOTH_SIDED_MODELS = ["WT1iG"];
+const OBJECT_BOTH_SIDED_MODELS: Partial<Record<ObjectType, string[]>> = {
+  wooden_peg: GATE_BOTH_SIDED_MODELS,
+  rising_spiked_log: GATE_BOTH_SIDED_MODELS,
+  falling_spiked_log: GATE_BOTH_SIDED_MODELS,
+  fire_pit: GATE_BOTH_SIDED_MODELS,
+};
+
+// object with its models in OBJECT_BOTH_SIDED_MODELS drawn from both sides
+function withBothSidedModels(type: ObjectType, object: DonorObject): DonorObject {
+  const names = (OBJECT_BOTH_SIDED_MODELS[type] ?? []).map(stringToEid);
+  return { ...object, entries: object.entries.map((entry) => bothSidedIfNamed(entry, names)) };
+}
+
+// entry drawn from both sides if it's one of names
+function bothSidedIfNamed(entry: Entry, names: number[]): Entry {
+  if (!names.includes(entry.eid)) {
+    return entry;
+  }
+  return withBothSidesDrawn(entry);
 }
 
 // object with its model named model capped at its ends, as animation's first
@@ -482,6 +527,19 @@ const BARREL_CODE_PATCHES: CodePatch[] = [
 ];
 
 // the code each enemy spawns by its exec slot, changed to suit custom levels
+// the great gate's fire pit (WalOC subtype 5) spawns its flame (subtype 6),
+// which timed itself by its own init flags (A how often, B how far in) if it
+// had them, else every 120 frames: a spawned object hasn't, so every fire pit
+// flamed at once. it reads its parent's (the pit's) instead, always: the
+// builder gives every fire pit them. shared by all the great gate's objects'
+// code, as its data patches are
+const GATE_OBJECTS_CODE_PATCHES: CodePatch[] = [
+  { at: 0x203, was: 0x8225c003, now: 0x82094000 }, // BEQZ self[0xbc] (no flag a: the default) becomes BRA 0
+  { at: 0x204, was: 0x15017e17, now: 0x15017c57 }, // SHA ireg[0x5c], obj[0xbc] becomes parent[0xbc]
+  { at: 0x208, was: 0x82260003, now: 0x82094000 }, // BEQZ self[0xc0] (no flag b: 0) becomes BRA 0
+  { at: 0x209, was: 0x15017e18, now: 0x15017c58 }, // SHA ireg[0x5c], obj[0xc0] becomes parent[0xc0]
+];
+
 const ENEMY_CHILD_CODE_PATCHES: Partial<Record<ObjectType, [slot: number, patches: CodePatch[]][]>> = {
   barrel_roller: [[16, BARREL_CODE_PATCHES]],
 };
@@ -497,6 +555,11 @@ const ENEMY_CODE_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   gunman: GUNMAN_CODE_PATCHES,
   lizard: LIZARD_CODE_PATCHES,
   red_lizard: LIZARD_CODE_PATCHES,
+  wooden_peg: GATE_OBJECTS_CODE_PATCHES, // the great gate's objects, sharing the code
+  mossy_slide: GATE_OBJECTS_CODE_PATCHES,
+  rising_spiked_log: GATE_OBJECTS_CODE_PATCHES,
+  falling_spiked_log: GATE_OBJECTS_CODE_PATCHES,
+  fire_pit: GATE_OBJECTS_CODE_PATCHES,
 };
 
 // instructions with an addition after their end; an error if they aren't as long as it needs
@@ -526,6 +589,7 @@ const OBJECT_DATA_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   wooden_peg: GATE_OBJECTS_DATA_PATCHES,
   rising_spiked_log: GATE_OBJECTS_DATA_PATCHES,
   falling_spiked_log: GATE_OBJECTS_DATA_PATCHES,
+  fire_pit: GATE_OBJECTS_DATA_PATCHES,
 };
 
 // instructions patched, with the enemy's addition (if it has one) after their end
@@ -593,7 +657,7 @@ function objectDonorObject(type: ObjectType, level: Level): DonorObject {
   const slot = moved?.donorSlot ?? objectEntity(type)[0];
   const leftOut = (ENEMY_UNUSED_ENTRIES[type] ?? []).map(stringToEid);
   const object = donorObject(level, slot, ENEMY_CHILD_SLOTS[type] ?? [], leftOut);
-  const capped = (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, withCrashAnimationEntries(type, object, level));
+  const capped = withBothSidedModels(type, (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, withCrashEntries(type, object, level)));
   const patched = withPatchedOwnData(type, withPatchedOwnCode(type, withPatchedChildCode(type, capped, level), level, slot), level, slot);
   if (!moved) {
     return patched;
