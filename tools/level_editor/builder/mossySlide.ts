@@ -162,3 +162,15 @@ export function mossySlidePath(length: number, angle: number, reverse: boolean):
     return [way * x + 0, -drop * x + 0, 0] as Vec3; // + 0 turns -0 into 0
   });
 }
+
+// a map's mesh with planks added, each moved to where it goes (at, in the
+// map's frame), so they're drawn, textured and solid as the map is
+export function withPlanks(map: Mesh, planks: { plank: Mesh; at: Vec3 }[]): Mesh {
+  return planks.reduce((mesh, { plank, at }) => {
+    const first = mesh.vertices.length;
+    const vertices = plank.vertices.map((vertex) => vertex.map((value, axis) => value + at[axis]) as Vec3);
+    const triangles = plank.triangles.map((triangle) =>
+      ({ ...triangle, corners: triangle.corners.map((corner) => corner + first) as [number, number, number] }));
+    return { ...mesh, vertices: [...mesh.vertices, ...vertices], triangles: [...mesh.triangles, ...triangles] };
+  }, map);
+}

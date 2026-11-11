@@ -25,7 +25,8 @@ import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
 import { cameraOffsets, cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
 import { DEFAULT_CAMERA, type Camera } from "../src/camera";
-import { levelEntity, mossyPlank, mossySlats, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type MossySlope, type PlankSlat, type StoneTrack, type Templates } from "./templates";
+import { levelEntity, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type StoneTrack, type Templates } from "./templates";
+import { mossySlideImages, mossySlidePath, mossySlidePlank, withPlanks } from "./mossySlide";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
@@ -68,9 +69,9 @@ interface FittedMap {
 }
 
 // each zone's world meshes; with more than one zone, each lists the next's too,
-// so half as many. a zone with rolling stones or mossy slides (trackZones) ends
-// with an empty one, kept for their tracks and planks, so they fit however full
-// the map's meshes are, and are drawn over the floor (see TRACKS_NEARER)
+// so half as many. a zone with rolling stones (trackZones) ends with an empty
+// one, kept for their tracks, so they fit however full the map's meshes are,
+// and are drawn over the floor (see TRACKS_NEARER)
 function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, textured: Set<string>, trackZones: Set<number>): WorldMesh[][] {
   const texinfoWords = readWorldHeader(templates.world.items[0]).texinfoWords;
   const options = {
@@ -333,16 +334,11 @@ class ObjectPlacer {
     this.entities[zone].push(withInitFlagA(placed, stoneStartFlag(stone.start ?? 0, stone.reverse === true)));
   }
 
-  // a mossy slide's slider (example) at its spot, sliding along its slope's path from there
-  placeSlide(slide: LevelObject, example: Buffer, slope: MossySlope): void {
+  // a mossy slide's slider (example) at its spot, sliding along its plank's top from there (run, from its spot)
+  placeSlide(slide: LevelObject, example: Buffer, run: Vec3[]): void {
     const { zone, at } = this.inZone(this.positionOf(slide));
-    const path = slope.path.map((point) => point.map((value, axis) => value + at[axis]) as Vec3);
+    const path = run.map((point) => point.map((value, axis) => value + at[axis]) as Vec3);
     this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
-  }
-
-  // the zone an object's in, and where it is in it
-  placeOf(object: LevelObject): { zone: number; at: Vec3 } {
-    return this.inZone(this.positionOf(object));
   }
 
   // the zone an object's in
@@ -409,47 +405,42 @@ function withStoneTracks(worlds: Worlds, stones: LevelObject[], track: StoneTrac
   }, worlds);
 }
 
-// how much nearer the sort list draws rolling stones' tracks and mossy slides'
-// planks than they are (along z): it draws farthest first by the polygons'
-// middles, which for the long floor tiles under them can be nearer than theirs,
-// covering them; half a map piece more is clear of the tiles they stand over
+// how much nearer the sort list draws rolling stones' tracks than they are
+// (along z): it draws farthest first by the polygons' middles, which for the
+// long floor tiles under them can be nearer than theirs, covering them; half a
+// map piece more is clear of the tiles they stand over
 const TRACKS_NEARER = MAP_PIECE / 2;
 
 // how much nearer each of a zone's count meshes is drawn: its last, with the
-// tracks and planks, if it has them (hasTracks)
+// tracks, if it has them (hasTracks)
 function tracksNearer(count: number, hasTracks: boolean): number[] {
   return Array.from({ length: count }, (_, index) => Number(hasTracks && index === count - 1) * TRACKS_NEARER);
 }
 
-// the textured worlds with each mossy slide's plank added where it slopes from (its spot), named for errors
-function withSlidePlanks(worlds: Worlds, slides: LevelObject[], slopeOf: (slide: LevelObject) => MossySlope, placer: ObjectPlacer, zoneWorlds: WorldMesh[][], template: Buffer): Worlds {
-  return slides.reduce((built, slide) => {
-    const { zone, at } = placer.placeOf(slide);
-    const tracksMesh = meshesInZone(zoneWorlds, zone).at(-1)!;
-    return addMapPiece(built, slopeOf(slide), at, template, [tracksMesh], "a mossy slide's plank");
-  }, worlds);
+// a mossy slide's plank, as long (metres, at scale) and steep as it's set
+const slidePlank = (slide: LevelObject, scale: number) =>
+  mossySlidePlank(numberSetting(slide, "length") * scale, numberSetting(slide, "angle"), slide.reverse === true);
+
+// and the slider's path along its top
+const slidePath = (slide: LevelObject, scale: number) =>
+  mossySlidePath(numberSetting(slide, "length") * scale, numberSetting(slide, "angle"), slide.reverse === true);
+
+// the map with each mossy slide's plank added to its mesh where it slopes from
+// (its spot), so it's drawn, textured and solid as the map is
+function withSlidePlanks(map: FittedMap, slides: LevelObject[], placer: ObjectPlacer, scale: number): FittedMap {
+  if (slides.length === 0) {
+    return map;
+  }
+  const planks = slides.map((slide) => ({ plank: slidePlank(slide, scale), at: placer.positionOf(slide) }));
+  return { ...map, fitted: { ...map.fitted, mesh: withPlanks(map.fitted.mesh, planks) } };
 }
 
-// each mossy slide's plank as a mesh where it goes, for the collision, so crash stands on it
-function slidePlankMeshes(slides: LevelObject[], slopeOf: (slide: LevelObject) => MossySlope, placer: ObjectPlacer): Mesh[] {
-  return slides.map((slide) => pieceMesh(slopeOf(slide), placer.positionOf(slide)));
-}
-
-// each mossy slide's slope (its plank and the slider's path along it): made of
-// the great gate's (donor's) slats, as long (metres, at scale) and steep as it's
-// set, each length, angle and way made once
-function slideSlopes(donor: Level | undefined, scale: number): (slide: LevelObject) => MossySlope {
-  const slopes = new Map<string, MossySlope>();
-  let slats: PlankSlat[] | null = null;
-  return (slide) => {
-    const [length, angle, reverse] = [numberSetting(slide, "length"), numberSetting(slide, "angle"), slide.reverse === true];
-    const key = `${length},${angle},${reverse}`;
-    slats ??= mossySlats(donor!);
-    if (!slopes.has(key)) {
-      slopes.set(key, mossyPlank(slats, length * scale, angle, reverse));
-    }
-    return slopes.get(key)!;
-  };
+// the map's images, and the mossy slides' if it has any
+function withSlideImages(images: Map<string, RgbImage>, slides: LevelObject[]): Map<string, RgbImage> {
+  if (slides.length === 0) {
+    return images;
+  }
+  return new Map([...images, ...mossySlideImages()]);
 }
 
 // each rolling stone's track as a mesh where it goes, for the collision, so
@@ -479,18 +470,19 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const stones = obstacles.filter((obstacle) => obstacle.obstacle === "rolling_stone");
   const slides = obstacles.filter((obstacle) => obstacle.obstacle === "mossy_slide");
   const donorLevels = objectDonorLevels([...enemies, ...obstacles], readOtherLevel);
-  const slopeOf = slideSlopes(donorLevels.get("mossy_slide"), scale);
   const entityCount = Number(end !== undefined) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0) + obstacles.length;
   const placer = new ObjectPlacer(map, templates, scale, turn, entityCount);
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
-  const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, [...stoneTrackMeshes(stones, track, placer), ...slidePlankMeshes(slides, slopeOf, placer)]);
+  const planked = withSlidePlanks(map, slides, placer, scale);
+  const mapImages = withSlideImages(images, slides);
+  const cells = solidCells(planked.fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
 
-  const trackZones = new Set([...stones, ...slides].map((object) => placer.zoneOf(object)));
-  const zoneWorlds = zoneWorldMeshes(map, templates, new Set(images.keys()), trackZones);
+  const trackZones = new Set(stones.map((stone) => placer.zoneOf(stone)));
+  const zoneWorlds = zoneWorldMeshes(planked, templates, new Set(mapImages.keys()), trackZones);
   const template = templates.world.items[0];
-  const { pages, ...textured } = textureWorlds(zoneWorlds.flat(), images, template);
+  const { pages, ...textured } = textureWorlds(zoneWorlds.flat(), mapImages, template);
 
-  const start = spawn ? placer.positionOf(spawn) : spawnPoint(fitted.mesh, cells, MAP_CELL);
+  const start = spawn ? placer.positionOf(spawn) : spawnPoint(planked.fitted.mesh, cells, MAP_CELL);
   const spawnZone = placer.placeCrash(start);
   boxes.forEach((box) => placer.placeBoxStack(box));
   linkSwitches(placer.entities, placer.placedBoxes);
@@ -521,10 +513,10 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   movers.filter((obstacle) => !obstacle.path).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
   movers.filter((obstacle) => obstacle.path).forEach((leaf) => placer.placeLeafOnPath(leaf, obstacleOf(leaf)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
-  slides.forEach((slide) => placer.placeSlide(slide, obstacleOf(slide), slopeOf(slide)));
+  slides.forEach((slide) => placer.placeSlide(slide, obstacleOf(slide), slidePath(slide, scale)));
   enemies.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   const withTracks = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
-  let withBase = withSlidePlanks(withTracks, slides, slopeOf, placer, zoneWorlds, template);
+  let withBase = withTracks;
   if (end) {
     const position = placer.positionOf(end);
     const pad = placer.placeWarpPad(position);
