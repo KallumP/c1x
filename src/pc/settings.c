@@ -17,6 +17,7 @@ pc_settings game_settings = {
   .replay_inputs = 0,
   .replay_speed = 1,
   .frame_rate = 60,
+  .fullscreen = 0,
   .boot_level = ""
 };
 
@@ -33,6 +34,7 @@ void SettingsReset(pc_settings *s) {
   s->replay_inputs = 0;
   s->replay_speed = 1;
   s->frame_rate = 60;
+  s->fullscreen = 0;
   s->boot_level[0] = 0;
 }
 
@@ -109,6 +111,8 @@ static int SettingsApply(const char *name, const char *value, pc_settings *s) {
   if (SDL_strcasecmp(name, "frame_rate") == 0)
     return SettingsParseNumberFrom(value, SETTINGS_FRAME_RATE_MIN,
       SETTINGS_FRAME_RATE_MAX, &s->frame_rate) ? 1 : -1;
+  if (SDL_strcasecmp(name, "fullscreen") == 0)
+    return SettingsParseOnOff(value, &s->fullscreen) ? 1 : -1;
   if (SDL_strcasecmp(name, "boot_level") == 0)
     return SettingsParseLevelName(value, s->boot_level) ? 1 : -1;
   return -1;

@@ -15,6 +15,7 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | `replay_inputs` | `off` | Play back the newest recording (see below) instead of recording this run. |
 | `replay_speed` | `1` | How fast a replay plays: this many times normal speed (up to `16`), or `0` for as fast as possible. |
 | `frame_rate` | `60` | How many frames a second to draw, from `30` to `240`. The game itself still runs at 30 frames a second, as on the PS1, so it plays the same; the frames in between show the camera and everything moving smoothly between them. `30` draws only the game's own frames. |
+| `fullscreen` | `off` | Fill the screen instead of a 1024x768 window. The picture keeps its 4:3 shape, with black bars at the sides on a widescreen. <kbd>Alt</kbd>+<kbd>Enter</kbd> switches between the two while playing, without changing the setting. |
 | `boot_level` | none | Start in a custom level built to `build/levels/` instead of the title screen (see [Custom levels](custom_levels.md)). |
 
 ## Recorded inputs

@@ -30,6 +30,7 @@ UTEST(settings, reset_gives_each_setting_its_default) {
       { "replay_inputs",         s.replay_inputs,         0 },
       { "replay_speed",          s.replay_speed,          1 }, /* normal speed */
       { "frame_rate",            s.frame_rate,            60 },
+      { "fullscreen",            s.fullscreen,            0 },
     };
 
     for (i = 0; i < sizeof(defaults)/sizeof(defaults[0]); i++) {
@@ -52,6 +53,7 @@ static const struct {
   { "skip_splash_screens",  offsetof(pc_settings, skip_splash_screens) },
   { "fix_model_draw_order", offsetof(pc_settings, fix_model_draw_order) },
   { "replay_inputs",        offsetof(pc_settings, replay_inputs) },
+  { "fullscreen",           offsetof(pc_settings, fullscreen) },
 };
 
 #define ON_OFF_SETTING_COUNT (int)(sizeof(on_off_settings)/sizeof(on_off_settings[0]))
