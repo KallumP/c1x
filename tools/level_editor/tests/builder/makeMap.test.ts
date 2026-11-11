@@ -639,6 +639,10 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
         .toBeGreaterThan(worldVertices(build()).filter(nearSlide).length + 20);
     });
 
+    test("its plank is drawn in a mesh of its own, which the sort list draws over the floor around it", () => {
+      expect(worldsOf(build([obstacle("mossy_slide", { raise: 1 })])).length).toBe(worldsOf(build()).length + 1);
+    });
+
     test("a level with mossy slides and wood platforms reads the great gate once", () => {
       const reader = recordingReader();
       build([obstacle("wooden_peg"), obstacle("mossy_slide", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
