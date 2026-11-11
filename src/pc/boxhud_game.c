@@ -47,6 +47,20 @@ int BoxHudCounterText(gool_object *obj, char *text, size_t size) {
   return 1;
 }
 
+/* before text is drawn: size the box counter's digits, if obj is them (their start code sizes them as the others) */
+void BoxHudSizeCounterText(gool_object *obj) {
+  if (!game_settings.box_display) { return; }
+  if (!BoxHudIsCounterDigits(obj, &box_source)) { return; }
+  BoxHudSizeDigits(obj);
+}
+
+/* how far down to draw obj's text: the box counter's smaller digits drop to the others' line */
+int32_t BoxHudCounterTextDrop(gool_object *obj) {
+  if (!game_settings.box_display) { return 0; }
+  if (!BoxHudIsCounterDigits(obj, &box_source)) { return 0; }
+  return BoxHudTextDrop();
+}
+
 /* each frame, after the objects update: feed the box counter the boxes broken */
 void BoxHudUpdate() {
   if (!game_settings.box_display) { return; }

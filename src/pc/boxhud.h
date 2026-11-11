@@ -19,17 +19,28 @@
 #define HUD_SHOWN_REG_IDX   0x4a /* obj[0x188]: which register (shifted 8 left) a counter shows */
 #define HUD_COUNT_REG       0x40 /* the register the box counter shows (wumpa's, on its own source) */
 #define HUD_DIGITS_OFFSET_X 0x1c00 /* a counter's digits (its child) sit this far right of it */
-#define BOX_HUD_X           (-HUD_DIGITS_OFFSET_X) /* so its digits, centred, are at the top middle */
+#define BOX_HUD_DIGITS_X    0xa00  /* the middle of the gap between two digit wumpa and the lives head */
+#define BOX_HUD_X           (BOX_HUD_DIGITS_X - HUD_DIGITS_OFFSET_X) /* so its digits, centred, are there */
 #define OBJECT_HANDLE_TYPE  1    /* an object's handle type; a handle of objects' is 2 */
+#define HUD_DIGITS_SCALE    0x200 /* the size a counter's digits are drawn at */
+#define BOX_HUD_TEXT_PERCENT 60  /* the box counter's digits, of that: "38/38" fits between two digit wumpa and lives */
+#define FONT_CHAR_HEIGHT    400  /* a font char's height before scaling (GoolTextStringTransform) */
+#define SPRITE_SCALE_ONE    0x1000 /* a scale of 1 */
+#define SPRITE_HEIGHT_DRAWN_EIGHTHS 5 /* sprites are drawn 5/8 as tall (SwCalcSpriteRotMatrix) */
 
 extern void BoxHudSetUpCounter(gool_object *counter, gool_object *source);
 extern void BoxHudShowBoxes(gool_object *source, int boxes_broken);
 extern void BoxHudText(char *text, size_t size, int broken, int total);
 extern int BoxHudIsCounterDigits(gool_object *digits, gool_object *source);
+extern void BoxHudSizeDigits(gool_object *digits);
+extern int32_t BoxHudTextHeight(int32_t scale);
+extern int32_t BoxHudTextDrop();
 
 /* in the game (boxhud_game.c) */
 extern void BoxHudCreate();
 extern void BoxHudUpdate();
 extern int BoxHudCounterText(gool_object *obj, char *text, size_t size);
+extern void BoxHudSizeCounterText(gool_object *obj);
+extern int32_t BoxHudCounterTextDrop(gool_object *obj);
 
 #endif /* _PC_BOXHUD_H_ */

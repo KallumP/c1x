@@ -1520,6 +1520,7 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
   int32_t arg;
   int i, j, res, start;
 
+  BoxHudSizeCounterText(obj); /* pc: the box counter's digits are smaller */
   size = abs(obj->scale.x) / 27279; /* scale ignores flip */
   res = SwCalcSpriteRotMatrix(
     &obj->vectors,
@@ -1531,6 +1532,7 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
     0x3C00,
     &params);
   if (!res) { return; }
+  params.trans.y += BoxHudCounterTextDrop(obj); /* pc: onto the other counters' line */
   str = text->strings;
   for (i=0,j=0;j<terms_skip;i++) {
     if (str[i] == 0) { j++; }

@@ -39,6 +39,34 @@ int BoxHudIsCounterDigits(gool_object *digits, gool_object *source) {
   return counter->player == source;
 }
 
+/* the box counter's digits' scale: smaller than the other counters' */
+static int32_t BoxHudDigitsScale() {
+  return (HUD_DIGITS_SCALE * BOX_HUD_TEXT_PERCENT) / 100;
+}
+
+/* draw the box counter's digits smaller than the other counters', so "broken/total" fits between them */
+void BoxHudSizeDigits(gool_object *digits) {
+  int32_t scale;
+
+  scale = BoxHudDigitsScale();
+  digits->scale.x = scale;
+  digits->scale.y = scale;
+  digits->scale.z = scale;
+}
+
+/* how tall hud text at scale is on screen */
+int32_t BoxHudTextHeight(int32_t scale) {
+  return (FONT_CHAR_HEIGHT * scale * SPRITE_HEIGHT_DRAWN_EIGHTHS) / (SPRITE_SCALE_ONE * 8);
+}
+
+/*
+ * how far down to draw the box counter's smaller digits so their bottom lines
+ * up with the other counters' (text shrinks towards its top)
+ */
+int32_t BoxHudTextDrop() {
+  return BoxHudTextHeight(HUD_DIGITS_SCALE) - BoxHudTextHeight(BoxHudDigitsScale());
+}
+
 /* give the box counter's source the boxes broken (a gool number, 8 bits after the point, as box_count) */
 void BoxHudShowBoxes(gool_object *source, int boxes_broken) {
   source->regs[HUD_COUNT_REG] = boxes_broken;
