@@ -56,6 +56,10 @@ Project structure is listed below, including descriptions for each file.
 │   │   │── loading.c,h      # level loading screen image conversion and minimum display time
 │   │   │── speed.c,h        # crash's speed measurement for the speed display
 │   │   │── spin.c,h         # crash's spins left and next refill, for the spin display
+│   │   │── boxhud.c,h       # the box counter: a hud lives counter showing broken/total boxes
+│   │   │── boxhud_game.c    # creates the box counter with the hud and feeds it box_count each frame
+│   │   │── boxtotals.c,h    # each level's box total: the game's (from the level end screen) or a custom level's
+│   │   │── slash.c,h        # a '/' image for the hud's digits, which have none
 │   │   │── frames.h         # game frames elapsed, started part way as on a ps1
 │   │   │── follow.c,h       # the follow camera's sideways offset (cam_mode 9, custom levels)
 │   │   └── time.c,h         # tick counter

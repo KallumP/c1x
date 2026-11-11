@@ -9,6 +9,7 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | `speed_display` | `off` | Show how fast Crash is moving in the top right corner. |
 | `fps_display` | `off` | Show how many frames are drawn a second in the top right corner (see `frame_rate`). |
 | `spin_display` | `off` | Show how many spins Crash has left in the top right corner, and the seconds until the next comes back. He holds up to 5, and each comes back 2 seconds after it's used. |
+| `box_display` | `off` | Show how many of the level's boxes Crash has broken at the top of the screen, such as `12/49`. Like the lives and wumpa counters, it slides in when a box breaks, then back out. Levels without a box gem (bosses, bonus rounds) show only the number broken. |
 | `skip_splash_screens` | `off` | Go straight to the main menu, skipping the Sony, Universal and Naughty Dog screens. |
 | `fix_model_draw_order` | `off` | Draw 3D models in front of or behind each other by their actual depth, so a crate can't be drawn over Crash in front of it. `off` keeps the original game's order. |
 | `replay_inputs` | `off` | Play back the newest recording (see below) instead of recording this run. |

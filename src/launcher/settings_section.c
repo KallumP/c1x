@@ -177,6 +177,8 @@ static void DrawFields() {
     "Show how many frames are drawn a second in the top right corner.");
   DrawOnOff("Spin display", &settings.spin_display,
     "Show how many spins Crash has left in the top right corner.");
+  DrawOnOff("Box counter", &settings.box_display,
+    "Show how many of the level's boxes Crash has broken (such as 12/49) at the top of the screen.");
   DrawBootLevel();
   EndFieldRows();
 }

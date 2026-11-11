@@ -31,6 +31,10 @@ SRC =	src/ns.c \
 	src/pc/fps.c \
 	src/pc/spin.c \
 	src/pc/levelend.c \
+	src/pc/boxhud.c \
+	src/pc/boxtotals.c \
+	src/pc/slash.c \
+	src/pc/boxhud_game.c \
 	src/pc/gfx/tex.c \
 	src/pc/gfx/soft.c \
 	src/pc/gfx/gl.c \
@@ -62,6 +66,9 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/fps.c \
 	src/pc/spin.c \
 	src/pc/levelend.c \
+	src/pc/boxhud.c \
+	src/pc/boxtotals.c \
+	src/pc/slash.c \
 	src/pc/sound/mix.c \
 	src/pc/sound/util.c \
 	src/ext/lib/gui.c \

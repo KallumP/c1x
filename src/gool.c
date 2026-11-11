@@ -16,6 +16,7 @@
 #include "pc/shield.h"
 #include "pc/tween.h"
 #include "pc/frames.h"
+#include "pc/boxhud.h"
 int CardControl(int op, int part_idx) { return 1; }
 
 /* forward declarations for unexported funcs */
@@ -1380,6 +1381,31 @@ void GoolObjectTransform(gool_object *obj) {
   }
 }
 
+#define TEXT_SLASH_WIDTH_PERCENT 60 /* pc: a drawn slash's width, of a char's */
+
+/*
+ * pc: draw a '/' at x for a font with none (the hud's digits), from the slash
+ * image in the font's '1' colours, a little narrower than a digit. keeps
+ * max_x the text's right edge; returns where the next char starts
+ */
+static int32_t GoolTextSlashTransform(gool_object *obj, gool_font *font,
+  int32_t x, int32_t y_offs, vec *scale, int size, void **prims_tail, int flag,
+  int32_t *max_x) {
+  gool_glyph *one;
+  bound2 bound;
+
+  one = &font->glyphs['1' - 0x20];
+  bound.p1.x = x;
+  bound.p2.x = x + ((scale->x * TEXT_SLASH_WIDTH_PERCENT) / 100);
+  bound.p2.y = y_offs + (int32_t)(one->height << size);
+  bound.p1.y = bound.p2.y - scale->y;
+  if (prims_tail)
+    GfxTransformFontSlash(obj, one, obj->size, &bound, prims_tail, flag);
+  if (bound.p2.x > *max_x)
+    *max_x = bound.p2.x;
+  return bound.p2.x;
+}
+
 //----- (8001E3D4) --------------------------------------------------------
 static int GoolTextStringTransform(
   gool_object *obj,
@@ -1450,6 +1476,10 @@ static int GoolTextStringTransform(
       }
     }
     glyph = &font->glyphs[c - 0x20];
+    if (c == '/' && !glyph->has_texture) { /* pc: a font with no slash (the hud's digits) */
+      bound.p1.x = GoolTextSlashTransform(obj, font, bound.p1.x, y_offs, &scale, size, prims_tail, flag, &max_x);
+      continue;
+    }
     bound.p2.x = bound.p1.x + scale.x;
     bound.p2.y = y_offs + (int32_t)(glyph->height << size);
     bound.p1.y = bound.p2.y - scale.y;
@@ -1490,6 +1520,7 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
   int32_t arg;
   int i, j, res, start;
 
+  BoxHudSizeCounterText(obj); /* pc: the box counter's digits are smaller */
   size = abs(obj->scale.x) / 27279; /* scale ignores flip */
   res = SwCalcSpriteRotMatrix(
     &obj->vectors,
@@ -1501,6 +1532,7 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
     0x3C00,
     &params);
   if (!res) { return; }
+  params.trans.y += BoxHudCounterTextDrop(obj); /* pc: onto the other counters' line */
   str = text->strings;
   for (i=0,j=0;j<terms_skip;i++) {
     if (str[i] == 0) { j++; }
@@ -1522,6 +1554,8 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
     }
     buf[i+1] = 0; /* place null term at end of truncated string */
   }
+  if (BoxHudCounterText(obj, buf, sizeof(buf))) /* pc: the box counter's "broken/total", centred */
+    flag = 1;
   tpag = font->tpage;
   if (flag)
     arg = GoolTextStringTransform(obj, buf, 0, font, tpag, size, 0);

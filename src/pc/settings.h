@@ -17,6 +17,7 @@ typedef struct {
   int speed_display;              /* show crash's speed in the top right */
   int fps_display;                /* show the frames drawn a second in the top right */
   int spin_display;               /* show how many spins crash has left in the top right */
+  int box_display;                /* show a counter of the boxes broken with the hud */
   int skip_splash_screens;        /* boot straight to the main menu */
   int fix_model_draw_order;       /* depth test 3d models against each other */
   int replay_inputs;              /* replay the newest recording instead of recording */
