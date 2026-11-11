@@ -36,6 +36,17 @@ UTEST(slash, it_goes_from_orange_at_the_top_to_red_at_the_bottom_like_the_digits
   ASSERT_GT(top[1], bottom[1]); /* more green: more orange */
 }
 
+UTEST(slash, it_stays_full_red_top_to_bottom_like_the_digits) {
+  SlashImage(image);
+  ASSERT_EQ(255, Pixel(SLASH_WIDTH * 2 / 3, SLASH_HEIGHT / 4)[0]);
+  ASSERT_EQ(255, Pixel(SLASH_WIDTH / 3, SLASH_HEIGHT * 3 / 4)[0]);
+}
+
+UTEST(slash, its_top_is_the_digits_orange_not_yellow) {
+  SlashImage(image);
+  ASSERT_LE(Pixel(SLASH_WIDTH * 3 / 4, SLASH_HEIGHT / 8)[1], 120);
+}
+
 UTEST(slash, the_stroke_has_a_black_outline) {
   int x, y;
 
