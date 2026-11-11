@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
-import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, leafDriftShares, LEADER_BATS_FLIGHT, leaderBatsGap, MOSSY_SLIDES } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, leafDriftShares, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
 import type { EnemyType, LevelObject, ObstacleType } from "../../src/objects";
 import { DEFAULT_SKY, type Sky } from "../../src/sky";
 import { enemyObject, expectNear, obstacleObject } from "../helpers";
@@ -622,24 +622,22 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const slidePaths = (zone: Entry) => zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.mossy_slide)).map(entityPath);
     const fromFirst = (path: Vec3[]) => path.map((point) => point.map((value, axis) => value - path[0][axis]));
 
+    // the great gate's slats are 304, 232 and 264 along: a plank is them in turn, enough to reach its length
     test.each([
-      { more: {}, points: 5, end: MOSSY_SLIDES.short },
-      { more: { long: true }, points: 9, end: MOSSY_SLIDES.long },
-      { more: { reverse: true }, points: 5, end: [-MOSSY_SLIDES.short[0], MOSSY_SLIDES.short[1]] },
-    ])("a slider ($more) slides from its spot along the great gate's slide, the one the editor draws", ({ more, points, end }) => {
+      { more: {}, plank: 1104, angle: 14, way: 1 },                                  // 4 m at scale 256: 1024, so 4 slats
+      { more: { length: 8, angle: 20 }, plank: 2208, angle: 20, way: 1 },           // 2048: 8 slats
+      { more: { length: 2, angle: 5, reverse: true }, plank: 536, angle: 5, way: -1 }, // 512: 2 slats
+    ])("a slider ($more) slides from its spot along its plank and on past it, at its angle", ({ more, plank, angle, way }) => {
       const [path] = slidePaths(build([obstacle("mossy_slide", more)]).zone);
-      expect(path.length).toBe(points);
       expectNear(path[0], SPOT_IN_ZONE, 16);
       const [x, y, z] = fromFirst(path).at(-1)!;
-      expectNear([x, y, z], [end[0], end[1], 0], 16);
+      expectNear([x, y, z], [way * (plank + 400), -(plank + 400) * Math.tan((angle * Math.PI) / 180), 0], 16);
     });
 
     test("its plank is in the map there, on the great gate's texture page", () => {
       const built = build([obstacle("mossy_slide")]);
-      const plankVertices = worldVertices(built).filter(([x, y, z]) =>
-        x >= SPOT_X - 400 && x <= SPOT_X + MOSSY_SLIDES.short[0] + 400 && y > FLOOR_Y - 400 && y < FLOOR_Y + 200 && Math.abs(z - SPOT_Z) < 700);
-      expect(plankVertices.length).toBeGreaterThan(worldVertices(build()).filter(([x, y, z]) =>
-        x >= SPOT_X - 400 && x <= SPOT_X + MOSSY_SLIDES.short[0] + 400 && y > FLOOR_Y - 400 && y < FLOOR_Y + 200 && Math.abs(z - SPOT_Z) < 700).length + 40);
+      const nearSlide = ([x, y, z]: Vec3) => x >= SPOT_X - 400 && x <= SPOT_X + 1504 && y > FLOOR_Y - 800 && y < FLOOR_Y + 200 && Math.abs(z - SPOT_Z) < 900;
+      expect(worldVertices(built).filter(nearSlide).length).toBeGreaterThan(worldVertices(build()).filter(nearSlide).length + 40);
       expect(texturePages(built.level).some((page) => page.eid === stringToEid("Vi1iT"))).toBe(true);
     });
 

@@ -97,11 +97,12 @@ describe("rolling stones", () => {
     expectCloseTo(path[12], [-2400 / 400, -400 / 400, 0.5]);
   });
 
-  test("a mossy slide runs across the map and down from its top end, long or short, either way", () => {
-    // as the great gate's: 3600 across and 868 down, or 2000 and 476 (game units)
-    expectCloseTo(mossySlideEnd([1, 2, 3], 0, 0, 400, true, false), [1 + 3600 / 400, 2, 3 - 868 / 400]);
-    expectCloseTo(mossySlideEnd([1, 2, 3], 0.5, 0, 400, false, true), [1 - 2000 / 400, 2, 3.5 - 476 / 400]);
-    expectCloseTo(mossySlideEnd([0, 0, 0], 0, 90, 400, true, false), [0, -3600 / 400, -868 / 400]);
+  test("a mossy slide runs across the map and down from its top end, as long and steep as it's set, either way", () => {
+    // its length along the map (metres) and down at its angle
+    const drop = (metres: number, degrees: number) => metres * Math.tan((degrees * Math.PI) / 180);
+    expectCloseTo(mossySlideEnd([1, 2, 3], 0, 0, 8, 20, false), [1 + 8, 2, 3 - drop(8, 20)]);
+    expectCloseTo(mossySlideEnd([1, 2, 3], 0.5, 0, 4, 14, true), [1 - 4, 2, 3.5 - drop(4, 14)]);
+    expectCloseTo(mossySlideEnd([0, 0, 0], 0, 90, 9, 10, false), [0, -9, -drop(9, 10)]);
   });
 
   test("a fish leaps across the map from its spot", () => {
