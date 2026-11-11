@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
-import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, leafDriftShares, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, leafDriftShares, LEADER_BATS_FLIGHT, leaderBatsGap, MOSSY_SLIDES } from "../../src/coords";
 import type { EnemyType, LevelObject, ObstacleType } from "../../src/objects";
 import { DEFAULT_SKY, type Sky } from "../../src/sky";
 import { enemyObject, expectNear, obstacleObject } from "../helpers";
@@ -614,6 +614,38 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     test("a level with wooden pegs and natives reads the great gate once", () => {
       const reader = recordingReader();
       build([enemy("native"), obstacle("wooden_peg", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
+      expect(reader.read).toEqual([0x12]);
+    });
+  });
+
+  describe.skipIf(!hasGreatGate)("mossy slides, from the great gate", () => {
+    const slidePaths = (zone: Entry) => zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.mossy_slide)).map(entityPath);
+    const fromFirst = (path: Vec3[]) => path.map((point) => point.map((value, axis) => value - path[0][axis]));
+
+    test.each([
+      { more: {}, points: 5, end: MOSSY_SLIDES.short },
+      { more: { long: true }, points: 9, end: MOSSY_SLIDES.long },
+      { more: { reverse: true }, points: 5, end: [-MOSSY_SLIDES.short[0], MOSSY_SLIDES.short[1]] },
+    ])("a slider ($more) slides from its spot along the great gate's slide, the one the editor draws", ({ more, points, end }) => {
+      const [path] = slidePaths(build([obstacle("mossy_slide", more)]).zone);
+      expect(path.length).toBe(points);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      const [x, y, z] = fromFirst(path).at(-1)!;
+      expectNear([x, y, z], [end[0], end[1], 0], 16);
+    });
+
+    test("its plank is in the map there, on the great gate's texture page", () => {
+      const built = build([obstacle("mossy_slide")]);
+      const plankVertices = worldVertices(built).filter(([x, y, z]) =>
+        x >= SPOT_X - 400 && x <= SPOT_X + MOSSY_SLIDES.short[0] + 400 && y > FLOOR_Y - 400 && y < FLOOR_Y + 200 && Math.abs(z - SPOT_Z) < 700);
+      expect(plankVertices.length).toBeGreaterThan(worldVertices(build()).filter(([x, y, z]) =>
+        x >= SPOT_X - 400 && x <= SPOT_X + MOSSY_SLIDES.short[0] + 400 && y > FLOOR_Y - 400 && y < FLOOR_Y + 200 && Math.abs(z - SPOT_Z) < 700).length + 40);
+      expect(texturePages(built.level).some((page) => page.eid === stringToEid("Vi1iT"))).toBe(true);
+    });
+
+    test("a level with mossy slides and wood platforms reads the great gate once", () => {
+      const reader = recordingReader();
+      build([obstacle("wooden_peg"), obstacle("mossy_slide", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
       expect(reader.read).toEqual([0x12]);
     });
   });

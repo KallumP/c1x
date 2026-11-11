@@ -511,9 +511,9 @@ describe("obstacles", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone)"],
-    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone)"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed (an obstacle takes kind, at, raise, type, path, start, reverse)"],
+    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide)"],
+    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed (an obstacle takes kind, at, raise, type, path, start, reverse, long)"],
     ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
@@ -556,6 +556,30 @@ describe("obstacle paths", () => {
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', "object 1: a path should be 2 to 20 nodes"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0], [1, 0, 0]]}]', "object 1: a path's nodes should each be [x, y, z]"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
+  });
+});
+
+describe("mossy slides", () => {
+  test("a mossy slide can be long and reversed, written after the rest and read back", () => {
+    const [slide] = parseObjects('[{"kind": "obstacle", "type": "mossy_slide", "at": [1, 2, 0], "raise": 1, "reverse": true, "long": true}]');
+    expect(slide).toEqual({ kind: "obstacle", obstacle: "mossy_slide", at: [1, 2, 0], raise: 1, stack: 1, reverse: true, long: true });
+    const text = formatObjects([slide]);
+    expect(text).toContain('"raise": 1, "reverse": true, "long": true}');
+    expect(parseObjects(text)).toEqual([slide]);
+  });
+
+  test("a short one leaves long out", () => {
+    const [slide] = parseObjects('[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "long": false}]');
+    expect(slide.long).toBeUndefined();
+    expect(formatObjects([slide])).toContain('"at": [0, 0, 0]}');
+  });
+
+  test.each([
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "long": true}]', "object 1: a leaf has no long (mossy slides do)"],
+    ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "long": 2}]', "object 1: long should be true or false"],
+    ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a mossy_slide has no path"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });

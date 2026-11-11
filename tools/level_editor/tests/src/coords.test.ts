@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Vec3 } from "../../src/objects";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, LEAF_DRIFT, leafDrift, leafDriftShares, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, LEAF_DRIFT, leafDrift, leafDriftShares, mossySlideEnd, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 import { expectCloseTo, noMinusZero } from "../helpers";
 
 describe("blender and the viewport", () => {
@@ -95,6 +95,13 @@ describe("rolling stones", () => {
   test("a leaf's drift turns with the level and lifts with raise", () => {
     const path = leafDrift([0, 0, 0], 0.5, 90, 400);
     expectCloseTo(path[12], [-2400 / 400, -400 / 400, 0.5]);
+  });
+
+  test("a mossy slide runs across the map and down from its top end, long or short, either way", () => {
+    // as the great gate's: 3600 across and 868 down, or 2000 and 476 (game units)
+    expectCloseTo(mossySlideEnd([1, 2, 3], 0, 0, 400, true, false), [1 + 3600 / 400, 2, 3 - 868 / 400]);
+    expectCloseTo(mossySlideEnd([1, 2, 3], 0.5, 0, 400, false, true), [1 - 2000 / 400, 2, 3.5 - 476 / 400]);
+    expectCloseTo(mossySlideEnd([0, 0, 0], 0, 90, 400, true, false), [0, -3600 / 400, -868 / 400]);
   });
 
   test("a fish leaps across the map from its spot", () => {

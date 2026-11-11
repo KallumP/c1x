@@ -26,8 +26,8 @@ describe("obstacle shapes", () => {
     expectWithin(max[2] - min[2], long);
   });
 
-  test("every obstacle but the rolling stone (drawn as its wheel on its track) has a shape", () => {
-    OBSTACLE_TYPES.filter((obstacle) => obstacle !== "rolling_stone")
+  test("every obstacle but the rolling stone and mossy slide (drawn as their track and plank) has a shape", () => {
+    OBSTACLE_TYPES.filter((obstacle) => obstacle !== "rolling_stone" && obstacle !== "mossy_slide")
       .forEach((obstacle) => expect(OBSTACLE_SHAPES[obstacle].length).toBeGreaterThan(0));
   });
 });

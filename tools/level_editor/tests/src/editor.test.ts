@@ -33,7 +33,7 @@ describe("obstacles", () => {
     expect(["lily_pad", "leaf"].map((what) => placeableKind(what as Placeable))).toEqual(["obstacle", "obstacle"]);
   });
 
-  test.each(["lily_pad", "leaf", "wooden_peg", "rolling_stone"] as const)("a new %s is where it's put", (obstacle) => {
+  test.each(["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide"] as const)("a new %s is where it's put", (obstacle) => {
     expect(newObject(obstacle, [1, 2, 3])).toEqual(obstacleObject(obstacle, { at: [1, 2, 3] }));
   });
 });
