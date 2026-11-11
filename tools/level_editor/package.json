@@ -9,7 +9,6 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "build-level": "tsx builder/buildLevelCli.ts",
-    "extract-streams": "tsx scripts/extractStreamsCli.ts",
     "export-cut-level": "tsx scripts/cutLevel/exportCutLevelCli.ts"
   },
   "dependencies": {
