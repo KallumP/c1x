@@ -8,6 +8,7 @@ const LEAF_COLOURS = { leaf: "#2e7a2c", vein: "#1f4f1e", stalk: "#6b5a2a" };
 const PEG_COLOURS = { log: "#8a5a32", end: "#c89a5e" };
 const SPIKED_LOG_COLOURS = { log: "#7a5530", spike: "#d8d0b8", arrow: "#ffd23a" };
 const FIRE_PIT_COLOURS = { bowl: "#b8321e", rim: "#e0a030", flame: "#ff8a1f" };
+const PILLAR_COLOURS = { stone: "#5c5a50", moss: "#4f6b3a" };
 
 // one of a lily pad's four round leaves, x and z out from its middle
 const lilyPadLeaf = (x: number, z: number) => ball(1, [x, 50, z], LILY_PAD_COLOURS.leaf, { stretch: [270, 50, 270] });
@@ -139,7 +140,21 @@ function firePit(): ShapePart[] {
   ];
 }
 
+const PILLAR = { across: 1209, long: 1148, height: 2407, moss: 60 };
+
+// boulder dash's pillar (PlPeG): a stone column 1209 across and 1148 long, its
+// mossy top at its spot, reaching 2407 down
+function pillar(): ShapePart[] {
+  const stretch = { stretch: [1, 1, PILLAR.long / PILLAR.across] as Vec3 };
+  const radius = PILLAR.across / 2;
+  const stone = PILLAR.height - PILLAR.moss;
+  return [
+    rod(radius, radius * 0.9, stone, [0, -PILLAR.moss - stone / 2, 0], PILLAR_COLOURS.stone, stretch),
+    rod(radius, radius, PILLAR.moss, [0, -PILLAR.moss / 2, 0], PILLAR_COLOURS.moss, stretch),
+  ];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
-export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit() };
+export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit(), dropping_pillar: pillar(), sliding_pillar: pillar() };
