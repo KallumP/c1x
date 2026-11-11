@@ -517,3 +517,36 @@ describe("the barrel roller's code from toxic waste", () => {
     expect(() => objectDonorObjects(new Map([["barrel_roller", toxicWaste(1)]]))).toThrow(/barrel roller/);
   });
 });
+
+const GATE_OBJECTS = stringToEid("WalOC");
+const GATE_OBJECTS_SLOT = 33;
+const SLIDE_BELOW = 0xcc / 4; // where in the great gate's objects' data (in words) a mossy slide's height band is: below its line
+const SLIDE_ABOVE = 0xd0 / 4; // and above
+const GATE_BAND = [0x64000, 0x4b000]; // 1600 and 1200 game units (8 bits of fraction)
+const NARROW_BAND = 0x14000;           // 320 (0.8 m at scale 400)
+
+// the great gate's objects' code (1s) and data (2s), with its slide's height band as the great gate's
+function gateObjectsLevel(band = GATE_BAND): Level {
+  const data = Array<number>(0x110 / 4).fill(2);
+  [data[SLIDE_BELOW], data[SLIDE_ABOVE]] = band;
+  const execMap: number[] = [];
+  execMap[GATE_OBJECTS_SLOT] = GATE_OBJECTS;
+  const pages = [entryPage([entry(GATE_OBJECTS, 11, [text("head"), words(1, 1, 1), words(...data)])])];
+  return { nsd: readNsd(nsdData([], 0x12, ZONE, execMap), ), pages };
+}
+
+const dataOf = (objects: DonorObject[]) => {
+  const item = objects[0].entries.find(({ eid }) => eid === GATE_OBJECTS)!.items[2];
+  return [item.readUInt32LE(4 * SLIDE_BELOW), item.readUInt32LE(4 * SLIDE_ABOVE)];
+};
+
+describe("the great gate's objects' code (WalOC)", () => {
+  test.each(["mossy_slide", "wooden_peg"] as const)("a %s's has the slide's height band narrowed, so floors well under a slide don't slide crash", (type) => {
+    // the wood platform has the same code, so it's changed the same, or the two would clash
+    expect(dataOf(objectDonorObjects(new Map([[type, gateObjectsLevel()]])))).toEqual([NARROW_BAND, NARROW_BAND]);
+  });
+
+  test("code whose height band isn't the great gate's is an error naming the slide", () => {
+    expect(() => objectDonorObjects(new Map([["mossy_slide", gateObjectsLevel([1, 2])]]))).toThrow(/mossy slide/);
+  });
+});

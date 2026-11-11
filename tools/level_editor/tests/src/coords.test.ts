@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Vec3 } from "../../src/objects";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, LEAF_DRIFT, leafDrift, leafDriftShares, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, LEAF_DRIFT, leafDrift, leafDriftShares, mossySlideEnd, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 import { expectCloseTo, noMinusZero } from "../helpers";
 
 describe("blender and the viewport", () => {
@@ -95,6 +95,14 @@ describe("rolling stones", () => {
   test("a leaf's drift turns with the level and lifts with raise", () => {
     const path = leafDrift([0, 0, 0], 0.5, 90, 400);
     expectCloseTo(path[12], [-2400 / 400, -400 / 400, 0.5]);
+  });
+
+  test("a mossy slide runs across the map and down from its top end, as long and steep as it's set, either way", () => {
+    // its length along the map (metres) and down at its angle
+    const drop = (metres: number, degrees: number) => metres * Math.tan((degrees * Math.PI) / 180);
+    expectCloseTo(mossySlideEnd([1, 2, 3], 0, 0, 8, 20, false), [1 + 8, 2, 3 - drop(8, 20)]);
+    expectCloseTo(mossySlideEnd([1, 2, 3], 0.5, 0, 4, 14, true), [1 - 4, 2, 3.5 - drop(4, 14)]);
+    expectCloseTo(mossySlideEnd([0, 0, 0], 0, 90, 9, 10, false), [0, -9, -drop(9, 10)]);
   });
 
   test("a fish leaps across the map from its spot", () => {

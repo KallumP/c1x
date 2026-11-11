@@ -618,6 +618,34 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasGreatGate)("mossy slides, from the great gate", () => {
+    const slidePaths = (zone: Entry) => zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.mossy_slide)).map(entityPath);
+    const fromFirst = (path: Vec3[]) => path.map((point) => point.map((value, axis) => value - path[0][axis]));
+
+    test.each([
+      { more: {}, length: 1024, angle: 14, way: 1 },                                  // 4 m at scale 256
+      { more: { length: 8, angle: 20 }, length: 2048, angle: 20, way: 1 },
+      { more: { length: 2, angle: 5, reverse: true }, length: 512, angle: 5, way: -1 },
+    ])("its slider ($more) slides from its spot along its slope and on 400 past it", ({ more, length, angle, way }) => {
+      const [path] = slidePaths(build([obstacle("mossy_slide", more)]).zone);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      const run = length + 400;
+      expectNear(fromFirst(path).at(-1)!, [way * run, -run * Math.tan((angle * Math.PI) / 180), 0], 16);
+      fromFirst(path).slice(1).forEach(([x], point) => expectNear(Math.abs(x - fromFirst(path)[point][0]), 450, 60));
+    });
+
+    test("it adds nothing to the map: the slope is modelled in blender", () => {
+      expect(worldsOf(build([obstacle("mossy_slide", { raise: 1 })])).map((world) => world.items[1].length))
+        .toEqual(worldsOf(build()).map((world) => world.items[1].length));
+    });
+
+    test("a level with mossy slides and wood platforms reads the great gate once", () => {
+      const reader = recordingReader();
+      build([obstacle("wooden_peg"), obstacle("mossy_slide", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
+      expect(reader.read).toEqual([0x12]);
+    });
+  });
+
   describe.skipIf(!hasStormyAscent)("lab assistants, from stormy ascent", () => {
     // a placed lab assistant's init flags: its facing, and its vials' speeds along the game's x and z
     const assistantFlags = (more: Partial<LevelObject> = {}) => initFlagsOf(build([enemy("lab_assistant", more)]).zone, ENEMY_ENTITIES.lab_assistant);
