@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11
+
+### Changed
+
+- the launcher is now `build/_launcher.exe`, so it's first in the `build` folder
+
 ## 2026-11-10
 
 ### Added
