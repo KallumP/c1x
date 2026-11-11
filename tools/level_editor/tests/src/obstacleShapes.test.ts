@@ -27,6 +27,9 @@ describe("obstacle shapes", () => {
     // boulder dash's pillar PlPeG: 1209 across, 1148 long, its top at its spot and 2407 down
     { obstacle: "dropping_pillar", bottom: -2407, top: [-10, 30], across: [1150, 1260], long: [1100, 1200] },
     { obstacle: "sliding_pillar", bottom: -2407, top: [-10, 30], across: [1150, 1260], long: [1100, 1200] },
+    // and its gates: JB4eG, 903 across and 1554 tall, and JB3eG, 2377 across and 437 tall, standing on its spot
+    { obstacle: "tall_thin_gate", bottom: 0, top: [1500, 1600], across: [860, 950], long: [200, 290] },
+    { obstacle: "low_wide_gate", bottom: 0, top: [400, 480], across: [2300, 2450], long: [240, 330] },
   ] as const)("a $obstacle is as big as the game's, about its spot as the game's", ({ obstacle, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(OBSTACLE_SHAPES[obstacle].filter((part) => part.name !== "arrow"));
     expectWithin(min[1], [bottom - 15, bottom + 15]);

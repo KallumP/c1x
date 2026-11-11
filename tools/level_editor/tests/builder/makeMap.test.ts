@@ -678,6 +678,28 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(path.at(-1)!, [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1], SPOT_IN_ZONE[2] - 10240], 16);
     });
 
+    // boulder dash's objects' code (JunOC, slot 22) is jungle rollers' own code
+    // naming other models, so it moves to slot 23 as BldOC
+    test.each([
+      { type: "tall_thin_gate", subtype: 13, model: "JB4eG" },
+      { type: "low_wide_gate", subtype: 18, model: "JB3eG" },
+    ] as const)("a $type is boulder dash's JunOC subtype $subtype, moved to its own slot, with its model ($model), standing at its spot", ({ type, subtype, model }) => {
+      const { level, entries, zone } = build([obstacle(type)]);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([23, subtype]);
+      expect(level.nsd.ldat.execMap[23]).toBe(stringToEid("BldOC"));
+      expect(level.nsd.ldat.execMap[22]).toBe(stringToEid("JunOC"));
+      expect(entries.has(stringToEid(model))).toBe(true);
+      const placed = zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES[type]));
+      expect(placed.length).toBe(1);
+      expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a gate leaves jungle rollers' own objects' code as it is", () => {
+      const { entries } = build([obstacle("low_wide_gate")]);
+      const baseCode = entriesById(readLevel(STREAMS, BASE_LEVEL.lid)).get(stringToEid("JunOC"))!;
+      expect(entries.get(stringToEid("JunOC"))!.items).toEqual(baseCode.items);
+    });
+
     test("dropping and sliding pillars read boulder dash once", () => {
       const reader = recordingReader();
       build([obstacle("dropping_pillar"), obstacle("sliding_pillar", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
