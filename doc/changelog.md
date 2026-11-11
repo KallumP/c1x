@@ -13,6 +13,7 @@
 
 ### Changed
 
+- the rolling stone is an obstacle now, not an enemy, in the level editor and objects.json
 - extracting the game's files from a disc image no longer needs Node.js
 - the launcher is now `build/_launcher.exe`, so it's first in the `build` folder
 
