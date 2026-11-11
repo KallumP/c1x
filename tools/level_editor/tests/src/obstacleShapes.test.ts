@@ -38,6 +38,8 @@ describe("obstacle shapes", () => {
     { obstacle: "slamming_walls", bottom: 0, top: [1000, 1060], across: [2350, 2450], long: [580, 640] },
     // temple ruins' rising pillar PlUsG: 953 across, its top at its spot and 3203 down
     { obstacle: "rising_pillar", bottom: -3203, top: [-10, 30], across: [900, 1000], long: [900, 1000] },
+    // and its carrying platform PlPsG: 794 across, its top at its spot and 481 down
+    { obstacle: "carrying_platform", bottom: -481, top: [-10, 30], across: [750, 840], long: [750, 840] },
   ] as const)("a $obstacle is as big as the game's, about its spot as the game's", ({ obstacle, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(OBSTACLE_SHAPES[obstacle].filter((part) => part.name !== "arrow"));
     expectWithin(min[1], [bottom - 15, bottom + 15]);

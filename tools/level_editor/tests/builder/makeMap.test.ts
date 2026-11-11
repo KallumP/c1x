@@ -327,6 +327,34 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasTempleRuins)("carrying platforms, from temple ruins", () => {
+    const carryPath = (more: Partial<LevelObject> = {}) => {
+      const { zone } = build([obstacle("carrying_platform", more)]);
+      return entityPath(zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.carrying_platform))!);
+    };
+
+    test("a carrying platform is temple ruins' PoPlC subtype 3, moved as a rising pillar's, with its own model", () => {
+      const { level, entries } = build([obstacle("carrying_platform")]);
+      expect(OBSTACLE_ENTITIES.carrying_platform).toEqual([13, 3]);
+      expect(level.nsd.ldat.execMap[13]).toBe(stringToEid("PoPTC"));
+      expect(entries.has(stringToEid("PlPsG"))).toBe(true);
+      expect(entries.has(stringToEid("PlUsG"))).toBe(false);
+    });
+
+    test("without a path, it carries crash 6 m straight across the map (at scale 256: 1536), as many points as temple ruins' first", () => {
+      const path = carryPath();
+      expect(path.length).toBe(26);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 1536, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
+    });
+
+    test("with a path, it carries crash along its nodes", () => {
+      const path = carryPath({ path: [[0, 0, 0], [0, 4, 0], [2, 4, 1]] });
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 512, SPOT_IN_ZONE[1] + 256, SPOT_IN_ZONE[2] - 1024], 16);
+    });
+  });
+
   describe.skipIf(!hasTempleRuins)("slamming walls, from temple ruins", () => {
     // temple ruins' RuiOC isn't sunset vista's (the bats'), so it moves to slot 6 as RuiWC
     test("slamming walls are temple ruins' RuiOC subtypes 7 (the right half) and 8 (the left), moved to their own slot, 1200 either side of the spot, sliding in to meet there", () => {

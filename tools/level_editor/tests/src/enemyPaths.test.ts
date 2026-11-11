@@ -245,6 +245,16 @@ describe("a point along a path", () => {
   });
 });
 
+describe("a carrying platform's path", () => {
+  test("without a path of its own, its nodes are 6 m straight across the map", () => {
+    const platform = obstacleObject("carrying_platform", { at: [1, 2, 0] });
+    expect(nodeCount(platform)).toBe(2);
+    const [start, end] = pathPositions(platform, 0, 400);
+    expectCloseTo(start, [1, 2, 0]);
+    expectCloseTo(end, [7, 2, 0]);
+  });
+});
+
 describe("a sliding pillar's path", () => {
   const pillar = (more: Partial<LevelObject> = {}) => obstacleObject("sliding_pillar", { at: [1, 2, 0], raise: 0.5, ...more });
 
