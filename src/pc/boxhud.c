@@ -22,6 +22,14 @@ void BoxHudSetUpCounter(gool_object *counter, gool_object *source) {
   BoxHudHideIcon(counter);
 }
 
+/* the box counter's text: boxes broken out of the total ("12/40"), or just those broken with no total */
+void BoxHudText(char *text, size_t size, int broken, int total) {
+  if (total > 0)
+    snprintf(text, size, "%d/%d", broken, total);
+  else
+    snprintf(text, size, "%d", broken);
+}
+
 /* give the box counter's source the boxes broken (a gool number, 8 bits after the point, as box_count) */
 void BoxHudShowBoxes(gool_object *source, int boxes_broken) {
   source->regs[HUD_COUNT_REG] = boxes_broken;

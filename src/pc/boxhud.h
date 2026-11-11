@@ -22,6 +22,7 @@
 
 extern void BoxHudSetUpCounter(gool_object *counter, gool_object *source);
 extern void BoxHudShowBoxes(gool_object *source, int boxes_broken);
+extern void BoxHudText(char *text, size_t size, int broken, int total);
 
 /* in the game (boxhud_game.c) */
 extern void BoxHudCreate();
