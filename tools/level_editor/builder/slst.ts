@@ -125,6 +125,7 @@ export interface ListedMesh {
   vertices: WorldVertex[];
   polygons: BuiltPolygon[];
   zOffset: number;
+  nearer?: number; // drawn as if this much nearer (along z): pieces over the floor, which the floor around them mustn't cover
 }
 
 // how far a point is along a camera's view, backwards: its z and height seen by
@@ -149,11 +150,11 @@ function polygonPlaces({ vertices, polygons, zOffset }: ListedMesh, lookDown: nu
   })));
 }
 
-// each mesh's polygons' middle z, to draw them farthest first
-function polygonMiddles({ vertices, polygons, zOffset }: ListedMesh): number[] {
+// each mesh's polygons' middle z, to draw them farthest first (as if nearer, for a mesh drawn nearer)
+function polygonMiddles({ vertices, polygons, zOffset, nearer = 0 }: ListedMesh): number[] {
   return polygons.map(({ corners }) => {
     const [a, b, c] = corners.map((index) => vertices[index].at[2]);
-    return (a + b + c) / 3 + zOffset;
+    return (a + b + c) / 3 + zOffset + nearer;
   });
 }
 

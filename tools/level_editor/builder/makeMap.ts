@@ -68,8 +68,9 @@ interface FittedMap {
 }
 
 // each zone's world meshes; with more than one zone, each lists the next's too,
-// so half as many. a zone with rolling stones (trackZones) ends with an empty
-// one, kept for their tracks, so they fit however full the map's meshes are
+// so half as many. a zone with rolling stones or mossy slides (trackZones) ends
+// with an empty one, kept for their tracks and planks, so they fit however full
+// the map's meshes are, and are drawn over the floor (see TRACKS_NEARER)
 function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, textured: Set<string>, trackZones: Set<number>): WorldMesh[][] {
   const texinfoWords = readWorldHeader(templates.world.items[0]).texinfoWords;
   const options = {
@@ -408,11 +409,24 @@ function withStoneTracks(worlds: Worlds, stones: LevelObject[], track: StoneTrac
   }, worlds);
 }
 
+// how much nearer the sort list draws rolling stones' tracks and mossy slides'
+// planks than they are (along z): it draws farthest first by the polygons'
+// middles, which for the long floor tiles under them can be nearer than theirs,
+// covering them; half a map piece more is clear of the tiles they stand over
+const TRACKS_NEARER = MAP_PIECE / 2;
+
+// how much nearer each of a zone's count meshes is drawn: its last, with the
+// tracks and planks, if it has them (hasTracks)
+function tracksNearer(count: number, hasTracks: boolean): number[] {
+  return Array.from({ length: count }, (_, index) => Number(hasTracks && index === count - 1) * TRACKS_NEARER);
+}
+
 // the textured worlds with each mossy slide's plank added where it slopes from (its spot), named for errors
 function withSlidePlanks(worlds: Worlds, slides: LevelObject[], slopeOf: (slide: LevelObject) => MossySlope, placer: ObjectPlacer, zoneWorlds: WorldMesh[][], template: Buffer): Worlds {
   return slides.reduce((built, slide) => {
     const { zone, at } = placer.placeOf(slide);
-    return addMapPiece(built, slopeOf(slide), at, template, meshesInZone(zoneWorlds, zone), "a mossy slide's plank");
+    const tracksMesh = meshesInZone(zoneWorlds, zone).at(-1)!;
+    return addMapPiece(built, slopeOf(slide), at, template, [tracksMesh], "a mossy slide's plank");
   }, worlds);
 }
 
@@ -471,7 +485,8 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
   const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, [...stoneTrackMeshes(stones, track, placer), ...slidePlankMeshes(slides, slopeOf, placer)]);
 
-  const zoneWorlds = zoneWorldMeshes(map, templates, new Set(images.keys()), new Set(stones.map((stone) => placer.zoneOf(stone))));
+  const trackZones = new Set([...stones, ...slides].map((object) => placer.zoneOf(object)));
+  const zoneWorlds = zoneWorldMeshes(map, templates, new Set(images.keys()), trackZones);
   const template = templates.world.items[0];
   const { pages, ...textured } = textureWorlds(zoneWorlds.flat(), images, template);
 
@@ -530,6 +545,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
         texinfos: withBase.texinfos.slice(first, first + count),
         points: paths[index],
         entities: placer.entities[index],
+        nearer: tracksNearer(count, trackZones.has(index)),
       };
       first += count;
       return plan;

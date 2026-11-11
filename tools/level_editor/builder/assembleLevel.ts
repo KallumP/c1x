@@ -33,6 +33,7 @@ export interface ZonePlan {
   zOffset: number;
   blocks: Block[];
   worlds: BuiltWorld[];
+  nearer?: number[];       // how much nearer each world is drawn than it is (along z), if any is
   texinfos: Buffer[];
   points: Vec3[];
   entities: Buffer[];
@@ -111,9 +112,9 @@ function zonePath(assembly: Assembly, zoneIndex: number, neighbours: number[]): 
   const zone = zones[zoneIndex];
   const rotation = cameraRotation(camera);
   const next = zones[zoneIndex + 1];
-  const listed = zone.worlds.map((world) => ({ ...world, zOffset: 0 }));
+  const listed = zone.worlds.map((world, index) => ({ ...world, zOffset: 0, nearer: zone.nearer?.[index] }));
   if (next) {
-    listed.push(...next.worlds.map((world) => ({ ...world, zOffset: next.zOffset - zone.zOffset })));
+    listed.push(...next.worlds.map((world, index) => ({ ...world, zOffset: next.zOffset - zone.zOffset, nearer: next.nearer?.[index] })));
   }
   const path = pathBytes({
     slst: sortListEid(zoneIndex),
