@@ -618,6 +618,47 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasGreatGate)("mossy slides, from the great gate", () => {
+    const slidePaths = (zone: Entry) => zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.mossy_slide)).map(entityPath);
+    const fromFirst = (path: Vec3[]) => path.map((point) => point.map((value, axis) => value - path[0][axis]));
+
+    // its way across the floor: the game's x (across the map) turned anticlockwise seen from above, towards -z (away from the camera)
+    test.each([
+      { more: {}, length: 1024, angle: 14, way: [1, 0] },                                   // 4 m at scale 256
+      { more: { length: 8, angle: 20 }, length: 2048, angle: 20, way: [1, 0] },
+      { more: { length: 2, angle: 5, rotation: 180 }, length: 512, angle: 5, way: [-1, 0] },
+      { more: { rotation: 90 }, length: 1024, angle: 14, way: [0, -1] },
+      { more: { rotation: 270 }, length: 1024, angle: 14, way: [0, 1] },
+    ])("its slider ($more) slides from its spot along its slope and on 400 past it", ({ more, length, angle, way }) => {
+      const [path] = slidePaths(build([obstacle("mossy_slide", more)]).zone);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      const run = length + 400;
+      expectNear(fromFirst(path).at(-1)!, [way[0] * run, -run * Math.tan((angle * Math.PI) / 180), way[1] * run], 16);
+      const steps = fromFirst(path).slice(1).map(([x, , z], point) => Math.hypot(x - fromFirst(path)[point][0], z - fromFirst(path)[point][2]));
+      steps.forEach((step) => expectNear(step, 450, 60));
+    });
+
+    test("it takes no texture pages: it's invisible, so the great gate's models don't come with it", () => {
+      expect(texturePages(build([obstacle("mossy_slide")]).level).length).toBe(texturePages(build().level).length);
+    });
+
+    test("with a wood platform too, the platform's models and pages still come", () => {
+      const pages = (objects: LevelObject[]) => texturePages(build(objects).level).length;
+      expect(pages([obstacle("wooden_peg"), obstacle("mossy_slide", { at: [1, 6, 0] })])).toBe(pages([obstacle("wooden_peg")]));
+    });
+
+    test("it adds nothing to the map: the slope is modelled in blender", () => {
+      expect(worldsOf(build([obstacle("mossy_slide", { raise: 1 })])).map((world) => world.items[1].length))
+        .toEqual(worldsOf(build()).map((world) => world.items[1].length));
+    });
+
+    test("a level with mossy slides and wood platforms reads the great gate once", () => {
+      const reader = recordingReader();
+      build([obstacle("wooden_peg"), obstacle("mossy_slide", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
+      expect(reader.read).toEqual([0x12]);
+    });
+  });
+
   describe.skipIf(!hasStormyAscent)("lab assistants, from stormy ascent", () => {
     // a placed lab assistant's init flags: its facing, and its vials' speeds along the game's x and z
     const assistantFlags = (more: Partial<LevelObject> = {}) => initFlagsOf(build([enemy("lab_assistant", more)]).zone, ENEMY_ENTITIES.lab_assistant);

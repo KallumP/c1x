@@ -25,6 +25,7 @@ import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
 import { cameraOffsets, cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
 import { DEFAULT_CAMERA, type Camera } from "../src/camera";
+import { mossySlidePath } from "./mossySlide";
 import { levelEntity, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type StoneTrack, type Templates } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
@@ -180,6 +181,10 @@ function donorEnemyEntity(donor: Level, type: EnemyType): Buffer {
 // an obstacle's entity from the level it's taken from
 const obstacleExample = (donor: Level, type: ObstacleType): Buffer => levelEntity(donor, ...OBSTACLE_ENTITIES[type]);
 
+// a mossy slide's slider's path along its slope, as long (metres, at scale) and steep as it's set
+const slidePath = (slide: LevelObject, scale: number) =>
+  mossySlidePath(numberSetting(slide, "length") * scale, numberSetting(slide, "angle"), numberSetting(slide, "rotation"));
+
 // entities each enemy takes: a leader bats roost and its two leaders, one for the rest
 function entitiesFor(enemy: LevelObject): number {
   if (enemy.enemy === "leader_bats") {
@@ -277,6 +282,13 @@ class ObjectPlacer {
     const points = leafDriftShares().map((share) => pointAlongShare(nodes, share));
     const drift = points.map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
     this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), drift));
+  }
+
+  // a mossy slide's slider (example) at its spot, sliding along its slope from there (run, from its spot)
+  placeSlide(slide: LevelObject, example: Buffer, run: Vec3[]): void {
+    const { zone, at } = this.inZone(this.positionOf(slide));
+    const path = run.map((point) => point.map((value, axis) => value + at[axis]) as Vec3);
+    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
   }
 
   // leader bats: their roost (roost, an example) where their flight between
@@ -457,8 +469,10 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   enemies.filter((enemy) => enemy.enemy === "bat").forEach((enemy) => placer.placeBatRoost(enemy, enemyExample("bat")));
   enemies.filter((enemy) => enemy.enemy === "leader_bats")
     .forEach((enemy) => placer.placeLeaderBats(enemy, enemyExample("leader_bats"), levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT)));
-  const movers = obstacles.filter((obstacle) => obstacle.obstacle !== "rolling_stone"); // the rest, from their levels
+  const slides = obstacles.filter((obstacle) => obstacle.obstacle === "mossy_slide");
+  const movers = obstacles.filter((obstacle) => obstacle.obstacle !== "rolling_stone" && obstacle.obstacle !== "mossy_slide"); // the rest, from their levels
   const obstacleOf = (obstacle: LevelObject) => obstacleExample(donorLevels.get(obstacle.obstacle!)!, obstacle.obstacle!);
+  slides.forEach((slide) => placer.placeSlide(slide, obstacleOf(slide), slidePath(slide, scale)));
   movers.filter((obstacle) => !obstacle.path).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
   movers.filter((obstacle) => obstacle.path).forEach((leaf) => placer.placeLeafOnPath(leaf, obstacleOf(leaf)));
   stones.forEach((stone) => placer.placeStone(stone, track!));

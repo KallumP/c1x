@@ -4,7 +4,7 @@ import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeHeading, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
-import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type EnemyType, type LevelObject, type NumberSetting, type Vec3 } from "../objects";
+import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type LevelObject, type NumberSetting, type ObjectType, type Vec3, objectType } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
@@ -14,17 +14,21 @@ import "./PropertiesPanel.css";
 const AXES = ["x", "y"] as const;
 // each number setting's slider: its label, and its steps (a stone's start of
 // its track, a speed times the game's own pace, a count of badgers, a bat
-// roost's seconds between flocks, a gunman's range in metres)
+// roost's seconds between flocks, a gunman's range in metres, a mossy slide's
+// length in metres, angle in degrees and rotation in degrees)
 const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
   speed: { label: "speed ×", step: 0.25 },
   start: { label: "start", step: 0.05 },
   count: { label: "count", step: 1 },
   delay: { label: "delay s", step: 0.5 },
   range: { label: "range m", step: 1 },
+  length: { label: "length m", step: 0.5 },
+  angle: { label: "angle °", step: 1 },
+  rotation: { label: "rotation °", step: 5 },
 };
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 // the enemies reversed across the map, and what their Reverse direction button does
-const ACROSS_REVERSE_TITLES: Partial<Record<EnemyType, string>> = {
+const ACROSS_REVERSE_TITLES: Partial<Record<ObjectType, string>> = {
   fish: "It leaps from the solid fish to the faded one, and back",
 };
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
@@ -178,13 +182,14 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
   // which way a fish leaps or a lab assistant throws across the map: the way
   // the editor shows it, or the other way
   const renderAcrossReverseButton = (selected: LevelObject) => (
-    <button className="drop" onClick={() => change({ reverse: selected.reverse ? undefined : true })} title={ACROSS_REVERSE_TITLES[selected.enemy!]}>
+    <button className="drop" onClick={() => change({ reverse: selected.reverse ? undefined : true })} title={ACROSS_REVERSE_TITLES[objectType(selected)!]}>
       Reverse direction
     </button>
   );
 
   const isStone = (selected: LevelObject) => selected.kind === "obstacle" && selected.obstacle === "rolling_stone";
-  const isReversedAcross = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy! in ACROSS_REVERSE_TITLES;
+  const isReversedAcross = (selected: LevelObject) => objectType(selected) !== undefined && objectType(selected)! in ACROSS_REVERSE_TITLES;
+
 
   // raise is its height above the floor, kept as it's dragged about
   const renderObjectFields = (selected: LevelObject) => (

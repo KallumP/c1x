@@ -1,14 +1,14 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, mossySlideEnd, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, ENEMY_COLOURS, OBSTACLE_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { OBSTACLE_SHAPES } from "../obstacleShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
-import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
+import { isPathEnemy, numberSetting, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
@@ -18,6 +18,8 @@ const BOX_EDGE_COLOUR = "#000000";
 const HANDLE_SIZE = 0.15;   // a path node's handle's radius, of a box's size
 const FAR_END_OPACITY = 0.4; // the enemy drawn at the far end of its path, faded: it starts at the other
 const SELECTED_GLOW = 0.35; // how much brighter the selected enemy's model is
+const SLOPE_WIDTH = 1000;    // a mossy slide's slope across, as the editor draws it (game units: the great gate's, about)
+const SLOPE_THICKNESS = 60;  // thin: it shows where the map's own slope goes
 
 // how big a crab's and turtle's models are, in game units: how tall, and how
 // far they reach out from their middles, whichever way they're turned. the
@@ -442,7 +444,27 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     </>
   );
 
-  // a leaf with its drift, a rolling stone on its track, and the rest at their
+  // a mossy slide as the slope it slides crash down, from its top end (at, raised)
+  // across the map and down to its bottom end, as long and steep as it's set: the
+  // map's own, modelled to match (the game draws nothing of it)
+  const renderMossySlide = (object: LevelObject, index: number) => {
+    const [x, y, z] = object.at;
+    const top = blenderToView([x, y, z + object.raise]);
+    const bottom = blenderToView(mossySlideEnd(object.at, object.raise, turn, numberSetting(object, "length"), numberSetting(object, "angle"), numberSetting(object, "rotation")));
+    const centre = top.map((value, axis) => (value + bottom[axis]) / 2) as Vec3;
+    const [dx, dy, dz] = bottom.map((value, axis) => value - top[axis]);
+    const flat = Math.hypot(dx, dz);
+    const colour = OBSTACLE_COLOURS.mossy_slide;
+    return (
+      <mesh position={centre} rotation={[0, Math.atan2(-dz, dx), Math.atan2(dy, flat), "YZX"]}>
+        <boxGeometry args={[Math.hypot(flat, dy), SLOPE_THICKNESS / scale, SLOPE_WIDTH / scale]} />
+        <meshLambertMaterial color={colour} />
+        <Edges color={edgeColour(index, colour)} />
+      </mesh>
+    );
+  };
+
+  // a leaf with its drift, a rolling stone on its track, a mossy slide as its slope, and the rest at their
   // spots (a lily pad where it sinks from, a wooden peg opened out)
   const renderObstacle = (object: LevelObject, index: number) => {
     if (object.obstacle === "leaf") {
@@ -450,6 +472,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     }
     if (object.obstacle === "rolling_stone") {
       return renderRollingStone(object, index);
+    }
+    if (object.obstacle === "mossy_slide") {
+      return renderMossySlide(object, index);
     }
     return renderShapeModel(OBSTACLE_SHAPES[object.obstacle!], base(object), index);
   };

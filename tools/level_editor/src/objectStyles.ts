@@ -60,6 +60,7 @@ export const OBSTACLE_COLOURS: Record<ObstacleType, string> = {
   leaf: "#2e7a2c",
   wooden_peg: "#8a5a32",
   rolling_stone: "#8d8a5f",
+  mossy_slide: "#5f7a3a",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";
