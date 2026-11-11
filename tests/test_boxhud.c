@@ -36,6 +36,17 @@ static void AddDigits(gool_object *parent) {
   digits.parent = parent;
 }
 
+UTEST(boxhud, the_box_counters_digits_are_smaller_than_the_others_to_fit_between_them) {
+  AddDigits(&counter);
+  digits.scale.x = HUD_DIGITS_SCALE;
+  digits.scale.y = HUD_DIGITS_SCALE;
+  digits.scale.z = HUD_DIGITS_SCALE;
+  BoxHudSizeDigits(&digits);
+  ASSERT_EQ(HUD_DIGITS_SCALE * BOX_HUD_TEXT_PERCENT / 100, digits.scale.x);
+  ASSERT_EQ(HUD_DIGITS_SCALE * BOX_HUD_TEXT_PERCENT / 100, digits.scale.y);
+  ASSERT_LT(BOX_HUD_TEXT_PERCENT, 100);
+}
+
 UTEST(boxhud, the_box_counters_digits_are_known) {
   StartLivesCounter();
   counter.handle.type = 1;
