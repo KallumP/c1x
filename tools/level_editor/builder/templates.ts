@@ -1,6 +1,7 @@
 // what custom levels take from a real level (the base level): its spawn zone's
 // header and origin, crash, its biggest world mesh (for textures), an example of
-// each kind of entity, the base the warp pad stands on, and a rolling stone's track
+// each kind of entity, the base the warp pad stands on, and a rolling stone's
+// track; and from the great gate, the mossy planks under its slides
 import { BOX_TYPE, CRASH, OBSTACLE_ENTITIES, entityPath, entityPosition, entityType, WARP_PAD, withInitFlagA, withSubtype } from "./entities";
 import { ENTRY_ZDAT, entriesById, type Entry, type Level } from "./levelFiles";
 import type { Mesh } from "./obj";
@@ -287,4 +288,79 @@ export function stoneTrack(level: Level): StoneTrack {
     return { ...track, path, floor: floorUnderMiddle(track, path) };
   }
   throw new Error("there's no rolling stone in the level");
+}
+
+// the great gate's mossy slide (WalOC subtype 2): an invisible object carrying
+// crash down along its path while he's on the plank under it, which is the
+// level's own map
+const MOSSY_SLIDE: [number, number] = [33, 2];
+const LONG_SLIDE_POINTS = 9;  // its long slides' paths (3600 units across), and its short ones' (2000)
+const SHORT_SLIDE_POINTS = 5;
+
+// how far round a slide's line its plank reaches (game units): its slats' tops
+// a little over it, their log ends under it, and its width either side; the
+// posts and ground further down aren't the plank's
+const PLANK_ABOVE = 120;
+const PLANK_BELOW = 360;
+const PLANK_SIDE = 700;
+const PLANK_BEYOND = 400; // past the ends of its path
+
+// a mossy slide's plank, its vertices relative to its path's first point, and that path, from there
+export interface MossySlope extends MapPiece {
+  path: Vec3[];
+}
+
+// whether all of a polygon's corners are on a slide's plank: by its line (from
+// its path's first point to its last), across the map along the path
+function isOnPlank(polygon: BuiltPolygon, vertices: WorldVertex[], path: Vec3[]): boolean {
+  const [endX, endY] = path[path.length - 1];
+  const drop = endY / endX;
+  return polygon.corners.every((index) => {
+    const [x, y, z] = vertices[index].at;
+    const height = y - drop * x;
+    const along = x >= Math.min(0, endX) - PLANK_BEYOND && x <= Math.max(0, endX) + PLANK_BEYOND;
+    return along && Math.abs(z) <= PLANK_SIDE && height >= -PLANK_BELOW && height <= PLANK_ABOVE;
+  });
+}
+
+// whether a slide's path is long (or short) and runs back across the map (or on, along the game's x)
+function isSlide(path: Vec3[], long: boolean, reverse: boolean): boolean {
+  const across = path[path.length - 1][0];
+  return path.length === slidePoints(long) && (across < 0) === reverse;
+}
+
+// how many points a long or short slide's path has
+function slidePoints(long: boolean): number {
+  if (long) {
+    return LONG_SLIDE_POINTS;
+  }
+  return SHORT_SLIDE_POINTS;
+}
+
+// the plank under a slide, from the world mesh of its zone with the most of it
+function slidePlank(level: Level, zone: Entry, start: Vec3, path: Vec3[]): MapPiece {
+  const entries = entriesById(level);
+  const planks = zoneWorldEids(zone).flatMap((eid) => {
+    const world = entries.get(eid);
+    if (!world) {
+      return [];
+    }
+    const vertices = verticesRelativeTo(world, start);
+    return [pieceOf(world, vertices, worldPolygons(world).filter((polygon) => isOnPlank(polygon, vertices, path)))];
+  });
+  return planks.reduce((most, plank) => (plank.polygons.length > most.polygons.length ? plank : most));
+}
+
+// the great gate's first mossy slide that's long (or short) and runs back across
+// the map (reverse) or on: its plank and path. an error if it has none
+export function mossySlope(level: Level, long: boolean, reverse: boolean): MossySlope {
+  for (const zone of zonesOf(level)) {
+    for (const slide of zoneEntities(zone).filter((item) => entityType(item).join() === MOSSY_SLIDE.join())) {
+      const path = fromFirstPoint(entityPath(slide));
+      if (isSlide(path, long, reverse)) {
+        return { ...slidePlank(level, zone, entityAt(zone, slide), path), path };
+      }
+    }
+  }
+  throw new Error("there's no mossy slide like that in the level");
 }
