@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Vec3 } from "../../src/objects";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, LEAF_DRIFT, leafDrift, leafDriftShares, mossySlideEnd, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, LEAF_DRIFT, leafDrift, leafDriftShares, mossySlideEnd, pillarSlideShares, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 import { expectCloseTo, noMinusZero } from "../helpers";
 
 describe("blender and the viewport", () => {
@@ -90,6 +90,14 @@ describe("rolling stones", () => {
     expect([shares[0], shares[12]]).toEqual([0, 1]);
     shares.slice(1).forEach((share, point) => expect(share).toBeGreaterThan(shares[point]));
     expect(shares[1]).toBeLessThan(shares[6] - shares[5]); // its first step shorter than one in the middle
+  });
+
+  test("a sliding pillar's points are bunched at its slide's ends, as boulder dash's (14 over 800)", () => {
+    const shares = pillarSlideShares();
+    expect(shares.length).toBe(14);
+    expect([shares[0], shares[13]]).toEqual([0, 1]);
+    expect(shares[1]).toBeCloseTo(8 / 800);
+    expect(shares[6]).toBeCloseTo(400 / 800);
   });
 
   test("a leaf's drift turns with the level and lifts with raise", () => {

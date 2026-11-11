@@ -371,7 +371,7 @@ describe("a rolling stone's start", () => {
     ['[{"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "start": 0.5}]', "object 1: a turtle has no start (rolling stones do)"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "start": 0.5}]', "object 1: a leaf has no start (rolling stones do)"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "reverse": true}]', "object 1: a leaf has no reverse"],
-    ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a rolling_stone has no path (leaves do)"],
+    ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a rolling_stone has no path (leaves and sliding pillars do)"],
     ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "start": 1.5}]', "object 1: start should be 0 to 1 (how far along its track it starts)"],
     ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "start": "middle"}]', "object 1: start should be 0 to 1"],
   ])("refuses %s", (text, message) => {
@@ -534,11 +534,17 @@ describe("wooden pegs", () => {
 });
 
 describe("pillars", () => {
-  test.each(["dropping_pillar", "sliding_pillar"])("a %s is an obstacle, with no path", (type) => {
+  test.each(["dropping_pillar", "sliding_pillar"])("a %s is an obstacle", (type) => {
     expect(parseObjects(`[{"kind": "obstacle", "type": "${type}", "at": [1, 2, 0], "raise": 1}]`))
       .toEqual([{ kind: "obstacle", obstacle: type, at: [1, 2, 0], raise: 1, stack: 1 }]);
-    expect(() => parseObjects(`[{"kind": "obstacle", "type": "${type}", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]`))
-      .toThrow(`a ${type} has no path`);
+  });
+
+  test("a sliding pillar can have a path, read back as written; a dropping one can't", () => {
+    const [pillar] = parseObjects('[{"kind": "obstacle", "type": "sliding_pillar", "at": [1, 2, 0], "path": [[0, 0, 0], [0, 3, 0], [2, 3, 0]]}]');
+    expect(pillar.path).toEqual([[0, 0, 0], [0, 3, 0], [2, 3, 0]]);
+    expect(parseObjects(formatObjects([pillar]))).toEqual([pillar]);
+    expect(() => parseObjects('[{"kind": "obstacle", "type": "dropping_pillar", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]'))
+      .toThrow("a dropping_pillar has no path (leaves and sliding pillars do)");
   });
 });
 
@@ -613,7 +619,7 @@ describe("obstacle paths", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "type": "lily_pad", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a lily_pad has no path (leaves do)"],
+    ['[{"kind": "obstacle", "type": "lily_pad", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a lily_pad has no path (leaves and sliding pillars do)"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', "object 1: a path should be 2 to 20 nodes"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0], [1, 0, 0]]}]', "object 1: a path's nodes should each be [x, y, z]"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed"],

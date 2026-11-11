@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
-import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, leafDriftShares, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, leafDriftShares, LEADER_BATS_FLIGHT, leaderBatsGap, pillarSlideShares } from "../../src/coords";
 import type { EnemyType, LevelObject, ObstacleType } from "../../src/objects";
 import { DEFAULT_SKY, type Sky } from "../../src/sky";
 import { enemyObject, expectNear, obstacleObject } from "../helpers";
@@ -643,6 +643,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(path.length).toBe(14);
       expectNear(path[0], SPOT_IN_ZONE, 16);
       expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 800, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
+    });
+
+    test("a sliding pillar with a path slides along its nodes, its points as far along them as boulder dash's are along its slide", () => {
+      // 4 m along blender +y (the game's -z) at scale 256: its 14 points spread over 1024 units, bunched at the ends
+      const placed = zoneEntities(build([obstacle("sliding_pillar", { path: [[0, 0, 0], [0, 4, 0]] })]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.sliding_pillar))!;
+      const path = entityPath(placed);
+      expect(path.length).toBe(14);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path[13], [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1], SPOT_IN_ZONE[2] - 1024], 16);
+      const shares = path.map(([, , z]) => (path[0][2] - z) / 1024);
+      pillarSlideShares().forEach((share, point) => expectNear(shares[point], share, 0.01));
     });
 
     test("dropping and sliding pillars read boulder dash once", () => {

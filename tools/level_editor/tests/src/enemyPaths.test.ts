@@ -245,6 +245,23 @@ describe("a point along a path", () => {
   });
 });
 
+describe("a sliding pillar's path", () => {
+  const pillar = (more: Partial<LevelObject> = {}) => obstacleObject("sliding_pillar", { at: [1, 2, 0], raise: 0.5, ...more });
+
+  test("without a path of its own, its nodes are its slide's ends, as boulder dash's: 2 m across the map", () => {
+    expect(nodeCount(pillar())).toBe(2);
+    const [start, end] = pathPositions(pillar(), 0, 400);
+    expectCloseTo(start, [1, 2, 0.5]);
+    expectCloseTo(end, [3, 2, 0.5]);
+  });
+
+  test("with a path, its nodes are its own, from where it's placed, raised", () => {
+    const path: Vec3[] = [[0, 0, 0], [0, 4, 0], [2, 4, 1]];
+    expect(nodeCount(pillar({ path }))).toBe(3);
+    expect(pathPositions(pillar({ path }), 0, 400)).toEqual([[1, 2, 0.5], [1, 6, 0.5], [3, 6, 1.5]]);
+  });
+});
+
 describe("a floating leaf's path", () => {
   const leaf = (more: Partial<LevelObject> = {}) => obstacleObject("leaf", { at: [1, 2, 0], raise: 0.5, ...more });
 
