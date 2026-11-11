@@ -6,7 +6,7 @@
 
 - obstacles for custom levels: Up the Creek's sinking lily pads and floating leaves
 - a floating leaf's drift can be set in the level editor, by dragging its nodes
-- wooden pegs from The Great Gate's totem, which flip out as a step when spun
+- spinnable wood platforms from The Great Gate's totem, which flip out as a step when spun
 - fullscreen, set in the launcher or switched with Alt+Enter while playing
 - build custom levels from the launcher's new Levels tab, without Node.js
 - an option to show how many of a level's boxes Crash has broken (such as 12/49), with the lives and wumpa counters
