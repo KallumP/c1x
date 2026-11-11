@@ -499,6 +499,23 @@ function withAddedInstructions(type: ObjectType, instructions: Buffer, addition:
   return Buffer.concat([instructions, added]);
 }
 
+// one word of an object's code's data (its constants) changed, as CodePatch
+// is an instruction: the great gate's mossy slide carries crash along while
+// the floor he's on is within 1600 units under its line or 1200 over it,
+// wherever he is across the map (its code checks only the height), which in
+// a custom level took in other floors near it. narrowed to 320 each way (0.8 m
+// at scale 400): the plank's floor, not those under or over it. the wood
+// platform has the same code (WalOC), so it's changed the same, or the two would clash
+const GATE_OBJECTS_DATA_PATCHES: CodePatch[] = [
+  { at: 0xcc / 4, was: 0x64000, now: 0x14000 }, // under its line (8 bits of fraction)
+  { at: 0xd0 / 4, was: 0x4b000, now: 0x14000 }, // over it
+];
+
+const OBJECT_DATA_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
+  mossy_slide: GATE_OBJECTS_DATA_PATCHES,
+  wooden_peg: GATE_OBJECTS_DATA_PATCHES,
+};
+
 // instructions patched, with the enemy's addition (if it has one) after their end
 function changedInstructions(type: ObjectType, instructions: Buffer, patches: CodePatch[]): Buffer {
   const patched = patchedInstructions(type, instructions, patches);
@@ -509,22 +526,22 @@ function changedInstructions(type: ObjectType, instructions: Buffer, patches: Co
   return withAddedInstructions(type, patched, addition);
 }
 
-// instructions with patches made; an error if one isn't what the patch expects
-function patchedInstructions(type: ObjectType, instructions: Buffer, patches: CodePatch[]): Buffer {
+// instructions (or data words, what) with patches made; an error if one isn't what the patch expects
+function patchedInstructions(type: ObjectType, instructions: Buffer, patches: CodePatch[], what = "instruction"): Buffer {
   const patched = Buffer.from(instructions);
   for (const { at, was, now } of patches) {
     if (at * 4 + 4 > patched.length || patched.readUInt32LE(at * 4) !== was) {
-      throw new Error(`the ${objectName(type)}'s code isn't as expected at instruction ${at.toString(16)}, so it can't be changed to suit custom levels`);
+      throw new Error(`the ${objectName(type)}'s code isn't as expected at ${what} ${at.toString(16)}, so it can't be changed to suit custom levels`);
     }
     patched.writeUInt32LE(now, at * 4);
   }
   return patched;
 }
 
-// object with its code (code, an eid) patched, the rest as it was
-function withPatchedCode(object: DonorObject, code: number, change: (instructions: Buffer) => Buffer): DonorObject {
+// object with its code (code, an eid) patched (its instructions, or another item), the rest as it was
+function withPatchedCode(object: DonorObject, code: number, change: (instructions: Buffer) => Buffer, patchedItem = CODE_ITEM): DonorObject {
   const patchEntry = (entry: Entry): Entry => {
-    const items = entry.items.map((item, index) => (index === CODE_ITEM ? change(item) : item));
+    const items = entry.items.map((item, index) => (index === patchedItem ? change(item) : item));
     return { ...entry, items };
   };
   return { ...object, entries: object.entries.map((entry) => (entry.eid === code ? patchEntry(entry) : entry)) };
@@ -548,6 +565,15 @@ function withPatchedOwnCode(type: ObjectType, object: DonorObject, level: Level,
   return withPatchedCode(object, level.nsd.ldat.execMap[slot], (instructions) => changedInstructions(type, instructions, patches));
 }
 
+// object with its own code's data (in slot, as level has it) patched, if the object has patches
+function withPatchedOwnData(type: ObjectType, object: DonorObject, level: Level, slot: number): DonorObject {
+  const patches = OBJECT_DATA_PATCHES[type];
+  if (!patches) {
+    return object;
+  }
+  return withPatchedCode(object, level.nsd.ldat.execMap[slot], (data) => patchedInstructions(type, data, patches, "data word"), CODE_DATA);
+}
+
 // a kind of enemy's object from the level it's taken from, its code changed to
 // suit custom levels, and moved to its own exec slot if it has one there
 function objectDonorObject(type: ObjectType, level: Level): DonorObject {
@@ -556,7 +582,7 @@ function objectDonorObject(type: ObjectType, level: Level): DonorObject {
   const leftOut = (ENEMY_UNUSED_ENTRIES[type] ?? []).map(stringToEid);
   const object = donorObject(level, slot, ENEMY_CHILD_SLOTS[type] ?? [], leftOut);
   const capped = (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, withCrashAnimationEntries(type, object, level));
-  const patched = withPatchedOwnCode(type, withPatchedChildCode(type, capped, level), level, slot);
+  const patched = withPatchedOwnData(type, withPatchedOwnCode(type, withPatchedChildCode(type, capped, level), level, slot), level, slot);
   if (!moved) {
     return patched;
   }
