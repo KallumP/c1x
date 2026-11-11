@@ -25,7 +25,7 @@ import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
 import { cameraOffsets, cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
 import { DEFAULT_CAMERA, type Camera } from "../src/camera";
-import { levelEntity, mossySlope, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type MossySlope, type StoneTrack, type Templates } from "./templates";
+import { levelEntity, mossyPlank, mossySlats, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type MossySlope, type PlankSlat, type StoneTrack, type Templates } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
@@ -421,15 +421,18 @@ function slidePlankMeshes(slides: LevelObject[], slopeOf: (slide: LevelObject) =
   return slides.map((slide) => pieceMesh(slopeOf(slide), placer.positionOf(slide)));
 }
 
-// each mossy slide's slope (its plank and path) from the great gate (donor), by
-// whether it's long and reversed, each read from it once
-function slideSlopes(donor: Level | undefined): (slide: LevelObject) => MossySlope {
+// each mossy slide's slope (its plank and the slider's path along it): made of
+// the great gate's (donor's) slats, as long (metres, at scale) and steep as it's
+// set, each length, angle and way made once
+function slideSlopes(donor: Level | undefined, scale: number): (slide: LevelObject) => MossySlope {
   const slopes = new Map<string, MossySlope>();
+  let slats: PlankSlat[] | null = null;
   return (slide) => {
-    const [long, reverse] = [slide.long === true, slide.reverse === true];
-    const key = `${long},${reverse}`;
+    const [length, angle, reverse] = [numberSetting(slide, "length"), numberSetting(slide, "angle"), slide.reverse === true];
+    const key = `${length},${angle},${reverse}`;
+    slats ??= mossySlats(donor!);
     if (!slopes.has(key)) {
-      slopes.set(key, mossySlope(donor!, long, reverse));
+      slopes.set(key, mossyPlank(slats, length * scale, angle, reverse));
     }
     return slopes.get(key)!;
   };
@@ -462,7 +465,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const stones = obstacles.filter((obstacle) => obstacle.obstacle === "rolling_stone");
   const slides = obstacles.filter((obstacle) => obstacle.obstacle === "mossy_slide");
   const donorLevels = objectDonorLevels([...enemies, ...obstacles], readOtherLevel);
-  const slopeOf = slideSlopes(donorLevels.get("mossy_slide"));
+  const slopeOf = slideSlopes(donorLevels.get("mossy_slide"), scale);
   const entityCount = Number(end !== undefined) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0) + obstacles.length;
   const placer = new ObjectPlacer(map, templates, scale, turn, entityCount);
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;

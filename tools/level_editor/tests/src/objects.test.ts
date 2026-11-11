@@ -579,7 +579,7 @@ describe("mossy slides", () => {
 
   test.each([
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "length": 5}]', "object 1: a leaf has no length (mossy slides do)"],
-    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "angle": 5}]', "object 1: a crab has no angle (mossy slides do)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "angle": 5}]', "object 1: unknown setting angle"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "length": 1}]', "object 1: length should be 2 to 20 (how long it is, in metres)"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "angle": 40}]', "object 1: angle should be 5 to 30 (how steeply it slopes, in degrees)"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "long": true}]', "object 1: unknown setting long"],

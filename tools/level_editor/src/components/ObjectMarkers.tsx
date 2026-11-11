@@ -8,7 +8,7 @@ import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { OBSTACLE_SHAPES } from "../obstacleShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
-import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
+import { isPathEnemy, numberSetting, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
@@ -445,11 +445,11 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   );
 
   // a mossy slide as its plank, sloping from its top end (at, raised) across the
-  // map and down to its bottom end, as long as the great gate's long or short one
+  // map and down to its bottom end, as long and steep as it's set
   const renderMossySlide = (object: LevelObject, index: number) => {
     const [x, y, z] = object.at;
     const top = blenderToView([x, y, z + object.raise]);
-    const bottom = blenderToView(mossySlideEnd(object.at, object.raise, turn, scale, object.long === true, object.reverse === true));
+    const bottom = blenderToView(mossySlideEnd(object.at, object.raise, turn, numberSetting(object, "length"), numberSetting(object, "angle"), object.reverse === true));
     const centre = top.map((value, axis) => (value + bottom[axis]) / 2) as Vec3;
     const [dx, dy, dz] = bottom.map((value, axis) => value - top[axis]);
     const flat = Math.hypot(dx, dz);

@@ -143,10 +143,20 @@ export const GUNMAN_RANGE = 16;
 export const RANGE_MIN = 2;
 export const RANGE_MAX = 40;
 
+// how long a mossy slide is (metres, at the default scale: its plank is
+// slats enough to reach it) and how steeply it slopes (degrees): the great
+// gate's short slide's, without them
+export const SLIDE_LENGTH = 4;
+export const SLIDE_LENGTH_MIN = 2;
+export const SLIDE_LENGTH_MAX = 20;
+export const SLIDE_ANGLE = 14;
+export const SLIDE_ANGLE_MIN = 5;
+export const SLIDE_ANGLE_MAX = 30;
+
 // the enemy settings that are a number in a range, and for each: the enemies
 // that have it (named for messages), its range, whether it's whole, what it is
 // without one (left out of objects.json), and what it means
-export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range"] as const;
+export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range", "length", "angle"] as const;
 export type NumberSetting = (typeof NUMBER_SETTINGS)[number];
 
 interface NumberSettingRule {
@@ -164,6 +174,8 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   start: { types: ["rolling_stone"], typesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
   count: { types: ["badger", "walking_spider", "bat", "leader_bats"], typesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
   delay: { types: ["bat", "leader_bats"], typesNamed: "bats and leader bats", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks" },
+  length: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_LENGTH_MIN, max: SLIDE_LENGTH_MAX, whole: false, fallback: () => SLIDE_LENGTH, meaning: "how long it is, in metres" },
+  angle: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_ANGLE_MIN, max: SLIDE_ANGLE_MAX, whole: false, fallback: () => SLIDE_ANGLE, meaning: "how steeply it slopes, in degrees" },
   range: { types: ["gunman"], typesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },
 };
 
@@ -186,7 +198,8 @@ export interface LevelObject {
   speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
   reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping (or a mossy slide sloping) the other way (true, or none)
-  long?: boolean;       // a mossy slide that's the great gate's long one, not its short (true, or none)
+  length?: number;      // how long a mossy slide is, in metres (SLIDE_LENGTH without one)
+  angle?: number;       // how steeply a mossy slide slopes, in degrees (SLIDE_ANGLE without one)
   count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
   delay?: number;       // the seconds between a bat roost's flocks (BAT_DELAY, LEADER_BATS_DELAY without one)
   range?: number;       // how near crash comes, in metres, before a gunman shoots (GUNMAN_RANGE without one)
@@ -225,7 +238,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
-const OBSTACLE_SETTINGS = ["type", "path", "start", "reverse", "long"];
+const OBSTACLE_SETTINGS = ["type", "path", "start", "reverse", "length", "angle"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
 // a word with "a" or "an" before it, as it sounds: "a box", "an enemy"
@@ -358,26 +371,6 @@ function readReverse(fields: Record<string, unknown>, type: ObjectType, objectNu
   return fields.reverse ? { reverse: true } : {};
 }
 
-// the obstacles that can be long: a mossy slide, as the great gate's long one
-const LONG_OBSTACLES: ObjectType[] = ["mossy_slide"];
-
-// whether a mossy slide is long, from its fields in objects.json
-function readLong(fields: Record<string, unknown>, type: ObjectType, objectNumber: number): Pick<LevelObject, "long"> {
-  if (!("long" in fields)) {
-    return {};
-  }
-  if (!LONG_OBSTACLES.includes(type)) {
-    throw new Error(`object ${objectNumber}: a ${type} has no long (mossy slides do)`);
-  }
-  if (typeof fields.long !== "boolean") {
-    throw new Error(`object ${objectNumber}: long should be true or false`);
-  }
-  if (!fields.long) {
-    return {};
-  }
-  return { long: true };
-}
-
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
 export function parseObjects(text: string): LevelObject[] {
   let entries: unknown;
@@ -461,7 +454,6 @@ export function parseObjects(text: string): LevelObject[] {
       Object.assign(object, readObstaclePath(fields, object.obstacle!, objectNumber));
       NUMBER_SETTINGS.forEach((setting) => Object.assign(object, readNumberSetting(fields, setting, object.obstacle!, objectNumber)));
       Object.assign(object, readReverse(fields, object.obstacle!, objectNumber));
-      Object.assign(object, readLong(fields, object.obstacle!, objectNumber));
     }
 
     objects.push(object);
@@ -502,9 +494,6 @@ function formatObject(object: LevelObject): string {
   }
   if (object.reverse) {
     parts.push(`"reverse": true`);
-  }
-  if (object.long) {
-    parts.push(`"long": true`);
   }
   return `{${parts.join(", ")}}`;
 }

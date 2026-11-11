@@ -625,7 +625,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     // the great gate's slats are 304, 232 and 264 along: a plank is them in turn, enough to reach its length
     test.each([
       { more: {}, plank: 1104, angle: 14, way: 1 },                                  // 4 m at scale 256: 1024, so 4 slats
-      { more: { length: 8, angle: 20 }, plank: 2208, angle: 20, way: 1 },           // 2048: 8 slats
+      { more: { length: 8, angle: 20 }, plank: 2136, angle: 20, way: 1 },           // 2048: 8 slats
       { more: { length: 2, angle: 5, reverse: true }, plank: 536, angle: 5, way: -1 }, // 512: 2 slats
     ])("a slider ($more) slides from its spot along its plank and on past it, at its angle", ({ more, plank, angle, way }) => {
       const [path] = slidePaths(build([obstacle("mossy_slide", more)]).zone);
@@ -636,7 +636,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("its plank is in the map there, on the great gate's texture page", () => {
       const built = build([obstacle("mossy_slide")]);
-      const nearSlide = ([x, y, z]: Vec3) => x >= SPOT_X - 400 && x <= SPOT_X + 1504 && y > FLOOR_Y - 800 && y < FLOOR_Y + 200 && Math.abs(z - SPOT_Z) < 900;
+      const nearSlide = ([x, y, z]: number[]) => x >= SPOT_X - 400 && x <= SPOT_X + 1504 && y > FLOOR_Y - 800 && y < FLOOR_Y + 200 && Math.abs(z - SPOT_Z) < 900;
       expect(worldVertices(built).filter(nearSlide).length).toBeGreaterThan(worldVertices(build()).filter(nearSlide).length + 40);
       expect(texturePages(built.level).some((page) => page.eid === stringToEid("Vi1iT"))).toBe(true);
     });
