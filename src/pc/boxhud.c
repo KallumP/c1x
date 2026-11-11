@@ -30,7 +30,7 @@ void BoxHudSetUpCounter(gool_object *counter, gool_object *source, box_hud_icon 
   counter->anim_frame = 0;
 }
 
-/* give the box counter's source the boxes broken (box_count: a gool number, 8 bits after the point) */
-void BoxHudShowBoxes(gool_object *source, int box_count) {
-  source->regs[HUD_COUNT_REG] = box_count;
+/* give the box counter's source the boxes broken (a gool number, 8 bits after the point, as box_count) */
+void BoxHudShowBoxes(gool_object *source, int boxes_broken) {
+  source->regs[HUD_COUNT_REG] = boxes_broken;
 }
