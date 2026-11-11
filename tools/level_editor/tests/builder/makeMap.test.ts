@@ -634,6 +634,14 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
     });
 
+    test.each([
+      { type: "pushing_block", more: {}, flags: [60, 0] },
+      { type: "pushing_platform", more: {}, flags: [70, 0] },
+      { type: "pushing_platform", more: { every: 4, offset: 1 }, flags: [120, 90] },
+    ] as const)("a $type ($more) has its timing in its init flags", ({ type, more, flags }) => {
+      expect(initFlagsOf(build([obstacle(type, more)]).zone, OBSTACLE_ENTITIES[type]).slice(0, 2)).toEqual(flags);
+    });
+
     test("pushing blocks and platforms read sunset vista once", () => {
       const reader = recordingReader();
       build([obstacle("pushing_block"), obstacle("pushing_platform", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
