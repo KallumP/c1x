@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
-import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
 import type { EnemyType, LevelObject, PlatformType } from "../../src/objects";
 import { DEFAULT_SKY, type Sky } from "../../src/sky";
 import { enemyObject, expectNear, platformObject } from "../helpers";
@@ -551,6 +551,11 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(path[0], SPOT_IN_ZONE, 16);
       expect(path.length).toBe(13);
       expect(fromFirst(path).at(-1)).toEqual([400, 0, 2400]);
+    });
+
+    test("a leaf's drift is the one the editor draws", () => {
+      const [path] = platformPaths(build([platform("leaf")]).zone, "leaf");
+      expect(fromFirst(path).map(([x, , z]) => [x, z])).toEqual(LEAF_DRIFT);
     });
 
     test("a raised platform is raised", () => {
