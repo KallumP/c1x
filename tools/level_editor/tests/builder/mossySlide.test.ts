@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { mossySlideImages, mossySlidePlank, mossySlidePath, SLIDE_MATERIALS } from "../../builder/mossySlide";
+import { mossySlideImages, mossySlidePlank, mossySlidePath, SLIDE_MATERIALS, withPlanks } from "../../builder/mossySlide";
 import { normal } from "../../builder/faces";
 import { expectNear } from "../helpers";
 
@@ -78,5 +78,18 @@ describe("a mossy slide's slider path", () => {
     expectNear([x, y, z], [4400, -4400 * tan(20), 0], 1);
     path.slice(1).forEach(([px], point) => expectNear(px - path[point][0], 450, 60));
     expect(mossySlidePath(4000, 20, true).at(-1)![0]).toBeCloseTo(-4400);
+  });
+});
+
+describe("planks added to a map's mesh", () => {
+  test("the map's own, then each plank's moved to where it goes, so it's drawn and solid as the map is", () => {
+    const map = { vertices: [[0, 0, 0], [1, 0, 0], [0, 0, 1]] as [number, number, number][], triangles: [{ corners: [0, 1, 2] as [number, number, number], object: null, material: "grass" }], materialLibraries: [] };
+    const plank = mossySlidePlank(1000, 10, false);
+    const merged = withPlanks(map, [{ plank, at: [500, 200, -300] }]);
+    expect(merged.vertices.length).toBe(3 + plank.vertices.length);
+    expect(merged.vertices[3]).toEqual(plank.vertices[0].map((value, axis) => value + [500, 200, -300][axis]));
+    expect(merged.triangles[0]).toEqual(map.triangles[0]);
+    expect(merged.triangles[1].corners).toEqual(plank.triangles[0].corners.map((corner) => corner + 3));
+    expect(merged.triangles.length).toBe(1 + plank.triangles.length);
   });
 });

@@ -622,11 +622,10 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const slidePaths = (zone: Entry) => zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.mossy_slide)).map(entityPath);
     const fromFirst = (path: Vec3[]) => path.map((point) => point.map((value, axis) => value - path[0][axis]));
 
-    // the great gate's slats are 304, 232 and 264 along: a plank is them in turn, enough to reach its length
     test.each([
-      { more: {}, plank: 1104, angle: 14, way: 1 },                                  // 4 m at scale 256: 1024, so 4 slats
-      { more: { length: 8, angle: 20 }, plank: 2136, angle: 20, way: 1 },           // 2048: 8 slats
-      { more: { length: 2, angle: 5, reverse: true }, plank: 536, angle: 5, way: -1 }, // 512: 2 slats
+      { more: {}, plank: 1024, angle: 14, way: 1 },                                  // 4 m at scale 256
+      { more: { length: 8, angle: 20 }, plank: 2048, angle: 20, way: 1 },
+      { more: { length: 2, angle: 5, reverse: true }, plank: 512, angle: 5, way: -1 },
     ])("a slider ($more) slides from its spot along its plank and on past it, at its angle", ({ more, plank, angle, way }) => {
       const [path] = slidePaths(build([obstacle("mossy_slide", more)]).zone);
       expectNear(path[0], SPOT_IN_ZONE, 16);
@@ -634,18 +633,10 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear([x, y, z], [way * (plank + 400), -(plank + 400) * Math.tan((angle * Math.PI) / 180), 0], 16);
     });
 
-    test("its plank is in the map there, on the great gate's texture page", () => {
-      const built = build([obstacle("mossy_slide")]);
-      const nearSlide = ([x, y, z]: number[]) => x >= SPOT_X - 400 && x <= SPOT_X + 1504 && y > FLOOR_Y - 800 && y < FLOOR_Y + 200 && Math.abs(z - SPOT_Z) < 900;
-      expect(worldVertices(built).filter(nearSlide).length).toBeGreaterThan(worldVertices(build()).filter(nearSlide).length + 40);
-      expect(texturePages(built.level).some((page) => page.eid === stringToEid("Vi1iT"))).toBe(true);
-    });
-
-    test("its plank is in a mesh of its own, the zone's last, so it's drawn over the floor", () => {
-      const [withSlide, without] = [build([obstacle("mossy_slide")]), build()];
-      expect(worldsOf(withSlide).length).toBe(worldsOf(without).length + 1);
-      const last = readWorldHeader(worldsOf(withSlide).at(-1)!.items[0]);
-      expect(last.polygonCount).toBeGreaterThan(40);
+    test("its plank is in the map there, made for it, textured as the map is", () => {
+      const nearSlide = ([x, y, z]: number[]) => x >= SPOT_X - 100 && x <= SPOT_X + 1124 && y > FLOOR_Y - 600 && y < FLOOR_Y + 600 && Math.abs(z - SPOT_Z) <= 600;
+      expect(worldVertices(build([obstacle("mossy_slide", { raise: 1 })])).filter(nearSlide).length)
+        .toBeGreaterThan(worldVertices(build()).filter(nearSlide).length + 20);
     });
 
     test("a level with mossy slides and wood platforms reads the great gate once", () => {
