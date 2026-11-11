@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "build-level": "tsx builder/buildLevelCli.ts",
     "bundle-builder": "esbuild builder/buildLevelCli.ts --bundle --platform=node --format=cjs --log-level=error --outfile=../../build/build-level/build-level.cjs",
+    "builder-exe": "npm run bundle-builder && tsx scripts/builderExeCli.ts",
     "export-cut-level": "tsx scripts/cutLevel/exportCutLevelCli.ts"
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "@types/three": "0.169.0",
     "@types/utif": "3.0.6",
     "@vitejs/plugin-react": "4.3.3",
+    "postject": "1.0.0-alpha.6",
     "tsx": "4.21.1",
     "typescript": "5.6.3",
     "vite": "5.4.10",
