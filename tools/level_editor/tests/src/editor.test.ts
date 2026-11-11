@@ -33,13 +33,13 @@ describe("obstacles", () => {
     expect(["lily_pad", "leaf"].map((what) => placeableKind(what as Placeable))).toEqual(["obstacle", "obstacle"]);
   });
 
-  test.each(["lily_pad", "leaf"] as const)("a new %s is where it's put", (obstacle) => {
+  test.each(["lily_pad", "leaf", "wooden_peg", "rolling_stone"] as const)("a new %s is where it's put", (obstacle) => {
     expect(newObject(obstacle, [1, 2, 3])).toEqual(obstacleObject(obstacle, { at: [1, 2, 3] }));
   });
 });
 
 describe("new enemies", () => {
-  test.each(["plant", "rolling_stone", "crab", "turtle"] as const)("a new %s stands where it's put", (enemy) => {
+  test.each(["plant", "crab", "turtle"] as const)("a new %s stands where it's put", (enemy) => {
     expect(newObject(enemy, [1, 2, 3])).toEqual(enemyObject(enemy, { at: [1, 2, 3] }));
   });
 

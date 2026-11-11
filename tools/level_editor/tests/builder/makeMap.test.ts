@@ -134,6 +134,10 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   const enemies = (zone: Entry) => zoneEntities(zone)
     .filter((item) => Object.values(ENEMY_ENTITIES).some((type) => isOfType(item, type)))
     .map((item) => ({ type: entityType(item), id: entityId(item), path: entityPath(item), initFlagA: item.readInt16LE(ENTITY_INIT_FLAGS) }));
+  // the zone's rolling stones, as enemies() has the enemies
+  const stones = (zone: Entry) => zoneEntities(zone)
+    .filter((item) => isOfType(item, OBSTACLE_ENTITIES.rolling_stone))
+    .map((item) => ({ type: entityType(item), id: entityId(item), path: entityPath(item), initFlagA: item.readInt16LE(ENTITY_INIT_FLAGS) }));
   const enemyOfType = (zone: Entry, type: readonly number[]) => enemies(zone).find((placed) => placed.type.join() === type.join())!;
   // the init flags a, b and c of the zone's first entity of a type
   const initFlagsOf = (zone: Entry, type: readonly number[]) => {
@@ -271,7 +275,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     // its init flag a counts through its cycle there and back (seen in the game): STONE_FAR_END
     // x start rolling forward, twice that less it rolling back; its path is the same either
     // way (rolling -x, so it spins the right way)
-    const placed = (more: Partial<LevelObject>) => enemies(build([enemy("rolling_stone", more)]).zone)[0];
+    const placed = (more: Partial<LevelObject>) => stones(build([obstacle("rolling_stone", more)]).zone)[0];
     const flags = [{}, { start: 1 }, { start: 0.5 }, { start: 0.5, reverse: true }, { start: 1, reverse: true }, { reverse: true }]
       .map((more) => placed(more).initFlagA);
     const halfWay = STONE_FAR_END / 2;
@@ -350,7 +354,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   test("rolling stones' tracks get a world mesh of their own", () => {
     const track = stoneTrack(base);
-    const withStones = build([enemy("rolling_stone"), enemy("rolling_stone", { at: [-1, 4, 0] })]);
+    const withStones = build([obstacle("rolling_stone"), obstacle("rolling_stone", { at: [-1, 4, 0] })]);
     const without = build();
     expect(worldsOf(withStones).length).toBe(worldsOf(without).length + 1);
     const tracksMesh = readWorldHeader(worldsOf(withStones).at(-1)!.items[0]);
@@ -359,8 +363,8 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   test("a rolling stone rolls jungle rollers' path, centred over its spot on its lifted track", () => {
     const track = stoneTrack(base);
-    const [placed] = enemies(build([enemy("rolling_stone")]).zone);
-    expect(placed.type).toEqual(ENEMY_ENTITIES.rolling_stone);
+    const [placed] = stones(build([obstacle("rolling_stone")]).zone);
+    expect(placed.type).toEqual(OBSTACLE_ENTITIES.rolling_stone);
     // the track's floor is lifted over the spot, under the path's middle
     const start = [SPOT_X - track.path[5][0], FLOOR_Y + STONE_TRACK_LIFT - track.floor, SPOT_Z - track.path[5][2]];
     expect(placed.path.length).toBe(track.path.length);
@@ -1232,7 +1236,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const track = stoneTrack(base);
     const middle = track.path[5];
     const offset = [SPOT_X - middle[0], FLOOR_Y + STONE_TRACK_LIFT - track.floor, SPOT_Z - middle[2]];
-    const placedVertices = worldVertices(build([enemy("rolling_stone")]));
+    const placedVertices = worldVertices(build([obstacle("rolling_stone")]));
     const isPlaced = (wanted: number[]) => placedVertices.some((vertex) => vertex.every((value, axis) => Math.abs(value - wanted[axis]) <= 16));
     const floorVertices = track.vertices.filter(({ at }) => at[1] === track.floor);
     expect(floorVertices.length).toBeGreaterThan(0);
