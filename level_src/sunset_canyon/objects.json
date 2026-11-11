@@ -112,8 +112,6 @@
   {"kind": "obstacle", "type": "rising_spiked_log", "at": [3.25, 142.5, 2.263], "every": 4, "offset": 1},
   {"kind": "obstacle", "type": "rising_spiked_log", "at": [5.25, 142.5, 2.272], "every": 4, "offset": 2},
   {"kind": "obstacle", "type": "rising_spiked_log", "at": [7.25, 142.5, 2.369], "every": 4, "offset": 3},
-  {"kind": "obstacle", "type": "fire_pit", "at": [3.5, 86, 2.2]},
-  {"kind": "obstacle", "type": "fire_pit", "at": [5, 89, 2.2], "offset": 2},
   {"kind": "obstacle", "type": "fire_pit", "at": [-8.63, 252.464, 2.396], "raise": 3},
   {"kind": "obstacle", "type": "fire_pit", "at": [-5.098, 251.621, 2.199], "raise": 3, "every": 5, "offset": 1},
   {"kind": "obstacle", "type": "fire_pit", "at": [-1.261, 252.018, 2.229], "raise": 3, "every": 5, "offset": 2},
