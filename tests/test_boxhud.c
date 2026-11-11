@@ -57,10 +57,10 @@ UTEST(boxhud, the_crate_icon_is_as_wide_as_the_wumpa) {
   ASSERT_EQ(WUMPA_SCALE, counter.scale.x);
 }
 
-UTEST(boxhud, the_crate_icon_is_square_though_sprites_are_drawn_5_8_as_tall) {
+UTEST(boxhud, the_crate_icon_is_square) {
   StartLivesCounter();
   BoxHudSetUpCounter(&counter, &source, &icon, WUMPA_SCALE);
-  ASSERT_EQ(WUMPA_SCALE * 8 / 5, counter.scale.y);
+  ASSERT_EQ(WUMPA_SCALE, counter.scale.y);
 }
 
 UTEST(boxhud, the_counter_starts_on_the_boxes_already_broken_so_it_doesnt_slide_in) {
