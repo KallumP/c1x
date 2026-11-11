@@ -155,24 +155,34 @@ function pillar(): ShapePart[] {
   ];
 }
 
-// boulder dash's wooden gate, standing on its spot: a post at each end, across
-// wide and tall high, with rails between them, deep along the map
-function gate(across: number, tall: number, deep: number): ShapePart[] {
-  const post = deep;
-  const postAt = (across - post) / 2;
-  const railCount = Math.max(2, Math.round(tall / 400));
-  const rails = Array.from({ length: railCount }, (_, rail): ShapePart => (
-    { kind: "box", size: [across - 2 * post, 90, deep * 0.6], at: [0, (tall * (rail + 0.5)) / railCount, 0], colour: GATE_COLOURS.rail }
-  ));
+const TALL_GATE = { across: 903, tall: 1554, deep: 246, post: 160, plank: 150 };
+const LOW_GATE = { across: 2377, tall: 437, deep: 284, stumps: 6 };
+
+// boulder dash's tall thin gate (JB4eG), standing on its spot: an upright
+// post 1554 tall, two planks nailed across it, 903 wide
+function tallThinGate(): ShapePart[] {
+  const { across, tall, deep, post, plank } = TALL_GATE;
+  const plankAt = (height: number): ShapePart =>
+    ({ kind: "box", size: [across, plank, deep * 0.5], at: [0, height, deep * 0.25], colour: GATE_COLOURS.rail });
   return [
-    { kind: "box", size: [post, tall, deep], at: [-postAt, tall / 2, 0], colour: GATE_COLOURS.post },
-    { kind: "box", size: [post, tall, deep], at: [postAt, tall / 2, 0], colour: GATE_COLOURS.post },
-    ...rails,
+    { kind: "box", size: [post, tall, deep * 0.5], at: [0, tall / 2, -deep * 0.25], colour: GATE_COLOURS.post },
+    plankAt(tall * 0.55),
+    plankAt(tall * 0.85),
   ];
+}
+
+// boulder dash's low wide gate (JB3eG), standing on its spot: a row of short
+// log stumps 437 tall, 2377 wide
+function lowWideGate(): ShapePart[] {
+  const { across, tall, deep, stumps } = LOW_GATE;
+  const width = across / stumps;
+  return Array.from({ length: stumps }, (_, stump): ShapePart => (
+    { kind: "box", size: [width * 0.9, tall, deep], at: [-across / 2 + width * (stump + 0.5), tall / 2, 0], colour: GATE_COLOURS.post }
+  ));
 }
 
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
 export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit(), dropping_pillar: pillar(), sliding_pillar: pillar(),
-  tall_thin_gate: gate(903, 1554, 246), low_wide_gate: gate(2377, 437, 284) };
+  tall_thin_gate: tallThinGate(), low_wide_gate: lowWideGate() };
