@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { defaultPath, enemyPath, handleLifts, nodeCount, nodeHeading, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
-import { batSwoopEnd, labAssistantThrow, leaderBatsGap } from "../../src/coords";
+import { batSwoopEnd, labAssistantThrow, LEAF_DRIFT, leafDrift, leaderBatsGap } from "../../src/coords";
 import { LAB_ASSISTANT_REACH } from "../../src/labAssistantThrow";
-import { PATH_NODES_MAX, type Vec3 } from "../../src/objects";
-import { enemyObject, expectCloseTo, noMinusZero } from "../helpers";
+import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
+import { enemyObject, expectCloseTo, noMinusZero, obstacleObject } from "../helpers";
 
 // where the enemies whose spot matters stand
 const SPOT: Vec3 = [1, 2, 3];
@@ -242,5 +242,27 @@ describe("a point along a path", () => {
     const bent: Vec3[] = [[0, 0, 0], [2, 0, 0], [2, 2, 0]];
     expect([0, 0.25, 0.5, 0.75, 1].map((share) => noMinusZero(pointAlongShare(bent, share))))
       .toEqual([[0, 0, 0], [1, 0, 0], [2, 0, 0], [2, 1, 0], [2, 2, 0]]);
+  });
+});
+
+describe("a floating leaf's path", () => {
+  const leaf = (more: Partial<LevelObject> = {}) => obstacleObject("leaf", { at: [1, 2, 0], raise: 0.5, ...more });
+
+  test("without a path of its own, its nodes are its drift, as up the creek's", () => {
+    expect(nodeCount(leaf())).toBe(LEAF_DRIFT.length);
+    pathPositions(leaf(), 90, 400).forEach((position, node) => expectCloseTo(position, leafDrift([1, 2, 0], 0.5, 90, 400)[node]));
+  });
+
+  test("with a path, its nodes are its own, from where it's placed, raised", () => {
+    const path: Vec3[] = [[0, 0, 0], [3, 0, 0], [3, -2, 0]];
+    expect(nodeCount(leaf({ path }))).toBe(3);
+    expect(pathPositions(leaf({ path }), 0, 400)).toEqual([[1, 2, 0.5], [4, 2, 0.5], [4, 0, 0.5]]);
+  });
+
+  test("moving a node of its drift gives it a path of its own, the drift's other nodes kept", () => {
+    const moved = withNodeAt(leaf(), 12, [5, 5, 0.5], 0, 400);
+    expect(moved.length).toBe(LEAF_DRIFT.length);
+    expect(moved[12]).toEqual([4, 3, 0]);
+    expectCloseTo(moved[1], enemyPath(leaf(), 0, 400)[1]);
   });
 });
