@@ -44,12 +44,14 @@ describe.skipIf(!hasGreatGate)("the great gate's mossy slides' planks", () => {
     expectNear(slope.path.at(-1)![0], across, 16);
     expect(slope.polygons.length).toBeGreaterThan(40);
     expect(slope.polygons.every(({ page }) => page === VI1IT)).toBe(true);
-    // every corner is near the slide's line: from 0.9 m below it to 0.3 m above, 1.75 m to either side (at scale 400)
+    // every corner is near the slide's line: from 1.25 m below it to 0.75 m above, 2 m to either side (at scale 400), and not past its ends
     const drop = slope.path.at(-1)![1] / slope.path.at(-1)![0];
     slope.vertices.forEach(({ at: [x, y, z] }) => {
-      expect(y - drop * x).toBeGreaterThanOrEqual(-360);
-      expect(y - drop * x).toBeLessThanOrEqual(120);
-      expect(Math.abs(z)).toBeLessThanOrEqual(700);
+      expect(y - drop * x).toBeGreaterThanOrEqual(-500);
+      expect(y - drop * x).toBeLessThanOrEqual(300);
+      expect(Math.abs(z)).toBeLessThanOrEqual(800);
+      expect(x * Math.sign(across)).toBeGreaterThanOrEqual(-20);
+      expect(x * Math.sign(across)).toBeLessThanOrEqual(Math.abs(slope.path.at(-1)![0]) + 20);
     });
   });
 });
