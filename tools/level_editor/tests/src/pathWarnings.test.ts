@@ -61,6 +61,16 @@ describe("crabs' and turtles' paths that leave the floor or run through a wall",
     expect(strayingPaths([camera], 0, SCALE, floor)).toEqual(new Set());
   });
 
+  test("a leaf's path off the floor is fine: it floats", () => {
+    const leaf: LevelObject = { ...newObject("leaf", [0, 0, 0]), path: [[0, 0, 0], [8, 0, 0]] };
+    expect(strayingPaths([leaf], 0, SCALE, floor)).toEqual(new Set());
+  });
+
+  test("a leaf's path through a wall is flagged", () => {
+    const leaf: LevelObject = { ...newObject("leaf", [0, 0, 0]), path: [[0, 0, 0], [4, 0, 0]] };
+    expect(strayingPaths([leaf], 0, SCALE, [...floor, ...wall])).toEqual(new Set([0]));
+  });
+
   test("other objects aren't checked here", () => {
     expect(strayingPaths([newObject("plant", [9, 0, 0]), newObject("basic", [9, 0, 0])], 0, SCALE, floor)).toEqual(new Set());
   });
