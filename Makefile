@@ -115,7 +115,8 @@ LAUNCHER_SRC = src/launcher/main.c \
 OBJ = $(SRC:.c=.o)
 OUT = build/c1
 TEST_OUT = build/tests
-LAUNCHER_OUT = build/launcher
+# the launcher's _ sorts it first in build/
+LAUNCHER_OUT = build/_launcher
 
 # include dirs.
 INCLUDE = -I./src/
@@ -129,7 +130,7 @@ ifeq ($(OS),Windows_NT)
 LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lm -lstdc++
 OUT = build/c1.exe
 TEST_OUT = build/tests.exe
-LAUNCHER_OUT = build/launcher.exe
+LAUNCHER_OUT = build/_launcher.exe
 LAUNCHER_LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lcomdlg32 -lm -lstdc++ -mwindows
 else
 LDLIBS = -lSDL2 -lGL -lfluidsynth -lm -lstdc++

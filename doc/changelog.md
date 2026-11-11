@@ -6,6 +6,10 @@
 
 - an option to show how many of a level's boxes Crash has broken (such as 12/49), with the lives and wumpa counters
 
+### Changed
+
+- the launcher is now `build/_launcher.exe`, so it's first in the `build` folder
+
 ## 2026-11-10
 
 ### Added
