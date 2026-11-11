@@ -5,6 +5,7 @@ import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, 
 import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
+import { PLATFORM_SHAPES } from "../platformShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
 import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
@@ -416,6 +417,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
+  // a lily pad or floating leaf: at its spot, where it sinks or drifts from
+  const renderPlatform = (object: LevelObject, index: number) => renderShapeModel(PLATFORM_SHAPES[object.platform!], base(object), index);
+
   const renderShape = (object: LevelObject, index: number) => {
     switch (object.kind) {
       case "spawn":
@@ -426,6 +430,8 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
         return renderBoxStack(object, index);
       case "enemy":
         return renderEnemy(object, index);
+      case "platform":
+        return renderPlatform(object, index);
     }
   };
 

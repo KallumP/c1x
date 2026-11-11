@@ -4,18 +4,21 @@
 import { useState } from "react";
 import { placeableKind, type Placeable, type PlaceableKind, type Tool } from "../editor";
 import { placeableName, placeablesByName } from "../objectNames";
-import { BOX_TYPES, ENEMY_TYPES, type BoxType, type EnemyType } from "../objects";
-import { boxStyle, END_COLOUR, ENEMY_COLOURS, SPAWN_COLOUR } from "../objectStyles";
+import { BOX_TYPES, ENEMY_TYPES, PLATFORM_TYPES, type BoxType, type EnemyType, type PlatformType } from "../objects";
+import { boxStyle, END_COLOUR, ENEMY_COLOURS, PLATFORM_COLOURS, SPAWN_COLOUR } from "../objectStyles";
 import "./Palette.css";
 
 const GRID_SIZES = [0, 0.25, 0.5, 1];
 const BOX_TYPE_NAMES = Object.keys(BOX_TYPES) as BoxType[];
 
-type TypedKind = "box" | "enemy"; // the kinds with types to pick from
-const isTypedKind = (kind: PlaceableKind | null): kind is TypedKind => kind === "box" || kind === "enemy";
+type TypedKind = "box" | "enemy" | "platform"; // the kinds with types to pick from
+const TYPED_KINDS: PlaceableKind[] = ["box", "enemy", "platform"];
+const isTypedKind = (kind: PlaceableKind | null): kind is TypedKind => kind !== null && TYPED_KINDS.includes(kind);
 // each kind's types, in alphabetical order of their names
-const KIND_TYPES: Record<TypedKind, Placeable[]> = { box: placeablesByName(BOX_TYPE_NAMES), enemy: placeablesByName([...ENEMY_TYPES]) };
-const KIND_TYPE_HEADINGS: Record<TypedKind, string> = { box: "Box type", enemy: "Enemy type" };
+const KIND_TYPES: Record<TypedKind, Placeable[]> = {
+  box: placeablesByName(BOX_TYPE_NAMES), enemy: placeablesByName([...ENEMY_TYPES]), platform: placeablesByName([...PLATFORM_TYPES]),
+};
+const KIND_TYPE_HEADINGS: Record<TypedKind, string> = { box: "Box type", enemy: "Enemy type", platform: "Platform type" };
 
 // what a tool places, if anything
 function placingOf(tool: Tool): Placeable | null {
@@ -36,14 +39,17 @@ function colourOf(what: Placeable): string {
   if (placeableKind(what) === "box") {
     return boxStyle(what as BoxType).colour;
   }
+  if (placeableKind(what) === "platform") {
+    return PLATFORM_COLOURS[what as PlatformType];
+  }
   return ENEMY_COLOURS[what as EnemyType];
 }
 
 export default function Palette({ tool, onTool, grid, onGrid }: {
   tool: Tool; onTool: (tool: Tool) => void; grid: number; onGrid: (grid: number) => void;
 }) {
-  // the box and enemy types last picked, which picking box or enemy places
-  const [lastPicked, setLastPicked] = useState<{ box: BoxType; enemy: EnemyType }>({ box: "basic", enemy: ENEMY_TYPES[0] });
+  // the box, enemy and platform types last picked, which picking box, enemy or platform places
+  const [lastPicked, setLastPicked] = useState<Record<TypedKind, Placeable>>({ box: "basic", enemy: ENEMY_TYPES[0], platform: PLATFORM_TYPES[0] });
   const placing = placingOf(tool);
   const placingKind = placing && placeableKind(placing);
 
@@ -111,6 +117,7 @@ export default function Palette({ tool, onTool, grid, onGrid }: {
       {renderKindButton("end")}
       {renderKindButton("box")}
       {renderKindButton("enemy")}
+      {renderKindButton("platform")}
       {isTypedKind(placingKind) && renderTypes(placingKind)}
       {renderGridPicker()}
     </aside>

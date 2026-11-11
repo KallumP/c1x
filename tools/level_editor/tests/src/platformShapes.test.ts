@@ -3,7 +3,7 @@ import { shapeBounds } from "../../src/enemyShapes";
 import { PLATFORM_SHAPES } from "../../src/platformShapes";
 import { PLATFORM_TYPES } from "../../src/objects";
 
-type Range = [number, number];
+type Range = readonly [number, number];
 
 function expectWithin(value: number, [low, high]: Range): void {
   expect(value).toBeGreaterThan(low);
