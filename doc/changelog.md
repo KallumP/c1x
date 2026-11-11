@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11
+
+### Added
+
+- an option to show how many boxes Crash has broken, with the lives and wumpa counters
+
 ## 2026-11-10
 
 ### Added
