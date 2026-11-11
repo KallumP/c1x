@@ -8,6 +8,7 @@
 
 ### Changed
 
+- extracting the game's files from a disc image no longer needs Node.js
 - the launcher is now `build/_launcher.exe`, so it's first in the `build` folder
 
 ## 2026-11-10
