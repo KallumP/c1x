@@ -656,6 +656,19 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       pillarSlideShares().forEach((share, point) => expectNear(shares[point], share, 0.01));
     });
 
+    // it moves through its points at the game's rate: faster, it has fewer, still eased at its ends
+    test.each([
+      { speed: 2, points: 8 },
+      { speed: 0.5, points: 27 },
+    ])("a sliding pillar at speed $speed slides the same way in $points points", ({ speed, points }) => {
+      const placed = zoneEntities(build([obstacle("sliding_pillar", { speed })]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.sliding_pillar))!;
+      const path = entityPath(placed);
+      expect(path.length).toBe(points);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 800, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
+      expect(path[1][0] - path[0][0]).toBeLessThan(path[Math.floor(points / 2)][0] - path[Math.floor(points / 2) - 1][0]);
+    });
+
     test("dropping and sliding pillars read boulder dash once", () => {
       const reader = recordingReader();
       build([obstacle("dropping_pillar"), obstacle("sliding_pillar", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });

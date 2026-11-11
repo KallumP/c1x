@@ -513,7 +513,8 @@ describe("obstacles", () => {
   test.each([
     ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar)"],
     ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar)"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed (an obstacle takes kind, at, raise, type, path, start, reverse, length, angle, rotation, every, offset)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: a leaf has no speed"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count (an obstacle takes kind, at, raise, type, path, speed, start, reverse, length, angle, rotation, every, offset)"],
     ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
@@ -537,6 +538,13 @@ describe("pillars", () => {
   test.each(["dropping_pillar", "sliding_pillar"])("a %s is an obstacle", (type) => {
     expect(parseObjects(`[{"kind": "obstacle", "type": "${type}", "at": [1, 2, 0], "raise": 1}]`))
       .toEqual([{ kind: "obstacle", obstacle: type, at: [1, 2, 0], raise: 1, stack: 1 }]);
+  });
+
+  test("a sliding pillar can have a speed, times boulder dash's, read back as written; 1 without", () => {
+    const [pillar] = parseObjects('[{"kind": "obstacle", "type": "sliding_pillar", "at": [1, 2, 0], "speed": 2}]');
+    expect(pillar.speed).toBe(2);
+    expect(parseObjects(formatObjects([pillar]))).toEqual([pillar]);
+    expect(numberSetting(obstacleObject("sliding_pillar"), "speed")).toBe(1);
   });
 
   test("a sliding pillar can have a path, read back as written; a dropping one can't", () => {
