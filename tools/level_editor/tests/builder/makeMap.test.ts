@@ -54,6 +54,7 @@ const N_SANITY_BEACH = 0x9;
 const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
 const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0x12)
 const hasBoulderDash = existsSync(`${STREAMS}/s0000013.nsd`); // boulder dash (0x13)
+const hasSunsetVista = existsSync(`${STREAMS}/s0000023.nsd`); // sunset vista (0x23)
 const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhere (0x14)
 const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the dark (0x2a)
 const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x18)
@@ -616,6 +617,28 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const reader = recordingReader();
       build([enemy("native"), obstacle("wooden_peg", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
       expect(reader.read).toEqual([0x12]);
+    });
+  });
+
+  describe.skipIf(!hasSunsetVista)("pushing blocks and platforms, from sunset vista", () => {
+    test.each([
+      { type: "pushing_block", subtype: 4, models: ["Rp1wG", "Rp7wG"] },
+      { type: "pushing_platform", subtype: 7, models: ["Rw1wG", "Rw3wG"] },
+    ] as const)("a $type is sunset vista's RWaOC subtype $subtype, with its models and no others, at its spot", ({ type, subtype, models }) => {
+      const { level, entries, zone } = build([obstacle(type)]);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([46, subtype]);
+      expect(level.nsd.ldat.execMap[46]).toBe(stringToEid("RWaOC"));
+      expect(models.every((model) => entries.has(stringToEid(model)))).toBe(true);
+      expect(entries.has(stringToEid("Li1wG"))).toBe(false);
+      const placed = zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES[type]));
+      expect(placed.length).toBe(1);
+      expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("pushing blocks and platforms read sunset vista once", () => {
+      const reader = recordingReader();
+      build([obstacle("pushing_block"), obstacle("pushing_platform", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
+      expect(reader.read).toEqual([0x23]);
     });
   });
 
