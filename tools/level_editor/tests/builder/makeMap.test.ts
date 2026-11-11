@@ -693,6 +693,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
     });
 
+    test("a gate takes one more texture page, without boulder dash's boulder and the rest it never shows", () => {
+      const { entries, level } = build([obstacle("low_wide_gate"), obstacle("tall_thin_gate", { at: [1, 6, 0] })]);
+      expect(texturePages(level).length).toBe(texturePages(build().level).length + 1);
+      expect(["JuSeG", "JuLeG", "JuFeG"].some((name) => entries.has(stringToEid(name)))).toBe(false);
+    });
+
     test("a gate leaves jungle rollers' own objects' code (its rolling stone's) as it is", () => {
       const { level, entries } = build([obstacle("low_wide_gate"), obstacle("rolling_stone", { at: [1, 8, 0] })]);
       expect(level.nsd.ldat.execMap[22]).toBe(stringToEid("JunOC"));
