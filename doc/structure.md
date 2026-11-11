@@ -87,13 +87,17 @@ Project structure is listed below, including descriptions for each file.
 │   │   ├── controls_file.c,h    # reading controls.cfg, and saving it keeping its other lines
 │   │   ├── controls_section.c,h # the controls tab (each button's keys, Save)
 │   │   ├── editor_section.c,h   # the level editor section (Node check, Install, Open editor)
-│   │   ├── extract.c,h      # the command extracting the game's files from a disc image
+│   │   ├── disc_image.c,h   # reading a disc image's ISO9660 file system (.bin or .iso)
+│   │   ├── extract.c,h      # extracting the game's files from a disc image into streams/
+│   │   ├── extraction.c,h   # running the extraction on a thread
 │   │   ├── extract_section.c,h  # the disc image field, Browse and Extract
 │   │   ├── file_dialog.c,h  # choosing a file with the system's dialog (windows)
 │   │   ├── game.c,h         # the game: is it built, and starting it
 │   │   ├── game_section.c,h # the game section (Play)
 │   │   ├── level_editor.c,h # the level editor's folder, packages and address
-│   │   ├── levels.c,h       # the levels built to build/levels/, for the boot level dropdown
+│   │   ├── level_build.c,h  # building a level with build/build-level.exe
+│   │   ├── levels.c,h       # the custom levels: built to build/levels/ or sources in level_src/
+│   │   ├── levels_section.c,h   # the levels tab (each custom level, Build)
 │   │   ├── node.c,h         # node's version
 │   │   ├── paths.c,h        # the repo folder, from the launcher's own path
 │   │   ├── process.c,h      # running programs, and commands in the background with their output
@@ -132,7 +136,7 @@ Project structure is listed below, including descriptions for each file.
 │   └── level_editor         # the level editor and the tools beside it, in typescript (npm install first)
 │       ├── src, server      # the level editor (npm run dev): places a level source's objects, sets its turn and scale, and builds and boots it
 │       ├── builder          # builds a level from its source in level_src/ (npm run build-level -- <name>), for the editor's build button
-│       ├── scripts          # extracts game assets from a disc image (npm run extract-streams -- <image>)
+│       ├── scripts          # exports a real level as a level source (npm run export-cut-level), and makes build-level.exe (npm run builder-exe)
 │       └── tests            # their tests (npm test)
 ├── level_src                # level sources: maps modelled in blender, a folder each, to build levels from (ignored by git, apart from the included ones listed in level_src/README.md)
 ├── controls.example.cfg     # default key bindings, which the launcher creates controls.cfg from

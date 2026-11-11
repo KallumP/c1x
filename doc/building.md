@@ -4,7 +4,11 @@ As of currently, compilation has only been tested on Ubuntu/Debian and on Window
 
 Note that only 32-bit target executables are currently supported. If you are not already running a 32-bit OS, you will need multilib versions of gcc and g++ and 32-bit versions of the dependencies.
 
-To compile c1x, install the dependencies listed below, `cd` into the main project directory, and run `make`. This builds the game and the [launcher](launcher.md), a window for starting the game (`make launcher` builds just the launcher).
+To compile c1x, install the dependencies listed below, `cd` into the main project directory, and run `make`. This builds the game, the [launcher](launcher.md), a window for starting the game (`make launcher` builds just the launcher), and `build/build-level.exe` (`build/build-level` on Linux), which the launcher builds custom levels with (`make builder` builds just that).
+
+## Building levels without Node
+
+`build-level.exe` is the level editor's level build (`tools/level_editor/builder/`) bundled into one file with Node.js built in (a [single executable application](https://nodejs.org/api/single-executable-applications.html)), so players can build [custom levels](custom_levels.md) from the launcher without installing Node or the editor. Making it needs [Node.js](https://nodejs.org/) 18 or later: `make` runs `npm install` in `tools/level_editor/` if it's never been run, then `npm run builder-exe`. It's about 85 MB. Without Node, `make` says it's skipping it and builds the rest; the launcher then says levels can't be built. Players running a build made elsewhere need nothing else installed.
 
 ## Dependencies
 
@@ -33,7 +37,7 @@ Windows (MSYS2):
 3. Open the **MSYS2 MINGW32** shell, `cd` into the project directory and run `make`. This builds the game and the launcher into `build/` and copies the DLLs they need next to them (see below). Alternatively, run `rebuild.bat` from the project directory (`rebuild.bat clean` for a full rebuild, `rebuild.bat test` for the tests), which runs `make` in the MINGW32 environment for you.
 4. Open `build/_launcher.exe` and click **Play** (see [Launcher](launcher.md)).
 
-The game links dynamically against SDL2, FluidSynth (and its audio codec dependencies) and the GCC runtime. Windows only looks for DLLs next to the executable or on `PATH`, so outside the MINGW32 shell the game fails to start with an error such as *"libfluidsynth-3.dll was not found"*. To avoid this, the Windows build has an extra `dlls` step that runs after linking. It recursively follows the game's imports and copies each one found in the MinGW32 `bin` directory (currently 17 DLLs) into `build/`. To re-copy them on their own, run `make dlls`. The `build` directory is ignored by git, and `make clean` removes it. To run the game on another machine, copy the `build` directory with the `streams` directory beside it (or inside it), and your `controls.cfg` and `settings.cfg` (if you have them) next to `streams`.
+The game links dynamically against SDL2, FluidSynth (and its audio codec dependencies) and the GCC runtime. Windows only looks for DLLs next to the executable or on `PATH`, so outside the MINGW32 shell the game fails to start with an error such as *"libfluidsynth-3.dll was not found"*. To avoid this, the Windows build has an extra `dlls` step that runs after linking. It recursively follows the game's imports and copies each one found in the MinGW32 `bin` directory (currently 17 DLLs) into `build/`. To re-copy them on their own, run `make dlls`. The `build` directory is ignored by git, and `make clean` removes it. To run the game on another machine, copy the `build` directory with the `streams` directory beside it (or inside it), and your `controls.cfg` and `settings.cfg` (if you have them) next to `streams`. To build custom levels there, put `level_src` next to `streams` too.
 
 ### psx
 As of 30 October 2026, c1x no longer supports building for the PS1, and the `PSX` flag and PS1-specific code have been removed (the last version with them is tagged `psx-last`). See [PS1 build](psx-build.md) for why.
@@ -42,4 +46,4 @@ As of 30 October 2026, c1x no longer supports building for the PS1, and the `PSX
 
 Run `make test` to build and run the unit tests in `tests/`. They use the [utest.h](https://github.com/sheredom/utest.h) single-header framework (vendored in `tests/`), build to `build/tests` (`build/tests.exe` on Windows) and only need SDL 2. Tests are plain C files in `tests/`; each `UTEST(group, name)` registers itself, so adding a file there is enough for `make test` to pick it up.
 
-The [level editor](custom_levels.md#2-place-objects-in-the-level-editor) in `tools/level_editor/`, with the level build (`builder/`) and the disc image extraction (`scripts/`) beside it, has its own tests: `npm test` there (after `npm install`), and `npm run typecheck` for its types. The tests that build a level from Jungle Rollers, which custom levels are built from, are skipped without it in `streams/`.
+The [level editor](custom_levels.md#2-place-objects-in-the-level-editor) in `tools/level_editor/`, with the level build (`builder/`) beside it, has its own tests: `npm test` there (after `npm install`), and `npm run typecheck` for its types. The tests that build a level from Jungle Rollers, which custom levels are built from, are skipped without it in `streams/`.

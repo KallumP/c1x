@@ -13,6 +13,7 @@
 #include "game_section.h"
 #include "settings_section.h"
 #include "editor_section.h"
+#include "levels_section.h"
 #include "controls_section.h"
 #include "ui.h"
 
@@ -74,6 +75,7 @@ static void DrawTabs() {
   if (!igBeginTabBar("sections", 0)) { return; }
   DrawTab("Settings", DrawSettingsSection);
   DrawTab("Controls", DrawControlsSection);
+  DrawTab("Levels", DrawLevelsSection);
   DrawTab("Level editor", DrawEditorSection);
   igEndTabBar();
 }
@@ -105,6 +107,7 @@ static void DrawFrame() {
   igNewFrame();
   UpdateSettingsSection(repo);
   UpdateEditorSection(repo);
+  UpdateLevelsSection(repo);
   DrawLauncher();
   igRender();
   io = igGetIO();
@@ -123,6 +126,7 @@ int main(int argc, char *argv[]) {
   LoadSettingsSection(repo);
   LoadControlsSection(repo);
   LoadEditorSection(repo);
+  LoadLevelsSection(repo);
   if (!OpenLauncherWindow()) {
     fprintf(stderr, "could not open the launcher's window: %s\n", SDL_GetError());
     return 1;

@@ -24,7 +24,7 @@ If any of the game's files are missing from `streams/`, the launcher lists them 
 
 The launcher has a field for each setting in `settings.cfg` (see [Settings](settings.md)): a checkbox for each on/off setting, and a box for each number. Hover over a field to see what it does. When it opens, the fields show what `settings.cfg` sets. If there isn't one, it creates it from `settings.example.cfg`, with the defaults.
 
-**Boot level** lists the levels built to `build/levels/` (see [Custom levels](custom_levels.md)), and **title screen** to start the game normally.
+**Boot level** lists the custom levels (see [Levels](#levels)), and **title screen** to start the game normally. A level that isn't built says `(not built)`; choosing it builds it, then sets it as the boot level once it builds.
 
 **Save** writes the settings to `settings.cfg`. It changes each setting's line, or adds one for a setting the file doesn't have, and keeps the rest of the file as it is, comments included. Choosing **title screen** comments out the `boot_level` line. **Play** saves too, so you only need **Save** to keep the settings without playing.
 
@@ -38,6 +38,12 @@ The Controls tab shows each PlayStation button's keys from `controls.cfg` (see [
 - **+** gives a button another key, and **x** removes one. A button always keeps at least one.
 - **Reset to defaults** puts every button back to its default key.
 - **Save** writes `controls.cfg`, changing only the lines for buttons whose keys changed and keeping the rest of the file. **Play** saves too.
+
+## Levels
+
+The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`, saying whether it's built. **Build** builds that level with `build/build-level.exe`, without Node or the level editor, showing its output below. When it builds, it's set as the boot level and `settings.cfg` is saved. Only one level builds at a time. **Check again** looks for level sources added since the launcher opened.
+
+If `build-level.exe` isn't there (`make` skips it without Node; see [Building](building.md#building-levels-without-node)), the tab says so and **Build** is greyed out.
 
 ## Level editor
 

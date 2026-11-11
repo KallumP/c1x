@@ -3,15 +3,21 @@
 
 #include "pc/settings.h"
 
-#define BUILT_LEVELS_MAX 128
+#define CUSTOM_LEVELS_MAX 128
 
-/* the levels built to build/levels/, which the game can boot into */
+/* the custom levels: those built to build/levels/, which the game can boot
+   into, and the level sources in level_src/ (a folder with a map) */
 typedef struct {
   int count;
-  char names[BUILT_LEVELS_MAX][SETTINGS_BOOT_LEVEL_MAX+1];
-} built_levels;
+  char names[CUSTOM_LEVELS_MAX][SETTINGS_BOOT_LEVEL_MAX+1];
+  int built[CUSTOM_LEVELS_MAX];
+} custom_levels;
 
-extern void ListBuiltLevels(const char *folder, built_levels *levels);
-extern int FindBuiltLevel(const built_levels *levels, const char *name);
+/* the repo's custom levels, sorted by name */
+extern void ListCustomLevels(const char *repo, custom_levels *levels);
+extern int FindCustomLevel(const custom_levels *levels, const char *name);
+
+/* the level's name, saying if it isn't built, as the launcher lists it */
+extern void CustomLevelLabel(const custom_levels *levels, int index, char *label, size_t size);
 
 #endif /* _LAUNCHER_LEVELS_H_ */
