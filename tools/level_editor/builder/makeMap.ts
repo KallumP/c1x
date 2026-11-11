@@ -327,7 +327,7 @@ class ObjectPlacer {
   placeStone(stone: LevelObject, track: StoneTrack): void {
     const { zone, at } = this.trackPlace(stone, track);
     const path = track.path.map((point) => point.map((value, axis) => value + at[axis]) as Vec3);
-    const [type, subtype] = ENEMY_ENTITIES.rolling_stone;
+    const [type, subtype] = OBSTACLE_ENTITIES.rolling_stone;
     const placed = withPath(withEntityId(this.templates.entity(type, subtype), this.ids.shift()!), path);
     this.entities[zone].push(withInitFlagA(placed, stoneStartFlag(stone.start ?? 0, stone.reverse === true)));
   }
@@ -420,7 +420,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const boxes = objects.filter((object) => object.kind === "box");
   const enemies = objects.filter((object) => object.kind === "enemy");
   const obstacles = objects.filter((object) => object.kind === "obstacle");
-  const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
+  const stones = obstacles.filter((obstacle) => obstacle.obstacle === "rolling_stone");
   const donorLevels = objectDonorLevels([...enemies, ...obstacles], readOtherLevel);
   const entityCount = Number(end !== undefined) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0) + obstacles.length;
   const placer = new ObjectPlacer(map, templates, scale, turn, entityCount);
@@ -457,9 +457,10 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   enemies.filter((enemy) => enemy.enemy === "bat").forEach((enemy) => placer.placeBatRoost(enemy, enemyExample("bat")));
   enemies.filter((enemy) => enemy.enemy === "leader_bats")
     .forEach((enemy) => placer.placeLeaderBats(enemy, enemyExample("leader_bats"), levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT)));
+  const movers = obstacles.filter((obstacle) => obstacle.obstacle !== "rolling_stone"); // the rest, from their levels
   const obstacleOf = (obstacle: LevelObject) => obstacleExample(donorLevels.get(obstacle.obstacle!)!, obstacle.obstacle!);
-  obstacles.filter((obstacle) => !obstacle.path).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
-  obstacles.filter((obstacle) => obstacle.path).forEach((leaf) => placer.placeLeafOnPath(leaf, obstacleOf(leaf)));
+  movers.filter((obstacle) => !obstacle.path).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
+  movers.filter((obstacle) => obstacle.path).forEach((leaf) => placer.placeLeafOnPath(leaf, obstacleOf(leaf)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   enemies.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;

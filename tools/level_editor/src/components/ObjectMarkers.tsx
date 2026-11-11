@@ -277,8 +277,8 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
       <group position={pointAlongShare(path, object.start ?? 0)}>
         <mesh rotation={[0, Math.atan2(rollX, rollZ), Math.PI / 2]}>
           <cylinderGeometry args={[radius, radius, radius * STONE_THICKNESS, 20]} />
-          <meshLambertMaterial color={ENEMY_COLOURS.rolling_stone} />
-          <Edges color={edgeColour(index, ENEMY_COLOURS.rolling_stone)} />
+          <meshLambertMaterial color={OBSTACLE_COLOURS.rolling_stone} />
+          <Edges color={edgeColour(index, OBSTACLE_COLOURS.rolling_stone)} />
         </mesh>
         {renderStoneArrow(object, path, radius)}
       </group>
@@ -299,7 +299,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
       <group position={[0, radius + size * 0.3, 0]} rotation={[0, Math.atan2(at[0] - ahead[0], at[2] - ahead[2]), 0]}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <coneGeometry args={[size * 0.15, size * 0.4, 12]} />
-          <meshBasicMaterial color={ENEMY_COLOURS.rolling_stone} />
+          <meshBasicMaterial color={OBSTACLE_COLOURS.rolling_stone} />
         </mesh>
       </group>
     );
@@ -310,7 +310,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     const [x, y, z] = base(object);
     const lift = boxSize(scale) / 50; // above the floor, so it isn't hidden in it
     const path = stonePath(object.at, object.raise, turn, scale).map(blenderToView);
-    const colour = ENEMY_COLOURS.rolling_stone;
+    const colour = OBSTACLE_COLOURS.rolling_stone;
     return (
       <>
         <mesh position={[x, y + lift, z]} rotation={[0, Math.atan2(rollX, rollZ), 0]}>
@@ -415,15 +415,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     if (object.enemy === "leader_bats") {
       return renderLeaderBats(object, index);
     }
-    if (object.enemy === "lab_assistant") {
-      return renderLabAssistant(object, index);
-    }
-    return (
-      <>
-        {renderStone(object, index)}
-        {renderStoneTrack(object)}
-      </>
-    );
+    return renderLabAssistant(object, index); // the last enemy left
   };
 
   // a floating leaf: at its spot, where it drifts from, facing the way it drifts,
@@ -442,10 +434,22 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // a lily pad at its spot, where it sinks from; a leaf with its drift
+  // a rolling stone on its track, where it rolls back and forth
+  const renderRollingStone = (object: LevelObject, index: number) => (
+    <>
+      {renderStone(object, index)}
+      {renderStoneTrack(object)}
+    </>
+  );
+
+  // a leaf with its drift, a rolling stone on its track, and the rest at their
+  // spots (a lily pad where it sinks from, a wooden peg opened out)
   const renderObstacle = (object: LevelObject, index: number) => {
     if (object.obstacle === "leaf") {
       return renderLeaf(object, index);
+    }
+    if (object.obstacle === "rolling_stone") {
+      return renderRollingStone(object, index);
     }
     return renderShapeModel(OBSTACLE_SHAPES[object.obstacle!], base(object), index);
   };

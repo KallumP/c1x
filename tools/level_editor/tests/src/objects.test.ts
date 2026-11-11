@@ -177,7 +177,7 @@ describe("enemies", () => {
     ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, snake, gunman, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, walking_lizard, robot_dog, barrel_roller, camera_robot, bird, electric_scientist, blob, flying_camera, badger, walking_spider, bat, leader_bats)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras do)"],
-    ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0]}]', "object 1: unknown enemy type rolling_stone"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0]}]', "object 1: unknown enemy type rolling_stone"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });

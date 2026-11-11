@@ -183,7 +183,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     </button>
   );
 
-  const isStone = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy === "rolling_stone";
+  const isStone = (selected: LevelObject) => selected.kind === "obstacle" && selected.obstacle === "rolling_stone";
   const isReversedAcross = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy! in ACROSS_REVERSE_TITLES;
 
   // raise is its height above the floor, kept as it's dragged about

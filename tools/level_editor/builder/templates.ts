@@ -1,7 +1,7 @@
 // what custom levels take from a real level (the base level): its spawn zone's
 // header and origin, crash, its biggest world mesh (for textures), an example of
 // each kind of entity, the base the warp pad stands on, and a rolling stone's track
-import { BOX_TYPE, CRASH, ENEMY_ENTITIES, entityPath, entityPosition, entityType, WARP_PAD, withInitFlagA, withSubtype } from "./entities";
+import { BOX_TYPE, CRASH, OBSTACLE_ENTITIES, entityPath, entityPosition, entityType, WARP_PAD, withInitFlagA, withSubtype } from "./entities";
 import { ENTRY_ZDAT, entriesById, type Entry, type Level } from "./levelFiles";
 import type { Mesh } from "./obj";
 import type { Vec3 } from "./vectors";
@@ -276,7 +276,7 @@ const fromFirstPoint = (path: Vec3[]) => path.map((point) => point.map((value, a
 export function stoneTrack(level: Level): StoneTrack {
   const entries = entriesById(level);
   for (const zone of zonesOf(level)) {
-    const stone = zoneEntities(zone).find((item) => entityType(item).join() === ENEMY_ENTITIES.rolling_stone.join());
+    const stone = zoneEntities(zone).find((item) => entityType(item).join() === OBSTACLE_ENTITIES.rolling_stone.join());
     if (!stone) {
       continue;
     }

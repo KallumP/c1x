@@ -45,4 +45,7 @@ function woodenPeg(): ShapePart[] {
   return [...pegLog(-186), ...pegLog(186)];
 }
 
-export const OBSTACLE_SHAPES: Record<ObstacleType, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg() };
+// the obstacles with a model: all but the rolling stone, drawn as its wheel on its track
+export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone">;
+
+export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg() };

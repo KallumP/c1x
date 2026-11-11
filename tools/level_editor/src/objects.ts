@@ -55,9 +55,7 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - walking_spider: fumbling in the dark's
 // - bat: temple ruins', from a roost: they swoop down at crash
 // - leader_bats: sunset vista's, from a roost, flying across between two leader bats: kill both and they stop
-// rolling along a track:
-// - rolling_stone: jungle rollers' stone wheel, back and forth along its track
-export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake", "gunman", "fish", "lab_assistant", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "walking_lizard", "robot_dog", "barrel_roller", "camera_robot", "bird", "electric_scientist", "blob", "flying_camera", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
+export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake", "gunman", "fish", "lab_assistant", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "walking_lizard", "robot_dog", "barrel_roller", "camera_robot", "bird", "electric_scientist", "blob", "flying_camera", "badger", "walking_spider", "bat", "leader_bats"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
 // the obstacles custom levels can have, by name: parts of the level with a mind
@@ -68,7 +66,9 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // - leaf: up the creek's floating leaf, drifting back and forth
 // standing at their spot:
 // - wooden_peg: the great gate's totem peg, folded up until crash spins it, then a step for a while
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg"] as const;
+// rolling along a track:
+// - rolling_stone: jungle rollers' stone wheel, back and forth along its track (jungle rollers' own: no other level is read)
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
@@ -107,7 +107,7 @@ export const BADGER_COUNT_MIN = 1;
 export const BADGER_COUNT_MAX = 6;
 
 // how many come out at once for an enemy without a count
-function countFallback(enemy: EnemyType | undefined): number {
+function countFallback(enemy: ObjectType | undefined): number {
   if (enemy === "walking_spider") {
     return WALKING_SPIDER_COUNT;
   }
@@ -128,7 +128,7 @@ export const DELAY_MIN = 1;
 export const DELAY_MAX = 20;
 
 // the seconds between flocks for a bat roost without a delay
-function delayFallback(enemy: EnemyType | undefined): number {
+function delayFallback(enemy: ObjectType | undefined): number {
   if (enemy === "leader_bats") {
     return LEADER_BATS_DELAY;
   }
@@ -148,29 +148,29 @@ export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range"] as 
 export type NumberSetting = (typeof NUMBER_SETTINGS)[number];
 
 interface NumberSettingRule {
-  enemies: readonly EnemyType[];
-  enemiesNamed: string;
+  types: readonly ObjectType[]; // the enemies or obstacles that have it
+  typesNamed: string;
   min: number;
   max: number;
   whole: boolean;
-  fallback: (enemy: EnemyType | undefined) => number;
+  fallback: (type: ObjectType | undefined) => number;
   meaning: string;
 }
 
 export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
-  speed: { enemies: PATH_ENEMIES, enemiesNamed: PATH_ENEMIES_NAMED, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: () => 1, meaning: "times the game's own pace" },
-  start: { enemies: ["rolling_stone"], enemiesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
-  count: { enemies: ["badger", "walking_spider", "bat", "leader_bats"], enemiesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
-  delay: { enemies: ["bat", "leader_bats"], enemiesNamed: "bats and leader bats", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks" },
-  range: { enemies: ["gunman"], enemiesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },
+  speed: { types: PATH_ENEMIES, typesNamed: PATH_ENEMIES_NAMED, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: () => 1, meaning: "times the game's own pace" },
+  start: { types: ["rolling_stone"], typesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
+  count: { types: ["badger", "walking_spider", "bat", "leader_bats"], typesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
+  delay: { types: ["bat", "leader_bats"], typesNamed: "bats and leader bats", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks" },
+  range: { types: ["gunman"], typesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },
 };
 
-// whether an object is an enemy with a number setting
+// whether an object is an enemy or obstacle with a number setting
 export const hasNumberSetting = (object: LevelObject, setting: NumberSetting) =>
-  object.kind === "enemy" && NUMBER_SETTING_RULES[setting].enemies.some((enemy) => enemy === object.enemy);
+  NUMBER_SETTING_RULES[setting].types.some((type) => type === objectType(object));
 
 // an object's number setting, or what it is without one
-export const numberSetting = (object: LevelObject, setting: NumberSetting) => object[setting] ?? NUMBER_SETTING_RULES[setting].fallback(object.enemy);
+export const numberSetting = (object: LevelObject, setting: NumberSetting) => object[setting] ?? NUMBER_SETTING_RULES[setting].fallback(objectType(object));
 
 export interface LevelObject {
   kind: Kind;
@@ -222,7 +222,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
-const OBSTACLE_SETTINGS = ["type", "path"];
+const OBSTACLE_SETTINGS = ["type", "path", "start", "reverse"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
 // a word with "a" or "an" before it, as it sounds: "a box", "an enemy"
@@ -307,7 +307,7 @@ function readObstaclePath(fields: Record<string, unknown>, obstacle: ObstacleTyp
     return {};
   }
   if (!isPathObstacle(obstacle)) {
-    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves do; a lily pad sinks where it is)`);
+    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves do)`);
   }
   checkPathLength(fields.path, objectNumber);
   return { path: pathNodes(fields.path, objectNumber) };
@@ -322,13 +322,13 @@ function isInRange(value: unknown, rule: NumberSettingRule): value is number {
 }
 
 // an enemy's number setting, from its fields in objects.json (none if it hasn't one)
-function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetting, enemy: EnemyType, objectNumber: number): Partial<LevelObject> {
+function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetting, type: ObjectType, objectNumber: number): Partial<LevelObject> {
   if (!(setting in fields)) {
     return {};
   }
   const rule = NUMBER_SETTING_RULES[setting];
-  if (!rule.enemies.includes(enemy)) {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no ${setting} (${rule.enemiesNamed} do)`);
+  if (!rule.types.includes(type)) {
+    throw new Error(`object ${objectNumber}: a ${type} has no ${setting} (${rule.typesNamed} do)`);
   }
   const value = fields[setting];
   if (!isInRange(value, rule)) {
@@ -337,17 +337,17 @@ function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetti
   return { [setting]: value };
 }
 
-// the enemies that can be reversed: a rolling stone rolls back towards its first
+// the enemies and obstacles that can be reversed: a rolling stone rolls back towards its first
 // end first, and a fish leaps the other way across the map
-const REVERSIBLE_ENEMIES: EnemyType[] = ["rolling_stone", "fish"];
+const REVERSIBLE: ObjectType[] = ["rolling_stone", "fish"];
 
 // whether a rolling stone or fish is reversed, from its fields in objects.json
-function readReverse(fields: Record<string, unknown>, enemy: EnemyType, objectNumber: number): Pick<LevelObject, "reverse"> {
+function readReverse(fields: Record<string, unknown>, type: ObjectType, objectNumber: number): Pick<LevelObject, "reverse"> {
   if (!("reverse" in fields)) {
     return {};
   }
-  if (!REVERSIBLE_ENEMIES.includes(enemy)) {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no reverse (rolling stones and fish do; reverse a ${enemy}'s path instead)`);
+  if (!REVERSIBLE.includes(type)) {
+    throw new Error(`object ${objectNumber}: a ${type} has no reverse (rolling stones and fish do; reverse a ${type}'s path instead)`);
   }
   if (typeof fields.reverse !== "boolean") {
     throw new Error(`object ${objectNumber}: reverse should be true or false`);
@@ -436,6 +436,8 @@ export function parseObjects(text: string): LevelObject[] {
     if (kind === "obstacle") {
       Object.assign(object, readObstacle(fields, objectNumber));
       Object.assign(object, readObstaclePath(fields, object.obstacle!, objectNumber));
+      NUMBER_SETTINGS.forEach((setting) => Object.assign(object, readNumberSetting(fields, setting, object.obstacle!, objectNumber)));
+      Object.assign(object, readReverse(fields, object.obstacle!, objectNumber));
     }
 
     objects.push(object);

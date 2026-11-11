@@ -41,14 +41,15 @@ export const BOX_HEIGHT = 400;   // a box on top of another is this much higher 
 // and the lab's blob spawner frogC subtype 2, sending blobs (its subtype 3) hopping along its path,
 // and castle machinery's (and heavy machinery's) flying camera PoRoC subtype 6, the robot dog's code, floating up and down its path
 export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
-  plant: [25, 0], snake: [26, 1], rolling_stone: [22, 6], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
+  plant: [25, 0], snake: [26, 1], crab: [31, 0], turtle: [19, 0], native: [38, 0], badger: [35, 0], warthog: [7, 1],
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
   blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12], lizard: [47, 1], red_lizard: [47, 2], walking_lizard: [46, 5], lab_assistant: [54, 0], robot_dog: [9, 0], barrel_roller: [17, 0], gunman: [12, 0], camera_robot: [10, 0], bird: [53, 15], electric_scientist: [24, 1], blob: [36, 2], flying_camera: [9, 6],
 };
 // each obstacle's entity type and subtype: up the creek's river objects RivOC
 // (the river enemies' code), subtype 1 its lily pad and 2 its floating leaf,
-// and the great gate's objects WalOC, subtype 0 its totem's wooden peg
-export const OBSTACLE_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2], wooden_peg: [33, 0] };
+// and the great gate's objects WalOC, subtype 0 its totem's wooden peg, and
+// jungle rollers' own JunOC, subtype 6 its rolling stone
+export const OBSTACLE_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2], wooden_peg: [33, 0], rolling_stone: [22, 6] };
 
 // an enemy's or obstacle's entity type and subtype
 export function objectEntity(type: ObjectType): [number, number] {
