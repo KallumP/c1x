@@ -59,6 +59,7 @@ export const ENEMY_COLOURS: Record<EnemyType, string> = {
 export const OBSTACLE_COLOURS: Record<ObstacleType, string> = {
   lily_pad: "#2f6b2a",
   leaf: "#2e7a2c",
+  wooden_peg: "#8a5a32",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";
