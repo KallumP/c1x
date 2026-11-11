@@ -25,6 +25,6 @@ export const noMinusZero = (values: Vector): number[] => values.map((value) => M
 export const enemyObject = (type: EnemyType, more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind: "enemy", enemy: type, at: [0, 0, 0], raise: 0, stack: 1, ...more });
 
-// a platform of a type, at the origin unless more says otherwise
-export const platformObject = (type: ObstacleType, more: Partial<LevelObject> = {}): LevelObject =>
+// an obstacle of a type, at the origin unless more says otherwise
+export const obstacleObject = (type: ObstacleType, more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind: "obstacle", obstacle: type, at: [0, 0, 0], raise: 0, stack: 1, ...more });

@@ -4,7 +4,7 @@ import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import { ENEMY_ENTITIES } from "../../builder/entities";
 import { entriesById, entryPage, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, readNsd, soundPage, texturePage, type Entry, type Level } from "../../builder/levelFiles";
 import { nsdData, texturePageData, words } from "./levelFiles";
-import { enemyObject, platformObject } from "../helpers";
+import { enemyObject, obstacleObject } from "../helpers";
 
 const CRAB = stringToEid("CrabC");
 const SPLASH = stringToEid("SplaC");
@@ -288,19 +288,19 @@ describe("river enemies' code from up the creek", () => {
 });
 
 describe("the levels objects are taken from", () => {
-  test("platforms come from up the creek, read once with the river enemies", () => {
+  test("obstacles come from up the creek, read once with the river enemies", () => {
     const reads: number[] = [];
     const readOtherLevel = (lid: number) => {
       reads.push(lid);
       return oneCodeLevel(lid, RIVER_SLOT, RIVER, riverCode());
     };
-    const levels = objectDonorLevels([enemyObject("fish"), platformObject("lily_pad"), platformObject("leaf")], readOtherLevel);
+    const levels = objectDonorLevels([enemyObject("fish"), obstacleObject("lily_pad"), obstacleObject("leaf")], readOtherLevel);
     expect([...levels.keys()]).toEqual(["fish", "lily_pad", "leaf"]);
     expect(reads).toEqual([0x18]);
   });
 
-  test("a platform without other levels to take it from is an error, naming it", () => {
-    expect(() => objectDonorLevels([platformObject("lily_pad")])).toThrow(/lily pads come from Up the Creek/);
+  test("an obstacle without other levels to take it from is an error, naming it", () => {
+    expect(() => objectDonorLevels([obstacleObject("lily_pad")])).toThrow(/lily pads come from Up the Creek/);
   });
 });
 
