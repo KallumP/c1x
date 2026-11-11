@@ -32,6 +32,8 @@ const NAMES: Partial<Record<Placeable, string>> = {
   leaf: "Floating leaf",
   wooden_peg: "Wood platform (spinnable)",
   mossy_slide: "Slippery slope",
+  rising_spiked_log: "Spiked log (rising)",
+  falling_spiked_log: "Spiked log (falling)",
 };
 
 // a type's id in words, capitalised: blue_river_plant is "Blue river plant"

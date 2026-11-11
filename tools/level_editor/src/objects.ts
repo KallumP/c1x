@@ -70,7 +70,10 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track (jungle rollers' own: no other level is read)
 // sloping across the map and down from their spot:
 // - mossy_slide: the great gate's invisible slider, which slides crash down the slope modelled under it (the map's own)
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide"] as const;
+// spiked logs at their spot, the great gate's:
+// - rising_spiked_log: pushing up out of the floor
+// - falling_spiked_log: pushing down from above
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
@@ -154,10 +157,17 @@ export const SLIDE_ANGLE_MIN = 5;
 export const SLIDE_ANGLE_MAX = 30;
 export const SLIDE_ROTATION_MAX = 359; // degrees anticlockwise seen from above, from across the map (0)
 
+// the seconds between a spiked log's pushes: the great gate's 180 frames
+// without one, and no fewer than a push takes, up and back
+export const SPIKED_LOG_EVERY = 6;
+export const SPIKED_LOG_EVERY_MIN = 3;
+export const SPIKED_LOG_EVERY_MAX = 20;
+export const SPIKED_LOGS: ObstacleType[] = ["rising_spiked_log", "falling_spiked_log"];
+
 // the enemy settings that are a number in a range, and for each: the enemies
 // that have it (named for messages), its range, whether it's whole, what it is
 // without one (left out of objects.json), and what it means
-export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range", "length", "angle", "rotation"] as const;
+export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range", "length", "angle", "rotation", "every", "offset"] as const;
 export type NumberSetting = (typeof NUMBER_SETTINGS)[number];
 
 interface NumberSettingRule {
@@ -178,6 +188,8 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   length: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_LENGTH_MIN, max: SLIDE_LENGTH_MAX, whole: false, fallback: () => SLIDE_LENGTH, meaning: "how long it is, in metres" },
   angle: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_ANGLE_MIN, max: SLIDE_ANGLE_MAX, whole: false, fallback: () => SLIDE_ANGLE, meaning: "how steeply it slopes, in degrees" },
   rotation: { types: ["mossy_slide"], typesNamed: "mossy slides", min: 0, max: SLIDE_ROTATION_MAX, whole: false, fallback: () => 0, meaning: "which way it slides down, in degrees anticlockwise from across the map" },
+  every: { types: SPIKED_LOGS, typesNamed: "spiked logs", min: SPIKED_LOG_EVERY_MIN, max: SPIKED_LOG_EVERY_MAX, whole: false, fallback: () => SPIKED_LOG_EVERY, meaning: "the seconds between its pushes" },
+  offset: { types: SPIKED_LOGS, typesNamed: "spiked logs", min: 0, max: SPIKED_LOG_EVERY_MAX, whole: false, fallback: () => 0, meaning: "the seconds its pushes are put off by" },
   range: { types: ["gunman"], typesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },
 };
 
@@ -204,6 +216,8 @@ export interface LevelObject {
   angle?: number;       // how steeply a mossy slide slopes, in degrees (SLIDE_ANGLE without one)
   rotation?: number;    // which way a mossy slide slides down: degrees anticlockwise seen from above, from across the map (0 without one)
   count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
+  every?: number;       // the seconds between a spiked log's pushes (SPIKED_LOG_EVERY without one)
+  offset?: number;      // the seconds a spiked log's pushes are put off by, so a row can push in turn (0 without one)
   delay?: number;       // the seconds between a bat roost's flocks (BAT_DELAY, LEADER_BATS_DELAY without one)
   range?: number;       // how near crash comes, in metres, before a gunman shoots (GUNMAN_RANGE without one)
 }
@@ -241,7 +255,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
-const OBSTACLE_SETTINGS = ["type", "path", "start", "reverse", "length", "angle", "rotation"];
+const OBSTACLE_SETTINGS = ["type", "path", "start", "reverse", "length", "angle", "rotation", "every", "offset"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
 // a word with "a" or "an" before it, as it sounds: "a box", "an enemy"

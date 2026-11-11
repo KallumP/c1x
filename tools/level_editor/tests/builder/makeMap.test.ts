@@ -618,6 +618,50 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasGreatGate)("spiked logs, from the great gate", () => {
+    test.each([
+      { type: "rising_spiked_log", subtype: 3 },
+      { type: "falling_spiked_log", subtype: 4 },
+    ] as const)("a $type is the great gate's WalOC subtype $subtype, with its spiked log's model", ({ type, subtype }) => {
+      const { level, entries, zone } = build([obstacle(type)]);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([33, subtype]);
+      expect(level.nsd.ldat.execMap[33]).toBe(stringToEid("WalOC"));
+      expect(entries.has(stringToEid("SL1iG"))).toBe(true);
+      const placed = zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES[type]));
+      expect(placed.length).toBe(1);
+      expect(entityPath(placed[0]).length).toBe(1);
+    });
+
+    test("a rising spiked log stands at its spot, pushing up out of the floor there", () => {
+      const placed = zoneEntities(build([obstacle("rising_spiked_log")]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.rising_spiked_log))!;
+      expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a falling spiked log hangs 1600 over its spot (as the great gate's over their floor), so it comes down on it", () => {
+      const placed = zoneEntities(build([obstacle("falling_spiked_log")]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.falling_spiked_log))!;
+      expectNear(entityPath(placed)[0], [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1] + 1600, SPOT_IN_ZONE[2]], 16);
+    });
+
+    // init flag A: the frames between its pushes (30 a second); B: the frames into
+    // them it starts, so its pushes come that much sooner: an offset puts them off,
+    // as starting that much less far into them (round its pushes, past a whole one)
+    test.each([
+      { type: "rising_spiked_log", more: {}, flags: [180, 0] },
+      { type: "falling_spiked_log", more: { every: 3, offset: 1 }, flags: [90, 60] },
+      { type: "rising_spiked_log", more: { offset: 2 }, flags: [180, 120] },
+      { type: "rising_spiked_log", more: { every: 3, offset: 4 }, flags: [90, 60] },
+      { type: "rising_spiked_log", more: { every: 3, offset: 3 }, flags: [90, 0] },
+    ] as const)("a $type ($more) has its pushes' timing in its init flags", ({ type, more, flags }) => {
+      expect(initFlagsOf(build([obstacle(type, more)]).zone, OBSTACLE_ENTITIES[type]).slice(0, 2)).toEqual(flags);
+    });
+
+    test("rising and falling spiked logs with a wood platform read the great gate once", () => {
+      const reader = recordingReader();
+      build([obstacle("wooden_peg"), obstacle("rising_spiked_log", { at: [1, 6, 0] }), obstacle("falling_spiked_log", { at: [1, 8, 0] })], { readOtherLevel: reader.readOtherLevel });
+      expect(reader.read).toEqual([0x12]);
+    });
+  });
+
   describe.skipIf(!hasGreatGate)("mossy slides, from the great gate", () => {
     const slidePaths = (zone: Entry) => zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.mossy_slide)).map(entityPath);
     const fromFirst = (path: Vec3[]) => path.map((point) => point.map((value, axis) => value - path[0][axis]));

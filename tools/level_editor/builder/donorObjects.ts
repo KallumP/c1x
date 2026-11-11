@@ -68,6 +68,8 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   leaf: UP_THE_CREEK,
   wooden_peg: THE_GREAT_GATE,
   mossy_slide: THE_GREAT_GATE,
+  rising_spiked_log: THE_GREAT_GATE,
+  falling_spiked_log: THE_GREAT_GATE,
 };
 
 export interface DonorObject {
@@ -522,6 +524,8 @@ const GATE_OBJECTS_DATA_PATCHES: CodePatch[] = [
 const OBJECT_DATA_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   mossy_slide: GATE_OBJECTS_DATA_PATCHES,
   wooden_peg: GATE_OBJECTS_DATA_PATCHES,
+  rising_spiked_log: GATE_OBJECTS_DATA_PATCHES,
+  falling_spiked_log: GATE_OBJECTS_DATA_PATCHES,
 };
 
 // instructions patched, with the enemy's addition (if it has one) after their end

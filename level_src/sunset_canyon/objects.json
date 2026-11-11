@@ -43,7 +43,7 @@
   {"kind": "box", "type": "life", "at": [-9.093, 122, 5.568]},
   {"kind": "box", "type": "basic", "at": [1.5, 132, 2.285], "stack": 2},
   {"kind": "box", "type": "aku_aku", "at": [-1.5, 157.5, 0.994]},
-  {"kind": "box", "type": "checkpoint", "at": [2.777, 149, 2.226]},
+  {"kind": "box", "type": "checkpoint", "at": [3.277, 146.75, 2.351]},
   {"kind": "box", "type": "basic", "at": [5.773, 155.975, 1.445], "raise": 1},
   {"kind": "box", "type": "tnt", "at": [5.748, 155.966, 1.445]},
   {"kind": "box", "type": "basic", "at": [0.827, 167.728, -1.6]},
@@ -105,10 +105,13 @@
   {"kind": "enemy", "type": "walking_lizard", "at": [0, 79.5, 2.244], "path": [[0.5, -6, -0.033], [-0.566, -4.64, 0.084], [-1.515, -3.244, 0.189], [-1.369, -1.518, 0.184], [0.384, -0.087, 0.093], [1.647, 1.096, 0.054], [1.91, 2.28, 0.009], [1.565, 3.863, 0.026], [1, 5.5, 0.055]]},
   {"kind": "enemy", "type": "walking_lizard", "at": [8, 79, 2.27], "path": [[-2.5, 6.5, 0.053], [-1, 2.334, -0.012], [-1, -1.833, -0.083], [-2.5, -6, -0.149]]},
 
-  {"kind": "obstacle", "type": "rolling_stone", "at": [4, 141.5, 2.211]},
   {"kind": "obstacle", "type": "rolling_stone", "at": [-6, 118.5, 2.268], "reverse": true},
   {"kind": "obstacle", "type": "lily_pad", "at": [1.049, 37.529, -1]},
   {"kind": "obstacle", "type": "lily_pad", "at": [-9.906, 41.02, -1]},
+  {"kind": "obstacle", "type": "rising_spiked_log", "at": [1.25, 142.5, 2.182], "every": 4},
+  {"kind": "obstacle", "type": "rising_spiked_log", "at": [3.25, 142.5, 2.263], "every": 4, "offset": 1},
+  {"kind": "obstacle", "type": "rising_spiked_log", "at": [5.25, 142.5, 2.272], "every": 4, "offset": 2},
+  {"kind": "obstacle", "type": "rising_spiked_log", "at": [7.25, 142.5, 2.369], "every": 4, "offset": 3},
 
   {"kind": "end", "at": [-1.829, 247, 2.7], "raise": 0.25}
 ]

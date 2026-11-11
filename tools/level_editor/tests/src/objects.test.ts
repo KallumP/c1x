@@ -511,9 +511,9 @@ describe("obstacles", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide)"],
-    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide)"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed (an obstacle takes kind, at, raise, type, path, start, reverse, length, angle, rotation)"],
+    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log)"],
+    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed (an obstacle takes kind, at, raise, type, path, start, reverse, length, angle, rotation, every, offset)"],
     ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
@@ -530,6 +530,38 @@ describe("wooden pegs", () => {
       .toEqual([{ kind: "obstacle", obstacle: "wooden_peg", at: [1, 2, 0], raise: 1, stack: 1 }]);
     expect(() => parseObjects('[{"kind": "obstacle", "type": "wooden_peg", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]'))
       .toThrow("a wooden_peg has no path");
+  });
+});
+
+describe("spiked logs", () => {
+  test.each(["rising_spiked_log", "falling_spiked_log"])("a %s is an obstacle, with no path", (type) => {
+    expect(parseObjects(`[{"kind": "obstacle", "type": "${type}", "at": [1, 2, 0], "raise": 1}]`))
+      .toEqual([{ kind: "obstacle", obstacle: type, at: [1, 2, 0], raise: 1, stack: 1 }]);
+    expect(() => parseObjects(`[{"kind": "obstacle", "type": "${type}", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]`))
+      .toThrow(`a ${type} has no path`);
+  });
+
+  test("a spiked log can push every so many seconds, its pushes put off by an offset in seconds, written and read back", () => {
+    const [log] = parseObjects('[{"kind": "obstacle", "type": "rising_spiked_log", "at": [1, 2, 0], "every": 4.5, "offset": 1.5}]');
+    expect(log).toEqual({ kind: "obstacle", obstacle: "rising_spiked_log", at: [1, 2, 0], raise: 0, stack: 1, every: 4.5, offset: 1.5 });
+    expect(parseObjects(formatObjects([log]))).toEqual([log]);
+  });
+
+  test("without them, it pushes every 6 seconds (the great gate's 180 frames) with no offset, left out when written", () => {
+    const log = obstacleObject("falling_spiked_log");
+    expect([numberSetting(log, "every"), numberSetting(log, "offset")]).toEqual([6, 0]);
+    expect(formatObjects([{ ...log, every: 6, offset: 0 }])).toContain('"at": [0, 0, 0]}');
+  });
+
+  test.each([
+    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "every": 2}]', "object 1: every should be 3 to 20 (the seconds between its pushes)"],
+    ['[{"kind": "obstacle", "type": "falling_spiked_log", "at": [0, 0, 0], "every": 21}]', "object 1: every should be 3 to 20"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "every": 5}]', "object 1: a leaf has no every (spiked logs do)"],
+    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "offset": 21}]', "object 1: offset should be 0 to 20 (the seconds its pushes are put off by)"],
+    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "start": 0.5}]', "object 1: a rising_spiked_log has no start (rolling stones do)"],
+    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "reverse": true}]', "object 1: a rising_spiked_log has no reverse"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
   });
 });
 

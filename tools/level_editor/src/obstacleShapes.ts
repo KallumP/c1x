@@ -6,6 +6,7 @@ import type { ObstacleType, Vec3 } from "./objects";
 const LILY_PAD_COLOURS = { leaf: "#2f6b2a", bud: "#c8b83a" };
 const LEAF_COLOURS = { leaf: "#2e7a2c", vein: "#1f4f1e", stalk: "#6b5a2a" };
 const PEG_COLOURS = { log: "#8a5a32", end: "#c89a5e" };
+const SPIKED_LOG_COLOURS = { log: "#7a5530", spike: "#d8d0b8" };
 
 // one of a lily pad's four round leaves, x and z out from its middle
 const lilyPadLeaf = (x: number, z: number) => ball(1, [x, 50, z], LILY_PAD_COLOURS.leaf, { stretch: [270, 50, 270] });
@@ -45,7 +46,39 @@ function woodenPeg(): ShapePart[] {
   return [...pegLog(-186), ...pegLog(186)];
 }
 
+const SPIKED_LOG_RADIUS = 250;
+const SPIKE_LENGTH = { across: 150, along: 120 }; // out of its sides, across the map and along it
+const SPIKE_GAP = 450;       // between rings of spikes up the log
+const SPIKED_LOG_TIP = 200;  // its top, a spike
+const RISING_LOG_TOP = 1700; // how far a rising log's top comes up out of the floor
+const FALLING_LOG_HEIGHT = 2800;
+
+// a ring of four spikes round a spiked log, height up it
+function spikeRing(height: number): ShapePart[] {
+  const reach = (length: number) => SPIKED_LOG_RADIUS + length / 2;
+  const spike = (at: Vec3, turn: Vec3, length: number) => rod(0, 60, length, at, SPIKED_LOG_COLOURS.spike, { turn });
+  return [
+    spike([reach(SPIKE_LENGTH.across), height, 0], [0, 0, -Math.PI / 2], SPIKE_LENGTH.across),
+    spike([-reach(SPIKE_LENGTH.across), height, 0], [0, 0, Math.PI / 2], SPIKE_LENGTH.across),
+    spike([0, height, reach(SPIKE_LENGTH.along)], [Math.PI / 2, 0, 0], SPIKE_LENGTH.along),
+    spike([0, height, -reach(SPIKE_LENGTH.along)], [-Math.PI / 2, 0, 0], SPIKE_LENGTH.along),
+  ];
+}
+
+// the great gate's spiked log (SL1iG), standing on the floor at its spot and
+// height tall: an upright log 800 across with rings of spikes up it, its top a spike
+function spikedLog(height: number): ShapePart[] {
+  const body = height - SPIKED_LOG_TIP;
+  const ringCount = Math.floor((body - SPIKE_GAP / 2) / SPIKE_GAP);
+  const rings = Array.from({ length: ringCount }, (_, ring) => spikeRing((ring + 1) * SPIKE_GAP)).flat();
+  return [
+    rod(SPIKED_LOG_RADIUS, SPIKED_LOG_RADIUS, body, [0, body / 2, 0], SPIKED_LOG_COLOURS.log),
+    rod(0, SPIKED_LOG_RADIUS * 0.6, SPIKED_LOG_TIP, [0, body + SPIKED_LOG_TIP / 2, 0], SPIKED_LOG_COLOURS.spike),
+    ...rings,
+  ];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
-export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg() };
+export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT) };
