@@ -618,6 +618,28 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasGreatGate)("spiked logs, from the great gate", () => {
+    test.each([
+      { type: "rising_spiked_log", subtype: 3 },
+      { type: "falling_spiked_log", subtype: 4 },
+    ] as const)("a $type is the great gate's WalOC subtype $subtype, with its spiked log's model, standing at its spot", ({ type, subtype }) => {
+      const { level, entries, zone } = build([obstacle(type)]);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([33, subtype]);
+      expect(level.nsd.ldat.execMap[33]).toBe(stringToEid("WalOC"));
+      expect(entries.has(stringToEid("SL1iG"))).toBe(true);
+      const placed = zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES[type]));
+      expect(placed.length).toBe(1);
+      expect(entityPath(placed[0]).length).toBe(1);
+      expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("rising and falling spiked logs with a wood platform read the great gate once", () => {
+      const reader = recordingReader();
+      build([obstacle("wooden_peg"), obstacle("rising_spiked_log", { at: [1, 6, 0] }), obstacle("falling_spiked_log", { at: [1, 8, 0] })], { readOtherLevel: reader.readOtherLevel });
+      expect(reader.read).toEqual([0x12]);
+    });
+  });
+
   describe.skipIf(!hasGreatGate)("mossy slides, from the great gate", () => {
     const slidePaths = (zone: Entry) => zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.mossy_slide)).map(entityPath);
     const fromFirst = (path: Vec3[]) => path.map((point) => point.map((value, axis) => value - path[0][axis]));
