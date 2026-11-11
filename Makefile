@@ -83,6 +83,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/launcher/levels.c \
 	src/launcher/streams.c \
 	src/launcher/extract.c \
+	src/launcher/disc_image.c \
 	src/launcher/node.c \
 	src/launcher/command.c \
 	src/launcher/level_editor.c
