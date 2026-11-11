@@ -643,6 +643,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(CRASH_FIRE.filter((name) => !entries.has(stringToEid(name)))).toEqual([]);
     });
 
+    test("and crash's animations (his code's last item, from 0x94, every 8 bytes) play him burning", () => {
+      const animations = build([obstacle("fire_pit")]).entries.get(stringToEid("WillC"))!.items.at(-1)!;
+      const burning = [0, 1, 2, 3, 4].map((index) => animations.readUInt32LE(0x94 + 8 * index));
+      expect(burning).toEqual(["WF10V", "WF20V", "WF30V", "WF40V", "WF50V"].map(stringToEid));
+    });
+
     test("a level without a fire pit keeps the base level's crash code", () => {
       const { entries } = build([obstacle("wooden_peg")]);
       const baseCrash = entriesById(readLevel(STREAMS, BASE_LEVEL.lid)).get(stringToEid("WillC"))!;
