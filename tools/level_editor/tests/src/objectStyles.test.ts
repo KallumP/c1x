@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { boxStyle, ENEMY_COLOURS } from "../../src/objectStyles";
-import { BOX_TYPES, ENEMY_TYPES } from "../../src/objects";
+import { boxStyle, ENEMY_COLOURS, PLATFORM_COLOURS } from "../../src/objectStyles";
+import { BOX_TYPES, ENEMY_TYPES, PLATFORM_TYPES } from "../../src/objects";
 
 describe("boxStyle", () => {
   test("every type has its own colour", () => {
@@ -27,5 +27,14 @@ describe("enemy colours", () => {
     const enemyColours = ENEMY_TYPES.map((type) => ENEMY_COLOURS[type]);
     expect(enemyColours.every(Boolean)).toBe(true);
     expect(new Set([...boxColours, ...enemyColours]).size).toBe(boxColours.length + enemyColours.length);
+  });
+});
+
+describe("platform colours", () => {
+  test("every platform has its own colour, unlike any box's or enemy's", () => {
+    const others = [...Object.keys(BOX_TYPES).map((t) => boxStyle(t as keyof typeof BOX_TYPES).colour), ...ENEMY_TYPES.map((type) => ENEMY_COLOURS[type])];
+    const platformColours = PLATFORM_TYPES.map((type) => PLATFORM_COLOURS[type]);
+    expect(platformColours.every(Boolean)).toBe(true);
+    expect(new Set([...others, ...platformColours]).size).toBe(others.length + platformColours.length);
   });
 });
