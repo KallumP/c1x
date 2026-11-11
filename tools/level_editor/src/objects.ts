@@ -69,7 +69,7 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track (jungle rollers' own: no other level is read)
 // sloping across the map and down from their spot:
-// - mossy_slide: the great gate's mossy plank, which slides crash down it (long, or short), and the invisible slider that does
+// - mossy_slide: the great gate's invisible slider, which slides crash down the slope modelled under it (the map's own)
 export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
