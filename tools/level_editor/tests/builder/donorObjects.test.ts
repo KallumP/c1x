@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { donorObject, enemyDonorObjects, withCodeMoved, withDonorObjects, type DonorObject } from "../../builder/donorObjects";
+import { donorObject, objectDonorLevels, objectDonorObjects, withCodeMoved, withDonorObjects, type DonorObject } from "../../builder/donorObjects";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import { ENEMY_ENTITIES } from "../../builder/entities";
 import { entriesById, entryPage, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, readNsd, soundPage, texturePage, type Entry, type Level } from "../../builder/levelFiles";
 import { nsdData, texturePageData, words } from "./levelFiles";
+import { enemyObject, platformObject } from "../helpers";
 
 const CRAB = stringToEid("CrabC");
 const SPLASH = stringToEid("SplaC");
@@ -218,30 +219,30 @@ const codeOf = (objects: DonorObject[], eid: number) => {
 describe("enemies' code from other levels", () => {
   test("a native from the great gate starts at its path's first node and walks back there", () => {
     // not to the end nearest crash: each pick branches past the other end, dropping its comparison
-    const code = codeOf(enemyDonorObjects(new Map([["native", nativeDonorLevel(nativeCode())]])), NATIVE);
+    const code = codeOf(objectDonorObjects(new Map([["native", nativeDonorLevel(nativeCode())]])), NATIVE);
     expect(code).toEqual(nativeCode(BRA_0_DROP_1, BRA_3_DROP_1));
   });
 
   test("a native's code keeps its other items", () => {
-    const items = enemyDonorObjects(new Map([["native", nativeDonorLevel(nativeCode())]]))[0].entries[0].items;
+    const items = objectDonorObjects(new Map([["native", nativeDonorLevel(nativeCode())]]))[0].entries[0].items;
     expect([items[0], items[2]]).toEqual([text("head"), text("data")]);
   });
 
   test("patching a native's code leaves its donor level's code alone", () => {
     const level = nativeDonorLevel(nativeCode());
-    enemyDonorObjects(new Map([["native", level]]));
+    objectDonorObjects(new Map([["native", level]]));
     expect(codeOf([donorObject(level, NATIVE_SLOT)], NATIVE)).toEqual(nativeCode());
   });
 
   test("other enemies' code isn't patched", () => {
-    const code = codeOf(enemyDonorObjects(new Map([["crab", nativeDonorLevel(nativeCode())]])), CRAB);
+    const code = codeOf(objectDonorObjects(new Map([["crab", nativeDonorLevel(nativeCode())]])), CRAB);
     expect(code).toEqual(nativeCode());
   });
 
   test("a native's code that can't be patched is an error", () => {
     // code that isn't as the great gate's
     const level = nativeDonorLevel(nativeCode(1));
-    expect(() => enemyDonorObjects(new Map([["native", level]]))).toThrow(/native/);
+    expect(() => objectDonorObjects(new Map([["native", level]]))).toThrow(/native/);
   });
 });
 
@@ -269,14 +270,37 @@ function riverCode(check = SLT_PLAYER_HEIGHT): number[] {
 describe("river enemies' code from up the creek", () => {
   test.each(["blue_river_plant", "green_river_plant", "fish"] as const)("a %s's code lets a green river plant bite at any height", (type) => {
     // its check that crash came back down near it always passes
-    const code = codeOf(enemyDonorObjects(new Map([[type, oneCodeLevel(0x18, RIVER_SLOT, RIVER, riverCode())]])), RIVER);
+    const code = codeOf(objectDonorObjects(new Map([[type, oneCodeLevel(0x18, RIVER_SLOT, RIVER, riverCode())]])), RIVER);
+    expect(code).toEqual(riverCode(ORL_TRUE));
+  });
+
+  test.each(["lily_pad", "leaf"] as const)("a %s's code is patched as the river enemies' are, so the two don't clash", (type) => {
+    // lily pads and leaves are river objects too
+    const code = codeOf(objectDonorObjects(new Map([[type, oneCodeLevel(0x18, RIVER_SLOT, RIVER, riverCode())]])), RIVER);
     expect(code).toEqual(riverCode(ORL_TRUE));
   });
 
   test("a river enemy's code that can't be patched is an error", () => {
     // code that isn't as up the creek's
     const level = oneCodeLevel(0x18, RIVER_SLOT, RIVER, riverCode(1));
-    expect(() => enemyDonorObjects(new Map([["green_river_plant", level]]))).toThrow(/green river/);
+    expect(() => objectDonorObjects(new Map([["green_river_plant", level]]))).toThrow(/green river/);
+  });
+});
+
+describe("the levels objects are taken from", () => {
+  test("platforms come from up the creek, read once with the river enemies", () => {
+    const reads: number[] = [];
+    const readOtherLevel = (lid: number) => {
+      reads.push(lid);
+      return oneCodeLevel(lid, RIVER_SLOT, RIVER, riverCode());
+    };
+    const levels = objectDonorLevels([enemyObject("fish"), platformObject("lily_pad"), platformObject("leaf")], readOtherLevel);
+    expect([...levels.keys()]).toEqual(["fish", "lily_pad", "leaf"]);
+    expect(reads).toEqual([0x18]);
+  });
+
+  test("a platform without other levels to take it from is an error, naming it", () => {
+    expect(() => objectDonorLevels([platformObject("lily_pad")])).toThrow(/lily pads come from Up the Creek/);
   });
 });
 
@@ -295,13 +319,13 @@ function gunmanCode(check = SLT_RANGE_CONSTANT): number[] {
 
 describe("gunmen's code from cortex power", () => {
   test("a gunman shoots once crash is nearer than his init flag c", () => {
-    const code = codeOf(enemyDonorObjects(new Map([["gunman", oneCodeLevel(0x3, GUNMAN_SLOT, GUNMAN, gunmanCode())]])), GUNMAN);
+    const code = codeOf(objectDonorObjects(new Map([["gunman", oneCodeLevel(0x3, GUNMAN_SLOT, GUNMAN, gunmanCode())]])), GUNMAN);
     expect(code).toEqual(gunmanCode(SLT_FLAG_C));
   });
 
   test("a gunman's code that can't be patched is an error", () => {
     const level = oneCodeLevel(0x3, GUNMAN_SLOT, GUNMAN, gunmanCode(1));
-    expect(() => enemyDonorObjects(new Map([["gunman", level]]))).toThrow(/gunman/);
+    expect(() => objectDonorObjects(new Map([["gunman", level]]))).toThrow(/gunman/);
   });
 });
 
@@ -341,7 +365,7 @@ function branchedTo(code: number[], at: number): { block: number[]; back: number
 }
 
 describe.each(["lizard", "red_lizard"] as const)("lizards' code from the lost city (%s)", (type) => {
-  const code = () => codeOf(enemyDonorObjects(new Map([[type, oneCodeLevel(0x20, LIZARD_SLOT, LIZARD, lizardCode())]])), LIZARD);
+  const code = () => codeOf(objectDonorObjects(new Map([[type, oneCodeLevel(0x20, LIZARD_SLOT, LIZARD, lizardCode())]])), LIZARD);
 
   test("a green lizard's leap moves its z along its path as it does its x, and the line it keeps near with it", () => {
     // x then z: start z (0x10($fp)) + (target z (0x1c) - start z) × the leap's frame (0x20) / its frames;
@@ -366,7 +390,7 @@ describe.each(["lizard", "red_lizard"] as const)("lizards' code from the lost ci
 
   test("lizard code of another length is an error", () => {
     const level = oneCodeLevel(0x20, LIZARD_SLOT, LIZARD, lizardCode(LIZARD_LENGTH + 1));
-    expect(() => enemyDonorObjects(new Map([[type, level]]))).toThrow(/lizard/);
+    expect(() => objectDonorObjects(new Map([[type, level]]))).toThrow(/lizard/);
   });
 });
 
@@ -406,14 +430,14 @@ describe("lab assistants' code from stormy ascent", () => {
   test("a lab assistant's code faces and throws by its init flags", () => {
     // it faces by flag a, and throws its vials at b along the game's x and c along z
     const level = oneCodeLevel(0x22, LAB_ASSISTANT_SLOT, LAB_ASSISTANT, labAssistantCode());
-    const code = codeOf(enemyDonorObjects(new Map([["lab_assistant", level]])), LAB_ASSISTANT);
+    const code = codeOf(objectDonorObjects(new Map([["lab_assistant", level]])), LAB_ASSISTANT);
     expect(code).toEqual(labAssistantCode(SETUP_BY_FLAGS, BRA_PAST_FACING, MOVE_THROWER_FLAG_C));
   });
 
   test("a lab assistant's code that can't be patched is an error", () => {
     // code that isn't as stormy ascent's
     const level = oneCodeLevel(0x22, LAB_ASSISTANT_SLOT, LAB_ASSISTANT, labAssistantCode(SETUP_BY_PRESET, 1));
-    expect(() => enemyDonorObjects(new Map([["lab_assistant", level]]))).toThrow(/lab assistant/);
+    expect(() => objectDonorObjects(new Map([["lab_assistant", level]]))).toThrow(/lab assistant/);
   });
 });
 
@@ -428,7 +452,7 @@ describe("the cobra's code from temple ruins", () => {
     const pages = [entryPage([entry(COBRA, 11, [words(COBRA_SLOT, 0x300), words(1, 2, 3)])])];
     return { nsd: readNsd(nsdData([], 0x1c, ZONE, execMap)), pages };
   }
-  const [cobra] = enemyDonorObjects(new Map([["snake", cobraLevel()]]));
+  const [cobra] = objectDonorObjects(new Map([["snake", cobraLevel()]]));
 
   test("a snake's code goes in its own exec slot, under a name of its own, out of the plant's way", () => {
     expect(cobra.code).toEqual([[ENEMY_ENTITIES.snake[0], stringToEid("SnakC")]]);
@@ -472,7 +496,7 @@ describe("the barrel roller's code from toxic waste", () => {
     ])];
     return { nsd: readNsd(nsdData([], 0x7, ZONE, execMap)), pages };
   }
-  const [roller] = enemyDonorObjects(new Map([["barrel_roller", toxicWaste()]]));
+  const [roller] = objectDonorObjects(new Map([["barrel_roller", toxicWaste()]]));
 
   test("a barrel roller brings his barrels' code, which he spawns by its exec slot, and what it uses", () => {
     expect(new Map(roller.code).get(BARRELS_SLOT)).toBe(BARRELS);
@@ -490,6 +514,6 @@ describe("the barrel roller's code from toxic waste", () => {
   });
 
   test("barrels' code that can't be patched is an error", () => {
-    expect(() => enemyDonorObjects(new Map([["barrel_roller", toxicWaste(1)]]))).toThrow(/barrel roller/);
+    expect(() => objectDonorObjects(new Map([["barrel_roller", toxicWaste(1)]]))).toThrow(/barrel roller/);
   });
 });

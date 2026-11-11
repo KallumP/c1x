@@ -13,7 +13,7 @@ import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_SOUNDS, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
 import { CORE_EXEC_SLOTS } from "../../builder/cutLevel";
-import { donorObject, ENEMY_DONORS, enemyDonorObjects } from "../../builder/donorObjects";
+import { donorObject, OBJECT_DONORS, objectDonorObjects } from "../../builder/donorObjects";
 import type { Vec3 } from "../../builder/vectors";
 import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
 import { FOLLOW_CAM_MODE } from "../../builder/paths";
@@ -473,8 +473,8 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   const builtCode = (objects: LevelObject[], code: string) => build(objects).entries.get(stringToEid(code))!.items[1];
   // and in the level an enemy is taken from, as patched for custom levels (donorObjects.test.ts has the patches)
   const patchedDonorCode = (type: EnemyType, code: string) => {
-    const donor = readOtherLevel(ENEMY_DONORS[type]!.lid);
-    const entries = enemyDonorObjects(new Map([[type, donor]])).flatMap((object) => object.entries);
+    const donor = readOtherLevel(OBJECT_DONORS[type]!.lid);
+    const entries = objectDonorObjects(new Map([[type, donor]])).flatMap((object) => object.entries);
     return entries.find(({ eid }) => eid === stringToEid(code))!.items[1];
   };
 
