@@ -136,3 +136,11 @@ int FindCustomLevel(const custom_levels *levels, const char *name) {
   }
   return -1;
 }
+
+void CustomLevelLabel(const custom_levels *levels, int index, char *label, size_t size) {
+  if (levels->built[index]) {
+    SDL_strlcpy(label, levels->names[index], size);
+  } else {
+    SDL_snprintf(label, size, "%s (not built)", levels->names[index]);
+  }
+}

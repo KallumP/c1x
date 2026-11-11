@@ -10,6 +10,7 @@
 #include "ui.h"
 #include "settings_file.h"
 #include "levels.h"
+#include "levels_section.h"
 #include "paths.h"
 
 #define NUMBER_WIDTH 160.0f
@@ -43,6 +44,11 @@ void LoadSettingsSection(const char *repo) {
 
 void ListSettingsLevels(const char *repo) {
   ListCustomLevels(repo, &levels);
+}
+
+void BootIntoLevel(const char *repo, const char *level) {
+  SDL_strlcpy(settings.boot_level, level, sizeof(settings.boot_level));
+  SaveSettingsSection(repo);
 }
 
 /* write the settings to settings.cfg; returns 0 (saying why) if it can't */
@@ -130,6 +136,26 @@ static void DrawBootLevelChoice(const char *name, const char *level) {
   if (selected) { igSetItemDefaultFocus(); }
 }
 
+/* a level that isn't built builds when chosen, and is then the boot level */
+static void DrawUnbuiltLevelChoice(const char *repo, const char *label, const char *level) {
+  int can_build = CanBuildLevels(repo);
+
+  igBeginDisabled(!can_build);
+  if (igSelectable_Bool(label, false, 0, (ImVec2){0,0})) { StartLevelBuild(repo, level); }
+  igEndDisabled();
+}
+
+static void DrawCustomLevelChoice(const char *repo, int index) {
+  char label[SETTINGS_BOOT_LEVEL_MAX + 16];
+
+  CustomLevelLabel(&levels, index, label, sizeof(label));
+  if (levels.built[index]) {
+    DrawBootLevelChoice(label, levels.names[index]);
+  } else {
+    DrawUnbuiltLevelChoice(repo, label, levels.names[index]);
+  }
+}
+
 /* what the boot level dropdown shows for the current boot_level */
 static void BootLevelPreview(char *preview, size_t size) {
   if (!settings.boot_level[0]) {
@@ -143,9 +169,9 @@ static void BootLevelPreview(char *preview, size_t size) {
   }
 }
 
-#define BOOT_LEVEL_TOOLTIP "Start in a level built to build/levels/ instead of the title screen."
+#define BOOT_LEVEL_TOOLTIP "Start in a custom level instead of the title screen. Choosing one that isn't built builds it first."
 
-static void DrawBootLevel() {
+static void DrawBootLevel(const char *repo) {
   char preview[64];
   int i;
 
@@ -154,16 +180,14 @@ static void DrawBootLevel() {
   igSetNextItemWidth(BOOT_LEVEL_WIDTH);
   if (igBeginCombo("##boot_level", preview, 0)) {
     DrawBootLevelChoice(TITLE_SCREEN, "");
-    for (i=0;i<levels.count;i++) {
-      if (!levels.built[i]) { continue; }
-      DrawBootLevelChoice(levels.names[i], levels.names[i]);
-    }
+    for (i=0;i<levels.count;i++) { DrawCustomLevelChoice(repo, i); }
     igEndCombo();
   }
   DrawTooltip(BOOT_LEVEL_TOOLTIP);
+  DrawLevelBuildStatus();
 }
 
-static void DrawFields() {
+static void DrawFields(const char *repo) {
   if (!BeginFieldRows("settings_fields")) { return; }
   DrawOnOff("Loading screen", &settings.loading_screen,
     "Show each level's loading screen while it loads.");
@@ -189,7 +213,7 @@ static void DrawFields() {
     "Show how many spins Crash has left in the top right corner.");
   DrawOnOff("Box counter", &settings.box_display,
     "Show how many of the level's boxes Crash has broken (such as 12/49) at the top of the screen.");
-  DrawBootLevel();
+  DrawBootLevel(repo);
   EndFieldRows();
 }
 
@@ -204,7 +228,7 @@ static void DrawButtons(const char *repo) {
 }
 
 void DrawSettingsSection(const char *repo) {
-  DrawFields();
+  DrawFields(repo);
   igSpacing();
   DrawButtons(repo);
 }

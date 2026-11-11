@@ -25,7 +25,7 @@ void LoadLevelsSection(const char *repo) {
   ListCustomLevels(repo, &levels);
 }
 
-static void StartBuilding(const char *repo, const char *level) {
+void StartLevelBuild(const char *repo, const char *level) {
   char command[PATH_MAX_LEN + 64];
 
   problem[0] = 0;
@@ -39,11 +39,17 @@ static void StartBuilding(const char *repo, const char *level) {
   }
 }
 
-/* once a build finishes, the levels it made are listed here and for boot_level */
+int CanBuildLevels(const char *repo) {
+  return IsBuilderBuilt(repo) && !IsBackgroundCommandRunning(&build);
+}
+
+/* once a build finishes, the levels it made are listed here and for
+   boot_level, and a level that built is the one the game boots into */
 void UpdateLevelsSection(const char *repo) {
   if (!UpdateBackgroundCommand(&build)) { return; }
   LoadLevelsSection(repo);
   ListSettingsLevels(repo);
+  if (build.exit_code == 0) { BootIntoLevel(repo, building); }
 }
 
 static void DrawBuilderMissing(const char *repo) {
@@ -67,7 +73,7 @@ static void DrawLevelRow(const char *repo, int index, int can_build) {
   igTableNextColumn();
   igPushID_Int(index);
   igBeginDisabled(!can_build);
-  if (igButton("Build", (ImVec2){BUTTON_WIDTH, 0})) { StartBuilding(repo, levels.names[index]); }
+  if (igButton("Build", (ImVec2){BUTTON_WIDTH, 0})) { StartLevelBuild(repo, levels.names[index]); }
   igEndDisabled();
   igPopID();
 }
@@ -83,19 +89,17 @@ static void DrawLevelTable(const char *repo, int can_build) {
   igEndTable();
 }
 
-static void DrawBuildResult(void) {
+/* how the last build went, in a line */
+void DrawLevelBuildStatus(void) {
   if (problem[0]) {
     igTextColored(PROBLEM_COLOUR, "%s", problem);
-    return;
-  }
-  if (IsBackgroundCommandRunning(&build)) {
+  } else if (IsBackgroundCommandRunning(&build)) {
     igText("Building %s...", building);
   } else if (build.output[0] && build.exit_code != 0) {
-    igTextColored(PROBLEM_COLOUR, "%s didn't build; its output says why.", building);
+    igTextColored(PROBLEM_COLOUR, "%s didn't build; the Levels tab's output says why.", building);
   } else if (build.output[0]) {
-    igText("Built %s.", building);
+    igText("Built %s, and set it as the boot level.", building);
   }
-  DrawCommandOutput("build_output", &build);
 }
 
 void DrawLevelsSection(const char *repo) {
@@ -107,9 +111,10 @@ void DrawLevelsSection(const char *repo) {
   if (levels.count == 0) {
     igText("There are no level sources in level_src/.");
   }
-  DrawLevelTable(repo, has_builder && !IsBackgroundCommandRunning(&build));
+  DrawLevelTable(repo, CanBuildLevels(repo));
   if (igButton("Check again", (ImVec2){0, 0})) { LoadLevelsSection(repo); }
   DrawTooltip("Look for new level sources in level_src/.");
   igSpacing();
-  DrawBuildResult();
+  DrawLevelBuildStatus();
+  DrawCommandOutput("build_output", &build);
 }
