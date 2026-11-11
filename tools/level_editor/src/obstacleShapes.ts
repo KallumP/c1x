@@ -120,19 +120,22 @@ function spikedLog(height: number, way: PushWay): ShapePart[] {
   ];
 }
 
-const FIRE_PIT = { across: 494, long: 793, near: 8, bottom: -68, top: 239, rim: 30 };
+// the great gate's fire pit (WT1iG), by its vertices: a dish 494 across, 40 to
+// 239 over its spot and 300 to 650 out towards the player from it, on stems
+// down to the floor (68 under its spot) at 8 and 793 out
+const FIRE_PIT = { radius: 247, dishBottom: 40, top: 239, rim: 30, middle: 475, dishLong: 350, floor: -68, stems: [33, 768], stemTop: 100 }; // stems their radius in from the ends (8 and 793)
+const STEM_RADIUS = 25;
 
-// the great gate's fire pit (WT1iG): a red bowl 494 across and 793 long, from
-// just out of its spot towards the player, its fire glowing in its top
 function firePit(): ShapePart[] {
-  const along = FIRE_PIT.near + FIRE_PIT.long / 2; // its middle, out from its spot
-  const oval = { stretch: [1, 1, FIRE_PIT.long / FIRE_PIT.across] as Vec3 };
-  const radius = FIRE_PIT.across / 2;
-  const bowlHeight = FIRE_PIT.top - FIRE_PIT.rim - FIRE_PIT.bottom;
+  const { radius, dishBottom, top, rim, middle, dishLong, floor, stems, stemTop } = FIRE_PIT;
+  const oval = { stretch: [1, 1, dishLong / (2 * radius)] as Vec3 };
+  const dishHeight = top - rim - dishBottom;
+  const stem = (along: number): ShapePart => rod(STEM_RADIUS, STEM_RADIUS, stemTop - floor, [0, (stemTop + floor) / 2, along], FIRE_PIT_COLOURS.rim);
   return [
-    rod(radius, radius * 0.6, bowlHeight, [0, FIRE_PIT.bottom + bowlHeight / 2, along], FIRE_PIT_COLOURS.bowl, oval),
-    rod(radius, radius, FIRE_PIT.rim, [0, FIRE_PIT.top - FIRE_PIT.rim / 2, along], FIRE_PIT_COLOURS.rim, oval),
-    rod(radius * 0.8, radius * 0.8, 4, [0, FIRE_PIT.top - 2, along], FIRE_PIT_COLOURS.flame, oval),
+    rod(radius, radius * 0.5, dishHeight, [0, dishBottom + dishHeight / 2, middle], FIRE_PIT_COLOURS.bowl, oval),
+    rod(radius, radius, rim, [0, top - rim / 2, middle], FIRE_PIT_COLOURS.rim, oval),
+    rod(radius * 0.8, radius * 0.8, 4, [0, top - 2, middle], FIRE_PIT_COLOURS.flame, oval),
+    ...stems.map(stem),
   ];
 }
 

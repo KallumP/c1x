@@ -13,7 +13,7 @@ import { EntryTooBig } from "./cutLevel";
 import { objectDonorLevels, objectDonorObjects } from "./donorObjects";
 import {
   BOX_HEIGHT, BOX_TYPE, donorEntityType, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
-  LEADER_BAT, OBSTACLE_ENTITIES, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
+  LEADER_BAT, OBSTACLE_ENTITIES, withNoRotationFromFlags, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
@@ -292,7 +292,7 @@ class ObjectPlacer {
     const { zone, at } = this.inZone(this.positionOf(obstacle));
     const hung: Vec3 = [at[0], at[1] + timedObstacleHang(obstacle), at[2]];
     const [every, into] = obstacleTiming(obstacle);
-    const placed = withPosition(withEntityId(example, this.ids.shift()!), hung);
+    const placed = withNoRotationFromFlags(withPosition(withEntityId(example, this.ids.shift()!), hung));
     this.entities[zone].push(withInitFlagB(withInitFlagA(placed, every), into));
   }
 
