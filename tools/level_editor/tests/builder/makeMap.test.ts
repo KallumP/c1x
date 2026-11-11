@@ -638,6 +638,15 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       steps.forEach((step) => expectNear(step, 450, 60));
     });
 
+    test("it takes no texture pages: it's invisible, so the great gate's models don't come with it", () => {
+      expect(texturePages(build([obstacle("mossy_slide")]).level).length).toBe(texturePages(build().level).length);
+    });
+
+    test("with a wood platform too, the platform's models and pages still come", () => {
+      const pages = (objects: LevelObject[]) => texturePages(build(objects).level).length;
+      expect(pages([obstacle("wooden_peg"), obstacle("mossy_slide", { at: [1, 6, 0] })])).toBe(pages([obstacle("wooden_peg")]));
+    });
+
     test("it adds nothing to the map: the slope is modelled in blender", () => {
       expect(worldsOf(build([obstacle("mossy_slide", { raise: 1 })])).map((world) => world.items[1].length))
         .toEqual(worldsOf(build()).map((world) => world.items[1].length));
