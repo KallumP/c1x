@@ -108,7 +108,7 @@
   {"kind": "obstacle", "type": "rolling_stone", "at": [-6, 118.5, 2.268], "reverse": true},
   {"kind": "obstacle", "type": "lily_pad", "at": [1.049, 37.529, -1]},
   {"kind": "obstacle", "type": "lily_pad", "at": [-9.906, 41.02, -1]},
-  {"kind": "obstacle", "type": "rising_spiked_log", "at": [1.5, 142.5, 2.19], "start": 1, "every": 3},
+  {"kind": "obstacle", "type": "rising_spiked_log", "at": [1.5, 142.5, 2.19], "every": 3},
   {"kind": "obstacle", "type": "rising_spiked_log", "at": [4.25, 142.5, 2.284]},
   {"kind": "obstacle", "type": "rising_spiked_log", "at": [7, 142.5, 2.347]},
 
