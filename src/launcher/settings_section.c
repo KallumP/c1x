@@ -189,6 +189,8 @@ static void DrawBootLevel(const char *repo) {
 
 static void DrawFields(const char *repo) {
   if (!BeginFieldRows("settings_fields")) { return; }
+  DrawOnOff("Fullscreen", &settings.fullscreen,
+    "Fill the screen instead of a window. Alt+Enter switches while playing.");
   DrawOnOff("Loading screen", &settings.loading_screen,
     "Show each level's loading screen while it loads.");
   DrawNumber("Minimum loading screen time (ms)", &settings.loading_screen_min_ms,
