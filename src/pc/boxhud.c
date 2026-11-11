@@ -30,6 +30,15 @@ void BoxHudText(char *text, size_t size, int broken, int total) {
     snprintf(text, size, "%d", broken);
 }
 
+/* is digits the box counter's digits: the child of the counter whose player link is source? */
+int BoxHudIsCounterDigits(gool_object *digits, gool_object *source) {
+  gool_object *counter;
+
+  counter = digits->parent;
+  if (!counter || counter->handle.type != OBJECT_HANDLE_TYPE) { return 0; }
+  return counter->player == source;
+}
+
 /* give the box counter's source the boxes broken (a gool number, 8 bits after the point, as box_count) */
 void BoxHudShowBoxes(gool_object *source, int boxes_broken) {
   source->regs[HUD_COUNT_REG] = boxes_broken;

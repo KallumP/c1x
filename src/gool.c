@@ -16,6 +16,7 @@
 #include "pc/shield.h"
 #include "pc/tween.h"
 #include "pc/frames.h"
+#include "pc/boxhud.h"
 int CardControl(int op, int part_idx) { return 1; }
 
 /* forward declarations for unexported funcs */
@@ -1522,6 +1523,8 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
     }
     buf[i+1] = 0; /* place null term at end of truncated string */
   }
+  if (BoxHudCounterText(obj, buf, sizeof(buf))) /* pc: the box counter's "broken/total", centred */
+    flag = 1;
   tpag = font->tpage;
   if (flag)
     arg = GoolTextStringTransform(obj, buf, 0, font, tpag, size, 0);
