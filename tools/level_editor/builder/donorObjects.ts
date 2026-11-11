@@ -67,6 +67,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   lily_pad: UP_THE_CREEK,
   leaf: UP_THE_CREEK,
   wooden_peg: THE_GREAT_GATE,
+  mossy_slide: THE_GREAT_GATE,
 };
 
 export interface DonorObject {

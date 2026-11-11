@@ -4,7 +4,7 @@ import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeHeading, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
-import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type EnemyType, type LevelObject, type NumberSetting, type Vec3 } from "../objects";
+import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type LevelObject, type NumberSetting, type ObjectType, type Vec3, objectType } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
@@ -24,10 +24,19 @@ const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
 };
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 // the enemies reversed across the map, and what their Reverse direction button does
-const ACROSS_REVERSE_TITLES: Partial<Record<EnemyType, string>> = {
+const ACROSS_REVERSE_TITLES: Partial<Record<ObjectType, string>> = {
   fish: "It leaps from the solid fish to the faded one, and back",
+  mossy_slide: "It slides Crash down from its high end to its low end",
 };
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
+
+// what a mossy slide's length button does: make it the other length
+function slideLengthLabel(slide: LevelObject): string {
+  if (slide.long) {
+    return "Make it short";
+  }
+  return "Make it long";
+}
 
 export default function PropertiesPanel({ state, warnings, pathWarnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
   state: EditorState;
@@ -178,13 +187,21 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
   // which way a fish leaps or a lab assistant throws across the map: the way
   // the editor shows it, or the other way
   const renderAcrossReverseButton = (selected: LevelObject) => (
-    <button className="drop" onClick={() => change({ reverse: selected.reverse ? undefined : true })} title={ACROSS_REVERSE_TITLES[selected.enemy!]}>
+    <button className="drop" onClick={() => change({ reverse: selected.reverse ? undefined : true })} title={ACROSS_REVERSE_TITLES[objectType(selected)!]}>
       Reverse direction
     </button>
   );
 
   const isStone = (selected: LevelObject) => selected.kind === "obstacle" && selected.obstacle === "rolling_stone";
-  const isReversedAcross = (selected: LevelObject) => selected.kind === "enemy" && selected.enemy! in ACROSS_REVERSE_TITLES;
+  const isReversedAcross = (selected: LevelObject) => objectType(selected) !== undefined && objectType(selected)! in ACROSS_REVERSE_TITLES;
+  const isSlide = (selected: LevelObject) => selected.kind === "obstacle" && selected.obstacle === "mossy_slide";
+
+  // a mossy slide's length: the great gate's long slide or its short one
+  const renderLengthButton = (slide: LevelObject) => (
+    <button className="drop" onClick={() => change({ long: slide.long ? undefined : true })} title="The great gate's long slides are 9 m, its short ones 5 m (at scale 400)">
+      {slideLengthLabel(slide)}
+    </button>
+  );
 
   // raise is its height above the floor, kept as it's dragged about
   const renderObjectFields = (selected: LevelObject) => (
@@ -321,6 +338,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {hasPath(object) && renderTurnRoundButton(object)}
           {isStone(object) && renderStoneReverseButton(object)}
           {isReversedAcross(object) && renderAcrossReverseButton(object)}
+          {isSlide(object) && renderLengthButton(object)}
           {hasNodes(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}

@@ -1,7 +1,7 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, mossySlideEnd, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, ENEMY_COLOURS, OBSTACLE_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
@@ -18,6 +18,8 @@ const BOX_EDGE_COLOUR = "#000000";
 const HANDLE_SIZE = 0.15;   // a path node's handle's radius, of a box's size
 const FAR_END_OPACITY = 0.4; // the enemy drawn at the far end of its path, faded: it starts at the other
 const SELECTED_GLOW = 0.35; // how much brighter the selected enemy's model is
+const PLANK_WIDTH = 1100;    // a mossy slide's plank across its slope, game units (the great gate's, about)
+const PLANK_THICKNESS = 120;
 
 // how big a crab's and turtle's models are, in game units: how tall, and how
 // far they reach out from their middles, whichever way they're turned. the
@@ -442,7 +444,26 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     </>
   );
 
-  // a leaf with its drift, a rolling stone on its track, and the rest at their
+  // a mossy slide as its plank, sloping from its top end (at, raised) across the
+  // map and down to its bottom end, as long as the great gate's long or short one
+  const renderMossySlide = (object: LevelObject, index: number) => {
+    const [x, y, z] = object.at;
+    const top = blenderToView([x, y, z + object.raise]);
+    const bottom = blenderToView(mossySlideEnd(object.at, object.raise, turn, scale, object.long === true, object.reverse === true));
+    const centre = top.map((value, axis) => (value + bottom[axis]) / 2) as Vec3;
+    const [dx, dy, dz] = bottom.map((value, axis) => value - top[axis]);
+    const flat = Math.hypot(dx, dz);
+    const colour = OBSTACLE_COLOURS.mossy_slide;
+    return (
+      <mesh position={centre} rotation={[0, Math.atan2(-dz, dx), Math.atan2(dy, flat), "YZX"]}>
+        <boxGeometry args={[Math.hypot(flat, dy), PLANK_THICKNESS / scale, PLANK_WIDTH / scale]} />
+        <meshLambertMaterial color={colour} />
+        <Edges color={edgeColour(index, colour)} />
+      </mesh>
+    );
+  };
+
+  // a leaf with its drift, a rolling stone on its track, a mossy slide as its plank, and the rest at their
   // spots (a lily pad where it sinks from, a wooden peg opened out)
   const renderObstacle = (object: LevelObject, index: number) => {
     if (object.obstacle === "leaf") {
@@ -450,6 +471,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     }
     if (object.obstacle === "rolling_stone") {
       return renderRollingStone(object, index);
+    }
+    if (object.obstacle === "mossy_slide") {
+      return renderMossySlide(object, index);
     }
     return renderShapeModel(OBSTACLE_SHAPES[object.obstacle!], base(object), index);
   };

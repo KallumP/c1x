@@ -25,7 +25,7 @@ import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
 import { cameraOffsets, cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
 import { DEFAULT_CAMERA, type Camera } from "../src/camera";
-import { levelEntity, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type StoneTrack, type Templates } from "./templates";
+import { levelEntity, mossySlope, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type MossySlope, type StoneTrack, type Templates } from "./templates";
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
@@ -332,6 +332,18 @@ class ObjectPlacer {
     this.entities[zone].push(withInitFlagA(placed, stoneStartFlag(stone.start ?? 0, stone.reverse === true)));
   }
 
+  // a mossy slide's slider (example) at its spot, sliding along its slope's path from there
+  placeSlide(slide: LevelObject, example: Buffer, slope: MossySlope): void {
+    const { zone, at } = this.inZone(this.positionOf(slide));
+    const path = slope.path.map((point) => point.map((value, axis) => value + at[axis]) as Vec3);
+    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), path));
+  }
+
+  // the zone an object's in, and where it is in it
+  placeOf(object: LevelObject): { zone: number; at: Vec3 } {
+    return this.inZone(this.positionOf(object));
+  }
+
   // the zone an object's in
   zoneOf(object: LevelObject): number {
     return this.inZone(this.positionOf(object)).zone;
@@ -396,6 +408,33 @@ function withStoneTracks(worlds: Worlds, stones: LevelObject[], track: StoneTrac
   }, worlds);
 }
 
+// the textured worlds with each mossy slide's plank added where it slopes from (its spot), named for errors
+function withSlidePlanks(worlds: Worlds, slides: LevelObject[], slopeOf: (slide: LevelObject) => MossySlope, placer: ObjectPlacer, zoneWorlds: WorldMesh[][], template: Buffer): Worlds {
+  return slides.reduce((built, slide) => {
+    const { zone, at } = placer.placeOf(slide);
+    return addMapPiece(built, slopeOf(slide), at, template, meshesInZone(zoneWorlds, zone), "a mossy slide's plank");
+  }, worlds);
+}
+
+// each mossy slide's plank as a mesh where it goes, for the collision, so crash stands on it
+function slidePlankMeshes(slides: LevelObject[], slopeOf: (slide: LevelObject) => MossySlope, placer: ObjectPlacer): Mesh[] {
+  return slides.map((slide) => pieceMesh(slopeOf(slide), placer.positionOf(slide)));
+}
+
+// each mossy slide's slope (its plank and path) from the great gate (donor), by
+// whether it's long and reversed, each read from it once
+function slideSlopes(donor: Level | undefined): (slide: LevelObject) => MossySlope {
+  const slopes = new Map<string, MossySlope>();
+  return (slide) => {
+    const [long, reverse] = [slide.long === true, slide.reverse === true];
+    const key = `${long},${reverse}`;
+    if (!slopes.has(key)) {
+      slopes.set(key, mossySlope(donor!, long, reverse));
+    }
+    return slopes.get(key)!;
+  };
+}
+
 // each rolling stone's track as a mesh where it goes, for the collision, so
 // crash stands in its groove, can't walk through its sides, and steps onto it
 // where it meets the map as he does the map's own lips
@@ -421,11 +460,13 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const enemies = objects.filter((object) => object.kind === "enemy");
   const obstacles = objects.filter((object) => object.kind === "obstacle");
   const stones = obstacles.filter((obstacle) => obstacle.obstacle === "rolling_stone");
+  const slides = obstacles.filter((obstacle) => obstacle.obstacle === "mossy_slide");
   const donorLevels = objectDonorLevels([...enemies, ...obstacles], readOtherLevel);
+  const slopeOf = slideSlopes(donorLevels.get("mossy_slide"));
   const entityCount = Number(end !== undefined) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0) + obstacles.length;
   const placer = new ObjectPlacer(map, templates, scale, turn, entityCount);
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
-  const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
+  const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, [...stoneTrackMeshes(stones, track, placer), ...slidePlankMeshes(slides, slopeOf, placer)]);
 
   const zoneWorlds = zoneWorldMeshes(map, templates, new Set(images.keys()), new Set(stones.map((stone) => placer.zoneOf(stone))));
   const template = templates.world.items[0];
@@ -457,13 +498,15 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   enemies.filter((enemy) => enemy.enemy === "bat").forEach((enemy) => placer.placeBatRoost(enemy, enemyExample("bat")));
   enemies.filter((enemy) => enemy.enemy === "leader_bats")
     .forEach((enemy) => placer.placeLeaderBats(enemy, enemyExample("leader_bats"), levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT)));
-  const movers = obstacles.filter((obstacle) => obstacle.obstacle !== "rolling_stone"); // the rest, from their levels
+  const movers = obstacles.filter((obstacle) => obstacle.obstacle !== "rolling_stone" && obstacle.obstacle !== "mossy_slide"); // the rest, from their levels
   const obstacleOf = (obstacle: LevelObject) => obstacleExample(donorLevels.get(obstacle.obstacle!)!, obstacle.obstacle!);
   movers.filter((obstacle) => !obstacle.path).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
   movers.filter((obstacle) => obstacle.path).forEach((leaf) => placer.placeLeafOnPath(leaf, obstacleOf(leaf)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
+  slides.forEach((slide) => placer.placeSlide(slide, obstacleOf(slide), slopeOf(slide)));
   enemies.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
-  let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
+  const withTracks = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
+  let withBase = withSlidePlanks(withTracks, slides, slopeOf, placer, zoneWorlds, template);
   if (end) {
     const position = placer.positionOf(end);
     const pad = placer.placeWarpPad(position);

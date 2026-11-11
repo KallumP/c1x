@@ -142,6 +142,26 @@ export function leafDrift(at: Vec3, raise: number, turn: number, scale: number):
     start.map((value, axis) => value + (across[axis] * sideways + back[axis] * along) / scale + 0) as Vec3); // + 0 turns -0 into 0
 }
 
+// the great gate's mossy slides' runs (its first long and short slides' paths,
+// end to end), in game units: across the map (as a stone rolls) and down
+export const MOSSY_SLIDES: Record<"long" | "short", [number, number]> = { long: [3600, -868], short: [2000, -476] };
+
+// a long or short slide's run
+function slideRun(long: boolean): [number, number] {
+  if (long) {
+    return MOSSY_SLIDES.long;
+  }
+  return MOSSY_SLIDES.short;
+}
+
+// where a mossy slide's run ends (in blender), for a slide whose top end is at
+// at, raised by raise: across the map and down, or back across it reversed
+export function mossySlideEnd(at: Vec3, raise: number, turn: number, scale: number, long: boolean, reverse: boolean): Vec3 {
+  const [across, down] = slideRun(long);
+  const way = scaled(stoneRolling(turn), leapWay(reverse));
+  return [0, 1, 2].map((axis) => at[axis] + (way[axis] * across) / scale + rising()[axis] * (raise + down / scale) + 0) as Vec3; // + 0 turns -0 into 0
+}
+
 // temple ruins' bats' swoop (its first roost's path), in game units from the
 // roost: along the game's z (the route back towards the spawn) and up. its bats fly it once
 export const BAT_SWOOP: [number, number][] = [

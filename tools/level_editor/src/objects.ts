@@ -68,7 +68,9 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // - wooden_peg: the great gate's totem peg, folded up until crash spins it, then a step for a while
 // rolling along a track:
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track (jungle rollers' own: no other level is read)
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone"] as const;
+// sloping across the map and down from their spot:
+// - mossy_slide: the great gate's mossy plank, which slides crash down it (long, or short), and the invisible slider that does
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
@@ -183,7 +185,8 @@ export interface LevelObject {
   path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised); leader bats' second leader, from their first
   speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
-  reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping the other way (true, or none)
+  reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping (or a mossy slide sloping) the other way (true, or none)
+  long?: boolean;       // a mossy slide that's the great gate's long one, not its short (true, or none)
   count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
   delay?: number;       // the seconds between a bat roost's flocks (BAT_DELAY, LEADER_BATS_DELAY without one)
   range?: number;       // how near crash comes, in metres, before a gunman shoots (GUNMAN_RANGE without one)
@@ -222,7 +225,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
-const OBSTACLE_SETTINGS = ["type", "path", "start", "reverse"];
+const OBSTACLE_SETTINGS = ["type", "path", "start", "reverse", "long"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
 // a word with "a" or "an" before it, as it sounds: "a box", "an enemy"
@@ -339,7 +342,7 @@ function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetti
 
 // the enemies and obstacles that can be reversed: a rolling stone rolls back towards its first
 // end first, and a fish leaps the other way across the map
-const REVERSIBLE: ObjectType[] = ["rolling_stone", "fish"];
+const REVERSIBLE: ObjectType[] = ["rolling_stone", "fish", "mossy_slide"];
 
 // whether a rolling stone or fish is reversed, from its fields in objects.json
 function readReverse(fields: Record<string, unknown>, type: ObjectType, objectNumber: number): Pick<LevelObject, "reverse"> {
@@ -353,6 +356,26 @@ function readReverse(fields: Record<string, unknown>, type: ObjectType, objectNu
     throw new Error(`object ${objectNumber}: reverse should be true or false`);
   }
   return fields.reverse ? { reverse: true } : {};
+}
+
+// the obstacles that can be long: a mossy slide, as the great gate's long one
+const LONG_OBSTACLES: ObjectType[] = ["mossy_slide"];
+
+// whether a mossy slide is long, from its fields in objects.json
+function readLong(fields: Record<string, unknown>, type: ObjectType, objectNumber: number): Pick<LevelObject, "long"> {
+  if (!("long" in fields)) {
+    return {};
+  }
+  if (!LONG_OBSTACLES.includes(type)) {
+    throw new Error(`object ${objectNumber}: a ${type} has no long (mossy slides do)`);
+  }
+  if (typeof fields.long !== "boolean") {
+    throw new Error(`object ${objectNumber}: long should be true or false`);
+  }
+  if (!fields.long) {
+    return {};
+  }
+  return { long: true };
 }
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
@@ -438,6 +461,7 @@ export function parseObjects(text: string): LevelObject[] {
       Object.assign(object, readObstaclePath(fields, object.obstacle!, objectNumber));
       NUMBER_SETTINGS.forEach((setting) => Object.assign(object, readNumberSetting(fields, setting, object.obstacle!, objectNumber)));
       Object.assign(object, readReverse(fields, object.obstacle!, objectNumber));
+      Object.assign(object, readLong(fields, object.obstacle!, objectNumber));
     }
 
     objects.push(object);
@@ -478,6 +502,9 @@ function formatObject(object: LevelObject): string {
   }
   if (object.reverse) {
     parts.push(`"reverse": true`);
+  }
+  if (object.long) {
+    parts.push(`"long": true`);
   }
   return `{${parts.join(", ")}}`;
 }
