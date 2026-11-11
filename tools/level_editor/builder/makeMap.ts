@@ -186,6 +186,15 @@ const obstacleExample = (donor: Level, type: ObstacleType): Buffer => levelEntit
 // units, as the great gate's hang over their floor: higher, it stops short of crash)
 const SPIKED_LOG_HANG = 1600;
 
+// a spiked log's init flags: A the frames between its pushes, and B the frames
+// into them it starts, which brings them that much sooner. its offset puts
+// them off, so it starts that much less far into them, round its pushes
+function spikedLogTiming(log: LevelObject): [number, number] {
+  const every = Math.round(numberSetting(log, "every") * FRAMES_A_SECOND);
+  const offset = Math.round(numberSetting(log, "offset") * FRAMES_A_SECOND) % every;
+  return [every, (every - offset) % every];
+}
+
 // how far over its spot a spiked log is placed
 function spikedLogHang(log: LevelObject): number {
   if (log.obstacle === "falling_spiked_log") {
@@ -278,15 +287,13 @@ class ObjectPlacer {
   }
 
   // a spiked log (example) at its spot, a falling one hung over it (see
-  // SPIKED_LOG_HANG), its init flags its pushes' timing: A the frames between
-  // them, B the frames into them it starts
+  // SPIKED_LOG_HANG), its init flags its pushes' timing (see spikedLogTiming)
   placeSpikedLog(log: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(log));
     const hung: Vec3 = [at[0], at[1] + spikedLogHang(log), at[2]];
-    const every = Math.round(numberSetting(log, "every") * FRAMES_A_SECOND);
-    const start = Math.round(numberSetting(log, "start") * every);
+    const [every, into] = spikedLogTiming(log);
     const placed = withPosition(withEntityId(example, this.ids.shift()!), hung);
-    this.entities[zone].push(withInitFlagB(withInitFlagA(placed, every), start));
+    this.entities[zone].push(withInitFlagB(withInitFlagA(placed, every), into));
   }
 
   // an enemy or obstacle that moves along its own level's path, as example, from
