@@ -3,12 +3,12 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
 import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
-import type { EnemyType, LevelObject } from "../../src/objects";
+import type { EnemyType, LevelObject, PlatformType } from "../../src/objects";
 import { DEFAULT_SKY, type Sky } from "../../src/sky";
-import { enemyObject, expectNear } from "../helpers";
+import { enemyObject, expectNear, platformObject } from "../helpers";
 import { readCameraPath, readZoneHeader, readZoneRect } from "./zoneReaders";
 import { BASE_LEVEL } from "../../builder/baseLevel";
-import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, LEADER_BAT, ENTITY_INIT_FLAGS, entityId, entityPath, entityPosition, entityType, STONE_FAR_END, WARP_PAD } from "../../builder/entities";
+import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, LEADER_BAT, PLATFORM_ENTITIES, ENTITY_INIT_FLAGS, entityId, entityPath, entityPosition, entityType, STONE_FAR_END, WARP_PAD } from "../../builder/entities";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_SOUNDS, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
@@ -84,6 +84,8 @@ const object = (kind: LevelObject["kind"], at: [number, number, number], more: P
 const box = (at: [number, number, number], subtype: number, more: Partial<LevelObject> = {}) => object("box", at, { box: subtype, ...more });
 // an enemy at blender (1, 2, 0), on the floor, unless more moves it
 const enemy = (type: EnemyType, more: Partial<LevelObject> = {}) => enemyObject(type, { at: [1, 2, 0], ...more });
+// and a platform there
+const platform = (type: PlatformType, more: Partial<LevelObject> = {}) => platformObject(type, { at: [1, 2, 0], ...more });
 
 // blender (1, 2, 0), where enemy() puts an enemy, in the zone at scale 256: the floor's
 // corner is a cell (128) in from the zone's, and its top is at 128
@@ -521,6 +523,49 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const objects = [enemy("blue_river_plant"), enemy("green_river_plant", { at: [-1, 4, 0] }), enemy("fish", { at: [1, 6, 0] })];
       build(objects, { readOtherLevel: reader.readOtherLevel });
       expect(reader.read).toEqual([0x18]);
+    });
+  });
+
+  describe.skipIf(!hasUpTheCreek)("lily pads and leaves, from up the creek", () => {
+    // the zone's platforms of a type: their paths, relative to their first point
+    const platformPaths = (zone: Entry, type: PlatformType) => zoneEntities(zone)
+      .filter((item) => isOfType(item, PLATFORM_ENTITIES[type]))
+      .map((item) => entityPath(item));
+    const fromFirst = (path: Vec3[]) => path.map((point) => point.map((value, axis) => value - path[0][axis]));
+
+    test("a level with only platforms has up the creek's river code", () => {
+      const { level, entries } = build([platform("lily_pad")]);
+      expect(level.nsd.ldat.execMap[PLATFORM_ENTITIES.lily_pad[0]]).toBe(stringToEid("RivOC"));
+      expect(entries.get(stringToEid("RivOC"))!.items[1]).toEqual(patchedDonorCode("fish", "RivOC"));
+    });
+
+    test("a lily pad sinks from its spot, down up the creek's first lily pad's path", () => {
+      const [path] = platformPaths(build([platform("lily_pad")]).zone, "lily_pad");
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expect(path.length).toBe(21);
+      expect(fromFirst(path).at(-1)).toEqual([0, -384, 0]);
+    });
+
+    test("a leaf drifts from its spot, along up the creek's first leaf's path", () => {
+      const [path] = platformPaths(build([platform("leaf")]).zone, "leaf");
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expect(path.length).toBe(13);
+      expect(fromFirst(path).at(-1)).toEqual([400, 0, 2400]);
+    });
+
+    test("a raised platform is raised", () => {
+      const [path] = platformPaths(build([platform("lily_pad", { raise: 1 })]).zone, "lily_pad");
+      expectNear(path[0][1], FLOOR_Y + 256, 16); // 1 m at scale 256
+    });
+
+    test("a level with platforms and river enemies reads up the creek once", () => {
+      const reader = recordingReader();
+      build([enemy("fish"), platform("lily_pad", { at: [-1, 4, 0] }), platform("leaf", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
+      expect(reader.read).toEqual([0x18]);
+    });
+
+    test("a platform without other levels to take it from is an error", () => {
+      expect(() => build([platform("leaf")], { readOtherLevel: undefined })).toThrow(/leaf/);
     });
   });
 
