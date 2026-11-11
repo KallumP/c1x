@@ -31,6 +31,14 @@ extern eid_t insts[8];
 extern page_struct texture_pages[16];
 extern uint32_t seed_a;
 
+/* the window's flags: filling the screen at its own resolution if fullscreen is on */
+static Uint32 WindowFlags() {
+  Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+
+  if (game_settings.fullscreen) { flags |= SDL_WINDOW_FULLSCREEN_DESKTOP; }
+  return flags;
+}
+
 void SDLInit() {
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); /* for fix_model_draw_order */
@@ -38,7 +46,7 @@ void SDLInit() {
     SDL_WINDOWPOS_UNDEFINED,
     SDL_WINDOWPOS_UNDEFINED,
     WINDOW_WIDTH, WINDOW_HEIGHT,
-    SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    WindowFlags());
   ogl_context = SDL_GL_CreateContext(window);
   /* frames are drawn between game frames on their own timing (see pc/tween.h), so
      a swap mustn't wait for the screen: that would push the game frame past its time */
@@ -96,11 +104,16 @@ void SDLSwap() {
   FpsCountShownFrame(SDL_GetTicks());
 }
 
-void SDLInput(gl_input *input) {
-  int i;
+void SDLDrawableSize(int *w, int *h) {
+  SDL_GL_GetDrawableSize(window, w, h);
+}
 
-  input->window.w = WINDOW_WIDTH;
-  input->window.h = WINDOW_HEIGHT;
+void SDLInput(gl_input *input) {
+  int i, w, h;
+
+  SDL_GetWindowSize(window, &w, &h);
+  input->window.w = w;
+  input->window.h = h;
   input->mouse.x = mousex;
   input->mouse.y = mousey;
   input->click = 0 | (mousel ? 1 : 0);
@@ -205,6 +218,7 @@ int init() {
   callbacks.ext_supported = (int (*)(const char*))SDL_GL_ExtensionSupported;
   callbacks.proc_addr = SDL_GL_GetProcAddress;
   callbacks.input = SDLInput;
+  callbacks.drawable_size = SDLDrawableSize;
   GLInit(&callbacks);
   sranda2();
   InitBootLevel();

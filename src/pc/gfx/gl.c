@@ -23,6 +23,7 @@ static PFNGLBLENDEQUATIONPROC pglBlendEquation;
 #include "pc/replay.h"
 #include "pc/pace.h"
 #include "pc/tween.h"
+#include "pc/screen_fit.h"
 
 #ifdef CFLAGS_GUI
 #include "ext/gui.h"
@@ -227,12 +228,27 @@ void GLDrawImage(dim2 *dim, uint8_t *buf, pnt2 *loc) {
 }
 
 /*
+ * draw into the part of the window the picture fits (see pc/screen_fit.h);
+ * the clear before it blacks the whole window, leaving bars around it
+ */
+static void GLFitViewport() {
+  screen_area area;
+  int w, h;
+
+  if (!callbacks.drawable_size) { return; }
+  (*callbacks.drawable_size)(&w, &h);
+  FitPicture(w, h, &area);
+  glViewport(area.x, area.y, area.w, area.h);
+}
+
+/*
  * clear the screen, draw an rgba image centered and show it immediately.
  * used for the level loading screen, which is drawn outside the frame loop
  * (so this doesn't use GLClear, which reads the current zone)
  */
 void GLShowImage(dim2 *dim, uint8_t *buf) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  GLFitViewport();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glFrustum(screen.x, screen.x+screen.w, screen.y, screen.y+screen.h,
@@ -619,7 +635,7 @@ void GLClear() {
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
-  // glViewport(0, 0, screen.w, screen.h);
+  GLFitViewport();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   /*

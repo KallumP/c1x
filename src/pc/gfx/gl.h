@@ -19,6 +19,7 @@ typedef struct {
   int (*ext_supported)(const char*);
   void *(*proc_addr)(const char*);
   void (*input)(gl_input*);
+  void (*drawable_size)(int *w, int *h); /* the window's size in pixels, to draw into */
 } gl_callbacks;
 
 typedef struct {
