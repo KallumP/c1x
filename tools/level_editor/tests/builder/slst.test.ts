@@ -109,6 +109,15 @@ describe("sort lists", () => {
     expect(slstWords(items[0]).words).toEqual([polyId(1, 0), polyId(0, 0)]);
   });
 
+  test("a mesh drawn nearer (a mossy slide's plank) comes after polygons a little in front of it, as if it were nearer", () => {
+    // the floor's middle at z 1300, the plank's at 1000: farthest first, the plank comes first,
+    // but drawn 512 nearer it comes after the floor, which can't then cover it
+    const floor = triangleMesh([[0, 0, 1200], [800, 0, 1200], [0, 0, 1500]]);
+    const plank = triangleMesh([[0, 200, 990], [8, 200, 990], [0, 200, 1020]]);
+    expect(slstWords(zoneSlstItems([floor, plank], [[0, 0, 3000]], 200)[0]).words).toEqual([polyId(1, 0), polyId(0, 0)]);
+    expect(slstWords(zoneSlstItems([floor, { ...plank, nearer: 512 }], [[0, 0, 3000]], 200)[0]).words).toEqual([polyId(0, 0), polyId(1, 0)]);
+  });
+
   test("a camera looking steeply down lists the floor reaching back under it", () => {
     // a floor triangle from z 2000 to 3500, the camera 1930 above it at z 3000:
     // level, the triangle reaches behind it; tilted 54 degrees down, it's all in front

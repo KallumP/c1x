@@ -641,6 +641,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(texturePages(built.level).some((page) => page.eid === stringToEid("Vi1iT"))).toBe(true);
     });
 
+    test("its plank is in a mesh of its own, the zone's last, so it's drawn over the floor", () => {
+      const [withSlide, without] = [build([obstacle("mossy_slide")]), build()];
+      expect(worldsOf(withSlide).length).toBe(worldsOf(without).length + 1);
+      const last = readWorldHeader(worldsOf(withSlide).at(-1)!.items[0]);
+      expect(last.polygonCount).toBeGreaterThan(40);
+    });
+
     test("a level with mossy slides and wood platforms reads the great gate once", () => {
       const reader = recordingReader();
       build([obstacle("wooden_peg"), obstacle("mossy_slide", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
