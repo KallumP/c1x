@@ -370,7 +370,14 @@ const RUINS_OBJECT_MODELS = ["Li1w", "Rw1w", "Rw2w", "Rw3w", "Rw4w", "Rp1w", "Rp
 const GATE_OBJECT_MODELS = ["WT1i", "SL1i", "WS1i", "WP1i"];
 const GATE_OBJECTS_PAGE = "Vi3iT";
 
+// boulder dash's objects' models (its JunOC's, moved: see MOVED_ENEMY_CODE)
+// that its gates never show: its boulder (JuSe) and the rest. left out, their
+// texture pages don't come with them
+const BOULDER_DASH_NON_GATE_MODELS = ["Jube", "JuBe", "JuFe", "JuLe", "JuSe"];
+
 const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
+  tall_thin_gate: BOULDER_DASH_NON_GATE_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
+  low_wide_gate: BOULDER_DASH_NON_GATE_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
   barrel_roller: ["WateC"],
   mossy_slide: [...GATE_OBJECT_MODELS.flatMap((model) => [`${model}G`, `${model}V`]), GATE_OBJECTS_PAGE],
   walking_lizard: RUINS_OBJECT_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
