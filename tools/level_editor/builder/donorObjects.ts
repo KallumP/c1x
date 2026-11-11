@@ -382,14 +382,22 @@ const ENEMY_CAPPED_MODELS: Partial<Record<ObjectType, [model: string, animation:
 // the donor's entry to put there. the lab's walking lab assistant's spark
 // shocks crash (WS10V), and reads its model's vertices: without it, spinning
 // him as he sparks would look up a model the level hasn't, and crash the
-// game. the great gate's fire pit sets him alight, and his code opens his
-// burning animations, model and sounds from its constants (from 0x80): jungle
+// game. the great gate's fire pit sets him alight: his code opens his burning
+// animations, model and sounds from its constants (from 0x80), and plays the
+// animations from his animations item (from 0x90, each 8 bytes). jungle
 // rollers' name entries no level has, and the game crashes looking them up
 const CRASH_BURNING = ["WF10V", "WF10G", "BDC0A", "BLI0A", "WF20V", "BDA0A", "WF30V", "WF40V", "WF50V"];
 const CRASH_BURNING_AT = 0x80;
+const CRASH_BURNING_ANIMATIONS = ["WF10V", "WF20V", "WF30V", "WF40V", "WF50V"];
+const CRASH_BURNING_ANIMATIONS_AT = 0x90;
+const ANIMATION_BYTES = 8;
+const crashBurning = [
+  ...CRASH_BURNING.map((name, index) => ({ item: CRASH_CONSTANTS, at: CRASH_BURNING_AT + 4 * index, name })),
+  ...CRASH_BURNING_ANIMATIONS.map((name, index) => ({ item: CRASH_ANIMATIONS, at: CRASH_BURNING_ANIMATIONS_AT + ANIMATION_BYTES * index + ANIMATION_EID, name })),
+];
 const OBJECT_CRASH_ENTRIES: Partial<Record<ObjectType, { item: number; at: number; name: string }[]>> = {
   electric_scientist: [{ item: CRASH_ANIMATIONS, at: 72 + ANIMATION_EID, name: "WS10V" }],
-  fire_pit: CRASH_BURNING.map((name, index) => ({ item: CRASH_CONSTANTS, at: CRASH_BURNING_AT + 4 * index, name })),
+  fire_pit: crashBurning,
 };
 
 // object with the entries it needs crash's code to name (OBJECT_CRASH_ENTRIES),
