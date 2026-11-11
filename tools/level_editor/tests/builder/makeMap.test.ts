@@ -665,6 +665,23 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect([at(0x203), at(0x204), at(0x208), at(0x209)]).toEqual([0x82094000, 0x15017c57, 0x82094000, 0x15017c58]);
     });
 
+    // each texture info's colour word, after the model's header (poly count, scale, texinfo count)
+    const colourWords = (model: Entry) => {
+      const header = model.items[0];
+      const words: number[] = [];
+      for (let at = 20; at + 4 <= header.length; at += (header.readUInt32LE(at) >>> 31) ? 8 : 4) {
+        words.push(header.readUInt32LE(at));
+      }
+      return words;
+    };
+    const NO_CULL = 1 << 28;
+
+    test.each(["fire_pit", "wooden_peg"] as const)("with a %s, the fire pit's bowl (WT1iG) is drawn from both sides, so its top can't be seen through close up", (type) => {
+      const model = build([obstacle(type)]).entries.get(stringToEid("WT1iG"))!;
+      expect(colourWords(model).length).toBeGreaterThan(0);
+      expect(colourWords(model).every((word) => (word & NO_CULL) !== 0)).toBe(true);
+    });
+
     test("a level without a fire pit keeps the base level's crash code", () => {
       const { entries } = build([obstacle("wooden_peg")]);
       const baseCrash = entriesById(readLevel(STREAMS, BASE_LEVEL.lid)).get(stringToEid("WillC"))!;
