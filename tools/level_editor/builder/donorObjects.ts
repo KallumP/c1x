@@ -352,8 +352,16 @@ const MOVED_CHILD_CODE: Partial<Record<ObjectType, { from: number; to: number; n
 // walking lizard (subtype 5) only uses its own (Ig1wG, walking Ig1wV): the rest
 // would bring three more texture pages
 const RUINS_OBJECT_MODELS = ["Li1w", "Rw1w", "Rw2w", "Rw3w", "Rw4w", "Rp1w", "Rp2w", "Rp3w", "Rp4w", "Rp5w", "Rp7w"];
+// the great gate's objects' models (WalOC's: its wood platforms' and the rest),
+// and the texture page its code names itself (Vi3iT), which its mossy slide's
+// slider, being invisible, never shows. left out, their texture pages don't
+// come with it; a wood platform brings them itself
+const GATE_OBJECT_MODELS = ["WT1i", "SL1i", "WS1i", "WP1i"];
+const GATE_OBJECTS_PAGE = "Vi3iT";
+
 const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   barrel_roller: ["WateC"],
+  mossy_slide: [...GATE_OBJECT_MODELS.flatMap((model) => [`${model}G`, `${model}V`]), GATE_OBJECTS_PAGE],
   walking_lizard: RUINS_OBJECT_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
 };
 
