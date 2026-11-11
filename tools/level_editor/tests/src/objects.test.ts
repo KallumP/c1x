@@ -511,7 +511,7 @@ describe("obstacles", () => {
   test.each([
     ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf)"],
     ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf)"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: unknown setting path (an obstacle takes kind, at, raise, type)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed (an obstacle takes kind, at, raise, type, path)"],
     ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);

@@ -447,7 +447,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     .forEach((enemy) => placer.placeLeaderBats(enemy, enemyExample("leader_bats"), levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT)));
   obstacles.forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleExample(donorLevels.get(obstacle.obstacle!)!, obstacle.obstacle!)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
-  objects.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
+  enemies.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
   if (end) {
     const position = placer.positionOf(end);

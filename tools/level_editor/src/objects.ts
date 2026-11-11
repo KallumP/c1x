@@ -69,6 +69,10 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 export const OBSTACLE_TYPES = ["lily_pad", "leaf"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
+// the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
+export const PATH_OBSTACLES = ["leaf"] as const satisfies readonly ObstacleType[];
+export const isPathObstacle = (type: ObstacleType | undefined) => PATH_OBSTACLES.some((obstacle) => obstacle === type);
+
 // what a placed enemy or obstacle is, as the level build takes it from its level
 export type ObjectType = EnemyType | ObstacleType;
 export const objectType = (object: LevelObject): ObjectType | undefined => object.enemy ?? object.obstacle;
@@ -183,8 +187,9 @@ export interface LevelObject {
   range?: number;       // how near crash comes, in metres, before a gunman shoots (GUNMAN_RANGE without one)
 }
 
-// whether an object is an enemy that moves along a path
-export const hasPath = (object: LevelObject) => object.kind === "enemy" && isPathEnemy(object.enemy);
+// whether an object moves along a path: an enemy that does, or a leaf
+export const hasPath = (object: LevelObject) =>
+  (object.kind === "enemy" && isPathEnemy(object.enemy)) || (object.kind === "obstacle" && isPathObstacle(object.obstacle));
 
 // the enemies whose path is one node, which they don't walk: leader bats'
 // second leader (the object is their first), a bat roost's swoop's end (the
@@ -215,7 +220,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
-const OBSTACLE_SETTINGS = ["type"];
+const OBSTACLE_SETTINGS = ["type", "path"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
 // a word with "a" or "an" before it, as it sounds: "a box", "an enemy"
@@ -266,9 +271,22 @@ function checkNodeCount(nodes: unknown, enemy: EnemyType, objectNumber: number):
   if (!isPathEnemy(enemy)) {
     throw new Error(`object ${objectNumber}: a ${enemy} has no path (${PATH_ENEMIES_NAMED} do)`);
   }
+  checkPathLength(nodes, objectNumber);
+}
+
+// whether a path has 2 to PATH_NODES_MAX nodes
+function checkPathLength(nodes: unknown, objectNumber: number): asserts nodes is unknown[] {
   if (!Array.isArray(nodes) || nodes.length < 2 || nodes.length > PATH_NODES_MAX) {
     throw new Error(`object ${objectNumber}: a path should be 2 to ${PATH_NODES_MAX} nodes, [[x, y, z], ...]`);
   }
+}
+
+// a path's nodes, each [x, y, z]; an error if one isn't
+function pathNodes(nodes: unknown[], objectNumber: number): Vec3[] {
+  if (!nodes.every(isPosition)) {
+    throw new Error(`object ${objectNumber}: a path's nodes should each be [x, y, z] in metres from where the object stands`);
+  }
+  return nodes.map(([x, y, z]): Vec3 => [x, y, z]);
 }
 
 // a path enemy's path, or a one node enemy's node, from its fields in objects.json (none if it hasn't one)
@@ -278,10 +296,19 @@ function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumbe
   }
   const nodes = fields.path;
   checkNodeCount(nodes, enemy, objectNumber);
-  if (!nodes.every(isPosition)) {
-    throw new Error(`object ${objectNumber}: a path's nodes should each be [x, y, z] in metres from where the enemy stands`);
+  return { path: pathNodes(nodes, objectNumber) };
+}
+
+// a leaf's path, from its fields in objects.json (none if it hasn't one); a lily pad has none
+function readObstaclePath(fields: Record<string, unknown>, obstacle: ObstacleType, objectNumber: number): Pick<LevelObject, "path"> {
+  if (!("path" in fields)) {
+    return {};
   }
-  return { path: nodes.map(([x, y, z]): Vec3 => [x, y, z]) };
+  if (!isPathObstacle(obstacle)) {
+    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves do; a lily pad sinks where it is)`);
+  }
+  checkPathLength(fields.path, objectNumber);
+  return { path: pathNodes(fields.path, objectNumber) };
 }
 
 // whether a value is a number a setting can be: in its range, and whole if it has to be
@@ -406,6 +433,7 @@ export function parseObjects(text: string): LevelObject[] {
     }
     if (kind === "obstacle") {
       Object.assign(object, readObstacle(fields, objectNumber));
+      Object.assign(object, readObstaclePath(fields, object.obstacle!, objectNumber));
     }
 
     objects.push(object);
