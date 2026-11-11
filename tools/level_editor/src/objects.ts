@@ -1,7 +1,7 @@
 // a level source's objects.json (see doc/custom_levels.md), read and written
 // here for the editor, and read for the level build too (builder/levelObjects.ts)
 
-export const KINDS = ["spawn", "end", "box", "enemy"] as const;
+export const KINDS = ["spawn", "end", "box", "enemy", "platform"] as const;
 export type Kind = (typeof KINDS)[number];
 const ONCE: Kind[] = ["spawn", "end"]; // a level has at most one of these
 
@@ -59,6 +59,14 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track
 export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake", "gunman", "fish", "lab_assistant", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "walking_lizard", "robot_dog", "barrel_roller", "camera_robot", "bird", "electric_scientist", "blob", "flying_camera", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
+
+// the platforms custom levels can have, which crash stands on, by name. the
+// level build takes them from the level they're in (builder/donorObjects.ts),
+// moving along their own level's path from their spot:
+// - lily_pad: up the creek's, sinking while crash stands on it
+// - leaf: up the creek's floating leaf, drifting back and forth
+export const PLATFORM_TYPES = ["lily_pad", "leaf"] as const;
+export type PlatformType = (typeof PLATFORM_TYPES)[number];
 
 export type Vec3 = [number, number, number];
 
@@ -160,6 +168,7 @@ export interface LevelObject {
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
   enemy?: EnemyType;    // an enemy's type
+  platform?: PlatformType; // a platform's type
   path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised); leader bats' second leader, from their first
   speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
@@ -201,7 +210,8 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
-const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS };
+const PLATFORM_SETTINGS = ["type"];
+const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, platform: PLATFORM_SETTINGS };
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 const isWhole = (value: unknown): value is number => isNumber(value) && Number.isInteger(value);
@@ -217,6 +227,18 @@ function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<
     throw new Error(`object ${objectNumber}: unknown enemy type ${fields.type} (it can be ${enemyTypes})`);
   }
   return { enemy: fields.type as EnemyType };
+}
+
+// a platform's type, from its fields in objects.json
+function readPlatform(fields: Record<string, unknown>, objectNumber: number): Pick<LevelObject, "platform"> {
+  const platformTypes = PLATFORM_TYPES.join(", ");
+  if (!("type" in fields)) {
+    throw new Error(`object ${objectNumber}: a platform needs a type (${platformTypes})`);
+  }
+  if (!PLATFORM_TYPES.includes(fields.type as PlatformType)) {
+    throw new Error(`object ${objectNumber}: unknown platform type ${fields.type} (it can be ${platformTypes})`);
+  }
+  return { platform: fields.type as PlatformType };
 }
 
 // whether a path has as many nodes as an enemy's can: a one node enemy's one
@@ -369,6 +391,9 @@ export function parseObjects(text: string): LevelObject[] {
       NUMBER_SETTINGS.forEach((setting) => Object.assign(object, readNumberSetting(fields, setting, object.enemy!, objectNumber)));
       Object.assign(object, readReverse(fields, object.enemy!, objectNumber));
     }
+    if (kind === "platform") {
+      Object.assign(object, readPlatform(fields, objectNumber));
+    }
 
     objects.push(object);
   });
@@ -384,6 +409,9 @@ function formatObject(object: LevelObject): string {
   }
   if (object.kind === "enemy" && object.enemy !== undefined) {
     parts.push(`"type": ${JSON.stringify(object.enemy)}`);
+  }
+  if (object.kind === "platform" && object.platform !== undefined) {
+    parts.push(`"type": ${JSON.stringify(object.platform)}`);
   }
   parts.push(`"at": [${object.at.map(roundToMillimetre).join(", ")}]`);
   const raise = roundToMillimetre(object.raise);
@@ -409,9 +437,9 @@ function formatObject(object: LevelObject): string {
   return `{${parts.join(", ")}}`;
 }
 
-const KIND_ORDER: Record<Kind, number> = { spawn: 0, box: 1, enemy: 2, end: 3 };
+const KIND_ORDER: Record<Kind, number> = { spawn: 0, box: 1, enemy: 2, platform: 3, end: 4 };
 
-// the text of an objects.json: the spawn, the boxes in their order, the enemies, then the end;
+// the text of an objects.json: the spawn, the boxes in their order, the enemies, the platforms, then the end;
 // one object a line, with a blank line between kinds
 export function formatObjects(unordered: LevelObject[]): string {
   if (unordered.length === 0) {
