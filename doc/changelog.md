@@ -4,6 +4,7 @@
 
 ### Added
 
+- build custom levels from the launcher's new Levels tab, without Node.js
 - an option to show how many of a level's boxes Crash has broken (such as 12/49), with the lives and wumpa counters
 
 ### Changed

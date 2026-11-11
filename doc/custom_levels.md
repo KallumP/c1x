@@ -71,9 +71,11 @@ See [Objects](../level_src/README.md#objects) for how each box and enemy behaves
 
 ## 3. Build the level and play it
 
-**Set it up (once):** build the game (see [Building](building.md)), and put its files in `streams/` (see [Running](running.md)). The level editor builds levels itself, so there's nothing else to install.
+**Set it up (once):** build the game (see [Building](building.md)), and put its files in `streams/` (see [Running](running.md)). The launcher and the level editor build levels themselves, so there's nothing else to install.
 
-Then, in the level editor:
+**From the launcher** (no editor needed, as for a level someone sent you: put its folder in `level_src/`): in the **Levels** tab, click **Build** beside the level, or choose it as the **Boot level**, where a level that isn't built yet says `(not built)` and builds when chosen. Once it builds, the game boots into it. Click **Play**.
+
+**From the level editor:**
 
 1. Click **Build + boot** at the top right (or press **F5**). It saves your changes, builds the level, then, if the build worked, sets the game to start in it by writing `boot_level = my_level` in `settings.cfg`. A bar slides along the bottom of the top bar while it works, and it says `The game boots into my_level` when it's done, or why it failed (hover over the message for the full output).
 2. In the launcher, click **Play**.
