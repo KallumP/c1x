@@ -82,6 +82,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   rotating_pots: SUNSET_VISTA,
   rotating_platforms: SUNSET_VISTA,
   slamming_walls: TEMPLE_RUINS,
+  rising_pillar: TEMPLE_RUINS,
 };
 
 export interface DonorObject {
@@ -390,6 +391,7 @@ const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   pushing_platform: ruinsModelsBut(["Rw1w", "Rw3w"]),
   rotating_pots: ruinsModelsBut(["Rp3w"]),
   rotating_platforms: ruinsModelsBut(["Rw1w"]),
+  rising_pillar: ["PlDsG", "PlDsV", "PlPsG", "PlPsV"], // temple ruins' other pillars' models: its PoPlC's, which a rising pillar never shows
   tall_thin_gate: BOULDER_DASH_NON_GATE_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
   low_wide_gate: BOULDER_DASH_NON_GATE_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
   barrel_roller: ["WateC"],

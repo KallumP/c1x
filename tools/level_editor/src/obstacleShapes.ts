@@ -237,6 +237,19 @@ function slammingWalls(): ShapePart[] {
   return [half(-1), half(1), face(-1), face(1)];
 }
 
+const RISING_PILLAR = { across: 953, height: 3203, cap: 120 };
+
+// temple ruins' rising pillar (PlUsG): a stone column 953 across, its capped
+// top at its spot, reaching 3203 down (it rises 1600 from there and back)
+function risingPillar(): ShapePart[] {
+  const { across, height, cap } = RISING_PILLAR;
+  const radius = across / 2;
+  return [
+    rod(radius * 0.8, radius * 0.8, height - cap, [0, -cap - (height - cap) / 2, 0], PILLAR_COLOURS.stone),
+    rod(radius, radius, cap, [0, -cap / 2, 0], PILLAR_COLOURS.moss),
+  ];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
@@ -244,4 +257,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar() };
