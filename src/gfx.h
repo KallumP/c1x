@@ -46,6 +46,8 @@ extern void GfxTransformFragment(
 extern void GfxTransformFontChar(gool_object *obj,
   gool_glyph *glyph, int32_t z, eid_t tpag, bound2 *bound, void *ot,
   int gouraud);
+extern void GfxTransformFontSlash(gool_object *obj, gool_glyph *like_glyph,
+  int32_t z, bound2 *bound, void *ot, int gouraud);
 extern void GfxTransform(vec *in, mat16 *mat, vec *out);
 extern void GfxLoadWorlds(zone_header *header);
 extern void GfxTransformWorlds(void *ot);

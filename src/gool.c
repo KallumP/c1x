@@ -1381,6 +1381,31 @@ void GoolObjectTransform(gool_object *obj) {
   }
 }
 
+#define TEXT_SLASH_WIDTH_PERCENT 60 /* pc: a drawn slash's width, of a char's */
+
+/*
+ * pc: draw a '/' at x for a font with none (the hud's digits), from the slash
+ * image in the font's '1' colours, a little narrower than a digit. keeps
+ * max_x the text's right edge; returns where the next char starts
+ */
+static int32_t GoolTextSlashTransform(gool_object *obj, gool_font *font,
+  int32_t x, int32_t y_offs, vec *scale, int size, void **prims_tail, int flag,
+  int32_t *max_x) {
+  gool_glyph *one;
+  bound2 bound;
+
+  one = &font->glyphs['1' - 0x20];
+  bound.p1.x = x;
+  bound.p2.x = x + ((scale->x * TEXT_SLASH_WIDTH_PERCENT) / 100);
+  bound.p2.y = y_offs + (int32_t)(one->height << size);
+  bound.p1.y = bound.p2.y - scale->y;
+  if (prims_tail)
+    GfxTransformFontSlash(obj, one, obj->size, &bound, prims_tail, flag);
+  if (bound.p2.x > *max_x)
+    *max_x = bound.p2.x;
+  return bound.p2.x;
+}
+
 //----- (8001E3D4) --------------------------------------------------------
 static int GoolTextStringTransform(
   gool_object *obj,
@@ -1451,6 +1476,10 @@ static int GoolTextStringTransform(
       }
     }
     glyph = &font->glyphs[c - 0x20];
+    if (c == '/' && !glyph->has_texture) { /* pc: a font with no slash (the hud's digits) */
+      bound.p1.x = GoolTextSlashTransform(obj, font, bound.p1.x, y_offs, &scale, size, prims_tail, flag, &max_x);
+      continue;
+    }
     bound.p2.x = bound.p1.x + scale.x;
     bound.p2.y = y_offs + (int32_t)(glyph->height << size);
     bound.p1.y = bound.p2.y - scale.y;

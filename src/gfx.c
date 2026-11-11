@@ -27,6 +27,7 @@ static inline void GfxCopyMatrix(mat16 *m_s, mat16 *m_d) {
 #include "pc/gfx/soft.h"
 #include "pc/gfx/tex.h"
 #include "pc/gfx/gl.h"
+#include "pc/slash.h"
 extern sw_transform_struct params;
 
 static rgb Rgb8To32(rgb8 c) {
@@ -1151,17 +1152,10 @@ void GfxTransformFragment(gool_frag *frag, int32_t z, eid_t tpag,
   *prims_tail+=sizeof(poly4i);
 }
 
-//----- (80018DBC) --------------------------------------------------------
-void GfxTransformFontChar(gool_object *obj, gool_glyph *glyph, int32_t z,
-  eid_t tpag, bound2 *bound, void *ot, int gouraud) {
-  poly4i *prim, *next;
-  vec verts[4], r_verts[4];
-  fvec uvs[4];
-  texinfo info;
-  rgb8 rgb;
-  int32_t z_sum, z_dist;
-  void **prims_tail;
-  int i, idx, z_idx, texid;
+/* pc: a font char's corners on screen, from its bound (split out of GfxTransformFontChar) */
+static void GfxFontCharVerts(bound2 *bound, vec *r_verts) {
+  vec verts[4];
+  int i;
 
   verts[2].x=bound->p1.x;verts[2].y=bound->p1.y;
   verts[3].x=bound->p2.x;verts[3].y=bound->p1.y;
@@ -1177,28 +1171,35 @@ void GfxTransformFontChar(gool_object *obj, gool_glyph *glyph, int32_t z,
 #endif
   }
   // if (_$T0 < 0) { return 0; } /* return on fail */ // TODO!
+}
+
+/* pc: add a font char's quad to the ot (split out of GfxTransformFontChar) */
+static void GfxAddFontCharPrim(gool_object *obj, texinfo *info, vec *r_verts,
+  fvec *uvs, int texid, int32_t z, void *ot, int gouraud) {
+  poly4i *prim, *next;
+  rgb8 rgb;
+  int32_t z_sum, z_dist;
+  void **prims_tail;
+  int i, z_idx;
+
   prims_tail=GLGetPrimsTail();
   prim=(poly4i*)*prims_tail;
-  info.colinfo = glyph->texinfo.colinfo;
-  info.rgninfo = glyph->texinfo.rgninfo;
-  info.tpage = tpag;
-  texid=TextureLoad(&info, &uvs);
   for (i=0;i<4;i++) {
     prim->verts[i]=r_verts[i];
     if (gouraud) {
-      rgb.r = (info.r*obj->vert_colors[i].r)>>8;
-      rgb.g = (info.g*obj->vert_colors[i].g)>>8;
-      rgb.b = (info.b*obj->vert_colors[i].b)>>8;
+      rgb.r = (info->r*obj->vert_colors[i].r)>>8;
+      rgb.g = (info->g*obj->vert_colors[i].g)>>8;
+      rgb.b = (info->b*obj->vert_colors[i].b)>>8;
       prim->colors[i]=Rgb8ToA32(rgb);
     }
     else {
       // prim->colors[i]=info.rgb;
-      prim->colors[i]=Rgb8ToA32(info.rgb);
+      prim->colors[i]=Rgb8ToA32(info->rgb);
     }
     prim->uvs[i]=uvs[i];
   }
   prim->texid=texid;
-  prim->flags=info.semi_trans;
+  prim->flags=info->semi_trans;
   z_sum=prim->verts[0].z+prim->verts[1].z+prim->verts[2].z;
   z_dist=z+(0x800-screen_proj/2); /* far??? */
   z_idx=z_dist-(z_sum/32);
@@ -1208,6 +1209,51 @@ void GfxTransformFontChar(gool_object *obj, gool_glyph *glyph, int32_t z,
   prim->type=2;
   ((poly4i**)ot)[z_idx]=prim;
   *prims_tail+=sizeof(poly4i);
+}
+
+//----- (80018DBC) --------------------------------------------------------
+void GfxTransformFontChar(gool_object *obj, gool_glyph *glyph, int32_t z,
+  eid_t tpag, bound2 *bound, void *ot, int gouraud) {
+  vec r_verts[4];
+  fvec uvs[4];
+  texinfo info;
+  int texid;
+
+  GfxFontCharVerts(bound, r_verts);
+  info.colinfo = glyph->texinfo.colinfo;
+  info.rgninfo = glyph->texinfo.rgninfo;
+  info.tpage = tpag;
+  texid=TextureLoad(&info, &uvs);
+  GfxAddFontCharPrim(obj, &info, r_verts, uvs, texid, z, ot, gouraud);
+}
+
+/* pc: the slash's texture, made the first time it's drawn */
+static int GfxSlashTexture() {
+  static int texid = 0;
+  static uint8_t rgba[SLASH_WIDTH*SLASH_HEIGHT*4];
+  dim2 dim;
+
+  if (texid) { return texid; }
+  SlashImage(rgba);
+  dim.w = SLASH_WIDTH;
+  dim.h = SLASH_HEIGHT;
+  texid = GLCreateTexture(dim, rgba);
+  return texid;
+}
+
+/*
+ * pc: a '/' for a font with none (the hud's digits), in bound, drawn from the
+ * slash image (slash.h) in like_glyph's colours, so it matches the font
+ */
+void GfxTransformFontSlash(gool_object *obj, gool_glyph *like_glyph, int32_t z,
+  bound2 *bound, void *ot, int gouraud) {
+  vec r_verts[4];
+  fvec uvs[4] = { { .x = 0, .y = 0 }, { .x = 1, .y = 0 }, { .x = 0, .y = 1 }, { .x = 1, .y = 1 } };
+  texinfo info;
+
+  GfxFontCharVerts(bound, r_verts);
+  info.colinfo = like_glyph->texinfo.colinfo;
+  GfxAddFontCharPrim(obj, &info, r_verts, uvs, GfxSlashTexture(), z, ot, gouraud);
 }
 
 
