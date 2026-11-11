@@ -43,7 +43,7 @@ level_src/my_level/grass.png
 
 ## 2. Place objects in the level editor
 
-The level editor places Crash's spawn, the level's end, boxes and enemies.
+The level editor places Crash's spawn, the level's end, boxes, enemies and platforms.
 
 **Set it up (once):** install [Node.js](https://nodejs.org/) 18 or later, then click **Install** in the [launcher](launcher.md#level-editor)'s Level editor section.
 
@@ -51,7 +51,7 @@ The level editor places Crash's spawn, the level's end, boxes and enemies.
 
 1. In the launcher, click **Open editor**. It opens in your browser.
 1. Pick your level at the top left.
-1. Pick `spawn`, `end`, `box` or `enemy` on the left bar, then click the floor to place it. Box and enemy place the type you last picked of them, and list their types underneath to pick another. A level needs at least a spawn and an end to be played.
+1. Pick `spawn`, `end`, `box`, `enemy` or `platform` on the left bar, then click the floor to place it. Box, enemy and platform place the type you last picked of them, and list their types underneath to pick another. A level needs at least a spawn and an end to be played.
 1. Click **Select** (or press Esc), then click an object to select it. Drag it to move it, or change its properties on the right. **Delete** (or Del) removes it.
 1. Click **Save** (or press Ctrl+S), then **Build + boot** at the top right (or press F5), which builds the level and boots the game straight into it. [Step 3](#3-build-the-level-and-play-it) has more on building.
 
@@ -67,7 +67,9 @@ The arrow on the spawn object shows which way the camera faces at the start. Wit
 
 A rolling stone instead has a **start** slider for where it starts along its track, and **Reverse direction** for which way it rolls first. A fish's leap is drawn from the solid fish, where it leaps from, to the faded one, where it lands; **Reverse direction** turns it to leap the other way. A bat roost's swoop is drawn from the solid bat, at the roost, to the faded one, where its bats fly off; select it to drag the swoop's end by its handle (or set its x, y and z on the right), and **count** sets how many bats it sends and **delay** the seconds between flocks. Leader bats are drawn as their two leaders, with their bats' flight from high over the first (solid, where they come in), past both, and up away from the second (faded, where they go out); drag the first like any object, and select them to drag the second by its handle (or set its x, y and z on the right). **count** sets how many bats are in each flock and **delay** the seconds between flocks. A lab assistant is drawn facing where its vials land, with their flight there and a pink ring where they land; select it to drag the ring by its handle (or set its x, y and z on the right).
 
-See [Objects](../level_src/README.md#objects) for how each box and enemy behaves.
+A floating leaf's drift is drawn from the solid leaf, where it starts, to the faded one, where it turns back. Set a platform's **raise** to lift it over a gap.
+
+See [Objects](../level_src/README.md#objects) for how each box, enemy and platform behaves.
 
 ## 3. Build the level and play it
 
