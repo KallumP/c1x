@@ -75,7 +75,10 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // - falling_spiked_log: pushing down from above
 // and the great gate's fire pit, standing at its spot:
 // - fire_pit: a bowl of fire, which sets crash alight
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit"] as const;
+// boulder dash's stone pillars, at their spot:
+// - dropping_pillar: standing still until crash stands on it, then sinking away a few seconds later
+// - sliding_pillar: sliding across the map and back
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)

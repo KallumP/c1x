@@ -511,8 +511,8 @@ describe("obstacles", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit)"],
-    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit)"],
+    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar)"],
+    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar)"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed (an obstacle takes kind, at, raise, type, path, start, reverse, length, angle, rotation, every, offset)"],
     ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
   ])("refuses %s", (text, message) => {
@@ -530,6 +530,15 @@ describe("wooden pegs", () => {
       .toEqual([{ kind: "obstacle", obstacle: "wooden_peg", at: [1, 2, 0], raise: 1, stack: 1 }]);
     expect(() => parseObjects('[{"kind": "obstacle", "type": "wooden_peg", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]'))
       .toThrow("a wooden_peg has no path");
+  });
+});
+
+describe("pillars", () => {
+  test.each(["dropping_pillar", "sliding_pillar"])("a %s is an obstacle, with no path", (type) => {
+    expect(parseObjects(`[{"kind": "obstacle", "type": "${type}", "at": [1, 2, 0], "raise": 1}]`))
+      .toEqual([{ kind: "obstacle", obstacle: type, at: [1, 2, 0], raise: 1, stack: 1 }]);
+    expect(() => parseObjects(`[{"kind": "obstacle", "type": "${type}", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]`))
+      .toThrow(`a ${type} has no path`);
   });
 });
 

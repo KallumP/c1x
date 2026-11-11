@@ -19,6 +19,7 @@ export interface DonorLevel {
 
 const N_SANITY_BEACH: DonorLevel = { lid: 0x9, name: "N. Sanity Beach", file: "s0000009" };
 const THE_GREAT_GATE: DonorLevel = { lid: 0x12, name: "The Great Gate", file: "s0000012" };
+const BOULDER_DASH: DonorLevel = { lid: 0x13, name: "Boulder Dash", file: "s0000013" };
 const ROAD_TO_NOWHERE: DonorLevel = { lid: 0x14, name: "Road to Nowhere", file: "s0000014" };
 const FUMBLING_IN_THE_DARK: DonorLevel = { lid: 0x2a, name: "Fumbling in the Dark", file: "s000002a" };
 const UP_THE_CREEK: DonorLevel = { lid: 0x18, name: "Up the Creek", file: "s0000018" };
@@ -72,6 +73,8 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   rising_spiked_log: THE_GREAT_GATE,
   falling_spiked_log: THE_GREAT_GATE,
   fire_pit: THE_GREAT_GATE,
+  dropping_pillar: BOULDER_DASH,
+  sliding_pillar: BOULDER_DASH,
 };
 
 export interface DonorObject {
