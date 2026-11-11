@@ -622,7 +622,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     test.each([
       { type: "rising_spiked_log", subtype: 3 },
       { type: "falling_spiked_log", subtype: 4 },
-    ] as const)("a $type is the great gate's WalOC subtype $subtype, with its spiked log's model, standing at its spot", ({ type, subtype }) => {
+    ] as const)("a $type is the great gate's WalOC subtype $subtype, with its spiked log's model", ({ type, subtype }) => {
       const { level, entries, zone } = build([obstacle(type)]);
       expect(OBSTACLE_ENTITIES[type]).toEqual([33, subtype]);
       expect(level.nsd.ldat.execMap[33]).toBe(stringToEid("WalOC"));
@@ -630,7 +630,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const placed = zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES[type]));
       expect(placed.length).toBe(1);
       expect(entityPath(placed[0]).length).toBe(1);
-      expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a rising spiked log stands at its spot, pushing up out of the floor there", () => {
+      const placed = zoneEntities(build([obstacle("rising_spiked_log")]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.rising_spiked_log))!;
+      expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a falling spiked log hangs 1600 over its spot (as the great gate's over their floor), so it comes down on it", () => {
+      const placed = zoneEntities(build([obstacle("falling_spiked_log")]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.falling_spiked_log))!;
+      expectNear(entityPath(placed)[0], [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1] + 1600, SPOT_IN_ZONE[2]], 16);
     });
 
     test("rising and falling spiked logs with a wood platform read the great gate once", () => {
