@@ -121,6 +121,8 @@ OUT = build/c1
 TEST_OUT = build/tests
 # the launcher's _ sorts it first in build/
 LAUNCHER_OUT = build/_launcher
+# the level build with node built in, for the launcher (see doc/building.md)
+BUILDER_OUT = build/build-level
 
 # include dirs.
 INCLUDE = -I./src/
@@ -135,6 +137,7 @@ LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lm -lstdc++
 OUT = build/c1.exe
 TEST_OUT = build/tests.exe
 LAUNCHER_OUT = build/_launcher.exe
+BUILDER_OUT = build/build-level.exe
 LAUNCHER_LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lcomdlg32 -lm -lstdc++ -mwindows
 else
 LDLIBS = -lSDL2 -lGL -lfluidsynth -lm -lstdc++
@@ -162,7 +165,13 @@ TEST_CIMGUI_OBJ = $(filter-out $(CIMGUI_PATH)/imgui/backends/%,$(CIMGUI_OBJ))
 OBJ += $(SRC:.c=.o)
 LAUNCHER_OBJ = $(CIMGUI_OBJ) $(LAUNCHER_SRC:.c=.o)
 
-all: $(SRC) $(OUT) $(LAUNCHER_OUT)
+# the level build's sources, and the editor's code it shares
+EDITOR_PATH = tools/level_editor
+BUILDER_SRC = $(wildcard $(EDITOR_PATH)/builder/*.ts $(EDITOR_PATH)/src/*.ts) 	$(EDITOR_PATH)/scripts/builderExe.ts $(EDITOR_PATH)/package.json
+# making build-level needs node; without it make builds the rest and says so
+HAVE_NODE := $(shell node --version 2>/dev/null)
+
+all: $(SRC) $(OUT) $(LAUNCHER_OUT) builder
 
 clean:
 	rm -r $(OBJ) $(OUT)
@@ -202,6 +211,18 @@ endif
 
 .PHONY: launcher
 launcher: $(LAUNCHER_OUT)
+
+.PHONY: builder
+ifneq ($(HAVE_NODE),)
+builder: $(BUILDER_OUT)
+else
+builder:
+	@echo "skipping $(BUILDER_OUT): it needs Node.js 18 or later (see doc/building.md)"
+endif
+
+# installs the editor's packages first if need be
+$(BUILDER_OUT): $(BUILDER_SRC)
+	cd $(EDITOR_PATH) && { [ -d node_modules ] || npm install; } && npm run builder-exe
 
 $(LAUNCHER_OUT): $(LAUNCHER_OBJ)
 	@mkdir -p $(dir $(LAUNCHER_OUT))
