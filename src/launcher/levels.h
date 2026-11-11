@@ -17,4 +17,7 @@ typedef struct {
 extern void ListCustomLevels(const char *repo, custom_levels *levels);
 extern int FindCustomLevel(const custom_levels *levels, const char *name);
 
+/* the level's name, saying if it isn't built, as the launcher lists it */
+extern void CustomLevelLabel(const custom_levels *levels, int index, char *label, size_t size);
+
 #endif /* _LAUNCHER_LEVELS_H_ */

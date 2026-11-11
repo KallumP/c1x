@@ -121,3 +121,25 @@ UTEST(launcher_levels, finds_a_level_by_name) {
   ASSERT_EQ(1, FindCustomLevel(&levels, "tide_ruins"));
   ASSERT_EQ(-1, FindCustomLevel(&levels, "facing_castle"));
 }
+
+UTEST(launcher_levels, a_built_levels_label_is_its_name) {
+  custom_levels levels;
+  char label[64];
+
+  levels.count = 1;
+  strcpy(levels.names[0], "tide_ruins");
+  levels.built[0] = 1;
+  CustomLevelLabel(&levels, 0, label, sizeof(label));
+  ASSERT_STREQ("tide_ruins", label);
+}
+
+UTEST(launcher_levels, an_unbuilt_levels_label_says_so) {
+  custom_levels levels;
+  char label[64];
+
+  levels.count = 1;
+  strcpy(levels.names[0], "sunset_canyon");
+  levels.built[0] = 0;
+  CustomLevelLabel(&levels, 0, label, sizeof(label));
+  ASSERT_STREQ("sunset_canyon (not built)", label);
+}
