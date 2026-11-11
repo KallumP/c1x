@@ -525,13 +525,19 @@ const SLIDE_ABOVE = 0xd0 / 4; // and above
 const GATE_BAND = [0x64000, 0x4b000]; // 1600 and 1200 game units (8 bits of fraction)
 const NARROW_BAND = 0x14000;           // 320 (0.8 m at scale 400)
 
-// the great gate's objects' code (1s) and data (2s), with its slide's height band as the great gate's
+// the great gate's fire pit's flame's timing, as its instructions there are
+const FLAME_TIMING: [number, number][] = [[0x203, 0x8225c003], [0x204, 0x15017e17], [0x208, 0x82260003], [0x209, 0x15017e18]];
+
+// the great gate's objects' code (1s, with its flame's timing) and data (2s),
+// with its slide's height band as the great gate's
 function gateObjectsLevel(band = GATE_BAND): Level {
   const data = Array<number>(0x110 / 4).fill(2);
   [data[SLIDE_BELOW], data[SLIDE_ABOVE]] = band;
+  const code = Array<number>(0x210).fill(1);
+  FLAME_TIMING.forEach(([at, instruction]) => { code[at] = instruction; });
   const execMap: number[] = [];
   execMap[GATE_OBJECTS_SLOT] = GATE_OBJECTS;
-  const pages = [entryPage([entry(GATE_OBJECTS, 11, [text("head"), words(1, 1, 1), words(...data)])])];
+  const pages = [entryPage([entry(GATE_OBJECTS, 11, [text("head"), words(...code), words(...data)])])];
   return { nsd: readNsd(nsdData([], 0x12, ZONE, execMap), ), pages };
 }
 

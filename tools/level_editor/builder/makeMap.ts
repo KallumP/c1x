@@ -4,7 +4,7 @@
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { batSwoop, leafDriftShares, leaderBatsFlight, leapWay } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep, pointAlongShare, spotAndNode } from "../src/enemyPaths";
-import { hasPath, LEADER_BATS_LEADERS, numberSetting, SPIKED_LOGS, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
+import { hasPath, LEADER_BATS_LEADERS, numberSetting, TIMED_OBSTACLES, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
 import { throwFlags } from "../src/labAssistantThrow";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
@@ -186,18 +186,18 @@ const obstacleExample = (donor: Level, type: ObstacleType): Buffer => levelEntit
 // units, as the great gate's hang over their floor: higher, it stops short of crash)
 const SPIKED_LOG_HANG = 1600;
 
-// a spiked log's init flags: A the frames between its pushes, and B the frames
-// into them it starts, which brings them that much sooner. its offset puts
-// them off, so it starts that much less far into them, round its pushes
-function spikedLogTiming(log: LevelObject): [number, number] {
-  const every = Math.round(numberSetting(log, "every") * FRAMES_A_SECOND);
-  const offset = Math.round(numberSetting(log, "offset") * FRAMES_A_SECOND) % every;
+// a spiked log's or fire pit's init flags: A the frames between its pushes or
+// flames, and B the frames into them it starts, which brings them that much
+// sooner. its offset puts them off, so it starts that much less far into them
+function obstacleTiming(obstacle: LevelObject): [number, number] {
+  const every = Math.round(numberSetting(obstacle, "every") * FRAMES_A_SECOND);
+  const offset = Math.round(numberSetting(obstacle, "offset") * FRAMES_A_SECOND) % every;
   return [every, (every - offset) % every];
 }
 
-// how far over its spot a spiked log is placed
-function spikedLogHang(log: LevelObject): number {
-  if (log.obstacle === "falling_spiked_log") {
+// how far over its spot a timed obstacle is placed
+function timedObstacleHang(obstacle: LevelObject): number {
+  if (obstacle.obstacle === "falling_spiked_log") {
     return SPIKED_LOG_HANG;
   }
   return 0;
@@ -286,12 +286,12 @@ class ObjectPlacer {
     this.entities[zone].push(withInitFlagC(withInitFlagB(withInitFlagA(placed, facing), alongX), alongZ));
   }
 
-  // a spiked log (example) at its spot, a falling one hung over it (see
-  // SPIKED_LOG_HANG), its init flags its pushes' timing (see spikedLogTiming)
-  placeSpikedLog(log: LevelObject, example: Buffer): void {
-    const { zone, at } = this.inZone(this.positionOf(log));
-    const hung: Vec3 = [at[0], at[1] + spikedLogHang(log), at[2]];
-    const [every, into] = spikedLogTiming(log);
+  // a spiked log or fire pit (example) at its spot, a falling log hung over it
+  // (see SPIKED_LOG_HANG), its init flags its timing (see obstacleTiming)
+  placeTimedObstacle(obstacle: LevelObject, example: Buffer): void {
+    const { zone, at } = this.inZone(this.positionOf(obstacle));
+    const hung: Vec3 = [at[0], at[1] + timedObstacleHang(obstacle), at[2]];
+    const [every, into] = obstacleTiming(obstacle);
     const placed = withPosition(withEntityId(example, this.ids.shift()!), hung);
     this.entities[zone].push(withInitFlagB(withInitFlagA(placed, every), into));
   }
@@ -502,12 +502,12 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   enemies.filter((enemy) => enemy.enemy === "leader_bats")
     .forEach((enemy) => placer.placeLeaderBats(enemy, enemyExample("leader_bats"), levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT)));
   const slides = obstacles.filter((obstacle) => obstacle.obstacle === "mossy_slide");
-  const spikedLogs = obstacles.filter((obstacle) => SPIKED_LOGS.includes(obstacle.obstacle!));
-  const placedApart: ObstacleType[] = ["rolling_stone", "mossy_slide", ...SPIKED_LOGS];
+  const timed = obstacles.filter((obstacle) => TIMED_OBSTACLES.includes(obstacle.obstacle!));
+  const placedApart: ObstacleType[] = ["rolling_stone", "mossy_slide", ...TIMED_OBSTACLES];
   const movers = obstacles.filter((obstacle) => !placedApart.includes(obstacle.obstacle!)); // the rest, from their levels
   const obstacleOf = (obstacle: LevelObject) => obstacleExample(donorLevels.get(obstacle.obstacle!)!, obstacle.obstacle!);
   slides.forEach((slide) => placer.placeSlide(slide, obstacleOf(slide), slidePath(slide, scale)));
-  spikedLogs.forEach((log) => placer.placeSpikedLog(log, obstacleOf(log)));
+  timed.forEach((obstacle) => placer.placeTimedObstacle(obstacle, obstacleOf(obstacle)));
   movers.filter((obstacle) => !obstacle.path).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
   movers.filter((obstacle) => obstacle.path).forEach((leaf) => placer.placeLeafOnPath(leaf, obstacleOf(leaf)));
   stones.forEach((stone) => placer.placeStone(stone, track!));

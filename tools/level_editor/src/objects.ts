@@ -159,12 +159,22 @@ export const SLIDE_ANGLE_MIN = 5;
 export const SLIDE_ANGLE_MAX = 30;
 export const SLIDE_ROTATION_MAX = 359; // degrees anticlockwise seen from above, from across the map (0)
 
-// the seconds between a spiked log's pushes: the great gate's 180 frames
-// without one, and no fewer than a push takes, up and back
+// the seconds between a spiked log's pushes, or a fire pit's flames: the great
+// gate's 180 frames or 120 without one, and no fewer than a push takes, up and back
 export const SPIKED_LOG_EVERY = 6;
-export const SPIKED_LOG_EVERY_MIN = 3;
-export const SPIKED_LOG_EVERY_MAX = 20;
+export const FIRE_PIT_EVERY = 4;
+export const TIMED_EVERY_MIN = 3;
+export const TIMED_EVERY_MAX = 20;
 export const SPIKED_LOGS: ObstacleType[] = ["rising_spiked_log", "falling_spiked_log"];
+export const TIMED_OBSTACLES: ObstacleType[] = [...SPIKED_LOGS, "fire_pit"];
+
+// the seconds between a timed obstacle's pushes or flames without an every
+function everyFallback(type: ObjectType | undefined): number {
+  if (type === "fire_pit") {
+    return FIRE_PIT_EVERY;
+  }
+  return SPIKED_LOG_EVERY;
+}
 
 // the enemy settings that are a number in a range, and for each: the enemies
 // that have it (named for messages), its range, whether it's whole, what it is
@@ -190,8 +200,8 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   length: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_LENGTH_MIN, max: SLIDE_LENGTH_MAX, whole: false, fallback: () => SLIDE_LENGTH, meaning: "how long it is, in metres" },
   angle: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_ANGLE_MIN, max: SLIDE_ANGLE_MAX, whole: false, fallback: () => SLIDE_ANGLE, meaning: "how steeply it slopes, in degrees" },
   rotation: { types: ["mossy_slide"], typesNamed: "mossy slides", min: 0, max: SLIDE_ROTATION_MAX, whole: false, fallback: () => 0, meaning: "which way it slides down, in degrees anticlockwise from across the map" },
-  every: { types: SPIKED_LOGS, typesNamed: "spiked logs", min: SPIKED_LOG_EVERY_MIN, max: SPIKED_LOG_EVERY_MAX, whole: false, fallback: () => SPIKED_LOG_EVERY, meaning: "the seconds between its pushes" },
-  offset: { types: SPIKED_LOGS, typesNamed: "spiked logs", min: 0, max: SPIKED_LOG_EVERY_MAX, whole: false, fallback: () => 0, meaning: "the seconds its pushes are put off by" },
+  every: { types: TIMED_OBSTACLES, typesNamed: "spiked logs and fire pits", min: TIMED_EVERY_MIN, max: TIMED_EVERY_MAX, whole: false, fallback: everyFallback, meaning: "the seconds between its pushes or flames" },
+  offset: { types: TIMED_OBSTACLES, typesNamed: "spiked logs and fire pits", min: 0, max: TIMED_EVERY_MAX, whole: false, fallback: () => 0, meaning: "the seconds its pushes or flames are put off by" },
   range: { types: ["gunman"], typesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },
 };
 
@@ -218,7 +228,7 @@ export interface LevelObject {
   angle?: number;       // how steeply a mossy slide slopes, in degrees (SLIDE_ANGLE without one)
   rotation?: number;    // which way a mossy slide slides down: degrees anticlockwise seen from above, from across the map (0 without one)
   count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
-  every?: number;       // the seconds between a spiked log's pushes (SPIKED_LOG_EVERY without one)
+  every?: number;       // the seconds between a spiked log's pushes or a fire pit's flames (SPIKED_LOG_EVERY, FIRE_PIT_EVERY without one)
   offset?: number;      // the seconds a spiked log's pushes are put off by, so a row can push in turn (0 without one)
   delay?: number;       // the seconds between a bat roost's flocks (BAT_DELAY, LEADER_BATS_DELAY without one)
   range?: number;       // how near crash comes, in metres, before a gunman shoots (GUNMAN_RANGE without one)

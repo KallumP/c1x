@@ -501,6 +501,19 @@ const BARREL_CODE_PATCHES: CodePatch[] = [
 ];
 
 // the code each enemy spawns by its exec slot, changed to suit custom levels
+// the great gate's fire pit (WalOC subtype 5) spawns its flame (subtype 6),
+// which timed itself by its own init flags (A how often, B how far in) if it
+// had them, else every 120 frames: a spawned object hasn't, so every fire pit
+// flamed at once. it reads its parent's (the pit's) instead, always: the
+// builder gives every fire pit them. shared by all the great gate's objects'
+// code, as its data patches are
+const GATE_OBJECTS_CODE_PATCHES: CodePatch[] = [
+  { at: 0x203, was: 0x8225c003, now: 0x82094000 }, // BEQZ self[0xbc] (no flag a: the default) becomes BRA 0
+  { at: 0x204, was: 0x15017e17, now: 0x15017c57 }, // SHA ireg[0x5c], obj[0xbc] becomes parent[0xbc]
+  { at: 0x208, was: 0x82260003, now: 0x82094000 }, // BEQZ self[0xc0] (no flag b: 0) becomes BRA 0
+  { at: 0x209, was: 0x15017e18, now: 0x15017c58 }, // SHA ireg[0x5c], obj[0xc0] becomes parent[0xc0]
+];
+
 const ENEMY_CHILD_CODE_PATCHES: Partial<Record<ObjectType, [slot: number, patches: CodePatch[]][]>> = {
   barrel_roller: [[16, BARREL_CODE_PATCHES]],
 };
@@ -516,6 +529,11 @@ const ENEMY_CODE_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   gunman: GUNMAN_CODE_PATCHES,
   lizard: LIZARD_CODE_PATCHES,
   red_lizard: LIZARD_CODE_PATCHES,
+  wooden_peg: GATE_OBJECTS_CODE_PATCHES, // the great gate's objects, sharing the code
+  mossy_slide: GATE_OBJECTS_CODE_PATCHES,
+  rising_spiked_log: GATE_OBJECTS_CODE_PATCHES,
+  falling_spiked_log: GATE_OBJECTS_CODE_PATCHES,
+  fire_pit: GATE_OBJECTS_CODE_PATCHES,
 };
 
 // instructions with an addition after their end; an error if they aren't as long as it needs
