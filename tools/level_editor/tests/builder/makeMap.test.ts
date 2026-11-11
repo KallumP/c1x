@@ -619,11 +619,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   });
 
   describe.skipIf(!hasGreatGate)("fire pits, from the great gate", () => {
-    // where crash's code (its constants, item 2) names the animation and model
-    // it opens when he's set alight: the great gate's crash on fire
+    // what crash's code (its constants, item 2, from 0x80) names for when he's
+    // set alight: the great gate's crash burning, his model, and his sounds
+    const CRASH_FIRE = ["WF10V", "WF10G", "BDC0A", "BLI0A", "WF20V", "BDA0A", "WF30V", "WF40V", "WF50V"];
     const crashFireEntries = (entries: Map<number, Entry>) => {
       const constants = entries.get(stringToEid("WillC"))!.items[2];
-      return [constants.readUInt32LE(0x80), constants.readUInt32LE(0x84)];
+      return CRASH_FIRE.map((_, index) => constants.readUInt32LE(0x80 + 4 * index));
     };
 
     test("a fire pit is the great gate's WalOC subtype 5, standing at its spot", () => {
@@ -638,8 +639,8 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a level with a fire pit has the great gate's crash on fire, and crash's code opens it", () => {
       const { entries } = build([obstacle("fire_pit")]);
-      expect(crashFireEntries(entries)).toEqual([stringToEid("WF10V"), stringToEid("WF10G")]);
-      expect(["WF10V", "WF10G"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      expect(crashFireEntries(entries)).toEqual(CRASH_FIRE.map(stringToEid));
+      expect(CRASH_FIRE.filter((name) => !entries.has(stringToEid(name)))).toEqual([]);
     });
 
     test("a level without a fire pit keeps the base level's crash code", () => {
