@@ -41,6 +41,20 @@ UTEST(boxhud, the_counter_starts_on_the_boxes_already_broken_so_it_doesnt_slide_
   ASSERT_EQ(source.regs[HUD_COUNT_REG], counter.regs[HUD_COUNT_REG]);
 }
 
+UTEST(boxhud, the_text_is_boxes_broken_out_of_the_total) {
+  char text[16];
+
+  BoxHudText(text, sizeof(text), 12, 40);
+  ASSERT_STREQ("12/40", text);
+}
+
+UTEST(boxhud, the_text_is_just_boxes_broken_in_a_level_with_no_total) {
+  char text[16];
+
+  BoxHudText(text, sizeof(text), 3, 0);
+  ASSERT_STREQ("3", text);
+}
+
 UTEST(boxhud, the_source_holds_the_boxes_broken) {
   memset(&source, 0, sizeof(source));
   BoxHudShowBoxes(&source, 7 << 8);
