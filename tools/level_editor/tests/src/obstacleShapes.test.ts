@@ -13,11 +13,16 @@ function expectWithin(value: number, [low, high]: Range): void {
 describe("obstacle shapes", () => {
   // the sizes of the game's models, in game units: up the creek's lily pad Rl1fG
   // (its first frame in Rl1fV) and floating leaf RB1fG (its first frame in
-  // RB1fV), and the great gate's wooden peg WP1iG, flipped out as a step (WP1iV), its spot its middle
+  // RB1fV), and the great gate's wooden peg WP1iG, flipped out as a step (WP1iV), its spot its middle,
+  // and its spiked log SL1iG (800 across, 738 long, 2800 tall), at the far end
+  // of its push: a rising one's top 1700 up out of the floor (by a stack of boxes
+  // in the game), a falling one down on the floor
   test.each([
     { obstacle: "lily_pad", bottom: 0, top: [80, 130], across: [1000, 1130], long: [1000, 1130] },
     { obstacle: "leaf", bottom: 0, top: [280, 460], across: [800, 920], long: [1200, 1360] },
     { obstacle: "wooden_peg", bottom: -119, top: [90, 140], across: [690, 800], long: [1060, 1200] },
+    { obstacle: "rising_spiked_log", bottom: 0, top: [1650, 1850], across: [740, 860], long: [680, 800] },
+    { obstacle: "falling_spiked_log", bottom: 0, top: [2700, 2900], across: [740, 860], long: [680, 800] },
   ] as const)("a $obstacle is as big as the game's, about its spot as the game's", ({ obstacle, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(OBSTACLE_SHAPES[obstacle]);
     expectWithin(min[1], [bottom - 15, bottom + 15]);
