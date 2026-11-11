@@ -4,7 +4,6 @@
 // level goes to build/levels/<name>, next to the game
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, dirname, extname, join, normalize } from "node:path";
-import { fileURLToPath } from "node:url";
 import type { LevelObject } from "../src/objects";
 import { BASE_LEVEL } from "./baseLevel";
 import { TooBig } from "./fit";
@@ -16,11 +15,6 @@ import { writeLevel } from "./levelWriting";
 import { makeMap } from "./makeMap";
 import { readMtl } from "./obj";
 
-const REPO = fileURLToPath(new URL("../../..", import.meta.url));
-export const LEVEL_SOURCES_DIR = join(REPO, "level_src");
-export const STREAMS_DIR = join(REPO, "streams");
-export const LEVELS_DIR = join(REPO, "build", "levels"); // next to the game; see LEVELS_DIR in src/pc/settings.h
-
 export interface BuildOptions {
   streamsDir: string;
   levelsDir: string;
@@ -30,7 +24,7 @@ export interface BuildOptions {
 const isFolder = (path: string) => existsSync(path) && statSync(path).isDirectory();
 
 // the level source to build: a level's name (its folder in sourcesDir), or a path to one
-export function levelSourcePath(nameOrPath: string, sourcesDir = LEVEL_SOURCES_DIR): string {
+export function levelSourcePath(nameOrPath: string, sourcesDir: string): string {
   const named = join(sourcesDir, nameOrPath);
   return !existsSync(nameOrPath) && isFolder(named) ? named : nameOrPath;
 }
