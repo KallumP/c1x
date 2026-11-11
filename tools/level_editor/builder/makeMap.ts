@@ -2,8 +2,8 @@
 // as the level's world meshes and collision, crash, and the objects placed in
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
-import { batSwoop, leaderBatsFlight, leapWay } from "../src/coords";
-import { inEvenSteps, pathPositions, pathStep, spotAndNode } from "../src/enemyPaths";
+import { batSwoop, leafDriftShares, leaderBatsFlight, leapWay } from "../src/coords";
+import { inEvenSteps, pathPositions, pathStep, pointAlongShare, spotAndNode } from "../src/enemyPaths";
 import { hasPath, LEADER_BATS_LEADERS, numberSetting, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
 import { throwFlags } from "../src/labAssistantThrow";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
@@ -267,6 +267,18 @@ class ObjectPlacer {
     this.entities[zone].push(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(object.reverse === true)));
   }
 
+  // a floating leaf (example) drifting along its path's nodes from its spot: its
+  // points as far along them as its own drift's are along that, so it eases and
+  // takes as long, in the zone its spot is in
+  placeLeafOnPath(leaf: LevelObject, example: Buffer): void {
+    const position = this.positionOf(leaf);
+    const { zone, at } = this.inZone(position);
+    const nodes = pathPositions(leaf, this.turn, this.scale).map((node) => this.positionOf({ ...leaf, at: node, raise: 0 }));
+    const points = leafDriftShares().map((share) => pointAlongShare(nodes, share));
+    const drift = points.map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
+    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), drift));
+  }
+
   // leader bats: their roost (roost, an example) where their flight between
   // the leaders starts, the flight its path, and the two leaders (leader, an
   // example), each pointed at the roost by its id
@@ -445,7 +457,9 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   enemies.filter((enemy) => enemy.enemy === "bat").forEach((enemy) => placer.placeBatRoost(enemy, enemyExample("bat")));
   enemies.filter((enemy) => enemy.enemy === "leader_bats")
     .forEach((enemy) => placer.placeLeaderBats(enemy, enemyExample("leader_bats"), levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT)));
-  obstacles.forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleExample(donorLevels.get(obstacle.obstacle!)!, obstacle.obstacle!)));
+  const obstacleOf = (obstacle: LevelObject) => obstacleExample(donorLevels.get(obstacle.obstacle!)!, obstacle.obstacle!);
+  obstacles.filter((obstacle) => !obstacle.path).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
+  obstacles.filter((obstacle) => obstacle.path).forEach((leaf) => placer.placeLeafOnPath(leaf, obstacleOf(leaf)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   enemies.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
