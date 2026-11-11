@@ -113,6 +113,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/ui.c \
 	src/launcher/level_editor.c \
 	src/launcher/level_build.c \
+	src/launcher/levels_section.c \
 	src/launcher/editor_section.c \
 	src/pc/settings.c \
 	src/pc/controls.c \

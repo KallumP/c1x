@@ -37,8 +37,12 @@ void LoadSettingsSection(const char *repo) {
   SettingsPath(repo, path, sizeof(path));
   if (!ReadSettingsFile(path, &settings)) { SaveSettingsSection(repo); } /* the defaults */
   saved = settings;
-  ListCustomLevels(repo, &levels);
+  ListSettingsLevels(repo);
   save_status[0] = 0;
+}
+
+void ListSettingsLevels(const char *repo) {
+  ListCustomLevels(repo, &levels);
 }
 
 /* write the settings to settings.cfg; returns 0 (saying why) if it can't */

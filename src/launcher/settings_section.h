@@ -6,4 +6,7 @@ extern int SaveSettingsSection(const char *repo);
 extern void UpdateSettingsSection(const char *repo);
 extern void DrawSettingsSection(const char *repo);
 
+/* list the custom levels again for the boot level dropdown, as after a build */
+extern void ListSettingsLevels(const char *repo);
+
 #endif /* _LAUNCHER_SETTINGS_SECTION_H_ */
