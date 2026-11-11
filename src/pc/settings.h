@@ -23,6 +23,7 @@ typedef struct {
   int replay_inputs;              /* replay the newest recording instead of recording */
   uint32_t replay_speed;          /* times normal speed, 0 = as fast as possible */
   uint32_t frame_rate;            /* frames drawn a second; the game itself runs at 30 */
+  int fullscreen;                 /* fill the screen instead of a window */
   char boot_level[SETTINGS_BOOT_LEVEL_MAX+1]; /* custom level to boot into, or "" */
 } pc_settings;
 
