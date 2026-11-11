@@ -687,15 +687,15 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const { level, entries, zone } = build([obstacle(type)]);
       expect(OBSTACLE_ENTITIES[type]).toEqual([23, subtype]);
       expect(level.nsd.ldat.execMap[23]).toBe(stringToEid("BldOC"));
-      expect(level.nsd.ldat.execMap[22]).toBe(stringToEid("JunOC"));
       expect(entries.has(stringToEid(model))).toBe(true);
       const placed = zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES[type]));
       expect(placed.length).toBe(1);
       expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
     });
 
-    test("a gate leaves jungle rollers' own objects' code as it is", () => {
-      const { entries } = build([obstacle("low_wide_gate")]);
+    test("a gate leaves jungle rollers' own objects' code (its rolling stone's) as it is", () => {
+      const { level, entries } = build([obstacle("low_wide_gate"), obstacle("rolling_stone", { at: [1, 8, 0] })]);
+      expect(level.nsd.ldat.execMap[22]).toBe(stringToEid("JunOC"));
       const baseCode = entriesById(readLevel(STREAMS, BASE_LEVEL.lid)).get(stringToEid("JunOC"))!;
       expect(entries.get(stringToEid("JunOC"))!.items).toEqual(baseCode.items);
     });

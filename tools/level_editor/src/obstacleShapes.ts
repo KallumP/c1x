@@ -9,6 +9,7 @@ const PEG_COLOURS = { log: "#8a5a32", end: "#c89a5e" };
 const SPIKED_LOG_COLOURS = { log: "#7a5530", spike: "#d8d0b8", arrow: "#ffd23a" };
 const FIRE_PIT_COLOURS = { bowl: "#b8321e", rim: "#e0a030", flame: "#ff8a1f" };
 const PILLAR_COLOURS = { stone: "#5c5a50", moss: "#4f6b3a" };
+const GATE_COLOURS = { post: "#9a6a3a", rail: "#7a5230" };
 
 // one of a lily pad's four round leaves, x and z out from its middle
 const lilyPadLeaf = (x: number, z: number) => ball(1, [x, 50, z], LILY_PAD_COLOURS.leaf, { stretch: [270, 50, 270] });
@@ -154,7 +155,24 @@ function pillar(): ShapePart[] {
   ];
 }
 
+// boulder dash's wooden gate, standing on its spot: a post at each end, across
+// wide and tall high, with rails between them, deep along the map
+function gate(across: number, tall: number, deep: number): ShapePart[] {
+  const post = deep;
+  const postAt = (across - post) / 2;
+  const railCount = Math.max(2, Math.round(tall / 400));
+  const rails = Array.from({ length: railCount }, (_, rail): ShapePart => (
+    { kind: "box", size: [across - 2 * post, 90, deep * 0.6], at: [0, (tall * (rail + 0.5)) / railCount, 0], colour: GATE_COLOURS.rail }
+  ));
+  return [
+    { kind: "box", size: [post, tall, deep], at: [-postAt, tall / 2, 0], colour: GATE_COLOURS.post },
+    { kind: "box", size: [post, tall, deep], at: [postAt, tall / 2, 0], colour: GATE_COLOURS.post },
+    ...rails,
+  ];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
-export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit(), dropping_pillar: pillar(), sliding_pillar: pillar() };
+export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit(), dropping_pillar: pillar(), sliding_pillar: pillar(),
+  tall_thin_gate: gate(903, 1554, 246), low_wide_gate: gate(2377, 437, 284) };

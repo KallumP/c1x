@@ -75,6 +75,8 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   fire_pit: THE_GREAT_GATE,
   dropping_pillar: BOULDER_DASH,
   sliding_pillar: BOULDER_DASH,
+  tall_thin_gate: BOULDER_DASH,
+  low_wide_gate: BOULDER_DASH,
 };
 
 export interface DonorObject {

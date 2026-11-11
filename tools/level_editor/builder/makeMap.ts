@@ -12,7 +12,7 @@ import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { objectDonorLevels, objectDonorObjects } from "./donorObjects";
 import {
-  BOX_HEIGHT, BOX_TYPE, donorEntityType, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
+  BOX_HEIGHT, BOX_TYPE, donorEntityType, donorObstacleType, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
   LEADER_BAT, OBSTACLE_ENTITIES, withNoRotationFromFlags, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
@@ -178,8 +178,10 @@ function donorEnemyEntity(donor: Level, type: EnemyType): Buffer {
   return withEntityType(levelEntity(donor, ...donorEntityType(type)), ENEMY_ENTITIES[type][0]);
 }
 
-// an obstacle's entity from the level it's taken from
-const obstacleExample = (donor: Level, type: ObstacleType): Buffer => levelEntity(donor, ...OBSTACLE_ENTITIES[type]);
+// an obstacle's entity from the level it's taken from, of its type in custom
+// levels (another than its own if its code moves there: see MOVED_ENEMY_CODE)
+const obstacleExample = (donor: Level, type: ObstacleType): Buffer =>
+  withEntityType(levelEntity(donor, ...donorObstacleType(type)), OBSTACLE_ENTITIES[type][0]);
 
 // the great gate's spiked logs: a rising one pushes up out of the floor at its
 // spot, and a falling one comes down on it from SPIKED_LOG_HANG over it (game
