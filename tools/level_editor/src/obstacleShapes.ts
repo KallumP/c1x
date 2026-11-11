@@ -120,12 +120,19 @@ function spikedLog(height: number, way: PushWay): ShapePart[] {
   ];
 }
 
-// the great gate's fire pit: a red bowl on the floor at its spot, flames in it
+const FIRE_PIT = { across: 494, long: 793, near: 8, bottom: -68, top: 239, rim: 30 };
+
+// the great gate's fire pit (WT1iG): a red bowl 494 across and 793 long, from
+// just out of its spot towards the player, its fire glowing in its top
 function firePit(): ShapePart[] {
+  const along = FIRE_PIT.near + FIRE_PIT.long / 2; // its middle, out from its spot
+  const oval = { stretch: [1, 1, FIRE_PIT.long / FIRE_PIT.across] as Vec3 };
+  const radius = FIRE_PIT.across / 2;
+  const bowlHeight = FIRE_PIT.top - FIRE_PIT.rim - FIRE_PIT.bottom;
   return [
-    rod(300, 180, 260, [0, 130, 0], FIRE_PIT_COLOURS.bowl),
-    rod(320, 320, 30, [0, 260, 0], FIRE_PIT_COLOURS.rim),
-    rod(0, 200, 300, [0, 410, 0], FIRE_PIT_COLOURS.flame),
+    rod(radius, radius * 0.6, bowlHeight, [0, FIRE_PIT.bottom + bowlHeight / 2, along], FIRE_PIT_COLOURS.bowl, oval),
+    rod(radius, radius, FIRE_PIT.rim, [0, FIRE_PIT.top - FIRE_PIT.rim / 2, along], FIRE_PIT_COLOURS.rim, oval),
+    rod(radius * 0.8, radius * 0.8, 4, [0, FIRE_PIT.top - 2, along], FIRE_PIT_COLOURS.flame, oval),
   ];
 }
 
