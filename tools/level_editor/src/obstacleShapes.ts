@@ -1,4 +1,4 @@
-// placeholder models for the platforms, as the enemies' (src/enemyShapes.ts):
+// placeholder models for the obstacles, as the enemies' (src/enemyShapes.ts):
 // in game units, y up, on their spot, coloured like the game's
 import { ball, rod, type ShapePart } from "./enemyShapes";
 import type { ObstacleType } from "./objects";
@@ -27,4 +27,4 @@ function leaf(): ShapePart[] {
   ];
 }
 
-export const PLATFORM_SHAPES: Record<ObstacleType, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf() };
+export const OBSTACLE_SHAPES: Record<ObstacleType, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf() };

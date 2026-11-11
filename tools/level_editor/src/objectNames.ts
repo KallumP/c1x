@@ -28,7 +28,7 @@ const NAMES: Partial<Record<Placeable, string>> = {
   bat: "Bats (roost)",
   leader_bats: "Bats (leaders)",
   electric_scientist: "Lab assistant (electric)",
-  // platforms
+  // obstacles
   leaf: "Floating leaf",
 };
 

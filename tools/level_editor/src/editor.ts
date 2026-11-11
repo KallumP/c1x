@@ -9,8 +9,8 @@ export type Placeable = "spawn" | "end" | BoxType | EnemyType | ObstacleType;
 // what clicking on the level does: select, or place an object
 export type Tool = { kind: "select" } | { kind: "place"; what: Placeable };
 
-// the palette's kinds of thing to place: the spawn, the end, a box, an enemy or a platform (each of a type)
-export const PLACEABLE_KINDS = ["spawn", "end", "box", "enemy", "platform"] as const;
+// the palette's kinds of thing to place: the spawn, the end, a box, an enemy or an obstacle (each of a type)
+export const PLACEABLE_KINDS = ["spawn", "end", "box", "enemy", "obstacle"] as const;
 export type PlaceableKind = (typeof PLACEABLE_KINDS)[number];
 
 const isObstacleType = (what: Placeable): what is ObstacleType => (OBSTACLE_TYPES as readonly string[]).includes(what);
@@ -24,7 +24,7 @@ export function placeableKind(what: Placeable): PlaceableKind {
     return "box";
   }
   if (isObstacleType(what)) {
-    return "platform";
+    return "obstacle";
   }
   return "enemy";
 }

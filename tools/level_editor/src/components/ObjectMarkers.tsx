@@ -2,10 +2,10 @@
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import { batSwoop, blenderToView, labAssistantThrow, leafDrift, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
-import { boxStyle, ENEMY_COLOURS, PLATFORM_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
+import { boxStyle, ENEMY_COLOURS, OBSTACLE_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
-import { PLATFORM_SHAPES } from "../platformShapes";
+import { OBSTACLE_SHAPES } from "../obstacleShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
 import { isPathEnemy, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
@@ -425,19 +425,19 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     const facing = facingFrom(start, end, turn);
     return (
       <>
-        {renderShapeModel(PLATFORM_SHAPES.leaf, blenderToView(start), index, 0, facing)}
-        {renderShapeModel(PLATFORM_SHAPES.leaf, blenderToView(end), index, 1, facing, FAR_END_OPACITY)}
-        <Line points={drift.map(blenderToView)} color={PLATFORM_COLOURS.leaf} lineWidth={2} />
+        {renderShapeModel(OBSTACLE_SHAPES.leaf, blenderToView(start), index, 0, facing)}
+        {renderShapeModel(OBSTACLE_SHAPES.leaf, blenderToView(end), index, 1, facing, FAR_END_OPACITY)}
+        <Line points={drift.map(blenderToView)} color={OBSTACLE_COLOURS.leaf} lineWidth={2} />
       </>
     );
   };
 
   // a lily pad at its spot, where it sinks from; a leaf with its drift
-  const renderPlatform = (object: LevelObject, index: number) => {
+  const renderObstacle = (object: LevelObject, index: number) => {
     if (object.obstacle === "leaf") {
       return renderLeaf(object, index);
     }
-    return renderShapeModel(PLATFORM_SHAPES[object.obstacle!], base(object), index);
+    return renderShapeModel(OBSTACLE_SHAPES[object.obstacle!], base(object), index);
   };
 
   const renderShape = (object: LevelObject, index: number) => {
@@ -451,7 +451,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
       case "enemy":
         return renderEnemy(object, index);
       case "obstacle":
-        return renderPlatform(object, index);
+        return renderObstacle(object, index);
     }
   };
 

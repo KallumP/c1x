@@ -56,7 +56,7 @@ export const ENEMY_COLOURS: Record<EnemyType, string> = {
   lab_assistant: "#c9ccd6",
 };
 
-export const PLATFORM_COLOURS: Record<ObstacleType, string> = {
+export const OBSTACLE_COLOURS: Record<ObstacleType, string> = {
   lily_pad: "#2f6b2a",
   leaf: "#2e7a2c",
 };
