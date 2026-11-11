@@ -1,8 +1,8 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
-import { boxStyle, ENEMY_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
+import { batSwoop, blenderToView, labAssistantThrow, leafDrift, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { boxStyle, ENEMY_COLOURS, PLATFORM_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { PLATFORM_SHAPES } from "../platformShapes";
@@ -417,8 +417,28 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // a lily pad or floating leaf: at its spot, where it sinks or drifts from
-  const renderPlatform = (object: LevelObject, index: number) => renderShapeModel(PLATFORM_SHAPES[object.platform!], base(object), index);
+  // a floating leaf: at its spot, where it drifts from, facing the way it drifts,
+  // with the line of its drift, and faded where it turns back
+  const renderLeaf = (object: LevelObject, index: number) => {
+    const drift = leafDrift(object.at, object.raise, turn, scale);
+    const [start, end] = [drift[0], drift[drift.length - 1]];
+    const facing = facingFrom(start, end, turn);
+    return (
+      <>
+        {renderShapeModel(PLATFORM_SHAPES.leaf, blenderToView(start), index, 0, facing)}
+        {renderShapeModel(PLATFORM_SHAPES.leaf, blenderToView(end), index, 1, facing, FAR_END_OPACITY)}
+        <Line points={drift.map(blenderToView)} color={PLATFORM_COLOURS.leaf} lineWidth={2} />
+      </>
+    );
+  };
+
+  // a lily pad at its spot, where it sinks from; a leaf with its drift
+  const renderPlatform = (object: LevelObject, index: number) => {
+    if (object.platform === "leaf") {
+      return renderLeaf(object, index);
+    }
+    return renderShapeModel(PLATFORM_SHAPES[object.platform!], base(object), index);
+  };
 
   const renderShape = (object: LevelObject, index: number) => {
     switch (object.kind) {

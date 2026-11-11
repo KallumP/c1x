@@ -112,6 +112,23 @@ export function fishLeap(at: Vec3, raise: number, turn: number, scale: number, r
     [at[0] + (rollX * across) / scale, at[1] + (rollY * across) / scale, at[2] + raise + up / scale] as Vec3);
 }
 
+// up the creek's floating leaf's drift (its first leaf's path), in game units
+// from its spot: across the map (as a stone rolls) and along the game's z (back
+// towards the spawn), level. it drifts out along it and back
+export const LEAF_DRIFT: [number, number][] = [
+  [0, 0], [-48, 48], [-100, 180], [-72, 376], [-8, 624], [88, 904], [196, 1200],
+  [304, 1500], [400, 1780], [464, 2028], [492, 2224], [448, 2356], [400, 2400],
+];
+
+// each point of a leaf's drift (in blender), for a leaf at at, raised by raise
+export function leafDrift(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
+  const across = stoneRolling(turn);
+  const back = scaled(cameraFacing(turn), -1);
+  const start: Vec3 = [at[0], at[1], at[2] + raise];
+  return LEAF_DRIFT.map(([sideways, along]) =>
+    start.map((value, axis) => value + (across[axis] * sideways + back[axis] * along) / scale + 0) as Vec3); // + 0 turns -0 into 0
+}
+
 // temple ruins' bats' swoop (its first roost's path), in game units from the
 // roost: along the game's z (the route back towards the spawn) and up. its bats fly it once
 export const BAT_SWOOP: [number, number][] = [

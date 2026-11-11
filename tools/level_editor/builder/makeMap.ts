@@ -410,7 +410,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const platforms = objects.filter((object) => object.kind === "platform");
   const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
   const donorLevels = objectDonorLevels([...enemies, ...platforms], readOtherLevel);
-  const entityCount = (end ? 1 : 0) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0) + platforms.length;
+  const entityCount = Number(end !== undefined) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0) + platforms.length;
   const placer = new ObjectPlacer(map, templates, scale, turn, entityCount);
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
   const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
