@@ -70,7 +70,10 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // - rolling_stone: jungle rollers' stone wheel, back and forth along its track (jungle rollers' own: no other level is read)
 // sloping across the map and down from their spot:
 // - mossy_slide: the great gate's invisible slider, which slides crash down the slope modelled under it (the map's own)
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide"] as const;
+// spiked logs at their spot, the great gate's:
+// - rising_spiked_log: pushing up out of the floor
+// - falling_spiked_log: pushing down from above
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
