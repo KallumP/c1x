@@ -19,6 +19,7 @@ An object in `objects.json` has a `kind`:
 - `end`: the warp pad that ends the level (one at most)
 - `box`: a box, by its `type` (see [Boxes](#boxes)); `stack` makes a stack of them
 - `enemy`: an enemy, by its `type` (see [Enemies](#enemies))
+- `obstacle`: a part of the level with a mind of its own, by its `type` (see [Obstacles](#obstacles)): something Crash rides, like a lily pad, or has to get past
 
 Each object also has `at`, where it is in Blender, and can have `raise`, how far above that it is. The [level editor](../doc/custom_levels.md#2-place-objects-in-the-level-editor) writes all of these for you. Custom levels are built from Jungle Rollers, which has every kind of box, and its plant, rolling stone and badger. Other enemies are taken from the level they're in, such as the crab from N. Sanity Beach, so the game's files for that level have to be in `streams/` too.
 
@@ -76,3 +77,10 @@ Each object also has `at`, where it is in Blender, and can have `raise`, how far
 A crab's, turtle's, native's, warthog's, monkey's or lizard's `path` is the nodes it walks through, in order, there and back, starting at the first (badgers and walking spiders run it once, first to last): `"path": [[x, y, z], ...]`, 2 to 20 of them, each in metres from where the enemy stands (`at`, raised by `raise`), so the path moves with it. In the game its points are spaced as its own level's are, which keeps it walking at its own speed, however far apart the nodes are. It walks straight through walls and off edges, so keep its path on clear floor; the level editor warns about a path that isn't.
 
 A crab's, turtle's, native's, badger's, warthog's, walking spider's, monkey's or lizard's `speed` is how many times the game's own pace it walks at, 0.25 to 3 (1 by default). It's the same all along its path, wherever the nodes are. Its legs don't move any faster, so a fast one looks like it's sliding. A lizard's speed sets how far apart the points it leaps or hops between are, so a fast one goes further each time.
+
+### Obstacles
+
+Both are ridden, and both come from Up the Creek, with its river plants and fish (its files need to be in `streams/`), and take the same three texture pages as them, however many of each a level has. Neither needs water under it.
+
+- `lily_pad`: Up the Creek's lily pad, four round leaves lying flat at `at`. With Crash on it, it sinks about 1 m (at scale 400), rises back up and sinks again, carrying him with it. Raise it over a gap or a drop: at the bottom of its sink it's 1 m below where it's placed, so on the floor it sinks into it.
+- `leaf`: Up the Creek's floating leaf, drifting from `at` about 6 m back towards the spawn and swaying from side to side, then back, every few seconds. Crash can ride it if he lands on it from above; on the floor it passes through him, so raise it over a gap. Its drift is the game's own, so it can't be changed, and every leaf drifts in step with the others.

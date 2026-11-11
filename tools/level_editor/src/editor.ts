@@ -2,16 +2,18 @@
 // changes that can be undone and redone
 import { nodeCount, pathPositions, withNodeAt } from "./enemyPaths";
 import { BAT_ROOST_HEIGHT, DEFAULT_SCALE, LEADER_BAT_HEIGHT } from "./coords";
-import { BOX_TYPES, ENEMY_TYPES, type BoxType, type EnemyType, type LevelObject, type Vec3 } from "./objects";
+import { BOX_TYPES, ENEMY_TYPES, OBSTACLE_TYPES, type BoxType, type EnemyType, type LevelObject, type ObstacleType, type Vec3 } from "./objects";
 
-export type Placeable = "spawn" | "end" | BoxType | EnemyType;
+export type Placeable = "spawn" | "end" | BoxType | EnemyType | ObstacleType;
 
 // what clicking on the level does: select, or place an object
 export type Tool = { kind: "select" } | { kind: "place"; what: Placeable };
 
-// the palette's kinds of thing to place: the spawn, the end, a box (of a type) or an enemy (of a type)
-export const PLACEABLE_KINDS = ["spawn", "end", "box", "enemy"] as const;
+// the palette's kinds of thing to place: the spawn, the end, a box, an enemy or an obstacle (each of a type)
+export const PLACEABLE_KINDS = ["spawn", "end", "box", "enemy", "obstacle"] as const;
 export type PlaceableKind = (typeof PLACEABLE_KINDS)[number];
+
+const isObstacleType = (what: Placeable): what is ObstacleType => (OBSTACLE_TYPES as readonly string[]).includes(what);
 
 // the kind a thing to place is under in the palette
 export function placeableKind(what: Placeable): PlaceableKind {
@@ -20,6 +22,9 @@ export function placeableKind(what: Placeable): PlaceableKind {
   }
   if (what in BOX_TYPES) {
     return "box";
+  }
+  if (isObstacleType(what)) {
+    return "obstacle";
   }
   return "enemy";
 }
@@ -60,6 +65,9 @@ const newEnemyRaise = (enemy: EnemyType, scale: number) => (NEW_ENEMY_HEIGHTS[en
 export function newObject(what: Placeable, at: Vec3, scale = DEFAULT_SCALE): LevelObject {
   if (isEnemyType(what)) {
     return { kind: "enemy", enemy: what, at, raise: newEnemyRaise(what, scale), stack: 1 };
+  }
+  if (isObstacleType(what)) {
+    return { kind: "obstacle", obstacle: what, at, raise: 0, stack: 1 };
   }
   const kind = what in BOX_TYPES ? "box" : (what as "spawn" | "end");
   const object: LevelObject = { kind, at, raise: 0, stack: 1 };

@@ -1,6 +1,6 @@
 // helpers shared by the editor's and the level build's tests
 import { expect } from "vitest";
-import type { EnemyType, LevelObject } from "../src/objects";
+import type { EnemyType, LevelObject, ObstacleType } from "../src/objects";
 
 type Vector = readonly number[];
 
@@ -24,3 +24,7 @@ export const noMinusZero = (values: Vector): number[] => values.map((value) => M
 // an enemy of a type, standing at the origin unless more says otherwise
 export const enemyObject = (type: EnemyType, more: Partial<LevelObject> = {}): LevelObject =>
   ({ kind: "enemy", enemy: type, at: [0, 0, 0], raise: 0, stack: 1, ...more });
+
+// an obstacle of a type, at the origin unless more says otherwise
+export const obstacleObject = (type: ObstacleType, more: Partial<LevelObject> = {}): LevelObject =>
+  ({ kind: "obstacle", obstacle: type, at: [0, 0, 0], raise: 0, stack: 1, ...more });

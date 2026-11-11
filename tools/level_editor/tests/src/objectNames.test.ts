@@ -19,6 +19,13 @@ describe("the names the palette shows", () => {
     expect(new Set(names).size).toBe(names.length);
   });
 
+  test.each([
+    ["lily_pad", "Lily pad"],
+    ["leaf", "Floating leaf"],
+  ] as const)("the %s obstacle is named %s", (what, name) => {
+    expect(placeableName(what)).toBe(name);
+  });
+
   test("a type without a name of its own is named by its id in words", () => {
     expect(placeableName("gunman")).toBe("Gunman");
     expect(placeableName("camera_robot")).toBe("Camera robot");

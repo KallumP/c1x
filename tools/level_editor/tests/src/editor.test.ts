@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { draggedBy, draggedTo, editorReducer, emptyEditor, newObject, placeableKind, type EditorAction, type EditorState, type Placeable } from "../../src/editor";
 import { BAT_SWOOP, DEFAULT_SCALE } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
-import { enemyObject } from "../helpers";
+import { enemyObject, obstacleObject } from "../helpers";
 
 const box = (x: number): LevelObject => newObject("basic", [x, 0, 0]);
 
@@ -25,6 +25,16 @@ describe("newObject", () => {
     ["end", { kind: "end" }],
   ] as const)("a new %s stands where it's put", (what, kind) => {
     expect(newObject(what, [1, 2, 3])).toEqual({ ...kind, at: [1, 2, 3], raise: 0, stack: 1 });
+  });
+});
+
+describe("obstacles", () => {
+  test("an obstacle is placed under its own kind", () => {
+    expect(["lily_pad", "leaf"].map((what) => placeableKind(what as Placeable))).toEqual(["obstacle", "obstacle"]);
+  });
+
+  test.each(["lily_pad", "leaf"] as const)("a new %s is where it's put", (obstacle) => {
+    expect(newObject(obstacle, [1, 2, 3])).toEqual(obstacleObject(obstacle, { at: [1, 2, 3] }));
   });
 });
 

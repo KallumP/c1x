@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Vec3 } from "../../src/objects";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, LEAF_DRIFT, leafDrift, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 import { expectCloseTo, noMinusZero } from "../helpers";
 
 describe("blender and the viewport", () => {
@@ -73,6 +73,20 @@ describe("rolling stones", () => {
     expect(path[10][0]).toBeCloseTo(1 - 1800 / 400);
     expect(path[0][2]).toBeCloseTo(3 + radius + 472 / 400);
     expect(path.every(([, y]) => y === 2)).toBe(true);
+  });
+
+  test("a leaf drifts from its spot back towards the spawn, swaying across the map", () => {
+    // as up the creek's first leaf: 13 points, 2400 along the game's z (back
+    // along the way the camera faces) and 400 across (game units), level
+    const path = leafDrift([1, 2, 3], 0, 0, 400);
+    expect(path.length).toBe(LEAF_DRIFT.length);
+    expect(path[0]).toEqual([1, 2, 3]);
+    expectCloseTo(path[12], [1 + 400 / 400, 2 - 2400 / 400, 3]);
+  });
+
+  test("a leaf's drift turns with the level and lifts with raise", () => {
+    const path = leafDrift([0, 0, 0], 0.5, 90, 400);
+    expectCloseTo(path[12], [-2400 / 400, -400 / 400, 0.5]);
   });
 
   test("a fish leaps across the map from its spot", () => {

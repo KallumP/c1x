@@ -2,18 +2,18 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
-import { BAT_SWOOP, FISH_LEAP, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
-import type { EnemyType, LevelObject } from "../../src/objects";
+import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
+import type { EnemyType, LevelObject, ObstacleType } from "../../src/objects";
 import { DEFAULT_SKY, type Sky } from "../../src/sky";
-import { enemyObject, expectNear } from "../helpers";
+import { enemyObject, expectNear, obstacleObject } from "../helpers";
 import { readCameraPath, readZoneHeader, readZoneRect } from "./zoneReaders";
 import { BASE_LEVEL } from "../../builder/baseLevel";
-import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, LEADER_BAT, ENTITY_INIT_FLAGS, entityId, entityPath, entityPosition, entityType, STONE_FAR_END, WARP_PAD } from "../../builder/entities";
+import { BOX_HEIGHT, BOX_TYPE, ENEMY_ENTITIES, LEADER_BAT, OBSTACLE_ENTITIES, ENTITY_INIT_FLAGS, entityId, entityPath, entityPosition, entityType, STONE_FAR_END, WARP_PAD } from "../../builder/entities";
 import { EID_NONE, stringToEid } from "../../builder/entryIds";
 import type { RgbImage } from "../../builder/images";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, entriesById, PAGE_SOUNDS, PAGE_TEXTURE, readLevel, type Entry, type Level } from "../../builder/levelFiles";
 import { CORE_EXEC_SLOTS } from "../../builder/cutLevel";
-import { donorObject, ENEMY_DONORS, enemyDonorObjects } from "../../builder/donorObjects";
+import { donorObject, OBJECT_DONORS, objectDonorObjects } from "../../builder/donorObjects";
 import type { Vec3 } from "../../builder/vectors";
 import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
 import { FOLLOW_CAM_MODE } from "../../builder/paths";
@@ -84,6 +84,8 @@ const object = (kind: LevelObject["kind"], at: [number, number, number], more: P
 const box = (at: [number, number, number], subtype: number, more: Partial<LevelObject> = {}) => object("box", at, { box: subtype, ...more });
 // an enemy at blender (1, 2, 0), on the floor, unless more moves it
 const enemy = (type: EnemyType, more: Partial<LevelObject> = {}) => enemyObject(type, { at: [1, 2, 0], ...more });
+// and an obstacle there
+const obstacle = (type: ObstacleType, more: Partial<LevelObject> = {}) => obstacleObject(type, { at: [1, 2, 0], ...more });
 
 // blender (1, 2, 0), where enemy() puts an enemy, in the zone at scale 256: the floor's
 // corner is a cell (128) in from the zone's, and its top is at 128
@@ -473,8 +475,8 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   const builtCode = (objects: LevelObject[], code: string) => build(objects).entries.get(stringToEid(code))!.items[1];
   // and in the level an enemy is taken from, as patched for custom levels (donorObjects.test.ts has the patches)
   const patchedDonorCode = (type: EnemyType, code: string) => {
-    const donor = readOtherLevel(ENEMY_DONORS[type]!.lid);
-    const entries = enemyDonorObjects(new Map([[type, donor]])).flatMap((object) => object.entries);
+    const donor = readOtherLevel(OBJECT_DONORS[type]!.lid);
+    const entries = objectDonorObjects(new Map([[type, donor]])).flatMap((object) => object.entries);
     return entries.find(({ eid }) => eid === stringToEid(code))!.items[1];
   };
 
@@ -521,6 +523,54 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const objects = [enemy("blue_river_plant"), enemy("green_river_plant", { at: [-1, 4, 0] }), enemy("fish", { at: [1, 6, 0] })];
       build(objects, { readOtherLevel: reader.readOtherLevel });
       expect(reader.read).toEqual([0x18]);
+    });
+  });
+
+  describe.skipIf(!hasUpTheCreek)("lily pads and leaves, from up the creek", () => {
+    // the zone's obstacles of a type: their paths, relative to their first point
+    const obstaclePaths = (zone: Entry, type: ObstacleType) => zoneEntities(zone)
+      .filter((item) => isOfType(item, OBSTACLE_ENTITIES[type]))
+      .map((item) => entityPath(item));
+    const fromFirst = (path: Vec3[]) => path.map((point) => point.map((value, axis) => value - path[0][axis]));
+
+    test("a level with only obstacles has up the creek's river code", () => {
+      const { level, entries } = build([obstacle("lily_pad")]);
+      expect(level.nsd.ldat.execMap[OBSTACLE_ENTITIES.lily_pad[0]]).toBe(stringToEid("RivOC"));
+      expect(entries.get(stringToEid("RivOC"))!.items[1]).toEqual(patchedDonorCode("fish", "RivOC"));
+    });
+
+    test("a lily pad sinks from its spot, down up the creek's first lily pad's path", () => {
+      const [path] = obstaclePaths(build([obstacle("lily_pad")]).zone, "lily_pad");
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expect(path.length).toBe(21);
+      expect(fromFirst(path).at(-1)).toEqual([0, -384, 0]);
+    });
+
+    test("a leaf drifts from its spot, along up the creek's first leaf's path", () => {
+      const [path] = obstaclePaths(build([obstacle("leaf")]).zone, "leaf");
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expect(path.length).toBe(13);
+      expect(fromFirst(path).at(-1)).toEqual([400, 0, 2400]);
+    });
+
+    test("a leaf's drift is the one the editor draws", () => {
+      const [path] = obstaclePaths(build([obstacle("leaf")]).zone, "leaf");
+      expect(fromFirst(path).map(([x, , z]) => [x, z])).toEqual(LEAF_DRIFT);
+    });
+
+    test("a raised obstacle is raised", () => {
+      const [path] = obstaclePaths(build([obstacle("lily_pad", { raise: 1 })]).zone, "lily_pad");
+      expectNear(path[0][1], FLOOR_Y + 256, 16); // 1 m at scale 256
+    });
+
+    test("a level with obstacles and river enemies reads up the creek once", () => {
+      const reader = recordingReader();
+      build([enemy("fish"), obstacle("lily_pad", { at: [-1, 4, 0] }), obstacle("leaf", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
+      expect(reader.read).toEqual([0x18]);
+    });
+
+    test("an obstacle without other levels to take it from is an error", () => {
+      expect(() => build([obstacle("leaf")], { readOtherLevel: undefined })).toThrow(/leaf/);
     });
   });
 

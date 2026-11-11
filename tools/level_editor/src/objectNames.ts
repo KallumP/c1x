@@ -28,6 +28,8 @@ const NAMES: Partial<Record<Placeable, string>> = {
   bat: "Bats (roost)",
   leader_bats: "Bats (leaders)",
   electric_scientist: "Lab assistant (electric)",
+  // obstacles
+  leaf: "Floating leaf",
 };
 
 // a type's id in words, capitalised: blue_river_plant is "Blue river plant"

@@ -4,16 +4,16 @@
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { batSwoop, leaderBatsFlight, leapWay } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep, spotAndNode } from "../src/enemyPaths";
-import { hasPath, LEADER_BATS_LEADERS, numberSetting, type EnemyType, type LevelObject, type PathEnemy } from "../src/objects";
+import { hasPath, LEADER_BATS_LEADERS, numberSetting, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
 import { throwFlags } from "../src/labAssistantThrow";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
-import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
+import { objectDonorLevels, objectDonorObjects } from "./donorObjects";
 import {
   BOX_HEIGHT, BOX_TYPE, donorEntityType, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
-  LEADER_BAT, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
+  LEADER_BAT, OBSTACLE_ENTITIES, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
@@ -48,7 +48,7 @@ export interface MapOptions {
   objects?: LevelObject[];
   sky?: Sky;                      // n. sanity beach's without one
   camera?: Camera;                // how the follow camera looks at crash; as it always was without one
-  readOtherLevel?: (lid: number) => Level; // the real levels enemies are taken from (see ENEMY_DONORS)
+  readOtherLevel?: (lid: number) => Level; // the real levels enemies are taken from (see OBJECT_DONORS)
 }
 
 // collision blocks for cells
@@ -177,6 +177,8 @@ function donorEnemyEntity(donor: Level, type: EnemyType): Buffer {
   return withEntityType(levelEntity(donor, ...donorEntityType(type)), ENEMY_ENTITIES[type][0]);
 }
 
+// an obstacle's entity from the level it's taken from
+const obstacleExample = (donor: Level, type: ObstacleType): Buffer => levelEntity(donor, ...OBSTACLE_ENTITIES[type]);
 
 // entities each enemy takes: a leader bats roost and its two leaders, one for the rest
 function entitiesFor(enemy: LevelObject): number {
@@ -257,11 +259,12 @@ class ObjectPlacer {
     this.entities[zone].push(withInitFlagC(withInitFlagB(withInitFlagA(placed, facing), alongX), alongZ));
   }
 
-  // an enemy that moves along its own level's path, as example, from its spot:
-  // up the creek's fish, leaping across the map (the other way, reversed)
-  placeWithItsPath(enemy: LevelObject, example: Buffer): void {
-    const { zone, at } = this.inZone(this.positionOf(enemy));
-    this.entities[zone].push(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(enemy.reverse === true)));
+  // an enemy or obstacle that moves along its own level's path, as example, from
+  // its spot: up the creek's fish, leaping across the map (the other way,
+  // reversed), its lily pad sinking and its leaf drifting
+  placeWithItsPath(object: LevelObject, example: Buffer): void {
+    const { zone, at } = this.inZone(this.positionOf(object));
+    this.entities[zone].push(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(object.reverse === true)));
   }
 
   // leader bats: their roost (roost, an example) where their flight between
@@ -404,9 +407,11 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const end = objects.find((object) => object.kind === "end");
   const boxes = objects.filter((object) => object.kind === "box");
   const enemies = objects.filter((object) => object.kind === "enemy");
+  const obstacles = objects.filter((object) => object.kind === "obstacle");
   const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
-  const donorLevels = enemyDonorLevels(enemies, readOtherLevel);
-  const placer = new ObjectPlacer(map, templates, scale, turn, (end ? 1 : 0) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0));
+  const donorLevels = objectDonorLevels([...enemies, ...obstacles], readOtherLevel);
+  const entityCount = Number(end !== undefined) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0) + obstacles.length;
+  const placer = new ObjectPlacer(map, templates, scale, turn, entityCount);
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
   const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
 
@@ -440,6 +445,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   enemies.filter((enemy) => enemy.enemy === "bat").forEach((enemy) => placer.placeBatRoost(enemy, enemyExample("bat")));
   enemies.filter((enemy) => enemy.enemy === "leader_bats")
     .forEach((enemy) => placer.placeLeaderBats(enemy, enemyExample("leader_bats"), levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT)));
+  obstacles.forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleExample(donorLevels.get(obstacle.obstacle!)!, obstacle.obstacle!)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   objects.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;
@@ -470,7 +476,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   };
 
   const size: Vec3 = [fitted.size[0], fitted.size[1], spans[0][1] - spans[0][0]];
-  const donors = enemyDonorObjects(donorLevels);
+  const donors = objectDonorObjects(donorLevels);
   for (let step = MAP_PATH_STEP; ; step *= 2) {
     try {
       const out = assembleLevel({
