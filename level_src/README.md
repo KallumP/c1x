@@ -19,7 +19,7 @@ An object in `objects.json` has a `kind`:
 - `end`: the warp pad that ends the level (one at most)
 - `box`: a box, by its `type` (see [Boxes](#boxes)); `stack` makes a stack of them
 - `enemy`: an enemy, by its `type` (see [Enemies](#enemies))
-- `obstacle`: something that moves, which Crash stands on, by its `type` (see [Obstacles](#obstacles))
+- `obstacle`: a part of the level with a mind of its own, by its `type` (see [Obstacles](#obstacles)): something Crash rides, like a lily pad, or has to get past
 
 Each object also has `at`, where it is in Blender, and can have `raise`, how far above that it is. The [level editor](../doc/custom_levels.md#2-place-objects-in-the-level-editor) writes all of these for you. Custom levels are built from Jungle Rollers, which has every kind of box, and its plant, rolling stone and badger. Other enemies are taken from the level they're in, such as the crab from N. Sanity Beach, so the game's files for that level have to be in `streams/` too.
 
@@ -80,7 +80,7 @@ A crab's, turtle's, native's, badger's, warthog's, walking spider's, monkey's or
 
 ### Obstacles
 
-Both come from Up the Creek, with its river plants and fish (its files need to be in `streams/`), and take the same three texture pages as them, however many of each a level has. Neither needs water under it.
+Both are ridden, and both come from Up the Creek, with its river plants and fish (its files need to be in `streams/`), and take the same three texture pages as them, however many of each a level has. Neither needs water under it.
 
 - `lily_pad`: Up the Creek's lily pad, four round leaves lying flat at `at`. With Crash on it, it sinks about 1 m (at scale 400), rises back up and sinks again, carrying him with it. Raise it over a gap or a drop: at the bottom of its sink it's 1 m below where it's placed, so on the floor it sinks into it.
 - `leaf`: Up the Creek's floating leaf, drifting from `at` about 6 m back towards the spawn and swaying from side to side, then back, every few seconds. Crash can ride it if he lands on it from above; on the floor it passes through him, so raise it over a gap. Its drift is the game's own, so it can't be changed, and every leaf drifts in step with the others.

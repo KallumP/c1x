@@ -60,9 +60,10 @@ export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 export const ENEMY_TYPES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake", "gunman", "fish", "lab_assistant", "crab", "turtle", "native", "monkey", "warthog", "lizard", "red_lizard", "walking_lizard", "robot_dog", "barrel_roller", "camera_robot", "bird", "electric_scientist", "blob", "flying_camera", "badger", "walking_spider", "bat", "leader_bats", "rolling_stone"] as const;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 
-// the obstacles custom levels can have: things that move, which crash stands
-// on, by name. the level build takes them from the level they're in
-// (builder/donorObjects.ts), moving along their own level's path from their spot:
+// the obstacles custom levels can have, by name: parts of the level with a mind
+// of their own, which crash rides or has to get past (rather than fights, as an
+// enemy). the level build takes them from the level they're in
+// (builder/donorObjects.ts). these move along their own level's path from their spot:
 // - lily_pad: up the creek's, sinking while crash stands on it
 // - leaf: up the creek's floating leaf, drifting back and forth
 export const OBSTACLE_TYPES = ["lily_pad", "leaf"] as const;
