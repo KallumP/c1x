@@ -21,7 +21,7 @@
 static pc_settings settings;
 static pc_settings saved;     /* what settings.cfg had when last loaded or saved */
 static Uint32 last_change_check;
-static built_levels levels;
+static custom_levels levels;
 static char save_status[PATH_MAX_LEN + 64]; /* what Save last did, or "" */
 static int save_failed;
 
@@ -30,15 +30,14 @@ static void SettingsPath(const char *repo, char *path, size_t size) {
 }
 
 /* read settings.cfg, creating it from settings.example.cfg if there isn't
-   one, and list the levels built to build/levels/ */
+   one, and list the custom levels */
 void LoadSettingsSection(const char *repo) {
   char path[PATH_MAX_LEN];
 
   SettingsPath(repo, path, sizeof(path));
   if (!ReadSettingsFile(path, &settings)) { SaveSettingsSection(repo); } /* the defaults */
   saved = settings;
-  JoinPath(path, sizeof(path), repo, "build/levels");
-  ListBuiltLevels(path, &levels);
+  ListCustomLevels(repo, &levels);
   save_status[0] = 0;
 }
 
@@ -111,6 +110,12 @@ static void DrawSlider(const char *label, uint32_t *setting, uint32_t min,
   DrawTooltip(tooltip);
 }
 
+static int IsCustomLevelBuilt(const char *name) {
+  int at = FindCustomLevel(&levels, name);
+
+  return at >= 0 && levels.built[at];
+}
+
 static void DrawBootLevelChoice(const char *name, const char *level) {
   bool selected;
 
@@ -126,7 +131,7 @@ static void BootLevelPreview(char *preview, size_t size) {
   if (!settings.boot_level[0]) {
     SDL_strlcpy(preview, TITLE_SCREEN, size);
   }
-  else if (FindBuiltLevel(&levels, settings.boot_level) < 0) {
+  else if (!IsCustomLevelBuilt(settings.boot_level)) {
     SDL_snprintf(preview, size, "%s (not built)", settings.boot_level);
   }
   else {
@@ -146,6 +151,7 @@ static void DrawBootLevel() {
   if (igBeginCombo("##boot_level", preview, 0)) {
     DrawBootLevelChoice(TITLE_SCREEN, "");
     for (i=0;i<levels.count;i++) {
+      if (!levels.built[i]) { continue; }
       DrawBootLevelChoice(levels.names[i], levels.names[i]);
     }
     igEndCombo();
