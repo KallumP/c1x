@@ -1,7 +1,7 @@
 // entities (zone_entity in src/formats/zdat.h): parent zone, spawn flags,
 // group, id, point count, 3 init flags, type, subtype, then the points, in
 // units of 4 zone units relative to the zone
-import { BOX_TYPES, type EnemyType, type ObjectType, type PlatformType } from "../src/objects";
+import { BOX_TYPES, type EnemyType, type ObjectType, type ObstacleType } from "../src/objects";
 import { padTo4 } from "./bytes";
 import type { Vec3 } from "./vectors";
 
@@ -47,12 +47,12 @@ export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
 };
 // each platform's entity type and subtype: up the creek's river objects RivOC
 // (the river enemies' code), subtype 1 its lily pad and 2 its floating leaf
-export const PLATFORM_ENTITIES: Record<PlatformType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2] };
+export const PLATFORM_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2] };
 
 // an enemy's or platform's entity type and subtype
 export function objectEntity(type: ObjectType): [number, number] {
   if (type in PLATFORM_ENTITIES) {
-    return PLATFORM_ENTITIES[type as PlatformType];
+    return PLATFORM_ENTITIES[type as ObstacleType];
   }
   return ENEMY_ENTITIES[type as EnemyType];
 }

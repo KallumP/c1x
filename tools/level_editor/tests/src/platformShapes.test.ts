@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { shapeBounds } from "../../src/enemyShapes";
 import { PLATFORM_SHAPES } from "../../src/platformShapes";
-import { PLATFORM_TYPES } from "../../src/objects";
+import { OBSTACLE_TYPES } from "../../src/objects";
 
 type Range = readonly [number, number];
 
@@ -25,6 +25,6 @@ describe("platform shapes", () => {
   });
 
   test("every platform has a shape", () => {
-    PLATFORM_TYPES.forEach((platform) => expect(PLATFORM_SHAPES[platform].length).toBeGreaterThan(0));
+    OBSTACLE_TYPES.forEach((platform) => expect(PLATFORM_SHAPES[platform].length).toBeGreaterThan(0));
   });
 });

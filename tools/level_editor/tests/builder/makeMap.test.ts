@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
 import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
-import type { EnemyType, LevelObject, PlatformType } from "../../src/objects";
+import type { EnemyType, LevelObject, ObstacleType } from "../../src/objects";
 import { DEFAULT_SKY, type Sky } from "../../src/sky";
 import { enemyObject, expectNear, platformObject } from "../helpers";
 import { readCameraPath, readZoneHeader, readZoneRect } from "./zoneReaders";
@@ -85,7 +85,7 @@ const box = (at: [number, number, number], subtype: number, more: Partial<LevelO
 // an enemy at blender (1, 2, 0), on the floor, unless more moves it
 const enemy = (type: EnemyType, more: Partial<LevelObject> = {}) => enemyObject(type, { at: [1, 2, 0], ...more });
 // and a platform there
-const platform = (type: PlatformType, more: Partial<LevelObject> = {}) => platformObject(type, { at: [1, 2, 0], ...more });
+const platform = (type: ObstacleType, more: Partial<LevelObject> = {}) => platformObject(type, { at: [1, 2, 0], ...more });
 
 // blender (1, 2, 0), where enemy() puts an enemy, in the zone at scale 256: the floor's
 // corner is a cell (128) in from the zone's, and its top is at 128
@@ -528,7 +528,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe.skipIf(!hasUpTheCreek)("lily pads and leaves, from up the creek", () => {
     // the zone's platforms of a type: their paths, relative to their first point
-    const platformPaths = (zone: Entry, type: PlatformType) => zoneEntities(zone)
+    const platformPaths = (zone: Entry, type: ObstacleType) => zoneEntities(zone)
       .filter((item) => isOfType(item, PLATFORM_ENTITIES[type]))
       .map((item) => entityPath(item));
     const fromFirst = (path: Vec3[]) => path.map((point) => point.map((value, axis) => value - path[0][axis]));

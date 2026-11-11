@@ -1,7 +1,7 @@
 // placeholder models for the platforms, as the enemies' (src/enemyShapes.ts):
 // in game units, y up, on their spot, coloured like the game's
 import { ball, rod, type ShapePart } from "./enemyShapes";
-import type { PlatformType } from "./objects";
+import type { ObstacleType } from "./objects";
 
 const LILY_PAD_COLOURS = { leaf: "#2f6b2a", bud: "#c8b83a" };
 const LEAF_COLOURS = { leaf: "#2e7a2c", vein: "#1f4f1e", stalk: "#6b5a2a" };
@@ -27,4 +27,4 @@ function leaf(): ShapePart[] {
   ];
 }
 
-export const PLATFORM_SHAPES: Record<PlatformType, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf() };
+export const PLATFORM_SHAPES: Record<ObstacleType, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf() };

@@ -1,6 +1,6 @@
 // helpers shared by the editor's and the level build's tests
 import { expect } from "vitest";
-import type { EnemyType, LevelObject, PlatformType } from "../src/objects";
+import type { EnemyType, LevelObject, ObstacleType } from "../src/objects";
 
 type Vector = readonly number[];
 
@@ -26,5 +26,5 @@ export const enemyObject = (type: EnemyType, more: Partial<LevelObject> = {}): L
   ({ kind: "enemy", enemy: type, at: [0, 0, 0], raise: 0, stack: 1, ...more });
 
 // a platform of a type, at the origin unless more says otherwise
-export const platformObject = (type: PlatformType, more: Partial<LevelObject> = {}): LevelObject =>
-  ({ kind: "platform", platform: type, at: [0, 0, 0], raise: 0, stack: 1, ...more });
+export const platformObject = (type: ObstacleType, more: Partial<LevelObject> = {}): LevelObject =>
+  ({ kind: "obstacle", obstacle: type, at: [0, 0, 0], raise: 0, stack: 1, ...more });

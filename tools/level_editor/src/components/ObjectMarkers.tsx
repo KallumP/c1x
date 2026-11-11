@@ -434,10 +434,10 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
 
   // a lily pad at its spot, where it sinks from; a leaf with its drift
   const renderPlatform = (object: LevelObject, index: number) => {
-    if (object.platform === "leaf") {
+    if (object.obstacle === "leaf") {
       return renderLeaf(object, index);
     }
-    return renderShapeModel(PLATFORM_SHAPES[object.platform!], base(object), index);
+    return renderShapeModel(PLATFORM_SHAPES[object.obstacle!], base(object), index);
   };
 
   const renderShape = (object: LevelObject, index: number) => {
@@ -450,7 +450,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
         return renderBoxStack(object, index);
       case "enemy":
         return renderEnemy(object, index);
-      case "platform":
+      case "obstacle":
         return renderPlatform(object, index);
     }
   };

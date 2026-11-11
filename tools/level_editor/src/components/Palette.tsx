@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { placeableKind, type Placeable, type PlaceableKind, type Tool } from "../editor";
 import { placeableName, placeablesByName } from "../objectNames";
-import { BOX_TYPES, ENEMY_TYPES, PLATFORM_TYPES, type BoxType, type EnemyType, type PlatformType } from "../objects";
+import { BOX_TYPES, ENEMY_TYPES, OBSTACLE_TYPES, type BoxType, type EnemyType, type ObstacleType } from "../objects";
 import { boxStyle, END_COLOUR, ENEMY_COLOURS, PLATFORM_COLOURS, SPAWN_COLOUR } from "../objectStyles";
 import "./Palette.css";
 
@@ -16,7 +16,7 @@ const TYPED_KINDS: PlaceableKind[] = ["box", "enemy", "platform"];
 const isTypedKind = (kind: PlaceableKind | null): kind is TypedKind => kind !== null && TYPED_KINDS.includes(kind);
 // each kind's types, in alphabetical order of their names
 const KIND_TYPES: Record<TypedKind, Placeable[]> = {
-  box: placeablesByName(BOX_TYPE_NAMES), enemy: placeablesByName([...ENEMY_TYPES]), platform: placeablesByName([...PLATFORM_TYPES]),
+  box: placeablesByName(BOX_TYPE_NAMES), enemy: placeablesByName([...ENEMY_TYPES]), platform: placeablesByName([...OBSTACLE_TYPES]),
 };
 const KIND_TYPE_HEADINGS: Record<TypedKind, string> = { box: "Box type", enemy: "Enemy type", platform: "Platform type" };
 
@@ -40,7 +40,7 @@ function colourOf(what: Placeable): string {
     return boxStyle(what as BoxType).colour;
   }
   if (placeableKind(what) === "platform") {
-    return PLATFORM_COLOURS[what as PlatformType];
+    return PLATFORM_COLOURS[what as ObstacleType];
   }
   return ENEMY_COLOURS[what as EnemyType];
 }
@@ -49,7 +49,7 @@ export default function Palette({ tool, onTool, grid, onGrid }: {
   tool: Tool; onTool: (tool: Tool) => void; grid: number; onGrid: (grid: number) => void;
 }) {
   // the box, enemy and platform types last picked, which picking box, enemy or platform places
-  const [lastPicked, setLastPicked] = useState<Record<TypedKind, Placeable>>({ box: "basic", enemy: ENEMY_TYPES[0], platform: PLATFORM_TYPES[0] });
+  const [lastPicked, setLastPicked] = useState<Record<TypedKind, Placeable>>({ box: "basic", enemy: ENEMY_TYPES[0], platform: OBSTACLE_TYPES[0] });
   const placing = placingOf(tool);
   const placingKind = placing && placeableKind(placing);
 
