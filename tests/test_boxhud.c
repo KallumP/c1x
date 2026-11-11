@@ -21,10 +21,48 @@ UTEST(boxhud, the_counter_shows_the_source_not_crash) {
   ASSERT_EQ((uint32_t)(HUD_COUNT_REG << 8), counter.regs[HUD_SHOWN_REG_IDX]);
 }
 
-UTEST(boxhud, the_counter_sits_at_the_top_middle) {
+UTEST(boxhud, the_counter_puts_its_digits_at_the_top_middle) {
   StartLivesCounter();
   BoxHudSetUpCounter(&counter, &source);
-  ASSERT_EQ(BOX_HUD_X, counter.trans.x);
+  ASSERT_EQ(0, counter.trans.x + HUD_DIGITS_OFFSET_X);
+}
+
+static gool_object digits;
+
+/* a counter's digits: its child, an object */
+static void AddDigits(gool_object *parent) {
+  memset(&digits, 0, sizeof(digits));
+  digits.handle.type = 1;
+  digits.parent = parent;
+}
+
+UTEST(boxhud, the_box_counters_digits_are_known) {
+  StartLivesCounter();
+  counter.handle.type = 1;
+  BoxHudSetUpCounter(&counter, &source);
+  AddDigits(&counter);
+  ASSERT_TRUE(BoxHudIsCounterDigits(&digits, &source));
+}
+
+UTEST(boxhud, another_counters_digits_arent_the_box_counters) {
+  StartLivesCounter();
+  counter.handle.type = 1;
+  AddDigits(&counter);
+  ASSERT_FALSE(BoxHudIsCounterDigits(&digits, &source));
+}
+
+UTEST(boxhud, an_object_under_a_handle_isnt_the_box_counters_digits) {
+  gool_handle handle;
+
+  memset(&handle, 0, sizeof(handle));
+  handle.type = 2;
+  AddDigits((gool_object*)&handle);
+  ASSERT_FALSE(BoxHudIsCounterDigits(&digits, &source));
+}
+
+UTEST(boxhud, an_object_with_no_parent_isnt_the_box_counters_digits) {
+  AddDigits(0);
+  ASSERT_FALSE(BoxHudIsCounterDigits(&digits, &source));
 }
 
 UTEST(boxhud, the_counter_hides_the_lives_head_it_starts_with) {
