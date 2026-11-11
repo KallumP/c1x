@@ -15,6 +15,7 @@
 #include "pc/settings.h"
 #include "pc/replay.h"
 #include "pc/fps.h"
+#include "pc/fullscreen.h"
 
 #define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 768
@@ -67,6 +68,26 @@ void SDLKill() {
   SDL_Quit();
 }
 
+/* switch between filling the screen and the window it started in */
+static void ToggleFullscreen() {
+  Uint32 flags = SDL_GetWindowFlags(window);
+
+  if (flags & SDL_WINDOW_FULLSCREEN) {
+    SDL_SetWindowFullscreen(window, 0);
+  } else {
+    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+  }
+}
+
+/* a key going down; alt+enter isn't the game's, so enter doesn't press start */
+static void PressKey(SDL_KeyboardEvent *key) {
+  if (IsFullscreenToggle(key->keysym.scancode, key->keysym.mod)) {
+    if (!key->repeat) { ToggleFullscreen(); }
+    return;
+  }
+  keys[key->keysym.scancode] = 1;
+}
+
 void SDLUpdate() {
   SDL_Event e;
   while (SDL_PollEvent(&e)) {
@@ -78,7 +99,7 @@ void SDLUpdate() {
       done = 1;
       break;
     case SDL_KEYDOWN:
-      keys[e.key.keysym.scancode] = 1;
+      PressKey(&e.key);
       break;
     case SDL_KEYUP:
       keys[e.key.keysym.scancode] = 0;
