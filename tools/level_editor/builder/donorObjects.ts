@@ -3,6 +3,7 @@
 // uses there (models, animations, sounds and texture pages), and any object it spawns
 import { objectType, type ObjectType, type LevelObject } from "../src/objects";
 import { packEntries, rawPagesById, reachableEids } from "./cutLevel";
+import { withBothSidesDrawn } from "./bothSides";
 import { withEndCaps } from "./endCaps";
 import { MOVED_ENEMY_CODE, objectEntity } from "./entities";
 import { EID_NONE, eidToString, stringToEid } from "./entryIds";
@@ -414,6 +415,31 @@ function withCrashEntries(type: ObjectType, object: DonorObject, level: Level): 
   return { ...object, entries, sounds, crashEntries };
 }
 
+// models drawn from both sides (see bothSides.ts): the great gate's fire pit's
+// bowl (WT1iG), open at its top, which close up was see-through. every great
+// gate object that brings it changes it the same, or the two would clash
+const GATE_BOTH_SIDED_MODELS = ["WT1iG"];
+const OBJECT_BOTH_SIDED_MODELS: Partial<Record<ObjectType, string[]>> = {
+  wooden_peg: GATE_BOTH_SIDED_MODELS,
+  rising_spiked_log: GATE_BOTH_SIDED_MODELS,
+  falling_spiked_log: GATE_BOTH_SIDED_MODELS,
+  fire_pit: GATE_BOTH_SIDED_MODELS,
+};
+
+// object with its models in OBJECT_BOTH_SIDED_MODELS drawn from both sides
+function withBothSidedModels(type: ObjectType, object: DonorObject): DonorObject {
+  const names = (OBJECT_BOTH_SIDED_MODELS[type] ?? []).map(stringToEid);
+  return { ...object, entries: object.entries.map((entry) => bothSidedIfNamed(entry, names)) };
+}
+
+// entry drawn from both sides if it's one of names
+function bothSidedIfNamed(entry: Entry, names: number[]): Entry {
+  if (!names.includes(entry.eid)) {
+    return entry;
+  }
+  return withBothSidesDrawn(entry);
+}
+
 // object with its model named model capped at its ends, as animation's first
 // frame has it (if the object has that model)
 function withCappedModel(object: DonorObject, [model, animation]: [string, string]): DonorObject {
@@ -631,7 +657,7 @@ function objectDonorObject(type: ObjectType, level: Level): DonorObject {
   const slot = moved?.donorSlot ?? objectEntity(type)[0];
   const leftOut = (ENEMY_UNUSED_ENTRIES[type] ?? []).map(stringToEid);
   const object = donorObject(level, slot, ENEMY_CHILD_SLOTS[type] ?? [], leftOut);
-  const capped = (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, withCrashEntries(type, object, level));
+  const capped = withBothSidedModels(type, (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, withCrashEntries(type, object, level)));
   const patched = withPatchedOwnData(type, withPatchedOwnCode(type, withPatchedChildCode(type, capped, level), level, slot), level, slot);
   if (!moved) {
     return patched;
