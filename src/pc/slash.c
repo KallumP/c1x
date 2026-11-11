@@ -10,8 +10,9 @@
 
 typedef struct { uint8_t r, g, b; } slash_colour;
 
-static const slash_colour slash_top    = { 255, 190, 0 };  /* the digits' orange */
-static const slash_colour slash_bottom = { 225, 30,  0 };  /* and red */
+/* the digits' shading, sampled from the game: full red, with green from about 120 at the top to 8 */
+static const slash_colour slash_top    = { 255, 120, 0 };  /* the digits' orange */
+static const slash_colour slash_bottom = { 255, 8,   0 };  /* and red */
 static const slash_colour slash_black  = { 0,   0,   0 };
 
 /* is the centre of pixel x, y within reach of the stroke's middle line? (squared, so no sqrt) */
