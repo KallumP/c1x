@@ -24,6 +24,9 @@ describe("obstacle shapes", () => {
     { obstacle: "rising_spiked_log", bottom: 0, top: [1650, 1850], across: [740, 860], long: [680, 800] },
     { obstacle: "falling_spiked_log", bottom: 0, top: [2700, 2900], across: [740, 860], long: [680, 800] },
     { obstacle: "fire_pit", bottom: -68, top: [220, 260], across: [460, 530], long: [760, 830] },
+    // boulder dash's pillar PlPeG: 1209 across, 1148 long, its top at its spot and 2407 down
+    { obstacle: "dropping_pillar", bottom: -2407, top: [-10, 30], across: [1150, 1260], long: [1100, 1200] },
+    { obstacle: "sliding_pillar", bottom: -2407, top: [-10, 30], across: [1150, 1260], long: [1100, 1200] },
   ] as const)("a $obstacle is as big as the game's, about its spot as the game's", ({ obstacle, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(OBSTACLE_SHAPES[obstacle].filter((part) => part.name !== "arrow"));
     expectWithin(min[1], [bottom - 15, bottom + 15]);

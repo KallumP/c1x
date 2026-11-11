@@ -53,6 +53,7 @@ const hasBase = existsSync(`${STREAMS}/${BASE_LEVEL.file}.nsd`);
 const N_SANITY_BEACH = 0x9;
 const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
 const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0x12)
+const hasBoulderDash = existsSync(`${STREAMS}/s0000013.nsd`); // boulder dash (0x13)
 const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhere (0x14)
 const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the dark (0x2a)
 const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x18)
@@ -615,6 +616,39 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const reader = recordingReader();
       build([enemy("native"), obstacle("wooden_peg", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
       expect(reader.read).toEqual([0x12]);
+    });
+  });
+
+  describe.skipIf(!hasBoulderDash)("pillars, from boulder dash", () => {
+    test.each([
+      { type: "dropping_pillar", subtype: 4 },
+      { type: "sliding_pillar", subtype: 2 },
+    ] as const)("a $type is boulder dash's PoPlC subtype $subtype, with its pillar's model", ({ type, subtype }) => {
+      const { level, entries } = build([obstacle(type)]);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([11, subtype]);
+      expect(level.nsd.ldat.execMap[11]).toBe(stringToEid("PoPlC"));
+      expect(entries.has(stringToEid("PlPeG"))).toBe(true);
+    });
+
+    test("a dropping pillar stands at its spot", () => {
+      const placed = zoneEntities(build([obstacle("dropping_pillar")]).zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.dropping_pillar));
+      expect(placed.length).toBe(1);
+      expect(entityPath(placed[0]).length).toBe(1);
+      expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a sliding pillar slides from its spot 800 across the map and back, along boulder dash's path", () => {
+      const placed = zoneEntities(build([obstacle("sliding_pillar")]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.sliding_pillar))!;
+      const path = entityPath(placed);
+      expect(path.length).toBe(14);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 800, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
+    });
+
+    test("dropping and sliding pillars read boulder dash once", () => {
+      const reader = recordingReader();
+      build([obstacle("dropping_pillar"), obstacle("sliding_pillar", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
+      expect(reader.read).toEqual([0x13]);
     });
   });
 
