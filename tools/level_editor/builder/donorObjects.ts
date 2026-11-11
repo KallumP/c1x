@@ -383,15 +383,17 @@ const ENEMY_CAPPED_MODELS: Partial<Record<ObjectType, [model: string, animation:
 // shocks crash (WS10V), and reads its model's vertices: without it, spinning
 // him as he sparks would look up a model the level hasn't, and crash the
 // game. the great gate's fire pit sets him alight, and his code opens his
-// burning animation and model (WF10V, WF10G) from its constants: jungle
+// burning animations, model and sounds from its constants (from 0x80): jungle
 // rollers' name entries no level has, and the game crashes looking them up
+const CRASH_BURNING = ["WF10V", "WF10G", "BDC0A", "BLI0A", "WF20V", "BDA0A", "WF30V", "WF40V", "WF50V"];
+const CRASH_BURNING_AT = 0x80;
 const OBJECT_CRASH_ENTRIES: Partial<Record<ObjectType, { item: number; at: number; name: string }[]>> = {
   electric_scientist: [{ item: CRASH_ANIMATIONS, at: 72 + ANIMATION_EID, name: "WS10V" }],
-  fire_pit: [{ item: CRASH_CONSTANTS, at: 0x80, name: "WF10V" }, { item: CRASH_CONSTANTS, at: 0x84, name: "WF10G" }],
+  fire_pit: CRASH_BURNING.map((name, index) => ({ item: CRASH_CONSTANTS, at: CRASH_BURNING_AT + 4 * index, name })),
 };
 
-// object with the entries it needs crash's code to name (OBJECT_CRASH_ENTRIES)
-// and what they use, but not their texture pages: crash's own, which the level has
+// object with the entries it needs crash's code to name (OBJECT_CRASH_ENTRIES),
+// what they use, and their sounds, but not their texture pages: crash's own, which the level has
 function withCrashEntries(type: ObjectType, object: DonorObject, level: Level): DonorObject {
   const named = OBJECT_CRASH_ENTRIES[type] ?? [];
   if (named.length === 0) {
@@ -399,7 +401,9 @@ function withCrashEntries(type: ObjectType, object: DonorObject, level: Level): 
   }
   const crashEntries = named.map(({ item, at, name }) => ({ item, at, eid: stringToEid(name) }));
   const used = reachableEids(level, crashEntries.map(({ eid }) => eid));
-  return { ...object, entries: [...object.entries, ...entriesInPages(level, PAGE_ENTRIES, used)], crashEntries };
+  const entries = [...object.entries, ...entriesInPages(level, PAGE_ENTRIES, used)];
+  const sounds = [...object.sounds, ...entriesInPages(level, PAGE_SOUNDS, used)];
+  return { ...object, entries, sounds, crashEntries };
 }
 
 // object with its model named model capped at its ends, as animation's first
