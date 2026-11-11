@@ -294,6 +294,20 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(plant.id).not.toBe(boxes(built.zone)[0].id);
   });
 
+  describe.skipIf(!hasTempleRuins)("slamming walls, from temple ruins", () => {
+    test("slamming walls are temple ruins' RuiOC subtypes 7 (the right half) and 8 (the left), 1200 either side of the spot, sliding in to meet there", () => {
+      const { level, entries, zone } = build([obstacle("slamming_walls")]);
+      expect(level.nsd.ldat.execMap[42]).toBe(stringToEid("RuiOC"));
+      expect(["RcRsG", "RcLsG"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      const half = (subtype: number) => zoneEntities(zone).find((item) => isOfType(item, [42, subtype]))!;
+      const [right, left] = [entityPath(half(7)), entityPath(half(8))];
+      expectNear(right[0], [SPOT_IN_ZONE[0] + 1200, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
+      expectNear(left[0], [SPOT_IN_ZONE[0] - 1200, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
+      expectNear(right.at(-1)!, SPOT_IN_ZONE, 16);
+      expectNear(left.at(-1)!, SPOT_IN_ZONE, 16);
+    });
+  });
+
   describe.skipIf(!hasTempleRuins)("snakes, from temple ruins", () => {
     test("a snake is temple ruins' cobra, in its own exec slot, at its spot", () => {
       const [snake] = enemies(build([enemy("snake")]).zone);
