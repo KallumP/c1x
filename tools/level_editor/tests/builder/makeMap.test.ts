@@ -649,6 +649,24 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(placed.readInt16LE(ENTITY_INIT_FLAGS + 4) & 2).toBe(2);
     });
 
+    // init flag A: the frames a turn takes; B: the frames into it it starts; C: how
+    // many go round (bits 12 to 14), the other way round (bit 11) and how far out
+    // (bits 0 to 9, in 4s of game units: 3.5 m at scale 256 is 896, so 224)
+    test.each([
+      { type: "rotating_pots", subtype: 0, more: {}, flags: [180, 0, (3 << 12) | 224] },
+      { type: "rotating_platforms", subtype: 8, more: { platforms: 4, radius: 2, reverse: true, every: 4, offset: 1 }, flags: [120, 90, (4 << 12) | (1 << 11) | 128] },
+      { type: "rotating_platforms", subtype: 8, more: { radius: 10, platforms: 1 }, flags: [180, 0, (1 << 12) | 640] },
+    ] as const)("a $type ($more) is sunset vista's RWaOC subtype $subtype, its turn in its init flags", ({ type, subtype, more, flags }) => {
+      const { zone } = build([obstacle(type, more)]);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([46, subtype]);
+      expect(initFlagsOf(zone, OBSTACLE_ENTITIES[type])).toEqual(flags);
+    });
+
+    test("a rotating pot hub brings its pots (Rp3wG), and a rotating platform hub its platforms (Rw1wG)", () => {
+      expect(build([obstacle("rotating_pots")]).entries.has(stringToEid("Rp3wG"))).toBe(true);
+      expect(build([obstacle("rotating_platforms")]).entries.has(stringToEid("Rw1wG"))).toBe(true);
+    });
+
     test("pushing blocks and platforms read sunset vista once", () => {
       const reader = recordingReader();
       build([obstacle("pushing_block"), obstacle("pushing_platform", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
