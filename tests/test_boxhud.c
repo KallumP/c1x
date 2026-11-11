@@ -21,10 +21,11 @@ UTEST(boxhud, the_counter_shows_the_source_not_crash) {
   ASSERT_EQ((uint32_t)(HUD_COUNT_REG << 8), counter.regs[HUD_SHOWN_REG_IDX]);
 }
 
-UTEST(boxhud, the_counter_puts_its_digits_at_the_top_middle) {
+UTEST(boxhud, the_counter_puts_its_digits_in_the_middle_of_the_gap_between_wumpa_and_lives) {
   StartLivesCounter();
   BoxHudSetUpCounter(&counter, &source);
-  ASSERT_EQ(0, counter.trans.x + HUD_DIGITS_OFFSET_X);
+  ASSERT_EQ(BOX_HUD_DIGITS_X, counter.trans.x + HUD_DIGITS_OFFSET_X);
+  ASSERT_GT(BOX_HUD_DIGITS_X, 0); /* two digit wumpa reach further in than the lives head */
 }
 
 static gool_object digits;
