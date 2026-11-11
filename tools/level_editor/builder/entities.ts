@@ -1,7 +1,7 @@
 // entities (zone_entity in src/formats/zdat.h): parent zone, spawn flags,
 // group, id, point count, 3 init flags, type, subtype, then the points, in
 // units of 4 zone units relative to the zone
-import { BOX_TYPES, type EnemyType } from "../src/objects";
+import { BOX_TYPES, type EnemyType, type ObjectType, type PlatformType } from "../src/objects";
 import { padTo4 } from "./bytes";
 import type { Vec3 } from "./vectors";
 
@@ -45,12 +45,24 @@ export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
   blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12], lizard: [47, 1], red_lizard: [47, 2], walking_lizard: [46, 5], lab_assistant: [54, 0], robot_dog: [9, 0], barrel_roller: [17, 0], gunman: [12, 0], camera_robot: [10, 0], bird: [53, 15], electric_scientist: [24, 1], blob: [36, 2], flying_camera: [9, 6],
 };
+// each platform's entity type and subtype: up the creek's river objects RivOC
+// (the river enemies' code), subtype 1 its lily pad and 2 its floating leaf
+export const PLATFORM_ENTITIES: Record<PlatformType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2] };
+
+// an enemy's or platform's entity type and subtype
+export function objectEntity(type: ObjectType): [number, number] {
+  if (type in PLATFORM_ENTITIES) {
+    return PLATFORM_ENTITIES[type as PlatformType];
+  }
+  return ENEMY_ENTITIES[type as EnemyType];
+}
+
 // enemies whose code goes in another exec slot in custom levels than in their
 // level, under another name, as jungle rollers' own code has its slot and name:
 // temple ruins' cobra is its PlanC, in slot 25, as jungle rollers' plant is.
 // donorSlot is its slot in its level, name its code's name in custom levels.
 // their slot in custom levels is ENEMY_ENTITIES' (one no level uses)
-export const MOVED_ENEMY_CODE: Partial<Record<EnemyType, { donorSlot: number; name: string }>> = {
+export const MOVED_ENEMY_CODE: Partial<Record<ObjectType, { donorSlot: number; name: string }>> = {
   snake: { donorSlot: 25, name: "SnakC" },
   electric_scientist: { donorSlot: 54, name: "LabEC" }, // the lab's LabAC: stormy ascent's lab assistant has slot 54 and the name
 };

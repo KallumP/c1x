@@ -1,10 +1,10 @@
 // objects custom levels take from a real level other than the base level (their
 // donor), such as an enemy jungle rollers doesn't have: its code and what that
 // uses there (models, animations, sounds and texture pages), and any object it spawns
-import type { EnemyType, LevelObject } from "../src/objects";
+import { objectType, type ObjectType, type LevelObject } from "../src/objects";
 import { packEntries, rawPagesById, reachableEids } from "./cutLevel";
 import { withEndCaps } from "./endCaps";
-import { ENEMY_ENTITIES, MOVED_ENEMY_CODE } from "./entities";
+import { MOVED_ENEMY_CODE, objectEntity } from "./entities";
 import { EID_NONE, eidToString, stringToEid } from "./entryIds";
 import { ENTRY_GOOL, entriesById, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, soundPage, type Entry, type Level, type Page } from "./levelFiles";
 import { entryBytes } from "./levelWriting";
@@ -37,8 +37,8 @@ const CASTLE_MACHINERY: DonorLevel = { lid: 0x37, name: "Castle Machinery", file
 const SLIPPERY_CLIMB: DonorLevel = { lid: 0x2e, name: "Slippery Climb", file: "s000002e" };
 const THE_LAB: DonorLevel = { lid: 0x29, name: "The Lab", file: "s0000029" };
 
-// the level each enemy jungle rollers doesn't have is taken from
-export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
+// the level each enemy jungle rollers doesn't have, and each platform, is taken from
+export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   crab: N_SANITY_BEACH,
   turtle: N_SANITY_BEACH,
   native: THE_GREAT_GATE,
@@ -64,6 +64,8 @@ export const ENEMY_DONORS: Partial<Record<EnemyType, DonorLevel>> = {
   electric_scientist: THE_LAB,
   blob: THE_LAB,
   flying_camera: HEAVY_MACHINERY, // its PoRoC (the robot dog's) is the same as castle machinery's
+  lily_pad: UP_THE_CREEK,
+  leaf: UP_THE_CREEK,
 };
 
 export interface DonorObject {
@@ -238,28 +240,28 @@ function pagesWithCrashAnimations(pages: Page[], animations: CrashAnimation[]): 
   return pages.map((page) => (page.type === PAGE_ENTRIES ? { ...page, entries: page.entries.map(withAnimations) } : page));
 }
 
-const enemyName = (type: EnemyType) => type.replace("_", " ");
+const objectName = (type: ObjectType) => type.replace("_", " ");
 
-function readDonorLevel(type: EnemyType, donor: DonorLevel, readOtherLevel?: (lid: number) => Level): Level {
+function readDonorLevel(type: ObjectType, donor: DonorLevel, readOtherLevel?: (lid: number) => Level): Level {
   const what = `${donor.name} (${donor.file}.nsd)`;
   if (!readOtherLevel) {
-    throw new Error(`the level's ${enemyName(type)}s come from ${what}, but there are no other levels to read`);
+    throw new Error(`the level's ${objectName(type)}s come from ${what}, but there are no other levels to read`);
   }
   try {
     return readOtherLevel(donor.lid);
   } catch (error) {
-    throw new Error(`${what} couldn't be read, and the level's ${enemyName(type)}s come from it: ${error instanceof Error ? error.message : error}`);
+    throw new Error(`${what} couldn't be read, and the level's ${objectName(type)}s come from it: ${error instanceof Error ? error.message : error}`);
   }
 }
 
 // the level each kind of enemy among objects is taken from, read with
 // readOtherLevel, for the kinds that come from another level. a level two kinds
 // come from (such as fumbling in the dark's two spiders) is read once
-export function enemyDonorLevels(objects: LevelObject[], readOtherLevel?: (lid: number) => Level): Map<EnemyType, Level> {
-  const levels = new Map<EnemyType, Level>();
+export function objectDonorLevels(objects: LevelObject[], readOtherLevel?: (lid: number) => Level): Map<ObjectType, Level> {
+  const levels = new Map<ObjectType, Level>();
   const read = new Map<number, Level>();
-  for (const type of new Set(objects.flatMap((object) => (object.kind === "enemy" && object.enemy ? [object.enemy] : [])))) {
-    const donor = ENEMY_DONORS[type];
+  for (const type of new Set(objects.flatMap((object) => objectType(object) ?? []))) {
+    const donor = OBJECT_DONORS[type];
     if (!donor) {
       continue;
     }
@@ -329,7 +331,7 @@ const GUNMAN_CODE_PATCHES: CodePatch[] = [
 
 // the code each enemy spawns by its exec slot, which its entries don't name:
 // toxic waste's barrel roller throws his barrels (BaraC, slot 16)
-const ENEMY_CHILD_SLOTS: Partial<Record<EnemyType, number[]>> = {
+const ENEMY_CHILD_SLOTS: Partial<Record<ObjectType, number[]>> = {
   barrel_roller: [16],
   electric_scientist: [9],
 };
@@ -337,7 +339,7 @@ const ENEMY_CHILD_SLOTS: Partial<Record<EnemyType, number[]>> = {
 // the code an enemy spawns by exec slot that moves to another slot under another
 // name, as an enemy's own code can (see MOVED_ENEMY_CODE): the lab's walking lab
 // assistant's spark, the lab's PoRoC, as heavy machinery's (the robot dog's) has slot 9 and the name
-const MOVED_CHILD_CODE: Partial<Record<EnemyType, { from: number; to: number; name: string }[]>> = {
+const MOVED_CHILD_CODE: Partial<Record<ObjectType, { from: number; to: number; name: string }[]>> = {
   electric_scientist: [{ from: 9, to: 44, name: "SprkC" }],
 };
 
@@ -348,7 +350,7 @@ const MOVED_CHILD_CODE: Partial<Record<EnemyType, { from: number; to: number; na
 // walking lizard (subtype 5) only uses its own (Ig1wG, walking Ig1wV): the rest
 // would bring three more texture pages
 const RUINS_OBJECT_MODELS = ["Li1w", "Rw1w", "Rw2w", "Rw3w", "Rw4w", "Rp1w", "Rp2w", "Rp3w", "Rp4w", "Rp5w", "Rp7w"];
-const ENEMY_UNUSED_ENTRIES: Partial<Record<EnemyType, string[]>> = {
+const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   barrel_roller: ["WateC"],
   walking_lizard: RUINS_OBJECT_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
 };
@@ -356,7 +358,7 @@ const ENEMY_UNUSED_ENTRIES: Partial<Record<EnemyType, string[]>> = {
 // models that come with end caps (see endCaps.ts), and the animation whose first
 // frame has their vertices: toxic waste's barrels are open tubes, as the game
 // only shows them rolling straight at the camera, but custom levels' don't
-const ENEMY_CAPPED_MODELS: Partial<Record<EnemyType, [model: string, animation: string][]>> = {
+const ENEMY_CAPPED_MODELS: Partial<Record<ObjectType, [model: string, animation: string][]>> = {
   barrel_roller: [["BaV7G", "BaV7V"], ["BaD7G", "BaD7V"]],
 };
 
@@ -365,13 +367,13 @@ const ENEMY_CAPPED_MODELS: Partial<Record<EnemyType, [model: string, animation: 
 // donor's animation to put there. the lab's walking lab assistant's spark
 // shocks crash (WS10V), and reads its model's vertices: without it, spinning
 // him as he sparks would look up a model the level hasn't, and crash the game
-const ENEMY_CRASH_ANIMATIONS: Partial<Record<EnemyType, { at: number; animation: string }[]>> = {
+const ENEMY_CRASH_ANIMATIONS: Partial<Record<ObjectType, { at: number; animation: string }[]>> = {
   electric_scientist: [{ at: 72, animation: "WS10V" }],
 };
 
 // object with the crash animations its enemy needs (ENEMY_CRASH_ANIMATIONS) and
 // their models, but not their texture pages: crash's own, which the level has
-function withCrashAnimationEntries(type: EnemyType, object: DonorObject, level: Level): DonorObject {
+function withCrashAnimationEntries(type: ObjectType, object: DonorObject, level: Level): DonorObject {
   const animations = ENEMY_CRASH_ANIMATIONS[type] ?? [];
   if (animations.length === 0) {
     return object;
@@ -453,7 +455,7 @@ const LIZARD_CODE_ADDITION: CodeAddition = {
   ],
 };
 
-const ENEMY_CODE_ADDITIONS: Partial<Record<EnemyType, CodeAddition>> = {
+const ENEMY_CODE_ADDITIONS: Partial<Record<ObjectType, CodeAddition>> = {
   lizard: LIZARD_CODE_ADDITION,
   red_lizard: LIZARD_CODE_ADDITION,
 };
@@ -468,15 +470,17 @@ const BARREL_CODE_PATCHES: CodePatch[] = [
 ];
 
 // the code each enemy spawns by its exec slot, changed to suit custom levels
-const ENEMY_CHILD_CODE_PATCHES: Partial<Record<EnemyType, [slot: number, patches: CodePatch[]][]>> = {
+const ENEMY_CHILD_CODE_PATCHES: Partial<Record<ObjectType, [slot: number, patches: CodePatch[]][]>> = {
   barrel_roller: [[16, BARREL_CODE_PATCHES]],
 };
 
-const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = {
+const ENEMY_CODE_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   native: NATIVE_CODE_PATCHES,
   blue_river_plant: RIVER_CODE_PATCHES,
   green_river_plant: RIVER_CODE_PATCHES,
   fish: RIVER_CODE_PATCHES,
+  lily_pad: RIVER_CODE_PATCHES, // river objects too, sharing the code: it mustn't differ from theirs
+  leaf: RIVER_CODE_PATCHES,
   lab_assistant: LAB_ASSISTANT_CODE_PATCHES,
   gunman: GUNMAN_CODE_PATCHES,
   lizard: LIZARD_CODE_PATCHES,
@@ -484,9 +488,9 @@ const ENEMY_CODE_PATCHES: Partial<Record<EnemyType, CodePatch[]>> = {
 };
 
 // instructions with an addition after their end; an error if they aren't as long as it needs
-function withAddedInstructions(type: EnemyType, instructions: Buffer, addition: CodeAddition): Buffer {
+function withAddedInstructions(type: ObjectType, instructions: Buffer, addition: CodeAddition): Buffer {
   if (instructions.length !== addition.after * 4) {
-    throw new Error(`the ${enemyName(type)}'s code isn't as long as expected, so it can't be changed to suit custom levels`);
+    throw new Error(`the ${objectName(type)}'s code isn't as long as expected, so it can't be changed to suit custom levels`);
   }
   const added = Buffer.alloc(addition.instructions.length * 4);
   addition.instructions.forEach((instruction, index) => added.writeUInt32LE(instruction, index * 4));
@@ -494,7 +498,7 @@ function withAddedInstructions(type: EnemyType, instructions: Buffer, addition: 
 }
 
 // instructions patched, with the enemy's addition (if it has one) after their end
-function changedInstructions(type: EnemyType, instructions: Buffer, patches: CodePatch[]): Buffer {
+function changedInstructions(type: ObjectType, instructions: Buffer, patches: CodePatch[]): Buffer {
   const patched = patchedInstructions(type, instructions, patches);
   const addition = ENEMY_CODE_ADDITIONS[type];
   if (!addition) {
@@ -504,11 +508,11 @@ function changedInstructions(type: EnemyType, instructions: Buffer, patches: Cod
 }
 
 // instructions with patches made; an error if one isn't what the patch expects
-function patchedInstructions(type: EnemyType, instructions: Buffer, patches: CodePatch[]): Buffer {
+function patchedInstructions(type: ObjectType, instructions: Buffer, patches: CodePatch[]): Buffer {
   const patched = Buffer.from(instructions);
   for (const { at, was, now } of patches) {
     if (at * 4 + 4 > patched.length || patched.readUInt32LE(at * 4) !== was) {
-      throw new Error(`the ${enemyName(type)}'s code isn't as expected at instruction ${at.toString(16)}, so it can't be changed to suit custom levels`);
+      throw new Error(`the ${objectName(type)}'s code isn't as expected at instruction ${at.toString(16)}, so it can't be changed to suit custom levels`);
     }
     patched.writeUInt32LE(now, at * 4);
   }
@@ -525,7 +529,7 @@ function withPatchedCode(object: DonorObject, code: number, change: (instruction
 }
 
 // object with the code it spawns by exec slot patched, as level has it in those slots
-function withPatchedChildCode(type: EnemyType, object: DonorObject, level: Level): DonorObject {
+function withPatchedChildCode(type: ObjectType, object: DonorObject, level: Level): DonorObject {
   const childPatches = ENEMY_CHILD_CODE_PATCHES[type] ?? [];
   return childPatches.reduce(
     (patched, [slot, patches]) => withPatchedCode(patched, level.nsd.ldat.execMap[slot], (instructions) => patchedInstructions(type, instructions, patches)),
@@ -534,7 +538,7 @@ function withPatchedChildCode(type: EnemyType, object: DonorObject, level: Level
 }
 
 // object with its own code (in slot, as level has it) patched and added to, if the enemy has patches
-function withPatchedOwnCode(type: EnemyType, object: DonorObject, level: Level, slot: number): DonorObject {
+function withPatchedOwnCode(type: ObjectType, object: DonorObject, level: Level, slot: number): DonorObject {
   const patches = ENEMY_CODE_PATCHES[type];
   if (!patches) {
     return object;
@@ -544,9 +548,9 @@ function withPatchedOwnCode(type: EnemyType, object: DonorObject, level: Level, 
 
 // a kind of enemy's object from the level it's taken from, its code changed to
 // suit custom levels, and moved to its own exec slot if it has one there
-function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
+function objectDonorObject(type: ObjectType, level: Level): DonorObject {
   const moved = MOVED_ENEMY_CODE[type];
-  const slot = moved?.donorSlot ?? ENEMY_ENTITIES[type][0];
+  const slot = moved?.donorSlot ?? objectEntity(type)[0];
   const leftOut = (ENEMY_UNUSED_ENTRIES[type] ?? []).map(stringToEid);
   const object = donorObject(level, slot, ENEMY_CHILD_SLOTS[type] ?? [], leftOut);
   const capped = (ENEMY_CAPPED_MODELS[type] ?? []).reduce(withCappedModel, withCrashAnimationEntries(type, object, level));
@@ -554,7 +558,7 @@ function enemyDonorObject(type: EnemyType, level: Level): DonorObject {
   if (!moved) {
     return patched;
   }
-  return withChildCodeMoved(type, withCodeMoved(patched, slot, ENEMY_ENTITIES[type][0], stringToEid(moved.name)), slot);
+  return withChildCodeMoved(type, withCodeMoved(patched, slot, objectEntity(type)[0], stringToEid(moved.name)), slot);
 }
 
 const SPAWN_OPCODES = [0x8a, 0x91]; // CHLD: its exec slot in bits 12-19
@@ -586,16 +590,16 @@ function withSpawnSlotsMoved(object: DonorObject, moves: Map<number, number>): D
 
 // object (its own code moved from donorSlot) with the code it spawns moved too
 // (MOVED_CHILD_CODE), and its code spawning from where each moved to
-function withChildCodeMoved(type: EnemyType, object: DonorObject, donorSlot: number): DonorObject {
+function withChildCodeMoved(type: ObjectType, object: DonorObject, donorSlot: number): DonorObject {
   const childMoves = MOVED_CHILD_CODE[type] ?? [];
   if (childMoves.length === 0) {
     return object;
   }
   const moved = childMoves.reduce((withMoved, { from, to, name }) => withCodeMoved(withMoved, from, to, stringToEid(name)), object);
-  const moves = new Map([[donorSlot, ENEMY_ENTITIES[type][0]], ...childMoves.map(({ from, to }): [number, number] => [from, to])]);
+  const moves = new Map([[donorSlot, objectEntity(type)[0]], ...childMoves.map(({ from, to }): [number, number] => [from, to])]);
   return withSpawnSlotsMoved(moved, moves);
 }
 
 // each kind of enemy's object, from the level it's taken from
-export const enemyDonorObjects = (levels: Map<EnemyType, Level>): DonorObject[] =>
-  [...levels].map(([type, level]) => enemyDonorObject(type, level));
+export const objectDonorObjects = (levels: Map<ObjectType, Level>): DonorObject[] =>
+  [...levels].map(([type, level]) => objectDonorObject(type, level));

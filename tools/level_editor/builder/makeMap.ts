@@ -10,7 +10,7 @@ import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
 import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
-import { enemyDonorLevels, enemyDonorObjects } from "./donorObjects";
+import { objectDonorLevels, objectDonorObjects } from "./donorObjects";
 import {
   BOX_HEIGHT, BOX_TYPE, donorEntityType, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
   LEADER_BAT, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
@@ -48,7 +48,7 @@ export interface MapOptions {
   objects?: LevelObject[];
   sky?: Sky;                      // n. sanity beach's without one
   camera?: Camera;                // how the follow camera looks at crash; as it always was without one
-  readOtherLevel?: (lid: number) => Level; // the real levels enemies are taken from (see ENEMY_DONORS)
+  readOtherLevel?: (lid: number) => Level; // the real levels enemies are taken from (see OBJECT_DONORS)
 }
 
 // collision blocks for cells
@@ -405,7 +405,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const boxes = objects.filter((object) => object.kind === "box");
   const enemies = objects.filter((object) => object.kind === "enemy");
   const stones = enemies.filter((enemy) => enemy.enemy === "rolling_stone");
-  const donorLevels = enemyDonorLevels(enemies, readOtherLevel);
+  const donorLevels = objectDonorLevels(enemies, readOtherLevel);
   const placer = new ObjectPlacer(map, templates, scale, turn, (end ? 1 : 0) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0));
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
   const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
@@ -470,7 +470,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   };
 
   const size: Vec3 = [fitted.size[0], fitted.size[1], spans[0][1] - spans[0][0]];
-  const donors = enemyDonorObjects(donorLevels);
+  const donors = objectDonorObjects(donorLevels);
   for (let step = MAP_PATH_STEP; ; step *= 2) {
     try {
       const out = assembleLevel({

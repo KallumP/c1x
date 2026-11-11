@@ -68,6 +68,10 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 export const PLATFORM_TYPES = ["lily_pad", "leaf"] as const;
 export type PlatformType = (typeof PLATFORM_TYPES)[number];
 
+// what a placed enemy or platform is, as the level build takes it from its level
+export type ObjectType = EnemyType | PlatformType;
+export const objectType = (object: LevelObject): ObjectType | undefined => object.enemy ?? object.platform;
+
 export type Vec3 = [number, number, number];
 
 // the enemies that move along a path of nodes, and how many nodes it can have
