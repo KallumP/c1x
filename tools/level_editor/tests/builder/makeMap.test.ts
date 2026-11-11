@@ -618,6 +618,38 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasGreatGate)("fire pits, from the great gate", () => {
+    // where crash's code (its constants, item 2) names the animation and model
+    // it opens when he's set alight: the great gate's crash on fire
+    const crashFireEntries = (entries: Map<number, Entry>) => {
+      const constants = entries.get(stringToEid("WillC"))!.items[2];
+      return [constants.readUInt32LE(0x80), constants.readUInt32LE(0x84)];
+    };
+
+    test("a fire pit is the great gate's WalOC subtype 5, standing at its spot", () => {
+      const { level, zone } = build([obstacle("fire_pit")]);
+      expect(OBSTACLE_ENTITIES.fire_pit).toEqual([33, 5]);
+      expect(level.nsd.ldat.execMap[33]).toBe(stringToEid("WalOC"));
+      const placed = zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.fire_pit));
+      expect(placed.length).toBe(1);
+      expect(entityPath(placed[0]).length).toBe(1);
+      expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a level with a fire pit has the great gate's crash on fire, and crash's code opens it", () => {
+      const { entries } = build([obstacle("fire_pit")]);
+      expect(crashFireEntries(entries)).toEqual([stringToEid("WF10V"), stringToEid("WF10G")]);
+      expect(["WF10V", "WF10G"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
+
+    test("a level without a fire pit keeps the base level's crash code", () => {
+      const { entries } = build([obstacle("wooden_peg")]);
+      const baseCrash = entriesById(readLevel(STREAMS, BASE_LEVEL.lid)).get(stringToEid("WillC"))!;
+      expect(entries.get(stringToEid("WillC"))!.items).toEqual(baseCrash.items);
+      expect(entries.has(stringToEid("WF10V"))).toBe(false);
+    });
+  });
+
   describe.skipIf(!hasGreatGate)("spiked logs, from the great gate", () => {
     test.each([
       { type: "rising_spiked_log", subtype: 3 },
