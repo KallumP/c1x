@@ -23,6 +23,7 @@ describe("obstacle shapes", () => {
     { obstacle: "wooden_peg", bottom: -119, top: [90, 140], across: [690, 800], long: [1060, 1200] },
     { obstacle: "rising_spiked_log", bottom: 0, top: [1650, 1850], across: [740, 860], long: [680, 800] },
     { obstacle: "falling_spiked_log", bottom: 0, top: [2700, 2900], across: [740, 860], long: [680, 800] },
+    { obstacle: "fire_pit", bottom: -68, top: [220, 260], across: [460, 530], long: [760, 830] },
   ] as const)("a $obstacle is as big as the game's, about its spot as the game's", ({ obstacle, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(OBSTACLE_SHAPES[obstacle].filter((part) => part.name !== "arrow"));
     expectWithin(min[1], [bottom - 15, bottom + 15]);
@@ -46,6 +47,12 @@ describe("obstacle shapes", () => {
     expect(arrowTurn("falling_spiked_log")).toEqual([Math.PI]);
     expect(partHeight("rising_spiked_log", "arrow")).toBeGreaterThan(1850);
     expect(partHeight("falling_spiked_log", "arrow")).toBeGreaterThan(2900);
+  });
+
+  test("a fire pit's bowl is out towards the player from its spot, as the game's (WT1iG, 8 to 801 along z)", () => {
+    const { min, max } = shapeBounds(OBSTACLE_SHAPES.fire_pit);
+    expectWithin(min[2], [-10, 30]);
+    expectWithin(max[2], [780, 820]);
   });
 
   test("every obstacle but the rolling stone and mossy slide (drawn as their track and slope) has a shape", () => {
