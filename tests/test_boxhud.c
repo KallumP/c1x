@@ -47,6 +47,19 @@ UTEST(boxhud, the_box_counters_digits_are_smaller_than_the_others_to_fit_between
   ASSERT_LT(BOX_HUD_TEXT_PERCENT, 100);
 }
 
+UTEST(boxhud, the_smaller_digits_drop_by_the_height_they_lose_to_sit_on_the_others_line) {
+  int32_t full, smaller;
+
+  full = BoxHudTextHeight(HUD_DIGITS_SCALE);
+  smaller = BoxHudTextHeight((HUD_DIGITS_SCALE * BOX_HUD_TEXT_PERCENT) / 100);
+  ASSERT_EQ(full - smaller, BoxHudTextDrop());
+  ASSERT_GT(BoxHudTextDrop(), 0);
+}
+
+UTEST(boxhud, text_height_on_screen_follows_its_scale) {
+  ASSERT_EQ(BoxHudTextHeight(HUD_DIGITS_SCALE) / 2, BoxHudTextHeight(HUD_DIGITS_SCALE / 2));
+}
+
 UTEST(boxhud, the_box_counters_digits_are_known) {
   StartLivesCounter();
   counter.handle.type = 1;
