@@ -4,7 +4,7 @@
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { batSwoop, leafDriftShares, leaderBatsFlight, leapWay } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep, pointAlongShare, spotAndNode } from "../src/enemyPaths";
-import { hasPath, LEADER_BATS_LEADERS, numberSetting, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
+import { hasPath, LEADER_BATS_LEADERS, numberSetting, SPIKED_LOGS, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
 import { throwFlags } from "../src/labAssistantThrow";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
@@ -184,7 +184,6 @@ const obstacleExample = (donor: Level, type: ObstacleType): Buffer => levelEntit
 // the great gate's spiked logs: a rising one pushes up out of the floor at its
 // spot, and a falling one comes down on it from SPIKED_LOG_HANG over it (game
 // units, as the great gate's hang over their floor: higher, it stops short of crash)
-const SPIKED_LOGS: ObstacleType[] = ["rising_spiked_log", "falling_spiked_log"];
 const SPIKED_LOG_HANG = 1600;
 
 // how far over its spot a spiked log is placed
@@ -278,11 +277,16 @@ class ObjectPlacer {
     this.entities[zone].push(withInitFlagC(withInitFlagB(withInitFlagA(placed, facing), alongX), alongZ));
   }
 
-  // a spiked log (example) at its spot, a falling one hung over it (see SPIKED_LOG_HANG)
+  // a spiked log (example) at its spot, a falling one hung over it (see
+  // SPIKED_LOG_HANG), its init flags its pushes' timing: A the frames between
+  // them, B the frames into them it starts
   placeSpikedLog(log: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(log));
     const hung: Vec3 = [at[0], at[1] + spikedLogHang(log), at[2]];
-    this.entities[zone].push(withPosition(withEntityId(example, this.ids.shift()!), hung));
+    const every = Math.round(numberSetting(log, "every") * FRAMES_A_SECOND);
+    const start = Math.round(numberSetting(log, "start") * every);
+    const placed = withPosition(withEntityId(example, this.ids.shift()!), hung);
+    this.entities[zone].push(withInitFlagB(withInitFlagA(placed, every), start));
   }
 
   // an enemy or obstacle that moves along its own level's path, as example, from

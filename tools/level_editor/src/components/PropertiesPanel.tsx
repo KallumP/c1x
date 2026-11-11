@@ -15,7 +15,8 @@ const AXES = ["x", "y"] as const;
 // each number setting's slider: its label, and its steps (a stone's start of
 // its track, a speed times the game's own pace, a count of badgers, a bat
 // roost's seconds between flocks, a gunman's range in metres, a mossy slide's
-// length in metres, angle in degrees and rotation in degrees)
+// length in metres, angle in degrees and rotation in degrees, and a spiked
+// log's seconds between its pushes)
 const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
   speed: { label: "speed ×", step: 0.25 },
   start: { label: "start", step: 0.05 },
@@ -25,6 +26,7 @@ const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
   length: { label: "length m", step: 0.5 },
   angle: { label: "angle °", step: 1 },
   rotation: { label: "rotation °", step: 5 },
+  every: { label: "every s", step: 0.5 },
 };
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 // the enemies reversed across the map, and what their Reverse direction button does
