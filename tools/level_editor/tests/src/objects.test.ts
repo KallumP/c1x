@@ -486,33 +486,38 @@ describe("bat roosts' delays", () => {
   });
 });
 
-describe("platforms", () => {
-  test("reads a platform with its type", () => {
+describe("obstacles", () => {
+  test("reads an obstacle with its type", () => {
     const objects = parseObjects(`[
-      {"kind": "platform", "type": "lily_pad", "at": [1, 2, 0], "raise": 0.5},
-      {"kind": "platform", "type": "leaf", "at": [3, 4, 0]}
+      {"kind": "obstacle", "type": "lily_pad", "at": [1, 2, 0], "raise": 0.5},
+      {"kind": "obstacle", "type": "leaf", "at": [3, 4, 0]}
     ]`);
     expect(objects).toEqual([
-      { kind: "platform", platform: "lily_pad", at: [1, 2, 0], raise: 0.5, stack: 1 },
-      { kind: "platform", platform: "leaf", at: [3, 4, 0], raise: 0, stack: 1 },
+      { kind: "obstacle", obstacle: "lily_pad", at: [1, 2, 0], raise: 0.5, stack: 1 },
+      { kind: "obstacle", obstacle: "leaf", at: [3, 4, 0], raise: 0, stack: 1 },
     ]);
   });
 
-  test("writes platforms after the enemies and before the end, and reads them back", () => {
+  test("writes obstacles after the enemies and before the end, and reads them back", () => {
     const text = formatObjects([
       { kind: "end", at: [0, 9, 0], raise: 0, stack: 1 },
-      { kind: "platform", platform: "leaf", at: [1, 2, 0], raise: 0, stack: 1 },
+      { kind: "obstacle", obstacle: "leaf", at: [1, 2, 0], raise: 0, stack: 1 },
       enemyObject("plant"),
     ]);
-    expect(text).toContain('{"kind": "platform", "type": "leaf", "at": [1, 2, 0]}');
-    expect(parseObjects(text).map((object) => object.kind)).toEqual(["enemy", "platform", "end"]);
+    expect(text).toContain('{"kind": "obstacle", "type": "leaf", "at": [1, 2, 0]}');
+    expect(parseObjects(text).map((object) => object.kind)).toEqual(["enemy", "obstacle", "end"]);
   });
 
   test.each([
-    ['[{"kind": "platform", "at": [0, 0, 0]}]', "object 1: a platform needs a type (lily_pad, leaf)"],
-    ['[{"kind": "platform", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown platform type raft (it can be lily_pad, leaf)"],
-    ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: unknown setting path (a platform takes kind, at, raise, type)"],
+    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf)"],
+    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: unknown setting path (an obstacle takes kind, at, raise, type)"],
+    ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
+  });
+
+  test("an enemy's unknown setting says an enemy", () => {
+    expect(() => parseObjects('[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]')).toThrow("(an enemy takes");
   });
 });
