@@ -364,3 +364,104 @@ export function mossySlope(level: Level, long: boolean, reverse: boolean): Mossy
   }
   throw new Error("there's no mossy slide like that in the level");
 }
+
+// the great gate's short forward mossy plank's slats, as it has them in turn
+// down it (from its top, along the slide): a wide one with a long log end, a
+// narrow one, then one between. any plank is these in turn
+const SLAT_SPANS: [number, number][] = [[258, 562], [562, 794], [794, 1058]];
+const SLIDE_PAST_PLANK = 400; // how far a slide's path goes on past its plank (the great gate's: 2000 over a 1600 plank)
+const SLIDE_STEP = 450;       // how far apart its path's points are, about (its long slides': 3600 in 8)
+
+// one of a plank's slats: its polygons, its vertices from its start along the
+// slide and level (the slide's slope taken out), and how wide it is along it
+export interface PlankSlat extends MapPiece {
+  width: number;
+}
+
+// the polygons of a piece all of whose corners are between two points along it
+function polygonsBetween(piece: MapPiece, [start, end]: [number, number]): MapPiece["polygons"] {
+  return piece.polygons.filter(({ corners }) => corners.every((corner) => {
+    const [x] = piece.vertices[corner].at;
+    return x >= start - 1 && x <= end + 1;
+  }));
+}
+
+// the slat of a plank between two points along it, from its start and level
+function slatOf(plank: MossySlope, [start, end]: [number, number]): PlankSlat {
+  const [endX, endY] = plank.path[plank.path.length - 1];
+  const drop = endY / endX;
+  const chosen = polygonsBetween(plank, [start, end]);
+  const used = [...new Set(chosen.flatMap(({ corners }) => corners))].sort((first, second) => first - second);
+  const newIndex = new Map(used.map((vertex, index) => [vertex, index]));
+  const vertices = used.map((index) => {
+    const { at: [x, y, z], colour } = plank.vertices[index];
+    return { at: [x - start, y - drop * x, z] as Vec3, colour };
+  });
+  return {
+    vertices,
+    polygons: chosen.map((polygon) => ({ ...polygon, corners: polygon.corners.map((corner) => newIndex.get(corner)!) as [number, number, number] })),
+    texinfos: plank.texinfos,
+    width: end - start,
+  };
+}
+
+// the great gate's mossy plank's slats, in turn down it
+export function mossySlats(level: Level): PlankSlat[] {
+  const plank = mossySlope(level, false, false);
+  return SLAT_SPANS.map((span) => slatOf(plank, span));
+}
+
+// the slats in turn, as many as reach length along the slide, each with where it starts
+function slatsFor(slats: PlankSlat[], length: number): { slat: PlankSlat; from: number }[] {
+  const placed = [];
+  for (let from = 0, index = 0; from < length; index++) {
+    const slat = slats[index % slats.length];
+    placed.push({ slat, from });
+    from += slat.width;
+  }
+  return placed;
+}
+
+// a slat's vertices where it starts (from) along a slope dropping drop for each unit along it
+const slatVertices = (slat: PlankSlat, from: number, drop: number) =>
+  slat.vertices.map(({ at: [x, y, z], colour }) => ({ at: [from + x, y - drop * (from + x), z] as Vec3, colour }));
+
+// the slide's path along a plank as long as length (along the slide), going on past
+// it, its points about SLIDE_STEP apart, each dropping drop for each unit along it
+function slidePath(length: number, drop: number): Vec3[] {
+  const run = length + SLIDE_PAST_PLANK;
+  const steps = Math.max(1, Math.round(run / SLIDE_STEP));
+  return Array.from({ length: steps + 1 }, (_, point) => {
+    const x = (run * point) / steps;
+    return [x, -drop * x + 0, 0] as Vec3; // + 0 turns -0 into 0
+  });
+}
+
+// a plank mirrored back across the map (x), its triangles wound the other way so they still face out
+function mirrored(plank: MossySlope): MossySlope {
+  const mirror = ([x, y, z]: Vec3): Vec3 => [-x + 0, y, z]; // + 0 turns -0 into 0
+  return {
+    ...plank,
+    vertices: plank.vertices.map((vertex) => ({ ...vertex, at: mirror(vertex.at) })),
+    polygons: plank.polygons.map((polygon) => ({ ...polygon, corners: [polygon.corners[0], polygon.corners[2], polygon.corners[1]] as [number, number, number] })),
+    path: plank.path.map(mirror),
+  };
+}
+
+// a mossy plank at least length long down its slide (game units), sloping down
+// at angle degrees across the map (back across it reversed): the great gate's
+// slats in turn, each sheared to the slope, its sides upright, and the slider's path along it
+export function mossyPlank(slats: PlankSlat[], length: number, angle: number, reverse: boolean): MossySlope {
+  const drop = Math.tan((angle * Math.PI) / 180);
+  const placed = slatsFor(slats, length);
+  const vertices = placed.flatMap(({ slat, from }) => slatVertices(slat, from, drop));
+  const firsts = placed.map((_, index) => placed.slice(0, index).reduce((sum, { slat }) => sum + slat.vertices.length, 0));
+  const polygons = placed.flatMap(({ slat }, index) => slat.polygons.map((polygon) =>
+    ({ ...polygon, corners: polygon.corners.map((corner) => corner + firsts[index]) as [number, number, number] })));
+  const end = placed.reduce((sum, { slat }) => sum + slat.width, 0);
+  const plank = { vertices, polygons, texinfos: slats[0].texinfos, path: slidePath(end, drop) };
+  if (reverse) {
+    return mirrored(plank);
+  }
+  return plank;
+}
