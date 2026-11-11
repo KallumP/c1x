@@ -56,3 +56,9 @@ int GameLevelBoxTotal(uint32_t lid) {
   }
   return 0;
 }
+
+/* how many boxes the level with id lid has to break: a custom level's from its nsd, else the game's */
+int LevelBoxTotal(uint32_t lid) {
+  if (lid == LID_TEST) { return NSCustomBoxTotal(); }
+  return GameLevelBoxTotal(lid);
+}
