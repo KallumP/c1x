@@ -642,6 +642,15 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(entityPath(placed)[0], [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1] + 1600, SPOT_IN_ZONE[2]], 16);
     });
 
+    // init flag A: the frames between its pushes (30 a second); B: the frames into them it starts
+    test.each([
+      { type: "rising_spiked_log", more: {}, flags: [180, 0] },
+      { type: "falling_spiked_log", more: { every: 3, start: 0.5 }, flags: [90, 45] },
+      { type: "rising_spiked_log", more: { every: 4.5, start: 0.25 }, flags: [135, 34] },
+    ] as const)("a $type ($more) has its pushes' timing in its init flags", ({ type, more, flags }) => {
+      expect(initFlagsOf(build([obstacle(type, more)]).zone, OBSTACLE_ENTITIES[type]).slice(0, 2)).toEqual(flags);
+    });
+
     test("rising and falling spiked logs with a wood platform read the great gate once", () => {
       const reader = recordingReader();
       build([obstacle("wooden_peg"), obstacle("rising_spiked_log", { at: [1, 6, 0] }), obstacle("falling_spiked_log", { at: [1, 8, 0] })], { readOtherLevel: reader.readOtherLevel });
