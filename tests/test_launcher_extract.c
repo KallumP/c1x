@@ -1,53 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <SDL2/SDL.h>
 #include "utest.h"
 #include "launcher/extract.h"
-#include "test_files.h"
+#include "launcher/extraction.h"
 #include "test_disc.h"
-
-#define TEST_EXTRACT_REPO "build/test_launcher_extract"
-
-UTEST(launcher_extract, extracts_the_quoted_disc_image) {
-  char command[512];
-
-  MakeRepoWithNodeModules(TEST_EXTRACT_REPO);
-  ASSERT_TRUE(ExtractStreamsCommand(TEST_EXTRACT_REPO, "C:/games/crash 1.bin",
-    command, sizeof(command)));
-#ifdef _WIN32
-  ASSERT_STREQ("npm run extract-streams -- \"C:/games/crash 1.bin\"", command);
-#else
-  ASSERT_STREQ("npm run extract-streams -- 'C:/games/crash 1.bin'", command);
-#endif
-}
-
-UTEST(launcher_extract, installs_first_without_node_modules) {
-  char command[512];
-
-  ASSERT_TRUE(ExtractStreamsCommand("build/no_such_repo", "crash.bin",
-    command, sizeof(command)));
-#ifdef _WIN32
-  ASSERT_STREQ("npm install && npm run extract-streams -- \"crash.bin\"", command);
-#else
-  ASSERT_STREQ("npm install && npm run extract-streams -- 'crash.bin'", command);
-#endif
-}
-
-UTEST(launcher_extract, no_command_without_a_disc_image) {
-  char command[512];
-
-  ASSERT_FALSE(ExtractStreamsCommand(TEST_EXTRACT_REPO, "", command, sizeof(command)));
-}
-
-UTEST(launcher_extract, no_command_for_a_path_that_cant_be_quoted) {
-  char command[512];
-
-#ifdef _WIN32
-  ASSERT_FALSE(ExtractStreamsCommand(TEST_EXTRACT_REPO, "crash\".bin", command, sizeof(command)));
-#else
-  ASSERT_FALSE(ExtractStreamsCommand(TEST_EXTRACT_REPO, "crash's.bin", command, sizeof(command)));
-#endif
-}
 
 #define TEST_EXTRACT_DISC "build/test_extract_disc.iso"
 #define TEST_EXTRACT_OUT "build/test_extract_streams"
@@ -142,4 +100,54 @@ UTEST(launcher_extract, a_disc_without_the_games_files_is_an_error_and_writes_no
   ASSERT_EQ(-1, ExtractTestDisc(&disc, message, sizeof(message)));
   ASSERT_TRUE(strstr(message, ".NSD/.NSF files found") != 0);
   ASSERT_FALSE(ReadTestFile(TEST_EXTRACT_OUT "/s0000009.nsd", data, sizeof(data), &length));
+}
+
+/* waits for the extraction to finish, up to 5 seconds; whether it did */
+static int WaitForExtraction(extraction *job) {
+  int waited;
+
+  for (waited = 0; waited < 5000; waited += 10) {
+    if (UpdateExtraction(job)) { return 1; }
+    SDL_Delay(10);
+  }
+  return 0;
+}
+
+UTEST(launcher_extraction, extracts_in_the_background) {
+  test_disc disc;
+  extraction job = {0};
+
+  MakeTestDisc(&disc);
+  RemoveExtractedFiles();
+  WriteTestIso(&disc, TEST_EXTRACT_DISC);
+  ASSERT_TRUE(StartExtraction(&job, TEST_EXTRACT_DISC, TEST_EXTRACT_OUT));
+  ASSERT_TRUE(IsExtractionRunning(&job));
+  ASSERT_TRUE(WaitForExtraction(&job));
+  ASSERT_FALSE(IsExtractionRunning(&job));
+  ASSERT_EQ(2, job.file_count);
+  ASSERT_STREQ("Extracted 2 files to " TEST_EXTRACT_OUT ".", job.message);
+}
+
+UTEST(launcher_extraction, says_why_it_failed) {
+  extraction job = {0};
+
+  ASSERT_TRUE(StartExtraction(&job, "build/no_such_disc.iso", TEST_EXTRACT_OUT));
+  ASSERT_TRUE(WaitForExtraction(&job));
+  ASSERT_EQ(-1, job.file_count);
+  ASSERT_TRUE(strstr(job.message, "Couldn't open") != 0);
+}
+
+UTEST(launcher_extraction, finishing_is_reported_once) {
+  extraction job = {0};
+
+  ASSERT_TRUE(StartExtraction(&job, "build/no_such_disc.iso", TEST_EXTRACT_OUT));
+  ASSERT_TRUE(WaitForExtraction(&job));
+  ASSERT_FALSE(UpdateExtraction(&job));
+}
+
+UTEST(launcher_extraction, nothing_runs_before_starting) {
+  extraction job = {0};
+
+  ASSERT_FALSE(IsExtractionRunning(&job));
+  ASSERT_FALSE(UpdateExtraction(&job));
 }
