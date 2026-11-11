@@ -9,6 +9,7 @@
 - spinnable wood platforms from The Great Gate's totem, which flip out as a step when spun
 - slippery slopes from The Great Gate, which slide Crash down a slope you model under them
 - spiked logs from The Great Gate, rising out of the floor or falling from above, with their timing set in the level editor
+- fire pits from The Great Gate, whose flames burn Crash, timed in the level editor
 - fullscreen, set in the launcher or switched with Alt+Enter while playing
 - build custom levels from the launcher's new Levels tab, without Node.js
 - an option to show how many of a level's boxes Crash has broken (such as 12/49), with the lives and wumpa counters
