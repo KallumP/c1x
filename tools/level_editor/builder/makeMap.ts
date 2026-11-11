@@ -2,7 +2,7 @@
 // as the level's world meshes and collision, crash, and the objects placed in
 // it; built from a real level (the base level) for crash, the objects and
 // textures. faces of materials with an image get it, the rest the base level's textures
-import { batSwoop, leafDriftShares, leaderBatsFlight, leapWay } from "../src/coords";
+import { batSwoop, leafDriftShares, leaderBatsFlight, leapWay, pillarSlideShares } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep, pointAlongShare, spotAndNode } from "../src/enemyPaths";
 import { hasPath, LEADER_BATS_LEADERS, numberSetting, TIMED_OBSTACLES, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
 import { throwFlags } from "../src/labAssistantThrow";
@@ -195,6 +195,15 @@ function obstacleTiming(obstacle: LevelObject): [number, number] {
   return [every, (every - offset) % every];
 }
 
+// how far along its own level's path each of a path obstacle's points is: a
+// floating leaf's drift's, or a sliding pillar's slide's
+function ownPathShares(obstacle: LevelObject): number[] {
+  if (obstacle.obstacle === "sliding_pillar") {
+    return pillarSlideShares();
+  }
+  return leafDriftShares();
+}
+
 // how far over its spot a timed obstacle is placed
 function timedObstacleHang(obstacle: LevelObject): number {
   if (obstacle.obstacle === "falling_spiked_log") {
@@ -304,14 +313,14 @@ class ObjectPlacer {
     this.entities[zone].push(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(object.reverse === true)));
   }
 
-  // a floating leaf (example) drifting along its path's nodes from its spot: its
-  // points as far along them as its own drift's are along that, so it eases and
-  // takes as long, in the zone its spot is in
-  placeLeafOnPath(leaf: LevelObject, example: Buffer): void {
-    const position = this.positionOf(leaf);
+  // a floating leaf or sliding pillar (example) moving along its path's nodes
+  // from its spot: its points as far along them as its own level's are along
+  // its own path, so it eases and takes as long, in the zone its spot is in
+  placeOnItsNodes(obstacle: LevelObject, example: Buffer): void {
+    const position = this.positionOf(obstacle);
     const { zone, at } = this.inZone(position);
-    const nodes = pathPositions(leaf, this.turn, this.scale).map((node) => this.positionOf({ ...leaf, at: node, raise: 0 }));
-    const points = leafDriftShares().map((share) => pointAlongShare(nodes, share));
+    const nodes = pathPositions(obstacle, this.turn, this.scale).map((node) => this.positionOf({ ...obstacle, at: node, raise: 0 }));
+    const points = ownPathShares(obstacle).map((share) => pointAlongShare(nodes, share));
     const drift = points.map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
     this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), drift));
   }
@@ -509,7 +518,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   slides.forEach((slide) => placer.placeSlide(slide, obstacleOf(slide), slidePath(slide, scale)));
   timed.forEach((obstacle) => placer.placeTimedObstacle(obstacle, obstacleOf(obstacle)));
   movers.filter((obstacle) => !obstacle.path).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
-  movers.filter((obstacle) => obstacle.path).forEach((leaf) => placer.placeLeafOnPath(leaf, obstacleOf(leaf)));
+  movers.filter((obstacle) => obstacle.path).forEach((obstacle) => placer.placeOnItsNodes(obstacle, obstacleOf(obstacle)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
   enemies.filter(hasPath).forEach((enemy) => placer.placeOnPath(enemy, enemyExample(enemy.enemy!)));
   let withBase = track ? withStoneTracks(textured, stones, track, placer, zoneWorlds, template) : textured;

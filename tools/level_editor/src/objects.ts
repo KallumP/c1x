@@ -82,7 +82,8 @@ export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone"
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
-export const PATH_OBSTACLES = ["leaf"] as const satisfies readonly ObstacleType[];
+export const PATH_OBSTACLES = ["leaf", "sliding_pillar"] as const satisfies readonly ObstacleType[];
+export type PathObstacle = (typeof PATH_OBSTACLES)[number];
 export const isPathObstacle = (type: ObstacleType | undefined) => PATH_OBSTACLES.some((obstacle) => obstacle === type);
 
 // what a placed enemy or obstacle is, as the level build takes it from its level
@@ -349,13 +350,13 @@ function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumbe
   return { path: pathNodes(nodes, objectNumber) };
 }
 
-// a leaf's path, from its fields in objects.json (none if it hasn't one); a lily pad has none
+// a leaf's or sliding pillar's path, from its fields in objects.json (none if it hasn't one); a lily pad has none
 function readObstaclePath(fields: Record<string, unknown>, obstacle: ObstacleType, objectNumber: number): Pick<LevelObject, "path"> {
   if (!("path" in fields)) {
     return {};
   }
   if (!isPathObstacle(obstacle)) {
-    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves do)`);
+    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves and sliding pillars do)`);
   }
   checkPathLength(fields.path, objectNumber);
   return { path: pathNodes(fields.path, objectNumber) };
