@@ -511,7 +511,7 @@ describe("obstacles", () => {
   test.each([
     ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf)"],
     ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf)"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: unknown setting path (an obstacle takes kind, at, raise, type)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed (an obstacle takes kind, at, raise, type, path)"],
     ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
@@ -519,5 +519,33 @@ describe("obstacles", () => {
 
   test("an enemy's unknown setting says an enemy", () => {
     expect(() => parseObjects('[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]')).toThrow("(an enemy takes");
+  });
+});
+
+describe("obstacle paths", () => {
+  test("a leaf can have a path, written after its type and read back", () => {
+    const path = [[0, 0, 0], [2, -3, 0.5]];
+    const [leaf] = parseObjects(JSON.stringify([{ kind: "obstacle", type: "leaf", at: [1, 2, 0], path }]));
+    expect(leaf.path).toEqual(path);
+    expect(hasPath(leaf)).toBe(true);
+    const text = formatObjects([leaf]);
+    expect(text).toContain('"type": "leaf", "at": [1, 2, 0], "path": [[0, 0, 0], [2, -3, 0.5]]}');
+    expect(parseObjects(text)).toEqual([leaf]);
+  });
+
+  test("a leaf without a path has one all the same (its drift), and a lily pad none", () => {
+    const [leaf, pad] = parseObjects('[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0]}, {"kind": "obstacle", "type": "lily_pad", "at": [0, 0, 0]}]');
+    expect(hasPath(leaf)).toBe(true);
+    expect(hasPath(pad)).toBe(false);
+    expect(hasNodes(pad)).toBe(false);
+  });
+
+  test.each([
+    ['[{"kind": "obstacle", "type": "lily_pad", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a lily_pad has no path (leaves do; a lily pad sinks where it is)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', "object 1: a path should be 2 to 20 nodes"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0], [1, 0, 0]]}]', "object 1: a path's nodes should each be [x, y, z]"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed"],
+  ])("refuses %s", (text, message) => {
+    expect(() => parseObjects(text)).toThrow(message);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Vec3 } from "../../src/objects";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, LEAF_DRIFT, leafDrift, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, LEAF_DRIFT, leafDrift, leafDriftShares, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
 import { expectCloseTo, noMinusZero } from "../helpers";
 
 describe("blender and the viewport", () => {
@@ -82,6 +82,14 @@ describe("rolling stones", () => {
     expect(path.length).toBe(LEAF_DRIFT.length);
     expect(path[0]).toEqual([1, 2, 3]);
     expectCloseTo(path[12], [1 + 400 / 400, 2 - 2400 / 400, 3]);
+  });
+
+  test("a leaf's drift's points are bunched at its ends: how far along it each is", () => {
+    const shares = leafDriftShares();
+    expect(shares.length).toBe(LEAF_DRIFT.length);
+    expect([shares[0], shares[12]]).toEqual([0, 1]);
+    shares.slice(1).forEach((share, point) => expect(share).toBeGreaterThan(shares[point]));
+    expect(shares[1]).toBeLessThan(shares[6] - shares[5]); // its first step shorter than one in the middle
   });
 
   test("a leaf's drift turns with the level and lifts with raise", () => {

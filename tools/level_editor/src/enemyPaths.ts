@@ -1,6 +1,6 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
-import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, BIRD_SWOOP, BLOB_HOP, CAMERA_ROBOT_RISE, cameraFacing, FLYING_CAMERA_RISE, labAssistantThrow, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, rising, ROBOT_DOG_WALK, SCIENTIST_WALK, WALKING_LIZARD_PACE, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, BIRD_SWOOP, BLOB_HOP, CAMERA_ROBOT_RISE, cameraFacing, FLYING_CAMERA_RISE, labAssistantThrow, LEAF_DRIFT, leafDrift, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, rising, ROBOT_DOG_WALK, SCIENTIST_WALK, WALKING_LIZARD_PACE, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
 import { LAB_ASSISTANT_REACH } from "./labAssistantThrow";
 import { hasOneNode, PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
@@ -70,11 +70,17 @@ export function defaultPath(enemy: PathEnemy, turn: number, scale: number): Vec3
   return straightNodes(scaled(whole, -0.5), scaled(whole, 0.5), DEFAULT_PATH_NODES);
 }
 
+// a floating leaf's nodes without a path of its own: its drift, as up the creek's first leaf's
+const leafDriftNodes = (turn: number, scale: number) => leafDrift([0, 0, 0], 0, turn, scale);
+
 // an enemy's nodes without a path of its own: leader bats' second leader
 // where it hovers by default, a bat roost's swoop's end where temple ruins'
 // ends, a lab assistant's landing spot where stormy ascent's first's vials
 // land, or a path enemy's default path
 function defaultNodes(object: LevelObject, turn: number, scale: number): Vec3[] {
+  if (object.obstacle === "leaf") {
+    return leafDriftNodes(turn, scale);
+  }
   if (object.enemy === "leader_bats") {
     return [leaderBatsGap(turn, scale)];
   }
@@ -113,6 +119,9 @@ export function nodeCount(object: LevelObject): number {
   }
   if (hasOneNode(object.enemy)) {
     return 1;
+  }
+  if (object.obstacle === "leaf") {
+    return LEAF_DRIFT.length;
   }
   return DEFAULT_PATH_NODES;
 }

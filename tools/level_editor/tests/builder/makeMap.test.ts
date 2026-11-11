@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
-import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, leafDriftShares, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
 import type { EnemyType, LevelObject, ObstacleType } from "../../src/objects";
 import { DEFAULT_SKY, type Sky } from "../../src/sky";
 import { enemyObject, expectNear, obstacleObject } from "../helpers";
@@ -556,6 +556,24 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     test("a leaf's drift is the one the editor draws", () => {
       const [path] = obstaclePaths(build([obstacle("leaf")]).zone, "leaf");
       expect(fromFirst(path).map(([x, , z]) => [x, z])).toEqual(LEAF_DRIFT);
+    });
+
+    test("a leaf with a path drifts along its nodes, its points as far along as its own drift's", () => {
+      // 4 m along blender +x (the game's +x) at scale 256, so its drift's 13
+      // points spread over 1024 units with its own easing (bunched at the ends)
+      const [path] = obstaclePaths(build([obstacle("leaf", { path: [[0, 0, 0], [4, 0, 0]] })]).zone, "leaf");
+      expect(path.length).toBe(LEAF_DRIFT.length);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path[12], [SPOT_X + 1024, FLOOR_Y, SPOT_Z], 16);
+      const shares = path.map(([x]) => (x - path[0][0]) / 1024);
+      leafDriftShares().forEach((share, point) => expectNear(shares[point], share, 0.01));
+    });
+
+    test("a leaf's path bends where its nodes do", () => {
+      const [path] = obstaclePaths(build([obstacle("leaf", { path: [[0, 0, 0], [2, 0, 0], [2, 2, 0]] })]).zone, "leaf");
+      const corner = path.find(([x, , z]) => Math.abs(x - (SPOT_X + 512)) < 40 && Math.abs(z - SPOT_Z) > 40);
+      expect(corner).toBeDefined(); // past the corner it turns along the map
+      expectNear(path[12], [SPOT_X + 512, FLOOR_Y, SPOT_Z - 512], 16);
     });
 
     test("a raised obstacle is raised", () => {

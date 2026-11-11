@@ -120,6 +120,19 @@ export const LEAF_DRIFT: [number, number][] = [
   [304, 1500], [400, 1780], [464, 2028], [492, 2224], [448, 2356], [400, 2400],
 ];
 
+// how far along its drift (0 to 1) each of a leaf's points is: bunched at its
+// ends, where it slows to turn back. a leaf with a path of its own has its
+// points as far along that, so it drifts it with the same easing, in the same time
+export function leafDriftShares(): number[] {
+  const steps = LEAF_DRIFT.slice(1).map(([x, z], point) => Math.hypot(x - LEAF_DRIFT[point][0], z - LEAF_DRIFT[point][1]));
+  const total = steps.reduce((sum, step) => sum + step, 0);
+  let travelled = 0;
+  return [0, ...steps.map((step) => {
+    travelled += step;
+    return travelled / total;
+  })];
+}
+
 // each point of a leaf's drift (in blender), for a leaf at at, raised by raise
 export function leafDrift(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
   const across = stoneRolling(turn);

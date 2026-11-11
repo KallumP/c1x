@@ -1,7 +1,7 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { batSwoop, blenderToView, labAssistantThrow, leafDrift, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, ENEMY_COLOURS, OBSTACLE_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
@@ -31,6 +31,7 @@ const walkerSize = (parts: ShapePart[]) => {
 const FACES_ITS_WAY: PathEnemy[] = ["turtle", "warthog", "monkey", "lizard", "red_lizard", "walking_lizard", "robot_dog", "electric_scientist"];
 
 const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
+const LEAF_SIZE = walkerSize(OBSTACLE_SHAPES.leaf); // a leaf's, as a walker's, for the handles of the nodes under it
 
 // how far a leader bat's and a bat's tops are above their spots, in game units: their handles float over them
 const LEADER_BAT_TOP = shapeBounds(ENEMY_SHAPES.leader_bats).max[1];
@@ -61,6 +62,14 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   onSelect: (index: number) => void;
   onSelectNode: (index: number, node: number) => void;
 }) {
+  // a path's line: red if it leaves the floor or runs through a wall, else its own colour
+  const pathColour = (index: number, colour: string) => {
+    if (pathWarnings.has(index)) {
+      return WARNING_COLOUR;
+    }
+    return colour;
+  };
+
   // a box in a wall or another box has red edges, the selected object white, the rest their own colour
   const edgeColour = (index: number, colour: string) => {
     if (warnings.has(index)) {
@@ -334,10 +343,10 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // the handles on a path's nodes: those under the enemy at either end above
-  // it, and those under the ground above the floor
-  const renderPathHandles = (positions: Vec3[], index: number, enemy: PathEnemy, colour: string) => {
-    const { height, reach } = WALKER_SIZES[enemy];
+  // the handles on a path's nodes: those under the enemy (or leaf, size) at
+  // either end above it, and those under the ground above the floor
+  const renderPathHandles = (positions: Vec3[], index: number, size: ReturnType<typeof walkerSize>, colour: string) => {
+    const { height, reach } = size;
     const underEnds = nodesUnderEnds(positions, reach / scale);
     const depths = positions.map((position) => floorAbove(position, triangles));
     const lifts = handleLifts(underEnds, depths, height / scale);
@@ -384,8 +393,8 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
       <>
         {ends.map(({ end, next }, endIndex) =>
           renderShapeModel(endShape(enemy, endIndex), blenderToView(end), index, endIndex, endFacing(enemy, end, next, endIndex), endIndex === 0 ? 1 : FAR_END_OPACITY))}
-        <Line points={line} color={pathWarnings.has(index) ? WARNING_COLOUR : colour} lineWidth={2} />
-        {index === selected && renderPathHandles(positions, index, enemy, colour)}
+        <Line points={line} color={pathColour(index, colour)} lineWidth={2} />
+        {index === selected && renderPathHandles(positions, index, WALKER_SIZES[enemy], colour)}
       </>
     );
   };
@@ -420,14 +429,15 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   // a floating leaf: at its spot, where it drifts from, facing the way it drifts,
   // with the line of its drift, and faded where it turns back
   const renderLeaf = (object: LevelObject, index: number) => {
-    const drift = leafDrift(object.at, object.raise, turn, scale);
-    const [start, end] = [drift[0], drift[drift.length - 1]];
-    const facing = facingFrom(start, end, turn);
+    const nodes = pathPositions(object, turn, scale); // its drift, or its own path
+    const last = nodes.length - 1;
+    const colour = OBSTACLE_COLOURS.leaf;
     return (
       <>
-        {renderShapeModel(OBSTACLE_SHAPES.leaf, blenderToView(start), index, 0, facing)}
-        {renderShapeModel(OBSTACLE_SHAPES.leaf, blenderToView(end), index, 1, facing, FAR_END_OPACITY)}
-        <Line points={drift.map(blenderToView)} color={OBSTACLE_COLOURS.leaf} lineWidth={2} />
+        {renderShapeModel(OBSTACLE_SHAPES.leaf, blenderToView(nodes[0]), index, 0, facingFrom(nodes[0], nodes[1], turn))}
+        {renderShapeModel(OBSTACLE_SHAPES.leaf, blenderToView(nodes[last]), index, 1, facingFrom(nodes[last - 1], nodes[last], turn), FAR_END_OPACITY)}
+        <Line points={nodes.map(blenderToView)} color={pathColour(index, colour)} lineWidth={2} />
+        {index === selected && renderPathHandles(nodes, index, LEAF_SIZE, colour)}
       </>
     );
   };
