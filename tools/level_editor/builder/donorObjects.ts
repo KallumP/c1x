@@ -37,7 +37,7 @@ const CASTLE_MACHINERY: DonorLevel = { lid: 0x37, name: "Castle Machinery", file
 const SLIPPERY_CLIMB: DonorLevel = { lid: 0x2e, name: "Slippery Climb", file: "s000002e" };
 const THE_LAB: DonorLevel = { lid: 0x29, name: "The Lab", file: "s0000029" };
 
-// the level each enemy jungle rollers doesn't have, and each platform, is taken from
+// the level each enemy jungle rollers doesn't have, and each obstacle, is taken from
 export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   crab: N_SANITY_BEACH,
   turtle: N_SANITY_BEACH,

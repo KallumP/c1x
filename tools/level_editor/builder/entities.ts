@@ -45,14 +45,14 @@ export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
   spider: [43, 1], walking_spider: [43, 3], monkey: [1, 2],
   blue_river_plant: [28, 6], green_river_plant: [28, 7], fish: [28, 5], bat: [42, 9], leader_bats: [42, 12], lizard: [47, 1], red_lizard: [47, 2], walking_lizard: [46, 5], lab_assistant: [54, 0], robot_dog: [9, 0], barrel_roller: [17, 0], gunman: [12, 0], camera_robot: [10, 0], bird: [53, 15], electric_scientist: [24, 1], blob: [36, 2], flying_camera: [9, 6],
 };
-// each platform's entity type and subtype: up the creek's river objects RivOC
+// each obstacle's entity type and subtype: up the creek's river objects RivOC
 // (the river enemies' code), subtype 1 its lily pad and 2 its floating leaf
-export const PLATFORM_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2] };
+export const OBSTACLE_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2] };
 
-// an enemy's or platform's entity type and subtype
+// an enemy's or obstacle's entity type and subtype
 export function objectEntity(type: ObjectType): [number, number] {
-  if (type in PLATFORM_ENTITIES) {
-    return PLATFORM_ENTITIES[type as ObstacleType];
+  if (type in OBSTACLE_ENTITIES) {
+    return OBSTACLE_ENTITIES[type as ObstacleType];
   }
   return ENEMY_ENTITIES[type as EnemyType];
 }
