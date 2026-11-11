@@ -35,6 +35,7 @@ SRC =	src/ns.c \
 	src/pc/boxtotals.c \
 	src/pc/slash.c \
 	src/pc/screen_fit.c \
+	src/pc/fullscreen.c \
 	src/pc/boxhud_game.c \
 	src/pc/gfx/tex.c \
 	src/pc/gfx/soft.c \
@@ -71,6 +72,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/boxtotals.c \
 	src/pc/slash.c \
 	src/pc/screen_fit.c \
+	src/pc/fullscreen.c \
 	src/pc/sound/mix.c \
 	src/pc/sound/util.c \
 	src/ext/lib/gui.c \
