@@ -1,7 +1,7 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, mossySlideEnd, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, mossySlideEnd, rising, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
 import { boxStyle, ENEMY_COLOURS, OBSTACLE_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
@@ -477,14 +477,16 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // rotating pots or platforms: as many as go round, spread round the circle
-  // they go round (as far out as set, level), facing the way round, and the circle
+  // rotating pots or platforms: as many as go round, spread round the upright
+  // circle they go round (across the map and up, as far out as set), and the circle
   const renderRotating = (object: LevelObject, index: number) => {
     const type = object.obstacle as ModelledObstacle;
     const [x, y, z] = object.at;
     const middle: Vec3 = [x, y, z + object.raise];
     const radius = numberSetting(object, "radius");
-    const pointAt = (angle: number): Vec3 => [middle[0] + radius * Math.cos(angle), middle[1] + radius * Math.sin(angle), middle[2]];
+    const [across, up] = [stoneRolling(turn), rising()];
+    const pointAt = (angle: number) =>
+      middle.map((value, axis) => value + radius * (across[axis] * Math.cos(angle) + up[axis] * Math.sin(angle))) as Vec3;
     const count = numberSetting(object, "platforms");
     const angles = Array.from({ length: count }, (_, platform) => (2 * Math.PI * platform) / count);
     const circle = Array.from({ length: CIRCLE_POINTS + 1 }, (_, point) => blenderToView(pointAt((2 * Math.PI * point) / CIRCLE_POINTS)));
