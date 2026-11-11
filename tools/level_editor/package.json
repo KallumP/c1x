@@ -9,6 +9,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "build-level": "tsx builder/buildLevelCli.ts",
+    "bundle-builder": "esbuild builder/buildLevelCli.ts --bundle --platform=node --format=cjs --log-level=error --outfile=../../build/build-level/build-level.cjs",
     "export-cut-level": "tsx scripts/cutLevel/exportCutLevelCli.ts"
   },
   "dependencies": {
