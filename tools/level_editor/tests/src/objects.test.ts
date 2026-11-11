@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { numberSetting, boxTypeName, formatObjects, hasNodes, hasPath, parseObjects } from "../../src/objects";
-import { enemyObject } from "../helpers";
+import { enemyObject, obstacleObject } from "../helpers";
 
 describe("parseObjects", () => {
   test("reads spawn, end and boxes with their settings", () => {
@@ -129,7 +129,6 @@ describe("enemies", () => {
   test("reads an enemy by its type and spot", () => {
     const objects = parseObjects(`[
       {"kind": "enemy", "type": "plant", "at": [1, 10, 0]},
-      {"kind": "enemy", "type": "rolling_stone", "at": [-4, 20, 0.5]},
       {"kind": "enemy", "type": "crab", "at": [2, 30, 0]},
       {"kind": "enemy", "type": "turtle", "at": [3, 40, 0]},
       {"kind": "enemy", "type": "native", "at": [4, 50, 0]},
@@ -152,7 +151,6 @@ describe("enemies", () => {
     ]`);
     expect(objects).toEqual([
       { kind: "enemy", enemy: "plant", at: [1, 10, 0], raise: 0, stack: 1 },
-      { kind: "enemy", enemy: "rolling_stone", at: [-4, 20, 0.5], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "crab", at: [2, 30, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "turtle", at: [3, 40, 0], raise: 0, stack: 1 },
       { kind: "enemy", enemy: "native", at: [4, 50, 0], raise: 0, stack: 1 },
@@ -176,9 +174,10 @@ describe("enemies", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, snake, gunman, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, walking_lizard, robot_dog, barrel_roller, camera_robot, bird, electric_scientist, blob, flying_camera, badger, walking_spider, bat, leader_bats, rolling_stone)"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, snake, gunman, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, walking_lizard, robot_dog, barrel_roller, camera_robot, bird, electric_scientist, blob, flying_camera, badger, walking_spider, bat, leader_bats)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
-    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a rolling_stone has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras do)"],
+    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0]}]', "object 1: unknown enemy type rolling_stone"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -186,7 +185,7 @@ describe("enemies", () => {
   test("writes enemies after the boxes and before the end", () => {
     const text = formatObjects([
       { kind: "end", at: [0, 9, 0], raise: 0, stack: 1 },
-      enemyObject("rolling_stone"),
+      enemyObject("plant"),
       { kind: "box", box: "basic", at: [1, 0, 0], raise: 0, stack: 1 },
     ]);
     const kinds = parseObjects(text).map((object) => object.kind);
@@ -194,7 +193,7 @@ describe("enemies", () => {
   });
 
   test("reads back what it writes", () => {
-    const objects = parseObjects(`[{"kind": "enemy", "type": "rolling_stone", "at": [8, 35.5, 0], "raise": 0.5}]`);
+    const objects = parseObjects(`[{"kind": "enemy", "type": "plant", "at": [8, 35.5, 0], "raise": 0.5}]`);
     expect(parseObjects(formatObjects(objects))).toEqual(objects);
   });
 });
@@ -319,9 +318,9 @@ describe("a rolling stone's direction", () => {
   test("a rolling stone can be reversed", () => {
     // to start at the other end of its track
     const objects = parseObjects(`[
-      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": true},
-      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": false},
-      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0]}
+      {"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "reverse": true},
+      {"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "reverse": false},
+      {"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0]}
     ]`);
     expect(objects.map(({ reverse }) => reverse)).toEqual([true, undefined, undefined]);
   });
@@ -333,7 +332,7 @@ describe("a rolling stone's direction", () => {
   });
 
   test("writes it when it's reversed, and reads it back", () => {
-    const stone = enemyObject("rolling_stone", { at: [1, 2, 0] });
+    const stone = obstacleObject("rolling_stone", { at: [1, 2, 0] });
     const text = formatObjects([{ ...stone, reverse: true }]);
     expect(text).toContain('"at": [1, 2, 0], "reverse": true}');
     expect(parseObjects(text)).toEqual([{ ...stone, reverse: true }]);
@@ -343,7 +342,7 @@ describe("a rolling stone's direction", () => {
   test.each([
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "reverse": true}]', "object 1: a crab has no reverse (rolling stones and fish do; reverse a crab's path instead)"],
     ['[{"kind": "enemy", "type": "lab_assistant", "at": [0, 0, 0], "reverse": true}]', "object 1: a lab_assistant has no reverse"],
-    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "reverse": "yes"}]', "object 1: reverse should be true or false"],
+    ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "reverse": "yes"}]', "object 1: reverse should be true or false"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -353,15 +352,15 @@ describe("a rolling stone's start", () => {
   test("a rolling stone can start partway along its track", () => {
     // 0 its first end, 1 its far end
     const objects = parseObjects(`[
-      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 0.5},
-      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 1, "reverse": true},
-      {"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0]}
+      {"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "start": 0.5},
+      {"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "start": 1, "reverse": true},
+      {"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0]}
     ]`);
     expect(objects.map(({ start, reverse }) => [start, reverse])).toEqual([[0.5, undefined], [1, true], [undefined, undefined]]);
   });
 
   test("writes it when it isn't 0, before reverse, and reads it back", () => {
-    const stone = enemyObject("rolling_stone", { at: [1, 2, 0] });
+    const stone = obstacleObject("rolling_stone", { at: [1, 2, 0] });
     const text = formatObjects([{ ...stone, start: 0.25, reverse: true }]);
     expect(text).toContain('"at": [1, 2, 0], "start": 0.25, "reverse": true}');
     expect(parseObjects(text)).toEqual([{ ...stone, start: 0.25, reverse: true }]);
@@ -370,8 +369,11 @@ describe("a rolling stone's start", () => {
 
   test.each([
     ['[{"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "start": 0.5}]', "object 1: a turtle has no start (rolling stones do)"],
-    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": 1.5}]', "object 1: start should be 0 to 1 (how far along its track it starts)"],
-    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0], "start": "middle"}]', "object 1: start should be 0 to 1"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "start": 0.5}]', "object 1: a leaf has no start (rolling stones do)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "reverse": true}]', "object 1: a leaf has no reverse"],
+    ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a rolling_stone has no path (leaves do)"],
+    ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "start": 1.5}]', "object 1: start should be 0 to 1 (how far along its track it starts)"],
+    ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "start": "middle"}]', "object 1: start should be 0 to 1"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -509,9 +511,9 @@ describe("obstacles", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg)"],
-    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg)"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed (an obstacle takes kind, at, raise, type, path)"],
+    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone)"],
+    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed (an obstacle takes kind, at, raise, type, path, start, reverse)"],
     ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
@@ -550,7 +552,7 @@ describe("obstacle paths", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "type": "lily_pad", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a lily_pad has no path (leaves do; a lily pad sinks where it is)"],
+    ['[{"kind": "obstacle", "type": "lily_pad", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a lily_pad has no path (leaves do)"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', "object 1: a path should be 2 to 20 nodes"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0], [1, 0, 0]]}]', "object 1: a path's nodes should each be [x, y, z]"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: unknown setting speed"],
