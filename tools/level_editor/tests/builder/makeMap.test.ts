@@ -649,6 +649,22 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(burning).toEqual(["WF10V", "WF20V", "WF30V", "WF40V", "WF50V"].map(stringToEid));
     });
 
+    // init flag A: the frames between its flames; B: the frames into them it starts
+    test.each([
+      { more: {}, flags: [120, 0] },
+      { more: { every: 3, offset: 1 }, flags: [90, 60] },
+    ])("a fire pit ($more) has its flames' timing in its init flags", ({ more, flags }) => {
+      expect(initFlagsOf(build([obstacle("fire_pit", more)]).zone, OBSTACLE_ENTITIES.fire_pit).slice(0, 2)).toEqual(flags);
+    });
+
+    // its flame (WalOC subtype 6, spawned by it) timed itself by its own init
+    // flags, which a spawned object hasn't: it reads its parent's (the pit's)
+    test.each(["fire_pit", "wooden_peg", "rising_spiked_log"] as const)("the great gate's objects' code, with a %s, has the flame read its fire pit's timing", (type) => {
+      const code = build([obstacle(type)]).entries.get(stringToEid("WalOC"))!.items[1];
+      const at = (index: number) => code.readUInt32LE(index * 4);
+      expect([at(0x203), at(0x204), at(0x208), at(0x209)]).toEqual([0x82094000, 0x15017c57, 0x82094000, 0x15017c58]);
+    });
+
     test("a level without a fire pit keeps the base level's crash code", () => {
       const { entries } = build([obstacle("wooden_peg")]);
       const baseCrash = entriesById(readLevel(STREAMS, BASE_LEVEL.lid)).get(stringToEid("WillC"))!;

@@ -540,6 +540,17 @@ describe("fire pits", () => {
     expect(() => parseObjects('[{"kind": "obstacle", "type": "fire_pit", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]'))
       .toThrow("a fire_pit has no path");
   });
+
+  test("a fire pit's flames come every so many seconds, put off by an offset, as a spiked log's pushes", () => {
+    const [pit] = parseObjects('[{"kind": "obstacle", "type": "fire_pit", "at": [1, 2, 0], "every": 5, "offset": 2.5}]');
+    expect(pit).toEqual({ kind: "obstacle", obstacle: "fire_pit", at: [1, 2, 0], raise: 0, stack: 1, every: 5, offset: 2.5 });
+    expect(parseObjects(formatObjects([pit]))).toEqual([pit]);
+  });
+
+  test("without them, its flames come every 4 seconds (the great gate's 120 frames) with no offset", () => {
+    const pit = obstacleObject("fire_pit");
+    expect([numberSetting(pit, "every"), numberSetting(pit, "offset")]).toEqual([4, 0]);
+  });
 });
 
 describe("spiked logs", () => {
@@ -563,10 +574,10 @@ describe("spiked logs", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "every": 2}]', "object 1: every should be 3 to 20 (the seconds between its pushes)"],
+    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "every": 2}]', "object 1: every should be 3 to 20 (the seconds between its pushes or flames)"],
     ['[{"kind": "obstacle", "type": "falling_spiked_log", "at": [0, 0, 0], "every": 21}]', "object 1: every should be 3 to 20"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "every": 5}]', "object 1: a leaf has no every (spiked logs do)"],
-    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "offset": 21}]', "object 1: offset should be 0 to 20 (the seconds its pushes are put off by)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "every": 5}]', "object 1: a leaf has no every (spiked logs and fire pits do)"],
+    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "offset": 21}]', "object 1: offset should be 0 to 20 (the seconds its pushes or flames are put off by)"],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "start": 0.5}]', "object 1: a rising_spiked_log has no start (rolling stones do)"],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "reverse": true}]', "object 1: a rising_spiked_log has no reverse"],
   ])("refuses %s", (text, message) => {
