@@ -15,3 +15,22 @@ void BoxHudMakeIcon(box_hud_icon *icon, tgeo_texinfo *crate_face) {
   icon->texinfo.g = BOX_HUD_ICON_SHADE;
   icon->texinfo.b = BOX_HUD_ICON_SHADE;
 }
+
+/*
+ * turn a lives counter, once its start code has run, into the box counter:
+ * showing the source's boxes broken, at the top middle, behind the crate icon.
+ * it starts on the boxes already broken, so it only slides in when one breaks
+ */
+void BoxHudSetUpCounter(gool_object *counter, gool_object *source, box_hud_icon *icon) {
+  counter->player = source;
+  counter->regs[HUD_SHOWN_REG_IDX] = HUD_COUNT_REG << 8;
+  counter->regs[HUD_COUNT_REG] = source->regs[HUD_COUNT_REG];
+  counter->trans.x = BOX_HUD_X;
+  counter->anim_seq = (gool_anim*)icon;
+  counter->anim_frame = 0;
+}
+
+/* give the box counter's source the boxes broken (box_count: a gool number, 8 bits after the point) */
+void BoxHudShowBoxes(gool_object *source, int box_count) {
+  source->regs[HUD_COUNT_REG] = box_count;
+}
