@@ -642,11 +642,15 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(entityPath(placed)[0], [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1] + 1600, SPOT_IN_ZONE[2]], 16);
     });
 
-    // init flag A: the frames between its pushes (30 a second); B: the frames into them it starts
+    // init flag A: the frames between its pushes (30 a second); B: the frames into
+    // them it starts, so its pushes come that much sooner: an offset puts them off,
+    // as starting that much less far into them (round its pushes, past a whole one)
     test.each([
       { type: "rising_spiked_log", more: {}, flags: [180, 0] },
-      { type: "falling_spiked_log", more: { every: 3, start: 0.5 }, flags: [90, 45] },
-      { type: "rising_spiked_log", more: { every: 4.5, start: 0.25 }, flags: [135, 34] },
+      { type: "falling_spiked_log", more: { every: 3, offset: 1 }, flags: [90, 60] },
+      { type: "rising_spiked_log", more: { offset: 2 }, flags: [180, 120] },
+      { type: "rising_spiked_log", more: { every: 3, offset: 4 }, flags: [90, 60] },
+      { type: "rising_spiked_log", more: { every: 3, offset: 3 }, flags: [90, 0] },
     ] as const)("a $type ($more) has its pushes' timing in its init flags", ({ type, more, flags }) => {
       expect(initFlagsOf(build([obstacle(type, more)]).zone, OBSTACLE_ENTITIES[type]).slice(0, 2)).toEqual(flags);
     });
