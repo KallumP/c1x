@@ -55,6 +55,15 @@ describe("a mossy slide's plank", () => {
     expect(byMaterial(SLIDE_MATERIALS.bark).length).toBeGreaterThan(0);
   });
 
+  test("its faces come in the order they're drawn: bark (under, behind and at its ends), then its mossy top, then its log ends", () => {
+    // the sort list draws farthest first by middle z, and a log's top and underside have the same middles,
+    // so which is drawn over the other is their order: the top must come after, or the bark shows through it
+    const materials = mossySlidePlank(2000, 15, false).triangles.map(({ material }) => material);
+    const lastBark = materials.lastIndexOf(SLIDE_MATERIALS.bark);
+    expect(lastBark).toBeLessThan(materials.indexOf(SLIDE_MATERIALS.moss));
+    expect(materials.lastIndexOf(SLIDE_MATERIALS.moss)).toBeLessThan(materials.indexOf(SLIDE_MATERIALS.logEnd));
+  });
+
   test("reversed, its faces still face out", () => {
     const plank = mossySlidePlank(3000, 15, true);
     plank.triangles.filter((triangle) => triangle.material === SLIDE_MATERIALS.moss)
