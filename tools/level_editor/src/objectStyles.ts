@@ -68,6 +68,8 @@ export const OBSTACLE_COLOURS: Record<ObstacleType, string> = {
   sliding_pillar: "#5a7a44",
   tall_thin_gate: "#9a6a3a",
   low_wide_gate: "#8f6236",
+  pushing_block: "#4a5560",
+  pushing_platform: "#5a4a48",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";

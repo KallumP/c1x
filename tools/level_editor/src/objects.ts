@@ -80,7 +80,10 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // - sliding_pillar: sliding across the map and back
 // and its wooden gates, standing at their spot:
 // - tall_thin_gate, low_wide_gate
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate"] as const;
+// sunset vista's, pushing out towards the camera and back from their spot:
+// - pushing_block: a big stone block, shoving crash
+// - pushing_platform: a stone platform, to stand on
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)

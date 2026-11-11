@@ -10,6 +10,7 @@ const SPIKED_LOG_COLOURS = { log: "#7a5530", spike: "#d8d0b8", arrow: "#ffd23a" 
 const FIRE_PIT_COLOURS = { bowl: "#b8321e", rim: "#e0a030", flame: "#ff8a1f" };
 const PILLAR_COLOURS = { stone: "#5c5a50", moss: "#4f6b3a" };
 const GATE_COLOURS = { post: "#9a6a3a", rail: "#7a5230" };
+const RUINS_COLOURS = { stone: "#4a5560", carving: "#7a3a2a", platform: "#5a4a48" };
 
 // one of a lily pad's four round leaves, x and z out from its middle
 const lilyPadLeaf = (x: number, z: number) => ball(1, [x, 50, z], LILY_PAD_COLOURS.leaf, { stretch: [270, 50, 270] });
@@ -193,8 +194,28 @@ function fallArrow(deep: number): ShapePart[] {
   return [{ ...shaftPart, name: "arrow" }, { ...headPart, name: "arrow" }];
 }
 
+const PUSHING_BLOCK = { across: 800, tall: 1600, out: 2000 };
+const PUSHING_PLATFORM = { across: 741, top: -28, bottom: -206, near: -37, out: 1800 };
+
+// sunset vista's pushing block (Rp1wG on Rp7wG), pushed out: two stone blocks
+// 800 across and 1600 tall, one on the other, 2000 out towards the player from its spot
+function pushingBlock(): ShapePart[] {
+  const { across, tall, out } = PUSHING_BLOCK;
+  const block = (bottom: number): ShapePart => ({ kind: "box", size: [across, tall, out], at: [0, bottom + tall / 2, out / 2], colour: RUINS_COLOURS.stone });
+  const seam: ShapePart = { kind: "box", size: [across + 10, 80, out + 10], at: [0, tall, out / 2], colour: RUINS_COLOURS.carving };
+  return [block(0), block(tall), seam];
+}
+
+// sunset vista's long pushing platform (Rw3wG), pushed out: a stone slab 741
+// across, its top just under its spot, reaching 1800 out towards the player
+function pushingPlatform(): ShapePart[] {
+  const { across, top, bottom, near, out } = PUSHING_PLATFORM;
+  return [{ kind: "box", size: [across, top - bottom, out - near], at: [0, (top + bottom) / 2, (out + near) / 2], colour: RUINS_COLOURS.platform }];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
 export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit(), dropping_pillar: pillar(), sliding_pillar: pillar(),
-  tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)] };
+  tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
+  pushing_block: pushingBlock(), pushing_platform: pushingPlatform() };

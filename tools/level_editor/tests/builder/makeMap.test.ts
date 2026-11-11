@@ -54,7 +54,6 @@ const N_SANITY_BEACH = 0x9;
 const hasBeach = existsSync(`${STREAMS}/s0000009.nsd`);
 const hasGreatGate = existsSync(`${STREAMS}/s0000012.nsd`); // the great gate (0x12)
 const hasBoulderDash = existsSync(`${STREAMS}/s0000013.nsd`); // boulder dash (0x13)
-const hasSunsetVista = existsSync(`${STREAMS}/s0000023.nsd`); // sunset vista (0x23)
 const hasRoadToNowhere = existsSync(`${STREAMS}/s0000014.nsd`); // road to nowhere (0x14)
 const hasFumbling = existsSync(`${STREAMS}/s000002a.nsd`); // fumbling in the dark (0x2a)
 const hasUpTheCreek = existsSync(`${STREAMS}/s0000018.nsd`); // up the creek (0x18)
