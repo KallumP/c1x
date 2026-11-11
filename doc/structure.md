@@ -9,7 +9,7 @@ Project structure is listed below, including descriptions for each file.
 │   ├── issues.md            # project issues
 │   ├── building.md          # dependencies, compiling and tests
 │   ├── running.md           # game files and running the game
-│   ├── launcher.md          # the launcher (build/launcher.exe)
+│   ├── launcher.md          # the launcher (build/_launcher.exe)
 │   ├── controls.md          # default keys, and controls.cfg
 │   ├── structure.md         # project structure; this file
 │   ├── contributing.md      # commit messages and pull requests
