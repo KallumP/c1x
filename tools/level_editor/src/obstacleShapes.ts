@@ -7,6 +7,7 @@ const LILY_PAD_COLOURS = { leaf: "#2f6b2a", bud: "#c8b83a" };
 const LEAF_COLOURS = { leaf: "#2e7a2c", vein: "#1f4f1e", stalk: "#6b5a2a" };
 const PEG_COLOURS = { log: "#8a5a32", end: "#c89a5e" };
 const SPIKED_LOG_COLOURS = { log: "#7a5530", spike: "#d8d0b8", arrow: "#ffd23a" };
+const FIRE_PIT_COLOURS = { bowl: "#b8321e", rim: "#e0a030", flame: "#ff8a1f" };
 
 // one of a lily pad's four round leaves, x and z out from its middle
 const lilyPadLeaf = (x: number, z: number) => ball(1, [x, 50, z], LILY_PAD_COLOURS.leaf, { stretch: [270, 50, 270] });
@@ -119,7 +120,16 @@ function spikedLog(height: number, way: PushWay): ShapePart[] {
   ];
 }
 
+// the great gate's fire pit: a red bowl on the floor at its spot, flames in it
+function firePit(): ShapePart[] {
+  return [
+    rod(300, 180, 260, [0, 130, 0], FIRE_PIT_COLOURS.bowl),
+    rod(320, 320, 30, [0, 260, 0], FIRE_PIT_COLOURS.rim),
+    rod(0, 200, 300, [0, 410, 0], FIRE_PIT_COLOURS.flame),
+  ];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
-export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down") };
+export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit() };

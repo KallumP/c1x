@@ -73,7 +73,9 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // spiked logs at their spot, the great gate's:
 // - rising_spiked_log: pushing up out of the floor
 // - falling_spiked_log: pushing down from above
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log"] as const;
+// and the great gate's fire pit, standing at its spot:
+// - fire_pit: a bowl of fire, which sets crash alight
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)

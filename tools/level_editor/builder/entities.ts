@@ -50,7 +50,7 @@ export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
 // and the great gate's objects WalOC, subtype 0 its totem's wooden peg, and
 // jungle rollers' own JunOC, subtype 6 its rolling stone, and the great gate's
 // WalOC subtype 2, its mossy slide's invisible slider
-export const OBSTACLE_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2], wooden_peg: [33, 0], rolling_stone: [22, 6], mossy_slide: [33, 2], rising_spiked_log: [33, 3], falling_spiked_log: [33, 4] };
+export const OBSTACLE_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2], wooden_peg: [33, 0], rolling_stone: [22, 6], mossy_slide: [33, 2], rising_spiked_log: [33, 3], falling_spiked_log: [33, 4], fire_pit: [33, 5] };
 
 // an enemy's or obstacle's entity type and subtype
 export function objectEntity(type: ObjectType): [number, number] {

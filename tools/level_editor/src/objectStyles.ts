@@ -63,6 +63,7 @@ export const OBSTACLE_COLOURS: Record<ObstacleType, string> = {
   mossy_slide: "#5f7a3a",
   rising_spiked_log: "#7a5530",
   falling_spiked_log: "#6a4a2a",
+  fire_pit: "#b8321e",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";
