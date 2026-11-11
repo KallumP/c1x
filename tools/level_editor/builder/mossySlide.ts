@@ -108,14 +108,33 @@ function plankCorner(x: number, under: boolean, z: number, drop: number): Vec3 {
   return [x, -drop * Math.abs(x) - Number(under) * PLANK_THICKNESS, z];
 }
 
-// one log of the plank (from and to along the slide): its mossy top, its end at the front, bark behind and under it
-function addLog(mesh: MeshMaker, from: number, to: number, drop: number): void {
+// a log's faces (from and to along the slide): each adds one of them
+type LogFace = (mesh: MeshMaker, from: number, to: number, drop: number) => void;
+
+// its bark, behind and under it
+const addLogBark: LogFace = (mesh, from, to, drop) => {
   const corner = (x: number, under: boolean, z: number) => plankCorner(x, under, z, drop);
-  const [back, front] = [BACK, FRONT];
-  addQuad(mesh, [corner(from, false, front), corner(to, false, front), corner(to, false, back), corner(from, false, back)], SLIDE_MATERIALS.moss, [0, 1, 0]);
-  addQuad(mesh, [corner(from, true, front), corner(to, true, front), corner(to, false, front), corner(from, false, front)], SLIDE_MATERIALS.logEnd, [0, 0, 1]);
-  addQuad(mesh, [corner(to, true, back), corner(from, true, back), corner(from, false, back), corner(to, false, back)], SLIDE_MATERIALS.bark, [0, 0, -1]);
-  addQuad(mesh, [corner(from, true, back), corner(to, true, back), corner(to, true, front), corner(from, true, front)], SLIDE_MATERIALS.bark, [0, -1, 0]);
+  addQuad(mesh, [corner(to, true, BACK), corner(from, true, BACK), corner(from, false, BACK), corner(to, false, BACK)], SLIDE_MATERIALS.bark, [0, 0, -1]);
+  addQuad(mesh, [corner(from, true, BACK), corner(to, true, BACK), corner(to, true, FRONT), corner(from, true, FRONT)], SLIDE_MATERIALS.bark, [0, -1, 0]);
+};
+
+// its mossy top
+const addLogTop: LogFace = (mesh, from, to, drop) => {
+  const corner = (x: number, z: number) => plankCorner(x, false, z, drop);
+  addQuad(mesh, [corner(from, FRONT), corner(to, FRONT), corner(to, BACK), corner(from, BACK)], SLIDE_MATERIALS.moss, [0, 1, 0]);
+};
+
+// its end, at the front
+const addLogEnd: LogFace = (mesh, from, to, drop) => {
+  const corner = (x: number, under: boolean) => plankCorner(x, under, FRONT, drop);
+  addQuad(mesh, [corner(from, true), corner(to, true), corner(to, false), corner(from, false)], SLIDE_MATERIALS.logEnd, [0, 0, 1]);
+};
+
+// a face of each of the plank's logs (logs of them, length long, way along the map)
+function addLogFaces(mesh: MeshMaker, face: LogFace, logs: number, length: number, way: number, drop: number): void {
+  for (let log = 0; log < logs; log++) {
+    face(mesh, (way * length * log) / logs, (way * length * (log + 1)) / logs, drop);
+  }
 }
 
 // an end of the plank (at x along the slide), bark, facing out along it (outward)
@@ -136,17 +155,20 @@ function slideWay(reverse: boolean): number {
 }
 
 // a mossy slide's plank, length long along the map (game units) from its top
-// end (the origin), down at angle degrees, back across the map reversed
+// end (the origin), down at angle degrees, back across the map reversed. its
+// faces in the order they're drawn: the sort list draws farthest first by
+// their middles, and a log's top, underside and the plank's ends share theirs,
+// so the top comes after the bark, which would otherwise show through it
 export function mossySlidePlank(length: number, angle: number, reverse: boolean): Mesh {
   const way = slideWay(reverse);
   const drop = dropOf(angle);
   const logs = Math.max(1, Math.round(length / LOG));
   const mesh: MeshMaker = { vertices: [], triangles: [] };
-  for (let log = 0; log < logs; log++) {
-    addLog(mesh, (way * length * log) / logs, (way * length * (log + 1)) / logs, drop);
-  }
+  addLogFaces(mesh, addLogBark, logs, length, way, drop);
   addEnd(mesh, 0, drop, -way);
   addEnd(mesh, way * length, drop, way);
+  addLogFaces(mesh, addLogTop, logs, length, way, drop);
+  addLogFaces(mesh, addLogEnd, logs, length, way, drop);
   return { ...mesh, materialLibraries: [] };
 }
 
