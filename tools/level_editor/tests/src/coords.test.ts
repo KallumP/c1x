@@ -100,9 +100,11 @@ describe("rolling stones", () => {
   test("a mossy slide runs across the map and down from its top end, as long and steep as it's set, either way", () => {
     // its length along the map (metres) and down at its angle
     const drop = (metres: number, degrees: number) => metres * Math.tan((degrees * Math.PI) / 180);
-    expectCloseTo(mossySlideEnd([1, 2, 3], 0, 0, 8, 20, false), [1 + 8, 2, 3 - drop(8, 20)]);
-    expectCloseTo(mossySlideEnd([1, 2, 3], 0.5, 0, 4, 14, true), [1 - 4, 2, 3.5 - drop(4, 14)]);
-    expectCloseTo(mossySlideEnd([0, 0, 0], 0, 90, 9, 10, false), [0, -9, -drop(9, 10)]);
+    // turned rotation degrees anticlockwise seen from above, from across the map (as a stone rolls)
+    expectCloseTo(mossySlideEnd([1, 2, 3], 0, 0, 8, 20, 0), [1 + 8, 2, 3 - drop(8, 20)]);
+    expectCloseTo(mossySlideEnd([1, 2, 3], 0.5, 0, 4, 14, 180), [1 - 4, 2, 3.5 - drop(4, 14)]);
+    expectCloseTo(mossySlideEnd([0, 0, 0], 0, 90, 9, 10, 0), [0, -9, -drop(9, 10)]);
+    expectCloseTo(mossySlideEnd([0, 0, 0], 0, 0, 6, 10, 90), [0, 6, -drop(6, 10)]); // the way the camera faces
   });
 
   test("a fish leaps across the map from its spot", () => {

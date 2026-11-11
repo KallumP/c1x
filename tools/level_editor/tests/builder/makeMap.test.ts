@@ -622,16 +622,20 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     const slidePaths = (zone: Entry) => zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.mossy_slide)).map(entityPath);
     const fromFirst = (path: Vec3[]) => path.map((point) => point.map((value, axis) => value - path[0][axis]));
 
+    // its way across the floor: the game's x (across the map) turned anticlockwise seen from above, towards -z (away from the camera)
     test.each([
-      { more: {}, length: 1024, angle: 14, way: 1 },                                  // 4 m at scale 256
-      { more: { length: 8, angle: 20 }, length: 2048, angle: 20, way: 1 },
-      { more: { length: 2, angle: 5, reverse: true }, length: 512, angle: 5, way: -1 },
+      { more: {}, length: 1024, angle: 14, way: [1, 0] },                                   // 4 m at scale 256
+      { more: { length: 8, angle: 20 }, length: 2048, angle: 20, way: [1, 0] },
+      { more: { length: 2, angle: 5, rotation: 180 }, length: 512, angle: 5, way: [-1, 0] },
+      { more: { rotation: 90 }, length: 1024, angle: 14, way: [0, -1] },
+      { more: { rotation: 270 }, length: 1024, angle: 14, way: [0, 1] },
     ])("its slider ($more) slides from its spot along its slope and on 400 past it", ({ more, length, angle, way }) => {
       const [path] = slidePaths(build([obstacle("mossy_slide", more)]).zone);
       expectNear(path[0], SPOT_IN_ZONE, 16);
       const run = length + 400;
-      expectNear(fromFirst(path).at(-1)!, [way * run, -run * Math.tan((angle * Math.PI) / 180), 0], 16);
-      fromFirst(path).slice(1).forEach(([x], point) => expectNear(Math.abs(x - fromFirst(path)[point][0]), 450, 60));
+      expectNear(fromFirst(path).at(-1)!, [way[0] * run, -run * Math.tan((angle * Math.PI) / 180), way[1] * run], 16);
+      const steps = fromFirst(path).slice(1).map(([x, , z], point) => Math.hypot(x - fromFirst(path)[point][0], z - fromFirst(path)[point][2]));
+      steps.forEach((step) => expectNear(step, 450, 60));
     });
 
     test("it adds nothing to the map: the slope is modelled in blender", () => {
