@@ -21,6 +21,9 @@ function placesAlong(object: LevelObject, turn: number, scale: number): Vec3[] {
 // the path enemies that hover along their paths, which needn't be over a floor
 const HOVERING: EnemyType[] = ["camera_robot", "bird", "flying_camera"];
 
+// whether an object's path needn't be over a floor: a hovering enemy's, or a floating leaf's
+const floatsAlong = (object: LevelObject) => object.kind === "obstacle" || HOVERING.includes(object.enemy!);
+
 // whether a place along a path is in a wall
 function inWall(place: Vec3, triangles: Triangle[]): boolean {
   const min = place.map((value) => value - CHECK_SIZE) as Vec3;
@@ -34,12 +37,12 @@ function offTheFloor(place: Vec3, triangles: Triangle[]): boolean {
   return drop === null || drop > WALK_HEIGHT + FLOOR_REACH;
 }
 
-// whether a place along an enemy's path is in a wall, or (unless it hovers) has no floor close below it
+// whether a place along a path is in a wall, or (unless it hovers or floats) has no floor close below it
 function strays(object: LevelObject, place: Vec3, triangles: Triangle[]): boolean {
   if (inWall(place, triangles)) {
     return true;
   }
-  return !HOVERING.includes(object.enemy!) && offTheFloor(place, triangles);
+  return !floatsAlong(object) && offTheFloor(place, triangles);
 }
 
 // the indices of the path enemies (crabs, turtles, natives) whose paths leave the floor or run through a wall
