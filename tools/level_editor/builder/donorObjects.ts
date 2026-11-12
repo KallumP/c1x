@@ -77,6 +77,8 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   sliding_pillar: BOULDER_DASH,
   tall_thin_gate: BOULDER_DASH,
   low_wide_gate: BOULDER_DASH,
+  pushing_block: SUNSET_VISTA,
+  pushing_platform: SUNSET_VISTA,
 };
 
 export interface DonorObject {
@@ -375,7 +377,13 @@ const GATE_OBJECTS_PAGE = "Vi3iT";
 // texture pages don't come with them
 const BOULDER_DASH_NON_GATE_MODELS = ["Jube", "JuBe", "JuFe", "JuLe", "JuSe"];
 
+// the ruins objects' models a ruins object leaves out: all but its own
+// (sunset vista's pushing block Rp1w on Rp7w, its pushing platform Rw1w or Rw3w)
+const ruinsModelsBut = (own: string[]) => RUINS_OBJECT_MODELS.filter((model) => !own.includes(model)).flatMap((model) => [`${model}G`, `${model}V`]);
+
 const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
+  pushing_block: ruinsModelsBut(["Rp1w", "Rp7w"]),
+  pushing_platform: ruinsModelsBut(["Rw1w", "Rw3w"]),
   tall_thin_gate: BOULDER_DASH_NON_GATE_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
   low_wide_gate: BOULDER_DASH_NON_GATE_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
   barrel_roller: ["WateC"],

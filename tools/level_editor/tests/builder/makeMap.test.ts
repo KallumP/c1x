@@ -619,6 +619,43 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasSunsetVista)("pushing blocks and platforms, from sunset vista", () => {
+    test.each([
+      { type: "pushing_block", subtype: 4, models: ["Rp1wG", "Rp7wG"] },
+      { type: "pushing_platform", subtype: 7, models: ["Rw1wG", "Rw3wG"] },
+    ] as const)("a $type is sunset vista's RWaOC subtype $subtype, with its models and no others, at its spot", ({ type, subtype, models }) => {
+      const { level, entries, zone } = build([obstacle(type)]);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([46, subtype]);
+      expect(level.nsd.ldat.execMap[46]).toBe(stringToEid("RWaOC"));
+      expect(models.every((model) => entries.has(stringToEid(model)))).toBe(true);
+      expect(entries.has(stringToEid("Li1wG"))).toBe(false);
+      const placed = zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES[type]));
+      expect(placed.length).toBe(1);
+      expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
+    });
+
+    test.each([
+      { type: "pushing_block", more: {}, flags: [60, 0] },
+      { type: "pushing_platform", more: {}, flags: [70, 0] },
+      { type: "pushing_platform", more: { every: 4, offset: 1 }, flags: [120, 90] },
+    ] as const)("a $type ($more) has its timing in its init flags", ({ type, more, flags }) => {
+      expect(initFlagsOf(build([obstacle(type, more)]).zone, OBSTACLE_ENTITIES[type]).slice(0, 2)).toEqual(flags);
+    });
+
+    // its init flag C's bit 1 picks its model with a top (Rp7w; without, Rp1w, which has none:
+    // sunset vista's all push out of walls, their tops hidden). custom levels' stand in the open
+    test("a pushing block is the one with a top", () => {
+      const placed = zoneEntities(build([obstacle("pushing_block")]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.pushing_block))!;
+      expect(placed.readInt16LE(ENTITY_INIT_FLAGS + 4) & 2).toBe(2);
+    });
+
+    test("pushing blocks and platforms read sunset vista once", () => {
+      const reader = recordingReader();
+      build([obstacle("pushing_block"), obstacle("pushing_platform", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
+      expect(reader.read).toEqual([0x23]);
+    });
+  });
+
   describe.skipIf(!hasBoulderDash)("pillars, from boulder dash", () => {
     test.each([
       { type: "dropping_pillar", subtype: 4 },

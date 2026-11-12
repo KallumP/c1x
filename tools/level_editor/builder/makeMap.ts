@@ -12,7 +12,7 @@ import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { objectDonorLevels, objectDonorObjects } from "./donorObjects";
 import {
-  BOX_HEIGHT, BOX_TYPE, donorEntityType, donorObstacleType, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
+  BOX_HEIGHT, BOX_TYPE, donorEntityType, donorObstacleType, ENTITY_INIT_FLAGS, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
   LEADER_BAT, OBSTACLE_ENTITIES, withNoRotationFromFlags, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
@@ -274,6 +274,18 @@ function withGateTurn(entity: Buffer, object: LevelObject): Buffer {
   return withInitFlagC(withInitFlagB(entity, turn), turn);
 }
 
+// a pushing block's init flag C's bit 1 picks its model with a top (Rp7w): its
+// level's (all pushing out of walls, their tops hidden) have the one without (Rp1w)
+const BLOCK_WITH_TOP = 2;
+
+// entity with a pushing block's top; any other obstacle's as it is
+function withBlockTop(entity: Buffer, obstacle: LevelObject): Buffer {
+  if (obstacle.obstacle !== "pushing_block") {
+    return entity;
+  }
+  return withInitFlagC(entity, entity.readInt16LE(ENTITY_INIT_FLAGS + 4) | BLOCK_WITH_TOP);
+}
+
 // how far over its spot a timed obstacle is placed
 function timedObstacleHang(obstacle: LevelObject): number {
   if (obstacle.obstacle === "falling_spiked_log") {
@@ -372,7 +384,7 @@ class ObjectPlacer {
     const hung: Vec3 = [at[0], at[1] + timedObstacleHang(obstacle), at[2]];
     const [every, into] = obstacleTiming(obstacle);
     const placed = withNoRotationFromFlags(withPosition(withEntityId(example, this.ids.shift()!), hung));
-    this.entities[zone].push(withInitFlagB(withInitFlagA(placed, every), into));
+    this.entities[zone].push(withBlockTop(withInitFlagB(withInitFlagA(placed, every), into), obstacle));
   }
 
   // an enemy or obstacle that moves along its own level's path, as example, from

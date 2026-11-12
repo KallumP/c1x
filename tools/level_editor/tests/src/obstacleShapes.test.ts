@@ -30,6 +30,10 @@ describe("obstacle shapes", () => {
     // and its gates: JB4eG, 903 across and 1554 tall, and JB3eG, 2377 across and 437 tall, standing on its spot
     { obstacle: "tall_thin_gate", bottom: 0, top: [1500, 1600], across: [860, 950], long: [200, 290] },
     { obstacle: "low_wide_gate", bottom: 0, top: [400, 480], across: [2300, 2450], long: [240, 330] },
+    // sunset vista's pushing block, Rp7wG (800 across, 1600 tall, 2000 out towards the player; two panels on its face), and its
+    // pushing platform Rw3wG (741 across, 178 thick, 1838 out), each pushed out
+    { obstacle: "pushing_block", bottom: 0, top: [1550, 1650], across: [760, 840], long: [1950, 2050] },
+    { obstacle: "pushing_platform", bottom: -206, top: [-60, 0], across: [700, 780], long: [1790, 1890] },
   ] as const)("a $obstacle is as big as the game's, about its spot as the game's", ({ obstacle, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(OBSTACLE_SHAPES[obstacle].filter((part) => part.name !== "arrow"));
     expectWithin(min[1], [bottom - 15, bottom + 15]);
