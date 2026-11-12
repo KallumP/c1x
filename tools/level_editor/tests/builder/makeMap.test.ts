@@ -345,11 +345,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       { with: "alone", objects: () => [obstacle("slamming_walls")] },
       { with: "a bat", objects: () => [obstacle("slamming_walls"), enemy("bat", { at: [1, 8, 0] })] },
     ])("with slamming walls $with, the walls' halves (RcLsG, RcRsG) are drawn from both sides", ({ objects }) => {
-      const { entries } = build(objects());
+      const { entries, level } = build(objects());
+      const pages = texturePages(level).map(({ eid }) => eid);
       ["RcLsG", "RcRsG"].forEach((name) => {
         const infos = textureInfos(entries.get(stringToEid(name))!);
         expect(infos.every(({ colour }) => (colour & (1 << 28)) !== 0)).toBe(true);
-        expect(infos.every(({ page }) => page === undefined || entries.has(page))).toBe(true);
+        expect(infos.every(({ page }) => page === undefined || pages.includes(page))).toBe(true);
       });
     });
   });
