@@ -317,10 +317,10 @@ function fallingPlatform(): ShapePart[] {
 }
 
 const SEESAW_BLOCK = { across: 600, high: 600, out: 800 };
-const SEESAW_BLOCKS_AT = [-1600, -800, 800, 1600];
+const SEESAW_BLOCKS_AT = [-1600, -800, 0, 800, 1600];
 
-// sunset vista's seesaw (its first's layout): four stone blocks (Rp4wG, 600
-// across and high, 800 out from their wall), two either side of its spot
+// sunset vista's seesaw (its first's layout): five stone blocks (Rp4wG, 600
+// across and high, 800 out from their wall), its own at its spot and two either side
 function seesaw(): ShapePart[] {
   const { across, high, out } = SEESAW_BLOCK;
   return SEESAW_BLOCKS_AT.map((x) => ({ kind: "box", size: [across, high, out], at: [x, -high / 2, out / 2], colour: RUINS_COLOURS.stone }));
