@@ -308,6 +308,23 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasTempleRuins)("slamming walls' sides", () => {
+    // each half has faces on three sides only (temple ruins' are set in its corridor's walls), so
+    // they're drawn from both sides (no_cull in their texture infos' colour words), as are a bat's (the same code's)
+    test.each([
+      { with: "alone", objects: () => [obstacle("slamming_walls")] },
+      { with: "a bat", objects: () => [obstacle("slamming_walls"), enemy("bat", { at: [1, 8, 0] })] },
+    ])("with slamming walls $with, the walls' halves (RcLsG, RcRsG) are drawn from both sides", ({ objects }) => {
+      const { entries } = build(objects());
+      ["RcLsG", "RcRsG"].forEach((name) => {
+        const header = entries.get(stringToEid(name))!.items[0];
+        for (let at = 20; at + 4 <= header.length; at += (header.readUInt32LE(at) >>> 31) ? 8 : 4) {
+          expect(header.readUInt32LE(at) & (1 << 28)).not.toBe(0);
+        }
+      });
+    });
+  });
+
   describe.skipIf(!hasTempleRuins)("slamming walls' timing", () => {
     // init flag A: the frames between slams (90 without one: 3 s); B: the frames into them it starts, on both halves
     test.each([
