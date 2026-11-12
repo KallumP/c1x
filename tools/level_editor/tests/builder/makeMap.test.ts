@@ -842,6 +842,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(placed.readUInt16LE(4) & 1).toBe(1);
     });
 
+    // init flag A: which of its code's eight layouts of blocks it spawns (0: two either side)
+    test("a seesaw is sunset vista's RWaOC subtype 2, at its spot, laid out as its first, with its blocks (Rp4wG) and not the other ruins objects' models", () => {
+      const { zone, entries } = build([obstacle("seesaw")]);
+      expect(OBSTACLE_ENTITIES.seesaw).toEqual([46, 2]);
+      expect(entries.has(stringToEid("Rp4wG"))).toBe(true);
+      expect(entries.has(stringToEid("Rw2wG"))).toBe(false);
+      const placed = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.seesaw))!;
+      expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
+      expect(initFlagsOf(zone, OBSTACLE_ENTITIES.seesaw)).toEqual([0, 0, 0]);
+    });
+
     test("pushing blocks and platforms read sunset vista once", () => {
       const reader = recordingReader();
       build([obstacle("pushing_block"), obstacle("pushing_platform", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
