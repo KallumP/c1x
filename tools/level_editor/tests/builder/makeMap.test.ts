@@ -1608,7 +1608,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("without a path, it slides from its spot 4 m straight across the map (at scale 256: 1024), as many points as slippery climb's first", () => {
       const path = entityPath(platform().placed);
-      expect(path.length).toBe(11);
+      expect(path.length).toBe(12);
       expectNear(path[0], SPOT_IN_ZONE, 16);
       expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 1024, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
     });

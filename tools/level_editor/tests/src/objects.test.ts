@@ -511,6 +511,8 @@ describe("obstacles", () => {
   });
 
   test.each([
+    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms, slamming_walls, rising_pillar, carrying_platform, bounce_pad, steam_vent, moving_platform)"],
+    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms, slamming_walls, rising_pillar, carrying_platform, bounce_pad, steam_vent, moving_platform)"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: a leaf has no speed"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count (an obstacle takes kind, at, raise, type, path, speed, start, reverse, length, angle, rotation, every, offset, platforms, radius)"],
     ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],

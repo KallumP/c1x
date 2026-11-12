@@ -2,7 +2,7 @@
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
 import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, BIRD_SWOOP, BLOB_HOP, CAMERA_ROBOT_RISE, cameraFacing, FLYING_CAMERA_RISE, labAssistantThrow, LEAF_DRIFT, leafDrift, leaderBatsGap, PILLAR_SLIDE, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, rising, ROBOT_DOG_WALK, SCIENTIST_WALK, WALKING_LIZARD_PACE, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
 import { LAB_ASSISTANT_REACH } from "./labAssistantThrow";
-import { hasOneNode, PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
+import { hasOneNode, PATH_NODES_MAX, type LevelObject, type ObstacleType, type PathEnemy, type Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 2;
 
@@ -78,6 +78,11 @@ const leafDriftNodes = (turn: number, scale: number) => leafDrift([0, 0, 0], 0, 
 const CARRY_LENGTH = 6;
 const carryingNodes = (turn: number): Vec3[] => [[0, 0, 0], scaled(stoneRolling(turn), CARRY_LENGTH)];
 
+// a moving platform's nodes without a path of its own: PLATFORM_SLIDE metres
+// straight across the map (slippery climb's slide about 9 m across its towers' gaps)
+const PLATFORM_SLIDE = 4;
+const platformSlideNodes = (turn: number): Vec3[] => [[0, 0, 0], scaled(stoneRolling(turn), PLATFORM_SLIDE)];
+
 // a sliding pillar's nodes without a path of its own: its slide's two ends, as boulder dash's
 function pillarSlideNodes(turn: number, scale: number): Vec3[] {
   const [length] = PILLAR_SLIDE[PILLAR_SLIDE.length - 1];
@@ -97,6 +102,9 @@ function defaultNodes(object: LevelObject, turn: number, scale: number): Vec3[] 
   }
   if (object.obstacle === "carrying_platform") {
     return carryingNodes(turn);
+  }
+  if (object.obstacle === "moving_platform") {
+    return platformSlideNodes(turn);
   }
   if (object.enemy === "leader_bats") {
     return [leaderBatsGap(turn, scale)];
@@ -129,6 +137,9 @@ export function spotAndNode(object: LevelObject, turn: number, scale: number): V
   return [[x, y, z + object.raise], ...pathPositions(object, turn, scale)];
 }
 
+// the path obstacles whose default path is two nodes: from their spot, and to their path's end
+const TWO_NODE_OBSTACLES: ObstacleType[] = ["sliding_pillar", "carrying_platform", "moving_platform"];
+
 // how many nodes an enemy's path has: its own, or its default's (a one node enemy's one)
 export function nodeCount(object: LevelObject): number {
   if (object.path) {
@@ -140,7 +151,7 @@ export function nodeCount(object: LevelObject): number {
   if (object.obstacle === "leaf") {
     return LEAF_DRIFT.length;
   }
-  if (object.obstacle === "sliding_pillar" || object.obstacle === "carrying_platform") {
+  if (TWO_NODE_OBSTACLES.includes(object.obstacle!)) {
     return 2;
   }
   return DEFAULT_PATH_NODES;

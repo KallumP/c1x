@@ -48,6 +48,7 @@ const NAMES: Partial<Record<Placeable, string>> = {
   carrying_platform: "Platform (carries Crash)",
   bounce_pad: "Bounce pad",
   steam_vent: "Steam vent",
+  moving_platform: "Platform (moves along a path)",
 };
 
 // a type's id in words, capitalised: blue_river_plant is "Blue river plant"

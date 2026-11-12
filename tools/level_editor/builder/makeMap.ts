@@ -201,6 +201,10 @@ function obstacleTiming(obstacle: LevelObject): [number, number] {
   return [every, (every - offset) % every];
 }
 
+// the path obstacles that move along their nodes as their own level's first
+// eases along its path: a carrying platform's ride, a moving platform's slide
+const OWN_EASED_PATHS: ObstacleType[] = ["carrying_platform", "moving_platform"];
+
 // how far along its own level's path each of a path obstacle's points is: a
 // floating leaf's drift's, a sliding pillar's slide's, or a carrying platform's ride's
 // length its path's length (game units), example its entity from its own level
@@ -208,7 +212,7 @@ function ownPathShares(obstacle: LevelObject, length: number, example: Buffer): 
   if (obstacle.obstacle === "sliding_pillar") {
     return sharesInSteps(pillarSlideShares(), pillarSteps(length));
   }
-  if (obstacle.obstacle === "carrying_platform") {
+  if (OWN_EASED_PATHS.includes(obstacle.obstacle!)) {
     return entityPathShares(example);
   }
   return leafDriftShares();
@@ -259,10 +263,15 @@ function withRiseTiming(entity: Buffer, obstacle: LevelObject): Buffer {
   return withInitFlagB(withInitFlagA(withNoRotationFromFlags(entity), every), ahead);
 }
 
-// entity with a sliding pillar's slide's frames in its init flag A, not
-// turned by it; any other obstacle's as it is
+// the obstacles whose init flag A is the frames their slide there and back
+// takes, at their speed: a sliding pillar, and a moving platform (temple ruins'
+// code, as slippery climb has it)
+const SLIDING_AT_SPEED: ObstacleType[] = ["sliding_pillar", "moving_platform"];
+
+// entity with a sliding pillar's or moving platform's slide's frames in its
+// init flag A, not turned by it; any other obstacle's as it is
 function withSlideTiming(entity: Buffer, obstacle: LevelObject, length: number, scale: number): Buffer {
-  if (obstacle.obstacle !== "sliding_pillar") {
+  if (!SLIDING_AT_SPEED.includes(obstacle.obstacle!)) {
     return entity;
   }
   return withInitFlagA(withNoRotationFromFlags(entity), pillarSlideFrames(obstacle, length, scale));
@@ -301,7 +310,7 @@ function shareAt(shares: number[], point: number): number {
 // whether an obstacle moves along its nodes (its own path, a sliding pillar's
 // two ends, at its speed, or a carrying platform's default), not its own
 // level's path as it is
-const onItsNodes = (obstacle: LevelObject) => obstacle.path !== undefined || obstacle.obstacle === "sliding_pillar" || obstacle.obstacle === "carrying_platform";
+const onItsNodes = (obstacle: LevelObject) => obstacle.path !== undefined || ["sliding_pillar", ...OWN_EASED_PATHS].includes(obstacle.obstacle!);
 
 // a gate's init flags are its turn (its spawn flags let them be): A tips it
 // over, B is its yaw, 4096 a full turn, anticlockwise seen from above

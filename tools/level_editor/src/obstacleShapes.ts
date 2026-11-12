@@ -291,6 +291,18 @@ function steamVent(): ShapePart[] {
   ];
 }
 
+const MOVING_PLATFORM = { radius: 400, thick: 403, moss: 60 };
+
+// slippery climb's moving platform (PlPyG): a stone slab 802 x 797 across, its
+// mossy top at its spot, 403 thick
+function movingPlatform(): ShapePart[] {
+  const { radius, thick, moss } = MOVING_PLATFORM;
+  return [
+    rod(radius, radius * 0.9, thick - moss, [0, -moss - (thick - moss) / 2, 0], PILLAR_COLOURS.stone),
+    rod(radius, radius, moss, [0, -moss / 2, 0], PILLAR_COLOURS.moss),
+  ];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
@@ -298,4 +310,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform() };
