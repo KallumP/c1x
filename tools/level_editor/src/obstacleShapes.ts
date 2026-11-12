@@ -197,13 +197,13 @@ function fallArrow(deep: number): ShapePart[] {
 const PUSHING_BLOCK = { across: 800, tall: 1600, out: 2000 };
 const PUSHING_PLATFORM = { across: 741, top: -28, bottom: -206, near: -37, out: 1800 };
 
-// sunset vista's pushing block (Rp1wG on Rp7wG), pushed out: two stone blocks
-// 800 across and 1600 tall, one on the other, 2000 out towards the player from its spot
+// sunset vista's pushing block (Rp7wG), pushed out: a stone block 800 across
+// and 1600 tall, 2000 out towards the player from its spot, two panels on its face
 function pushingBlock(): ShapePart[] {
   const { across, tall, out } = PUSHING_BLOCK;
-  const block = (bottom: number): ShapePart => ({ kind: "box", size: [across, tall, out], at: [0, bottom + tall / 2, out / 2], colour: RUINS_COLOURS.stone });
-  const seam: ShapePart = { kind: "box", size: [across + 10, 80, out + 10], at: [0, tall, out / 2], colour: RUINS_COLOURS.carving };
-  return [block(0), block(tall), seam];
+  const block: ShapePart = { kind: "box", size: [across, tall, out], at: [0, tall / 2, out / 2], colour: RUINS_COLOURS.stone };
+  const seam: ShapePart = { kind: "box", size: [across + 10, 40, out + 10], at: [0, tall / 2, out / 2], colour: RUINS_COLOURS.carving };
+  return [block, seam];
 }
 
 // sunset vista's long pushing platform (Rw3wG), pushed out: a stone slab 741
