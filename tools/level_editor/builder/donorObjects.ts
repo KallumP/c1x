@@ -85,6 +85,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   rising_pillar: TEMPLE_RUINS,
   carrying_platform: TEMPLE_RUINS,
   bounce_pad: CASTLE_MACHINERY,
+  steam_vent: CASTLE_MACHINERY,
 };
 
 export interface DonorObject {
@@ -430,6 +431,7 @@ const crashBurning = [
 const OBJECT_CRASH_ENTRIES: Partial<Record<ObjectType, { item: number; at: number; name: string }[]>> = {
   electric_scientist: [{ item: CRASH_ANIMATIONS, at: 72 + ANIMATION_EID, name: "WS10V" }],
   fire_pit: crashBurning,
+  steam_vent: crashBurning, // castle machinery's steam burns him as the great gate's flames do
 };
 
 // object with the entries it needs crash's code to name (OBJECT_CRASH_ENTRIES),

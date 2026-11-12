@@ -10,6 +10,7 @@ const SPIKED_LOG_COLOURS = { log: "#7a5530", spike: "#d8d0b8", arrow: "#ffd23a" 
 const FIRE_PIT_COLOURS = { bowl: "#b8321e", rim: "#e0a030", flame: "#ff8a1f" };
 const PILLAR_COLOURS = { stone: "#5c5a50", moss: "#4f6b3a" };
 const GATE_COLOURS = { post: "#9a6a3a", rail: "#7a5230" };
+const STEAM_COLOURS = { grate: "#3a3a40", steam: "#e8ecf0" };
 const SPRING_COLOURS = { base: "#3a3a40", coil: "#8a8a90", pad: "#a83a2a" };
 const RUINS_COLOURS = { stone: "#4a5560", carving: "#7a3a2a", platform: "#5a4a48" };
 
@@ -278,6 +279,19 @@ function bouncePad(): ShapePart[] {
   ];
 }
 
+const STEAM_VENT = { across: 500, grate: 40, steam: 1600 };
+
+// castle machinery's steam vent, which has no model (its pipe is its level's):
+// a grate 500 across on its spot, and its steam, a column 1600 up from it
+function steamVent(): ShapePart[] {
+  const { across, grate, steam } = STEAM_VENT;
+  const radius = across / 2;
+  return [
+    rod(radius, radius, grate, [0, grate / 2, 0], STEAM_COLOURS.grate),
+    rod(radius * 0.9, radius * 0.4, steam - grate, [0, grate + (steam - grate) / 2, 0], STEAM_COLOURS.steam),
+  ];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
@@ -285,4 +299,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent() };
