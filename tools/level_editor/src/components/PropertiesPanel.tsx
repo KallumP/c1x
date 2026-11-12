@@ -4,7 +4,7 @@ import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeHeading, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
-import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, PATH_NODES_MAX, type BoxType, type LevelObject, type NumberSetting, type ObjectType, type Vec3, objectType } from "../objects";
+import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, settingMax, PATH_NODES_MAX, type BoxType, type LevelObject, type NumberSetting, type ObjectType, type Vec3, objectType } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
@@ -147,7 +147,8 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
         dispatch({ type: "update", index, changes: { [setting]: value }, record: false });
       }
     };
-    const { min, max } = NUMBER_SETTING_RULES[setting];
+    const { min } = NUMBER_SETTING_RULES[setting];
+    const max = settingMax(setting, objectType(enemy));
     const { label, step } = numberSlider(enemy, setting);
     return (
       <SliderField
