@@ -304,6 +304,9 @@ function movingPlatform(): ShapePart[] {
   ];
 }
 
+// sunset vista's dropping platform (Rw2wG): its rotating platform's slab
+const droppingPlatform = rotatingPlatform;
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
@@ -311,4 +314,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform() };
