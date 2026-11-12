@@ -1634,6 +1634,29 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasRoadToNowhere)("timed planks, from road to nowhere", () => {
+    // its slot (23) is the one boulder dash's gates' code (BldOC) takes in custom levels
+    test("a timed plank is road to nowhere's BridC subtype 1, moved to slot 18, at its spot, with its plank (BD1kG) and not its level's other planks", () => {
+      const { level, entries, zone } = build([obstacle("timed_plank")]);
+      expect(OBSTACLE_ENTITIES.timed_plank).toEqual([18, 1]);
+      expect(level.nsd.ldat.execMap[18]).toBe(stringToEid("BrgNC"));
+      expect(entries.has(stringToEid("BD1kG"))).toBe(true);
+      expect(entries.has(stringToEid("Bs1kG"))).toBe(false);
+      const placed = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.timed_plank))!;
+      expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a timed plank's code spawns its own kind (CHLD 0x17 at 0x106) in its new slot", () => {
+      const code = build([obstacle("timed_plank")]).entries.get(stringToEid("BrgNC"))!.items[1];
+      expect((code.readUInt32LE(0x106 * 4) >>> 12) & 0x3f).toBe(18);
+    });
+
+    test("a level with timed planks and gates has both codes", () => {
+      const { level } = build([obstacle("timed_plank"), obstacle("tall_thin_gate", { at: [1, 6, 0] })]);
+      expect([level.nsd.ldat.execMap[18], level.nsd.ldat.execMap[23]]).toEqual([stringToEid("BrgNC"), stringToEid("BldOC")]);
+    });
+  });
+
   describe.skipIf(!hasSlipperyClimb)("moving platforms, from slippery climb", () => {
     const platform = (more: Partial<LevelObject> = {}) => {
       const { level, entries, zone } = build([obstacle("moving_platform", more)]);
