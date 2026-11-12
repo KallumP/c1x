@@ -642,6 +642,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(initFlagsOf(build([obstacle(type, more)]).zone, OBSTACLE_ENTITIES[type]).slice(0, 2)).toEqual(flags);
     });
 
+    // its init flag C's bit 1 picks its model with a top (Rp7w; without, Rp1w, which has none:
+    // sunset vista's all push out of walls, their tops hidden). custom levels' stand in the open
+    test("a pushing block is the one with a top", () => {
+      const placed = zoneEntities(build([obstacle("pushing_block")]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.pushing_block))!;
+      expect(placed.readInt16LE(ENTITY_INIT_FLAGS + 4) & 2).toBe(2);
+    });
+
     test("pushing blocks and platforms read sunset vista once", () => {
       const reader = recordingReader();
       build([obstacle("pushing_block"), obstacle("pushing_platform", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
