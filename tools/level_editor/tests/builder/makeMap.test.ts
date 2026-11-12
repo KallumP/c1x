@@ -711,6 +711,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(placed.readUInt16LE(4) & 1).toBe(0);
     });
 
+    // falling, it turned back to facing the camera (its target turn, 0) as it tipped over: it keeps its own
+    test("a turned gate falls the way it's turned: its fall makes its own turn its target", () => {
+      const code = build([obstacle("tall_thin_gate", { rotation: 90 })]).entries.get(stringToEid("BldOC"))!.items[1];
+      const at = (index: number) => code.readUInt32LE(index * 4);
+      expect(code.length / 4).toBe(0x291 + 3);
+      expect(at(0x27b)).toBe((0x82094000 | ((0x291 - 0x27c) & 0x3ff)) >>> 0); // BRA to the added code
+      expect([at(0x291), at(0x292)]).toEqual([0x11810e39, 0x11e0ce15]);       // the fall's own MOVE 0x1000, obj[0x144]; MOVE obj[0x90], obj[0xb4]
+      expect(at(0x293)).toBe((0x82094000 | ((0x27c - 0x294) & 0x3ff)) >>> 0); // and back
+    });
+
     test("a gate takes one more texture page, without boulder dash's boulder and the rest it never shows", () => {
       const { entries, level } = build([obstacle("low_wide_gate"), obstacle("tall_thin_gate", { at: [1, 6, 0] })]);
       expect(texturePages(level).length).toBe(texturePages(build().level).length + 1);
