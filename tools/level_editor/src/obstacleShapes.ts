@@ -291,15 +291,16 @@ function steamVent(): ShapePart[] {
   ];
 }
 
-const MOVING_PLATFORM = { radius: 400, thick: 403, moss: 60 };
+const MOVING_PLATFORM = { across: 802, deep: 797, thick: 403, moss: 60 };
 
-// slippery climb's moving platform (PlPyG): a stone slab 802 x 797 across, its
-// mossy top at its spot, 403 thick
+// slippery climb's moving platform (PlPyG): a square stone slab 802 x 797
+// across, its mossy top at its spot, 403 thick
 function movingPlatform(): ShapePart[] {
-  const { radius, thick, moss } = MOVING_PLATFORM;
+  const { across, deep, thick, moss } = MOVING_PLATFORM;
+  const stone = thick - moss;
   return [
-    rod(radius, radius * 0.9, thick - moss, [0, -moss - (thick - moss) / 2, 0], PILLAR_COLOURS.stone),
-    rod(radius, radius, moss, [0, -moss / 2, 0], PILLAR_COLOURS.moss),
+    { kind: "box", size: [across, stone, deep], at: [0, -moss - stone / 2, 0], colour: PILLAR_COLOURS.stone },
+    { kind: "box", size: [across, moss, deep], at: [0, -moss / 2, 0], colour: PILLAR_COLOURS.moss },
   ];
 }
 
