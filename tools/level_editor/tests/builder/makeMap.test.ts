@@ -700,25 +700,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(code.readUInt32LE(0x26b * 4)).toBe(0x11801e1f);
     });
 
-    // its init flags are its turn (not settings): A tips it over, B is its yaw, 4096 a full turn
+    // its init flags are its rotation (not settings), drawn as Ry(C) Rx(A) Ry(B - C): B and C
+    // both its turn (4096 a full turn) stand it turned, and tip it over (A, as it falls) the way it faces
     test.each([
       { rotation: 0, yaw: 0 },
       { rotation: 90, yaw: 1024 },
       { rotation: 270, yaw: 3072 },
     ])("a gate turned $rotation degrees has a yaw of $yaw", ({ rotation, yaw }) => {
       const placed = zoneEntities(build([obstacle("low_wide_gate", { rotation })]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.low_wide_gate))!;
-      expect([placed.readInt16LE(ENTITY_INIT_FLAGS), placed.readInt16LE(ENTITY_INIT_FLAGS + 2)]).toEqual([0, yaw]);
+      expect([0, 2, 4].map((at) => placed.readInt16LE(ENTITY_INIT_FLAGS + at))).toEqual([0, yaw, yaw]);
       expect(placed.readUInt16LE(4) & 1).toBe(0);
-    });
-
-    // falling, it turned back to facing the camera (its target turn, 0) as it tipped over: it keeps its own
-    test("a turned gate falls the way it's turned: its fall makes its own turn its target", () => {
-      const code = build([obstacle("tall_thin_gate", { rotation: 90 })]).entries.get(stringToEid("BldOC"))!.items[1];
-      const at = (index: number) => code.readUInt32LE(index * 4);
-      expect(code.length / 4).toBe(0x291 + 3);
-      expect(at(0x27b)).toBe((0x82094000 | ((0x291 - 0x27c) & 0x3ff)) >>> 0); // BRA to the added code
-      expect([at(0x291), at(0x292)]).toEqual([0x11810e39, 0x11e0ce15]);       // the fall's own MOVE 0x1000, obj[0x144]; MOVE obj[0x90], obj[0xb4]
-      expect(at(0x293)).toBe((0x82094000 | ((0x27c - 0x294) & 0x3ff)) >>> 0); // and back
     });
 
     test("a gate takes one more texture page, without boulder dash's boulder and the rest it never shows", () => {
