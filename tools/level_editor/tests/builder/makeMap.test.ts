@@ -1622,6 +1622,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(frames);
       expect(placed.readUInt16LE(4) & 1).toBe(1);
     });
+
+    // its code puts it |A/2 - (frames + B's share of A) % A| along its path: with B 0 at its far
+    // end on the level's first frame; half way round (128 of 256) at its first node, where the editor shows it
+    test("a moving platform starts at its first node: its init flag B half way round its slide", () => {
+      expect(platform().placed.readInt16LE(ENTITY_INIT_FLAGS + 2)).toBe(128);
+    });
   });
 
   describe.skipIf(!hasSlipperyClimb)("birds, from slippery climb", () => {
