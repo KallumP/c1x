@@ -827,6 +827,21 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(build([obstacle("rotating_platforms")]).entries.has(stringToEid("Rw1wG"))).toBe(true);
     });
 
+    // init flag A: the frames it shakes before it drops; B: the frames it stays dropped;
+    // C 0: its short platform (Rw2w; 1 its long one, Rw4w)
+    test.each([
+      { more: {}, flags: [20, 60, 0] },
+      { more: { shake: 1, down: 3 }, flags: [30, 90, 0] },
+    ])("a dropping platform ($more) is sunset vista's RWaOC subtype 10, at its spot, its timing in its init flags, not turned by them", ({ more, flags }) => {
+      const { zone, entries } = build([obstacle("dropping_platform", more as Partial<LevelObject>)]);
+      expect(OBSTACLE_ENTITIES.dropping_platform).toEqual([46, 10]);
+      expect(entries.has(stringToEid("Rw2wG"))).toBe(true);
+      const placed = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.dropping_platform))!;
+      expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
+      expect(initFlagsOf(zone, OBSTACLE_ENTITIES.dropping_platform)).toEqual(flags);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
+
     test("pushing blocks and platforms read sunset vista once", () => {
       const reader = recordingReader();
       build([obstacle("pushing_block"), obstacle("pushing_platform", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
