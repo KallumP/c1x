@@ -340,6 +340,14 @@ function entitiesFor(enemy: LevelObject): number {
   return 1;
 }
 
+// entities each obstacle takes: slamming walls' two halves, one for the rest
+function entitiesForObstacle(obstacle: LevelObject): number {
+  if (obstacle.obstacle === "slamming_walls") {
+    return 2;
+  }
+  return 1;
+}
+
 // the enemies that stay at their spot: jungle rollers' plant, up the creek's two
 // river plants, the spider hanging there and temple ruins' cobra (and cortex
 // power's gunman, with his range)
@@ -605,7 +613,8 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const obstacles = objects.filter((object) => object.kind === "obstacle");
   const stones = obstacles.filter((obstacle) => obstacle.obstacle === "rolling_stone");
   const donorLevels = objectDonorLevels([...enemies, ...obstacles], readOtherLevel);
-  const entityCount = Number(end !== undefined) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0) + obstacles.length;
+  const entityCount = Number(end !== undefined) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0)
+    + obstacles.reduce((sum, obstacle) => sum + entitiesForObstacle(obstacle), 0);
   const placer = new ObjectPlacer(map, templates, scale, turn, entityCount);
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
   const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
