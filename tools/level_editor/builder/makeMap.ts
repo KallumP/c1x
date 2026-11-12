@@ -274,7 +274,20 @@ function withSlideTiming(entity: Buffer, obstacle: LevelObject, length: number, 
   if (!SLIDING_AT_SPEED.includes(obstacle.obstacle!)) {
     return entity;
   }
-  return withInitFlagA(withNoRotationFromFlags(entity), pillarSlideFrames(obstacle, length, scale));
+  const timed = withInitFlagA(withNoRotationFromFlags(entity), pillarSlideFrames(obstacle, length, scale));
+  return withSlideStart(timed, obstacle);
+}
+
+// a moving platform's code puts it |A/2 - (frames + B's share of A) % A| along
+// its path, so its init flag B half way round (in 256ths) starts it at its
+// first node, where the editor shows it (slippery climb's are a quarter or more
+// round); any other obstacle's as it is
+const HALF_WAY_ROUND = CYCLE_SHARES / 2;
+function withSlideStart(entity: Buffer, obstacle: LevelObject): Buffer {
+  if (obstacle.obstacle !== "moving_platform") {
+    return entity;
+  }
+  return withInitFlagB(entity, HALF_WAY_ROUND);
 }
 
 // a carrying platform's init flag A: its step along its path a frame, in
