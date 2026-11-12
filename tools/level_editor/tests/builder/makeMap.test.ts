@@ -1591,6 +1591,39 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasSlipperyClimb)("moving platforms, from slippery climb", () => {
+    const platform = (more: Partial<LevelObject> = {}) => {
+      const { level, entries, zone } = build([obstacle("moving_platform", more)]);
+      return { level, entries, placed: zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.moving_platform))! };
+    };
+
+    // its code isn't boulder dash's nor temple ruins' (those name their own models), so it has a slot of its own
+    test("a moving platform is slippery climb's PoPlC subtype 2, moved to slot 15, with its slab and not its level's other platforms", () => {
+      const { level, entries } = platform();
+      expect(OBSTACLE_ENTITIES.moving_platform).toEqual([15, 2]);
+      expect(level.nsd.ldat.execMap[15]).toBe(stringToEid("PoPCC"));
+      expect(entries.has(stringToEid("PlPyG"))).toBe(true);
+      expect(entries.has(stringToEid("PlUyG"))).toBe(false);
+    });
+
+    test("without a path, it slides from its spot 4 m straight across the map (at scale 256: 1024), as many points as slippery climb's first", () => {
+      const path = entityPath(platform().placed);
+      expect(path.length).toBe(11);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 1024, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
+    });
+
+    // its init flag A is the frames its slide there and back takes, as a sliding pillar's
+    test.each([
+      { more: {}, frames: 120 },                                        // 4 m there and back at 2 m/s: 4 s
+      { more: { path: [[0, 0, 0], [0, 6, 0]], speed: 4 }, frames: 90 }, // 6 m at 4 m/s: 3 s
+    ] as const)("a moving platform ($more) slides there and back in $frames frames, not turned by them", ({ more, frames }) => {
+      const { placed } = platform(more as Partial<LevelObject>);
+      expect(placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(frames);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
+  });
+
   describe.skipIf(!hasSlipperyClimb)("birds, from slippery climb", () => {
     test("a level with a bird has slippery climb's castle objects code, the bird's model, flapping and sounds", () => {
       const { level, entries } = build([enemy("bird")]);
