@@ -262,12 +262,16 @@ const onItsNodes = (obstacle: LevelObject) => obstacle.path !== undefined || obs
 // over, B is its yaw, 4096 a full turn, anticlockwise seen from above
 const FULL_TURN = 4096;
 
-// entity with a gate's rotation (degrees) as its yaw; any other object's as it is
+// entity with a gate's rotation (degrees) as its turn; any other object's as
+// it is. the game draws it turned Ry(C) Rx(A) Ry(B - C) (src/pc/gfx/soft.c):
+// its turn in B alone stood it turned, but its fall (tipping A over) stayed
+// towards the camera; in B and C both, it stands the same and falls the way it faces
 function withGateTurn(entity: Buffer, object: LevelObject): Buffer {
   if (!GATES.includes(object.obstacle!)) {
     return entity;
   }
-  return withInitFlagB(entity, Math.round((numberSetting(object, "rotation") / 360) * FULL_TURN) % FULL_TURN);
+  const turn = Math.round((numberSetting(object, "rotation") / 360) * FULL_TURN) % FULL_TURN;
+  return withInitFlagC(withInitFlagB(entity, turn), turn);
 }
 
 // how far over its spot a timed obstacle is placed
