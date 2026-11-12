@@ -8,7 +8,7 @@ import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { OBSTACLE_SHAPES } from "../obstacleShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
-import { isPathEnemy, isPathObstacle, numberSetting, PATH_ENEMIES, PATH_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
+import { GATES, isPathEnemy, isPathObstacle, numberSetting, PATH_ENEMIES, PATH_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
@@ -46,6 +46,15 @@ const VIAL_COLOUR = "#d0409a"; // its vials' pink, for their flight and landing 
 const SPOT_ENEMIES = ["plant", "blue_river_plant", "green_river_plant", "spider", "snake", "gunman"] as const;
 type SpotEnemy = (typeof SPOT_ENEMIES)[number];
 const isSpotEnemy = (enemy: string | undefined): enemy is SpotEnemy => SPOT_ENEMIES.some((spotEnemy) => spotEnemy === enemy);
+
+// how far an obstacle is turned from its model's own way (radians,
+// anticlockwise seen from above): a gate by its rotation, the rest not at all
+function obstacleTurn(object: LevelObject): number {
+  if (!GATES.includes(object.obstacle!)) {
+    return 0;
+  }
+  return (numberSetting(object, "rotation") * Math.PI) / 180;
+}
 
 // where an object's base is in the viewport, raised as it is in the game
 function base(object: LevelObject): Vec3 {
@@ -478,7 +487,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     if (object.obstacle === "mossy_slide") {
       return renderMossySlide(object, index);
     }
-    return renderShapeModel(OBSTACLE_SHAPES[object.obstacle!], base(object), index);
+    return renderShapeModel(OBSTACLE_SHAPES[object.obstacle!], base(object), index, undefined, enemyTurn(turn) + obstacleTurn(object));
   };
 
   const renderShape = (object: LevelObject, index: number) => {

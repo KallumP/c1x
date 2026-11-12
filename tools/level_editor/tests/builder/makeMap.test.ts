@@ -700,14 +700,14 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(code.readUInt32LE(0x26b * 4)).toBe(0x11801e1f);
     });
 
-    // its init flags are its turn (not settings), A its yaw: 4096 a full turn
+    // its init flags are its turn (not settings): A tips it over, B is its yaw, 4096 a full turn
     test.each([
       { rotation: 0, yaw: 0 },
       { rotation: 90, yaw: 1024 },
       { rotation: 270, yaw: 3072 },
     ])("a gate turned $rotation degrees has a yaw of $yaw", ({ rotation, yaw }) => {
       const placed = zoneEntities(build([obstacle("low_wide_gate", { rotation })]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.low_wide_gate))!;
-      expect(placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(yaw);
+      expect([placed.readInt16LE(ENTITY_INIT_FLAGS), placed.readInt16LE(ENTITY_INIT_FLAGS + 2)]).toEqual([0, yaw]);
       expect(placed.readUInt16LE(4) & 1).toBe(0);
     });
 
