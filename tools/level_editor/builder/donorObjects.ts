@@ -445,7 +445,14 @@ function withCrashEntries(type: ObjectType, object: DonorObject, level: Level): 
 // bowl (WT1iG), open at its top, which close up was see-through. every great
 // gate object that brings it changes it the same, or the two would clash
 const GATE_BOTH_SIDED_MODELS = ["WT1iG"];
+// temple ruins' slamming walls' halves (RcLsG, RcRsG), which have faces on
+// three sides only (its walls are set in its corridor's), see-through from the
+// rest: the ruins objects' code (RuiOC) brings them for its bats too
+const RUINS_BOTH_SIDED_MODELS = ["RcLsG", "RcRsG"];
 const OBJECT_BOTH_SIDED_MODELS: Partial<Record<ObjectType, string[]>> = {
+  slamming_walls: RUINS_BOTH_SIDED_MODELS,
+  bat: RUINS_BOTH_SIDED_MODELS,
+  leader_bats: RUINS_BOTH_SIDED_MODELS,
   wooden_peg: GATE_BOTH_SIDED_MODELS,
   rising_spiked_log: GATE_BOTH_SIDED_MODELS,
   falling_spiked_log: GATE_BOTH_SIDED_MODELS,

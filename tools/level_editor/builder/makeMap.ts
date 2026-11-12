@@ -183,6 +183,10 @@ function donorEnemyEntity(donor: Level, type: EnemyType): Buffer {
 const obstacleExample = (donor: Level, type: ObstacleType): Buffer =>
   withEntityType(levelEntity(donor, ...donorObstacleType(type)), OBSTACLE_ENTITIES[type][0]);
 
+// slamming walls' left half from temple ruins, moved to the walls' slot as their right half is
+const slammingWallLeft = (donor: Level): Buffer =>
+  withEntityType(levelEntity(donor, ...SLAMMING_WALL_LEFT), OBSTACLE_ENTITIES.slamming_walls[0]);
+
 // the great gate's spiked logs: a rising one pushes up out of the floor at its
 // spot, and a falling one comes down on it from SPIKED_LOG_HANG over it (game
 // units, as the great gate's hang over their floor: higher, it stops short of crash)
@@ -644,7 +648,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   slides.forEach((slide) => placer.placeSlide(slide, obstacleOf(slide), slidePath(slide, scale)));
   timed.forEach((obstacle) => placer.placeTimedObstacle(obstacle, obstacleOf(obstacle)));
   obstacles.filter((obstacle) => obstacle.obstacle === "slamming_walls")
-    .forEach((walls) => placer.placeSlammingWalls(walls, obstacleOf(walls), levelEntity(donorLevels.get("slamming_walls")!, ...SLAMMING_WALL_LEFT)));
+    .forEach((walls) => placer.placeSlammingWalls(walls, obstacleOf(walls), slammingWallLeft(donorLevels.get("slamming_walls")!)));
   movers.filter((obstacle) => !onItsNodes(obstacle)).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
   movers.filter(onItsNodes).forEach((obstacle) => placer.placeOnItsNodes(obstacle, obstacleOf(obstacle)));
   stones.forEach((stone) => placer.placeStone(stone, track!));
