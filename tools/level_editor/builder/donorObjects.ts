@@ -493,6 +493,14 @@ const GREEN_LEAP_Z = LIZARD_CODE_LENGTH;     // the instructions added for each,
 const RED_HOP_Z = LIZARD_CODE_LENGTH + 9;
 const MOVE_TO_X = 0x11e1fe08;                // MOVE pop(), obj[0x80]: its x, as the code sets it
 
+// boulder dash's gates (JunOC subtypes 13 to 18, state 10) only looked at what
+// hit them (crash walking into one knocks it over) while its boulder was about
+// (global 3, which the boulder sets): custom levels have none, so they never
+// fell. that wait is always met; with no boulder they skip to what hit them
+const GATE_CODE_PATCHES: CodePatch[] = [
+  { at: 0x26b, was: 0x1fbe0803, now: 0x11801e1f }, // GLBR 3 (the boulder) becomes MOVE 0x100, push(): there
+];
+
 const LIZARD_CODE_PATCHES: CodePatch[] = [
   { at: GREEN_LEAP_SETS_X, was: MOVE_TO_X, now: branch(GREEN_LEAP_SETS_X, GREEN_LEAP_Z) },
   { at: RED_HOP_SETS_X, was: MOVE_TO_X, now: branch(RED_HOP_SETS_X, RED_HOP_Z) },
@@ -567,6 +575,8 @@ const ENEMY_CODE_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   gunman: GUNMAN_CODE_PATCHES,
   lizard: LIZARD_CODE_PATCHES,
   red_lizard: LIZARD_CODE_PATCHES,
+  tall_thin_gate: GATE_CODE_PATCHES, // boulder dash's objects, sharing the code
+  low_wide_gate: GATE_CODE_PATCHES,
   wooden_peg: GATE_OBJECTS_CODE_PATCHES, // the great gate's objects, sharing the code
   mossy_slide: GATE_OBJECTS_CODE_PATCHES,
   rising_spiked_log: GATE_OBJECTS_CODE_PATCHES,
