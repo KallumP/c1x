@@ -3,13 +3,21 @@ import type { ReactNode } from "react";
 import { hexToRgb, rgbToHex, type Rgb } from "../sky";
 import "./Fields.css";
 
-export function Field({ label, children }: { label: string; children: ReactNode }) {
+// a field: its label beside what's in it, or over it if stacked (a slider, whose label can be long)
+export function Field({ label, stacked = false, children }: { label: string; stacked?: boolean; children: ReactNode }) {
   return (
-    <label className="field">
+    <label className={fieldClass(stacked)}>
       <span>{label}</span>
       {children}
     </label>
   );
+}
+
+function fieldClass(stacked: boolean): string {
+  if (stacked) {
+    return "field stacked";
+  }
+  return "field";
 }
 
 export function NumberField({ label, value, step, min, onChange }: {
@@ -34,7 +42,7 @@ export function SliderField({ label, value, min, max, step = 1, onGrab, onChange
   label: string; value: number; min: number; max: number; step?: number; onGrab: () => void; onChange: (value: number) => void;
 }) {
   return (
-    <Field label={`${label} (${value})`}>
+    <Field label={`${label} (${value})`} stacked>
       <input
         type="range"
         value={value}

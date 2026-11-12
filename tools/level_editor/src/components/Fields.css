@@ -5,6 +5,11 @@
   gap: 6px;
 }
 
+.field.stacked {
+  grid-template-columns: 1fr;
+  gap: 2px;
+}
+
 .field input[type="color"] {
   height: 24px;
   padding: 1px 2px;

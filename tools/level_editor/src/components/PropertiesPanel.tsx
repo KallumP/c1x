@@ -4,7 +4,7 @@ import type { LevelCfg } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeHeading, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
-import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, settingMax, PATH_NODES_MAX, type BoxType, type LevelObject, type NumberSetting, type ObjectType, type Vec3, objectType } from "../objects";
+import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, settingMax, PATH_NODES_MAX, ROTATING_OBSTACLES, type BoxType, type LevelObject, type NumberSetting, type ObjectType, type Vec3, objectType } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
@@ -17,10 +17,18 @@ const AXES = ["x", "y"] as const;
 // roost's seconds between flocks, a gunman's range in metres, a mossy slide's
 // length in metres, angle in degrees and rotation in degrees, and a spiked
 // log's seconds between its pushes and seconds they're put off by)
-// a number setting's slider for an object: a sliding pillar's speed is in metres a second
+// a number setting's slider for an object: a sliding pillar's speed is in
+// metres a second, and a rotating obstacle's every is the time a turn takes
+// and its offset how far round its turn it starts
 function numberSlider(object: LevelObject, setting: NumberSetting): { label: string; step: number } {
   if (setting === "speed" && object.obstacle === "sliding_pillar") {
     return { label: "speed m/s", step: 0.05 };
+  }
+  if (setting === "every" && ROTATING_OBSTACLES.includes(object.obstacle!)) {
+    return { label: "turn time s", step: 0.5 };
+  }
+  if (setting === "offset" && ROTATING_OBSTACLES.includes(object.obstacle!)) {
+    return { label: "rotation start offset s", step: 0.5 };
   }
   return NUMBER_SLIDERS[setting];
 }
@@ -36,6 +44,8 @@ const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
   rotation: { label: "rotation °", step: 5 },
   every: { label: "every s", step: 0.5 },
   offset: { label: "offset s", step: 0.5 },
+  platforms: { label: "platforms", step: 1 },
+  radius: { label: "radius m", step: 0.5 },
 };
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 // the enemies reversed across the map, and what their Reverse direction button does

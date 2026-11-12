@@ -213,9 +213,22 @@ function pushingPlatform(): ShapePart[] {
   return [{ kind: "box", size: [across, top - bottom, out - near], at: [0, (top + bottom) / 2, (out + near) / 2], colour: RUINS_COLOURS.platform }];
 }
 
+// sunset vista's rotating pot (Rp3wG): a stone pot 806 across and 794 long,
+// hanging 719 down from its spot
+function rotatingPot(): ShapePart[] {
+  return [rod(403, 300, 719, [0, -360, 397], RUINS_COLOURS.stone, { stretch: [1, 1, 794 / 806] })];
+}
+
+// sunset vista's rotating platform (Rw1wG): a stone slab 742 across, 172 thick,
+// just under its spot, reaching 1000 out towards the player
+function rotatingPlatform(): ShapePart[] {
+  return [{ kind: "box", size: [742, 172, 1039], at: [0, -117, 480], colour: RUINS_COLOURS.platform }];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
 export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit(), dropping_pillar: pillar(), sliding_pillar: pillar(),
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
-  pushing_block: pushingBlock(), pushing_platform: pushingPlatform() };
+  pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
+  rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform() };
