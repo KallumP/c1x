@@ -308,6 +308,22 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasTempleRuins)("slamming walls' timing", () => {
+    // init flag A: the frames between slams (90 without one: 3 s); B: the frames into them it starts, on both halves
+    test.each([
+      { more: {}, flags: [90, 0] },
+      { more: { every: 4, offset: 1 }, flags: [120, 90] },
+    ])("slamming walls ($more) have their slams' timing in both halves' init flags", ({ more, flags }) => {
+      const { zone } = build([obstacle("slamming_walls", more)]);
+      const halves = zoneEntities(zone).filter((item) => isOfType(item, [42, 7]) || isOfType(item, [42, 8]));
+      expect(halves.length).toBe(2);
+      halves.forEach((half) => {
+        expect([half.readInt16LE(ENTITY_INIT_FLAGS), half.readInt16LE(ENTITY_INIT_FLAGS + 2)]).toEqual(flags);
+        expect(half.readUInt16LE(4) & 1).toBe(1);
+      });
+    });
+  });
+
   describe.skipIf(!hasTempleRuins)("snakes, from temple ruins", () => {
     test("a snake is temple ruins' cobra, in its own exec slot, at its spot", () => {
       const [snake] = enemies(build([enemy("snake")]).zone);

@@ -535,6 +535,12 @@ describe("wooden pegs", () => {
 });
 
 describe("slamming walls", () => {
+  test("slamming walls slam every so many seconds (3 without), put off by an offset", () => {
+    const [walls] = parseObjects('[{"kind": "obstacle", "type": "slamming_walls", "at": [1, 2, 0], "every": 4, "offset": 1}]');
+    expect([walls.every, walls.offset]).toEqual([4, 1]);
+    expect(numberSetting(obstacleObject("slamming_walls"), "every")).toBe(3);
+  });
+
   test("slamming walls are an obstacle, with no path", () => {
     expect(parseObjects('[{"kind": "obstacle", "type": "slamming_walls", "at": [1, 2, 0]}]'))
       .toEqual([{ kind: "obstacle", obstacle: "slamming_walls", at: [1, 2, 0], raise: 0, stack: 1 }]);
