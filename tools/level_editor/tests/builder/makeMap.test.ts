@@ -308,6 +308,16 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(right.at(-1)!, SPOT_IN_ZONE, 16);
       expectNear(left.at(-1)!, SPOT_IN_ZONE, 16);
     });
+
+    // its code spawns its pieces (CHLD, opcode 0x8a, the type in bits 12-17) of its
+    // own type, 42 in temple ruins: moved, they're of the walls' slot
+    test("slamming walls' code spawns its pieces in its own slot", () => {
+      const code = build([obstacle("slamming_walls")]).entries.get(stringToEid("RuiWC"))!.items[1];
+      const words = Array.from({ length: code.length / 4 }, (_, index) => code.readUInt32LE(index * 4));
+      const spawnedTypes = words.filter((word) => word >>> 24 === 0x8a).map((word) => (word >>> 12) & 0x3f);
+      expect(spawnedTypes).not.toContain(42);
+      expect(spawnedTypes.filter((type) => type === 6).length).toBe(9);
+    });
   });
 
   describe.skipIf(!hasTempleRuins)("slamming walls' sides", () => {
