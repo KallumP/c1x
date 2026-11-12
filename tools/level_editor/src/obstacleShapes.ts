@@ -262,16 +262,19 @@ function carryingPlatform(): ShapePart[] {
 
 const BOUNCE_PAD = { across: 722, height: 175, base: 40, pad: 50 };
 
-// castle machinery's bounce pad (PoSpG): a spring 722 across, standing 175 tall
-// on its spot: a metal base, a coil and a red pad on top
+// a square slab across wide and high tall, its bottom bottom up from the spot
+const squareSlab = (across: number, high: number, bottom: number, colour: string): ShapePart =>
+  ({ kind: "box", size: [across, high, across], at: [0, bottom + high / 2, 0], colour });
+
+// castle machinery's bounce pad (PoSpG): a square spring 722 across, standing
+// 175 tall on its spot: a metal base, a coil and a red pad on top
 function bouncePad(): ShapePart[] {
   const { across, height, base, pad } = BOUNCE_PAD;
-  const radius = across / 2;
   const coil = height - base - pad;
   return [
-    rod(radius, radius, base, [0, base / 2, 0], SPRING_COLOURS.base),
-    rod(radius * 0.6, radius * 0.6, coil, [0, base + coil / 2, 0], SPRING_COLOURS.coil),
-    rod(radius, radius, pad, [0, height - pad / 2, 0], SPRING_COLOURS.pad),
+    squareSlab(across, base, 0, SPRING_COLOURS.base),
+    squareSlab(across * 0.6, coil, base, SPRING_COLOURS.coil),
+    squareSlab(across, pad, height - pad, SPRING_COLOURS.pad),
   ];
 }
 
