@@ -84,6 +84,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   slamming_walls: TEMPLE_RUINS,
   rising_pillar: TEMPLE_RUINS,
   carrying_platform: TEMPLE_RUINS,
+  bounce_pad: CASTLE_MACHINERY,
 };
 
 export interface DonorObject {
