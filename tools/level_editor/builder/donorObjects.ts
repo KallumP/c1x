@@ -86,6 +86,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   carrying_platform: TEMPLE_RUINS,
   bounce_pad: CASTLE_MACHINERY,
   steam_vent: CASTLE_MACHINERY,
+  moving_platform: SLIPPERY_CLIMB,
 };
 
 export interface DonorObject {
@@ -396,6 +397,7 @@ const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   rotating_platforms: ruinsModelsBut(["Rw1w"]),
   rising_pillar: ["PlDsG", "PlDsV", "PlPsG", "PlPsV"], // temple ruins' other pillars' models: its PoPlC's, which a rising pillar never shows
   carrying_platform: ["PlDsG", "PlDsV", "PlUsG", "PlUsV"], // and those a carrying platform never shows
+  moving_platform: ["PlD0G", "PlD0V", "PlUyG", "PlUyV"], // slippery climb's other platforms' models, which a moving platform never shows
   tall_thin_gate: BOULDER_DASH_NON_GATE_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
   low_wide_gate: BOULDER_DASH_NON_GATE_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
   barrel_roller: ["WateC"],

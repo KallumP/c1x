@@ -21,7 +21,7 @@ const AXES = ["x", "y"] as const;
 // platform's speed is in metres a second, and a rotating obstacle's every is the time a turn takes
 // and its offset how far round its turn it starts, as a rising pillar's are
 // the time a rise and fall takes and how far into it it starts
-const METRES_A_SECOND: ObstacleType[] = ["sliding_pillar", "carrying_platform"];
+const METRES_A_SECOND: ObstacleType[] = ["sliding_pillar", "carrying_platform", "moving_platform"];
 function numberSlider(object: LevelObject, setting: NumberSetting): { label: string; step: number } {
   if (setting === "speed" && METRES_A_SECOND.includes(object.obstacle!)) {
     return { label: "speed m/s", step: 0.05 };
