@@ -497,26 +497,9 @@ const MOVE_TO_X = 0x11e1fe08;                // MOVE pop(), obj[0x80]: its x, as
 // hit them (crash walking into one knocks it over) while its boulder was about
 // (global 3, which the boulder sets): custom levels have none, so they never
 // fell. that wait is always met; with no boulder they skip to what hit them
-const GATE_CODE_LENGTH = 0x291;
-const GATE_FALLS = 0x27b;              // its fall's (state 11's) first instruction
-const GATE_FALL_SPEED = 0x11810e39;    // MOVE 0x1000, obj[0x144]: how fast it tips over
 const GATE_CODE_PATCHES: CodePatch[] = [
   { at: 0x26b, was: 0x1fbe0803, now: 0x11801e1f }, // GLBR 3 (the boulder) becomes MOVE 0x100, push(): there
-  { at: GATE_FALLS, was: GATE_FALL_SPEED, now: branch(GATE_FALLS, GATE_CODE_LENGTH) },
 ];
-
-// a gate turned (its init flag B is its turn, rot.x) turned back to facing the
-// camera as it fell, as falling lets it turn towards its target turn
-// (target_rot.x, 0), so every gate fell the same way: its fall makes its own
-// turn its target first, so it tips over the way it faces
-const GATE_CODE_ADDITION: CodeAddition = {
-  after: GATE_CODE_LENGTH,
-  instructions: [
-    GATE_FALL_SPEED, // as the fall began
-    0x11e0ce15,      // MOVE obj[0x90], obj[0xb4]: its turn (rot.x) as its target turn (target_rot.x)
-    branch(GATE_CODE_LENGTH + 2, GATE_FALLS + 1),
-  ],
-};
 
 const LIZARD_CODE_PATCHES: CodePatch[] = [
   { at: GREEN_LEAP_SETS_X, was: MOVE_TO_X, now: branch(GREEN_LEAP_SETS_X, GREEN_LEAP_Z) },
@@ -552,8 +535,6 @@ const LIZARD_CODE_ADDITION: CodeAddition = {
 const ENEMY_CODE_ADDITIONS: Partial<Record<ObjectType, CodeAddition>> = {
   lizard: LIZARD_CODE_ADDITION,
   red_lizard: LIZARD_CODE_ADDITION,
-  tall_thin_gate: GATE_CODE_ADDITION, // boulder dash's objects, sharing the code
-  low_wide_gate: GATE_CODE_ADDITION,
 };
 
 // toxic waste's barrels (BaraC) stop flattening crash 5 points short of their
