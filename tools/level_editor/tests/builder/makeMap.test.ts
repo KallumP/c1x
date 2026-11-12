@@ -312,6 +312,21 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expect(plant.id).not.toBe(boxes(built.zone)[0].id);
   });
 
+  describe.skipIf(!hasTempleRuins || !hasBoulderDash)("rising pillars, from temple ruins", () => {
+    // temple ruins' PoPlC isn't boulder dash's (its dropping and sliding pillars'), so it moves to slot 13 as PoPTC
+    test("a rising pillar is temple ruins' PoPlC subtype 6, moved to its own slot, with its pillar, rising 1600 from its spot", () => {
+      const { level, entries, zone } = build([obstacle("rising_pillar"), obstacle("dropping_pillar", { at: [1, 6, 0] })]);
+      expect(OBSTACLE_ENTITIES.rising_pillar).toEqual([13, 6]);
+      expect(level.nsd.ldat.execMap[13]).toBe(stringToEid("PoPTC"));
+      expect(level.nsd.ldat.execMap[11]).toBe(stringToEid("PoPlC"));
+      expect(entries.has(stringToEid("PlUsG"))).toBe(true);
+      const path = entityPath(zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.rising_pillar))!);
+      expect(path.length).toBe(9);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path[8], [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1] + 1600, SPOT_IN_ZONE[2]], 16);
+    });
+  });
+
   describe.skipIf(!hasTempleRuins)("slamming walls, from temple ruins", () => {
     // temple ruins' RuiOC isn't sunset vista's (the bats'), so it moves to slot 6 as RuiWC
     test("slamming walls are temple ruins' RuiOC subtypes 7 (the right half) and 8 (the left), moved to their own slot, 1200 either side of the spot, sliding in to meet there", () => {
@@ -379,6 +394,21 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
         expect([half.readInt16LE(ENTITY_INIT_FLAGS), half.readInt16LE(ENTITY_INIT_FLAGS + 2)]).toEqual(flags);
         expect(half.readUInt16LE(4) & 1).toBe(1);
       });
+    });
+  });
+
+  describe.skipIf(!hasTempleRuins)("rising pillars' timing", () => {
+    // init flag A: the frames a rise and fall takes (120 without one: 4 s);
+    // B: how far through it the pillar is, in 256ths (ahead), so an offset puts it behind
+    test.each([
+      { more: {}, flags: [120, 0] },
+      { more: { every: 4, offset: 1 }, flags: [120, 192] },
+      { more: { every: 3, offset: 1.5 }, flags: [90, 128] },
+    ])("a rising pillar ($more) has its rise's timing in its init flags, not turned by them", ({ more, flags }) => {
+      const { zone } = build([obstacle("rising_pillar", more)]);
+      const [pillar] = zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES.rising_pillar));
+      expect([pillar.readInt16LE(ENTITY_INIT_FLAGS), pillar.readInt16LE(ENTITY_INIT_FLAGS + 2)]).toEqual(flags);
+      expect(pillar.readUInt16LE(4) & 1).toBe(1);
     });
   });
 

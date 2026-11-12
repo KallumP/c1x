@@ -19,7 +19,8 @@ const AXES = ["x", "y"] as const;
 // log's seconds between its pushes and seconds they're put off by)
 // a number setting's slider for an object: a sliding pillar's speed is in
 // metres a second, and a rotating obstacle's every is the time a turn takes
-// and its offset how far round its turn it starts
+// and its offset how far round its turn it starts, as a rising pillar's are
+// the time a rise and fall takes and how far into it it starts
 function numberSlider(object: LevelObject, setting: NumberSetting): { label: string; step: number } {
   if (setting === "speed" && object.obstacle === "sliding_pillar") {
     return { label: "speed m/s", step: 0.05 };
@@ -29,6 +30,12 @@ function numberSlider(object: LevelObject, setting: NumberSetting): { label: str
   }
   if (setting === "offset" && ROTATING_OBSTACLES.includes(object.obstacle!)) {
     return { label: "rotation start offset s", step: 0.5 };
+  }
+  if (setting === "every" && object.obstacle === "rising_pillar") {
+    return { label: "rise and fall time s", step: 0.5 };
+  }
+  if (setting === "offset" && object.obstacle === "rising_pillar") {
+    return { label: "rise start offset s", step: 0.5 };
   }
   return NUMBER_SLIDERS[setting];
 }

@@ -237,6 +237,25 @@ function pillarSlideFrames(pillar: LevelObject, length: number, scale: number): 
   return Math.min(INIT_FLAG_FRAMES_MAX, Math.max(1, Math.round(seconds * FRAMES_A_SECOND)));
 }
 
+// a rising pillar's init flags: A the frames its rise and fall takes, B how far
+// through it the pillar is, in 256ths ahead (temple ruins' code), so its offset
+// puts it behind
+const CYCLE_SHARES = 256;
+function risingPillarTiming(pillar: LevelObject): [number, number] {
+  const [every, into] = obstacleTiming(pillar);
+  return [every, Math.round((into * CYCLE_SHARES) / every) % CYCLE_SHARES];
+}
+
+// entity with a rising pillar's timing in its init flags, not turned by them;
+// any other obstacle's as it is
+function withRiseTiming(entity: Buffer, obstacle: LevelObject): Buffer {
+  if (obstacle.obstacle !== "rising_pillar") {
+    return entity;
+  }
+  const [every, ahead] = risingPillarTiming(obstacle);
+  return withInitFlagB(withInitFlagA(withNoRotationFromFlags(entity), every), ahead);
+}
+
 // entity with a sliding pillar's slide's frames in its init flag A, not
 // turned by it; any other obstacle's as it is
 function withSlideTiming(entity: Buffer, obstacle: LevelObject, length: number, scale: number): Buffer {
@@ -447,7 +466,8 @@ class ObjectPlacer {
   // reversed), its lily pad sinking and its leaf drifting
   placeWithItsPath(object: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(object));
-    this.entities[zone].push(withGateTurn(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(object.reverse === true)), object));
+    const placed = withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(object.reverse === true));
+    this.entities[zone].push(withRiseTiming(withGateTurn(placed, object), object));
   }
 
   // a floating leaf or sliding pillar (example) moving along its path's nodes
