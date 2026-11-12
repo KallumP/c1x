@@ -693,6 +693,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
     });
 
+    // its knocking over waited for boulder dash's boulder (global 3) to be about
+    // before it looked at what hit it: it doesn't wait (0x26b, GLBR 3 becomes MOVE 0x100, push())
+    test("a gate falls when crash walks into it, with no boulder about", () => {
+      const code = build([obstacle("tall_thin_gate")]).entries.get(stringToEid("BldOC"))!.items[1];
+      expect(code.readUInt32LE(0x26b * 4)).toBe(0x11801e1f);
+    });
+
     test("a gate takes one more texture page, without boulder dash's boulder and the rest it never shows", () => {
       const { entries, level } = build([obstacle("low_wide_gate"), obstacle("tall_thin_gate", { at: [1, 6, 0] })]);
       expect(texturePages(level).length).toBe(texturePages(build().level).length + 1);
