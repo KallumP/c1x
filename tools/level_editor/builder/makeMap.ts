@@ -197,19 +197,52 @@ function obstacleTiming(obstacle: LevelObject): [number, number] {
 
 // how far along its own level's path each of a path obstacle's points is: a
 // floating leaf's drift's, or a sliding pillar's slide's
-function ownPathShares(obstacle: LevelObject): number[] {
+// length its path's length (game units)
+function ownPathShares(obstacle: LevelObject, length: number): number[] {
   if (obstacle.obstacle === "sliding_pillar") {
-    return sharesAtSpeed(pillarSlideShares(), numberSetting(obstacle, "speed"));
+    return sharesInSteps(pillarSlideShares(), pillarSteps(length));
   }
   return leafDriftShares();
 }
 
-// shares (how far along a path each point is) for a path taken at speed times
-// its pace: the game moves through its points at its own rate, so faster has
-// fewer (at least 2), each as far along as the eased path is by then
-function sharesAtSpeed(shares: number[], speed: number): number[] {
-  const steps = Math.max(1, Math.round((shares.length - 1) / speed));
+// a sliding pillar's steps along its path (length, game units): its own
+// level's 13, or more if its longest step (in the middle, where it's eased
+// fastest) would be over PILLAR_STEP_MAX, so a long or bent path keeps its
+// shape (its speed is its flag A, not its points: see pillarSlideFrames)
+const PILLAR_STEP_MAX = 400;
+function pillarSteps(length: number): number {
+  const shares = pillarSlideShares();
+  const ownSteps = shares.length - 1;
+  const longest = Math.max(...shares.slice(1).map((share, step) => share - shares[step])) * ownSteps; // its longest step, in average steps
+  return Math.max(ownSteps, Math.ceil((length * longest) / PILLAR_STEP_MAX));
+}
+
+// shares (how far along a path each point is) in steps steps, each as far
+// along as the eased path (shares) is by then
+function sharesInSteps(shares: number[], steps: number): number[] {
   return Array.from({ length: steps + 1 }, (_, point) => shareAt(shares, (point * (shares.length - 1)) / steps));
+}
+
+// a sliding pillar's init flag A: the frames its slide there and back takes at
+// its speed (metres a second), its path length game units long at scale
+const INIT_FLAG_FRAMES_MAX = 32767;
+function pillarSlideFrames(pillar: LevelObject, length: number, scale: number): number {
+  const seconds = (2 * length) / scale / numberSetting(pillar, "speed");
+  return Math.min(INIT_FLAG_FRAMES_MAX, Math.max(1, Math.round(seconds * FRAMES_A_SECOND)));
+}
+
+// entity with a sliding pillar's slide's frames in its init flag A, not
+// turned by it; any other obstacle's as it is
+function withSlideTiming(entity: Buffer, obstacle: LevelObject, length: number, scale: number): Buffer {
+  if (obstacle.obstacle !== "sliding_pillar") {
+    return entity;
+  }
+  return withInitFlagA(withNoRotationFromFlags(entity), pillarSlideFrames(obstacle, length, scale));
+}
+
+// how long a path through points is
+function pathLength(points: Vec3[]): number {
+  return points.slice(1).reduce((sum, point, index) => sum + Math.hypot(...point.map((value, axis) => value - points[index][axis])), 0);
 }
 
 // how far along a path it is at a fractional point (between two of shares)
@@ -339,9 +372,10 @@ class ObjectPlacer {
     const position = this.positionOf(obstacle);
     const { zone, at } = this.inZone(position);
     const nodes = pathPositions(obstacle, this.turn, this.scale).map((node) => this.positionOf({ ...obstacle, at: node, raise: 0 }));
-    const points = ownPathShares(obstacle).map((share) => pointAlongShare(nodes, share));
+    const length = pathLength(nodes);
+    const points = ownPathShares(obstacle, length).map((share) => pointAlongShare(nodes, share));
     const drift = points.map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
-    this.entities[zone].push(withPath(withEntityId(example, this.ids.shift()!), drift));
+    this.entities[zone].push(withSlideTiming(withPath(withEntityId(example, this.ids.shift()!), drift), obstacle, length, this.scale));
   }
 
   // a mossy slide's slider (example) at its spot, sliding along its slope from there (run, from its spot)

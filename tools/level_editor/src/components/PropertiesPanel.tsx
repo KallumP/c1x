@@ -17,6 +17,14 @@ const AXES = ["x", "y"] as const;
 // roost's seconds between flocks, a gunman's range in metres, a mossy slide's
 // length in metres, angle in degrees and rotation in degrees, and a spiked
 // log's seconds between its pushes and seconds they're put off by)
+// a number setting's slider for an object: a sliding pillar's speed is in metres a second
+function numberSlider(object: LevelObject, setting: NumberSetting): { label: string; step: number } {
+  if (setting === "speed" && object.obstacle === "sliding_pillar") {
+    return { label: "speed m/s", step: 0.05 };
+  }
+  return NUMBER_SLIDERS[setting];
+}
+
 const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
   speed: { label: "speed ×", step: 0.25 },
   start: { label: "start", step: 0.05 },
@@ -140,7 +148,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
       }
     };
     const { min, max } = NUMBER_SETTING_RULES[setting];
-    const { label, step } = NUMBER_SLIDERS[setting];
+    const { label, step } = numberSlider(enemy, setting);
     return (
       <SliderField
         key={setting}

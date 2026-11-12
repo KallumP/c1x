@@ -658,7 +658,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     // its init flag A is the frames its slide there and back takes (30 a second), whatever its
     // length: from its path's length (metres at scale 256) and its speed, in metres a second
-    const pillar = (more: Partial<LevelObject>) => zoneEntities(build([obstacle("sliding_pillar", more)]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.sliding_pillar))!;
+    const pillar = (more: object) => zoneEntities(build([obstacle("sliding_pillar", more as Partial<LevelObject>)]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.sliding_pillar))!;
     test.each([
       { more: {}, frames: 188 },                                                   // its own 800 units: 3.125 m, there and back at 1 m/s
       { more: { path: [[0, 0, 0], [0, 4, 0]], speed: 2 }, frames: 120 },           // 8 m at 2 m/s: 4 s
