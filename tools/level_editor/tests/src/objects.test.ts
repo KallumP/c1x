@@ -305,8 +305,8 @@ describe("enemy speeds", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras, and sliding pillars do)"],
-    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 4}]', "object 1: speed should be 0.25 to 3 (times the game's own pace, or a sliding pillar's metres a second)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras, sliding pillars and carrying platforms do)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 4}]', "object 1: speed should be 0.25 to 3 (times the game's own pace, or a sliding pillar's or carrying platform's metres a second)"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 0.1}]', "object 1: speed should be 0.25 to 3"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": "fast"}]', "object 1: speed should be 0.25 to 3"],
   ])("refuses %s", (text, message) => {
@@ -651,6 +651,21 @@ describe("pillars", () => {
     const [platform] = parseObjects('[{"kind": "obstacle", "type": "carrying_platform", "at": [1, 2, 0], "path": [[0, 0, 0], [6, 0, 0], [6, 4, 1]]}]');
     expect(platform.path).toEqual([[0, 0, 0], [6, 0, 0], [6, 4, 1]]);
     expect(parseObjects(formatObjects([platform]))).toEqual([platform]);
+  });
+
+  test("a carrying platform can have a speed, in metres a second up to 6, read back as written; temple ruins' 1.5 without", () => {
+    const [platform] = parseObjects('[{"kind": "obstacle", "type": "carrying_platform", "at": [1, 2, 0], "speed": 3}]');
+    expect(platform.speed).toBe(3);
+    expect(parseObjects(formatObjects([platform]))).toEqual([platform]);
+    expect(numberSetting(obstacleObject("carrying_platform"), "speed")).toBe(1.5);
+    expect(settingMax("speed", "carrying_platform")).toBe(6);
+  });
+
+  // its own default is 1.5, so 1 (an enemy's default) is still written
+  test("a carrying platform's speed of 1 is written, and read back as 1", () => {
+    const platform = { ...obstacleObject("carrying_platform", { at: [1, 2, 0] }), speed: 1 };
+    expect(formatObjects([platform])).toContain('"speed": 1}');
+    expect(parseObjects(formatObjects([platform]))[0].speed).toBe(1);
   });
 });
 

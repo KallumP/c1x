@@ -353,6 +353,20 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(path[0], SPOT_IN_ZONE, 16);
       expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 512, SPOT_IN_ZONE[1] + 256, SPOT_IN_ZONE[2] - 1024], 16);
     });
+
+    // its init flag A is its step along its path a frame (30 a second), in 256ths of a point (its
+    // code's own 51 without): its 24 steps' 6144 over the frames its path's length takes at its
+    // speed, in metres a second (at scale 256)
+    const platform = (more: object) => zoneEntities(build([obstacle("carrying_platform", more as Partial<LevelObject>)]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.carrying_platform))!;
+    test.each([
+      { more: {}, step: 51 },                                                  // 6 m at 1.5 m/s: 120 frames, temple ruins' own pace
+      { more: { path: [[0, 0, 0], [0, 4, 0]], speed: 2 }, step: 102 },         // 4 m at 2 m/s: 60 frames
+      { more: { path: [[0, 0, 0], [0, 20, 0]], speed: 0.25 }, step: 3 },       // 20 m at 0.25 m/s: 2400 frames
+    ] as const)("a carrying platform ($more) steps $step 256ths of a point a frame, not turned by it", ({ more, step }) => {
+      const placed = platform(more);
+      expect(placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(step);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
   });
 
   describe.skipIf(!hasTempleRuins)("slamming walls, from temple ruins", () => {
