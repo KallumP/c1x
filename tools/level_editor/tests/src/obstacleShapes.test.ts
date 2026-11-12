@@ -40,6 +40,8 @@ describe("obstacle shapes", () => {
     { obstacle: "rising_pillar", bottom: -3203, top: [-10, 30], across: [900, 1000], long: [900, 1000] },
     // and its carrying platform PlPsG: 794 across, its top at its spot and 481 down
     { obstacle: "carrying_platform", bottom: -481, top: [-10, 30], across: [750, 840], long: [750, 840] },
+    // castle machinery's bounce pad PoSpG: a spring 719 x 725 across, 175 tall on its spot
+    { obstacle: "bounce_pad", bottom: 0, top: [160, 190], across: [690, 750], long: [690, 750] },
   ] as const)("a $obstacle is as big as the game's, about its spot as the game's", ({ obstacle, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(OBSTACLE_SHAPES[obstacle].filter((part) => part.name !== "arrow"));
     expectWithin(min[1], [bottom - 15, bottom + 15]);
