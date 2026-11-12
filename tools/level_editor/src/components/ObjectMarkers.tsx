@@ -8,7 +8,7 @@ import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { OBSTACLE_SHAPES } from "../obstacleShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
-import { isPathEnemy, numberSetting, PATH_ENEMIES, type LevelObject, type PathEnemy, type Vec3 } from "../objects";
+import { isPathEnemy, isPathObstacle, numberSetting, PATH_ENEMIES, PATH_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
@@ -33,7 +33,8 @@ const walkerSize = (parts: ShapePart[]) => {
 const FACES_ITS_WAY: PathEnemy[] = ["turtle", "warthog", "monkey", "lizard", "red_lizard", "walking_lizard", "robot_dog", "electric_scientist"];
 
 const WALKER_SIZES = Object.fromEntries(PATH_ENEMIES.map((enemy) => [enemy, walkerSize(ENEMY_SHAPES[enemy])])) as Record<PathEnemy, ReturnType<typeof walkerSize>>;
-const LEAF_SIZE = walkerSize(OBSTACLE_SHAPES.leaf); // a leaf's, as a walker's, for the handles of the nodes under it
+// a path obstacle's size (a leaf's or sliding pillar's), as a walker's, for the handles of the nodes under it
+const PATH_OBSTACLE_SIZES = Object.fromEntries(PATH_OBSTACLES.map((obstacle) => [obstacle, walkerSize(OBSTACLE_SHAPES[obstacle])])) as Record<PathObstacle, ReturnType<typeof walkerSize>>;
 
 // how far a leader bat's and a bat's tops are above their spots, in game units: their handles float over them
 const LEADER_BAT_TOP = shapeBounds(ENEMY_SHAPES.leader_bats).max[1];
@@ -420,18 +421,19 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     return renderLabAssistant(object, index); // the last enemy left
   };
 
-  // a floating leaf: at its spot, where it drifts from, facing the way it drifts,
-  // with the line of its drift, and faded where it turns back
-  const renderLeaf = (object: LevelObject, index: number) => {
-    const nodes = pathPositions(object, turn, scale); // its drift, or its own path
+  // a floating leaf or sliding pillar: at its spot, where it sets off from,
+  // facing the way it goes, with the line of its path, and faded where it turns back
+  const renderPathObstacle = (object: LevelObject, index: number) => {
+    const type = object.obstacle as PathObstacle;
+    const nodes = pathPositions(object, turn, scale); // its own level's path, or its own
     const last = nodes.length - 1;
-    const colour = OBSTACLE_COLOURS.leaf;
+    const colour = OBSTACLE_COLOURS[type];
     return (
       <>
-        {renderShapeModel(OBSTACLE_SHAPES.leaf, blenderToView(nodes[0]), index, 0, facingFrom(nodes[0], nodes[1], turn))}
-        {renderShapeModel(OBSTACLE_SHAPES.leaf, blenderToView(nodes[last]), index, 1, facingFrom(nodes[last - 1], nodes[last], turn), FAR_END_OPACITY)}
+        {renderShapeModel(OBSTACLE_SHAPES[type], blenderToView(nodes[0]), index, 0, facingFrom(nodes[0], nodes[1], turn))}
+        {renderShapeModel(OBSTACLE_SHAPES[type], blenderToView(nodes[last]), index, 1, facingFrom(nodes[last - 1], nodes[last], turn), FAR_END_OPACITY)}
         <Line points={nodes.map(blenderToView)} color={pathColour(index, colour)} lineWidth={2} />
-        {index === selected && renderPathHandles(nodes, index, LEAF_SIZE, colour)}
+        {index === selected && renderPathHandles(nodes, index, PATH_OBSTACLE_SIZES[type], colour)}
       </>
     );
   };
@@ -464,11 +466,11 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // a leaf with its drift, a rolling stone on its track, a mossy slide as its slope, and the rest at their
+  // a leaf or sliding pillar with its path, a rolling stone on its track, a mossy slide as its slope, and the rest at their
   // spots (a lily pad where it sinks from, a wooden peg opened out)
   const renderObstacle = (object: LevelObject, index: number) => {
-    if (object.obstacle === "leaf") {
-      return renderLeaf(object, index);
+    if (isPathObstacle(object.obstacle)) {
+      return renderPathObstacle(object, index);
     }
     if (object.obstacle === "rolling_stone") {
       return renderRollingStone(object, index);

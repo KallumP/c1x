@@ -1,6 +1,6 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
-import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, BIRD_SWOOP, BLOB_HOP, CAMERA_ROBOT_RISE, cameraFacing, FLYING_CAMERA_RISE, labAssistantThrow, LEAF_DRIFT, leafDrift, leaderBatsGap, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, rising, ROBOT_DOG_WALK, SCIENTIST_WALK, WALKING_LIZARD_PACE, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, BIRD_SWOOP, BLOB_HOP, CAMERA_ROBOT_RISE, cameraFacing, FLYING_CAMERA_RISE, labAssistantThrow, LEAF_DRIFT, leafDrift, leaderBatsGap, PILLAR_SLIDE, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, rising, ROBOT_DOG_WALK, SCIENTIST_WALK, WALKING_LIZARD_PACE, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
 import { LAB_ASSISTANT_REACH } from "./labAssistantThrow";
 import { hasOneNode, PATH_NODES_MAX, type LevelObject, type PathEnemy, type Vec3 } from "./objects";
 
@@ -73,6 +73,12 @@ export function defaultPath(enemy: PathEnemy, turn: number, scale: number): Vec3
 // a floating leaf's nodes without a path of its own: its drift, as up the creek's first leaf's
 const leafDriftNodes = (turn: number, scale: number) => leafDrift([0, 0, 0], 0, turn, scale);
 
+// a sliding pillar's nodes without a path of its own: its slide's two ends, as boulder dash's
+function pillarSlideNodes(turn: number, scale: number): Vec3[] {
+  const [length] = PILLAR_SLIDE[PILLAR_SLIDE.length - 1];
+  return [[0, 0, 0], scaled(stoneRolling(turn), length / scale)];
+}
+
 // an enemy's nodes without a path of its own: leader bats' second leader
 // where it hovers by default, a bat roost's swoop's end where temple ruins'
 // ends, a lab assistant's landing spot where stormy ascent's first's vials
@@ -80,6 +86,9 @@ const leafDriftNodes = (turn: number, scale: number) => leafDrift([0, 0, 0], 0, 
 function defaultNodes(object: LevelObject, turn: number, scale: number): Vec3[] {
   if (object.obstacle === "leaf") {
     return leafDriftNodes(turn, scale);
+  }
+  if (object.obstacle === "sliding_pillar") {
+    return pillarSlideNodes(turn, scale);
   }
   if (object.enemy === "leader_bats") {
     return [leaderBatsGap(turn, scale)];
@@ -122,6 +131,9 @@ export function nodeCount(object: LevelObject): number {
   }
   if (object.obstacle === "leaf") {
     return LEAF_DRIFT.length;
+  }
+  if (object.obstacle === "sliding_pillar") {
+    return 2;
   }
   return DEFAULT_PATH_NODES;
 }

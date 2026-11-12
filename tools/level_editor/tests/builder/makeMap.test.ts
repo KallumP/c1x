@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
-import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, leafDriftShares, LEADER_BATS_FLIGHT, leaderBatsGap } from "../../src/coords";
+import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, leafDriftShares, LEADER_BATS_FLIGHT, leaderBatsGap, pillarSlideShares } from "../../src/coords";
 import type { EnemyType, LevelObject, ObstacleType } from "../../src/objects";
 import { DEFAULT_SKY, type Sky } from "../../src/sky";
 import { enemyObject, expectNear, obstacleObject } from "../helpers";
@@ -643,6 +643,39 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(path.length).toBe(14);
       expectNear(path[0], SPOT_IN_ZONE, 16);
       expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 800, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
+    });
+
+    test("a sliding pillar with a path slides along its nodes, its points as far along them as boulder dash's are along its slide", () => {
+      // 4 m along blender +y (the game's -z) at scale 256: its 14 points spread over 1024 units, bunched at the ends
+      const placed = zoneEntities(build([obstacle("sliding_pillar", { path: [[0, 0, 0], [0, 4, 0]] })]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.sliding_pillar))!;
+      const path = entityPath(placed);
+      expect(path.length).toBe(14);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path[13], [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1], SPOT_IN_ZONE[2] - 1024], 16);
+      const shares = path.map(([, , z]) => (path[0][2] - z) / 1024);
+      pillarSlideShares().forEach((share, point) => expectNear(shares[point], share, 0.01));
+    });
+
+    // its init flag A is the frames its slide there and back takes (30 a second), whatever its
+    // length: from its path's length (metres at scale 256) and its speed, in metres a second
+    const pillar = (more: object) => zoneEntities(build([obstacle("sliding_pillar", more as Partial<LevelObject>)]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.sliding_pillar))!;
+    test.each([
+      { more: {}, frames: 188 },                                                   // its own 800 units: 3.125 m, there and back at 1 m/s
+      { more: { path: [[0, 0, 0], [0, 4, 0]], speed: 2 }, frames: 120 },           // 8 m at 2 m/s: 4 s
+      { more: { path: [[0, 0, 0], [0, 40, 0]], speed: 0.5 }, frames: 4800 },       // 80 m at 0.5 m/s: 160 s
+    ] as const)("a sliding pillar ($more) slides there and back in $frames frames, not turned by them", ({ more, frames }) => {
+      const placed = pillar(more);
+      expect(placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(frames);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
+
+    test("a long sliding pillar's path has a point at least every 400 (a metre at scale 400), still eased at its ends", () => {
+      const path = entityPath(pillar({ path: [[0, 0, 0], [0, 40, 0]] })); // 10240 units at scale 256
+      expect(path.length).toBeGreaterThanOrEqual(27);
+      const steps = path.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - path[index][axis])));
+      expect(Math.max(...steps)).toBeLessThanOrEqual(420);
+      expect(steps[0]).toBeLessThan(steps[Math.floor(steps.length / 2)]);
+      expectNear(path.at(-1)!, [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1], SPOT_IN_ZONE[2] - 10240], 16);
     });
 
     test("dropping and sliding pillars read boulder dash once", () => {

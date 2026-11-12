@@ -82,7 +82,8 @@ export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone"
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
-export const PATH_OBSTACLES = ["leaf"] as const satisfies readonly ObstacleType[];
+export const PATH_OBSTACLES = ["leaf", "sliding_pillar"] as const satisfies readonly ObstacleType[];
+export type PathObstacle = (typeof PATH_OBSTACLES)[number];
 export const isPathObstacle = (type: ObstacleType | undefined) => PATH_OBSTACLES.some((obstacle) => obstacle === type);
 
 // what a placed enemy or obstacle is, as the level build takes it from its level
@@ -104,6 +105,7 @@ const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map(pluralName).join(", 
 // how many times the game's own pace a path enemy can walk at (seen working in the game with crabs and turtles)
 export const SPEED_MIN = 0.25;
 export const SPEED_MAX = 3;
+export const SLIDING_PILLAR_SPEED_MAX = 6; // metres a second
 
 // how many badgers or walking spiders come out at once: as jungle rollers' first
 // badger spawner, and fumbling in the dark's spider spawners, without a count;
@@ -193,10 +195,11 @@ interface NumberSettingRule {
   whole: boolean;
   fallback: (type: ObjectType | undefined) => number;
   meaning: string;
+  maxFor?: Partial<Record<ObjectType, number>>; // a higher (or lower) max for some types than max
 }
 
 export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
-  speed: { types: PATH_ENEMIES, typesNamed: PATH_ENEMIES_NAMED, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: () => 1, meaning: "times the game's own pace" },
+  speed: { types: [...PATH_ENEMIES, "sliding_pillar"], typesNamed: `${PATH_ENEMIES_NAMED}, and sliding pillars`, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: () => 1, meaning: "times the game's own pace, or a sliding pillar's metres a second", maxFor: { sliding_pillar: SLIDING_PILLAR_SPEED_MAX } },
   start: { types: ["rolling_stone"], typesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
   count: { types: ["badger", "walking_spider", "bat", "leader_bats"], typesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
   delay: { types: ["bat", "leader_bats"], typesNamed: "bats and leader bats", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks" },
@@ -213,6 +216,10 @@ export const hasNumberSetting = (object: LevelObject, setting: NumberSetting) =>
   NUMBER_SETTING_RULES[setting].types.some((type) => type === objectType(object));
 
 // an object's number setting, or what it is without one
+// the most a setting can be for a type of object
+export const settingMax = (setting: NumberSetting, type: ObjectType | undefined): number =>
+  NUMBER_SETTING_RULES[setting].maxFor?.[type!] ?? NUMBER_SETTING_RULES[setting].max;
+
 export const numberSetting = (object: LevelObject, setting: NumberSetting) => object[setting] ?? NUMBER_SETTING_RULES[setting].fallback(objectType(object));
 
 export interface LevelObject {
@@ -270,7 +277,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
-const OBSTACLE_SETTINGS = ["type", "path", "start", "reverse", "length", "angle", "rotation", "every", "offset"];
+const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
 // a word with "a" or "an" before it, as it sounds: "a box", "an enemy"
@@ -349,21 +356,21 @@ function readPath(fields: Record<string, unknown>, enemy: EnemyType, objectNumbe
   return { path: pathNodes(nodes, objectNumber) };
 }
 
-// a leaf's path, from its fields in objects.json (none if it hasn't one); a lily pad has none
+// a leaf's or sliding pillar's path, from its fields in objects.json (none if it hasn't one); a lily pad has none
 function readObstaclePath(fields: Record<string, unknown>, obstacle: ObstacleType, objectNumber: number): Pick<LevelObject, "path"> {
   if (!("path" in fields)) {
     return {};
   }
   if (!isPathObstacle(obstacle)) {
-    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves do)`);
+    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves and sliding pillars do)`);
   }
   checkPathLength(fields.path, objectNumber);
   return { path: pathNodes(fields.path, objectNumber) };
 }
 
 // whether a value is a number a setting can be: in its range, and whole if it has to be
-function isInRange(value: unknown, rule: NumberSettingRule): value is number {
-  if (!isNumber(value) || value < rule.min || value > rule.max) {
+function isInRange(value: unknown, rule: NumberSettingRule, max: number): value is number {
+  if (!isNumber(value) || value < rule.min || value > max) {
     return false;
   }
   return !rule.whole || Number.isInteger(value);
@@ -379,8 +386,9 @@ function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetti
     throw new Error(`object ${objectNumber}: a ${type} has no ${setting} (${rule.typesNamed} do)`);
   }
   const value = fields[setting];
-  if (!isInRange(value, rule)) {
-    throw new Error(`object ${objectNumber}: ${setting} should be ${rule.min} to ${rule.max} (${rule.meaning})`);
+  const max = settingMax(setting, type);
+  if (!isInRange(value, rule, max)) {
+    throw new Error(`object ${objectNumber}: ${setting} should be ${rule.min} to ${max} (${rule.meaning})`);
   }
   return { [setting]: value };
 }

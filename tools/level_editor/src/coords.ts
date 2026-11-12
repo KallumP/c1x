@@ -120,11 +120,16 @@ export const LEAF_DRIFT: [number, number][] = [
   [304, 1500], [400, 1780], [464, 2028], [492, 2224], [448, 2356], [400, 2400],
 ];
 
-// how far along its drift (0 to 1) each of a leaf's points is: bunched at its
-// ends, where it slows to turn back. a leaf with a path of its own has its
-// points as far along that, so it drifts it with the same easing, in the same time
-export function leafDriftShares(): number[] {
-  const steps = LEAF_DRIFT.slice(1).map(([x, z], point) => Math.hypot(x - LEAF_DRIFT[point][0], z - LEAF_DRIFT[point][1]));
+// boulder dash's sliding pillar's slide (its first's path), in game units
+// from its spot: across the map (as a stone rolls). it slides out along it and back
+export const PILLAR_SLIDE: [number, number][] = [
+  [0, 0], [8, 0], [40, 0], [96, 0], [172, 0], [272, 0], [400, 0],
+  [504, 0], [596, 0], [668, 0], [728, 0], [768, 0], [792, 0], [800, 0],
+];
+
+// how far along a path (0 to 1) each of its points is
+function pathShares(points: [number, number][]): number[] {
+  const steps = points.slice(1).map(([x, z], point) => Math.hypot(x - points[point][0], z - points[point][1]));
   const total = steps.reduce((sum, step) => sum + step, 0);
   let travelled = 0;
   return [0, ...steps.map((step) => {
@@ -132,6 +137,14 @@ export function leafDriftShares(): number[] {
     return travelled / total;
   })];
 }
+
+// how far along its drift (0 to 1) each of a leaf's points is: bunched at its
+// ends, where it slows to turn back. a leaf with a path of its own has its
+// points as far along that, so it drifts it with the same easing, in the same time
+export const leafDriftShares = (): number[] => pathShares(LEAF_DRIFT);
+
+// how far along its slide each of a sliding pillar's points is, the same way
+export const pillarSlideShares = (): number[] => pathShares(PILLAR_SLIDE);
 
 // each point of a leaf's drift (in blender), for a leaf at at, raised by raise
 export function leafDrift(at: Vec3, raise: number, turn: number, scale: number): Vec3[] {
