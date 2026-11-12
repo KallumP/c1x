@@ -1543,6 +1543,35 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasCastleMachinery)("steam vents, from castle machinery", () => {
+    const CRASH_BURNING = ["WF10V", "WF10G", "BDC0A", "BLI0A", "WF20V", "BDA0A", "WF30V", "WF40V", "WF50V"];
+
+    test("a steam vent is castle machinery's PoObC subtype 1, in slot 14, at its spot, not turned by its timing", () => {
+      const { level, zone } = build([obstacle("steam_vent")]);
+      expect(OBSTACLE_ENTITIES.steam_vent).toEqual([14, 1]);
+      expect(level.nsd.ldat.execMap[14]).toBe(stringToEid("PoObC"));
+      const vent = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.steam_vent))!;
+      expectNear(entityPath(vent)[0], SPOT_IN_ZONE, 16);
+      expect(vent.readUInt16LE(4) & 1).toBe(1);
+    });
+
+    // its steam kills crash with his burning death, as a fire pit's flames do
+    test("a level with a steam vent has crash's burning death, and crash's code opens it", () => {
+      const { entries } = build([obstacle("steam_vent")]);
+      const constants = entries.get(stringToEid("WillC"))!.items[2];
+      expect(CRASH_BURNING.map((_, index) => constants.readUInt32LE(0x80 + 4 * index))).toEqual(CRASH_BURNING.map(stringToEid));
+      expect(CRASH_BURNING.filter((name) => !entries.has(stringToEid(name)))).toEqual([]);
+    });
+
+    // init flag A: the frames between its puffs; B: the frames into them it starts
+    test.each([
+      { more: {}, flags: [90, 0] },
+      { more: { every: 2, offset: 0.5 }, flags: [60, 45] },
+    ])("a steam vent ($more) has its puffs' timing in its init flags", ({ more, flags }) => {
+      expect(initFlagsOf(build([obstacle("steam_vent", more)]).zone, OBSTACLE_ENTITIES.steam_vent).slice(0, 2)).toEqual(flags);
+    });
+  });
+
   describe.skipIf(!hasCastleMachinery)("camera robots, from castle machinery", () => {
     test("a level with a camera robot has castle machinery's camera robot code, model, animations and sounds", () => {
       const { level, entries } = build([enemy("camera_robot")]);

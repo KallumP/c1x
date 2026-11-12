@@ -42,6 +42,8 @@ describe("obstacle shapes", () => {
     { obstacle: "carrying_platform", bottom: -481, top: [-10, 30], across: [750, 840], long: [750, 840] },
     // castle machinery's bounce pad PoSpG: a spring 719 x 725 across, 175 tall on its spot
     { obstacle: "bounce_pad", bottom: 0, top: [160, 190], across: [690, 750], long: [690, 750] },
+    // castle machinery's steam vent has no model (its pipe is its level's): a grate 500 across on its spot, its steam 1600 up
+    { obstacle: "steam_vent", bottom: 0, top: [1550, 1650], across: [450, 550], long: [450, 550] },
   ] as const)("a $obstacle is as big as the game's, about its spot as the game's", ({ obstacle, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(OBSTACLE_SHAPES[obstacle].filter((part) => part.name !== "arrow"));
     expectWithin(min[1], [bottom - 15, bottom + 15]);
