@@ -626,10 +626,10 @@ describe("pillars", () => {
     expect(numberSetting(obstacleObject("sliding_pillar"), "speed")).toBe(1);
   });
 
-  test("a rising pillar rises every so many seconds (127 frames without, as temple ruins'), put off by an offset", () => {
+  test("a rising pillar rises every so many seconds (4 without, near temple ruins' 127 frames), put off by an offset", () => {
     const [pillar] = parseObjects('[{"kind": "obstacle", "type": "rising_pillar", "at": [1, 2, 0], "every": 4, "offset": 1}]');
     expect([pillar.every, pillar.offset]).toEqual([4, 1]);
-    expect(numberSetting(obstacleObject("rising_pillar"), "every")).toBeCloseTo(127 / 30);
+    expect(numberSetting(obstacleObject("rising_pillar"), "every")).toBe(4);
   });
 
   test("a rising pillar is an obstacle, with no path", () => {

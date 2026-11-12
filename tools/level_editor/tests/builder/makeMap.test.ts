@@ -398,10 +398,10 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   });
 
   describe.skipIf(!hasTempleRuins)("rising pillars' timing", () => {
-    // init flag A: the frames a rise and fall takes (127 without one, as temple ruins' take);
+    // init flag A: the frames a rise and fall takes (120 without one: 4 s);
     // B: how far through it the pillar is, in 256ths (ahead), so an offset puts it behind
     test.each([
-      { more: {}, flags: [127, 0] },
+      { more: {}, flags: [120, 0] },
       { more: { every: 4, offset: 1 }, flags: [120, 192] },
       { more: { every: 3, offset: 1.5 }, flags: [90, 128] },
     ])("a rising pillar ($more) has its rise's timing in its init flags, not turned by them", ({ more, flags }) => {
