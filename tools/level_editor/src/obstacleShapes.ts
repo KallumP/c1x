@@ -10,6 +10,7 @@ const SPIKED_LOG_COLOURS = { log: "#7a5530", spike: "#d8d0b8", arrow: "#ffd23a" 
 const FIRE_PIT_COLOURS = { bowl: "#b8321e", rim: "#e0a030", flame: "#ff8a1f" };
 const PILLAR_COLOURS = { stone: "#5c5a50", moss: "#4f6b3a" };
 const GATE_COLOURS = { post: "#9a6a3a", rail: "#7a5230" };
+const SPRING_COLOURS = { base: "#3a3a40", coil: "#8a8a90", pad: "#a83a2a" };
 const RUINS_COLOURS = { stone: "#4a5560", carving: "#7a3a2a", platform: "#5a4a48" };
 
 // one of a lily pad's four round leaves, x and z out from its middle
@@ -259,6 +260,24 @@ function carryingPlatform(): ShapePart[] {
   ];
 }
 
+const BOUNCE_PAD = { across: 722, height: 175, base: 40, pad: 50 };
+
+// a square slab across wide and high tall, its bottom bottom up from the spot
+const squareSlab = (across: number, high: number, bottom: number, colour: string): ShapePart =>
+  ({ kind: "box", size: [across, high, across], at: [0, bottom + high / 2, 0], colour });
+
+// castle machinery's bounce pad (PoSpG): a square spring 722 across, standing
+// 175 tall on its spot: a metal base, a coil and a red pad on top
+function bouncePad(): ShapePart[] {
+  const { across, height, base, pad } = BOUNCE_PAD;
+  const coil = height - base - pad;
+  return [
+    squareSlab(across, base, 0, SPRING_COLOURS.base),
+    squareSlab(across * 0.6, coil, base, SPRING_COLOURS.coil),
+    squareSlab(across, pad, height - pad, SPRING_COLOURS.pad),
+  ];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
@@ -266,4 +285,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad() };

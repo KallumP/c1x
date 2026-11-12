@@ -1532,6 +1532,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasCastleMachinery)("bounce pads, from castle machinery", () => {
+    test("a bounce pad is castle machinery's PoObC subtype 0, in its own slot 14, at its spot, with its spring and no other model", () => {
+      const { level, entries, zone } = build([obstacle("bounce_pad")]);
+      expect(OBSTACLE_ENTITIES.bounce_pad).toEqual([14, 0]);
+      expect(level.nsd.ldat.execMap[14]).toBe(stringToEid("PoObC"));
+      expect(entries.has(stringToEid("PoSpG"))).toBe(true);
+      const pad = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.bounce_pad))!;
+      expectNear(entityPath(pad)[0], SPOT_IN_ZONE, 16);
+    });
+  });
+
   describe.skipIf(!hasCastleMachinery)("camera robots, from castle machinery", () => {
     test("a level with a camera robot has castle machinery's camera robot code, model, animations and sounds", () => {
       const { level, entries } = build([enemy("camera_robot")]);
