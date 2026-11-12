@@ -179,9 +179,9 @@ export const GATES: ObstacleType[] = ["tall_thin_gate", "low_wide_gate"];
 
 // the seconds between a timed obstacle's pushes or flames without an every, as
 // its own level's: the great gate's spiked logs' 180 frames and fire pits' 120,
-// sunset vista's pushing blocks' 60 and platforms' 70, temple ruins' rising
-// pillars' 127 (at 30 a second)
-const TIMED_EVERY: Partial<Record<ObjectType, number>> = { fire_pit: 4, pushing_block: 2, pushing_platform: 70 / 30, slamming_walls: 3, rising_pillar: 127 / 30 };
+// sunset vista's pushing blocks' 60 and platforms' 70 (at 30 a second); a
+// rising pillar's 4 s, near temple ruins' 127 frames
+const TIMED_EVERY: Partial<Record<ObjectType, number>> = { fire_pit: 4, pushing_block: 2, pushing_platform: 70 / 30, slamming_walls: 3, rising_pillar: 4 };
 export const SPIKED_LOG_EVERY = 6;
 export const TIMED_EVERY_MIN = 2;
 export const TIMED_EVERY_MAX = 20;
