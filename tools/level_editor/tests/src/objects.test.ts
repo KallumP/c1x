@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { numberSetting, boxTypeName, formatObjects, hasNodes, hasPath, parseObjects } from "../../src/objects";
+import { numberSetting, settingMax, boxTypeName, formatObjects, hasNodes, hasPath, parseObjects } from "../../src/objects";
 import { enemyObject, obstacleObject } from "../helpers";
 
 describe("parseObjects", () => {
@@ -538,6 +538,13 @@ describe("pillars", () => {
   test.each(["dropping_pillar", "sliding_pillar"])("a %s is an obstacle", (type) => {
     expect(parseObjects(`[{"kind": "obstacle", "type": "${type}", "at": [1, 2, 0], "raise": 1}]`))
       .toEqual([{ kind: "obstacle", obstacle: type, at: [1, 2, 0], raise: 1, stack: 1 }]);
+  });
+
+  test("a sliding pillar's speed goes up to 6 metres a second; an enemy's still up to 3 times its pace", () => {
+    expect(parseObjects('[{"kind": "obstacle", "type": "sliding_pillar", "at": [0, 0, 0], "speed": 6}]')[0].speed).toBe(6);
+    expect(() => parseObjects('[{"kind": "obstacle", "type": "sliding_pillar", "at": [0, 0, 0], "speed": 6.5}]')).toThrow("object 1: speed should be 0.25 to 6");
+    expect(() => parseObjects('[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 4}]')).toThrow("object 1: speed should be 0.25 to 3");
+    expect([settingMax("speed", "sliding_pillar"), settingMax("speed", "crab")]).toEqual([6, 3]);
   });
 
   test("a sliding pillar can have a speed, in metres a second, read back as written; 1 without", () => {
