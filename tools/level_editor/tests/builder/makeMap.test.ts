@@ -327,6 +327,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(left.at(-1)!, SPOT_IN_ZONE, 16);
     });
 
+    // each takes two entities, one a half: the ids ran out on the last ones (both 0, so only one spawned)
+    test("three slamming walls' six halves each have their own entity id", () => {
+      const walls = [2, 6, 10].map((z) => obstacle("slamming_walls", { at: [1, 2, z] }));
+      const { entries } = build(walls);
+      const ids = zonesOf({ entries } as Built).flatMap((zone) => zoneEntities(zone))
+        .filter((item) => isOfType(item, [6, 7]) || isOfType(item, [6, 8])).map((item) => entityId(item));
+      expect(ids.length).toBe(6);
+      expect(new Set(ids).size).toBe(6);
+      expect(ids).not.toContain(0);
+    });
+
     // its code spawns its pieces (CHLD, opcode 0x8a, the type in bits 12-17) of its
     // own type, 42 in temple ruins: moved, they're of the walls' slot
     test("slamming walls' code spawns its pieces in its own slot", () => {
