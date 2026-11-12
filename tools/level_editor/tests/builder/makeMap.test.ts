@@ -63,6 +63,24 @@ const hasStormyAscent = existsSync(`${STREAMS}/s0000022.nsd`); // stormy ascent 
 const hasTempleRuins = existsSync(`${STREAMS}/s000001c.nsd`); // temple ruins (0x1c)
 const hasHeavyMachinery = existsSync(`${STREAMS}/s0000006.nsd`); // heavy machinery (0x6)
 const hasTheLab = existsSync(`${STREAMS}/s0000029.nsd`); // the lab (0x29)
+
+// a model's texture infos, after its header's poly count, scale and texinfo count (src/gfx.c's
+// TgeoOnLoad): a textured one (colour word bit 31) is its colour, texture page and region, else its colour
+function textureInfos(model: Entry): { colour: number; page?: number }[] {
+  const header = model.items[0];
+  const infos: { colour: number; page?: number }[] = [];
+  for (let at = 20; at + 4 <= header.length;) {
+    const colour = header.readUInt32LE(at);
+    if (colour >>> 31) {
+      infos.push({ colour, page: header.readUInt32LE(at + 4) });
+      at += 12;
+    } else {
+      infos.push({ colour });
+      at += 4;
+    }
+  }
+  return infos;
+}
 const hasToxicWaste = existsSync(`${STREAMS}/s0000007.nsd`); // toxic waste (0x7)
 const hasCortexPower = existsSync(`${STREAMS}/s0000003.nsd`); // cortex power (0x3)
 const hasCastleMachinery = existsSync(`${STREAMS}/s0000037.nsd`); // castle machinery (0x37)
@@ -329,10 +347,9 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     ])("with slamming walls $with, the walls' halves (RcLsG, RcRsG) are drawn from both sides", ({ objects }) => {
       const { entries } = build(objects());
       ["RcLsG", "RcRsG"].forEach((name) => {
-        const header = entries.get(stringToEid(name))!.items[0];
-        for (let at = 20; at + 4 <= header.length; at += (header.readUInt32LE(at) >>> 31) ? 8 : 4) {
-          expect(header.readUInt32LE(at) & (1 << 28)).not.toBe(0);
-        }
+        const infos = textureInfos(entries.get(stringToEid(name))!);
+        expect(infos.every(({ colour }) => (colour & (1 << 28)) !== 0)).toBe(true);
+        expect(infos.every(({ page }) => page === undefined || entries.has(page))).toBe(true);
       });
     });
   });
@@ -893,15 +910,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect([at(0x203), at(0x204), at(0x208), at(0x209)]).toEqual([0x82094000, 0x15017c57, 0x82094000, 0x15017c58]);
     });
 
-    // each texture info's colour word, after the model's header (poly count, scale, texinfo count)
-    const colourWords = (model: Entry) => {
-      const header = model.items[0];
-      const words: number[] = [];
-      for (let at = 20; at + 4 <= header.length; at += (header.readUInt32LE(at) >>> 31) ? 8 : 4) {
-        words.push(header.readUInt32LE(at));
-      }
-      return words;
-    };
+    const colourWords = (model: Entry) => textureInfos(model).map(({ colour }) => colour);
     const NO_CULL = 1 << 28;
 
     test.each(["fire_pit", "wooden_peg"] as const)("with a %s, the fire pit's bowl (WT1iG) is drawn from both sides, so its top can't be seen through close up", (type) => {
