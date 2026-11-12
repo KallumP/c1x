@@ -656,17 +656,26 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       pillarSlideShares().forEach((share, point) => expectNear(shares[point], share, 0.01));
     });
 
-    // it moves through its points at the game's rate: faster, it has fewer, still eased at its ends
+    // its init flag A is the frames its slide there and back takes (30 a second), whatever its
+    // length: from its path's length (metres at scale 256) and its speed, in metres a second
+    const pillar = (more: Partial<LevelObject>) => zoneEntities(build([obstacle("sliding_pillar", more)]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.sliding_pillar))!;
     test.each([
-      { speed: 2, points: 8 },
-      { speed: 0.5, points: 27 },
-    ])("a sliding pillar at speed $speed slides the same way in $points points", ({ speed, points }) => {
-      const placed = zoneEntities(build([obstacle("sliding_pillar", { speed })]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.sliding_pillar))!;
-      const path = entityPath(placed);
-      expect(path.length).toBe(points);
-      expectNear(path[0], SPOT_IN_ZONE, 16);
-      expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 800, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
-      expect(path[1][0] - path[0][0]).toBeLessThan(path[Math.floor(points / 2)][0] - path[Math.floor(points / 2) - 1][0]);
+      { more: {}, frames: 188 },                                                   // its own 800 units: 3.125 m, there and back at 1 m/s
+      { more: { path: [[0, 0, 0], [0, 4, 0]], speed: 2 }, frames: 120 },           // 8 m at 2 m/s: 4 s
+      { more: { path: [[0, 0, 0], [0, 40, 0]], speed: 0.5 }, frames: 4800 },       // 80 m at 0.5 m/s: 160 s
+    ] as const)("a sliding pillar ($more) slides there and back in $frames frames, not turned by them", ({ more, frames }) => {
+      const placed = pillar(more);
+      expect(placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(frames);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
+
+    test("a long sliding pillar's path has a point at least every 400 (a metre at scale 400), still eased at its ends", () => {
+      const path = entityPath(pillar({ path: [[0, 0, 0], [0, 40, 0]] })); // 10240 units at scale 256
+      expect(path.length).toBeGreaterThanOrEqual(27);
+      const steps = path.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - path[index][axis])));
+      expect(Math.max(...steps)).toBeLessThanOrEqual(420);
+      expect(steps[0]).toBeLessThan(steps[Math.floor(steps.length / 2)]);
+      expectNear(path.at(-1)!, [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1], SPOT_IN_ZONE[2] - 10240], 16);
     });
 
     test("dropping and sliding pillars read boulder dash once", () => {

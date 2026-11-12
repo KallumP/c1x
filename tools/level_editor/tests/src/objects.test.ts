@@ -540,7 +540,7 @@ describe("pillars", () => {
       .toEqual([{ kind: "obstacle", obstacle: type, at: [1, 2, 0], raise: 1, stack: 1 }]);
   });
 
-  test("a sliding pillar can have a speed, times boulder dash's, read back as written; 1 without", () => {
+  test("a sliding pillar can have a speed, in metres a second, read back as written; 1 without", () => {
     const [pillar] = parseObjects('[{"kind": "obstacle", "type": "sliding_pillar", "at": [1, 2, 0], "speed": 2}]');
     expect(pillar.speed).toBe(2);
     expect(parseObjects(formatObjects([pillar]))).toEqual([pillar]);
