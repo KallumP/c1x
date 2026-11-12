@@ -13,7 +13,7 @@ import { EntryTooBig } from "./cutLevel";
 import { objectDonorLevels, objectDonorObjects } from "./donorObjects";
 import {
   BOX_HEIGHT, BOX_TYPE, donorEntityType, donorObstacleType, ENTITY_INIT_FLAGS, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
-  LEADER_BAT, OBSTACLE_ENTITIES, withNoRotationFromFlags, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
+  LEADER_BAT, OBSTACLE_ENTITIES, SLAMMING_WALL_LEFT, withNoRotationFromFlags, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
@@ -183,6 +183,10 @@ function donorEnemyEntity(donor: Level, type: EnemyType): Buffer {
 const obstacleExample = (donor: Level, type: ObstacleType): Buffer =>
   withEntityType(levelEntity(donor, ...donorObstacleType(type)), OBSTACLE_ENTITIES[type][0]);
 
+// slamming walls' left half from temple ruins, moved to the walls' slot as their right half is
+const slammingWallLeft = (donor: Level): Buffer =>
+  withEntityType(levelEntity(donor, ...SLAMMING_WALL_LEFT), OBSTACLE_ENTITIES.slamming_walls[0]);
+
 // the great gate's spiked logs: a rising one pushes up out of the floor at its
 // spot, and a falling one comes down on it from SPIKED_LOG_HANG over it (game
 // units, as the great gate's hang over their floor: higher, it stops short of crash)
@@ -312,6 +316,10 @@ function reverseBit(obstacle: LevelObject): number {
   return 0;
 }
 
+// how far either side of their spot temple ruins' slamming walls' halves
+// start, across the map (game units): each slides in this far to meet there
+const SLAMMING_WALL_GAP = 1200;
+
 // how far over its spot a timed obstacle is placed
 function timedObstacleHang(obstacle: LevelObject): number {
   if (obstacle.obstacle === "falling_spiked_log") {
@@ -328,6 +336,14 @@ const slidePath = (slide: LevelObject, scale: number) =>
 function entitiesFor(enemy: LevelObject): number {
   if (enemy.enemy === "leader_bats") {
     return 1 + LEADER_BATS_LEADERS;
+  }
+  return 1;
+}
+
+// entities each obstacle takes: slamming walls' two halves, one for the rest
+function entitiesForObstacle(obstacle: LevelObject): number {
+  if (obstacle.obstacle === "slamming_walls") {
+    return 2;
   }
   return 1;
 }
@@ -401,6 +417,19 @@ class ObjectPlacer {
     const { zone, at } = this.inZone(spot);
     const placed = withPosition(withEntityId(example, this.ids.shift()!), at);
     this.entities[zone].push(withInitFlagC(withInitFlagB(withInitFlagA(placed, facing), alongX), alongZ));
+  }
+
+  // slamming walls: their right half (right) SLAMMING_WALL_GAP across the map
+  // from their spot and their left half (left) as far the other way, each
+  // sliding in along its own level's path to meet at the spot
+  // both timed by their init flags as a spiked log is (A the frames between slams, B into them)
+  placeSlammingWalls(walls: LevelObject, right: Buffer, left: Buffer): void {
+    const { zone, at } = this.inZone(this.positionOf(walls));
+    const beside = (way: number): Vec3 => [at[0] + way * SLAMMING_WALL_GAP, at[1], at[2]];
+    const [every, into] = obstacleTiming(walls);
+    const timed = (half: Buffer) => withInitFlagB(withInitFlagA(withNoRotationFromFlags(half), every), into);
+    this.entities[zone].push(timed(withPathFrom(withEntityId(right, this.ids.shift()!), beside(1))));
+    this.entities[zone].push(timed(withPathFrom(withEntityId(left, this.ids.shift()!), beside(-1))));
   }
 
   // a spiked log or fire pit (example) at its spot, a falling log hung over it
@@ -584,7 +613,8 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const obstacles = objects.filter((object) => object.kind === "obstacle");
   const stones = obstacles.filter((obstacle) => obstacle.obstacle === "rolling_stone");
   const donorLevels = objectDonorLevels([...enemies, ...obstacles], readOtherLevel);
-  const entityCount = Number(end !== undefined) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0) + obstacles.length;
+  const entityCount = Number(end !== undefined) + boxCount(boxes) + enemies.reduce((sum, enemy) => sum + entitiesFor(enemy), 0)
+    + obstacles.reduce((sum, obstacle) => sum + entitiesForObstacle(obstacle), 0);
   const placer = new ObjectPlacer(map, templates, scale, turn, entityCount);
   const track = stones.length ? withLongerSkirts(stoneTrack(level), STONE_TRACK_LIFT) : null;
   const cells = solidCells(fitted.mesh, fitted.size, MAP_CELL, stoneTrackMeshes(stones, track, placer));
@@ -621,11 +651,13 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     .forEach((enemy) => placer.placeLeaderBats(enemy, enemyExample("leader_bats"), levelEntity(donorLevels.get("leader_bats")!, ...LEADER_BAT)));
   const slides = obstacles.filter((obstacle) => obstacle.obstacle === "mossy_slide");
   const timed = obstacles.filter((obstacle) => TIMED_OBSTACLES.includes(obstacle.obstacle!));
-  const placedApart: ObstacleType[] = ["rolling_stone", "mossy_slide", ...TIMED_OBSTACLES];
+  const placedApart: ObstacleType[] = ["rolling_stone", "mossy_slide", "slamming_walls", ...TIMED_OBSTACLES];
   const movers = obstacles.filter((obstacle) => !placedApart.includes(obstacle.obstacle!)); // the rest, from their levels
   const obstacleOf = (obstacle: LevelObject) => obstacleExample(donorLevels.get(obstacle.obstacle!)!, obstacle.obstacle!);
   slides.forEach((slide) => placer.placeSlide(slide, obstacleOf(slide), slidePath(slide, scale)));
   timed.forEach((obstacle) => placer.placeTimedObstacle(obstacle, obstacleOf(obstacle)));
+  obstacles.filter((obstacle) => obstacle.obstacle === "slamming_walls")
+    .forEach((walls) => placer.placeSlammingWalls(walls, obstacleOf(walls), slammingWallLeft(donorLevels.get("slamming_walls")!)));
   movers.filter((obstacle) => !onItsNodes(obstacle)).forEach((obstacle) => placer.placeWithItsPath(obstacle, obstacleOf(obstacle)));
   movers.filter(onItsNodes).forEach((obstacle) => placer.placeOnItsNodes(obstacle, obstacleOf(obstacle)));
   stones.forEach((stone) => placer.placeStone(stone, track!));

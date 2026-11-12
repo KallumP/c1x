@@ -81,6 +81,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   pushing_platform: SUNSET_VISTA,
   rotating_pots: SUNSET_VISTA,
   rotating_platforms: SUNSET_VISTA,
+  slamming_walls: TEMPLE_RUINS,
 };
 
 export interface DonorObject {
@@ -444,7 +445,14 @@ function withCrashEntries(type: ObjectType, object: DonorObject, level: Level): 
 // bowl (WT1iG), open at its top, which close up was see-through. every great
 // gate object that brings it changes it the same, or the two would clash
 const GATE_BOTH_SIDED_MODELS = ["WT1iG"];
+// temple ruins' slamming walls' halves (RcLsG, RcRsG), which have faces on
+// three sides only (its walls are set in its corridor's), see-through from the
+// rest: the ruins objects' code (RuiOC) brings them for its bats too
+const RUINS_BOTH_SIDED_MODELS = ["RcLsG", "RcRsG"];
 const OBJECT_BOTH_SIDED_MODELS: Partial<Record<ObjectType, string[]>> = {
+  slamming_walls: RUINS_BOTH_SIDED_MODELS,
+  bat: RUINS_BOTH_SIDED_MODELS,
+  leader_bats: RUINS_BOTH_SIDED_MODELS,
   wooden_peg: GATE_BOTH_SIDED_MODELS,
   rising_spiked_log: GATE_BOTH_SIDED_MODELS,
   falling_spiked_log: GATE_BOTH_SIDED_MODELS,
@@ -513,6 +521,21 @@ const MOVE_TO_X = 0x11e1fe08;                // MOVE pop(), obj[0x80]: its x, as
 const GATE_CODE_PATCHES: CodePatch[] = [
   { at: 0x26b, was: 0x1fbe0803, now: 0x11801e1f }, // GLBR 3 (the boulder) becomes MOVE 0x100, push(): there
 ];
+
+const CHILD_TYPE_BITS = 0x3f << 12; // a CHLD's type: bits 12 to 17
+
+// a CHLD spawning its child of another type
+function childSpawnedAs(at: number, was: number, type: number): CodePatch {
+  return { at, was, now: ((was & ~CHILD_TYPE_BITS) | (type << 12)) >>> 0 };
+}
+
+// temple ruins' RuiOC spawns its pieces of its own type (42 there): moved to the
+// walls' slot (see MOVED_ENEMY_CODE), they're spawned of that one instead
+const RUINS_OWN_CHILDREN: [number, number][] = [
+  [0x08a, 0x8a72a081], [0x18b, 0x8a82a401], [0x190, 0x8a82a401], [0x195, 0x8a82a401],
+  [0x19b, 0x8a82a281], [0x1a0, 0x8a82a281], [0x1a5, 0x8a82a281], [0x2c9, 0x8a02a481], [0x3c4, 0x8a22a2c1],
+];
+const SLAMMING_WALL_CODE_PATCHES: CodePatch[] = RUINS_OWN_CHILDREN.map(([at, was]) => childSpawnedAs(at, was, objectEntity("slamming_walls")[0]));
 
 const LIZARD_CODE_PATCHES: CodePatch[] = [
   { at: GREEN_LEAP_SETS_X, was: MOVE_TO_X, now: branch(GREEN_LEAP_SETS_X, GREEN_LEAP_Z) },
@@ -595,6 +618,7 @@ const ENEMY_CODE_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   rising_spiked_log: GATE_OBJECTS_CODE_PATCHES,
   falling_spiked_log: GATE_OBJECTS_CODE_PATCHES,
   fire_pit: GATE_OBJECTS_CODE_PATCHES,
+  slamming_walls: SLAMMING_WALL_CODE_PATCHES,
 };
 
 // instructions with an addition after their end; an error if they aren't as long as it needs

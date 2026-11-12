@@ -63,6 +63,24 @@ const hasStormyAscent = existsSync(`${STREAMS}/s0000022.nsd`); // stormy ascent 
 const hasTempleRuins = existsSync(`${STREAMS}/s000001c.nsd`); // temple ruins (0x1c)
 const hasHeavyMachinery = existsSync(`${STREAMS}/s0000006.nsd`); // heavy machinery (0x6)
 const hasTheLab = existsSync(`${STREAMS}/s0000029.nsd`); // the lab (0x29)
+
+// a model's texture infos, after its header's poly count, scale and texinfo count (src/gfx.c's
+// TgeoOnLoad): a textured one (colour word bit 31) is its colour, texture page and region, else its colour
+function textureInfos(model: Entry): { colour: number; page?: number }[] {
+  const header = model.items[0];
+  const infos: { colour: number; page?: number }[] = [];
+  for (let at = 20; at + 4 <= header.length;) {
+    const colour = header.readUInt32LE(at);
+    if (colour >>> 31) {
+      infos.push({ colour, page: header.readUInt32LE(at + 4) });
+      at += 12;
+    } else {
+      infos.push({ colour });
+      at += 4;
+    }
+  }
+  return infos;
+}
 const hasToxicWaste = existsSync(`${STREAMS}/s0000007.nsd`); // toxic waste (0x7)
 const hasCortexPower = existsSync(`${STREAMS}/s0000003.nsd`); // cortex power (0x3)
 const hasCastleMachinery = existsSync(`${STREAMS}/s0000037.nsd`); // castle machinery (0x37)
@@ -292,6 +310,76 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     expectNear(plant.path[0], SPOT_IN_ZONE, 16);
     expect(plant.path[0][1]).toBe(FLOOR_Y);
     expect(plant.id).not.toBe(boxes(built.zone)[0].id);
+  });
+
+  describe.skipIf(!hasTempleRuins)("slamming walls, from temple ruins", () => {
+    // temple ruins' RuiOC isn't sunset vista's (the bats'), so it moves to slot 6 as RuiWC
+    test("slamming walls are temple ruins' RuiOC subtypes 7 (the right half) and 8 (the left), moved to their own slot, 1200 either side of the spot, sliding in to meet there", () => {
+      const { level, entries, zone } = build([obstacle("slamming_walls")]);
+      expect(OBSTACLE_ENTITIES.slamming_walls).toEqual([6, 7]);
+      expect(level.nsd.ldat.execMap[6]).toBe(stringToEid("RuiWC"));
+      expect(["RcRsG", "RcLsG"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+      const half = (subtype: number) => zoneEntities(zone).find((item) => isOfType(item, [6, subtype]))!;
+      const [right, left] = [entityPath(half(7)), entityPath(half(8))];
+      expectNear(right[0], [SPOT_IN_ZONE[0] + 1200, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
+      expectNear(left[0], [SPOT_IN_ZONE[0] - 1200, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
+      expectNear(right.at(-1)!, SPOT_IN_ZONE, 16);
+      expectNear(left.at(-1)!, SPOT_IN_ZONE, 16);
+    });
+
+    // each takes two entities, one a half: the ids ran out on the last ones (both 0, so only one spawned)
+    test("three slamming walls' six halves each have their own entity id", () => {
+      const walls = [2, 6, 10].map((z) => obstacle("slamming_walls", { at: [1, 2, z] }));
+      const { entries } = build(walls);
+      const ids = zonesOf({ entries } as Built).flatMap((zone) => zoneEntities(zone))
+        .filter((item) => isOfType(item, [6, 7]) || isOfType(item, [6, 8])).map((item) => entityId(item));
+      expect(ids.length).toBe(6);
+      expect(new Set(ids).size).toBe(6);
+      expect(ids).not.toContain(0);
+    });
+
+    // its code spawns its pieces (CHLD, opcode 0x8a, the type in bits 12-17) of its
+    // own type, 42 in temple ruins: moved, they're of the walls' slot
+    test("slamming walls' code spawns its pieces in its own slot", () => {
+      const code = build([obstacle("slamming_walls")]).entries.get(stringToEid("RuiWC"))!.items[1];
+      const words = Array.from({ length: code.length / 4 }, (_, index) => code.readUInt32LE(index * 4));
+      const spawnedTypes = words.filter((word) => word >>> 24 === 0x8a).map((word) => (word >>> 12) & 0x3f);
+      expect(spawnedTypes).not.toContain(42);
+      expect(spawnedTypes.filter((type) => type === 6).length).toBe(9);
+    });
+  });
+
+  describe.skipIf(!hasTempleRuins)("slamming walls' sides", () => {
+    // each half has faces on three sides only (temple ruins' are set in its corridor's walls), so
+    // they're drawn from both sides (no_cull in their texture infos' colour words), as are a bat's (the same code's)
+    test.each([
+      { with: "alone", objects: () => [obstacle("slamming_walls")] },
+      { with: "a bat", objects: () => [obstacle("slamming_walls"), enemy("bat", { at: [1, 8, 0] })] },
+    ])("with slamming walls $with, the walls' halves (RcLsG, RcRsG) are drawn from both sides", ({ objects }) => {
+      const { entries, level } = build(objects());
+      const pages = texturePages(level).map(({ eid }) => eid);
+      ["RcLsG", "RcRsG"].forEach((name) => {
+        const infos = textureInfos(entries.get(stringToEid(name))!);
+        expect(infos.every(({ colour }) => (colour & (1 << 28)) !== 0)).toBe(true);
+        expect(infos.every(({ page }) => page === undefined || pages.includes(page))).toBe(true);
+      });
+    });
+  });
+
+  describe.skipIf(!hasTempleRuins)("slamming walls' timing", () => {
+    // init flag A: the frames between slams (90 without one: 3 s); B: the frames into them it starts, on both halves
+    test.each([
+      { more: {}, flags: [90, 0] },
+      { more: { every: 4, offset: 1 }, flags: [120, 90] },
+    ])("slamming walls ($more) have their slams' timing in both halves' init flags", ({ more, flags }) => {
+      const { zone } = build([obstacle("slamming_walls", more)]);
+      const halves = zoneEntities(zone).filter((item) => isOfType(item, [6, 7]) || isOfType(item, [6, 8]));
+      expect(halves.length).toBe(2);
+      halves.forEach((half) => {
+        expect([half.readInt16LE(ENTITY_INIT_FLAGS), half.readInt16LE(ENTITY_INIT_FLAGS + 2)]).toEqual(flags);
+        expect(half.readUInt16LE(4) & 1).toBe(1);
+      });
+    });
   });
 
   describe.skipIf(!hasTempleRuins)("snakes, from temple ruins", () => {
@@ -834,15 +922,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect([at(0x203), at(0x204), at(0x208), at(0x209)]).toEqual([0x82094000, 0x15017c57, 0x82094000, 0x15017c58]);
     });
 
-    // each texture info's colour word, after the model's header (poly count, scale, texinfo count)
-    const colourWords = (model: Entry) => {
-      const header = model.items[0];
-      const words: number[] = [];
-      for (let at = 20; at + 4 <= header.length; at += (header.readUInt32LE(at) >>> 31) ? 8 : 4) {
-        words.push(header.readUInt32LE(at));
-      }
-      return words;
-    };
+    const colourWords = (model: Entry) => textureInfos(model).map(({ colour }) => colour);
     const NO_CULL = 1 << 28;
 
     test.each(["fire_pit", "wooden_peg"] as const)("with a %s, the fire pit's bowl (WT1iG) is drawn from both sides, so its top can't be seen through close up", (type) => {

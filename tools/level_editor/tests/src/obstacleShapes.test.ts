@@ -34,6 +34,8 @@ describe("obstacle shapes", () => {
     // pushing platform Rw3wG (741 across, 178 thick, 1838 out), each pushed out
     { obstacle: "pushing_block", bottom: 0, top: [1550, 1650], across: [760, 840], long: [1950, 2050] },
     { obstacle: "pushing_platform", bottom: -206, top: [-60, 0], across: [700, 780], long: [1790, 1890] },
+    // temple ruins' slamming walls, its two halves (RcRsG, RcLsG: 1200 across, 1031 tall, 606 deep) shut, meeting at its spot
+    { obstacle: "slamming_walls", bottom: 0, top: [1000, 1060], across: [2350, 2450], long: [580, 640] },
   ] as const)("a $obstacle is as big as the game's, about its spot as the game's", ({ obstacle, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(OBSTACLE_SHAPES[obstacle].filter((part) => part.name !== "arrow"));
     expectWithin(min[1], [bottom - 15, bottom + 15]);

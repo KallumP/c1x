@@ -511,8 +511,8 @@ describe("obstacles", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms)"],
-    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms)"],
+    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms, slamming_walls)"],
+    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms, slamming_walls)"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: a leaf has no speed"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count (an obstacle takes kind, at, raise, type, path, speed, start, reverse, length, angle, rotation, every, offset, platforms, radius)"],
     ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
@@ -531,6 +531,21 @@ describe("wooden pegs", () => {
       .toEqual([{ kind: "obstacle", obstacle: "wooden_peg", at: [1, 2, 0], raise: 1, stack: 1 }]);
     expect(() => parseObjects('[{"kind": "obstacle", "type": "wooden_peg", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]'))
       .toThrow("a wooden_peg has no path");
+  });
+});
+
+describe("slamming walls", () => {
+  test("slamming walls slam every so many seconds (3 without), put off by an offset", () => {
+    const [walls] = parseObjects('[{"kind": "obstacle", "type": "slamming_walls", "at": [1, 2, 0], "every": 4, "offset": 1}]');
+    expect([walls.every, walls.offset]).toEqual([4, 1]);
+    expect(numberSetting(obstacleObject("slamming_walls"), "every")).toBe(3);
+  });
+
+  test("slamming walls are an obstacle, with no path", () => {
+    expect(parseObjects('[{"kind": "obstacle", "type": "slamming_walls", "at": [1, 2, 0]}]'))
+      .toEqual([{ kind: "obstacle", obstacle: "slamming_walls", at: [1, 2, 0], raise: 0, stack: 1 }]);
+    expect(() => parseObjects('[{"kind": "obstacle", "type": "slamming_walls", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]'))
+      .toThrow("a slamming_walls has no path");
   });
 });
 
@@ -663,7 +678,7 @@ describe("spiked logs", () => {
   test.each([
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "every": 1.5}]', "object 1: every should be 2 to 20 (the seconds between its pushes or flames)"],
     ['[{"kind": "obstacle", "type": "falling_spiked_log", "at": [0, 0, 0], "every": 21}]', "object 1: every should be 2 to 20"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "every": 5}]', "object 1: a leaf has no every (spiked logs, fire pits, pushing blocks and platforms, and rotating pots and platforms do)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "every": 5}]', "object 1: a leaf has no every (spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, and slamming walls do)"],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "offset": 21}]', "object 1: offset should be 0 to 20 (the seconds its pushes or flames are put off by)"],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "start": 0.5}]', "object 1: a rising_spiked_log has no start (rolling stones do)"],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "reverse": true}]', "object 1: a rising_spiked_log has no reverse"],
