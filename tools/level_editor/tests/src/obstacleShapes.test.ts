@@ -46,6 +46,17 @@ describe("obstacle shapes", () => {
     expect(partHeight("falling_spiked_log", "point")).toBeLessThan(200);
   });
 
+  test.each(["tall_thin_gate", "low_wide_gate"] as const)("a %s has an arrow on the floor in front of it, pointing the way it falls: towards the player", (gate) => {
+    const arrow = OBSTACLE_SHAPES[gate].filter((part) => part.name === "arrow");
+    const { min, max } = shapeBounds(arrow);
+    expect(arrow.length).toBeGreaterThan(0);
+    expect(min[2]).toBeGreaterThan(100); // in front of the gate
+    expect(max[1]).toBeLessThan(60);     // flat on the floor
+    const head = arrow.find((part) => part.kind === "rod" && part.radiusTop === 0)!;
+    expect(head.turn).toEqual([Math.PI / 2, 0, 0]); // its point along +z
+    expect(head.at[2]).toBe(max[2] - (head.kind === "rod" ? head.length / 2 : 0));
+  });
+
   test("an arrow over each spiked log points the way it pushes: up out of the floor, or down onto it", () => {
     const arrowTurn = (obstacle: "rising_spiked_log" | "falling_spiked_log") =>
       OBSTACLE_SHAPES[obstacle].filter((part) => part.name === "arrow" && part.kind === "rod" && part.radiusTop === 0).map((part) => part.turn?.[0] ?? 0);
