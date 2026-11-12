@@ -678,6 +678,53 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(path.at(-1)!, [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1], SPOT_IN_ZONE[2] - 10240], 16);
     });
 
+    // boulder dash's objects' code (JunOC, slot 22) is jungle rollers' own code
+    // naming other models, so it moves to slot 23 as BldOC
+    test.each([
+      { type: "tall_thin_gate", subtype: 13, model: "JB4eG" },
+      { type: "low_wide_gate", subtype: 18, model: "JB3eG" },
+    ] as const)("a $type is boulder dash's JunOC subtype $subtype, moved to its own slot, with its model ($model), standing at its spot", ({ type, subtype, model }) => {
+      const { level, entries, zone } = build([obstacle(type)]);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([23, subtype]);
+      expect(level.nsd.ldat.execMap[23]).toBe(stringToEid("BldOC"));
+      expect(entries.has(stringToEid(model))).toBe(true);
+      const placed = zoneEntities(zone).filter((item) => isOfType(item, OBSTACLE_ENTITIES[type]));
+      expect(placed.length).toBe(1);
+      expectNear(entityPath(placed[0])[0], SPOT_IN_ZONE, 16);
+    });
+
+    // its knocking over waited for boulder dash's boulder (global 3) to be about
+    // before it looked at what hit it: it doesn't wait (0x26b, GLBR 3 becomes MOVE 0x100, push())
+    test("a gate falls when crash walks into it, with no boulder about", () => {
+      const code = build([obstacle("tall_thin_gate")]).entries.get(stringToEid("BldOC"))!.items[1];
+      expect(code.readUInt32LE(0x26b * 4)).toBe(0x11801e1f);
+    });
+
+    // its init flags are its rotation (not settings), drawn as Ry(C) Rx(A) Ry(B - C): B and C
+    // both its turn (4096 a full turn) stand it turned, and tip it over (A, as it falls) the way it faces
+    test.each([
+      { rotation: 0, yaw: 0 },
+      { rotation: 90, yaw: 1024 },
+      { rotation: 270, yaw: 3072 },
+    ])("a gate turned $rotation degrees has a yaw of $yaw", ({ rotation, yaw }) => {
+      const placed = zoneEntities(build([obstacle("low_wide_gate", { rotation })]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.low_wide_gate))!;
+      expect([0, 2, 4].map((at) => placed.readInt16LE(ENTITY_INIT_FLAGS + at))).toEqual([0, yaw, yaw]);
+      expect(placed.readUInt16LE(4) & 1).toBe(0);
+    });
+
+    test("a gate takes one more texture page, without boulder dash's boulder and the rest it never shows", () => {
+      const { entries, level } = build([obstacle("low_wide_gate"), obstacle("tall_thin_gate", { at: [1, 6, 0] })]);
+      expect(texturePages(level).length).toBe(texturePages(build().level).length + 1);
+      expect(["JuSeG", "JuLeG", "JuFeG"].some((name) => entries.has(stringToEid(name)))).toBe(false);
+    });
+
+    test("a gate leaves jungle rollers' own objects' code (its rolling stone's) as it is", () => {
+      const { level, entries } = build([obstacle("low_wide_gate"), obstacle("rolling_stone", { at: [1, 8, 0] })]);
+      expect(level.nsd.ldat.execMap[22]).toBe(stringToEid("JunOC"));
+      const baseCode = entriesById(readLevel(STREAMS, BASE_LEVEL.lid)).get(stringToEid("JunOC"))!;
+      expect(entries.get(stringToEid("JunOC"))!.items).toEqual(baseCode.items);
+    });
+
     test("dropping and sliding pillars read boulder dash once", () => {
       const reader = recordingReader();
       build([obstacle("dropping_pillar"), obstacle("sliding_pillar", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });

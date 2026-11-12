@@ -50,7 +50,7 @@ export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
 // and the great gate's objects WalOC, subtype 0 its totem's wooden peg, and
 // jungle rollers' own JunOC, subtype 6 its rolling stone, and the great gate's
 // WalOC subtype 2, its mossy slide's invisible slider
-export const OBSTACLE_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2], wooden_peg: [33, 0], rolling_stone: [22, 6], mossy_slide: [33, 2], rising_spiked_log: [33, 3], falling_spiked_log: [33, 4], fire_pit: [33, 5], dropping_pillar: [11, 4], sliding_pillar: [11, 2] };
+export const OBSTACLE_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2], wooden_peg: [33, 0], rolling_stone: [22, 6], mossy_slide: [33, 2], rising_spiked_log: [33, 3], falling_spiked_log: [33, 4], fire_pit: [33, 5], dropping_pillar: [11, 4], sliding_pillar: [11, 2], tall_thin_gate: [23, 13], low_wide_gate: [23, 18] };
 
 // an enemy's or obstacle's entity type and subtype
 export function objectEntity(type: ObjectType): [number, number] {
@@ -68,7 +68,15 @@ export function objectEntity(type: ObjectType): [number, number] {
 export const MOVED_ENEMY_CODE: Partial<Record<ObjectType, { donorSlot: number; name: string }>> = {
   snake: { donorSlot: 25, name: "SnakC" },
   electric_scientist: { donorSlot: 54, name: "LabEC" }, // the lab's LabAC: stormy ascent's lab assistant has slot 54 and the name
+  tall_thin_gate: { donorSlot: 22, name: "BldOC" }, // boulder dash's JunOC: jungle rollers' own, naming other models
+  low_wide_gate: { donorSlot: 22, name: "BldOC" },
 };
+
+// an obstacle's entity type and subtype in the level it's taken from
+export function donorObstacleType(obstacle: ObstacleType): [number, number] {
+  const [type, subtype] = OBSTACLE_ENTITIES[obstacle];
+  return [MOVED_ENEMY_CODE[obstacle]?.donorSlot ?? type, subtype];
+}
 
 // an enemy's entity type and subtype in the level it's taken from
 export function donorEntityType(enemy: EnemyType): [number, number] {

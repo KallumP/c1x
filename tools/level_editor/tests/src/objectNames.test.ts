@@ -29,6 +29,8 @@ describe("the names the palette shows", () => {
     ["fire_pit", "Fire pit"],
     ["dropping_pillar", "Pillar (drops)"],
     ["sliding_pillar", "Pillar (slides)"],
+    ["tall_thin_gate", "Gate (tall, thin)"],
+    ["low_wide_gate", "Gate (low, wide)"],
   ] as const)("the %s obstacle is named %s", (what, name) => {
     expect(placeableName(what)).toBe(name);
   });

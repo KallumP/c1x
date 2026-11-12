@@ -9,6 +9,7 @@ const PEG_COLOURS = { log: "#8a5a32", end: "#c89a5e" };
 const SPIKED_LOG_COLOURS = { log: "#7a5530", spike: "#d8d0b8", arrow: "#ffd23a" };
 const FIRE_PIT_COLOURS = { bowl: "#b8321e", rim: "#e0a030", flame: "#ff8a1f" };
 const PILLAR_COLOURS = { stone: "#5c5a50", moss: "#4f6b3a" };
+const GATE_COLOURS = { post: "#9a6a3a", rail: "#7a5230" };
 
 // one of a lily pad's four round leaves, x and z out from its middle
 const lilyPadLeaf = (x: number, z: number) => ball(1, [x, 50, z], LILY_PAD_COLOURS.leaf, { stretch: [270, 50, 270] });
@@ -154,7 +155,46 @@ function pillar(): ShapePart[] {
   ];
 }
 
+const TALL_GATE = { across: 903, tall: 1554, deep: 246, post: 160, plank: 150 };
+const LOW_GATE = { across: 2377, tall: 437, deep: 284, stumps: 6 };
+
+// boulder dash's tall thin gate (JB4eG), standing on its spot: an upright
+// post 1554 tall, two planks nailed across it, 903 wide
+function tallThinGate(): ShapePart[] {
+  const { across, tall, deep, post, plank } = TALL_GATE;
+  const plankAt = (height: number): ShapePart =>
+    ({ kind: "box", size: [across, plank, deep * 0.5], at: [0, height, deep * 0.25], colour: GATE_COLOURS.rail });
+  return [
+    { kind: "box", size: [post, tall, deep * 0.5], at: [0, tall / 2, -deep * 0.25], colour: GATE_COLOURS.post },
+    plankAt(tall * 0.55),
+    plankAt(tall * 0.85),
+  ];
+}
+
+// boulder dash's low wide gate (JB3eG), standing on its spot: a row of short
+// log stumps 437 tall, 2377 wide
+function lowWideGate(): ShapePart[] {
+  const { across, tall, deep, stumps } = LOW_GATE;
+  const width = across / stumps;
+  return Array.from({ length: stumps }, (_, stump): ShapePart => (
+    { kind: "box", size: [width * 0.9, tall, deep], at: [-across / 2 + width * (stump + 0.5), tall / 2, 0], colour: GATE_COLOURS.post }
+  ));
+}
+
+const FALL_ARROW = { gap: 150, shaft: 450, shaftWidth: 90, head: 250, headRadius: 170, thick: 20 };
+
+// an arrow flat on the floor, from deep (a gate's depth) out in front of it,
+// pointing towards the player: the way boulder dash's gates fall when knocked
+function fallArrow(deep: number): ShapePart[] {
+  const { gap, shaft, shaftWidth, head, headRadius, thick } = FALL_ARROW;
+  const start = deep / 2 + gap;
+  const shaftPart: ShapePart = { kind: "box", size: [shaftWidth, thick, shaft], at: [0, thick / 2, start + shaft / 2], colour: SPIKED_LOG_COLOURS.arrow };
+  const headPart = rod(0, headRadius, head, [0, thick / 2, start + shaft + head / 2], SPIKED_LOG_COLOURS.arrow, { turn: [Math.PI / 2, 0, 0], stretch: [1, 1, thick / headRadius] });
+  return [{ ...shaftPart, name: "arrow" }, { ...headPart, name: "arrow" }];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
-export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit(), dropping_pillar: pillar(), sliding_pillar: pillar() };
+export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit(), dropping_pillar: pillar(), sliding_pillar: pillar(),
+  tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)] };

@@ -11,6 +11,7 @@
 - spiked logs from The Great Gate, rising out of the floor or falling from above, with their timing set in the level editor
 - fire pits from The Great Gate, whose flames burn Crash, timed in the level editor
 - stone pillars from Boulder Dash, which drop away after Crash stands on them, or slide back and forth along a path you set
+- wooden gates from Boulder Dash, tall and thin or low and wide, which Crash knocks over
 - fullscreen, set in the launcher or switched with Alt+Enter while playing
 - build custom levels from the launcher's new Levels tab, without Node.js
 - an option to show how many of a level's boxes Crash has broken (such as 12/49), with the lives and wumpa counters

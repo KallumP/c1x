@@ -66,6 +66,8 @@ export const OBSTACLE_COLOURS: Record<ObstacleType, string> = {
   fire_pit: "#b8321e",
   dropping_pillar: "#4f6b3a",
   sliding_pillar: "#5a7a44",
+  tall_thin_gate: "#9a6a3a",
+  low_wide_gate: "#8f6236",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";

@@ -27,6 +27,9 @@ describe("obstacle shapes", () => {
     // boulder dash's pillar PlPeG: 1209 across, 1148 long, its top at its spot and 2407 down
     { obstacle: "dropping_pillar", bottom: -2407, top: [-10, 30], across: [1150, 1260], long: [1100, 1200] },
     { obstacle: "sliding_pillar", bottom: -2407, top: [-10, 30], across: [1150, 1260], long: [1100, 1200] },
+    // and its gates: JB4eG, 903 across and 1554 tall, and JB3eG, 2377 across and 437 tall, standing on its spot
+    { obstacle: "tall_thin_gate", bottom: 0, top: [1500, 1600], across: [860, 950], long: [200, 290] },
+    { obstacle: "low_wide_gate", bottom: 0, top: [400, 480], across: [2300, 2450], long: [240, 330] },
   ] as const)("a $obstacle is as big as the game's, about its spot as the game's", ({ obstacle, bottom, top, across, long }) => {
     const { min, max } = shapeBounds(OBSTACLE_SHAPES[obstacle].filter((part) => part.name !== "arrow"));
     expectWithin(min[1], [bottom - 15, bottom + 15]);
@@ -41,6 +44,17 @@ describe("obstacle shapes", () => {
   test("a rising spiked log's point is at its top, and a falling one's at its bottom, on the floor it comes down on", () => {
     expect(partHeight("rising_spiked_log", "point")).toBeGreaterThan(1500);
     expect(partHeight("falling_spiked_log", "point")).toBeLessThan(200);
+  });
+
+  test.each(["tall_thin_gate", "low_wide_gate"] as const)("a %s has an arrow on the floor in front of it, pointing the way it falls: towards the player", (gate) => {
+    const arrow = OBSTACLE_SHAPES[gate].filter((part) => part.name === "arrow");
+    const { min, max } = shapeBounds(arrow);
+    expect(arrow.length).toBeGreaterThan(0);
+    expect(min[2]).toBeGreaterThan(100); // in front of the gate
+    expect(max[1]).toBeLessThan(60);     // flat on the floor
+    const head = arrow.find((part) => part.kind === "rod" && part.radiusTop === 0)!;
+    expect(head.turn).toEqual([Math.PI / 2, 0, 0]); // its point along +z
+    expect(head.at[2]).toBe(max[2] - (head.kind === "rod" ? head.length / 2 : 0));
   });
 
   test("an arrow over each spiked log points the way it pushes: up out of the floor, or down onto it", () => {
