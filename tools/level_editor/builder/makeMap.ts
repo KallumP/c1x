@@ -12,7 +12,7 @@ import { addFloor, Cells, solidCells } from "./collision";
 import { EntryTooBig } from "./cutLevel";
 import { objectDonorLevels, objectDonorObjects } from "./donorObjects";
 import {
-  BOX_HEIGHT, BOX_TYPE, donorEntityType, donorObstacleType, ENTITY_INIT_FLAGS, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
+  BOX_HEIGHT, BOX_TYPE, donorEntityType, donorObstacleType, entityPath, ENTITY_INIT_FLAGS, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
   LEADER_BAT, OBSTACLE_ENTITIES, SLAMMING_WALL_LEFT, withNoRotationFromFlags, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
@@ -202,11 +202,14 @@ function obstacleTiming(obstacle: LevelObject): [number, number] {
 }
 
 // how far along its own level's path each of a path obstacle's points is: a
-// floating leaf's drift's, or a sliding pillar's slide's
-// length its path's length (game units)
-function ownPathShares(obstacle: LevelObject, length: number): number[] {
+// floating leaf's drift's, a sliding pillar's slide's, or a carrying platform's ride's
+// length its path's length (game units), example its entity from its own level
+function ownPathShares(obstacle: LevelObject, length: number, example: Buffer): number[] {
   if (obstacle.obstacle === "sliding_pillar") {
     return sharesInSteps(pillarSlideShares(), pillarSteps(length));
+  }
+  if (obstacle.obstacle === "carrying_platform") {
+    return entityPathShares(example);
   }
   return leafDriftShares();
 }
@@ -265,6 +268,24 @@ function withSlideTiming(entity: Buffer, obstacle: LevelObject, length: number, 
   return withInitFlagA(withNoRotationFromFlags(entity), pillarSlideFrames(obstacle, length, scale));
 }
 
+// a carrying platform's init flag A: its step along its path a frame, in
+// 256ths of a point (temple ruins' code), so its points' steps take the frames
+// its path length game units long at scale takes at its speed (metres a second)
+const POINT_SHARES = 256;
+function platformRideStep(platform: LevelObject, points: number, length: number, scale: number): number {
+  const frames = (length / scale / numberSetting(platform, "speed")) * FRAMES_A_SECOND;
+  return Math.min(INIT_FLAG_FRAMES_MAX, Math.max(1, Math.round(((points - 1) * POINT_SHARES) / frames)));
+}
+
+// entity with a carrying platform's step along its points points in its init
+// flag A, not turned by it; any other obstacle's as it is
+function withRideSpeed(entity: Buffer, obstacle: LevelObject, points: number, length: number, scale: number): Buffer {
+  if (obstacle.obstacle !== "carrying_platform") {
+    return entity;
+  }
+  return withInitFlagA(withNoRotationFromFlags(entity), platformRideStep(obstacle, points, length, scale));
+}
+
 // how long a path through points is
 function pathLength(points: Vec3[]): number {
   return points.slice(1).reduce((sum, point, index) => sum + Math.hypot(...point.map((value, axis) => value - points[index][axis])), 0);
@@ -277,9 +298,10 @@ function shareAt(shares: number[], point: number): number {
   return shares[before] + (shares[after] - shares[before]) * (point - before);
 }
 
-// whether an obstacle moves along its nodes (its own path, or a sliding
-// pillar's two ends, at its speed), not its own level's path as it is
-const onItsNodes = (obstacle: LevelObject) => obstacle.path !== undefined || obstacle.obstacle === "sliding_pillar";
+// whether an obstacle moves along its nodes (its own path, a sliding pillar's
+// two ends, at its speed, or a carrying platform's default), not its own
+// level's path as it is
+const onItsNodes = (obstacle: LevelObject) => obstacle.path !== undefined || obstacle.obstacle === "sliding_pillar" || obstacle.obstacle === "carrying_platform";
 
 // a gate's init flags are its turn (its spawn flags let them be): A tips it
 // over, B is its yaw, 4096 a full turn, anticlockwise seen from above
@@ -307,6 +329,18 @@ function withBlockTop(entity: Buffer, obstacle: LevelObject): Buffer {
     return entity;
   }
   return withInitFlagC(entity, entity.readInt16LE(ENTITY_INIT_FLAGS + 4) | BLOCK_WITH_TOP);
+}
+
+// how far along its path (0 to 1) each of an entity's points is
+function entityPathShares(entity: Buffer): number[] {
+  const path = entityPath(entity);
+  const steps = path.slice(1).map((point, index) => Math.hypot(...point.map((value, axis) => value - path[index][axis])));
+  const total = steps.reduce((sum, step) => sum + step, 0);
+  let travelled = 0;
+  return [0, ...steps.map((step) => {
+    travelled += step;
+    return travelled / total;
+  })];
 }
 
 // a rotating obstacle's init flag C: how many go round (bits 12 to 14), the
@@ -478,9 +512,10 @@ class ObjectPlacer {
     const { zone, at } = this.inZone(position);
     const nodes = pathPositions(obstacle, this.turn, this.scale).map((node) => this.positionOf({ ...obstacle, at: node, raise: 0 }));
     const length = pathLength(nodes);
-    const points = ownPathShares(obstacle, length).map((share) => pointAlongShare(nodes, share));
+    const points = ownPathShares(obstacle, length, example).map((share) => pointAlongShare(nodes, share));
     const drift = points.map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
-    this.entities[zone].push(withSlideTiming(withPath(withEntityId(example, this.ids.shift()!), drift), obstacle, length, this.scale));
+    const placed = withPath(withEntityId(example, this.ids.shift()!), drift);
+    this.entities[zone].push(withRideSpeed(withSlideTiming(placed, obstacle, length, this.scale), obstacle, drift.length, length, this.scale));
   }
 
   // a mossy slide's slider (example) at its spot, sliding along its slope from there (run, from its spot)

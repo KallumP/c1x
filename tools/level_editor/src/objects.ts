@@ -90,11 +90,13 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // - slamming_walls
 // and its stone pillar, rising from its spot and back down:
 // - rising_pillar
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar"] as const;
+// and its platform that carries crash along its path once he stands on it:
+// - carrying_platform
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
-export const PATH_OBSTACLES = ["leaf", "sliding_pillar"] as const satisfies readonly ObstacleType[];
+export const PATH_OBSTACLES = ["leaf", "sliding_pillar", "carrying_platform"] as const satisfies readonly ObstacleType[];
 export type PathObstacle = (typeof PATH_OBSTACLES)[number];
 export const isPathObstacle = (type: ObstacleType | undefined) => PATH_OBSTACLES.some((obstacle) => obstacle === type);
 
@@ -118,6 +120,8 @@ const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map(pluralName).join(", 
 export const SPEED_MIN = 0.25;
 export const SPEED_MAX = 3;
 export const SLIDING_PILLAR_SPEED_MAX = 6; // metres a second
+export const CARRYING_PLATFORM_SPEED_MAX = 6; // metres a second
+export const CARRYING_PLATFORM_SPEED = 1.5; // metres a second: temple ruins' own pace on its 6 m
 
 // how many badgers or walking spiders come out at once: as jungle rollers' first
 // badger spawner, and fumbling in the dark's spider spawners, without a count;
@@ -204,6 +208,15 @@ function platformsFallback(type: ObjectType | undefined): number {
   return 2;
 }
 
+// a path enemy's speed without one (the game's own pace), a sliding pillar's
+// (metres a second), or a carrying platform's (temple ruins' own pace)
+function speedFallback(type: ObjectType | undefined): number {
+  if (type === "carrying_platform") {
+    return CARRYING_PLATFORM_SPEED;
+  }
+  return 1;
+}
+
 // the seconds between a timed obstacle's pushes or flames without an every
 const everyFallback = (type: ObjectType | undefined): number => TIMED_EVERY[type!] ?? SPIKED_LOG_EVERY;
 
@@ -225,7 +238,7 @@ interface NumberSettingRule {
 }
 
 export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
-  speed: { types: [...PATH_ENEMIES, "sliding_pillar"], typesNamed: `${PATH_ENEMIES_NAMED}, and sliding pillars`, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: () => 1, meaning: "times the game's own pace, or a sliding pillar's metres a second", maxFor: { sliding_pillar: SLIDING_PILLAR_SPEED_MAX } },
+  speed: { types: [...PATH_ENEMIES, "sliding_pillar", "carrying_platform"], typesNamed: `${PATH_ENEMIES_NAMED}, sliding pillars and carrying platforms`, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: speedFallback, meaning: "times the game's own pace, or a sliding pillar's or carrying platform's metres a second", maxFor: { sliding_pillar: SLIDING_PILLAR_SPEED_MAX, carrying_platform: CARRYING_PLATFORM_SPEED_MAX } },
   start: { types: ["rolling_stone"], typesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
   count: { types: ["badger", "walking_spider", "bat", "leader_bats"], typesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
   delay: { types: ["bat", "leader_bats"], typesNamed: "bats and leader bats", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks" },
@@ -259,7 +272,7 @@ export interface LevelObject {
   enemy?: EnemyType;    // an enemy's type
   obstacle?: ObstacleType; // an obstacle's type
   path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised); leader bats' second leader, from their first
-  speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one)
+  speed?: number;       // how many times the game's own pace a path enemy walks at (1 without one), or a sliding pillar's or carrying platform's metres a second
   start?: number;       // how far along its track a rolling stone starts, 0 (its first end) to 1 (its far end); 0 without one
   reverse?: boolean;    // a rolling stone that rolls back towards its first end first, or a fish leaping the other way (true, or none)
   length?: number;      // how long a mossy slide is, in metres (SLIDE_LENGTH without one)
@@ -392,7 +405,7 @@ function readObstaclePath(fields: Record<string, unknown>, obstacle: ObstacleTyp
     return {};
   }
   if (!isPathObstacle(obstacle)) {
-    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves and sliding pillars do)`);
+    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves, sliding pillars and carrying platforms do)`);
   }
   checkPathLength(fields.path, objectNumber);
   return { path: pathNodes(fields.path, objectNumber) };
@@ -558,7 +571,7 @@ function formatObject(object: LevelObject): string {
   }
   for (const setting of NUMBER_SETTINGS) {
     const value = object[setting];
-    if (value !== undefined && value !== NUMBER_SETTING_RULES[setting].fallback(object.enemy)) {
+    if (value !== undefined && value !== NUMBER_SETTING_RULES[setting].fallback(objectType(object))) {
       parts.push(`"${setting}": ${value}`);
     }
   }

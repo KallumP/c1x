@@ -327,6 +327,48 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasTempleRuins)("carrying platforms, from temple ruins", () => {
+    const carryPath = (more: Partial<LevelObject> = {}) => {
+      const { zone } = build([obstacle("carrying_platform", more)]);
+      return entityPath(zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.carrying_platform))!);
+    };
+
+    test("a carrying platform is temple ruins' PoPlC subtype 3, moved as a rising pillar's, with its own model", () => {
+      const { level, entries } = build([obstacle("carrying_platform")]);
+      expect(OBSTACLE_ENTITIES.carrying_platform).toEqual([13, 3]);
+      expect(level.nsd.ldat.execMap[13]).toBe(stringToEid("PoPTC"));
+      expect(entries.has(stringToEid("PlPsG"))).toBe(true);
+      expect(entries.has(stringToEid("PlUsG"))).toBe(false);
+    });
+
+    test("without a path, it carries crash 6 m straight across the map (at scale 256: 1536), as many points as temple ruins' first", () => {
+      const path = carryPath();
+      expect(path.length).toBe(25);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 1536, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
+    });
+
+    test("with a path, it carries crash along its nodes", () => {
+      const path = carryPath({ path: [[0, 0, 0], [0, 4, 0], [2, 4, 1]] });
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path.at(-1)!, [SPOT_IN_ZONE[0] + 512, SPOT_IN_ZONE[1] + 256, SPOT_IN_ZONE[2] - 1024], 16);
+    });
+
+    // its init flag A is its step along its path a frame (30 a second), in 256ths of a point (its
+    // code's own 51 without): its 24 steps' 6144 over the frames its path's length takes at its
+    // speed, in metres a second (at scale 256)
+    const platform = (more: object) => zoneEntities(build([obstacle("carrying_platform", more as Partial<LevelObject>)]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.carrying_platform))!;
+    test.each([
+      { more: {}, step: 51 },                                                  // 6 m at 1.5 m/s: 120 frames, temple ruins' own pace
+      { more: { path: [[0, 0, 0], [0, 4, 0]], speed: 2 }, step: 102 },         // 4 m at 2 m/s: 60 frames
+      { more: { path: [[0, 0, 0], [0, 20, 0]], speed: 0.25 }, step: 3 },       // 20 m at 0.25 m/s: 2400 frames
+    ] as const)("a carrying platform ($more) steps $step 256ths of a point a frame, not turned by it", ({ more, step }) => {
+      const placed = platform(more);
+      expect(placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(step);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
+  });
+
   describe.skipIf(!hasTempleRuins)("slamming walls, from temple ruins", () => {
     // temple ruins' RuiOC isn't sunset vista's (the bats'), so it moves to slot 6 as RuiWC
     test("slamming walls are temple ruins' RuiOC subtypes 7 (the right half) and 8 (the left), moved to their own slot, 1200 either side of the spot, sliding in to meet there", () => {
