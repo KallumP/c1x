@@ -6,7 +6,7 @@ import type { Entry } from "./levelFiles";
 const HEADER = 0;           // a model's items: its header, then its polygons
 const TEXINFOS = 20;        // where its texture infos start in its header, after its poly count, scale and texinfo count
 const NO_CULL = 1 << 28;    // a texture info's colour word: draw both sides
-const TEXTURED = 1 << 31;   // and whether it's textured, with a second word after it
+const TEXTURED = 1 << 31;   // and whether it's textured, with its texture page and region after it
 
 // model with every texture info set to draw both sides of its polygons
 export function withBothSidesDrawn(model: Entry): Entry {
@@ -17,10 +17,11 @@ export function withBothSidesDrawn(model: Entry): Entry {
   return { ...model, items: model.items.map((item, index) => (index === HEADER ? header : item)) };
 }
 
-// how long a texture info is, from its colour word: a second word if it's textured
+// how long a texture info is, from its colour word (src/gfx.c's TgeoOnLoad):
+// its texture page and region too if it's textured
 function texinfoBytes(colour: number): number {
   if (colour & TEXTURED) {
-    return 8;
+    return 12;
   }
   return 4;
 }
