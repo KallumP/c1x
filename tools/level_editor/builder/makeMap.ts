@@ -268,6 +268,24 @@ function withSlideTiming(entity: Buffer, obstacle: LevelObject, length: number, 
   return withInitFlagA(withNoRotationFromFlags(entity), pillarSlideFrames(obstacle, length, scale));
 }
 
+// a carrying platform's init flag A: its step along its path a frame, in
+// 256ths of a point (temple ruins' code), so its points' steps take the frames
+// its path length game units long at scale takes at its speed (metres a second)
+const POINT_SHARES = 256;
+function platformRideStep(platform: LevelObject, points: number, length: number, scale: number): number {
+  const frames = (length / scale / numberSetting(platform, "speed")) * FRAMES_A_SECOND;
+  return Math.min(INIT_FLAG_FRAMES_MAX, Math.max(1, Math.round(((points - 1) * POINT_SHARES) / frames)));
+}
+
+// entity with a carrying platform's step along its points points in its init
+// flag A, not turned by it; any other obstacle's as it is
+function withRideSpeed(entity: Buffer, obstacle: LevelObject, points: number, length: number, scale: number): Buffer {
+  if (obstacle.obstacle !== "carrying_platform") {
+    return entity;
+  }
+  return withInitFlagA(withNoRotationFromFlags(entity), platformRideStep(obstacle, points, length, scale));
+}
+
 // how long a path through points is
 function pathLength(points: Vec3[]): number {
   return points.slice(1).reduce((sum, point, index) => sum + Math.hypot(...point.map((value, axis) => value - points[index][axis])), 0);
@@ -496,7 +514,8 @@ class ObjectPlacer {
     const length = pathLength(nodes);
     const points = ownPathShares(obstacle, length, example).map((share) => pointAlongShare(nodes, share));
     const drift = points.map((point) => point.map((value, axis) => at[axis] + value - position[axis]) as Vec3);
-    this.entities[zone].push(withSlideTiming(withPath(withEntityId(example, this.ids.shift()!), drift), obstacle, length, this.scale));
+    const placed = withPath(withEntityId(example, this.ids.shift()!), drift);
+    this.entities[zone].push(withRideSpeed(withSlideTiming(placed, obstacle, length, this.scale), obstacle, drift.length, length, this.scale));
   }
 
   // a mossy slide's slider (example) at its spot, sliding along its slope from there (run, from its spot)
