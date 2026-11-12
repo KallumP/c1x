@@ -91,6 +91,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   falling_platform: THE_LOST_CITY,
   seesaw: SUNSET_VISTA,
   timed_plank: ROAD_TO_NOWHERE,
+  breaking_plank: ROAD_TO_NOWHERE,
 };
 
 export interface DonorObject {
@@ -406,6 +407,7 @@ const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   dropping_platform: ruinsModelsBut(["Rw2w"]),
   seesaw: ruinsModelsBut(["Rp4w"]),
   timed_plank: planksBut("BD1k"),
+  breaking_plank: planksBut("BE1k"),
   rising_pillar: ["PlDsG", "PlDsV", "PlPsG", "PlPsV"], // temple ruins' other pillars' models: its PoPlC's, which a rising pillar never shows
   carrying_platform: ["PlDsG", "PlDsV", "PlUsG", "PlUsV"], // and those a carrying platform never shows
   moving_platform: ["PlD0G", "PlD0V", "PlUyG", "PlUyV"], // slippery climb's other platforms' models, which a moving platform never shows
@@ -626,7 +628,8 @@ const LIZARD_CODE_ADDITION: CodeAddition = {
 const ENEMY_CODE_ADDITIONS: Partial<Record<ObjectType, CodeAddition>> = {
   lizard: LIZARD_CODE_ADDITION,
   red_lizard: LIZARD_CODE_ADDITION,
-  timed_plank: PLANK_CODE_ADDITION,
+  timed_plank: PLANK_CODE_ADDITION, // the same for every plank, as they share the code
+  breaking_plank: PLANK_CODE_ADDITION,
 };
 
 // toxic waste's barrels (BaraC) stop flattening crash 5 points short of their
@@ -675,7 +678,8 @@ const ENEMY_CODE_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   falling_spiked_log: GATE_OBJECTS_CODE_PATCHES,
   fire_pit: GATE_OBJECTS_CODE_PATCHES,
   slamming_walls: SLAMMING_WALL_CODE_PATCHES,
-  timed_plank: PLANK_CODE_PATCHES,
+  timed_plank: PLANK_CODE_PATCHES, // the same for every plank, as they share the code
+  breaking_plank: PLANK_CODE_PATCHES,
 };
 
 // instructions with an addition after their end; an error if they aren't as long as it needs

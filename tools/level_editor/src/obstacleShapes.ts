@@ -329,7 +329,7 @@ function seesaw(): ShapePart[] {
 const PLANK = { across: 1200, thick: 50, near: 19, out: 369 };
 const PLANK_COLOUR = "#8a6a40";
 
-// road to nowhere's plank (BD1kG): 1200 across, 50 thick, its top at its spot,
+// road to nowhere's planks (BD1kG, BE1kG): 1200 across, 50 thick, its top at its spot,
 // from 19 to 369 towards the player
 function plank(): ShapePart[] {
   const { across, thick, near, out } = PLANK;
@@ -343,4 +343,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw(), timed_plank: plank() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw(), timed_plank: plank(), breaking_plank: plank() };
