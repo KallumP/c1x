@@ -89,6 +89,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   moving_platform: SLIPPERY_CLIMB,
   dropping_platform: SUNSET_VISTA,
   falling_platform: THE_LOST_CITY,
+  seesaw: SUNSET_VISTA,
 };
 
 export interface DonorObject {
@@ -398,6 +399,7 @@ const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   rotating_pots: ruinsModelsBut(["Rp3w"]),
   rotating_platforms: ruinsModelsBut(["Rw1w"]),
   dropping_platform: ruinsModelsBut(["Rw2w"]),
+  seesaw: ruinsModelsBut(["Rp4w"]),
   rising_pillar: ["PlDsG", "PlDsV", "PlPsG", "PlPsV"], // temple ruins' other pillars' models: its PoPlC's, which a rising pillar never shows
   carrying_platform: ["PlDsG", "PlDsV", "PlUsG", "PlUsV"], // and those a carrying platform never shows
   moving_platform: ["PlD0G", "PlD0V", "PlUyG", "PlUyV"], // slippery climb's other platforms' models, which a moving platform never shows
