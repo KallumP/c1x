@@ -165,7 +165,6 @@ export const SLIDE_ANGLE = 14;
 export const SLIDE_ANGLE_MIN = 5;
 export const SLIDE_ANGLE_MAX = 30;
 export const SLIDE_ROTATION_MAX = 359; // degrees anticlockwise seen from above, from across the map (0)
-export const GATES: ObstacleType[] = ["tall_thin_gate", "low_wide_gate"];
 
 // the seconds between a spiked log's pushes, or a fire pit's flames: the great
 // gate's 180 frames or 120 without one, and no fewer than a push takes, up and back
@@ -208,7 +207,7 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   delay: { types: ["bat", "leader_bats"], typesNamed: "bats and leader bats", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks" },
   length: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_LENGTH_MIN, max: SLIDE_LENGTH_MAX, whole: false, fallback: () => SLIDE_LENGTH, meaning: "how long it is, in metres" },
   angle: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_ANGLE_MIN, max: SLIDE_ANGLE_MAX, whole: false, fallback: () => SLIDE_ANGLE, meaning: "how steeply it slopes, in degrees" },
-  rotation: { types: ["mossy_slide", ...GATES], typesNamed: "mossy slides and gates", min: 0, max: SLIDE_ROTATION_MAX, whole: false, fallback: () => 0, meaning: "which way it slides down, from across the map, or falls, from towards the camera: degrees anticlockwise seen from above" },
+  rotation: { types: ["mossy_slide"], typesNamed: "mossy slides", min: 0, max: SLIDE_ROTATION_MAX, whole: false, fallback: () => 0, meaning: "which way it slides down, in degrees anticlockwise from across the map" },
   every: { types: TIMED_OBSTACLES, typesNamed: "spiked logs and fire pits", min: TIMED_EVERY_MIN, max: TIMED_EVERY_MAX, whole: false, fallback: everyFallback, meaning: "the seconds between its pushes or flames" },
   offset: { types: TIMED_OBSTACLES, typesNamed: "spiked logs and fire pits", min: 0, max: TIMED_EVERY_MAX, whole: false, fallback: () => 0, meaning: "the seconds its pushes or flames are put off by" },
   range: { types: ["gunman"], typesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },

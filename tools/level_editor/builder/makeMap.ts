@@ -4,7 +4,7 @@
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { batSwoop, leafDriftShares, leaderBatsFlight, leapWay, pillarSlideShares } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep, pointAlongShare, spotAndNode } from "../src/enemyPaths";
-import { hasPath, LEADER_BATS_LEADERS, numberSetting, GATES, TIMED_OBSTACLES, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
+import { hasPath, LEADER_BATS_LEADERS, numberSetting, TIMED_OBSTACLES, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
 import { throwFlags } from "../src/labAssistantThrow";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
@@ -258,18 +258,6 @@ function shareAt(shares: number[], point: number): number {
 // pillar's two ends, at its speed), not its own level's path as it is
 const onItsNodes = (obstacle: LevelObject) => obstacle.path !== undefined || obstacle.obstacle === "sliding_pillar";
 
-// a gate's init flags are its turn (its spawn flags let them be): A tips it
-// over, B is its yaw, 4096 a full turn, anticlockwise seen from above
-const FULL_TURN = 4096;
-
-// entity with a gate's rotation (degrees) as its yaw; any other object's as it is
-function withGateTurn(entity: Buffer, object: LevelObject): Buffer {
-  if (!GATES.includes(object.obstacle!)) {
-    return entity;
-  }
-  return withInitFlagB(entity, Math.round((numberSetting(object, "rotation") / 360) * FULL_TURN) % FULL_TURN);
-}
-
 // how far over its spot a timed obstacle is placed
 function timedObstacleHang(obstacle: LevelObject): number {
   if (obstacle.obstacle === "falling_spiked_log") {
@@ -376,7 +364,7 @@ class ObjectPlacer {
   // reversed), its lily pad sinking and its leaf drifting
   placeWithItsPath(object: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(object));
-    this.entities[zone].push(withGateTurn(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(object.reverse === true)), object));
+    this.entities[zone].push(withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(object.reverse === true)));
   }
 
   // a floating leaf or sliding pillar (example) moving along its path's nodes
