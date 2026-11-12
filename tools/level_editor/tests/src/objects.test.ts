@@ -535,13 +535,6 @@ describe("wooden pegs", () => {
 });
 
 describe("gates", () => {
-  test("a gate can be turned (the way it falls), read back as written; 0 (towards the camera) without", () => {
-    const [gate] = parseObjects('[{"kind": "obstacle", "type": "low_wide_gate", "at": [1, 2, 0], "rotation": 90}]');
-    expect(gate.rotation).toBe(90);
-    expect(parseObjects(formatObjects([gate]))).toEqual([gate]);
-    expect(numberSetting(obstacleObject("tall_thin_gate"), "rotation")).toBe(0);
-  });
-
   test.each(["tall_thin_gate", "low_wide_gate"])("a %s is an obstacle, with no path", (type) => {
     expect(parseObjects(`[{"kind": "obstacle", "type": "${type}", "at": [1, 2, 0]}]`))
       .toEqual([{ kind: "obstacle", obstacle: type, at: [1, 2, 0], raise: 0, stack: 1 }]);
@@ -681,9 +674,9 @@ describe("mossy slides", () => {
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "length": 1}]', "object 1: length should be 2 to 20 (how long it is, in metres)"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "angle": 40}]', "object 1: angle should be 5 to 30 (how steeply it slopes, in degrees)"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "long": true}]', "object 1: unknown setting long"],
-    ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "rotation": 360}]', "object 1: rotation should be 0 to 359 (which way it slides down, from across the map, or falls, from towards the camera: degrees anticlockwise seen from above)"],
+    ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "rotation": 360}]', "object 1: rotation should be 0 to 359 (which way it slides down, in degrees anticlockwise from across the map)"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "reverse": true}]', "object 1: a mossy_slide has no reverse"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "rotation": 90}]', "object 1: a leaf has no rotation (mossy slides and gates do)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "rotation": 90}]', "object 1: a leaf has no rotation (mossy slides do)"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a mossy_slide has no path"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);

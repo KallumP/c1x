@@ -700,17 +700,6 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(code.readUInt32LE(0x26b * 4)).toBe(0x11801e1f);
     });
 
-    // its init flags are its turn (not settings), A its yaw: 4096 a full turn
-    test.each([
-      { rotation: 0, yaw: 0 },
-      { rotation: 90, yaw: 1024 },
-      { rotation: 270, yaw: 3072 },
-    ])("a gate turned $rotation degrees has a yaw of $yaw", ({ rotation, yaw }) => {
-      const placed = zoneEntities(build([obstacle("low_wide_gate", { rotation })]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.low_wide_gate))!;
-      expect(placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(yaw);
-      expect(placed.readUInt16LE(4) & 1).toBe(0);
-    });
-
     test("a gate takes one more texture page, without boulder dash's boulder and the rest it never shows", () => {
       const { entries, level } = build([obstacle("low_wide_gate"), obstacle("tall_thin_gate", { at: [1, 6, 0] })]);
       expect(texturePages(level).length).toBe(texturePages(build().level).length + 1);
