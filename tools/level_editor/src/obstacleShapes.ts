@@ -181,8 +181,20 @@ function lowWideGate(): ShapePart[] {
   ));
 }
 
+const FALL_ARROW = { gap: 150, shaft: 450, shaftWidth: 90, head: 250, headRadius: 170, thick: 20 };
+
+// an arrow flat on the floor, from deep (a gate's depth) out in front of it,
+// pointing towards the player: the way boulder dash's gates fall when knocked
+function fallArrow(deep: number): ShapePart[] {
+  const { gap, shaft, shaftWidth, head, headRadius, thick } = FALL_ARROW;
+  const start = deep / 2 + gap;
+  const shaftPart: ShapePart = { kind: "box", size: [shaftWidth, thick, shaft], at: [0, thick / 2, start + shaft / 2], colour: SPIKED_LOG_COLOURS.arrow };
+  const headPart = rod(0, headRadius, head, [0, thick / 2, start + shaft + head / 2], SPIKED_LOG_COLOURS.arrow, { turn: [Math.PI / 2, 0, 0], stretch: [1, 1, thick / headRadius] });
+  return [{ ...shaftPart, name: "arrow" }, { ...headPart, name: "arrow" }];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
 export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit(), dropping_pillar: pillar(), sliding_pillar: pillar(),
-  tall_thin_gate: tallThinGate(), low_wide_gate: lowWideGate() };
+  tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)] };
