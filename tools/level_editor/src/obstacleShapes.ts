@@ -282,13 +282,12 @@ function bouncePad(): ShapePart[] {
 const STEAM_VENT = { across: 500, grate: 40, steam: 1600 };
 
 // castle machinery's steam vent, which has no model (its pipe is its level's):
-// a grate 500 across on its spot, and its steam, a column 1600 up from it
+// a square grate 500 across on its spot, and its steam, a square column 1600 up from it
 function steamVent(): ShapePart[] {
   const { across, grate, steam } = STEAM_VENT;
-  const radius = across / 2;
   return [
-    rod(radius, radius, grate, [0, grate / 2, 0], STEAM_COLOURS.grate),
-    rod(radius * 0.9, radius * 0.4, steam - grate, [0, grate + (steam - grate) / 2, 0], STEAM_COLOURS.steam),
+    squareSlab(across, grate, 0, STEAM_COLOURS.grate),
+    squareSlab(across * 0.6, steam - grate, grate, STEAM_COLOURS.steam),
   ];
 }
 
