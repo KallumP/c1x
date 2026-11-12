@@ -178,7 +178,7 @@ export const GATES: ObstacleType[] = ["tall_thin_gate", "low_wide_gate"];
 // the seconds between a timed obstacle's pushes or flames without an every, as
 // its own level's: the great gate's spiked logs' 180 frames and fire pits' 120,
 // sunset vista's pushing blocks' 60 and platforms' 70 (at 30 a second)
-const TIMED_EVERY: Partial<Record<ObjectType, number>> = { fire_pit: 4, pushing_block: 2, pushing_platform: 70 / 30 };
+const TIMED_EVERY: Partial<Record<ObjectType, number>> = { fire_pit: 4, pushing_block: 2, pushing_platform: 70 / 30, slamming_walls: 3 };
 export const SPIKED_LOG_EVERY = 6;
 export const TIMED_EVERY_MIN = 2;
 export const TIMED_EVERY_MAX = 20;
@@ -229,8 +229,8 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   length: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_LENGTH_MIN, max: SLIDE_LENGTH_MAX, whole: false, fallback: () => SLIDE_LENGTH, meaning: "how long it is, in metres" },
   angle: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_ANGLE_MIN, max: SLIDE_ANGLE_MAX, whole: false, fallback: () => SLIDE_ANGLE, meaning: "how steeply it slopes, in degrees" },
   rotation: { types: ["mossy_slide", ...GATES], typesNamed: "mossy slides and gates", min: 0, max: SLIDE_ROTATION_MAX, whole: false, fallback: () => 0, meaning: "which way it slides down, from across the map, or falls, from towards the camera: degrees anticlockwise seen from above" },
-  every: { types: TIMED_OBSTACLES, typesNamed: "spiked logs, fire pits, pushing blocks and platforms, and rotating pots and platforms", min: TIMED_EVERY_MIN, max: TIMED_EVERY_MAX, whole: false, fallback: everyFallback, meaning: "the seconds between its pushes or flames" },
-  offset: { types: TIMED_OBSTACLES, typesNamed: "spiked logs, fire pits, pushing blocks and platforms, and rotating pots and platforms", min: 0, max: TIMED_EVERY_MAX, whole: false, fallback: () => 0, meaning: "the seconds its pushes or flames are put off by" },
+  every: { types: [...TIMED_OBSTACLES, "slamming_walls"], typesNamed: "spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, and slamming walls", min: TIMED_EVERY_MIN, max: TIMED_EVERY_MAX, whole: false, fallback: everyFallback, meaning: "the seconds between its pushes or flames" },
+  offset: { types: [...TIMED_OBSTACLES, "slamming_walls"], typesNamed: "spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, and slamming walls", min: 0, max: TIMED_EVERY_MAX, whole: false, fallback: () => 0, meaning: "the seconds its pushes or flames are put off by" },
   platforms: { types: ROTATING_OBSTACLES, typesNamed: "rotating pots and platforms", min: 1, max: ROTATING_PLATFORMS_MAX, whole: true, fallback: platformsFallback, meaning: "how many go round" },
   radius: { types: ROTATING_OBSTACLES, typesNamed: "rotating pots and platforms", min: ROTATING_RADIUS_MIN, max: ROTATING_RADIUS_MAX, whole: false, fallback: () => ROTATING_RADIUS, meaning: "how far out they go round, in metres" },
   range: { types: ["gunman"], typesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },

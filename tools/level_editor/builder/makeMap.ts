@@ -410,11 +410,14 @@ class ObjectPlacer {
   // slamming walls: their right half (right) SLAMMING_WALL_GAP across the map
   // from their spot and their left half (left) as far the other way, each
   // sliding in along its own level's path to meet at the spot
+  // both timed by their init flags as a spiked log is (A the frames between slams, B into them)
   placeSlammingWalls(walls: LevelObject, right: Buffer, left: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(walls));
     const beside = (way: number): Vec3 => [at[0] + way * SLAMMING_WALL_GAP, at[1], at[2]];
-    this.entities[zone].push(withPathFrom(withEntityId(right, this.ids.shift()!), beside(1)));
-    this.entities[zone].push(withPathFrom(withEntityId(left, this.ids.shift()!), beside(-1)));
+    const [every, into] = obstacleTiming(walls);
+    const timed = (half: Buffer) => withInitFlagB(withInitFlagA(withNoRotationFromFlags(half), every), into);
+    this.entities[zone].push(timed(withPathFrom(withEntityId(right, this.ids.shift()!), beside(1))));
+    this.entities[zone].push(timed(withPathFrom(withEntityId(left, this.ids.shift()!), beside(-1))));
   }
 
   // a spiked log or fire pit (example) at its spot, a falling log hung over it
