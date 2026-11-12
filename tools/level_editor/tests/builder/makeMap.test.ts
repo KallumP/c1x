@@ -295,11 +295,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   });
 
   describe.skipIf(!hasTempleRuins)("slamming walls, from temple ruins", () => {
-    test("slamming walls are temple ruins' RuiOC subtypes 7 (the right half) and 8 (the left), 1200 either side of the spot, sliding in to meet there", () => {
+    // temple ruins' RuiOC isn't sunset vista's (the bats'), so it moves to slot 6 as RuiWC
+    test("slamming walls are temple ruins' RuiOC subtypes 7 (the right half) and 8 (the left), moved to their own slot, 1200 either side of the spot, sliding in to meet there", () => {
       const { level, entries, zone } = build([obstacle("slamming_walls")]);
-      expect(level.nsd.ldat.execMap[42]).toBe(stringToEid("RuiOC"));
+      expect(OBSTACLE_ENTITIES.slamming_walls).toEqual([6, 7]);
+      expect(level.nsd.ldat.execMap[6]).toBe(stringToEid("RuiWC"));
       expect(["RcRsG", "RcLsG"].every((name) => entries.has(stringToEid(name)))).toBe(true);
-      const half = (subtype: number) => zoneEntities(zone).find((item) => isOfType(item, [42, subtype]))!;
+      const half = (subtype: number) => zoneEntities(zone).find((item) => isOfType(item, [6, subtype]))!;
       const [right, left] = [entityPath(half(7)), entityPath(half(8))];
       expectNear(right[0], [SPOT_IN_ZONE[0] + 1200, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
       expectNear(left[0], [SPOT_IN_ZONE[0] - 1200, SPOT_IN_ZONE[1], SPOT_IN_ZONE[2]], 16);
@@ -332,7 +334,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       { more: { every: 4, offset: 1 }, flags: [120, 90] },
     ])("slamming walls ($more) have their slams' timing in both halves' init flags", ({ more, flags }) => {
       const { zone } = build([obstacle("slamming_walls", more)]);
-      const halves = zoneEntities(zone).filter((item) => isOfType(item, [42, 7]) || isOfType(item, [42, 8]));
+      const halves = zoneEntities(zone).filter((item) => isOfType(item, [6, 7]) || isOfType(item, [6, 8]));
       expect(halves.length).toBe(2);
       halves.forEach((half) => {
         expect([half.readInt16LE(ENTITY_INIT_FLAGS), half.readInt16LE(ENTITY_INIT_FLAGS + 2)]).toEqual(flags);
