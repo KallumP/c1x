@@ -7,13 +7,13 @@ describe("parseObjects", () => {
     const objects = parseObjects(`[
       {"kind": "spawn", "at": [0.5, 3.5, 0.3]},
       {"kind": "box", "type": "basic", "at": [1, 10, 0], "stack": 2},
-      {"kind": "box", "subtype": 13, "at": [2, 10, 0], "raise": 1.5},
+      {"kind": "box", "subtype": 9, "at": [2, 10, 0], "raise": 1.5},
       {"kind": "end", "at": [0, 48, 1.2], "raise": 0.15}
     ]`);
     expect(objects).toEqual([
       { kind: "spawn", at: [0.5, 3.5, 0.3], raise: 0, stack: 1 },
       { kind: "box", box: "basic", at: [1, 10, 0], raise: 0, stack: 2 },
-      { kind: "box", box: 13, at: [2, 10, 0], raise: 1.5, stack: 1 },
+      { kind: "box", box: 9, at: [2, 10, 0], raise: 1.5, stack: 1 },
       { kind: "end", at: [0, 48, 1.2], raise: 0.15, stack: 1 },
     ]);
   });
@@ -22,10 +22,10 @@ describe("parseObjects", () => {
     const objects = parseObjects(`[
       {"kind": "box", "type": "tnt", "at": [0, 0, 0]},
       {"kind": "box", "type": "iron_arrow", "at": [1, 0, 0]},
-      {"kind": "box", "subtype": 19, "at": [2, 0, 0]},
+      {"kind": "box", "subtype": 15, "at": [2, 0, 0]},
       {"kind": "box", "subtype": 0, "at": [3, 0, 0]}
     ]`);
-    expect(objects.map((object) => object.box)).toEqual(["tnt", "iron_arrow", 19, 0]);
+    expect(objects.map((object) => object.box)).toEqual(["tnt", "iron_arrow", 15, 0]);
   });
 
   test.each([
@@ -41,6 +41,7 @@ describe("parseObjects", () => {
     ['[{"kind": "box", "type": "nitro", "at": [0, 0, 0]}]', "object 1: unknown box type nitro"],
     ['[{"kind": "box", "subtype": 1, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
     ['[{"kind": "box", "subtype": 12, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
+    ['[{"kind": "box", "subtype": 13, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "stack": 0}]', "object 1: stack should be"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "stack": 1.5}]', "object 1: stack should be"],
   ])("refuses %s", (text, message) => {
@@ -66,11 +67,11 @@ describe("formatObjects", () => {
   test("writes one object a line, leaving out default settings", () => {
     expect(formatObjects([
       { kind: "box", box: "basic", at: [1, 10, 0], raise: 0, stack: 2 },
-      { kind: "box", box: 13, at: [2, 10, 0], raise: 1.5, stack: 1 },
+      { kind: "box", box: 9, at: [2, 10, 0], raise: 1.5, stack: 1 },
     ])).toBe(
       "[\n" +
       '  {"kind": "box", "type": "basic", "at": [1, 10, 0], "stack": 2},\n' +
-      '  {"kind": "box", "subtype": 13, "at": [2, 10, 0], "raise": 1.5}\n' +
+      '  {"kind": "box", "subtype": 9, "at": [2, 10, 0], "raise": 1.5}\n' +
       "]\n");
   });
 
@@ -92,11 +93,11 @@ describe("formatObjects", () => {
     const text = formatObjects([
       { kind: "box", box: "basic", at: [1, 0, 0], raise: 0, stack: 1 },
       { kind: "end", at: [0, 9, 0], raise: 0, stack: 1 },
-      { kind: "box", box: "outline", at: [2, 0, 0], raise: 0, stack: 1 },
+      { kind: "box", box: "life", at: [2, 0, 0], raise: 0, stack: 1 },
       { kind: "spawn", at: [0, 0, 0], raise: 0, stack: 1 },
     ]);
     const kinds = parseObjects(text).map((object) => (object.box === undefined ? object.kind : `${object.kind} ${object.box}`));
-    expect(kinds).toEqual(["spawn", "box basic", "box outline", "end"]);
+    expect(kinds).toEqual(["spawn", "box basic", "box life", "end"]);
   });
 
   test("rounds positions to the millimetre", () => {
@@ -177,7 +178,7 @@ describe("boxTypeName", () => {
   });
 
   test("is the type a subtype number has", () => {
-    expect(boxTypeName(13)).toBe("outline");
+    expect(boxTypeName(5)).toBe("iron");
     expect(boxTypeName(9)).toBe("aku_aku");
   });
 });

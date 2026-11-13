@@ -2076,21 +2076,38 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   });
 
   test("every object has its own id", () => {
-    const { zone } = build([box([1, 2, 0.5], 2, { stack: 2 }), box([-1, 2, 0.5], 13), object("end", [-2, 4, 0.5])]);
+    const { zone } = build([box([1, 2, 0.5], 2, { stack: 2 }), box([-1, 2, 0.5], 9), object("end", [-2, 4, 0.5])]);
     const ids = zoneEntities(zone).map(entityId);
     expect(ids.length).toBe(5); // crash, 3 boxes and the warp pad
     expect(new Set(ids).size).toBe(ids.length);
   });
 
   test("the level header counts the boxes that can be broken", () => {
-    const objects = [box([1, 2, 0.5], 2, { stack: 2 }), box([-1, 2, 0.5], 13), box([1, 3, 0.5], 5), box([-1, 3, 0.5], 7)];
+    const objects = [box([1, 2, 0.5], 2, { stack: 2 }), box([-1, 2, 0.5], 9), box([1, 3, 0.5], 5), box([-1, 3, 0.5], 7)];
     expect(build(objects).level.nsd.ldat.boxTotal).toBe(3); // not the iron or switch boxes
     expect(build().level.nsd.ldat.boxTotal).toBe(0);
   });
 
-  test("tnts count towards the box total, iron arrows and outlines don't", () => {
-    const objects = [box([1, 2, 0.5], 0), box([-1, 2, 0.5], 0), box([1, 3, 0.5], 15), box([-1, 3, 0.5], 19)];
+  test("tnts count towards the box total, iron arrows don't", () => {
+    const objects = [box([1, 2, 0.5], 0), box([-1, 2, 0.5], 0), box([1, 3, 0.5], 15)];
     expect(build(objects).level.nsd.ldat.boxTotal).toBe(2);
+  });
+
+  test("an outline counts towards the box total as the box it fills in as", () => {
+    const outline = (at: Vec3, subtype: number) => box(at, subtype, { outline: 1 });
+    const objects = [box([1, 3, 0.5], 7, { switch: 1 }), outline([1, 2, 0.5], 2), outline([-1, 2, 0.5], 8), outline([-1, 3, 0.5], 5)];
+    expect(build(objects).level.nsd.ldat.boxTotal).toBe(2); // not the switch or the iron outline
+  });
+
+  test("a plain or iron outline is placed as the game's outline of it", () => {
+    const objects = [box([1, 3, 0.5], 7, { switch: 1 }), box([1, 2, 0.5], 2, { outline: 1 }), box([-1, 2, 0.5], 5, { outline: 1 })];
+    expect(boxes(build(objects).zone).map(({ subtype }) => subtype)).toEqual([7, 13, 19]);
+  });
+
+  test("any other outline keeps its own subtype, its second init flag 3", () => {
+    const objects = [box([1, 3, 0.5], 7, { switch: 1 }), box([1, 2, 0.5], 8, { outline: 1, stack: 2 })];
+    const placed = zoneEntities(build(objects).zone).filter((item) => entityType(item).join() === [BOX_TYPE, 8].join());
+    expect(placed.map((item) => item.readInt16LE(ENTITY_INIT_FLAGS + 2))).toEqual([3, 3]);
   });
 
   const skyIn = (zone: Entry) => headerOf(zone).sky;
