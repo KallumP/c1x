@@ -28,7 +28,7 @@ uint32_t image_cvt[512*240];
 uint16_t *cluts[480];
 
 extern ns_struct ns;
-extern page_struct texture_pages[16];
+extern page_struct texture_pages[NS_TEXTURE_PAGE_COUNT];
 extern int paused;
 extern int pause_status;
 extern lid_t cur_lid;

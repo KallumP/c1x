@@ -1,6 +1,7 @@
 // small form fields for the properties panel
 import type { ReactNode } from "react";
 import { hexToRgb, rgbToHex, type Rgb } from "../sky";
+import { shownNumber } from "../shownNumber";
 import "./Fields.css";
 
 // a field: its label beside what's in it, or over it if stacked (a slider, whose label can be long)
@@ -32,7 +33,7 @@ export function NumberField({ label, value, step, min, onChange }: {
 
   return (
     <Field label={label}>
-      <input type="number" value={value} step={step} min={min} onChange={(event) => change(event.target)} />
+      <input type="number" value={shownNumber(value)} step={step} min={min} onChange={(event) => change(event.target)} />
     </Field>
   );
 }

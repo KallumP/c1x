@@ -53,6 +53,14 @@
   {"kind": "box", "type": "basic", "at": [-7.5, 201, -0.9], "raise": 3.5},
   {"kind": "box", "type": "basic", "at": [-6.5, 123.25, -0.9], "raise": 4.5},
   {"kind": "box", "type": "basic", "at": [-1.75, 123.25, -0.9], "raise": 4.5},
+  {"kind": "box", "type": "question", "at": [-3.945, 231.68, -8.1], "raise": 6},
+  {"kind": "box", "type": "basic", "at": [-3.729, 233.839, -8.1], "raise": 6},
+  {"kind": "box", "type": "basic", "at": [-6.174, 235.309, -8.1], "raise": 6},
+  {"kind": "box", "type": "basic", "at": [-4.227, 237.869, -8.1], "raise": 6},
+  {"kind": "box", "type": "basic", "at": [-8.049, 237.076, -8.1], "raise": 6},
+  {"kind": "box", "type": "basic", "at": [-1.057, 235.139, -8.1], "raise": 6},
+  {"kind": "box", "type": "basic", "at": [-4, 236, -8.1], "raise": 14.4},
+  {"kind": "box", "type": "basic", "at": [-4.176, 240.966, -8.1], "raise": 6},
 
   {"kind": "enemy", "type": "plant", "at": [1, 89.5, -3.4]},
   {"kind": "enemy", "type": "plant", "at": [0, 92.5, -3.4]},
@@ -73,6 +81,8 @@
 
   {"kind": "obstacle", "type": "rolling_stone", "at": [-5.5, 151.5, 0.299]},
   {"kind": "obstacle", "type": "rolling_stone", "at": [0, 140, 0.438]},
+  {"kind": "obstacle", "type": "timed_plank", "at": [-4.004, 229.432, -8.1], "raise": 6, "delay": 1},
+  {"kind": "obstacle", "type": "carrying_platform", "at": [-3.962, 259.187, -2.1], "path": [[0, 0.813, 0.9], [-0.015, -19.187, 5.5], [0.007, -30.236, 5.365], [0.062, -51.725, 12.1], [-7.038, -55.187, 12.1], [-7.038, -55.187, -0.2]], "speed": 5},
 
-  {"kind": "end", "at": [-4, 235, -2.1], "raise": 0.32}
+  {"kind": "end", "at": [-4, 257, -2.1], "raise": 0.32}
 ]

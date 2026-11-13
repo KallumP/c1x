@@ -25,7 +25,7 @@ const ZONE_SKY_BOTTOM = ZONE_GFX + 48;
 const VISIBILITY_DEPTH = 6144000; // n. sanity beach's (jungle rollers' start zone has 0)
 export const ZONE_HEADER_SIZE = 888;
 export const ZONE_LOADLIST_PAGES_MAX = 32;
-const TEXTURE_PAGES_MAX = 16; // the game holds this many at once (texture_pages in src/ns.c)
+const TEXTURE_PAGES_MAX = 32; // the game holds this many at once (NS_TEXTURE_PAGE_COUNT in src/ns.h)
 
 function writeRgb(header: Buffer, [red, green, blue]: Rgb, at: number): void {
   header[at] = red;

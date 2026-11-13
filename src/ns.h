@@ -163,6 +163,10 @@ typedef struct _page_struct {
 
 /* ns struct */
 #define NS_PHYSICAL_PAGE_COUNT 128
+/* texture pages a level holds at once: the ps1's vram held 16, but the pc
+   draws from its own copies of them, so custom levels, with enemies and
+   obstacles from other levels bringing theirs, can have more */
+#define NS_TEXTURE_PAGE_COUNT  32
 #define NS_VIRTUAL_PAGE_COUNT  0
 
 typedef struct {

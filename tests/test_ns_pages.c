@@ -161,18 +161,38 @@ UTEST(ns_pages, entry_in_an_unloaded_page_needs_one_page) {
   ASSERT_EQ(1, count);
 }
 
-extern page_struct texture_pages[16];
+extern page_struct texture_pages[NS_TEXTURE_PAGE_COUNT];
 
-#define PAGE_FREE 1 /* a page_struct state: free for a page to load into (ns.c) */
+#define PAGE_FREE 1    /* a page_struct state: free for a page to load into (ns.c) */
+#define PAGE_LOADED 20 /* a page_struct state: holding a loaded page */
 
-/* the ps1 kept the upper half of vram (slots 0-7) for the screen; the pc draws
-   from its own copies of the pages, so a level can have a page in any slot */
-UTEST(ns_texture_pages, a_level_can_load_a_texture_page_into_any_of_the_16_slots) {
+/* the ps1's vram held 16 texture pages; the pc draws from its own copies of
+   the pages, so a level can have a page in any of the slots, and more of them */
+UTEST(ns_texture_pages, a_level_can_load_a_texture_page_into_any_of_the_32_slots) {
   int i;
 
+  ASSERT_EQ(32, NS_TEXTURE_PAGE_COUNT);
   memset(texture_pages, 0, sizeof(texture_pages));
   NSInitTexturePages(&ns, LID_TEST);
-  for (i = 0; i < 16; i++) {
+  for (i = 0; i < NS_TEXTURE_PAGE_COUNT; i++) {
     ASSERT_EQ(PAGE_FREE, texture_pages[i].state);
   }
+}
+
+UTEST(ns_texture_pages, a_17th_texture_page_gets_a_slot_of_its_own) {
+  int i, slot;
+
+  memset(texture_pages, 0, sizeof(texture_pages));
+  for (i = 0; i < NS_TEXTURE_PAGE_COUNT; i++) {
+    texture_pages[i].state = PAGE_FREE;
+  }
+  for (i = 0; i < 16; i++) {
+    texture_pages[i].state = PAGE_LOADED;
+  }
+  slot = NSTexturePageAllocate();
+  ASSERT_GE(slot, 16);
+  for (i = 0; i < 16; i++) {
+    ASSERT_EQ(PAGE_LOADED, texture_pages[i].state); /* none of the 16 put out for it */
+  }
+  memset(texture_pages, 0, sizeof(texture_pages));
 }

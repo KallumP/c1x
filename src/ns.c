@@ -29,7 +29,7 @@ char eid_str_buf[16];          /* 80056718 */
 char eid_str_buf2[16];         /* 80056728 */
 char ns_filename[1024];        /* 80056738 (128 on psx; longer for custom level paths) */
 page_struct audio_pages[8];    /* 80057F40 */
-page_struct texture_pages[16]; /* 800580A0 */
+page_struct texture_pages[NS_TEXTURE_PAGE_COUNT]; /* 800580A0 (16 on the ps1) */
 ns_struct ns;                  /* 8005C528 */
 
 extern ns_subsystem subsys[21];
@@ -295,7 +295,7 @@ static inline int NSPageTranslateOffsets(page* page) {
   return SUCCESS;
 }
 
-page tpagemem[16];
+page tpagemem[NS_TEXTURE_PAGE_COUNT];
 //----- (80012F10) --------------------------------------------------------
 static void NSPageUpdateEntries(int idx) {
   page_struct *ps, *tps;
@@ -334,7 +334,7 @@ static void NSPageUpdateEntries(int idx) {
   }
   else if (type == 1) {
     idx = NSTexturePageAllocate();
-    if (idx != -12 || (idx = 15, ps->ref_count)) {
+    if (idx != -12 || (idx = NS_TEXTURE_PAGE_COUNT - 1, ps->ref_count)) {
       tps = &texture_pages[idx];
       tpagemem[idx] = *page;
       page = &tpagemem[idx];
@@ -386,23 +386,23 @@ int NSTexturePageAllocate() {
   zone_header *header;
   ns_loadlist *loadlist;
 
-  for (i=15;i>=0;i--) {
+  for (i=NS_TEXTURE_PAGE_COUNT-1;i>=0;i--) {
     ps = &texture_pages[i];
     if (ps->state == 1) { return i; }
   }
-  for (i=15;i>=0;i--) {
+  for (i=NS_TEXTURE_PAGE_COUNT-1;i>=0;i--) {
     ps = &texture_pages[i];
     if (ps->state == 21) { return i; }
   }
   if (!cur_zone) {
-    NSTexturePageFree(15);
-    return 15;
+    NSTexturePageFree(NS_TEXTURE_PAGE_COUNT-1);
+    return NS_TEXTURE_PAGE_COUNT-1;
   }
   /* steal the first slot occupied by a texture page
      that is not in the current zone load list, if any */
   header = (zone_header*)cur_zone->items[0];
   loadlist = &header->loadlist;
-  for (i=15;i>=0;i--) {
+  for (i=NS_TEXTURE_PAGE_COUNT-1;i>=0;i--) {
     ps = &texture_pages[i];
     if (ps->state != 20 && ps->state != 21) { continue; }
     for (ii=0;ii<loadlist->entry_count;ii++) {
@@ -750,10 +750,10 @@ void NSInitTexturePages(ns_struct *nss, uint32_t lid) {
   int blx, bly, clutx, cluty, pagexy;
   int i, idx, hash;
 
-  for (i=0;i<16;i++) {
+  for (i=0;i<NS_TEXTURE_PAGE_COUNT;i++) {
     ps = &texture_pages[i];
     ps->type = 2; /* texture page */
-    blx=i%4;bly=i/4;
+    blx=i%4;bly=(i/4)%4; /* slots past the ps1's 16 get a block's info too: the pc never reads it */
     pagexy=blx<<2;
     if (i>8)
       pagexy|=0x10;
@@ -765,7 +765,7 @@ void NSInitTexturePages(ns_struct *nss, uint32_t lid) {
     ps->info = info;
     /* the ps1 kept slots 0-7 (the upper half of vram) for the display and draw
        buffers. the pc draws from its own copies of the pages, so a level can use
-       all 16: a custom level with enemies from other levels can need more than 8 */
+       all of them: a custom level with enemies from other levels can need more than 8 */
     if (ps->state != 20 && ps->state != 21) { /* this slot not used in previous level? */
       ps->state = 1; /* freshly reserved; ready for transfer */
       continue;

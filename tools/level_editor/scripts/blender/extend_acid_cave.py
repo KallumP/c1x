@@ -2,8 +2,8 @@
 # level's end with new ground in its style, "reimagined": an organic middle
 # (acid_cave_middle.py: a drop into a crystal geode, a fungal grotto, a river
 # gorge), then a collapsed temple swallowed by the rock: a tiki hall between
-# acid channels, a crystal cavern crossed on stepping stones, and acid falls
-# stepping down to a round end chamber. it opens up the cut level's end into
+# acid channels, a crystal cavern crossed on stepping stones, and a rope bridge
+# over a chasm of acid (as road to nowhere's) to a round end chamber. it opens up the cut level's end into
 # them, saves the .blend and exports the .obj and .mtl again. run headless:
 #   blender --background level_src/4_acid_cave/acid_cave.blend --python extend_acid_cave.py
 # running it again replaces what it made before (objects named ext_... and pit_ext...)
@@ -17,11 +17,13 @@ import bpy
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # its modules beside it
 from acid_cave_pieces import *  # noqa: E402,F403 (the shared pieces: materials, lighting, shapes)
 from acid_cave_middle import X_RANGE, middle_parts  # noqa: E402
+from build_cut_level import make_material  # noqa: E402
 
 TEMPLE_SHIFT = 85.0  # the temple, laid out from the cut level's end, moved along past the organic middle
 
 EXTENSION = ("ext_", "pit_ext")
 CUT_LEVEL_MESHES = ("k0_4W", "k1_4W", "k2_4W", "k3_4W", "k4_4W")
+END_WALL_MATERIALS = ("tex_088", "tex_089")  # the carved stone of the cut level's end chamber's north wall
 
 
 # the sections, along +y from the cut level's end
@@ -100,31 +102,155 @@ def crystal_cavern(parts):
         crystal_cluster(parts[part], (x, y), ACID_LEVEL, size, shine)
 
 
-TERRACES = [(128, 132, FLOOR), (132, 136, FLOOR - 0.8), (136, 140, FLOOR - 1.6), (140, 144, FLOOR - 2.4)]
 END_FLOOR = FLOOR - 2.4
-END_CENTRE = (-4, 150)
+
+# the rope bridge over the chasm, as road to nowhere's: steps down from the
+# crystal cavern, stone gate towers either end, and its slats (each a road to
+# nowhere plank: 3 m across, 0.875 m deep) level with the end chamber, some
+# missing, between ropes: a hand rope sagging from tower to tower, netting
+# zigzagging down from it, and a rope along the deck's edge
+LEDGE_X = (-7, -1)
+BRIDGE_Y = (131.5, 164.5)
+CHAMBER_FLOOR_Y = (BRIDGE_Y[1] + 1.5, BRIDGE_Y[1] + 3.5)  # the end chamber's way in, from the far ledge
+END_CENTRE = (-4, BRIDGE_Y[1] + 7.5)
+BRIDGE_X = (-5.5, -2.5)
+STEP_COUNT = 4  # down from the crystal cavern's floor, each as high as the last one onto the deck
+STEP_RISE = (FLOOR - END_FLOOR) / STEP_COUNT
+STEP_DEPTH = (BRIDGE_Y[0] - 128) / STEP_COUNT
+LEDGE_STEPS = [(128 + k * STEP_DEPTH, 128 + (k + 1) * STEP_DEPTH, FLOOR - k * STEP_RISE) for k in range(STEP_COUNT)]
+SLAT_PITCH, SLAT_DEPTH, SLAT_THICKNESS = 1.0, 0.875, 0.12
+KEPT_SLATS = (0, 1, 4, 8, 11, 27, 28, 31, 32)  # counted from the near end, uneven, none in the middle; the rest (24 of 33) left for planks placed in the editor
+CHASM_X = (-10, 2)
+CHASM_ACID = END_FLOOR - 6
+ROPE_X = (BRIDGE_X[0] - 0.05, BRIDGE_X[1] + 0.05)
+RAIL_HIGH, RAIL_SAG, ROPE_THICKNESS = 1.7, 0.6, 0.07
+NET_PITCH = 0.5
+TOWER_RADIUS, TOWER_HEIGHT = 0.6, 3.6
+TOWER_YS = (BRIDGE_Y[0], (BRIDGE_Y[0] + BRIDGE_Y[1]) / 2, BRIDGE_Y[1])  # either end, and halfway (standing in the acid)
 
 
-def acid_falls(parts):
-    """terraces stepping down between falls of acid"""
-    for y0, y1, z in TERRACES:
-        floor(parts["path"], -7, y0, -1, y1, z, lambda x, y, z: lit(path_light(x, y, -4, 3), glow=max(0.0, (abs(x + 4) - 1.5) / 2.5)))
+def rope_bridge(parts):
+    """a rope bridge over a chasm of acid, between stone gate towers"""
+    ledge_steps(parts)
+    end_ledge(parts)
+    chasm(parts)
+    bridge_slats(parts)
+    gate_towers(parts)
+    for x in ROPE_X:
+        bridge_ropes(parts, x)
+
+
+def ledge_steps(parts):
+    """the way down from the crystal cavern to the bridge"""
+    for y0, y1, z in LEDGE_STEPS:
+        floor(parts["path"], LEDGE_X[0], y0, LEDGE_X[1], y1, z, lambda x, y, z: lit(path_light(x, y, -4, 3)))
         if z < FLOOR:
-            wall(parts["dark_moss"], (-7, y0), (-1, y0), z, z + 0.8, (0, 1, 0), lambda x, y, z: lit(80, glow=0.3))
-        for inner, outwards in [(-7, -1), (-1, 1)]:  # the terrace's edges over the falls, and which way they face
-            wall(parts["dark_moss"], (inner, y0), (inner, y1), z - 1.5, z, (outwards, 0, 0), lambda x, y, z: lit(70, glow=0.5))
-    for x0, x1 in [(-10, -7), (-1, 2)]:
-        acid(parts["acid"], x0, 128, x1, 146, ACID_LEVEL, END_FLOOR - 1.2)
-    rock = lambda x, y, z: lit(wall_light(z, END_FLOOR - 1.4, 7), glow=low_glow(z, 0, 0.3))
-    wall(parts["green_rock_veined"], (-10, 128), (-10, 146), END_FLOOR - 1.4, 7, (1, 0, 0), rock)
-    wall(parts["green_rock_veined"], (2, 128), (2, 146), END_FLOOR - 1.4, 7, (-1, 0, 0), rock)
-    wall(parts["green_rock_veined"], (-13, 128), (-10, 128), ACID_LEVEL - 0.2, 8, (0, 1, 0), rock)
-    wall(parts["green_rock_veined"], (2, 128), (5, 128), ACID_LEVEL - 0.2, 8, (0, 1, 0), rock)
+            wall(parts["dark_moss"], (LEDGE_X[0], y0), (LEDGE_X[1], y0), z, z + STEP_RISE, (0, 1, 0), lambda x, y, z: lit(80, glow=0.3))
+        ledge_sides(parts, y0, y1, z)
+
+
+def end_ledge(parts):
+    """the far side's ground, from the bridge to the end chamber, its face to the chasm towards the camera"""
+    floor(parts["path"], LEDGE_X[0], BRIDGE_Y[1], LEDGE_X[1], CHAMBER_FLOOR_Y[0], END_FLOOR, lambda x, y, z: lit(100))
+    cliff = lambda x, y, z: lit(wall_light(z, CHASM_ACID, END_FLOOR) - 10, glow=low_glow(z, CHASM_ACID + 1.5, 0.4))
+    wall(parts["dark_moss"], (LEDGE_X[0], BRIDGE_Y[1]), (LEDGE_X[1], BRIDGE_Y[1]), CHASM_ACID - 0.2, END_FLOOR, (0, -1, 0), cliff)
+    ledge_sides(parts, BRIDGE_Y[1], CHAMBER_FLOOR_Y[1], END_FLOOR)
+
+
+def ledge_sides(parts, y0, y1, z):
+    """a ledge's sides, down its cliff into the chasm"""
+    cliff = lambda x, y, z: lit(wall_light(z, CHASM_ACID, FLOOR) - 10, glow=low_glow(z, CHASM_ACID + 1.5, 0.4))
+    for edge, outwards in [(LEDGE_X[0], -1), (LEDGE_X[1], 1)]:
+        wall(parts["dark_moss"], (edge, y0), (edge, y1), CHASM_ACID - 0.2, z, (outwards, 0, 0), cliff)
+
+
+def chasm(parts):
+    """acid far below the bridge, falling into it from the crystal cavern beside the steps, between high cliffs"""
+    acid(parts["acid"], CHASM_X[0], BRIDGE_Y[0], CHASM_X[1], BRIDGE_Y[1], CHASM_ACID)
+    for x0, x1 in [(CHASM_X[0], LEDGE_X[0]), (LEDGE_X[1], CHASM_X[1])]:
+        acid(parts["acid"], x0, 128, x1, BRIDGE_Y[0], ACID_LEVEL, CHASM_ACID)
+        acid(parts["acid"], x0, BRIDGE_Y[1], x1, CHAMBER_FLOOR_Y[1], CHASM_ACID)
+    rock = lambda x, y, z: lit(wall_light(z, CHASM_ACID, 7), glow=low_glow(z, CHASM_ACID + 1, 0.3))
+    wall(parts["green_rock_veined"], (CHASM_X[0], 128), (CHASM_X[0], CHAMBER_FLOOR_Y[1]), CHASM_ACID - 0.2, 7, (1, 0, 0), rock)
+    wall(parts["green_rock_veined"], (CHASM_X[1], 128), (CHASM_X[1], CHAMBER_FLOOR_Y[1]), CHASM_ACID - 0.2, 7, (-1, 0, 0), rock)
+    for x0, x1 in [(CHASM_X[0], LEDGE_X[0]), (LEDGE_X[1], CHASM_X[1])]:  # its far end, either side of the end ledge, in front of the end chamber's round wall
+        wall(parts["green_rock_veined"], (x0, BRIDGE_Y[1]), (x1, BRIDGE_Y[1]), CHASM_ACID - 0.2, 7, (0, -1, 0), rock)
+    wall(parts["green_rock_veined"], (-13, 128), (CHASM_X[0], 128), ACID_LEVEL - 0.2, 8, (0, 1, 0), rock)
+    wall(parts["green_rock_veined"], (CHASM_X[1], 128), (5, 128), ACID_LEVEL - 0.2, 8, (0, 1, 0), rock)
+
+
+def slat_spans():
+    """each slat's near and far edge along y, but the missing ones"""
+    count = round((BRIDGE_Y[1] - BRIDGE_Y[0]) / SLAT_PITCH)
+    starts = [BRIDGE_Y[0] + (SLAT_PITCH - SLAT_DEPTH) / 2 + index * SLAT_PITCH for index in range(count)]
+    return [(y, y + SLAT_DEPTH) for index, y in enumerate(starts) if index in KEPT_SLATS]
+
+
+def bridge_slats(parts):
+    for y0, y1 in slat_spans():
+        slat(parts, y0, y1)
+
+
+def slat(parts, y0, y1):
+    """a slat: its grain across the bridge, nailed at either end, and its edges"""
+    (x0, x1), top, bottom = BRIDGE_X, END_FLOOR, END_FLOOR - SLAT_THICKNESS
+    parts["slats"].quad([(x0, y0, top), (x1, y0, top), (x1, y1, top), (x0, y1, top)], lambda x, y, z: lit(105), UP)
+    edge = lambda x, y, z: lit(80)
+    parts["slat_edges"].quad([(x0, y0, bottom), (x1, y0, bottom), (x1, y0, top), (x0, y0, top)], edge, (0, -1, 0))
+    parts["slat_edges"].quad([(x0, y0, bottom), (x0, y1, bottom), (x0, y1, top), (x0, y0, top)], edge, (-1, 0, 0))
+    parts["slat_edges"].quad([(x1, y0, bottom), (x1, y1, bottom), (x1, y1, top), (x1, y0, top)], edge, (1, 0, 0))
+
+
+def gate_towers(parts):
+    """carved stone towers either side of the bridge, at its ends and halfway, the ropes tied to them"""
+    carved = lambda x, y, z: lit(wall_light(z, CHASM_ACID, END_FLOOR + TOWER_HEIGHT) + 20, glow=low_glow(z, CHASM_ACID + 1, 0.3))
+    for y in TOWER_YS:
+        bottom = END_FLOOR - 1.5
+        if y not in BRIDGE_Y:
+            bottom = CHASM_ACID - 0.2
+        for x in ROPE_X:
+            centre = (x + (x - END_CENTRE[0]) / abs(x - END_CENTRE[0]) * TOWER_RADIUS, y)
+            prism(parts["tiki"], centre, TOWER_RADIUS, 4, bottom, END_FLOOR + TOWER_HEIGHT, carved, cap=parts["tiki_cap"])
+
+
+def rail_height(y):
+    """the hand rope's height above the deck: high at the towers, sagging between them"""
+    for y0, y1 in zip(TOWER_YS, TOWER_YS[1:]):
+        if y0 <= y <= y1:
+            t = (y - y0) / (y1 - y0)
+            return RAIL_HIGH - RAIL_SAG * 4 * t * (1 - t)
+    return RAIL_HIGH
+
+
+def bridge_ropes(parts, x):
+    """one side's ropes: the hand rope, the netting zigzagging down from it, and the deck's edge rope"""
+    count = round((BRIDGE_Y[1] - BRIDGE_Y[0]) / NET_PITCH)
+    ys = [BRIDGE_Y[0] + (BRIDGE_Y[1] - BRIDGE_Y[0]) * k / count for k in range(count + 1)]
+    rail = [(x, y, END_FLOOR + rail_height(y)) for y in ys]
+    edge = [(x, y, END_FLOOR + ROPE_THICKNESS) for y in ys]
+    for a, b in list(zip(rail, rail[1:])) + list(zip(edge, edge[1:])):
+        rope(parts, a, b)
+    for k in range(count):
+        if k % 2 == 0:
+            rope(parts, edge[k], rail[k + 1])
+        else:
+            rope(parts, rail[k], edge[k + 1])
+
+
+def rope(parts, a, b):
+    """a rope from a to b along one side, seen from the bridge: a strip facing in, its twist along it"""
+    (_, ay, az), (_, by, bz) = a, b
+    length = math.hypot(by - ay, bz - az)
+    across = (0, -(bz - az) / length * ROPE_THICKNESS / 2, (by - ay) / length * ROPE_THICKNESS / 2)
+    minus = lambda p: tuple(c - d for c, d in zip(p, across))
+    plus = lambda p: tuple(c + d for c, d in zip(p, across))
+    towards = (END_CENTRE[0] - a[0], 0, 0)
+    parts["rope"].quad([minus(a), plus(a), plus(b), minus(b)], lambda x, y, z: lit(90), towards)
 
 
 def end_chamber(parts):
     """a round chamber of carved purple stone, the warp pad in its middle"""
-    floor(parts["path"], -7, 144, -1, 146, END_FLOOR, lambda x, y, z: lit(100))
+    floor(parts["path"], LEDGE_X[0], CHAMBER_FLOOR_Y[0], LEDGE_X[1], CHAMBER_FLOOR_Y[1], END_FLOOR, lambda x, y, z: lit(100))
     points = ring(END_CENTRE, 6.5, 12)
     centre = (*END_CENTRE, END_FLOOR)
     glow = lambda x, y, z: lit(118 - 6 * math.hypot(x - END_CENTRE[0], y - END_CENTRE[1]))
@@ -133,7 +259,7 @@ def end_chamber(parts):
     carved = lambda x, y, z: lit(wall_light(z, END_FLOOR, END_FLOOR + 7) + 10)
     for (xa, ya), (xb, yb) in zip(points, points[1:] + points[:1]):
         middle = ((xa + xb) / 2, (ya + yb) / 2)
-        if middle[1] < 145.5 and abs(middle[0] - END_CENTRE[0]) < 3.5:
+        if middle[1] < END_CENTRE[1] - 4.5 and abs(middle[0] - END_CENTRE[0]) < 3.5:
             continue  # the way in, from the terraces
         inward = (END_CENTRE[0] - middle[0], END_CENTRE[1] - middle[1], 0)
         wall(parts["chamber_walls"], (xa, ya), (xb, yb), END_FLOOR, END_FLOOR + 7, inward, carved)
@@ -159,19 +285,27 @@ def open_cut_level_end():
         mesh = bmesh.new()
         mesh.from_mesh(obj.data)
         is_floor_only = name == "collision_floor"
-        doomed = [face for face in mesh.faces if blocks_the_way(face.calc_center_median(), is_floor_only)]
+        doomed = [face for face in mesh.faces if blocks_the_way(face.calc_center_median(), material_name(obj, face), is_floor_only)]
         bmesh.ops.delete(mesh, geom=doomed, context="FACES")
         mesh.to_mesh(obj.data)
         mesh.free()
 
 
-def blocks_the_way(centre, is_floor_only):
+def material_name(obj, face):
+    if face.material_index >= len(obj.data.materials):
+        return ""
+    return obj.data.materials[face.material_index].name
+
+
+def blocks_the_way(centre, material, is_floor_only):
+    """the cut level's end chamber's north wall, and its ground past there; the rock
+    either side stays whole, or the camera sees through the holes left in it"""
     x, y, z = centre
     if is_floor_only:
         return X_RANGE[0] < x < X_RANGE[1] and y > 76.5
     if not -7.5 < x < 0.5:
         return False
-    return y > 77 or (y > 75 and z > 0.7)
+    return y > 77 or (y > 75 and z > 0.7 and material in END_WALL_MATERIALS)
 
 
 # all of it
@@ -183,6 +317,7 @@ PART_MATERIALS = {
     "stone_tops": (PURPLE_CARVED_DARK, True), "crystals_purple": (CRYSTAL_PURPLE, True),
     "crystals_green": (CRYSTAL_GREEN, True), "chamber_floor": (TIKI_CARVED_DARK, False),
     "chamber_walls": (PURPLE_CARVED, True), "acid": (ACID, False), "tiki_heads": (TIKI_FACE, True),
+    "slats": (BRIDGE_SLAT, True), "slat_edges": (BRIDGE_SLAT, False), "rope": (BRIDGE_ROPE, True),
 }
 
 # how much each of the temple's parts is roughened: organic rock swallowing its square stone
@@ -204,7 +339,7 @@ def object_name(part, section):
 def temple_parts():
     """the collapsed temple: the square sections, roughened where the rock has swallowed them, moved along past the middle"""
     parts = {part: Faces(material, keep_uvs) for part, (material, keep_uvs) in PART_MATERIALS.items()}
-    for section in (corridor, tiki_hall, crystal_cavern, acid_falls, end_chamber):
+    for section in (corridor, tiki_hall, crystal_cavern, rope_bridge, end_chamber):
         section(parts)
     for part, amount in ROUGHNESS.items():
         roughened(parts[part], amount, scale=2.2)
@@ -214,8 +349,32 @@ def temple_parts():
     return parts
 
 
+def add_bridge_materials():
+    """the bridge's slats and ropes: images beside the .blend that the cut level doesn't have"""
+    for name in (BRIDGE_SLAT, BRIDGE_ROPE):
+        if name not in bpy.data.materials:
+            make_material(name, os.path.join(os.path.dirname(bpy.data.filepath), name + ".png"))
+    bpy.ops.file.make_paths_relative()
+
+
+# the cut level's material on only one face, and one like it: drawn in that instead, so
+# its materials and the bridge's two still fit a world mesh's texture page slots
+LONE_MATERIAL, LIKE_IT = "tex_100", "tex_098"
+
+
+def merge_lone_material():
+    lone, like_it = bpy.data.materials.get(LONE_MATERIAL), bpy.data.materials[LIKE_IT]
+    for name in CUT_LEVEL_MESHES:
+        obj = bpy.data.objects.get(name)
+        if obj is None or lone is None or lone.name not in obj.data.materials:
+            continue
+        obj.data.materials[obj.data.materials.find(lone.name)] = like_it
+
+
 def main():
     remove_earlier_extension()
+    add_bridge_materials()
+    merge_lone_material()
     open_cut_level_end()
     for section, parts in (("mid", middle_parts()), ("temple", temple_parts())):
         for part, faces in parts.items():

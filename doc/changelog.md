@@ -12,6 +12,8 @@
 - the level editor raises the end pad over the floor around it when it's placed or moved, and the included levels' end pads sit above the ground
 - the included custom levels are numbered in the order to play them: `1_tide_ruins`, `2_mossy_creek`, `3_sunset_canyon` and `4_acid_cave` (a `boot_level` set to an old name needs changing)
 - the box counter only shows when triangle shows the hud, not each time a box breaks
+- the acid cave ends on a long rope bridge over a chasm of acid, and its rock no longer shows through where the original cave opens up
+- custom levels hold twice as many textures, so more kinds of enemies and obstacles fit in one level
 
 ## 2026-11-11
 
