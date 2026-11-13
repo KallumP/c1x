@@ -92,6 +92,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   seesaw: SUNSET_VISTA,
   timed_plank: ROAD_TO_NOWHERE,
   breaking_plank: ROAD_TO_NOWHERE,
+  rotating_pegs: TEMPLE_RUINS,
 };
 
 export interface DonorObject {
@@ -473,6 +474,7 @@ const GATE_BOTH_SIDED_MODELS = ["WT1iG"];
 const RUINS_BOTH_SIDED_MODELS = ["RcLsG", "RcRsG"];
 const OBJECT_BOTH_SIDED_MODELS: Partial<Record<ObjectType, string[]>> = {
   slamming_walls: RUINS_BOTH_SIDED_MODELS,
+  rotating_pegs: RUINS_BOTH_SIDED_MODELS, // its code is the slamming walls', the same
   bat: RUINS_BOTH_SIDED_MODELS,
   leader_bats: RUINS_BOTH_SIDED_MODELS,
   wooden_peg: GATE_BOTH_SIDED_MODELS,
@@ -678,6 +680,7 @@ const ENEMY_CODE_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   falling_spiked_log: GATE_OBJECTS_CODE_PATCHES,
   fire_pit: GATE_OBJECTS_CODE_PATCHES,
   slamming_walls: SLAMMING_WALL_CODE_PATCHES,
+  rotating_pegs: SLAMMING_WALL_CODE_PATCHES, // their code, moved the same
   timed_plank: PLANK_CODE_PATCHES, // the same for every plank, as they share the code
   breaking_plank: PLANK_CODE_PATCHES,
 };

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { numberSetting, settingMax, boxTypeName, formatObjects, hasNodes, hasPath, parseObjects } from "../../src/objects";
+import { numberSetting, settingMax, boxTypeName, formatObjects, hasNodes, hasPath, parseObjects, pegCount } from "../../src/objects";
 import { enemyObject, obstacleObject } from "../helpers";
 
 describe("parseObjects", () => {
@@ -511,8 +511,8 @@ describe("obstacles", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms, slamming_walls, rising_pillar, carrying_platform, bounce_pad, steam_vent, moving_platform, dropping_platform, falling_platform, seesaw, timed_plank, breaking_plank)"],
-    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms, slamming_walls, rising_pillar, carrying_platform, bounce_pad, steam_vent, moving_platform, dropping_platform, falling_platform, seesaw, timed_plank, breaking_plank)"],
+    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms, slamming_walls, rising_pillar, carrying_platform, bounce_pad, steam_vent, moving_platform, dropping_platform, falling_platform, seesaw, timed_plank, breaking_plank, rotating_pegs)"],
+    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms, slamming_walls, rising_pillar, carrying_platform, bounce_pad, steam_vent, moving_platform, dropping_platform, falling_platform, seesaw, timed_plank, breaking_plank, rotating_pegs)"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: a leaf has no speed"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count (an obstacle takes kind, at, raise, type, path, speed, start, reverse, length, angle, rotation, every, offset, platforms, radius, shake, down, delay)"],
     ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
@@ -549,6 +549,22 @@ describe("slamming walls", () => {
   });
 });
 
+describe("rotating pegs", () => {
+  test("rotating pegs can have a radius, turn time, count and way round, read back as written; 4 m, 20 s and 5 without", () => {
+    const [pegs] = parseObjects('[{"kind": "obstacle", "type": "rotating_pegs", "at": [1, 2, 0], "radius": 6, "every": 10, "platforms": 8, "reverse": true}]');
+    expect([pegs.radius, pegs.every, pegs.platforms, pegs.reverse]).toEqual([6, 10, 8, true]);
+    expect(parseObjects(formatObjects([pegs]))).toEqual([pegs]);
+    const plain = obstacleObject("rotating_pegs");
+    expect([numberSetting(plain, "radius"), numberSetting(plain, "every"), numberSetting(plain, "platforms")]).toEqual([4, 20, 5]);
+    expect(settingMax("platforms", "rotating_pegs")).toBe(9);
+  });
+
+  // temple ruins' code has 4, 5, 8 or 9 go round
+  test.each([[1, 4], [4, 4], [5, 5], [6, 5], [7, 8], [8, 8], [9, 9]])("%i rotating pegs go round as %i", (asked, count) => {
+    expect(pegCount({ ...obstacleObject("rotating_pegs"), platforms: asked })).toBe(count);
+  });
+});
+
 describe("rotating platforms", () => {
   test("rotating pots or platforms have how many go round, how far out, which way and how fast, written and read back", () => {
     const [hub] = parseObjects('[{"kind": "obstacle", "type": "rotating_platforms", "at": [1, 2, 0], "reverse": true, "every": 4, "offset": 1, "platforms": 4, "radius": 2.5}]');
@@ -568,7 +584,7 @@ describe("rotating platforms", () => {
     ['[{"kind": "obstacle", "type": "rotating_pots", "at": [0, 0, 0], "platforms": 8}]', "object 1: platforms should be 1 to 7 (how many go round)"],
     ['[{"kind": "obstacle", "type": "rotating_pots", "at": [0, 0, 0], "platforms": 2.5}]', "object 1: platforms should be 1 to 7"],
     ['[{"kind": "obstacle", "type": "rotating_pots", "at": [0, 0, 0], "radius": 0.5}]', "object 1: radius should be 1 to 10 (how far out they go round, in metres)"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "radius": 2}]', "object 1: a leaf has no radius (rotating pots and platforms do)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "radius": 2}]', "object 1: a leaf has no radius (rotating pots, platforms and pegs do)"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -809,7 +825,7 @@ describe("spiked logs", () => {
   test.each([
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "every": 1.5}]', "object 1: every should be 2 to 20 (the seconds between its pushes or flames)"],
     ['[{"kind": "obstacle", "type": "falling_spiked_log", "at": [0, 0, 0], "every": 21}]', "object 1: every should be 2 to 20"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "every": 5}]', "object 1: a leaf has no every (spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, slamming walls, rising pillars and steam vents do)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "every": 5}]', "object 1: a leaf has no every (spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, slamming walls, rising pillars, steam vents and rotating pegs do)"],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "offset": 21}]', "object 1: offset should be 0 to 20 (the seconds its pushes or flames are put off by)"],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "start": 0.5}]', "object 1: a rising_spiked_log has no start (rolling stones do)"],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "reverse": true}]', "object 1: a rising_spiked_log has no reverse"],

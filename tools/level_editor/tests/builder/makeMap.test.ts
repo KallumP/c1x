@@ -369,6 +369,36 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasTempleRuins)("rotating pegs, from temple ruins", () => {
+    // temple ruins' RuiOC subtype 0: a hub its pegs go round, moved with the slamming walls
+    test("rotating pegs are temple ruins' RuiOC subtype 0, in the slamming walls' slot (6), at their spot, with their peg (Ra1sG)", () => {
+      const { level, entries, zone } = build([obstacle("rotating_pegs")]);
+      expect(OBSTACLE_ENTITIES.rotating_pegs).toEqual([6, 0]);
+      expect(level.nsd.ldat.execMap[6]).toBe(stringToEid("RuiWC"));
+      expect(entries.has(stringToEid("Ra1sG"))).toBe(true);
+      const hub = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.rotating_pegs))!;
+      expectNear(entityPath(hub)[0], SPOT_IN_ZONE, 16);
+      expect(hub.readUInt16LE(4) & 1).toBe(1);
+    });
+
+    // init flag A: the radius, in 400s of game units (4 m at scale 256: 1024, so 3); B: its turn
+    // in degrees a second, less than 0 the way temple ruins' first goes; C: its code's preset,
+    // for how many go round (10: 4, 0: 5, 11: 8, 1: 9)
+    test.each([
+      { more: {}, flags: [3, -18, 0] },
+      { more: { radius: 8, every: 10, reverse: true, platforms: 8 }, flags: [5, 36, 11] },
+      { more: { platforms: 4 }, flags: [3, -18, 10] },
+      { more: { platforms: 9, radius: 1 }, flags: [1, -18, 1] },
+    ])("rotating pegs ($more) have their radius, turn and count in their init flags", ({ more, flags }) => {
+      expect(initFlagsOf(build([obstacle("rotating_pegs", more as Partial<LevelObject>)]).zone, OBSTACLE_ENTITIES.rotating_pegs)).toEqual(flags);
+    });
+
+    test("a level with rotating pegs and slamming walls shares their code", () => {
+      const { level } = build([obstacle("rotating_pegs"), obstacle("slamming_walls", { at: [1, 10, 0] })]);
+      expect(level.nsd.ldat.execMap[6]).toBe(stringToEid("RuiWC"));
+    });
+  });
+
   describe.skipIf(!hasTempleRuins)("slamming walls, from temple ruins", () => {
     // temple ruins' RuiOC isn't sunset vista's (the bats'), so it moves to slot 6 as RuiWC
     test("slamming walls are temple ruins' RuiOC subtypes 7 (the right half) and 8 (the left), moved to their own slot, 1200 either side of the spot, sliding in to meet there", () => {

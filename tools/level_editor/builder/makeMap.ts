@@ -4,7 +4,7 @@
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { batSwoop, leafDriftShares, leaderBatsFlight, leapWay, pillarSlideShares } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep, pointAlongShare, spotAndNode } from "../src/enemyPaths";
-import { hasPath, LEADER_BATS_LEADERS, numberSetting, GATES, ROTATING_OBSTACLES, TIMED_OBSTACLES, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
+import { hasPath, LEADER_BATS_LEADERS, numberSetting, pegCount, GATES, ROTATING_OBSTACLES, TIMED_OBSTACLES, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
 import { throwFlags } from "../src/labAssistantThrow";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
@@ -329,6 +329,26 @@ function withBreakDelay(entity: Buffer, object: LevelObject): Buffer {
   return withInitFlagA(withNoRotationFromFlags(entity), Math.round(numberSetting(object, "delay") * FRAMES_A_SECOND));
 }
 
+// rotating pegs' init flags (temple ruins' code): A their radius in 400s of
+// game units, B their turn in degrees a second (less than 0 the way temple
+// ruins' first goes), C its preset for how many go round
+const PEG_RADIUS_UNIT = 400;
+const PEG_PRESETS: Record<number, number> = { 4: 10, 5: 0, 8: 11, 9: 1 };
+function pegFlags(pegs: LevelObject, scale: number): [number, number, number] {
+  const radius = Math.max(1, Math.round((numberSetting(pegs, "radius") * scale) / PEG_RADIUS_UNIT));
+  const turn = Math.round(360 / numberSetting(pegs, "every"));
+  return [radius, pegs.reverse ? turn : -turn, PEG_PRESETS[pegCount(pegs)]];
+}
+
+// entity with rotating pegs' flags, not turned by them; any other obstacle's as it is
+function withPegTurn(entity: Buffer, obstacle: LevelObject, scale: number): Buffer {
+  if (obstacle.obstacle !== "rotating_pegs") {
+    return entity;
+  }
+  const [radius, turn, preset] = pegFlags(obstacle, scale);
+  return withInitFlagC(withInitFlagB(withInitFlagA(withNoRotationFromFlags(entity), radius), turn), preset);
+}
+
 // how long a path through points is
 function pathLength(points: Vec3[]): number {
   return points.slice(1).reduce((sum, point, index) => sum + Math.hypot(...point.map((value, axis) => value - points[index][axis])), 0);
@@ -544,7 +564,7 @@ class ObjectPlacer {
   placeWithItsPath(object: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(object));
     const placed = withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(object.reverse === true));
-    this.entities[zone].push(withBreakDelay(withDropTiming(withRiseTiming(withGateTurn(placed, object), object), object), object));
+    this.entities[zone].push(withPegTurn(withBreakDelay(withDropTiming(withRiseTiming(withGateTurn(placed, object), object), object), object), object, this.scale));
   }
 
   // a floating leaf or sliding pillar (example) moving along its path's nodes
