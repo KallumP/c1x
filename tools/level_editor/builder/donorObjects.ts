@@ -560,7 +560,16 @@ const SLAMMING_WALL_CODE_PATCHES: CodePatch[] = RUINS_OWN_CHILDREN.map(([at, was
 // road to nowhere's planks' code's spawn of its own kind (its s7's), by its
 // slot there (23), which moves (see MOVED_ENEMY_CODE)
 const PLANK_OWN_CHILD: [number, number] = [0x106, 0x8a1171c1];
-const PLANK_CODE_PATCHES: CodePatch[] = [childSpawnedAs(...PLANK_OWN_CHILD, objectEntity("timed_plank")[0])];
+// and its timed plank's wait once crash stands on it, a random 57 to 146 frames
+// (RND ireg[0x5c], plus ireg[0x60]), made its init flag A's frames: obj[0xbc]
+// shifted by ireg[0x5c] (its only use, made -8: see PLANK_DATA_PATCHES), plus 0
+const PLANK_WAIT_AT = 0x73;
+const PLANK_CODE_PATCHES: CodePatch[] = [
+  childSpawnedAs(...PLANK_OWN_CHILD, objectEntity("timed_plank")[0]),
+  { at: PLANK_WAIT_AT, was: 0x10017800, now: 0x15017e17 }, // RND ireg[0x5c], 0 → SHA ireg[0x5c], obj[0xbc]
+  { at: PLANK_WAIT_AT + 1, was: 0x00e1f018, now: 0x00e1f800 }, // ADD pop(), ireg[0x60] → ADD pop(), 0
+];
+const PLANK_DATA_PATCHES: CodePatch[] = [{ at: 0x5c / 4, was: 90, now: 0xfffffff8 }]; // ireg[0x5c]: -8
 
 const LIZARD_CODE_PATCHES: CodePatch[] = [
   { at: GREEN_LEAP_SETS_X, was: MOVE_TO_X, now: branch(GREEN_LEAP_SETS_X, GREEN_LEAP_Z) },
@@ -675,6 +684,7 @@ const OBJECT_DATA_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   rising_spiked_log: GATE_OBJECTS_DATA_PATCHES,
   falling_spiked_log: GATE_OBJECTS_DATA_PATCHES,
   fire_pit: GATE_OBJECTS_DATA_PATCHES,
+  timed_plank: PLANK_DATA_PATCHES,
 };
 
 // instructions patched, with the enemy's addition (if it has one) after their end
