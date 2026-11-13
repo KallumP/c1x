@@ -210,10 +210,13 @@ function pushingBlock(): ShapePart[] {
 
 // sunset vista's long pushing platform (Rw3wG), pushed out: a stone slab 741
 // across, its top just under its spot, reaching 1800 out towards the player
-function pushingPlatform(): ShapePart[] {
-  const { across, top, bottom, near, out } = PUSHING_PLATFORM;
+function pushingPlatform(out = PUSHING_PLATFORM.out): ShapePart[] {
+  const { across, top, bottom, near } = PUSHING_PLATFORM;
   return [{ kind: "box", size: [across, top - bottom, out - near], at: [0, (top + bottom) / 2, (out + near) / 2], colour: RUINS_COLOURS.platform }];
 }
+
+// and its short one (Rw1wG), 1000 out
+const SHORT_PUSHING_PLATFORM_OUT = 1000;
 
 // sunset vista's rotating pot (Rp3wG): a stone pot 806 across and 794 long,
 // hanging 719 down from its spot
@@ -383,6 +386,6 @@ export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_sl
 
 export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad: lilyPad(), leaf: leaf(), wooden_peg: woodenPeg(), rising_spiked_log: spikedLog(RISING_LOG_TOP, "up"), falling_spiked_log: spikedLog(FALLING_LOG_HEIGHT, "down"), fire_pit: firePit(), dropping_pillar: pillar(), sliding_pillar: pillar(),
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
-  pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
+  pushing_block: pushingBlock(), pushing_platform: pushingPlatform(), short_pushing_platform: pushingPlatform(SHORT_PUSHING_PLATFORM_OUT),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
   slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw(), timed_plank: timedPlank(), breaking_plank: breakingPlank(), rotating_pegs: rotatingPeg(), lift_platform: liftPlatform(), floor_fire: floorFire(), steady_fire: floorFire() };

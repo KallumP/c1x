@@ -41,6 +41,7 @@ const NAMES: Partial<Record<Placeable, string>> = {
   low_wide_gate: "Gate (low, wide)",
   pushing_block: "Block (pushes out)",
   pushing_platform: "Platform (interval, long)",
+  short_pushing_platform: "Platform (interval, short)",
   rotating_pots: "Pots (rotating)",
   rotating_platforms: "Platforms (rotating)",
   slamming_walls: "Walls (slamming)",

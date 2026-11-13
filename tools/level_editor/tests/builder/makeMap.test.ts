@@ -827,6 +827,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     test.each([
       { type: "pushing_block", more: {}, flags: [60, 0] },
       { type: "pushing_platform", more: {}, flags: [75, 0] },
+      { type: "short_pushing_platform", more: {}, flags: [75, 0] },
       { type: "pushing_platform", more: { every: 4, offset: 1 }, flags: [120, 90] },
     ] as const)("a $type ($more) has its timing in its init flags", ({ type, more, flags }) => {
       expect(initFlagsOf(build([obstacle(type, more)]).zone, OBSTACLE_ENTITIES[type]).slice(0, 2)).toEqual(flags);
@@ -881,6 +882,33 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const placed = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.seesaw))!;
       expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
       expect(initFlagsOf(zone, OBSTACLE_ENTITIES.seesaw)).toEqual([0, 0, 0]);
+    });
+
+    // init flag C's bit 0 picks its slab: Rw3w (1800 out) set, as sunset vista's first's (3), or Rw1w (1000) clear
+    test.each([
+      { type: "pushing_platform", c: 3 },
+      { type: "short_pushing_platform", c: 2 },
+    ] as const)("a $type is sunset vista's RWaOC subtype 7 with init flag C $c", ({ type, c }) => {
+      const { zone, entries } = build([obstacle(type)]);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([46, 7]);
+      expect(initFlagsOf(zone, OBSTACLE_ENTITIES[type])[2]).toBe(c);
+      expect(entries.has(stringToEid(c === 3 ? "Rw3wG" : "Rw1wG"))).toBe(true);
+    });
+
+    // sunset vista's slabs (Rw1w 10 triangles, Rw3w 18) have no face at the end in its walls (their
+    // lowest z): capped there, the same for every type that brings them, so they share them
+    test.each(["pushing_platform", "short_pushing_platform", "rotating_platforms"] as const)("with a %s, the slabs are capped at their wall end", (type) => {
+      const { entries } = build([obstacle(type)]);
+      const triangles = (name: string) => entries.get(stringToEid(name))?.items[0].readUInt32LE(0);
+      expect(triangles("Rw1wG")).toBe(12);
+      if (type !== "rotating_platforms") {
+        expect(triangles("Rw3wG")).toBe(20);
+      }
+    });
+
+    test("a level with pushing and rotating platforms has their slabs once, capped", () => {
+      const { entries } = build([obstacle("pushing_platform"), obstacle("short_pushing_platform", { at: [1, 6, 0] }), obstacle("rotating_platforms", { at: [1, 12, 0] })]);
+      expect(entries.get(stringToEid("Rw1wG"))!.items[0].readUInt32LE(0)).toBe(12);
     });
 
     test("pushing blocks and platforms read sunset vista once", () => {

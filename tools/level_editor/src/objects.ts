@@ -83,6 +83,7 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // sunset vista's, pushing out towards the camera and back from their spot:
 // - pushing_block: a big stone block, shoving crash
 // - pushing_platform: a stone platform, to stand on
+// - short_pushing_platform: a shorter one
 // and its platforms going round their spot:
 // - rotating_pots: stone pots
 // - rotating_platforms: flat stone platforms
@@ -115,7 +116,7 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // sunset vista's fire bursting up out of the floor, every so often or the whole time:
 // - floor_fire
 // - steady_fire
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform", "bounce_pad", "steam_vent", "moving_platform", "dropping_platform", "falling_platform", "seesaw", "timed_plank", "breaking_plank", "rotating_pegs", "lift_platform", "floor_fire", "steady_fire"] as const;
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform", "bounce_pad", "steam_vent", "moving_platform", "dropping_platform", "falling_platform", "seesaw", "timed_plank", "breaking_plank", "rotating_pegs", "lift_platform", "floor_fire", "steady_fire", "short_pushing_platform"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
@@ -215,13 +216,13 @@ export const GATES: ObstacleType[] = ["tall_thin_gate", "low_wide_gate"];
 // sunset vista's pushing blocks' 60 and near its platforms' 70 (2.5 s, a step of the slider) (at 30 a second); a
 // rising pillar's 4 s, near temple ruins' 127 frames, and castle machinery's
 // steam vents' 90
-const TIMED_EVERY: Partial<Record<ObjectType, number>> = { fire_pit: 4, pushing_block: 2, pushing_platform: 2.5, slamming_walls: 3, rising_pillar: 4, steam_vent: 3, rotating_pegs: 20, floor_fire: 2 };
+const TIMED_EVERY: Partial<Record<ObjectType, number>> = { fire_pit: 4, pushing_block: 2, pushing_platform: 2.5, short_pushing_platform: 2.5, slamming_walls: 3, rising_pillar: 4, steam_vent: 3, rotating_pegs: 20, floor_fire: 2 };
 export const SPIKED_LOG_EVERY = 6;
 export const TIMED_EVERY_MIN = 2;
 export const TIMED_EVERY_MAX = 20;
 export const SPIKED_LOGS: ObstacleType[] = ["rising_spiked_log", "falling_spiked_log"];
 export const ROTATING_OBSTACLES: ObstacleType[] = ["rotating_pots", "rotating_platforms"];
-export const TIMED_OBSTACLES: ObstacleType[] = [...SPIKED_LOGS, "fire_pit", "pushing_block", "pushing_platform", ...ROTATING_OBSTACLES, "steam_vent"];
+export const TIMED_OBSTACLES: ObstacleType[] = [...SPIKED_LOGS, "fire_pit", "pushing_block", "pushing_platform", "short_pushing_platform", ...ROTATING_OBSTACLES, "steam_vent"];
 
 // how many rotating pots or platforms go round, and how far out (metres): sunset
 // vista's (3 pots or 2 platforms, mostly 350 out in 4s of game units) without them

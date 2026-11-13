@@ -92,3 +92,23 @@ describe("end caps on an open tube's model", () => {
     expect(model.items[1].subarray(0, original.items[1].length)).toEqual(original.items[1]);
   });
 });
+
+// the same tube turned to run along z (its x the tube's y, its y the tube's z, its z the tube's x),
+// as a slab out of a wall is, open at its end in the wall (its lowest z)
+function turnedFrame(): Buffer {
+  const frame = Buffer.alloc(FRAME_HEADER + TUBE.length * VERTEX_BYTES);
+  TUBE.forEach(([x, y, z], index) => [y, z, x].forEach((value, axis) => frame.writeUInt8(value, FRAME_HEADER + index * VERTEX_BYTES + axis)));
+  return frame;
+}
+
+describe("an end cap on one end, along any axis", () => {
+  test("a tube along z capped at its lowest z gets one fan there: two triangles, on its first ring", () => {
+    const model = withEndCaps(tubeModel(tubeSides(true)), turnedFrame(), { axis: 2, ends: "low" });
+    expect(model.items[0].readUInt32LE(0)).toBe(8 + 2);
+    polygonsOf(model).slice(8).forEach((corners) => corners.forEach((corner) => expect(corner).toBeLessThan(4)));
+  });
+
+  test("capped at both ends along x, as before", () => {
+    expect(withEndCaps(tubeModel(tubeSides(true)), tubeFrame(), { axis: 0, ends: "both" }).items[0].readUInt32LE(0)).toBe(8 + 4);
+  });
+});

@@ -4,7 +4,7 @@
 import { objectType, type ObjectType, type LevelObject } from "../src/objects";
 import { packEntries, rawPagesById, reachableEids } from "./cutLevel";
 import { withBothSidesDrawn } from "./bothSides";
-import { withEndCaps } from "./endCaps";
+import { withEndCaps, type CapEnds } from "./endCaps";
 import { MOVED_ENEMY_CODE, objectEntity } from "./entities";
 import { EID_NONE, eidToString, stringToEid } from "./entryIds";
 import { ENTRY_GOOL, entriesById, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, soundPage, type Entry, type Level, type Page } from "./levelFiles";
@@ -79,6 +79,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   low_wide_gate: BOULDER_DASH,
   pushing_block: SUNSET_VISTA,
   pushing_platform: SUNSET_VISTA,
+  short_pushing_platform: SUNSET_VISTA,
   rotating_pots: SUNSET_VISTA,
   rotating_platforms: SUNSET_VISTA,
   slamming_walls: TEMPLE_RUINS,
@@ -406,6 +407,7 @@ const planksBut = (...own: string[]) => PLANK_MODELS.filter((model) => !own.incl
 const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   pushing_block: ruinsModelsBut(["Rp1w", "Rp7w"]),
   pushing_platform: ruinsModelsBut(["Rw1w", "Rw3w"]),
+  short_pushing_platform: ruinsModelsBut(["Rw1w", "Rw3w"]),
   rotating_pots: ruinsModelsBut(["Rp3w"]),
   rotating_platforms: ruinsModelsBut(["Rw1w"]),
   dropping_platform: ruinsModelsBut(["Rw2w"]),
@@ -426,8 +428,17 @@ const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
 // models that come with end caps (see endCaps.ts), and the animation whose first
 // frame has their vertices: toxic waste's barrels are open tubes, as the game
 // only shows them rolling straight at the camera, but custom levels' don't
-const ENEMY_CAPPED_MODELS: Partial<Record<ObjectType, [model: string, animation: string][]>> = {
+// and sunset vista's slabs (Rw1w, Rw3w), which stick out of its walls, so
+// have no face at the end in them (their lowest z): seen in the open, you saw
+// through them. every type that brings them caps them the same, or the two would clash
+type CappedModel = [model: string, animation: string, ends?: CapEnds];
+const SLAB_WALL_END: CapEnds = { axis: 2, ends: "low" };
+const SUNSET_SLABS: CappedModel[] = [["Rw1wG", "Rw1wV", SLAB_WALL_END], ["Rw3wG", "Rw3wV", SLAB_WALL_END]];
+const ENEMY_CAPPED_MODELS: Partial<Record<ObjectType, CappedModel[]>> = {
   barrel_roller: [["BaV7G", "BaV7V"], ["BaD7G", "BaD7V"]],
+  pushing_platform: SUNSET_SLABS,
+  short_pushing_platform: SUNSET_SLABS,
+  rotating_platforms: SUNSET_SLABS,
 };
 
 // the entries an object needs crash's code (WillC) to name, where the base
@@ -507,7 +518,7 @@ function bothSidedIfNamed(entry: Entry, names: number[]): Entry {
 
 // object with its model named model capped at its ends, as animation's first
 // frame has it (if the object has that model)
-function withCappedModel(object: DonorObject, [model, animation]: [string, string]): DonorObject {
+function withCappedModel(object: DonorObject, [model, animation, ends]: CappedModel): DonorObject {
   const entryNamed = (name: string) => object.entries.find(({ eid }) => eid === stringToEid(name));
   const [modelEntry, animationEntry] = [entryNamed(model), entryNamed(animation)];
   if (!modelEntry) {
@@ -516,7 +527,7 @@ function withCappedModel(object: DonorObject, [model, animation]: [string, strin
   if (!animationEntry) {
     throw new Error(`${animation} should come with ${model}, to cap its ends`);
   }
-  const capped = withEndCaps(modelEntry, animationEntry.items[0]);
+  const capped = withEndCaps(modelEntry, animationEntry.items[0], ends);
   return { ...object, entries: object.entries.map((entry) => (entry === modelEntry ? capped : entry)) };
 }
 

@@ -1,11 +1,18 @@
-// end caps for the model of an open tube along x, such as toxic waste's barrels,
-// which the game only ever shows rolling straight at the camera, so they have
-// no ends: a fan of triangles over the ring of vertices at each end, wound as
-// the model's sides are (so the game culls them as it does the sides), with
-// the sides' texture
+// end caps for the model of an open tube, such as toxic waste's barrels (along
+// x), which the game only ever shows rolling straight at the camera, so they
+// have no ends, or sunset vista's slabs (along z), open at the end in its walls:
+// a fan of triangles over the ring of vertices at an end, wound as the model's
+// sides are (so the game culls them as it does the sides), with the sides' texture
 import type { Entry } from "./levelFiles";
 
 type Point = [number, number, number];
+
+// which ends of a tube along which axis (0 x, 1 y, 2 z) to cap
+export interface CapEnds {
+  axis: number;
+  ends: "low" | "high" | "both";
+}
+const TUBE_ENDS: CapEnds = { axis: 0, ends: "both" };
 
 const VERTEX_BYTES = 6;     // an animation frame's vertex: x, y, z, then its normal
 const FRAME_HEADER = 56;    // where a frame's vertices start
@@ -45,12 +52,26 @@ function windingFromOutside(corners: number[], points: Point[], centre: Point): 
   return Math.sign(dot(normal, outward));
 }
 
-// the vertices at one end of the tube (where x is x), in order round its axis
-function endRing(points: Point[], x: number): number[] {
-  const ring = points.flatMap((point, index) => (point[0] === x ? [index] : []));
+// the vertices at one end of the tube (where its axis is at), in order round its axis
+function endRing(points: Point[], axis: number, at: number): number[] {
+  const ring = points.flatMap((point, index) => (point[axis] === at ? [index] : []));
   const middle = centreOf(ring.map((index) => points[index]));
-  const angle = (index: number) => Math.atan2(points[index][2] - middle[2], points[index][1] - middle[1]);
+  const [across, up] = [0, 1, 2].filter((other) => other !== axis);
+  const angle = (index: number) => Math.atan2(points[index][up] - middle[up], points[index][across] - middle[across]);
   return ring.sort((first, second) => angle(first) - angle(second));
+}
+
+// where along its axis the ends to cap are
+function capAts(points: Point[], { axis, ends }: CapEnds): number[] {
+  const along = points.map((point) => point[axis]);
+  const [low, high] = [Math.min(...along), Math.max(...along)];
+  if (ends === "low") {
+    return [low];
+  }
+  if (ends === "high") {
+    return [high];
+  }
+  return [low, high];
 }
 
 // a fan of triangles over a ring of vertices, each turning winding seen from outside
@@ -71,14 +92,13 @@ function polygonBytes(corners: number[], texinfo: number): Buffer {
   return polygon;
 }
 
-// the model (an open tube along x, its vertices as frame has them) with a cap
-// over each end, wound as its first polygon (a side) is, with its texture
-export function withEndCaps(model: Entry, frame: Buffer): Entry {
+// the model (an open tube, its vertices as frame has them) with a cap over its
+// ends (both ends along x without), wound as its first polygon (a side) is, with its texture
+export function withEndCaps(model: Entry, frame: Buffer, ends: CapEnds = TUBE_ENDS): Entry {
   const points = framePoints(frame);
   const centre = centreOf(points);
-  const xs = points.map(([x]) => x);
   const winding = windingFromOutside(polygonCorners(model)[0], points, centre);
-  const caps = [Math.min(...xs), Math.max(...xs)].flatMap((x) => capFan(endRing(points, x), points, centre, winding));
+  const caps = capAts(points, ends).flatMap((at) => capFan(endRing(points, ends.axis, at), points, centre, winding));
   const texinfo = model.items[POLYGONS].readUInt16LE(POLYGON_TEXINFO);
   const header = Buffer.from(model.items[HEADER]);
   header.writeUInt32LE(header.readUInt32LE(0) + caps.length, 0);
