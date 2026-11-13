@@ -152,8 +152,12 @@ describe("outlines", () => {
     expect(objects.map((object) => object.outline)).toEqual([2, undefined, undefined, 1]);
   });
 
+  test("reads an outline whose switch isn't in the level, which the editor warns of", () => {
+    const [object] = parseObjects(JSON.stringify([box("basic", { outline: 4 })]));
+    expect(object.outline).toBe(4);
+  });
+
   test.each([
-    [[box("basic", { outline: 1 })], "object 1: there's no switch 1 for it to be an outline of"],
     [[switchBox(1), box("basic", { outline: 0 })], "object 2: outline should be the number of a switch"],
     [[switchBox(1), box("basic", { outline: "1" })], "object 2: outline should be the number of a switch"],
     [[switchBox(1), { ...switchBox(2), outline: 1 }], "object 2: a switch can't be an outline"],
