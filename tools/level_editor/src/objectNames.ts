@@ -12,7 +12,6 @@ const NAMES: Partial<Record<Placeable, string>> = {
   iron_arrow: "Iron (arrow)",
   iron_outline: "Iron (outline)",
   tnt: "TNT",
-  enemy_tnt: "TNT (enemy)",
   switch: "Switch (!)",
   // enemies
   plant: "Biting plant",

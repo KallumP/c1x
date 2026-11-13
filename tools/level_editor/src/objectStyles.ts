@@ -18,7 +18,6 @@ const COLOURS: Record<BoxType, string> = {
   question: "#f2d230",
   outline: "#64b5f6",
   tnt: "#d81b1b",
-  enemy_tnt: "#7f1d1d",
   iron_arrow: "#c8cdd2",
   iron_outline: "#b0bec5",
 };
