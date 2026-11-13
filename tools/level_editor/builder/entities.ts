@@ -124,7 +124,7 @@ export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch, BO
 // outline box's the next one's, and the last's 0; each switch has its own, as on
 // road to nowhere. a plain or iron outline's init_flags_b marks the first in
 // its chain 12, the rest 4 (as on n. sanity beach); any other box's (one the
-// game has no outline box of) is left as placed, which has it start as an outline
+// game has no outline box of) is left as placed, which hides it until its switch is hit
 const OUTLINE_FIRST = 12;
 const OUTLINE_REST = 4;
 

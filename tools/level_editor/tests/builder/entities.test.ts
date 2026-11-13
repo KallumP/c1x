@@ -109,7 +109,7 @@ describe("switches", () => {
     expect(entities[0].slice(1).map(initFlags)).toEqual([[FIRST_IN_CHAIN, 12], [LATER_IN_CHAIN, 13], [LATER_IN_CHAIN, 0]]);
   });
 
-  test("an outline of any other box keeps its second init flag, which has it start as an outline", () => {
+  test("an outline of any other box keeps its second init flag, which hides it until its switch is hit", () => {
     const { entities, boxes } = placed([[switchBox(10, 1), outline(11, 1, 8), outline(12, 1)]]);
     entities[0][1] = withInitFlagB(entities[0][1], 3);
     linkSwitches(entities, boxes);

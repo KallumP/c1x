@@ -23,7 +23,8 @@ export function toZone(at: Vec3, scale: number, turn: number, offset: Vec3): Vec
 // the game's own outline boxes: a plain box's and an iron box's, by the subtype they fill in as
 const OUTLINE_SUBTYPES = new Map<number, number>([[BOX_TYPES.basic, PLAIN_OUTLINE], [BOX_TYPES.iron, IRON_OUTLINE]]);
 
-// the second init flag that has any other box start as an outline (road to nowhere's life boxes')
+// the second init flag that hides any other box until its switch is hit (road to nowhere's life boxes'): seen in
+// the game, its bit 1 hides it (the game has no outline of it), and 2, 4, 8, 16 or 32 alone don't
 const OUTLINE_INIT_FLAG_B = 3;
 
 // a box's subtype number as its type name or the number it was given has it
