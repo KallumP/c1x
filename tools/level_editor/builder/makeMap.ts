@@ -203,7 +203,7 @@ function obstacleTiming(obstacle: LevelObject): [number, number] {
 
 // the path obstacles that move along their nodes as their own level's first
 // eases along its path: a carrying platform's ride, a moving platform's slide
-const OWN_EASED_PATHS: ObstacleType[] = ["carrying_platform", "moving_platform"];
+const OWN_EASED_PATHS: ObstacleType[] = ["carrying_platform", "moving_platform", "lift_platform"];
 
 // how far along its own level's path each of a path obstacle's points is: a
 // floating leaf's drift's, a sliding pillar's slide's, or a carrying platform's ride's
@@ -301,8 +301,12 @@ function platformRideStep(platform: LevelObject, points: number, length: number,
 
 // entity with a carrying platform's step along its points points in its init
 // flag A, not turned by it; any other obstacle's as it is
+// the obstacles whose init flag A is their step along their points a frame
+// (temple ruins' code): a carrying platform, and a lift platform (slippery climb's)
+const STEPPING_AT_SPEED: ObstacleType[] = ["carrying_platform", "lift_platform"];
+
 function withRideSpeed(entity: Buffer, obstacle: LevelObject, points: number, length: number, scale: number): Buffer {
-  if (obstacle.obstacle !== "carrying_platform") {
+  if (!STEPPING_AT_SPEED.includes(obstacle.obstacle!)) {
     return entity;
   }
   return withInitFlagA(withNoRotationFromFlags(entity), platformRideStep(obstacle, points, length, scale));

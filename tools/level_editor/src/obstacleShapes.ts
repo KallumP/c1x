@@ -357,6 +357,17 @@ function rotatingPeg(): ShapePart[] {
   return [squareSlab(across * 0.85, height - cap, -height, PILLAR_COLOURS.stone), squareSlab(across, cap, -cap, PILLAR_COLOURS.moss)];
 }
 
+// slippery climb's lift platform (PlUyG): its moving platform's square slab, 338 thick
+function liftPlatform(): ShapePart[] {
+  const { across, deep, moss } = MOVING_PLATFORM;
+  const thick = 338;
+  const stone = thick - moss;
+  return [
+    { kind: "box", size: [across, stone, deep], at: [0, -moss - stone / 2, 0], colour: PILLAR_COLOURS.stone },
+    { kind: "box", size: [across, moss, deep], at: [0, -moss / 2, 0], colour: PILLAR_COLOURS.moss },
+  ];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
@@ -364,4 +375,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw(), timed_plank: timedPlank(), breaking_plank: breakingPlank(), rotating_pegs: rotatingPeg() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw(), timed_plank: timedPlank(), breaking_plank: breakingPlank(), rotating_pegs: rotatingPeg(), lift_platform: liftPlatform() };
