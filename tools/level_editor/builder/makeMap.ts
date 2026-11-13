@@ -364,13 +364,19 @@ function fireWait(fire: LevelObject): number {
   return Math.round(numberSetting(fire, "every") * FRAMES_A_SECOND);
 }
 
-// entity with a floor or steady fire's wait in its init flag B, not turned by
-// its flags; any other obstacle's as it is
+// a fire's init flag A, how long its flames hold at full height (their code
+// patched: see SUNSET_RUINS_CODE_PATCHES): a floor fire's 64 as the game's own
+// (about 2 s), a steady fire's 1 (about 3 minutes, then a 2 s gap)
+const FIRE_HOLDS: Partial<Record<ObstacleType, number>> = { floor_fire: 64, steady_fire: 1 };
+
+// entity with a floor or steady fire's hold and wait in its init flags A and
+// B, not turned by them; any other obstacle's as it is
 function withFireTiming(entity: Buffer, obstacle: LevelObject): Buffer {
-  if (obstacle.obstacle !== "floor_fire" && obstacle.obstacle !== "steady_fire") {
+  const hold = FIRE_HOLDS[obstacle.obstacle!];
+  if (hold === undefined) {
     return entity;
   }
-  return withInitFlagB(withNoRotationFromFlags(entity), fireWait(obstacle));
+  return withInitFlagB(withInitFlagA(withNoRotationFromFlags(entity), hold), fireWait(obstacle));
 }
 
 // an object placed from its own level's entity (see placeWithItsPath) with

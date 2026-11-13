@@ -604,6 +604,17 @@ const PLANK_CODE_ADDITION: CodeAddition = {
   ],
 };
 
+// sunset vista's ruins objects' code (RuiOC: its bats', and its floor fire's,
+// s4): a flame's burst (s10, state 7) holds at full height while a count,
+// adding 0x100 a frame, stays under 0x4000 (about 2 s). it adds the flame's
+// obj[0x1e0] instead, which it takes from its fire (EARG 0x6000) as its init
+// flag A x 256 / 100 x 1.5625 (only an s15's flames, s16, used it: no level
+// has one), so a fire's flag A sets its hold: see FIRE_HOLDS in makeMap.ts
+const FIRE_HOLD_COUNT_AT = 0x25b;
+const SUNSET_RUINS_CODE_PATCHES: CodePatch[] = [
+  { at: FIRE_HOLD_COUNT_AT, was: 0x00801b04, now: 0x00e60b04 }, // ADD 0x100, 0x10($fp) → ADD obj[0x1e0], 0x10($fp)
+];
+
 const LIZARD_CODE_PATCHES: CodePatch[] = [
   { at: GREEN_LEAP_SETS_X, was: MOVE_TO_X, now: branch(GREEN_LEAP_SETS_X, GREEN_LEAP_Z) },
   { at: RED_HOP_SETS_X, was: MOVE_TO_X, now: branch(RED_HOP_SETS_X, RED_HOP_Z) },
@@ -688,6 +699,10 @@ const ENEMY_CODE_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   falling_spiked_log: GATE_OBJECTS_CODE_PATCHES,
   fire_pit: GATE_OBJECTS_CODE_PATCHES,
   slamming_walls: SLAMMING_WALL_CODE_PATCHES,
+  bat: SUNSET_RUINS_CODE_PATCHES, // every object that brings sunset vista's RuiOC changes it the same
+  leader_bats: SUNSET_RUINS_CODE_PATCHES,
+  floor_fire: SUNSET_RUINS_CODE_PATCHES,
+  steady_fire: SUNSET_RUINS_CODE_PATCHES,
   rotating_pegs: SLAMMING_WALL_CODE_PATCHES, // their code, moved the same
   timed_plank: PLANK_CODE_PATCHES, // the same for every plank, as they share the code
   breaking_plank: PLANK_CODE_PATCHES,
