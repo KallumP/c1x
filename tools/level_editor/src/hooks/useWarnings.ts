@@ -3,6 +3,7 @@ import type * as THREE from "three";
 import type { LevelObject } from "../objects";
 import { overlappingBoxes, type Triangle } from "../overlaps";
 import { strayingPaths } from "../pathWarnings";
+import { switchlessOutlines } from "../switchWarnings";
 import { levelTriangles } from "../three/levelTriangles";
 
 // the level's triangles (blender), none until it's loaded
@@ -18,4 +19,9 @@ export function usePathWarnings(objects: LevelObject[], turn: number, scale: num
 // the boxes in a wall or another box
 export function useWarnings(objects: LevelObject[], scale: number, triangles: Triangle[]): Set<number> {
   return useMemo(() => overlappingBoxes(objects, scale, triangles), [objects, scale, triangles]);
+}
+
+// the outline boxes whose switch isn't in the level
+export function useOutlineWarnings(objects: LevelObject[]): Set<number> {
+  return useMemo(() => switchlessOutlines(objects), [objects]);
 }

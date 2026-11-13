@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import LevelMesh from "./components/LevelMesh";
 import LevelPicker from "./components/LevelPicker";
@@ -18,7 +18,7 @@ import { useLevelSongs } from "./hooks/useLevelSongs";
 import { useLevels } from "./hooks/useLevels";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
-import { usePathWarnings, useTriangles, useWarnings } from "./hooks/useWarnings";
+import { useOutlineWarnings, usePathWarnings, useTriangles, useWarnings } from "./hooks/useWarnings";
 import { clickedFloor, isClick } from "./three/clicks";
 import "./App.css";
 
@@ -38,6 +38,8 @@ export default function App() {
   const triangles = useTriangles(group);
   const warnings = useWarnings(state.objects, scale, triangles);
   const pathWarnings = usePathWarnings(state.objects, levelCfg.cfg.turn, scale, triangles);
+  const outlineWarnings = useOutlineWarnings(state.objects);
+  const boxWarnings = useMemo(() => new Set([...warnings, ...outlineWarnings]), [warnings, outlineWarnings]);
   const [tool, setTool] = useState<Tool>(SELECT);
   const [grid, setGrid] = useState(0);
   const orbitRef = useRef<Orbit>(null);
@@ -106,6 +108,16 @@ export default function App() {
     return <span className="warning">{pathWarnings.size} {paths} the floor or run{pathWarnings.size === 1 ? "s" : ""} through a wall</span>;
   };
 
+  const renderOutlineWarningCount = () => {
+    if (outlineWarnings.size === 0) {
+      return null;
+    }
+    if (outlineWarnings.size === 1) {
+      return <span className="warning">1 outline's switch isn't in the level</span>;
+    }
+    return <span className="warning">{outlineWarnings.size} outlines' switches aren't in the level</span>;
+  };
+
   const renderHistoryButtons = () => (
     <>
       <button disabled={state.past.length === 0} onClick={() => dispatch({ type: "undo" })} title="Undo (Ctrl+Z)">Undo</button>
@@ -150,6 +162,7 @@ export default function App() {
       {renderHistoryButtons()}
       {renderSaveButton()}
       {renderPathWarningCount()}
+      {renderOutlineWarningCount()}
       {error && <span className="error">{error}</span>}
       {renderLevelActions()}
       {(isSaving || levelActions.isBusy) && <div className="progress" role="progressbar" aria-label="Working" />}
@@ -165,7 +178,7 @@ export default function App() {
         turn={turn}
         selected={state.selected}
         selectedNode={state.selectedNode}
-        warnings={warnings}
+        warnings={boxWarnings}
         pathWarnings={pathWarnings}
         triangles={triangles}
         onSelect={drag.start}
@@ -191,6 +204,7 @@ export default function App() {
         state={state}
         warnings={warnings}
         pathWarnings={pathWarnings}
+        outlineWarnings={outlineWarnings}
         scale={scale}
         triangles={triangles}
         dispatch={dispatch}

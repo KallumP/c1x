@@ -68,10 +68,11 @@ const ACROSS_REVERSE_TITLES: Partial<Record<ObjectType, string>> = {
 };
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
-export default function PropertiesPanel({ state, warnings, pathWarnings, scale, triangles, dispatch, levelCfg, songs, onLevelCfg }: {
+export default function PropertiesPanel({ state, warnings, pathWarnings, outlineWarnings, scale, triangles, dispatch, levelCfg, songs, onLevelCfg }: {
   state: EditorState;
   warnings: Set<number>;
   pathWarnings: Set<number>; // the path enemies whose paths leave the floor or run through a wall
+  outlineWarnings: Set<number>; // the outlines whose switch isn't in the level
   scale: number;
   triangles: Triangle[]; // the level's, for dropping a box to the floor
   dispatch: (action: EditorAction) => void;
@@ -453,6 +454,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {hasNodes(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
+          {outlineWarnings.has(index) && <p className="warning">There's no switch {object.outline} in the level: pick another, or the level won't build.</p>}
           {pathWarnings.has(index) && <p className="warning">This path leaves the floor or runs through a wall.</p>}
           <button className="delete" onClick={() => dispatch({ type: "remove", index })}>Delete</button>
         </>

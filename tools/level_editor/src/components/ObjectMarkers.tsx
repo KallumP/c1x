@@ -74,7 +74,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   turn: number; // the level's, which sets the way the spawn's arrow points
   selected: number | null;
   selectedNode: number | null; // a node of the selected crab's or turtle's path
-  warnings: Set<number>; // the boxes in a wall or another box
+  warnings: Set<number>; // the boxes in a wall or another box, or outlines whose switch isn't in the level
   pathWarnings: Set<number>; // the path enemies whose paths leave the floor or run through a wall
   triangles: Triangle[]; // the level's (in blender), to raise the handles of path nodes under the ground
   onSelect: (index: number) => void;
