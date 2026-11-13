@@ -72,8 +72,8 @@ describe("load lists", () => {
   });
 
   test("more texture pages than the game holds at once is an error saying so", () => {
-    // the game keeps 16 texture pages (texture_pages in src/ns.c)
-    expect(() => loadTexturePages(levelWithTexturePages(16).level, ZONE_EID)).not.toThrow();
-    expect(() => loadTexturePages(levelWithTexturePages(17).level, ZONE_EID)).toThrow(/17 texture pages.*16/);
+    // the game keeps 32 texture pages (NS_TEXTURE_PAGE_COUNT in src/ns.h)
+    expect(() => loadTexturePages(levelWithTexturePages(32).level, ZONE_EID)).not.toThrow();
+    expect(() => loadTexturePages(levelWithTexturePages(33).level, ZONE_EID)).toThrow(/33 texture pages.*32/);
   });
 });

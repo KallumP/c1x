@@ -275,6 +275,25 @@ def terrain_faces(terrain, parts):
                 add_acid_over(parts, [corners[i] for i in triangle], level)
 
 
+SKIRT_BOTTOM = min(ACID_LEVELS.values()) - 1.0
+TOWARDS_START = (0, -1, 0)
+
+
+def front_skirt(terrain, parts):
+    """closes the terrain's front edge, where it meets the cut level's end: a wall
+    facing back along the route, from the ground down below the acid. without it
+    the camera looks into the terrain through its open edge, the slopes inside
+    face away from it (so they aren't drawn), and the acid shows through"""
+    row = 0
+    for column in range(len(terrain.xs) - 1):
+        if not terrain.is_kept(column, row):
+            continue
+        (xa, y, za), (xb, _, zb) = terrain.at(column, row), terrain.at(column + 1, row)
+        top_colours = [vertex_light(terrain, column, row), vertex_light(terrain, column + 1, row)]
+        corners = [(xa, y, za), (xb, y, zb), (xb, y, SKIRT_BOTTOM), (xa, y, SKIRT_BOTTOM)]
+        parts[PURPLE_ROCK].add(corners, top_colours + [lit(35)] * 2, TOWARDS_START)
+
+
 def add_above(parts, corners, colours, level):
     """a terrain triangle, cut off at the acid's level: only its part above it.
     the game draws polygons farthest first, so ground under the acid could be
@@ -421,6 +440,7 @@ def middle_parts():
     parts = {part: Faces(material, keep_uvs) for part, (material, keep_uvs) in MIDDLE_PARTS.items()}
     terrain = Terrain()
     terrain_faces(terrain, parts)
+    front_skirt(terrain, parts)
     geode_crystals(terrain, parts)
     grotto_mushrooms(terrain, parts)
     gorge_arch(parts)

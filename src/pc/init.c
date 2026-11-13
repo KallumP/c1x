@@ -29,7 +29,7 @@ int mousel;
 extern ns_struct ns;
 extern int done;
 extern eid_t insts[8];
-extern page_struct texture_pages[16];
+extern page_struct texture_pages[NS_TEXTURE_PAGE_COUNT];
 extern uint32_t seed_a;
 
 /* the window's flags: filling the screen at its own resolution if fullscreen is on */
@@ -246,7 +246,7 @@ int init() {
   InitReplay();
   for (i=1;i<4;i++)
     insts[i] = EID_NONE;
-  for (i=0;i<16;i++)
+  for (i=0;i<NS_TEXTURE_PAGE_COUNT;i++)
     texture_pages[i].eid = EID_NONE;
   ns.draw_skip_counter = 0;
   return SUCCESS;

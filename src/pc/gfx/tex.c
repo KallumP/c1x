@@ -8,9 +8,8 @@
 
 extern quad28_t uv_map[600];
 
-#define TEX_TPAGE_LOCAL_COUNT  8
 #define TEX_TPAGE_GLOBAL_COUNT 8
-#define TEX_TPAGE_COUNT        (TEX_TPAGE_LOCAL_COUNT+TEX_TPAGE_GLOBAL_COUNT)
+#define TEX_TPAGE_COUNT        NS_TEXTURE_PAGE_COUNT
 #define TEX_TPAGE_MEMSIZE      TEX_TPAGE_COUNT*((1024+512+256)*128)*2*sizeof(uint32_t)
 #define TEX_CACHE_BUCKETSIZE   0x8000 /* the whole table: custom levels use thousands of texture regions */
 
@@ -47,7 +46,7 @@ typedef struct {
 
 tex_cache cache;
 
-extern page_struct texture_pages[16];
+extern page_struct texture_pages[NS_TEXTURE_PAGE_COUNT];
 
 void TexturesInit(
   tex_create_callback_t create,
@@ -218,11 +217,11 @@ static int TexturePageIdx(entry_ref *tpag) {
 
   if (tpag->is_eid) { eid = tpag->eid; }
   else { eid = tpag->en->eid; }
-  for (i=0;i<16;i++) {
+  for (i=0;i<NS_TEXTURE_PAGE_COUNT;i++) {
     //if (i<cache.global_count && cache.global_eids[i] == eid) { break; }
-    if (texture_pages[i].eid == eid) { break; }
+    if (texture_pages[i].eid == eid) { return i; }
   }
-  return i < 16 ? i : -1;
+  return -1;
 }
 
 /**
