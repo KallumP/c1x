@@ -10,7 +10,7 @@ import { repoFolders, repoOfExe } from "./repoFolders";
 const USAGE = `usage: npm run build-level -- <level>
        build-level <level>
 
-  level  a level source's name, such as tide_ruins (its folder in level_src),
+  level  a level source's name, such as 1_tide_ruins (its folder in level_src),
          or the path of a level source's folder or .obj
 
   its level.cfg sets the level's scale and turn, and its objects.json places
