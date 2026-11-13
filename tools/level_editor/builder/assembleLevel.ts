@@ -9,6 +9,7 @@ import { CAM_LEAD, cameraOffsets } from "./route";
 import { DEFAULT_CAMERA, type Camera } from "../src/camera";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, type Entry, type Level, type Page } from "./levelFiles";
 import type { BuiltWorld } from "./mapTextures";
+import type { LevelMusic } from "./music";
 import { blocksRectBytes, type Block } from "./octree";
 import { FOLLOW_CAM_MODE, pathBytes, type PathLink } from "./paths";
 import { zoneSlstItems } from "./slst";
@@ -49,6 +50,7 @@ export interface Assembly {
   texturePages: Page[];
   donors: DonorObject[];   // objects taken from other levels, such as enemies jungle rollers doesn't have
   camera?: Camera;         // how the follow camera looks at crash (level.cfg's); as it always was without one
+  music?: LevelMusic | null; // music from another level the zones play (level.cfg's); the real level's without one
 }
 
 // how far behind crash the game keeps the camera along its path (its zoom): its
@@ -147,12 +149,21 @@ function zoneEntries(assembly: Assembly, zoneIndex: number, origins: Vec3[]): En
 // what to keep of the real level: the code for crash, the hud, the core objects
 // and the entities' types, the texture pages the meshes use, and the zones'
 // music (jungle rollers', with its instruments; aku aku's song is its second track)
-function keptEids({ level, templates, zones, pageEids }: Assembly): number[] {
+// unless they play music from another level
+function keptEids({ level, templates, zones, pageEids, music }: Assembly): number[] {
   const slots = new Set([...CORE_EXEC_SLOTS, ...zones.flatMap((zone) => zone.entities.map((entity) => entityType(entity)[0]))]);
   const execMap = level.nsd.ldat.execMap;
   const ownPages = readWorldHeader(templates.world.items[0]).pages.filter((page) => page !== 0);
-  const music = templates.header.readUInt32LE(ZONE_MIDI);
-  return [...[...slots].map((slot) => execMap[slot]), ...ownPages, ...pageEids, music];
+  const ownMusic = music ? [] : [templates.header.readUInt32LE(ZONE_MIDI)];
+  return [...[...slots].map((slot) => execMap[slot]), ...ownPages, ...pageEids, ...ownMusic];
+}
+
+// the pages music from another level takes: its entry, and its instruments' pages
+function musicPages(music: LevelMusic | null | undefined): Page[] {
+  if (!music) {
+    return [];
+  }
+  return [...packEntries(music.entries), ...music.pages];
 }
 
 export function assembleLevel(assembly: Assembly): Level {
@@ -161,7 +172,7 @@ export function assembleLevel(assembly: Assembly): Level {
   const origins = zones.map((zone): Vec3 => [x0, y0, z0 + zone.zOffset]);
   const entries = [...worldEntries(assembly, origins), ...zones.flatMap((_, index) => zoneEntries(assembly, index, origins))];
   const out = withDonorObjects(cutLevel(assembly.level, keptEids(assembly)), donors);
-  out.pages = [...packEntries(entries), ...out.pages, ...texturePages];
+  out.pages = [...packEntries(entries), ...out.pages, ...texturePages, ...musicPages(assembly.music)];
   out.nsd.ldat.lid = LID_TEST;
   out.nsd.ldat.zoneSpawn = zoneEid(spawnZone);
   out.nsd.ldat.pathIndexSpawn = 0;
