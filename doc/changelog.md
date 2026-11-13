@@ -4,6 +4,7 @@
 
 ### Added
 
+- a custom level's music: any of the game's songs, picked under **Music** in the level editor
 - the launcher's Levels tab says when a level is out of date: its sources were saved after it was built
 
 ### Changed
