@@ -48,7 +48,6 @@ What each enemy and obstacle takes is listed in its entry below; this is what th
 - `switch`
 - `outline`: filled in as a crate by a switch
 - `tnt`
-- `enemy_tnt`: a TNT for an enemy to be knocked into
 - `iron_arrow`: an iron box that bounces Crash
 - `iron_outline`: filled in as an iron box by a switch
 

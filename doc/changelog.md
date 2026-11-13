@@ -120,7 +120,7 @@
 - a launcher (`build/launcher.exe`, built with the game) for checking and extracting the game's files, changing the settings and controls, starting the game, and opening the level editor; see [Launcher](launcher.md)
 - the level editor sets a level's turn and scale, shows which way the camera faces from the spawn, and F5 builds the level and boots into it, saying what it's doing as it goes; Shift gives finer steps for x, y and z
 - textures can be TIFF images, as well as PNG and JPEG
-- custom levels can have every box the game has: TNT, enemy TNT, iron arrow and iron outline as well
+- custom levels can have every box the game has: TNT, iron arrow and iron outline as well
 - the level editor sets a level's sky: its top and bottom colours, and where they split
 - a third level source, `sunset_canyon`: a long desert canyon with an oasis, a chasm, a slot canyon, quicksand and hoodoos, and a full level's worth of boxes
 

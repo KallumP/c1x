@@ -39,7 +39,6 @@ UTEST(pace, the_intro_draws_a_frame_every_two_and_three_vblanks_in_turn) {
 }
 
 UTEST(pace, the_intro_lasts_as_long_as_on_the_ps1) {
-  /* its 1106 frames took 36 s at 30 fps, against 45 s in a recording of
-     the PS1's intro */
+  /* its 1106 frames last 45 s in a recording of the PS1's intro */
   ASSERT_NEAR(45.0, SecondsToFrame(LID_INTRO, 1106), 0.5);
 }

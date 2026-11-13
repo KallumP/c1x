@@ -108,7 +108,7 @@ describe("an end cap on one end, along any axis", () => {
     polygonsOf(model).slice(8).forEach((corners) => corners.forEach((corner) => expect(corner).toBeLessThan(4)));
   });
 
-  test("capped at both ends along x, as before", () => {
+  test("a tube along x capped at both ends gets a fan at each", () => {
     expect(withEndCaps(tubeModel(tubeSides(true)), tubeFrame(), { axis: 0, ends: "both" }).items[0].readUInt32LE(0)).toBe(8 + 4);
   });
 });

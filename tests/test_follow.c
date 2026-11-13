@@ -90,5 +90,5 @@ UTEST(follow, keeps_its_height_when_its_paths_height_jumps) {
 
 UTEST(follow, its_height_above_crash_is_the_one_its_path_keeps_or_the_usual_one) {
   ASSERT_EQ(2632 << 8, FollowCamAbove(2632));
-  ASSERT_EQ(FOLLOW_CAM_HEIGHT, FollowCamAbove(0)); /* a path built before levels set it */
+  ASSERT_EQ(FOLLOW_CAM_HEIGHT, FollowCamAbove(0)); /* a path that doesn't set one */
 }

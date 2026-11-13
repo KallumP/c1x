@@ -136,7 +136,7 @@ static __attribute__((noinline)) void FillStackWithJunk() {
     junk[i] = 0x7F7F7F7F;
 }
 
-/* NSCountAvailablePages2 once read locals it hadn't set, so each test runs it over junk */
+/* NSCountAvailablePages2 must set every local it reads, so each test runs it over junk */
 UTEST(ns_pages, no_entries_need_no_pages_despite_junk_left_on_the_stack) {
   FillStackWithJunk();
   ASSERT_EQ(0, NSCountAvailablePages2(0, 0));
