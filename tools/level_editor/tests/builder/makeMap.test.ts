@@ -1288,19 +1288,20 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(fire(type, more as Partial<LevelObject>).placed.readInt16LE(ENTITY_INIT_FLAGS + 2)).toBe(frames);
     });
 
-    // init flag A: how long its flames hold at full height. each frame of a burst's hold adds the
-    // flame's obj[0x1e0] (its fire's flag A x 256 / 100 x 1.5625), not 0x100, to 0x4000: a floor
-    // fire's 64 holds as the game's (about 2 s), a steady fire's 1 about 3 minutes
+    // init flag C: how a burst's hold counts, each frame taking it from the count to 0x4000 (the
+    // code's own adds 0x100: about 2 s): a floor fire's -1 as the game's, a steady fire's 0 holding
+    // for good. flag A stays 0: how near crash must be for a flame to burst (the game's own, about 11 m)
     test.each([
-      { type: "floor_fire", flag: 64 },
-      { type: "steady_fire", flag: 1 },
-    ] as const)("a $type holds its flames by its init flag A ($flag)", ({ type, flag }) => {
-      expect(fire(type).placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(flag);
+      { type: "floor_fire", flags: [0, -1] },
+      { type: "steady_fire", flags: [0, 0] },
+    ] as const)("a $type has its flames' hold in its init flag C", ({ type, flags }) => {
+      const { placed } = fire(type);
+      expect([placed.readInt16LE(ENTITY_INIT_FLAGS), placed.readInt16LE(ENTITY_INIT_FLAGS + 4)]).toEqual(flags);
     });
 
-    test.each(["floor_fire", "bat"] as const)("with a %s, the ruins objects' code holds a burst by its flame's obj[0x1e0]", (type) => {
+    test.each(["floor_fire", "bat"] as const)("with a %s, the ruins objects' code counts a burst's hold by its fire's flag C", (type) => {
       const built = type === "bat" ? build([enemy("bat")]) : build([obstacle(type)]);
-      expect(built.entries.get(stringToEid("RuiOC"))!.items[1].readUInt32LE(0x25b * 4)).toBe(0x00e60b04);
+      expect(built.entries.get(stringToEid("RuiOC"))!.items[1].readUInt32LE(0x25b * 4)).toBe(0x01c59b04);
     });
 
     test("a level with floor fires and bats shares their code", () => {
