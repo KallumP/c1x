@@ -1670,7 +1670,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const words = (from: number, count: number) => Array.from({ length: count }, (_, index) => code.items[1].readUInt32LE((from + index) * 4));
       expect(words(0x73, 2)).toEqual([0x10017800, 0x00e1f018]);
       expect(code.items[2].readInt32LE(0x5c)).toBe(90);
-      expect(words(0x8e, 1)).toEqual([0x82094000 | (0x163 - 0x8f)]);
+      expect(words(0x8e, 1)).toEqual([(0x82094000 | (0x163 - 0x8f)) >>> 0]);
       expect(words(0x163, 11)).toEqual([
         0x8227c003, 0x11e43e1f, 0x8217c001, 0x11e27e43, 0x11e43e1f, 0x8227c004, 0x01e43e27, 0x02801e1f, 0x0ce17e1f, 0x8257c001, 0x82894000,
       ]);

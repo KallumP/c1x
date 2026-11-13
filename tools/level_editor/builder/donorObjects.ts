@@ -560,16 +560,37 @@ const SLAMMING_WALL_CODE_PATCHES: CodePatch[] = RUINS_OWN_CHILDREN.map(([at, was
 // road to nowhere's planks' code's spawn of its own kind (its s7's), by its
 // slot there (23), which moves (see MOVED_ENEMY_CODE)
 const PLANK_OWN_CHILD: [number, number] = [0x106, 0x8a1171c1];
-// and its timed plank's wait once crash stands on it, a random 57 to 146 frames
-// (RND ireg[0x5c], plus ireg[0x60]), made its init flag A's frames: obj[0xbc]
-// shifted by ireg[0x5c] (its only use, made -8: see PLANK_DATA_PATCHES), plus 0
-const PLANK_WAIT_AT = 0x73;
+// and its timed plank (s1, state 3) breaking as soon as crash is over its middle
+// (its status_a's 0x1000, which GoolCollide in src/gool.c sets while he's
+// inside its bound less its hotspot, and he's its collider): its break (CSNZ
+// state 1) branches to PLANK_CODE_ADDITION instead, which waits its delay first
+const PLANK_CODE_LENGTH = 0x163;
+const PLANK_BREAK_AT = 0x8e;
 const PLANK_CODE_PATCHES: CodePatch[] = [
   childSpawnedAs(...PLANK_OWN_CHILD, objectEntity("timed_plank")[0]),
-  { at: PLANK_WAIT_AT, was: 0x10017800, now: 0x15017e17 }, // RND ireg[0x5c], 0 → SHA ireg[0x5c], obj[0xbc]
-  { at: PLANK_WAIT_AT + 1, was: 0x00e1f018, now: 0x00e1f800 }, // ADD pop(), ireg[0x60] → ADD pop(), 0
+  { at: PLANK_BREAK_AT, was: 0x8257c001, now: branch(PLANK_BREAK_AT, PLANK_CODE_LENGTH) }, // CSNZ self[0xdc], 1 → BRA to the addition
 ];
-const PLANK_DATA_PATCHES: CodePatch[] = [{ at: 0x5c / 4, was: 90, now: 0xfffffff8 }]; // ireg[0x5c]: -8
+
+// the timed plank's break, its condition (crash over its middle) on the stack:
+// the first time, its frame count (obj[0xfc]) is kept in obj[0x16c] (s1 never
+// uses it), and it breaks once 0x100 times the frames since reach its init
+// flag A (obj[0xbc], in 256ths): its delay. GOOL's "OP a, b" works out b OP a
+const PLANK_CODE_ADDITION: CodeAddition = {
+  after: PLANK_CODE_LENGTH,
+  instructions: [
+    0x8227c003, // BEQZ self[0xdc], 3: crash isn't over its middle
+    0x11e43e1f, // MOVE obj[0x16c], push(): its timer's start
+    0x8217c001, // BNEZ self[0xdc], 1: started already
+    0x11e27e43, // MOVE obj[0xfc], obj[0x16c]: start it now
+    0x11e43e1f, // MOVE obj[0x16c], push()
+    0x8227c004, // BEQZ self[0xdc], 4: not started: return
+    0x01e43e27, // SUB obj[0x16c], obj[0xfc]: the frames since
+    0x02801e1f, // MULT 0x100, pop(): in 256ths, as its flags are
+    0x0ce17e1f, // SGE obj[0xbc], pop(): its delay's up
+    0x8257c001, // CSNZ self[0xdc], 1: break
+    0x82894000, // RET
+  ],
+};
 
 const LIZARD_CODE_PATCHES: CodePatch[] = [
   { at: GREEN_LEAP_SETS_X, was: MOVE_TO_X, now: branch(GREEN_LEAP_SETS_X, GREEN_LEAP_Z) },
@@ -605,6 +626,7 @@ const LIZARD_CODE_ADDITION: CodeAddition = {
 const ENEMY_CODE_ADDITIONS: Partial<Record<ObjectType, CodeAddition>> = {
   lizard: LIZARD_CODE_ADDITION,
   red_lizard: LIZARD_CODE_ADDITION,
+  timed_plank: PLANK_CODE_ADDITION,
 };
 
 // toxic waste's barrels (BaraC) stop flattening crash 5 points short of their
@@ -684,7 +706,6 @@ const OBJECT_DATA_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   rising_spiked_log: GATE_OBJECTS_DATA_PATCHES,
   falling_spiked_log: GATE_OBJECTS_DATA_PATCHES,
   fire_pit: GATE_OBJECTS_DATA_PATCHES,
-  timed_plank: PLANK_DATA_PATCHES,
 };
 
 // instructions patched, with the enemy's addition (if it has one) after their end
