@@ -1290,18 +1290,25 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     // init flag C: how a burst's hold counts, each frame taking it from the count to 0x4000 (the
     // code's own adds 0x100: about 2 s): a floor fire's -1 as the game's, a steady fire's 0 holding
-    // for good. flag A stays 0: how near crash must be for a flame to burst (the game's own, about 11 m)
+    // for good. flag A: its flames' head start into their first wait, in 4s of frames (their wait
+    // less its offset), so they first burst its offset in
     test.each([
-      { type: "floor_fire", flags: [0, -1] },
-      { type: "steady_fire", flags: [0, 0] },
-    ] as const)("a $type has its flames' hold in its init flag C", ({ type, flags }) => {
-      const { placed } = fire(type);
+      { type: "floor_fire", more: {}, flags: [15, -1] },                     // 60 frames' wait: 15 of 4
+      { type: "floor_fire", more: { every: 2, offset: 1 }, flags: [8, -1] }, // 30 frames' head start
+      { type: "floor_fire", more: { every: 4, offset: 4 }, flags: [30, -1] },// an offset of its every is none
+      { type: "steady_fire", more: {}, flags: [1, 0] },
+    ] as const)("a $type ($more) has its start and its flames' hold in its init flags A and C", ({ type, more, flags }) => {
+      const { placed } = fire(type, more as Partial<LevelObject>);
       expect([placed.readInt16LE(ENTITY_INIT_FLAGS), placed.readInt16LE(ENTITY_INIT_FLAGS + 4)]).toEqual(flags);
     });
 
-    test.each(["floor_fire", "bat"] as const)("with a %s, the ruins objects' code counts a burst's hold by its fire's flag C", (type) => {
+    // a flame's code: its burst's hold counts by its fire's flag C (0x25b); it bursts on its timer
+    // wherever crash is (0x1df: it waited for him within its fire's obj[0x1e0], about 11 m); its timer
+    // starts obj[0x1e0] (its fire's flag A x 4) frames into its wait (0x1b8, not its whole wait)
+    test.each(["floor_fire", "bat"] as const)("with a %s, the ruins objects' code times flames by their fire's flags", (type) => {
       const built = type === "bat" ? build([enemy("bat")]) : build([obstacle(type)]);
-      expect(built.entries.get(stringToEid("RuiOC"))!.items[1].readUInt32LE(0x25b * 4)).toBe(0x01c59b04);
+      const code = built.entries.get(stringToEid("RuiOC"))!.items[1];
+      expect([0x1b8, 0x1df, 0x25b].map((at) => code.readUInt32LE(at * 4))).toEqual([0x01e60e27, 0x0c800e1f, 0x01c59b04]);
     });
 
     test("a level with floor fires and bats shares their code", () => {

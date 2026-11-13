@@ -565,6 +565,7 @@ describe("floor fires", () => {
     expect(fire.every).toBe(5);
     expect(parseObjects(formatObjects([fire]))).toEqual([fire]);
     expect(numberSetting(obstacleObject("floor_fire"), "every")).toBe(2);
+    expect(parseObjects('[{"kind": "obstacle", "type": "floor_fire", "at": [0, 0, 0], "offset": 1}]')[0].offset).toBe(1);
     expect(() => parseObjects('[{"kind": "obstacle", "type": "steady_fire", "at": [0, 0, 0], "every": 5}]')).toThrow("a steady_fire has no every");
   });
 });
