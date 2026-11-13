@@ -33,7 +33,7 @@ describe.skipIf(!hasLevels)("a level's music", () => {
     expect(music.pages.flatMap((page) => page.entries.map(({ eid }) => eid))).toEqual(expect.arrayContaining(LOST_CITY_INSTRUMENTS));
   });
 
-  test("without music set, a custom level plays jungle rollers', as it always did", () => {
+  test("without music set, a custom level plays jungle rollers'", () => {
     const built = build();
     expect(new Set(zoneMusic(built))).toEqual(new Set([JUNGLE_ROLLERS_MUSIC]));
     expect(entriesById(built).has(JUNGLE_ROLLERS_MUSIC)).toBe(true);

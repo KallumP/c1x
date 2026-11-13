@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, isAudioSongName, isMusicName, songChoices, songLabel, SOUNDTRACKS, soundtrack } from "../../src/music";
 
 describe("soundtracks", () => {
-  test("a level plays jungle rollers' music unless it picks another, as before", () => {
+  test("a level plays jungle rollers' music unless it picks another", () => {
     expect(DEFAULT_MUSIC).toBe("jungle_rollers");
     expect(soundtrack(DEFAULT_MUSIC).lid).toBe(0xc);
   });
