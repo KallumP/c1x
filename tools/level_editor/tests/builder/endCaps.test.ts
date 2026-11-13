@@ -93,11 +93,11 @@ describe("end caps on an open tube's model", () => {
   });
 });
 
-// the same tube turned to run along z (its x the tube's z, its y the tube's x, its z the tube's y),
+// the same tube turned to run along z (its x the tube's y, its y the tube's z, its z the tube's x),
 // as a slab out of a wall is, open at its end in the wall (its lowest z)
 function turnedFrame(): Buffer {
   const frame = Buffer.alloc(FRAME_HEADER + TUBE.length * VERTEX_BYTES);
-  TUBE.forEach(([x, y, z], index) => [z, x, y].forEach((value, axis) => frame.writeUInt8(value, FRAME_HEADER + index * VERTEX_BYTES + axis)));
+  TUBE.forEach(([x, y, z], index) => [y, z, x].forEach((value, axis) => frame.writeUInt8(value, FRAME_HEADER + index * VERTEX_BYTES + axis)));
   return frame;
 }
 
