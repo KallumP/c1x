@@ -5,6 +5,7 @@
 ### Added
 
 - a custom level's music: any of the game's songs, picked under **Music** in the level editor
+- a custom level's own song: an mp3 (or ogg, flac or wav) in its folder, picked under **Music**
 - the launcher's Levels tab says when a level is out of date: its sources were saved after it was built
 
 ### Changed

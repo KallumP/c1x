@@ -31,6 +31,7 @@ SRC =	src/ns.c \
 	src/pc/fps.c \
 	src/pc/spin.c \
 	src/pc/levelend.c \
+	src/pc/audiosong.c \
 	src/pc/boxhud.c \
 	src/pc/boxtotals.c \
 	src/pc/slash.c \
@@ -42,6 +43,7 @@ SRC =	src/ns.c \
 	src/pc/gfx/gl.c \
 	src/pc/sound/util.c \
 	src/pc/sound/midi.c \
+	src/pc/sound/stream.c \
 	src/pc/sound/audio.c \
 	src/pc/sound/mix.c \
 	src/util/list.c \
@@ -68,12 +70,14 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/fps.c \
 	src/pc/spin.c \
 	src/pc/levelend.c \
+	src/pc/audiosong.c \
 	src/pc/boxhud.c \
 	src/pc/boxtotals.c \
 	src/pc/slash.c \
 	src/pc/screen_fit.c \
 	src/pc/fullscreen.c \
 	src/pc/sound/mix.c \
+	src/pc/sound/stream.c \
 	src/pc/sound/util.c \
 	src/ext/lib/gui.c \
 	src/util/tree.c \
@@ -138,16 +142,16 @@ INCLUDE = -I./src/
 DEFS = -DCFLAGS_GFX_SW_PERSP -DCFLAGS_DRAW_EXTENSIONS -DCFLAGS_GUI -DCFLAGS_GOOL_DEBUG
 CFLAGS = -g -fplan9-extensions -m32 -std=gnu17 -Wno-error=incompatible-pointer-types
 TEST_CFLAGS = -g -fplan9-extensions -m32 -std=gnu17
-TEST_LDLIBS = -lSDL2 -lstdc++
+TEST_LDLIBS = -lSDL2 -lsndfile -lstdc++
 ifeq ($(OS),Windows_NT)
-LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lm -lstdc++
+LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lsndfile -lm -lstdc++
 OUT = build/c1.exe
 TEST_OUT = build/tests.exe
 LAUNCHER_OUT = build/_launcher.exe
 BUILDER_OUT = build/build-level.exe
 LAUNCHER_LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lcomdlg32 -lm -lstdc++ -mwindows
 else
-LDLIBS = -lSDL2 -lGL -lfluidsynth -lm -lstdc++
+LDLIBS = -lSDL2 -lGL -lfluidsynth -lsndfile -lm -lstdc++
 LAUNCHER_LDLIBS = -lSDL2 -lGL -lm -lstdc++
 endif
 CFLAGS += $(LDLIBS) $(DEFS)

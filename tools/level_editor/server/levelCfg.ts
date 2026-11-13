@@ -5,7 +5,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
 import { DEFAULT_SCALE } from "../src/coords";
-import { DEFAULT_MUSIC, isMusicName, SOUNDTRACKS } from "../src/music";
+import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, isAudioSongName, isMusicName, SOUNDTRACKS } from "../src/music";
 import { DEFAULT_SKY, formatRgb, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 import { levelFolder } from "./levels";
 
@@ -14,7 +14,7 @@ export interface LevelCfg {
   scale: number; // game units per blender metre
   sky: Sky;
   camera: Camera;
-  music: string; // one of SOUNDTRACKS' names
+  music: string; // one of SOUNDTRACKS' names, or an audio file in the level's folder
 }
 
 const TURNS = [0, 90, 180, 270]; // the build turns in steps of 90 degrees
@@ -55,10 +55,12 @@ function parseCamera(text: string): Camera {
   };
 }
 
-// the music: a soundtrack's name, jungle rollers' if it isn't one
+const isSongName = (music: string) => isMusicName(music) || isAudioSongName(music);
+
+// the music: a soundtrack's name or an audio file's, jungle rollers' if it's neither
 function parseMusic(text: string): string {
   const music = settingValue(text, "music");
-  if (music !== undefined && isMusicName(music)) {
+  if (music !== undefined && isSongName(music)) {
     return music;
   }
   return DEFAULT_MUSIC;
@@ -98,8 +100,9 @@ function checkLevelCfg(cfg: LevelCfg): void {
   if (!isCameraAngle(cfg.camera.angle)) {
     throw new Error(`camera_angle has to be ${CAMERA_ANGLE_MIN} to ${CAMERA_ANGLE_MAX}, not ${cfg.camera.angle}`);
   }
-  if (!isMusicName(cfg.music)) {
-    throw new Error(`music has to be one of ${SOUNDTRACKS.map(({ name }) => name).join(", ")}, not ${cfg.music}`);
+  if (!isSongName(cfg.music)) {
+    const names = SOUNDTRACKS.map(({ name }) => name).join(", ");
+    throw new Error(`music has to be one of ${names}, or an audio file (${AUDIO_SONG_EXTENSIONS.join(", ")}), not ${cfg.music}`);
   }
 }
 

@@ -8,8 +8,13 @@
 #include "formats/smf.h"
 #include "formats/psx.h"
 #include "pc/time.h"
+#include "pc/audiosong.h"
+#include "stream.h"
+#include "common.h"
+#include "ns.h"
 
 extern int seq_count;
+extern lid_t cur_lid;
 extern uint8_t *vabs[2];
 
 typedef struct {
@@ -32,6 +37,12 @@ static const midi_context_t def_context = {
 fluid_settings_t *settings;
 fluid_sfloader_t *loader = 0;
 midi_context_t midi_contexts[2] = { 0 };
+
+/* pc: a custom level's audio song, playing as the level's music (its first
+   track) in place of the midi; kept loaded while the level's music reopens */
+static stream_song level_audio_song;
+static char level_audio_song_path[AUDIO_SONG_PATH_MAX];
+static int has_audio_song;
 
 /* in-memory sf2 loader */
 typedef struct {
@@ -111,6 +122,25 @@ static void SwPlayerProcess(midi_context_t *context, int ch, float amp[2], float
   }
 }
 
+/* track i of the music from the level's audio song: the song as the first
+   track at its volume, and the second (aku aku's song) silent, so the
+   level's song keeps playing through his invincibility */
+static void SwAudioSongProcess(midi_context_t *context, int i, int len, int16_t *data) {
+  int16_t *d;
+  int j;
+
+  if (i != 0) {
+    memset(data, 0, len*2*sizeof(int16_t));
+    return;
+  }
+  StreamSongRead(&level_audio_song, data, len);
+  d = data;
+  for (j=0;j<len;j++) {
+    *d = (int16_t)(*d*context->vol[0]); d++;
+    *d = (int16_t)(*d*context->vol[1]); d++;
+  }
+}
+
 void SwMidiProcess(int ch, float amp[2], float freq, int len, int16_t *data) {
   midi_context_t *context;
   int32_t *p32, buf32[2048];
@@ -136,7 +166,8 @@ void SwMidiProcess(int ch, float amp[2], float freq, int len, int16_t *data) {
       if (ticks > fade_len)
         context->fading = 0;
     }
-    SwPlayerProcess(context, ch, amp, freq, len, buf16);
+    if (has_audio_song) { SwAudioSongProcess(context, i, len, buf16); }
+    else { SwPlayerProcess(context, ch, amp, freq, len, buf16); }
     p16 = buf16;
     p32 = buf32;
     for (j=0;j<len;j++) {
@@ -193,6 +224,27 @@ void SwMidiKill() {
   delete_fluid_settings(settings);
 }
 
+/* pc: loads the custom level's audio song, if it has one (once: the level's music reopens as it plays) */
+static void SwOpenAudioSong() {
+  const audio_song *own;
+
+  own = AudioSongToPlay(cur_lid == LID_TEST);
+  if (own && has_audio_song && strcmp(own->path, level_audio_song_path) == 0) {
+    StreamSongStop(&level_audio_song);
+    return;
+  }
+  StreamSongFree(&level_audio_song);
+  level_audio_song_path[0] = 0;
+  has_audio_song = 0;
+  if (!own) { return; }
+  has_audio_song = StreamSongLoad(own->path, &level_audio_song);
+  if (!has_audio_song) {
+    fprintf(stderr, "could not play %s, so the level plays its music\n", own->path);
+    return;
+  }
+  snprintf(level_audio_song_path, sizeof(level_audio_song_path), "%s", own->path);
+}
+
 int16_t SwSepOpen(uint8_t *sep, int vab_id, int count) {
   midi_context_t *context;
   fluid_synth_t *synth;
@@ -206,6 +258,7 @@ int16_t SwSepOpen(uint8_t *sep, int vab_id, int count) {
   uint8_t *midi_data;
   int i, sfid;
 
+  SwOpenAudioSong();
   for (i=0;i<count;i++) {
     context = &midi_contexts[i];
     synth = context->synth;
@@ -299,6 +352,7 @@ void SwSepPlay(int san, int seq_num, int mode, int loops) {
   fluid_player_set_loop(player, mode==1?-1:loops);
   fluid_player_seek(player, 0);
   fluid_player_play(player);
+  if (has_audio_song && seq_num == 0) { StreamSongPlay(&level_audio_song); }
 }
 
 void SwSepStop(int san, int seq_num) {
@@ -309,6 +363,7 @@ void SwSepStop(int san, int seq_num) {
   player = context->player;
   fluid_player_stop(player);
   fluid_player_seek(player, 0);
+  if (has_audio_song && seq_num == 0) { StreamSongStop(&level_audio_song); }
 }
 
 void SwSepPause(int san, int seq_num) {

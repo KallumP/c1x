@@ -8,7 +8,7 @@ import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SET
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
-import { SOUNDTRACKS, soundtrack } from "../music";
+import { isAudioSongName, songChoices, songLabel } from "../music";
 import { ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
 import "./PropertiesPanel.css";
 
@@ -68,7 +68,7 @@ const ACROSS_REVERSE_TITLES: Partial<Record<ObjectType, string>> = {
 };
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
-export default function PropertiesPanel({ state, warnings, pathWarnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
+export default function PropertiesPanel({ state, warnings, pathWarnings, scale, triangles, dispatch, levelCfg, songs, onLevelCfg }: {
   state: EditorState;
   warnings: Set<number>;
   pathWarnings: Set<number>; // the path enemies whose paths leave the floor or run through a wall
@@ -76,6 +76,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
   triangles: Triangle[]; // the level's, for dropping a box to the floor
   dispatch: (action: EditorAction) => void;
   levelCfg: LevelCfg | null; // null with no level open
+  songs: string[]; // the audio files in the level's folder, which it can pick as its song
   onLevelCfg: (changes: Partial<LevelCfg>) => void;
 }) {
   const isShiftHeld = useShiftHeld();
@@ -346,23 +347,21 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     );
   };
 
-  const SOUNDTRACK_NAMES = SOUNDTRACKS.map(({ name }) => name);
-  // a soundtrack as the dropdown lists it: its levels, starred without aku aku's song
-  const soundtrackLabel = (name: string) => {
-    const { label, akuAkuSong } = soundtrack(name);
-    if (akuAkuSong) {
-      return label;
+  // what the Music section says about the song picked
+  const musicHint = (music: string) => {
+    if (isAudioSongName(music)) {
+      return `${music}, in the level's folder, plays on a loop, through aku aku's invincibility too.`;
     }
-    return `${label} *`;
+    return "The song of the game's levels named. A song starred has no aku aku song, so his invincibility keeps the level's playing.";
   };
 
   // the music the level plays in the game; saved to its level.cfg with the rest
   const renderMusicFields = (music: string) => (
     <>
       <h3>Music</h3>
-      <ChoiceField label="song" value={music} choices={SOUNDTRACK_NAMES} labelOf={soundtrackLabel} onChange={(name) => onLevelCfg({ music: name })} />
+      <ChoiceField label="song" value={music} choices={songChoices(songs, music)} labelOf={songLabel} onChange={(name) => onLevelCfg({ music: name })} />
       <p className="hint">
-        The song of the game's levels named. A song starred has no aku aku song, so his invincibility keeps the level's playing.
+        {musicHint(music)} Put an .mp3, .ogg, .flac or .wav in the level's folder to pick it here.
         Build the level to hear it in the game.
       </p>
     </>

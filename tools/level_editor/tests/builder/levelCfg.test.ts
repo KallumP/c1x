@@ -47,6 +47,14 @@ describe("a level's scale, turn and sky", () => {
     expect(levelOptions(sourceFolder("music = the_lost_city\n")).music).toBe("the_lost_city");
   });
 
+  test("level.cfg's music can be an audio file in the level's folder", () => {
+    for (const file of ["my song.mp3", "theme.ogg", "loop.FLAC", "take2.wav"]) {
+      const folder = sourceFolder(`music = ${file}\n`);
+      writeFileSync(join(folder, file), "");
+      expect(levelOptions(folder).music).toBe(file);
+    }
+  });
+
   test("ones given override level.cfg", () => {
     const folder = sourceFolder("turn = 270\nscale = 2000\n");
     expect(levelOptions(folder, { scale: 1000 })).toEqual({ scale: 1000, turn: 270, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC });
@@ -83,6 +91,14 @@ describe("a bad level.cfg is an error naming it and its line", () => {
 
   test("music that isn't one of the soundtracks, listing them", () => {
     expect(readError("music = sunset_vista\n")).toThrow(/level\.cfg, line 1: music has to be one of n_sanity_beach, jungle_rollers, .*, not sunset_vista/);
+  });
+
+  test("music naming an audio file the level's folder doesn't have", () => {
+    expect(readError("music = missing.mp3\n")).toThrow(/level\.cfg, line 1: music is missing\.mp3, but the level's folder has no file called that/);
+  });
+
+  test("music naming a file that isn't audio the game plays, listing the kinds it does", () => {
+    expect(readError("music = notes.txt\n")).toThrow(/music has to be one of n_sanity_beach, .*, or an audio file in the level's folder \(\.mp3, \.ogg, \.flac, \.wav\), not notes\.txt/);
   });
 
   test("a line without a value", () => {

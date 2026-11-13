@@ -2,16 +2,25 @@
 // editor's dev server: which there are, their files, and their objects.json
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
+import { isAudioSongName } from "../src/music";
 import { parseLevelCfg } from "./levelCfg";
 
 export interface LevelInfo {
   name: string;  // its folder
   obj: string;   // its .obj, in the folder
   scale: number; // game units per blender metre (level.cfg, or the default)
+  songs: string[]; // the audio files in the folder, any of which it can pick as its song
 }
 
 function objsIn(folder: string): string[] {
   return readdirSync(folder).filter((file) => file.toLowerCase().endsWith(".obj"));
+}
+
+// the audio files in the folder, by name (any case)
+function songsIn(folder: string): string[] {
+  return readdirSync(folder)
+    .filter((file) => isAudioSongName(file) && statSync(join(folder, file)).isFile())
+    .sort((first, second) => first.localeCompare(second, undefined, { sensitivity: "base" }));
 }
 
 // scale from the folder's level.cfg (the level build reads the same file), or the default
@@ -26,7 +35,7 @@ export function listLevels(root: string): LevelInfo[] {
     .filter((name) => statSync(join(root, name)).isDirectory())
     .map((name) => ({ name, objs: objsIn(join(root, name)) }))
     .filter((folder) => folder.objs.length === 1)
-    .map((folder) => ({ name: folder.name, obj: folder.objs[0], scale: scaleIn(join(root, folder.name)) }))
+    .map((folder) => ({ name: folder.name, obj: folder.objs[0], scale: scaleIn(join(root, folder.name)), songs: songsIn(join(root, folder.name)) }))
     .sort((first, second) => (first.name < second.name ? -1 : 1));
 }
 

@@ -41,6 +41,11 @@ export const DEFAULT_MUSIC = "jungle_rollers"; // what custom levels always play
 
 export const isMusicName = (name: string) => SOUNDTRACKS.some((soundtrack) => soundtrack.name === name);
 
+// a level's own song can instead be an audio file in its folder, of these kinds
+export const AUDIO_SONG_EXTENSIONS = [".mp3", ".ogg", ".flac", ".wav"];
+
+export const isAudioSongName = (name: string) => AUDIO_SONG_EXTENSIONS.some((extension) => name.toLowerCase().endsWith(extension) && name.length > extension.length);
+
 // the soundtrack called name (one of SOUNDTRACKS)
 export function soundtrack(name: string): Soundtrack {
   const found = SOUNDTRACKS.find((soundtrack) => soundtrack.name === name);
@@ -48,4 +53,27 @@ export function soundtrack(name: string): Soundtrack {
     throw new Error(`there's no soundtrack called ${name}`);
   }
   return found;
+}
+
+// the songs a level can pick: the audio files in its folder (with the one it
+// has picked, if its folder no longer has it), then the game's
+export function songChoices(songs: string[], music: string): string[] {
+  const own = [...songs];
+  if (isAudioSongName(music) && !own.includes(music)) {
+    own.push(music);
+  }
+  return [...own, ...SOUNDTRACKS.map(({ name }) => name)];
+}
+
+// a song as the Music dropdown lists it: a soundtrack by its levels, starred
+// without aku aku's song, or an audio file by its name
+export function songLabel(name: string): string {
+  if (isAudioSongName(name)) {
+    return `${name} (in the level's folder)`;
+  }
+  const { label, akuAkuSong } = soundtrack(name);
+  if (akuAkuSong) {
+    return label;
+  }
+  return `${label} *`;
 }

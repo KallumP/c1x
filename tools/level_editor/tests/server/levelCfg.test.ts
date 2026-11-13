@@ -99,6 +99,11 @@ describe("setLevelCfg", () => {
     expect(setLevelCfg("music = boulders\n", cfg())).toBe("music = jungle_rollers\nturn = 0\nscale = 400\n");
   });
 
+  test("reads and writes an audio file in the level's folder as the music", () => {
+    expect(parseLevelCfg("music = My Song.mp3\n").music).toBe("My Song.mp3");
+    expect(setLevelCfg("music = boulders\n", cfg({ music: "theme.ogg" }))).toBe("music = theme.ogg\nturn = 0\nscale = 400\n");
+  });
+
   test("refuses music that isn't one of the soundtracks", () => {
     expect(() => setLevelCfg("", cfg({ music: "sunset_vista" }))).toThrow("music has to be one of");
   });

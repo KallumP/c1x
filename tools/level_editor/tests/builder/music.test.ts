@@ -39,6 +39,11 @@ describe.skipIf(!hasLevels)("a level's music", () => {
     expect(entriesById(built).has(JUNGLE_ROLLERS_MUSIC)).toBe(true);
   });
 
+  test("with an audio file as its song, a level has jungle rollers' music underneath, as without music set", () => {
+    const built = build("my song.mp3");
+    expect(new Set(zoneMusic(built))).toEqual(new Set([JUNGLE_ROLLERS_MUSIC]));
+  });
+
   test("music set to another soundtrack is copied in, and every zone plays it", () => {
     const built = build("the_lost_city");
     const entries = entriesById(built);
