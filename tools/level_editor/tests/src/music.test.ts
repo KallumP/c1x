@@ -39,10 +39,10 @@ describe("soundtracks", () => {
     SOUNDTRACKS.forEach(({ name }) => expect(isAudioSongName(name)).toBe(false));
   });
 
-  test("the songs a level can pick: the game's, then the audio files in its folder", () => {
+  test("the songs a level can pick: the audio files in its folder first, then the game's", () => {
     const choices = songChoices(["a.mp3", "b.wav"], DEFAULT_MUSIC);
-    expect(choices.slice(0, SOUNDTRACKS.length)).toEqual(SOUNDTRACKS.map(({ name }) => name));
-    expect(choices.slice(SOUNDTRACKS.length)).toEqual(["a.mp3", "b.wav"]);
+    expect(choices.slice(0, 2)).toEqual(["a.mp3", "b.wav"]);
+    expect(choices.slice(2)).toEqual(SOUNDTRACKS.map(({ name }) => name));
   });
 
   test("an audio file a level has picked stays a choice when its folder no longer has it", () => {
