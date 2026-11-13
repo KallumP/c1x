@@ -48,6 +48,9 @@ describe("obstacle shapes", () => {
     { obstacle: "rotating_pegs", bottom: -3203, top: [-10, 30], across: [900, 1000], long: [900, 1000] },
     // slippery climb's lift platform PlUyG: a slab 802 x 797 across, its top at its spot, 338 thick
     { obstacle: "lift_platform", bottom: -338, top: [-10, 30], across: [760, 840], long: [760, 840] },
+    // sunset vista's floor fire has no model (its hole is its level's): a dark grate 600 across on its spot, its flame 1600 up
+    { obstacle: "floor_fire", bottom: 0, top: [1550, 1650], across: [550, 650], long: [550, 650] },
+    { obstacle: "steady_fire", bottom: 0, top: [1550, 1650], across: [550, 650], long: [550, 650] },
     // temple ruins' slamming walls, its two halves (RcRsG, RcLsG: 1200 across, 1031 tall, 606 deep) shut, meeting at its spot
     { obstacle: "slamming_walls", bottom: 0, top: [1000, 1060], across: [2350, 2450], long: [580, 640] },
     // temple ruins' rising pillar PlUsG: 953 across, its top at its spot and 3203 down

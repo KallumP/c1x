@@ -1262,6 +1262,38 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasSunsetVista)("floor fires, from sunset vista", () => {
+    const CRASH_BURNING = ["WF10V", "WF10G", "BDC0A", "BLI0A", "WF20V", "BDA0A", "WF30V", "WF40V", "WF50V"];
+    const fire = (type: "floor_fire" | "steady_fire", more: Partial<LevelObject> = {}) => {
+      const { level, entries, zone } = build([obstacle(type, more)]);
+      return { level, entries, placed: zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES[type]))! };
+    };
+
+    test.each(["floor_fire", "steady_fire"] as const)("a %s is sunset vista's RuiOC subtype 4 (the bats' code), at its spot, with crash's burning death", (type) => {
+      const { level, entries, placed } = fire(type);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([42, 4]);
+      expect(level.nsd.ldat.execMap[42]).toBe(stringToEid("RuiOC"));
+      expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+      const constants = entries.get(stringToEid("WillC"))!.items[2];
+      expect(CRASH_BURNING.map((_, index) => constants.readUInt32LE(0x80 + 4 * index))).toEqual(CRASH_BURNING.map(stringToEid));
+    });
+
+    // init flag B: the frames each of its flames waits from its last before it bursts again
+    test.each([
+      { type: "floor_fire", more: {}, frames: 60 },
+      { type: "floor_fire", more: { every: 5 }, frames: 150 },
+      { type: "steady_fire", more: {}, frames: 1 },
+    ] as const)("a $type ($more) waits $frames frames between its flames", ({ type, more, frames }) => {
+      expect(fire(type, more as Partial<LevelObject>).placed.readInt16LE(ENTITY_INIT_FLAGS + 2)).toBe(frames);
+    });
+
+    test("a level with floor fires and bats shares their code", () => {
+      const { level } = build([obstacle("floor_fire"), enemy("bat", { at: [1, 10, 0] })]);
+      expect(level.nsd.ldat.execMap[42]).toBe(stringToEid("RuiOC"));
+    });
+  });
+
   describe.skipIf(!hasSunsetVista)("bats, from sunset vista", () => {
     const bat = (more: Partial<LevelObject> = {}) => enemy("bat", { raise: 3, ...more });
     const leaderBats = (more: Partial<LevelObject> = {}) => bat({ enemy: "leader_bats", ...more });
