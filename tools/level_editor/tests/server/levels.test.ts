@@ -17,13 +17,15 @@ function level(name: string, files: Record<string, string>) {
 beforeEach(() => { root = mkdtempSync(join(tmpdir(), "level_src-")); });
 afterEach(() => { rmSync(root, { recursive: true, force: true }); });
 
+const NO_SONG = { mid: false, akuMid: false, sf2: false };
+
 describe("listLevels", () => {
   test("lists folders holding one .obj, by name, with its .obj", () => {
     level("b_level", { "map.obj": "", "map.mtl": "" });
     level("a_level", { "a.obj": "" });
     expect(listLevels(root)).toEqual([
-      { name: "a_level", obj: "a.obj", scale: 400 },
-      { name: "b_level", obj: "map.obj", scale: 400 },
+      { name: "a_level", obj: "a.obj", scale: 400, song: NO_SONG },
+      { name: "b_level", obj: "map.obj", scale: 400, song: NO_SONG },
     ]);
   });
 
@@ -32,6 +34,11 @@ describe("listLevels", () => {
     level("two", { "a.obj": "", "b.obj": "" });
     writeFileSync(join(root, "README.md"), "");
     expect(listLevels(root)).toEqual([]);
+  });
+
+  test("says which of its own song's files it has", () => {
+    level("songful", { "songful.obj": "", "music.mid": "", "music.sf2": "" });
+    expect(listLevels(root)[0].song).toEqual({ mid: true, akuMid: false, sf2: true });
   });
 
   test("takes the scale from level.cfg", () => {
