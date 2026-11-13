@@ -1606,6 +1606,23 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasLostCity)("falling platforms, from the lost city", () => {
+    // its code isn't boulder dash's, temple ruins' nor slippery climb's (each names its own models)
+    test("a falling platform is the lost city's PoPlC subtype 0, moved to slot 20, at its spot, with its slab (PlDwG)", () => {
+      const { level, entries, zone } = build([obstacle("falling_platform")]);
+      expect(OBSTACLE_ENTITIES.falling_platform).toEqual([20, 0]);
+      expect(level.nsd.ldat.execMap[20]).toBe(stringToEid("PoPWC"));
+      expect(entries.has(stringToEid("PlDwG"))).toBe(true);
+      const placed = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.falling_platform))!;
+      expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a level with falling and moving platforms and dropping pillars has all three pieces of code", () => {
+      const { level } = build([obstacle("falling_platform"), obstacle("moving_platform", { at: [1, 6, 0] }), obstacle("dropping_pillar", { at: [1, 10, 0] })]);
+      expect([20, 15, 11].map((slot) => level.nsd.ldat.execMap[slot])).toEqual(["PoPWC", "PoPCC", "PoPlC"].map(stringToEid));
+    });
+  });
+
   describe.skipIf(!hasSlipperyClimb)("moving platforms, from slippery climb", () => {
     const platform = (more: Partial<LevelObject> = {}) => {
       const { level, entries, zone } = build([obstacle("moving_platform", more)]);
