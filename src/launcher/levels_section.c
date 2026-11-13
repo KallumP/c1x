@@ -61,15 +61,12 @@ static void DrawBuilderMissing(const char *repo) {
 }
 
 static void DrawLevelRow(const char *repo, int index, int can_build) {
-  const char *status = "not built";
-
-  if (levels.built[index]) { status = "built"; }
   igTableNextRow(0, 0);
   igTableNextColumn();
   igAlignTextToFramePadding();
   igText("%s", levels.names[index]);
   igTableNextColumn();
-  igText("%s", status);
+  igText("%s", CustomLevelStatus(&levels, index));
   igTableNextColumn();
   igPushID_Int(index);
   igBeginDisabled(!can_build);
@@ -113,7 +110,7 @@ void DrawLevelsSection(const char *repo) {
   }
   DrawLevelTable(repo, CanBuildLevels(repo));
   if (igButton("Check again", (ImVec2){0, 0})) { LoadLevelsSection(repo); }
-  DrawTooltip("Look for new level sources in level_src/.");
+  DrawTooltip("Look for new level sources in level_src/, and ones saved since they were built.");
   igSpacing();
   DrawLevelBuildStatus();
   DrawCommandOutput("build_output", &build);
