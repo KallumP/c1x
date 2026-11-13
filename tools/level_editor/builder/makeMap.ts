@@ -30,6 +30,7 @@ import { levelEntity, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, wa
 import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
+import { soundtrackMusic, withMusic, type LevelMusic } from "./music";
 import { withSky } from "./zones";
 
 export { LID_TEST } from "./assembleLevel";
@@ -50,6 +51,7 @@ export interface MapOptions {
   sky?: Sky;                      // n. sanity beach's without one
   camera?: Camera;                // how the follow camera looks at crash; as it always was without one
   readOtherLevel?: (lid: number) => Level; // the real levels enemies are taken from (see OBJECT_DONORS)
+  music?: string;                 // one of the soundtracks (src/music.ts); jungle rollers' without one
 }
 
 // collision blocks for cells
@@ -780,11 +782,21 @@ const boxCount = (boxes: LevelObject[]) => boxes.reduce((sum, box) => sum + box.
 // the boxes crash can break: all but the iron and switch boxes
 const breakableBoxes = (boxes: LevelObject[]) => boxCount(boxes.filter((box) => !UNBREAKABLE_BOXES.includes(boxSubtype(box))));
 
+// the header every zone's is made from: the base level's, with the level's sky, and its music if it isn't the base level's
+function zoneHeaderTemplate(header: Buffer, sky: Sky, music: LevelMusic | null): Buffer {
+  const withItsSky = withSky(header, sky);
+  if (!music) {
+    return withItsSky;
+  }
+  return withMusic(withItsSky, music.eid);
+}
+
 export function makeMap(level: Level, text: string, options: MapOptions = {}): Level {
   const { scale = MAP_SCALE, turn = 0, images = new Map(), objects = [], sky = DEFAULT_SKY, camera = DEFAULT_CAMERA, readOtherLevel } = options;
+  const music = soundtrackMusic(options.music, readOtherLevel);
   const offsets = cameraOffsets(camera);
   const base = readTemplates(level);
-  const templates = { ...base, header: withSky(base.header, sky) }; // every zone's header is made from this one
+  const templates = { ...base, header: zoneHeaderTemplate(base.header, sky, music) }; // every zone's header is made from this one
   const map = fitMap(text, scale, turn);
   const { fitted, spans } = map;
   const spawn = objects.find((object) => object.kind === "spawn");
@@ -875,7 +887,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   for (let step = MAP_PATH_STEP; ; step *= 2) {
     try {
       const out = assembleLevel({
-        level, templates, size, zones: zonePlans(step), step, spawnZone, pageEids: withBase.pageEids, texturePages: pages, donors, camera,
+        level, templates, size, zones: zonePlans(step), step, spawnZone, pageEids: withBase.pageEids, texturePages: pages, donors, camera, music,
       });
       out.nsd.ldat.boxTotal = breakableBoxes(boxes);
       return out;

@@ -68,13 +68,17 @@ export function ColourField({ label, value, onChange }: {
   );
 }
 
-export function ChoiceField<Choice extends string>({ label, value, choices, onChange }: {
-  label: string; value: Choice; choices: readonly Choice[]; onChange: (value: Choice) => void;
+// a choice's name as a dropdown shows it, its first _ a space
+const spacedName = (choice: string) => choice.replace("_", " ");
+
+// a dropdown of choices, each shown as labelOf names it (its name, spaced, without)
+export function ChoiceField<Choice extends string>({ label, value, choices, onChange, labelOf = spacedName }: {
+  label: string; value: Choice; choices: readonly Choice[]; onChange: (value: Choice) => void; labelOf?: (choice: Choice) => string;
 }) {
   return (
     <Field label={label}>
       <select value={value} onChange={(event) => onChange(event.target.value as Choice)}>
-        {choices.map((choice) => <option key={choice} value={choice}>{choice.replace("_", " ")}</option>)}
+        {choices.map((choice) => <option key={choice} value={choice}>{labelOf(choice)}</option>)}
       </select>
     </Field>
   );

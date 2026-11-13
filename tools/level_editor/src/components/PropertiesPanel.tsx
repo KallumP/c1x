@@ -8,6 +8,7 @@ import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SET
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
+import { SOUNDTRACKS, soundtrack } from "../music";
 import { ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
 import "./PropertiesPanel.css";
 
@@ -345,6 +346,28 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     );
   };
 
+  const SOUNDTRACK_NAMES = SOUNDTRACKS.map(({ name }) => name);
+  // a soundtrack as the dropdown lists it: its levels, starred without aku aku's song
+  const soundtrackLabel = (name: string) => {
+    const { label, akuAkuSong } = soundtrack(name);
+    if (akuAkuSong) {
+      return label;
+    }
+    return `${label} *`;
+  };
+
+  // the music the level plays in the game; saved to its level.cfg with the rest
+  const renderMusicFields = (music: string) => (
+    <>
+      <h3>Music</h3>
+      <ChoiceField label="song" value={music} choices={SOUNDTRACK_NAMES} labelOf={soundtrackLabel} onChange={(name) => onLevelCfg({ music: name })} />
+      <p className="hint">
+        The song of the game's levels named. A song starred has no aku aku song, so his invincibility keeps the level's playing.
+        Build the level to hear it in the game.
+      </p>
+    </>
+  );
+
   const renderHint = () => (
     <p className="hint">
       Click an object to select it, then drag it across the floor. Pick something under Place and click the floor to add one.
@@ -372,6 +395,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
           {levelCfg && renderLevelFields(levelCfg)}
           {levelCfg && renderSkyFields(levelCfg.sky)}
           {levelCfg && renderCameraFields(levelCfg.camera)}
+          {levelCfg && renderMusicFields(levelCfg.music)}
           {renderHint()}
         </>
       )}

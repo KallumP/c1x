@@ -2,17 +2,19 @@ import { useEffect, useState } from "react";
 import { fetchLevelCfg, saveLevelCfg, type LevelCfg, type LevelInfo } from "../api";
 import { DEFAULT_CAMERA, type Camera } from "../camera";
 import { DEFAULT_SCALE } from "../coords";
+import { DEFAULT_MUSIC } from "../music";
 import { DEFAULT_SKY, isSameSky } from "../sky";
 
 const isSameCamera = (first: Camera, second: Camera) => first.distance === second.distance && first.angle === second.angle;
 
 const sameCfg = (first: LevelCfg, second: LevelCfg) =>
-  first.turn === second.turn && first.scale === second.scale && isSameSky(first.sky, second.sky) && isSameCamera(first.camera, second.camera);
+  first.turn === second.turn && first.scale === second.scale && isSameSky(first.sky, second.sky) && isSameCamera(first.camera, second.camera)
+  && first.music === second.music;
 
 // the level list's scale, until level.cfg is read, so boxes don't change size as it opens
-const listedCfg = (level: LevelInfo | null): LevelCfg => ({ turn: 0, scale: level ? level.scale : DEFAULT_SCALE, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA });
+const listedCfg = (level: LevelInfo | null): LevelCfg => ({ turn: 0, scale: level ? level.scale : DEFAULT_SCALE, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC });
 
-// the open level's turn, scale, sky and camera as they're edited: read from its level.cfg when it
+// the open level's turn, scale, sky, camera and music as they're edited: read from its level.cfg when it
 // opens, and written back on save. unsaved is whether they differ from the file
 export function useLevelCfg(level: LevelInfo | null, onError: (message: string) => void) {
   const [cfg, setCfg] = useState<LevelCfg>(listedCfg(level));

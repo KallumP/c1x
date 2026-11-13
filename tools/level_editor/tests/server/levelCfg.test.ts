@@ -4,10 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseLevelCfg, readLevelCfg, setLevelCfg, writeLevelCfg, type LevelCfg } from "../../server/levelCfg";
 import { DEFAULT_CAMERA } from "../../src/camera";
+import { DEFAULT_MUSIC } from "../../src/music";
 import { DEFAULT_SKY } from "../../src/sky";
 
 // the default level.cfg, with changes
-const cfg = (changes: Partial<LevelCfg> = {}): LevelCfg => ({ turn: 0, scale: 400, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, ...changes });
+const cfg = (changes: Partial<LevelCfg> = {}): LevelCfg => ({ turn: 0, scale: 400, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, ...changes });
 
 describe("parseLevelCfg", () => {
   test("reads turn and scale, skipping comments", () => {
@@ -32,6 +33,12 @@ describe("parseLevelCfg", () => {
     expect(parseLevelCfg("camera_distance = 1.5\ncamera_angle = 60\n").camera).toEqual({ distance: 1.5, angle: 60 });
     expect(parseLevelCfg("camera_angle = 30\n").camera).toEqual({ ...DEFAULT_CAMERA, angle: 30 });
     expect(parseLevelCfg("camera_distance = 9\ncamera_angle = 5\n").camera).toEqual(DEFAULT_CAMERA);
+  });
+
+  test("reads the music, jungle rollers' for what isn't set or isn't a soundtrack", () => {
+    expect(parseLevelCfg("music = the_lost_city\n").music).toBe("the_lost_city");
+    expect(parseLevelCfg("").music).toBe(DEFAULT_MUSIC);
+    expect(parseLevelCfg("music = sunset_vista\n").music).toBe(DEFAULT_MUSIC);
   });
 
   test("reads a negative turn", () => {
@@ -85,6 +92,15 @@ describe("setLevelCfg", () => {
   test("refuses a camera the build can't take", () => {
     expect(() => setLevelCfg("", cfg({ camera: { distance: 4, angle: 42 } }))).toThrow("camera_distance has to be 0.5 to 3");
     expect(() => setLevelCfg("", cfg({ camera: { distance: 1, angle: 90 } }))).toThrow("camera_angle has to be 10 to 80");
+  });
+
+  test("writes music that isn't jungle rollers', and changes a music line already there", () => {
+    expect(setLevelCfg("", cfg({ music: "the_lost_city" }))).toBe("turn = 0\nscale = 400\nmusic = the_lost_city\n");
+    expect(setLevelCfg("music = boulders\n", cfg())).toBe("music = jungle_rollers\nturn = 0\nscale = 400\n");
+  });
+
+  test("refuses music that isn't one of the soundtracks", () => {
+    expect(() => setLevelCfg("", cfg({ music: "sunset_vista" }))).toThrow("music has to be one of");
   });
 
   test("refuses a turn the build can't do", () => {

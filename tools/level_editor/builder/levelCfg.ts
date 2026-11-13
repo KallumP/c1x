@@ -1,10 +1,11 @@
-// a level source's level.cfg: the scale, turn, sky and camera the level is built with,
+// a level source's level.cfg: the scale, turn, sky, camera and music the level is built with,
 // one "key = value" a line. the build reads it strictly, so a mistake stops it
 // with a message; the editor reads it leniently (server/levelCfg.ts)
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DEFAULT_SCALE } from "../src/coords";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
+import { DEFAULT_MUSIC, isMusicName, SOUNDTRACKS } from "../src/music";
 import { DEFAULT_SKY, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 
 export const LEVEL_CFG = "level.cfg";
@@ -14,6 +15,7 @@ export interface LevelOptions {
   turn: number;  // degrees to turn the level about the up axis
   sky: Sky;
   camera: Camera;
+  music: string; // one of SOUNDTRACKS' names
 }
 
 // what a level.cfg sets, each by its key
@@ -25,11 +27,12 @@ export interface LevelCfgSettings {
   sky_split?: number;
   camera_distance?: number;
   camera_angle?: number;
+  music?: string;
 }
 
 const WHOLE_NUMBERS = ["scale", "turn"];
 const COLOURS = ["sky_top", "sky_bottom"];
-const SETTINGS = [...WHOLE_NUMBERS, ...COLOURS, "sky_split", "camera_distance", "camera_angle"];
+const SETTINGS = [...WHOLE_NUMBERS, ...COLOURS, "sky_split", "camera_distance", "camera_angle", "music"];
 
 const isComment = (line: string) => line === "" || line.startsWith("#");
 const isWholeNumber = (value: string) => /^[+-]?\d+$/.test(value);
@@ -73,8 +76,16 @@ function readCameraAngle(value: string, where: string): number {
   return angle;
 }
 
+// music: one of the soundtracks, by name
+function readMusic(value: string, where: string): string {
+  if (!isMusicName(value)) {
+    throw new Error(`${where}: music has to be one of ${SOUNDTRACKS.map(({ name }) => name).join(", ")}, not ${value || "nothing"}`);
+  }
+  return value;
+}
+
 // the setting one line gives; an unknown setting, or a value it can't take, is an error
-function readSetting(line: string, where: string): [keyof LevelCfgSettings, number | Rgb] {
+function readSetting(line: string, where: string): [keyof LevelCfgSettings, number | Rgb | string] {
   const equals = line.indexOf("=");
   if (equals < 0) {
     throw new Error(`${where}: expected key = value`);
@@ -96,6 +107,9 @@ function readSetting(line: string, where: string): [keyof LevelCfgSettings, numb
   if (key === "camera_angle") {
     return [key, readCameraAngle(value, where)];
   }
+  if (key === "music") {
+    return [key, readMusic(value, where)];
+  }
   return [key as keyof LevelCfgSettings, readWholeNumber(key, value, where)];
 }
 
@@ -105,7 +119,7 @@ export function readLevelCfg(folder: string): LevelCfgSettings {
   if (!existsSync(path)) {
     return {};
   }
-  const settings: Record<string, number | Rgb> = {};
+  const settings: Record<string, number | Rgb | string> = {};
   readFileSync(path, "utf8").split(/\r?\n/).forEach((rawLine, index) => {
     const line = rawLine.trim();
     if (!isComment(line)) {
@@ -133,7 +147,7 @@ function cameraOf(settings: LevelCfgSettings): Camera {
   };
 }
 
-// the scale, turn, sky and camera for the level source in folder: those given, else its level.cfg's, else the defaults
+// the scale, turn, sky, camera and music for the level source in folder: those given, else its level.cfg's, else the defaults
 export function levelOptions(folder: string, given: Partial<LevelOptions> = {}): LevelOptions {
   const settings = readLevelCfg(folder);
   return {
@@ -141,5 +155,6 @@ export function levelOptions(folder: string, given: Partial<LevelOptions> = {}):
     turn: given.turn ?? settings.turn ?? 0,
     sky: given.sky ?? skyOf(settings),
     camera: given.camera ?? cameraOf(settings),
+    music: given.music ?? settings.music ?? DEFAULT_MUSIC,
   };
 }

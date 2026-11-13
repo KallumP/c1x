@@ -13,6 +13,7 @@ export interface LevelCfg {
   scale: number; // game units per blender metre
   sky: Sky;
   camera: Camera; // how the follow camera looks at crash
+  music: string;  // one of the soundtracks (music.ts)
 }
 
 export interface BuildResult {

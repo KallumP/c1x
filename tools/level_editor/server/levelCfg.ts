@@ -1,10 +1,11 @@
-// a level source's level.cfg (see doc/custom_levels.md): the turn, scale, sky
-// and camera the level is built with (builder/levelCfg.ts reads it for the build),
+// a level source's level.cfg (see doc/custom_levels.md): the turn, scale, sky,
+// camera and music the level is built with (builder/levelCfg.ts reads it for the build),
 // read and set by the editor
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
 import { DEFAULT_SCALE } from "../src/coords";
+import { DEFAULT_MUSIC, isMusicName, SOUNDTRACKS } from "../src/music";
 import { DEFAULT_SKY, formatRgb, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 import { levelFolder } from "./levels";
 
@@ -13,6 +14,7 @@ export interface LevelCfg {
   scale: number; // game units per blender metre
   sky: Sky;
   camera: Camera;
+  music: string; // one of SOUNDTRACKS' names
 }
 
 const TURNS = [0, 90, 180, 270]; // the build turns in steps of 90 degrees
@@ -53,13 +55,23 @@ function parseCamera(text: string): Camera {
   };
 }
 
-// turn, scale, sky and camera from level.cfg's text, the defaults for what it doesn't set (or sets wrong)
+// the music: a soundtrack's name, jungle rollers' if it isn't one
+function parseMusic(text: string): string {
+  const music = settingValue(text, "music");
+  if (music !== undefined && isMusicName(music)) {
+    return music;
+  }
+  return DEFAULT_MUSIC;
+}
+
+// turn, scale, sky, camera and music from level.cfg's text, the defaults for what it doesn't set (or sets wrong)
 export function parseLevelCfg(text: string): LevelCfg {
   return {
     turn: parseWholeNumber(text, "turn", 0),
     scale: parseWholeNumber(text, "scale", DEFAULT_SCALE),
     sky: parseSky(text),
     camera: parseCamera(text),
+    music: parseMusic(text),
   };
 }
 
@@ -86,9 +98,12 @@ function checkLevelCfg(cfg: LevelCfg): void {
   if (!isCameraAngle(cfg.camera.angle)) {
     throw new Error(`camera_angle has to be ${CAMERA_ANGLE_MIN} to ${CAMERA_ANGLE_MAX}, not ${cfg.camera.angle}`);
   }
+  if (!isMusicName(cfg.music)) {
+    throw new Error(`music has to be one of ${SOUNDTRACKS.map(({ name }) => name).join(", ")}, not ${cfg.music}`);
+  }
 }
 
-// each setting's line, and whether it's its default (a default sky or camera setting is only written over a line it already has)
+// each setting's line, and whether it's its default (a default sky, camera or music setting is only written over a line it already has)
 function settingLines(cfg: LevelCfg): [string, string, boolean][] {
   return [
     ["turn", `turn = ${cfg.turn}`, false],
@@ -98,6 +113,7 @@ function settingLines(cfg: LevelCfg): [string, string, boolean][] {
     ["sky_bottom", `sky_bottom = ${formatRgb(cfg.sky.bottom)}`, formatRgb(cfg.sky.bottom) === formatRgb(DEFAULT_SKY.bottom)],
     ["camera_distance", `camera_distance = ${cfg.camera.distance}`, cfg.camera.distance === DEFAULT_CAMERA.distance],
     ["camera_angle", `camera_angle = ${cfg.camera.angle}`, cfg.camera.angle === DEFAULT_CAMERA.angle],
+    ["music", `music = ${cfg.music}`, cfg.music === DEFAULT_MUSIC],
   ];
 }
 
