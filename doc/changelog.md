@@ -9,6 +9,7 @@
 ### Changed
 
 - the level editor's mouse: left-drag moves the camera, right-drag turns it, only the left button picks up objects, and snap starts off
+- the level editor raises the end pad over the floor around it when it's placed or moved, and the included levels' end pads sit above the ground
 
 ## 2026-11-11
 
