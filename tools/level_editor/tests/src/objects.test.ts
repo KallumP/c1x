@@ -143,6 +143,30 @@ describe("switch numbers", () => {
   });
 });
 
+describe("outlines", () => {
+  const switchBox = (number: number) => ({ kind: "box", type: "switch", at: [0, 0, 0], switch: number });
+  const box = (type: string, fields: object) => ({ kind: "box", type, at: [0, 0, 0], ...fields });
+
+  test("reads the switch a box is an outline of, before or after it", () => {
+    const objects = parseObjects(JSON.stringify([box("life", { outline: 2 }), switchBox(1), switchBox(2), box("basic", { outline: 1 })]));
+    expect(objects.map((object) => object.outline)).toEqual([2, undefined, undefined, 1]);
+  });
+
+  test.each([
+    [[box("basic", { outline: 1 })], "object 1: there's no switch 1 for it to be an outline of"],
+    [[switchBox(1), box("basic", { outline: 0 })], "object 2: outline should be the number of a switch"],
+    [[switchBox(1), box("basic", { outline: "1" })], "object 2: outline should be the number of a switch"],
+    [[switchBox(1), { ...switchBox(2), outline: 1 }], "object 2: a switch can't be an outline"],
+  ])("refuses %j", (objects, message) => {
+    expect(() => parseObjects(JSON.stringify(objects))).toThrow(message);
+  });
+
+  test("writes the switch a box is an outline of after its stack", () => {
+    expect(formatObjects([{ kind: "box", box: "tnt", outline: 3, at: [0, 0, 0], raise: 0, stack: 2 }]))
+      .toBe('[\n  {"kind": "box", "type": "tnt", "at": [0, 0, 0], "stack": 2, "outline": 3}\n]\n');
+  });
+});
+
 describe("boxTypeName", () => {
   test("is the type a box was given", () => {
     expect(boxTypeName("life")).toBe("life");
