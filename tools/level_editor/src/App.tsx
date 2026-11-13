@@ -194,6 +194,7 @@ export default function App() {
         dispatch={dispatch}
         levelCfg={level ? levelCfg.cfg : null}
         onLevelCfg={levelCfg.change}
+        song={level?.song ?? null}
       />
     </div>
   );

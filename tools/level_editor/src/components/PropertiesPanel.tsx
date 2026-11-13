@@ -1,6 +1,6 @@
 // the selected object's settings, or the level's (its level.cfg) with nothing selected
 import { useEffect, useRef, useState } from "react";
-import type { LevelCfg } from "../api";
+import type { LevelCfg, LevelSong } from "../api";
 import type { EditorAction, EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeHeading, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
@@ -68,7 +68,7 @@ const ACROSS_REVERSE_TITLES: Partial<Record<ObjectType, string>> = {
 };
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
-export default function PropertiesPanel({ state, warnings, pathWarnings, scale, triangles, dispatch, levelCfg, onLevelCfg }: {
+export default function PropertiesPanel({ state, warnings, pathWarnings, scale, triangles, dispatch, levelCfg, onLevelCfg, song }: {
   state: EditorState;
   warnings: Set<number>;
   pathWarnings: Set<number>; // the path enemies whose paths leave the floor or run through a wall
@@ -77,6 +77,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
   dispatch: (action: EditorAction) => void;
   levelCfg: LevelCfg | null; // null with no level open
   onLevelCfg: (changes: Partial<LevelCfg>) => void;
+  song: LevelSong | null; // which of its own song's files the open level has
 }) {
   const isShiftHeld = useShiftHeld();
   const index = state.selected;
@@ -356,11 +357,25 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     return `${label} *`;
   };
 
+  // what plays with the level's own song (music.mid in its folder): on whose instruments, and with aku aku's song or not
+  const ownSongNote = (own: LevelSong) => {
+    let instruments = "on the instruments of the song picked here";
+    if (own.sf2) {
+      instruments = "on its music.sf2's instruments, so the song picked here isn't used";
+    }
+    let aku = " Without a music_aku.mid, aku aku's invincibility keeps it playing.";
+    if (own.akuMid) {
+      aku = " Its music_aku.mid is aku aku's song.";
+    }
+    return `This level has its own song, music.mid in its folder, which plays ${instruments}.${aku}`;
+  };
+
   // the music the level plays in the game; saved to its level.cfg with the rest
   const renderMusicFields = (music: string) => (
     <>
       <h3>Music</h3>
       <ChoiceField label="song" value={music} choices={SOUNDTRACK_NAMES} labelOf={soundtrackLabel} onChange={(name) => onLevelCfg({ music: name })} />
+      {song?.mid && <p className="hint">{ownSongNote(song)}</p>}
       <p className="hint">
         The song of the game's levels named. A song starred has no aku aku song, so his invincibility keeps the level's playing.
         Build the level to hear it in the game.

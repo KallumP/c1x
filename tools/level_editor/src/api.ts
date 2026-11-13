@@ -2,10 +2,18 @@
 import type { Camera } from "./camera";
 import type { Sky } from "./sky";
 
+// which of its own song's files a level has: music.mid, music_aku.mid and music.sf2 in its folder
+export interface LevelSong {
+  mid: boolean;
+  akuMid: boolean;
+  sf2: boolean;
+}
+
 export interface LevelInfo {
-  name: string;  // its folder in level_src/
-  obj: string;   // its .obj
-  scale: number; // game units per blender metre
+  name: string;    // its folder in level_src/
+  obj: string;     // its .obj
+  scale: number;   // game units per blender metre
+  song: LevelSong;
 }
 
 export interface LevelCfg {
