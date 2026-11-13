@@ -53,6 +53,7 @@
   {"kind": "box", "type": "basic", "at": [-7.5, 201, -0.9], "raise": 3.5},
   {"kind": "box", "type": "basic", "at": [-6.5, 123.25, -0.9], "raise": 4.5},
   {"kind": "box", "type": "basic", "at": [-1.75, 123.25, -0.9], "raise": 4.5},
+  {"kind": "box", "type": "life", "at": [-7.374, 220.552, -8.1], "raise": 12},
 
   {"kind": "enemy", "type": "plant", "at": [1, 89.5, -3.4]},
   {"kind": "enemy", "type": "plant", "at": [0, 92.5, -3.4]},
@@ -73,6 +74,9 @@
 
   {"kind": "obstacle", "type": "rolling_stone", "at": [-5.5, 151.5, 0.299]},
   {"kind": "obstacle", "type": "rolling_stone", "at": [0, 140, 0.438]},
+  {"kind": "obstacle", "type": "moving_platform", "at": [-8.506, 228.574, -8.1], "raise": 6, "path": [[0, 0, 0], [0.037, 9.562, 0], [9.281, 9.474, 0], [9.215, 0.037, 0]]},
+  {"kind": "obstacle", "type": "dropping_pillar", "at": [0.419, 246.358, -8.1], "raise": 7},
+  {"kind": "obstacle", "type": "dropping_pillar", "at": [-7.613, 220.757, -8.1], "raise": 9},
 
   {"kind": "end", "at": [-4, 257, -2.1], "raise": 0.32}
 ]
