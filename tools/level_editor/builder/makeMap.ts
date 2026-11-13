@@ -353,6 +353,33 @@ function withPegTurn(entity: Buffer, obstacle: LevelObject, scale: number): Buff
   return withInitFlagC(withInitFlagB(withInitFlagA(withNoRotationFromFlags(entity), radius), turn), preset);
 }
 
+// a floor fire's init flag B: the frames each of its flames waits from its
+// last before it bursts again (sunset vista's code); a steady fire's 1, so it
+// bursts again at once
+const STEADY_FIRE_WAIT = 1;
+function fireWait(fire: LevelObject): number {
+  if (fire.obstacle === "steady_fire") {
+    return STEADY_FIRE_WAIT;
+  }
+  return Math.round(numberSetting(fire, "every") * FRAMES_A_SECOND);
+}
+
+// entity with a floor or steady fire's wait in its init flag B, not turned by
+// its flags; any other obstacle's as it is
+function withFireTiming(entity: Buffer, obstacle: LevelObject): Buffer {
+  if (obstacle.obstacle !== "floor_fire" && obstacle.obstacle !== "steady_fire") {
+    return entity;
+  }
+  return withInitFlagB(withNoRotationFromFlags(entity), fireWait(obstacle));
+}
+
+// an object placed from its own level's entity (see placeWithItsPath) with
+// its settings in its flags: each of these changes only its own kind of object
+type SettingsInFlags = (entity: Buffer, object: LevelObject, scale: number) => Buffer;
+const OWN_SETTINGS: SettingsInFlags[] = [withGateTurn, withRiseTiming, withDropTiming, withBreakDelay, withPegTurn, withFireTiming];
+const withOwnSettings = (entity: Buffer, object: LevelObject, scale: number) =>
+  OWN_SETTINGS.reduce((settled, withSettings) => withSettings(settled, object, scale), entity);
+
 // how long a path through points is
 function pathLength(points: Vec3[]): number {
   return points.slice(1).reduce((sum, point, index) => sum + Math.hypot(...point.map((value, axis) => value - points[index][axis])), 0);
@@ -568,7 +595,7 @@ class ObjectPlacer {
   placeWithItsPath(object: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(object));
     const placed = withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(object.reverse === true));
-    this.entities[zone].push(withPegTurn(withBreakDelay(withDropTiming(withRiseTiming(withGateTurn(placed, object), object), object), object), object, this.scale));
+    this.entities[zone].push(withOwnSettings(placed, object, this.scale));
   }
 
   // a floating leaf or sliding pillar (example) moving along its path's nodes

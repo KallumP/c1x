@@ -85,6 +85,8 @@ export const OBSTACLE_COLOURS: Record<ObstacleType, string> = {
   breaking_plank: "#9a7048",
   rotating_pegs: "#6a7458",
   lift_platform: "#5a6658",
+  floor_fire: "#e8702a",
+  steady_fire: "#f04a1a",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";

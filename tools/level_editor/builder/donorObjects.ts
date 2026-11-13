@@ -88,6 +88,8 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   steam_vent: CASTLE_MACHINERY,
   moving_platform: SLIPPERY_CLIMB,
   lift_platform: SLIPPERY_CLIMB,
+  floor_fire: SUNSET_VISTA, // its ruins objects RuiOC, the bats'
+  steady_fire: SUNSET_VISTA,
   dropping_platform: SUNSET_VISTA,
   falling_platform: THE_LOST_CITY,
   seesaw: SUNSET_VISTA,
@@ -450,6 +452,8 @@ const OBJECT_CRASH_ENTRIES: Partial<Record<ObjectType, { item: number; at: numbe
   electric_scientist: [{ item: CRASH_ANIMATIONS, at: 72 + ANIMATION_EID, name: "WS10V" }],
   fire_pit: crashBurning,
   steam_vent: crashBurning, // castle machinery's steam burns him as the great gate's flames do
+  floor_fire: crashBurning, // and sunset vista's fire
+  steady_fire: crashBurning,
 };
 
 // object with the entries it needs crash's code to name (OBJECT_CRASH_ENTRIES),
@@ -478,6 +482,8 @@ const OBJECT_BOTH_SIDED_MODELS: Partial<Record<ObjectType, string[]>> = {
   slamming_walls: RUINS_BOTH_SIDED_MODELS,
   rotating_pegs: RUINS_BOTH_SIDED_MODELS, // its code is the slamming walls', the same
   bat: RUINS_BOTH_SIDED_MODELS,
+  floor_fire: RUINS_BOTH_SIDED_MODELS, // the bats' code, changed the same
+  steady_fire: RUINS_BOTH_SIDED_MODELS,
   leader_bats: RUINS_BOTH_SIDED_MODELS,
   wooden_peg: GATE_BOTH_SIDED_MODELS,
   rising_spiked_log: GATE_BOTH_SIDED_MODELS,
