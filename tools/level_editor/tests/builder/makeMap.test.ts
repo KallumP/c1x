@@ -827,6 +827,21 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(build([obstacle("rotating_platforms")]).entries.has(stringToEid("Rw1wG"))).toBe(true);
     });
 
+    // init flag A: the frames it shakes before it drops; B: the frames it stays dropped;
+    // C 0: its short platform (Rw2w; 1 its long one, Rw4w)
+    test.each([
+      { more: {}, flags: [20, 60, 0] },
+      { more: { shake: 1, down: 3 }, flags: [30, 90, 0] },
+    ])("a dropping platform ($more) is sunset vista's RWaOC subtype 10, at its spot, its timing in its init flags, not turned by them", ({ more, flags }) => {
+      const { zone, entries } = build([obstacle("dropping_platform", more as Partial<LevelObject>)]);
+      expect(OBSTACLE_ENTITIES.dropping_platform).toEqual([46, 10]);
+      expect(entries.has(stringToEid("Rw2wG"))).toBe(true);
+      const placed = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.dropping_platform))!;
+      expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
+      expect(initFlagsOf(zone, OBSTACLE_ENTITIES.dropping_platform)).toEqual(flags);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
+
     test("pushing blocks and platforms read sunset vista once", () => {
       const reader = recordingReader();
       build([obstacle("pushing_block"), obstacle("pushing_platform", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
@@ -1588,6 +1603,23 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(placed.path[0][1], FLOOR_Y, 8);
       expectNear(placed.path.at(-1)![1], FLOOR_Y + 1200, 8);
       stepLengths(placed.path).forEach((step) => expectNear(step, 75, 8));
+    });
+  });
+
+  describe.skipIf(!hasLostCity)("falling platforms, from the lost city", () => {
+    // its code isn't boulder dash's, temple ruins' nor slippery climb's (each names its own models)
+    test("a falling platform is the lost city's PoPlC subtype 0, moved to slot 20, at its spot, with its slab (PlDwG)", () => {
+      const { level, entries, zone } = build([obstacle("falling_platform")]);
+      expect(OBSTACLE_ENTITIES.falling_platform).toEqual([20, 0]);
+      expect(level.nsd.ldat.execMap[20]).toBe(stringToEid("PoPWC"));
+      expect(entries.has(stringToEid("PlDwG"))).toBe(true);
+      const placed = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.falling_platform))!;
+      expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a level with falling and moving platforms and dropping pillars has all three pieces of code", () => {
+      const { level } = build([obstacle("falling_platform"), obstacle("moving_platform", { at: [1, 6, 0] }), obstacle("dropping_pillar", { at: [1, 10, 0] })]);
+      expect([20, 15, 11].map((slot) => level.nsd.ldat.execMap[slot])).toEqual(["PoPWC", "PoPCC", "PoPlC"].map(stringToEid));
     });
   });
 

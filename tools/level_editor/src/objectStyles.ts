@@ -78,6 +78,8 @@ export const OBSTACLE_COLOURS: Record<ObstacleType, string> = {
   bounce_pad: "#a83a2a",
   steam_vent: "#c8ccd4",
   moving_platform: "#5c6a4a",
+  dropping_platform: "#7a5a48",
+  falling_platform: "#6a6478",
 };
 
 export const SPAWN_COLOUR = "#ff9a1f";

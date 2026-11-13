@@ -308,6 +308,18 @@ function withRideSpeed(entity: Buffer, obstacle: LevelObject, points: number, le
   return withInitFlagA(withNoRotationFromFlags(entity), platformRideStep(obstacle, points, length, scale));
 }
 
+// entity with a dropping platform's timing in its init flags (A the frames it
+// shakes before it drops, B the frames it stays dropped), not turned by them;
+// any other obstacle's as it is
+function withDropTiming(entity: Buffer, obstacle: LevelObject): Buffer {
+  if (obstacle.obstacle !== "dropping_platform") {
+    return entity;
+  }
+  const shake = Math.round(numberSetting(obstacle, "shake") * FRAMES_A_SECOND);
+  const down = Math.round(numberSetting(obstacle, "down") * FRAMES_A_SECOND);
+  return withInitFlagB(withInitFlagA(withNoRotationFromFlags(entity), shake), down);
+}
+
 // how long a path through points is
 function pathLength(points: Vec3[]): number {
   return points.slice(1).reduce((sum, point, index) => sum + Math.hypot(...point.map((value, axis) => value - points[index][axis])), 0);
@@ -523,7 +535,7 @@ class ObjectPlacer {
   placeWithItsPath(object: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(object));
     const placed = withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(object.reverse === true));
-    this.entities[zone].push(withRiseTiming(withGateTurn(placed, object), object));
+    this.entities[zone].push(withDropTiming(withRiseTiming(withGateTurn(placed, object), object), object));
   }
 
   // a floating leaf or sliding pillar (example) moving along its path's nodes

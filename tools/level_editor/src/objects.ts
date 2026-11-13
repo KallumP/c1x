@@ -98,7 +98,11 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // - steam_vent
 // slippery climb's stone slab, sliding along its path and back:
 // - moving_platform
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform", "bounce_pad", "steam_vent", "moving_platform"] as const;
+// sunset vista's stone platform out of its wall, shaking when crash stands on it, then dropping a while:
+// - dropping_platform
+// the lost city's carved slab, falling as soon as crash stands on it, then floating back up:
+// - falling_platform
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform", "bounce_pad", "steam_vent", "moving_platform", "dropping_platform", "falling_platform"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
@@ -209,6 +213,15 @@ export const ROTATING_RADIUS = 3.5;
 export const ROTATING_RADIUS_MIN = 1;
 export const ROTATING_RADIUS_MAX = 10;
 
+// the seconds a dropping platform shakes before it drops, and stays dropped:
+// without, sunset vista's code's own 20 and 60 frames
+export const SHAKE = 20 / 30;
+export const SHAKE_MIN = 0.25;
+export const SHAKE_MAX = 5;
+export const DOWN = 2;
+export const DOWN_MIN = 0.5;
+export const DOWN_MAX = 10;
+
 // how many go round a rotating obstacle without a platforms
 function platformsFallback(type: ObjectType | undefined): number {
   if (type === "rotating_pots") {
@@ -235,7 +248,7 @@ const everyFallback = (type: ObjectType | undefined): number => TIMED_EVERY[type
 // the enemy settings that are a number in a range, and for each: the enemies
 // that have it (named for messages), its range, whether it's whole, what it is
 // without one (left out of objects.json), and what it means
-export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range", "length", "angle", "rotation", "every", "offset", "platforms", "radius"] as const;
+export const NUMBER_SETTINGS = ["speed", "start", "count", "delay", "range", "length", "angle", "rotation", "every", "offset", "platforms", "radius", "shake", "down"] as const;
 export type NumberSetting = (typeof NUMBER_SETTINGS)[number];
 
 interface NumberSettingRule {
@@ -261,6 +274,8 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   offset: { types: [...TIMED_OBSTACLES, "slamming_walls", "rising_pillar"], typesNamed: "spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, slamming walls, rising pillars and steam vents", min: 0, max: TIMED_EVERY_MAX, whole: false, fallback: () => 0, meaning: "the seconds its pushes or flames are put off by" },
   platforms: { types: ROTATING_OBSTACLES, typesNamed: "rotating pots and platforms", min: 1, max: ROTATING_PLATFORMS_MAX, whole: true, fallback: platformsFallback, meaning: "how many go round" },
   radius: { types: ROTATING_OBSTACLES, typesNamed: "rotating pots and platforms", min: ROTATING_RADIUS_MIN, max: ROTATING_RADIUS_MAX, whole: false, fallback: () => ROTATING_RADIUS, meaning: "how far out they go round, in metres" },
+  shake: { types: ["dropping_platform"], typesNamed: "dropping platforms", min: SHAKE_MIN, max: SHAKE_MAX, whole: false, fallback: () => SHAKE, meaning: "the seconds it shakes before it drops" },
+  down: { types: ["dropping_platform"], typesNamed: "dropping platforms", min: DOWN_MIN, max: DOWN_MAX, whole: false, fallback: () => DOWN, meaning: "the seconds it stays dropped" },
   range: { types: ["gunman"], typesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },
 };
 
@@ -292,6 +307,8 @@ export interface LevelObject {
   rotation?: number;    // which way a mossy slide slides down: degrees anticlockwise seen from above, from across the map (0 without one)
   platforms?: number;   // how many rotating pots or platforms go round (platformsFallback without one)
   radius?: number;      // how far out rotating pots or platforms go round, in metres (ROTATING_RADIUS without one)
+  shake?: number;       // the seconds a dropping platform shakes before it drops (SHAKE without one)
+  down?: number;        // the seconds a dropping platform stays dropped (DOWN without one)
   count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
   every?: number;       // the seconds between a timed obstacle's pushes or flames (its own level's without one: see TIMED_EVERY)
   offset?: number;      // the seconds a spiked log's pushes are put off by, so a row can push in turn (0 without one)
@@ -332,7 +349,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
-const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset", "platforms", "radius"];
+const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset", "platforms", "radius", "shake", "down"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
 // a word with "a" or "an" before it, as it sounds: "a box", "an enemy"

@@ -34,6 +34,10 @@ describe("obstacle shapes", () => {
     // pushing platform Rw3wG (741 across, 178 thick, 1838 out), each pushed out
     { obstacle: "pushing_block", bottom: 0, top: [1550, 1650], across: [760, 840], long: [1950, 2050] },
     { obstacle: "pushing_platform", bottom: -206, top: [-60, 0], across: [700, 780], long: [1790, 1890] },
+    // sunset vista's dropping platform Rw2wG: a slab 742 across, 172 thick, just under its spot, 1039 out towards the player
+    { obstacle: "dropping_platform", bottom: -203, top: [-45, -15], across: [700, 780], long: [1000, 1080] },
+    // the lost city's falling platform PlDwG: a carved slab 969 x 969 across, its top at its spot, 444 deep
+    { obstacle: "falling_platform", bottom: -444, top: [-10, 30], across: [930, 1010], long: [930, 1010] },
     // temple ruins' slamming walls, its two halves (RcRsG, RcLsG: 1200 across, 1031 tall, 606 deep) shut, meeting at its spot
     { obstacle: "slamming_walls", bottom: 0, top: [1000, 1060], across: [2350, 2450], long: [580, 640] },
     // temple ruins' rising pillar PlUsG: 953 across, its top at its spot and 3203 down
