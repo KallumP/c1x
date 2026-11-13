@@ -6,6 +6,9 @@ const CLICK_PIXELS = 4; // the pointer moving further than this between down and
 
 export const isClick = (event: ThreeEvent<MouseEvent>) => event.delta <= CLICK_PIXELS;
 
+// only the left button selects and drags objects; the others are the camera's
+export const isLeftPress = (event: { button: number }) => event.button === 0;
+
 // the blender position a click on the level places an object at, or null off the floor
 export function clickedFloor(event: ThreeEvent<MouseEvent>, grid: number): Vec3 | null {
   if (!event.face) {

@@ -10,6 +10,7 @@ import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNod
 import { vialArc } from "../labAssistantThrow";
 import { GATES, isPathEnemy, isPathObstacle, numberSetting, pegCount, PATH_ENEMIES, PATH_OBSTACLES, ROTATING_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
+import { isLeftPress } from "../three/clicks";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
 const STONE_THICKNESS = 0.35; // of the rolling stone's radius
@@ -95,6 +96,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   // pressing on an object grabs it; its click stops here, so it doesn't reach
   // the level behind it (which would clear the selection, or place an object)
   const grab = (index: number) => (event: ThreeEvent<PointerEvent>) => {
+    if (!isLeftPress(event)) {
+      return;
+    }
     event.stopPropagation();
     onSelect(index);
   };
@@ -102,6 +106,9 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
 
   // pressing on a path's node's handle grabs the node, not its enemy
   const grabNode = (index: number, node: number) => (event: ThreeEvent<PointerEvent>) => {
+    if (!isLeftPress(event)) {
+      return;
+    }
     event.stopPropagation();
     onSelectNode(index, node);
   };
