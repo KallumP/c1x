@@ -2,6 +2,7 @@
 // changes that can be undone and redone
 import { nodeCount, pathPositions, withNodeAt } from "./enemyPaths";
 import { BAT_ROOST_HEIGHT, DEFAULT_SCALE, LEADER_BAT_HEIGHT } from "./coords";
+import { END_PAD_LIFT } from "./endPad";
 import { BOX_TYPES, ENEMY_TYPES, OBSTACLE_TYPES, type BoxType, type EnemyType, type LevelObject, type ObstacleType, type Vec3 } from "./objects";
 
 export type Placeable = "spawn" | "end" | BoxType | EnemyType | ObstacleType;
@@ -62,6 +63,15 @@ const NEW_ENEMY_HEIGHTS: Partial<Record<EnemyType, number>> = { bat: BAT_ROOST_H
 // how far a new enemy is raised, in metres for a level at scale
 const newEnemyRaise = (enemy: EnemyType, scale: number) => (NEW_ENEMY_HEIGHTS[enemy] ?? 0) / scale;
 
+// how far a new object of a kind is raised: the end pad's base only reaches
+// 16 game units over where it stands, so it's lifted to show over the floor
+function newKindRaise(kind: LevelObject["kind"], scale: number): number {
+  if (kind === "end") {
+    return END_PAD_LIFT / scale;
+  }
+  return 0;
+}
+
 export function newObject(what: Placeable, at: Vec3, scale = DEFAULT_SCALE): LevelObject {
   if (isEnemyType(what)) {
     return { kind: "enemy", enemy: what, at, raise: newEnemyRaise(what, scale), stack: 1 };
@@ -70,7 +80,7 @@ export function newObject(what: Placeable, at: Vec3, scale = DEFAULT_SCALE): Lev
     return { kind: "obstacle", obstacle: what, at, raise: 0, stack: 1 };
   }
   const kind = what in BOX_TYPES ? "box" : (what as "spawn" | "end");
-  const object: LevelObject = { kind, at, raise: 0, stack: 1 };
+  const object: LevelObject = { kind, at, raise: newKindRaise(kind, scale), stack: 1 };
   if (kind === "box") {
     object.box = what as BoxType;
   }

@@ -22,9 +22,13 @@ describe("newObject", () => {
   test.each([
     ["life", { kind: "box", box: "life" }],
     ["spawn", { kind: "spawn" }],
-    ["end", { kind: "end" }],
   ] as const)("a new %s stands where it's put", (what, kind) => {
     expect(newObject(what, [1, 2, 3])).toEqual({ ...kind, at: [1, 2, 3], raise: 0, stack: 1 });
+  });
+
+  test("a new end pad starts raised 128 game units, at the level's scale, so its base shows over the floor", () => {
+    expect(newObject("end", [1, 2, 3], 400)).toEqual({ kind: "end", at: [1, 2, 3], raise: 128 / 400, stack: 1 });
+    expect(newObject("end", [1, 2, 3], 2000).raise).toBeCloseTo(128 / 2000);
   });
 });
 
