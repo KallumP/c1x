@@ -23,9 +23,9 @@ describe("parseObjects", () => {
       {"kind": "box", "type": "tnt", "at": [0, 0, 0]},
       {"kind": "box", "type": "iron_arrow", "at": [1, 0, 0]},
       {"kind": "box", "subtype": 19, "at": [2, 0, 0]},
-      {"kind": "box", "subtype": 11, "at": [3, 0, 0]}
+      {"kind": "box", "subtype": 0, "at": [3, 0, 0]}
     ]`);
-    expect(objects.map((object) => object.box)).toEqual(["tnt", "iron_arrow", 19, 11]);
+    expect(objects.map((object) => object.box)).toEqual(["tnt", "iron_arrow", 19, 0]);
   });
 
   test.each([

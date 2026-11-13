@@ -2095,7 +2095,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
   });
 
   test("tnts count towards the box total, iron arrows and outlines don't", () => {
-    const objects = [box([1, 2, 0.5], 0), box([-1, 2, 0.5], 11), box([1, 3, 0.5], 15), box([-1, 3, 0.5], 19)];
+    const objects = [box([1, 2, 0.5], 0), box([-1, 2, 0.5], 0), box([1, 3, 0.5], 15), box([-1, 3, 0.5], 19)];
     expect(build(objects).level.nsd.ldat.boxTotal).toBe(2);
   });
 
