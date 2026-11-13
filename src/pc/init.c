@@ -16,6 +16,7 @@
 #include "pc/replay.h"
 #include "pc/fps.h"
 #include "pc/fullscreen.h"
+#include "pc/levelsong.h"
 
 #define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 768
@@ -188,6 +189,7 @@ static void InitBootLevel() {
     return;
   }
   NSSetCustomLevel(level);
+  LevelSongFind(level, &custom_level_song);
   boot_lid = LID_TEST;
 }
 
