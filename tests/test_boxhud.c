@@ -104,6 +104,16 @@ UTEST(boxhud, the_counter_starts_on_the_boxes_already_broken_so_it_doesnt_slide_
   ASSERT_EQ(source.regs[HUD_COUNT_REG], counter.regs[HUD_COUNT_REG]);
 }
 
+/* a counter slides in while its count differs from its source's, so a box breaking mustn't make them differ (triangle still shows it) */
+UTEST(boxhud, the_counter_keeps_up_with_boxes_broken_so_a_box_breaking_doesnt_slide_it_in) {
+  StartLivesCounter();
+  BoxHudShowBoxes(&source, 12 << 8);
+  BoxHudSetUpCounter(&counter, &source);
+  BoxHudShowBoxes(&source, 13 << 8);
+  BoxHudKeepCount(&counter, &source);
+  ASSERT_EQ((uint32_t)(13 << 8), counter.regs[HUD_COUNT_REG]);
+}
+
 UTEST(boxhud, the_text_is_boxes_broken_out_of_the_total) {
   char text[16];
 
