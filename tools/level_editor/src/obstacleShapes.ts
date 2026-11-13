@@ -316,6 +316,16 @@ function fallingPlatform(): ShapePart[] {
   return [squareSlab(across, deep, -deep, RUINS_COLOURS.stone)];
 }
 
+const SEESAW_BLOCK = { across: 600, high: 600, out: 800 };
+const SEESAW_BLOCKS_AT = [-1600, -800, 0, 800, 1600];
+
+// sunset vista's seesaw (its first's layout): five stone blocks (Rp4wG, 600
+// across and high, 800 out from their wall), its own at its spot and two either side
+function seesaw(): ShapePart[] {
+  const { across, high, out } = SEESAW_BLOCK;
+  return SEESAW_BLOCKS_AT.map((x) => ({ kind: "box", size: [across, high, out], at: [x, -high / 2, out / 2], colour: RUINS_COLOURS.stone }));
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
@@ -323,4 +333,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw() };

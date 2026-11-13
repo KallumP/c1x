@@ -38,6 +38,8 @@ describe("obstacle shapes", () => {
     { obstacle: "dropping_platform", bottom: -203, top: [-45, -15], across: [700, 780], long: [1000, 1080] },
     // the lost city's falling platform PlDwG: a carved slab 969 x 969 across, its top at its spot, 444 deep
     { obstacle: "falling_platform", bottom: -444, top: [-10, 30], across: [930, 1010], long: [930, 1010] },
+    // sunset vista's seesaw: four blocks (Rp4wG, 600 x 600, 800 out), two either side of its spot at 800 and 1600
+    { obstacle: "seesaw", bottom: -600, top: [-10, 30], across: [3700, 3900], long: [760, 840] },
     // temple ruins' slamming walls, its two halves (RcRsG, RcLsG: 1200 across, 1031 tall, 606 deep) shut, meeting at its spot
     { obstacle: "slamming_walls", bottom: 0, top: [1000, 1060], across: [2350, 2450], long: [580, 640] },
     // temple ruins' rising pillar PlUsG: 953 across, its top at its spot and 3203 down
