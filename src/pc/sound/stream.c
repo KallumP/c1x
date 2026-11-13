@@ -74,6 +74,7 @@ int StreamSongLoad(const char *path, stream_song *song) {
   song->samples = 0;
   song->frames = 0;
   song->at = 0;
+  song->playing = 0;
   samples = ReadWholeFile(path, &info);
   if (!samples || info.frames <= 0 || info.channels <= 0) {
     free(samples);
@@ -89,15 +90,29 @@ void StreamSongFree(stream_song *song) {
   song->samples = 0;
   song->frames = 0;
   song->at = 0;
+  song->playing = 0;
 }
 
-/* the song's next frames, back round to its start at its end; silence without one */
+/* plays the song from its start */
+void StreamSongPlay(stream_song *song) {
+  song->at = 0;
+  song->playing = 1;
+}
+
+/* stops the song, back at its start */
+void StreamSongStop(stream_song *song) {
+  song->playing = 0;
+  song->at = 0;
+}
+
+/* the song's next frames, back round to its start at its end; silence when it isn't playing */
 void StreamSongRead(stream_song *song, int16_t *out, int frames) {
   int i;
 
   for (i = 0; i < frames; i++) {
-    if (!song->frames) {
-      out[2*i] = out[2*i + 1] = 0;
+    if (!song->playing || !song->frames) {
+      out[2*i] = 0;
+      out[2*i + 1] = 0;
       continue;
     }
     out[2*i] = song->samples[2*song->at];

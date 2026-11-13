@@ -15,10 +15,13 @@ typedef struct {
   int16_t *samples; /* left, right, left, right... */
   size_t frames;
   size_t at;        /* the next frame to play */
+  int playing;
 } stream_song;
 
 extern int StreamSongLoad(const char *path, stream_song *song);
 extern void StreamSongFree(stream_song *song);
+extern void StreamSongPlay(stream_song *song);
+extern void StreamSongStop(stream_song *song);
 extern void StreamSongRead(stream_song *song, int16_t *out, int frames);
 
 #endif /* _PC_SOUND_STREAM_H_ */
