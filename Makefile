@@ -32,6 +32,7 @@ SRC =	src/ns.c \
 	src/pc/spin.c \
 	src/pc/levelend.c \
 	src/pc/boxhud.c \
+	src/pc/levelsong.c \
 	src/pc/boxtotals.c \
 	src/pc/slash.c \
 	src/pc/screen_fit.c \
@@ -69,6 +70,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/spin.c \
 	src/pc/levelend.c \
 	src/pc/boxhud.c \
+	src/pc/levelsong.c \
 	src/pc/boxtotals.c \
 	src/pc/slash.c \
 	src/pc/screen_fit.c \
