@@ -100,7 +100,9 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // - moving_platform
 // sunset vista's stone platform out of its wall, shaking when crash stands on it, then dropping a while:
 // - dropping_platform
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform", "bounce_pad", "steam_vent", "moving_platform", "dropping_platform"] as const;
+// the lost city's carved slab, falling as soon as crash stands on it, then floating back up:
+// - falling_platform
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform", "bounce_pad", "steam_vent", "moving_platform", "dropping_platform", "falling_platform"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)

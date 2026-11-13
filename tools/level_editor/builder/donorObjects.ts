@@ -88,6 +88,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   steam_vent: CASTLE_MACHINERY,
   moving_platform: SLIPPERY_CLIMB,
   dropping_platform: SUNSET_VISTA,
+  falling_platform: THE_LOST_CITY,
 };
 
 export interface DonorObject {
