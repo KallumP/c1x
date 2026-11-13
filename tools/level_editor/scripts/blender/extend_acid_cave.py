@@ -22,6 +22,7 @@ TEMPLE_SHIFT = 85.0  # the temple, laid out from the cut level's end, moved alon
 
 EXTENSION = ("ext_", "pit_ext")
 CUT_LEVEL_MESHES = ("k0_4W", "k1_4W", "k2_4W", "k3_4W", "k4_4W")
+END_WALL_MATERIALS = ("tex_088", "tex_089")  # the carved stone of the cut level's end chamber's north wall
 
 
 # the sections, along +y from the cut level's end
@@ -159,19 +160,27 @@ def open_cut_level_end():
         mesh = bmesh.new()
         mesh.from_mesh(obj.data)
         is_floor_only = name == "collision_floor"
-        doomed = [face for face in mesh.faces if blocks_the_way(face.calc_center_median(), is_floor_only)]
+        doomed = [face for face in mesh.faces if blocks_the_way(face.calc_center_median(), material_name(obj, face), is_floor_only)]
         bmesh.ops.delete(mesh, geom=doomed, context="FACES")
         mesh.to_mesh(obj.data)
         mesh.free()
 
 
-def blocks_the_way(centre, is_floor_only):
+def material_name(obj, face):
+    if face.material_index >= len(obj.data.materials):
+        return ""
+    return obj.data.materials[face.material_index].name
+
+
+def blocks_the_way(centre, material, is_floor_only):
+    """the cut level's end chamber's north wall, and its ground past there; the rock
+    either side stays whole, or the camera sees through the holes left in it"""
     x, y, z = centre
     if is_floor_only:
         return X_RANGE[0] < x < X_RANGE[1] and y > 76.5
     if not -7.5 < x < 0.5:
         return False
-    return y > 77 or (y > 75 and z > 0.7)
+    return y > 77 or (y > 75 and z > 0.7 and material in END_WALL_MATERIALS)
 
 
 # all of it
