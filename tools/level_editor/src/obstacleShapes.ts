@@ -368,6 +368,16 @@ function liftPlatform(): ShapePart[] {
   ];
 }
 
+const FLOOR_FIRE = { across: 600, grate: 40, flame: 1600 };
+const FIRE_COLOURS = { grate: "#2a2624", flame: "#ff7a1f" };
+
+// sunset vista's floor fire, which has no model (its hole is its level's): a
+// dark square grate 600 across on its spot, and its flame, a column 1600 up from it
+function floorFire(): ShapePart[] {
+  const { across, grate, flame } = FLOOR_FIRE;
+  return [squareSlab(across, grate, 0, FIRE_COLOURS.grate), squareSlab(across * 0.6, flame - grate, grate, FIRE_COLOURS.flame)];
+}
+
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
 export type ModelledObstacle = Exclude<ObstacleType, "rolling_stone" | "mossy_slide">;
 
@@ -375,4 +385,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw(), timed_plank: timedPlank(), breaking_plank: breakingPlank(), rotating_pegs: rotatingPeg(), lift_platform: liftPlatform() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw(), timed_plank: timedPlank(), breaking_plank: breakingPlank(), rotating_pegs: rotatingPeg(), lift_platform: liftPlatform(), floor_fire: floorFire(), steady_fire: floorFire() };

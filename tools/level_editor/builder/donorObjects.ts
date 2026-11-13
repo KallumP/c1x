@@ -88,6 +88,8 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   steam_vent: CASTLE_MACHINERY,
   moving_platform: SLIPPERY_CLIMB,
   lift_platform: SLIPPERY_CLIMB,
+  floor_fire: SUNSET_VISTA, // its ruins objects RuiOC, the bats'
+  steady_fire: SUNSET_VISTA,
   dropping_platform: SUNSET_VISTA,
   falling_platform: THE_LOST_CITY,
   seesaw: SUNSET_VISTA,
@@ -450,6 +452,8 @@ const OBJECT_CRASH_ENTRIES: Partial<Record<ObjectType, { item: number; at: numbe
   electric_scientist: [{ item: CRASH_ANIMATIONS, at: 72 + ANIMATION_EID, name: "WS10V" }],
   fire_pit: crashBurning,
   steam_vent: crashBurning, // castle machinery's steam burns him as the great gate's flames do
+  floor_fire: crashBurning, // and sunset vista's fire
+  steady_fire: crashBurning,
 };
 
 // object with the entries it needs crash's code to name (OBJECT_CRASH_ENTRIES),
@@ -478,6 +482,8 @@ const OBJECT_BOTH_SIDED_MODELS: Partial<Record<ObjectType, string[]>> = {
   slamming_walls: RUINS_BOTH_SIDED_MODELS,
   rotating_pegs: RUINS_BOTH_SIDED_MODELS, // its code is the slamming walls', the same
   bat: RUINS_BOTH_SIDED_MODELS,
+  floor_fire: RUINS_BOTH_SIDED_MODELS, // the bats' code, changed the same
+  steady_fire: RUINS_BOTH_SIDED_MODELS,
   leader_bats: RUINS_BOTH_SIDED_MODELS,
   wooden_peg: GATE_BOTH_SIDED_MODELS,
   rising_spiked_log: GATE_BOTH_SIDED_MODELS,
@@ -598,6 +604,30 @@ const PLANK_CODE_ADDITION: CodeAddition = {
   ],
 };
 
+// sunset vista's ruins objects' code (RuiOC: its bats', and its floor fire's,
+// s4, whose flames are its s10s), its flames timed by their fire's flags:
+// - a burst (state 7) holds at full height while a count, adding 0x100 a frame,
+//   stays under 0x4000 (about 2 s): it takes its fire's (its parent's) init
+//   flag C from the count instead, -1 as the game's, 0 for good (FIRE_HOLDS
+//   in makeMap.ts). the game's fires have flag C 0, but only custom levels have this code
+// - a flame bursts once its wait is up and crash is within its obj[0x1e0], which
+//   it takes from its fire (flag A x 1024; about 11 m without): it bursts on its
+//   timer wherever he is
+// - its timer starts as if its wait (obj[0x1e4]) were up: it starts obj[0x1e0]
+//   frames into it instead, the fire working it out as its flag A in frames
+//   (its huge default without one: no delay), so flag A puts its first burst off (fireStart)
+const FIRE_FAR_AT = 0x17a;
+const FIRE_START_AT = 0x1b8;
+const FIRE_NEAR_CRASH_AT = 0x1df;
+const FIRE_HOLD_COUNT_AT = 0x25b;
+const SUNSET_RUINS_CODE_PATCHES: CodePatch[] = [
+  { at: FIRE_FAR_AT, was: 0x0301fe17, now: 0x15028e17 }, // DIV ireg[0x7c], obj[0xbc] → SHA ireg[0xa0], obj[0xbc]: flag A as written
+  { at: FIRE_FAR_AT + 1, was: 0x02a19e1f, now: 0x00e1f800 }, // MULT 1.5625, pop() → ADD pop(), 0
+  { at: FIRE_START_AT, was: 0x01e61e27, now: 0x01e60e27 }, // SUB obj[0x1e4], obj[0xfc] → SUB obj[0x1e0], obj[0xfc]
+  { at: FIRE_NEAR_CRASH_AT, was: 0x09e60e1f, now: 0x0c800e1f }, // SLT obj[0x1e0], pop() → SGE 0, pop(): always
+  { at: FIRE_HOLD_COUNT_AT, was: 0x00801b04, now: 0x01c59b04 }, // ADD 0x100, 0x10($fp) → SUB parent[0xc4], 0x10($fp)
+];
+
 const LIZARD_CODE_PATCHES: CodePatch[] = [
   { at: GREEN_LEAP_SETS_X, was: MOVE_TO_X, now: branch(GREEN_LEAP_SETS_X, GREEN_LEAP_Z) },
   { at: RED_HOP_SETS_X, was: MOVE_TO_X, now: branch(RED_HOP_SETS_X, RED_HOP_Z) },
@@ -682,6 +712,10 @@ const ENEMY_CODE_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   falling_spiked_log: GATE_OBJECTS_CODE_PATCHES,
   fire_pit: GATE_OBJECTS_CODE_PATCHES,
   slamming_walls: SLAMMING_WALL_CODE_PATCHES,
+  bat: SUNSET_RUINS_CODE_PATCHES, // every object that brings sunset vista's RuiOC changes it the same
+  leader_bats: SUNSET_RUINS_CODE_PATCHES,
+  floor_fire: SUNSET_RUINS_CODE_PATCHES,
+  steady_fire: SUNSET_RUINS_CODE_PATCHES,
   rotating_pegs: SLAMMING_WALL_CODE_PATCHES, // their code, moved the same
   timed_plank: PLANK_CODE_PATCHES, // the same for every plank, as they share the code
   breaking_plank: PLANK_CODE_PATCHES,

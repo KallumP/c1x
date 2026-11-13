@@ -1262,6 +1262,62 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasSunsetVista)("floor fires, from sunset vista", () => {
+    const CRASH_BURNING = ["WF10V", "WF10G", "BDC0A", "BLI0A", "WF20V", "BDA0A", "WF30V", "WF40V", "WF50V"];
+    const fire = (type: "floor_fire" | "steady_fire", more: Partial<LevelObject> = {}) => {
+      const { level, entries, zone } = build([obstacle(type, more)]);
+      return { level, entries, placed: zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES[type]))! };
+    };
+
+    test.each(["floor_fire", "steady_fire"] as const)("a %s is sunset vista's RuiOC subtype 4 (the bats' code), at its spot, with crash's burning death", (type) => {
+      const { level, entries, placed } = fire(type);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([42, 4]);
+      expect(level.nsd.ldat.execMap[42]).toBe(stringToEid("RuiOC"));
+      expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+      const constants = entries.get(stringToEid("WillC"))!.items[2];
+      expect(CRASH_BURNING.map((_, index) => constants.readUInt32LE(0x80 + 4 * index))).toEqual(CRASH_BURNING.map(stringToEid));
+    });
+
+    // init flag B: the frames each of its flames waits from its last before it bursts again
+    test.each([
+      { type: "floor_fire", more: {}, frames: 60 },
+      { type: "floor_fire", more: { every: 5 }, frames: 150 },
+      { type: "steady_fire", more: {}, frames: 1 },
+    ] as const)("a $type ($more) waits $frames frames between its flames", ({ type, more, frames }) => {
+      expect(fire(type, more as Partial<LevelObject>).placed.readInt16LE(ENTITY_INIT_FLAGS + 2)).toBe(frames);
+    });
+
+    // init flag C: how a burst's hold counts, each frame taking it from the count to 0x4000 (the
+    // code's own adds 0x100: about 2 s): a floor fire's -1 as the game's, a steady fire's 0 holding
+    // for good. flag A: its flames' head start into their first wait, in frames (their wait less
+    // its offset), so they first burst its offset in; 0 without one (the game's huge default: at once)
+    test.each([
+      { type: "floor_fire", more: {}, flags: [0, -1] },
+      { type: "floor_fire", more: { every: 2, offset: 1 }, flags: [30, -1] }, // 60 frames' wait less 30
+      { type: "floor_fire", more: { every: 4, offset: 4 }, flags: [0, -1] },  // an offset of its every is none
+      { type: "steady_fire", more: {}, flags: [0, 0] },
+    ] as const)("a $type ($more) has its start and its flames' hold in its init flags A and C", ({ type, more, flags }) => {
+      const { placed } = fire(type, more as Partial<LevelObject>);
+      expect([placed.readInt16LE(ENTITY_INIT_FLAGS), placed.readInt16LE(ENTITY_INIT_FLAGS + 4)]).toEqual(flags);
+    });
+
+    // a flame's code: its burst's hold counts by its fire's flag C (0x25b); it bursts on its timer
+    // wherever crash is (0x1df: it waited for him within its fire's obj[0x1e0], about 11 m); its timer
+    // starts obj[0x1e0] frames into its wait (0x1b8, not its whole wait), which the fire works out as
+    // its flag A in frames (0x17a, 0x17b: it was flag A x 1024)
+    test.each(["floor_fire", "bat"] as const)("with a %s, the ruins objects' code times flames by their fire's flags", (type) => {
+      const built = type === "bat" ? build([enemy("bat")]) : build([obstacle(type)]);
+      const code = built.entries.get(stringToEid("RuiOC"))!.items[1];
+      expect([0x17a, 0x17b, 0x1b8, 0x1df, 0x25b].map((at) => code.readUInt32LE(at * 4))).toEqual([0x15028e17, 0x00e1f800, 0x01e60e27, 0x0c800e1f, 0x01c59b04]);
+    });
+
+    test("a level with floor fires and bats shares their code", () => {
+      const { level } = build([obstacle("floor_fire"), enemy("bat", { at: [1, 10, 0] })]);
+      expect(level.nsd.ldat.execMap[42]).toBe(stringToEid("RuiOC"));
+    });
+  });
+
   describe.skipIf(!hasSunsetVista)("bats, from sunset vista", () => {
     const bat = (more: Partial<LevelObject> = {}) => enemy("bat", { raise: 3, ...more });
     const leaderBats = (more: Partial<LevelObject> = {}) => bat({ enemy: "leader_bats", ...more });
