@@ -4,6 +4,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BOX_TYPES, parseObjects, type LevelObject } from "../src/objects";
+import { IRON_OUTLINE, PLAIN_OUTLINE } from "./entities";
 import { turned } from "./obj";
 import type { Vec3 } from "./vectors";
 
@@ -19,10 +20,36 @@ export function toZone(at: Vec3, scale: number, turn: number, offset: Vec3): Vec
   return [x - offset[0], y - offset[1], z - offset[2]];
 }
 
-// a box's subtype number, from its type name or the number it was given
-export function boxSubtype(object: LevelObject): number {
+// the game's own outline boxes: a plain box's and an iron box's, by the subtype they fill in as
+const OUTLINE_SUBTYPES = new Map<number, number>([[BOX_TYPES.basic, PLAIN_OUTLINE], [BOX_TYPES.iron, IRON_OUTLINE]]);
+
+// the second init flag that has any other box start as an outline (road to nowhere's life boxes')
+const OUTLINE_INIT_FLAG_B = 3;
+
+// a box's subtype number as its type name or the number it was given has it
+function ownSubtype(object: LevelObject): number {
   const box = object.box!;
   return typeof box === "number" ? box : BOX_TYPES[box];
+}
+
+// whether the game has an outline box of the box's own type
+const hasOutlineSubtype = (object: LevelObject) => OUTLINE_SUBTYPES.has(ownSubtype(object));
+
+// a box's subtype number: its own, or for an outline the game's outline of it, if it has one
+export function boxSubtype(object: LevelObject): number {
+  const own = ownSubtype(object);
+  if (object.outline === undefined) {
+    return own;
+  }
+  return OUTLINE_SUBTYPES.get(own) ?? own;
+}
+
+// a box's second init flag: OUTLINE_INIT_FLAG_B for an outline the game has no outline box of, else 0
+export function boxInitFlagB(object: LevelObject): number {
+  if (object.outline === undefined || hasOutlineSubtype(object)) {
+    return 0;
+  }
+  return OUTLINE_INIT_FLAG_B;
 }
 
 // the objects the objects.json in folder places (none without one); a bad one is an error naming it

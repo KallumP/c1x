@@ -10,7 +10,6 @@ const NAMES: Partial<Record<Placeable, string>> = {
   life: "Extra life",
   aku_aku: "Aku Aku",
   iron_arrow: "Iron (arrow)",
-  iron_outline: "Iron (outline)",
   tnt: "TNT",
   switch: "Switch (!)",
   // enemies

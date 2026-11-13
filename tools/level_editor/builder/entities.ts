@@ -102,7 +102,6 @@ export function donorEntityType(enemy: EnemyType): [number, number] {
 // roost's bats come in and go out, and killing both stops it; its first init
 // flag is its roost's entity id
 export const LEADER_BAT: [number, number] = [42, 14];
-// not in the level's total (an iron outline fills in as an iron box)
 // a rolling stone's first init flag is where in its cycle along its path and
 // back it starts (its script's, seen in the game): 0 at its first point rolling
 // forward, this at its last, twice this back at its first. a stone starts
@@ -116,7 +115,9 @@ export function stoneStartFlag(start: number, reverse: boolean): number {
   return reverse ? (2 * STONE_FAR_END - along) % (2 * STONE_FAR_END) : along;
 }
 
-export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch, BOX_TYPES.iron_arrow, BOX_TYPES.iron_outline];
+export const IRON_OUTLINE = 19; // the game's iron outline box, which a switch fills in as an iron box
+export const PLAIN_OUTLINE = 13; // and its plain outline box
+export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch, BOX_TYPES.iron_arrow, IRON_OUTLINE];
 
 // a switch (! box) makes the outline boxes solid along a chain of ids in their
 // entities' init_flags_c: the switch's is the first outline box's id, each
@@ -211,7 +212,7 @@ export interface PlacedBox {
   id: number;
 }
 
-const OUTLINES: number[] = [BOX_TYPES.outline, BOX_TYPES.iron_outline]; // what a switch fills in
+const OUTLINES: number[] = [PLAIN_OUTLINE, IRON_OUTLINE]; // what a switch fills in
 
 // chains the outline boxes (iron ones too, in the order they're placed, as in
 // generator room) and points every switch at the first, so any switch makes

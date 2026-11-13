@@ -125,7 +125,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   const renderBoxStack = (object: LevelObject, index: number) => {
-    const style = boxStyle(object.box!);
+    const style = boxStyle(object.box!, object.outline !== undefined);
     const centres = stackCentres(object.at, object.raise, object.stack, scale);
     const edges = edgeColour(index, BOX_EDGE_COLOUR);
     return (
