@@ -895,6 +895,22 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(entries.has(stringToEid(c === 3 ? "Rw3wG" : "Rw1wG"))).toBe(true);
     });
 
+    // sunset vista's slabs (Rw1w 10 triangles, Rw3w 18) have no face at the end in its walls (their
+    // lowest z): capped there, the same for every type that brings them, so they share them
+    test.each(["pushing_platform", "short_pushing_platform", "rotating_platforms"] as const)("with a %s, the slabs are capped at their wall end", (type) => {
+      const { entries } = build([obstacle(type)]);
+      const triangles = (name: string) => entries.get(stringToEid(name))?.items[0].readUInt32LE(0);
+      expect(triangles("Rw1wG")).toBe(12);
+      if (type !== "rotating_platforms") {
+        expect(triangles("Rw3wG")).toBe(20);
+      }
+    });
+
+    test("a level with pushing and rotating platforms has their slabs once, capped", () => {
+      const { entries } = build([obstacle("pushing_platform"), obstacle("short_pushing_platform", { at: [1, 6, 0] }), obstacle("rotating_platforms", { at: [1, 12, 0] })]);
+      expect(entries.get(stringToEid("Rw1wG"))!.items[0].readUInt32LE(0)).toBe(12);
+    });
+
     test("pushing blocks and platforms read sunset vista once", () => {
       const reader = recordingReader();
       build([obstacle("pushing_block"), obstacle("pushing_platform", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
