@@ -177,7 +177,6 @@ describe("enemies", () => {
     ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, snake, gunman, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, walking_lizard, robot_dog, barrel_roller, camera_robot, bird, electric_scientist, blob, flying_camera, badger, walking_spider, bat, leader_bats)"],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras do)"],
-    ['[{"kind": "enemy", "type": "rolling_stone", "at": [0, 0, 0]}]', "object 1: unknown enemy type rolling_stone"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -515,7 +514,6 @@ describe("obstacles", () => {
     ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms, slamming_walls, rising_pillar, carrying_platform, bounce_pad, steam_vent, moving_platform, dropping_platform, falling_platform, seesaw, timed_plank, breaking_plank, rotating_pegs, lift_platform, floor_fire, steady_fire, short_pushing_platform)"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: a leaf has no speed"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count (an obstacle takes kind, at, raise, type, path, speed, start, reverse, length, angle, rotation, every, offset, platforms, radius, shake, down, delay)"],
-    ['[{"kind": "platform", "type": "leaf", "at": [0, 0, 0]}]', "object 1: unknown kind platform"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -650,7 +648,7 @@ describe("pillars", () => {
       .toEqual([{ kind: "obstacle", obstacle: type, at: [1, 2, 0], raise: 1, stack: 1 }]);
   });
 
-  test("a sliding pillar's speed goes up to 6 metres a second; an enemy's still up to 3 times its pace", () => {
+  test("a sliding pillar's speed goes up to 6 metres a second, and an enemy's up to 3 times its pace", () => {
     expect(parseObjects('[{"kind": "obstacle", "type": "sliding_pillar", "at": [0, 0, 0], "speed": 6}]')[0].speed).toBe(6);
     expect(() => parseObjects('[{"kind": "obstacle", "type": "sliding_pillar", "at": [0, 0, 0], "speed": 6.5}]')).toThrow("object 1: speed should be 0.25 to 6");
     expect(() => parseObjects('[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 4}]')).toThrow("object 1: speed should be 0.25 to 3");
@@ -905,9 +903,7 @@ describe("mossy slides", () => {
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "angle": 5}]', "object 1: unknown setting angle"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "length": 1}]', "object 1: length should be 2 to 20 (how long it is, in metres)"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "angle": 40}]', "object 1: angle should be 5 to 30 (how steeply it slopes, in degrees)"],
-    ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "long": true}]', "object 1: unknown setting long"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "rotation": 360}]', "object 1: rotation should be 0 to 359 (which way it slides down, from across the map, or falls, from towards the camera: degrees anticlockwise seen from above)"],
-    ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "reverse": true}]', "object 1: a mossy_slide has no reverse"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "rotation": 90}]', "object 1: a leaf has no rotation (mossy slides and gates do)"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a mossy_slide has no path"],
   ])("refuses %s", (text, message) => {

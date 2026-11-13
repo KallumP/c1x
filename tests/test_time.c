@@ -92,8 +92,8 @@ UTEST(time, counter_converts_to_ticks) {
 #define NEARLY_TWENTY_FOUR_DAYS 2063889LL /* seconds; nearly as many ticks as an int32 holds */
 
 UTEST(time, counter_converts_without_overflow_after_hours_of_uptime) {
-  /* 10 hours of a 10 MHz performance counter overflowed 1000000*count*34
-     (int64) and gave negative ticks, so the first frame waited for hours */
+  /* 10 hours of a 10 MHz performance counter is past what 1000000*count*34
+     holds in an int64; the ticks must still come out right and positive */
   int64_t freq = 10000000;
 
   ASSERT_EQ(TicksIn(TEN_HOURS), TimeTicksFromCount(TEN_HOURS*freq, freq));

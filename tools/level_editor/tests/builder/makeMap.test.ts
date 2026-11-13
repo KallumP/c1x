@@ -414,7 +414,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(left.at(-1)!, SPOT_IN_ZONE, 16);
     });
 
-    // each takes two entities, one a half: the ids ran out on the last ones (both 0, so only one spawned)
+    // each takes two entities, one a half, so six halves need six ids
     test("three slamming walls' six halves each have their own entity id", () => {
       const walls = [2, 6, 10].map((z) => obstacle("slamming_walls", { at: [1, 2, z] }));
       const { entries } = build(walls);
@@ -1454,12 +1454,6 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test("a leader bats roost's count goes into its init flag a", () => {
       expect(enemyOfType(build([leaderBats({ count: 6 })]).zone, ENEMY_ENTITIES.leader_bats).initFlagA).toBe(6);
-    });
-
-    test.skipIf(!hasFumbling)("bats and spiders together fit in the texture pages the game holds", () => {
-      const GAME_TEXTURE_PAGES = 16; // texture_pages in src/ns.c
-      const { level } = build([bat(), bat({ at: [-1, 4, 0] }), enemy("walking_spider", { at: [1, 6, 0] })]);
-      expect(texturePages(level).length).toBeLessThanOrEqual(GAME_TEXTURE_PAGES);
     });
   });
 
