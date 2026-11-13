@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sndfile.h>
@@ -7,7 +6,12 @@
 
 #define SONG_DIR "build/test_stream_song"
 
-/* a sine wave song at path: frames frames at rate, in channels, of the format given */
+/* a sawtooth wave's sample i: up from -8000 to 8000 every 64 */
+static int Saw(int i) {
+  return (i % 64) * 250 - 8000;
+}
+
+/* a sawtooth song at path: frames frames at rate, in channels, of the format given */
 static int write_song(const char *path, int format, int rate, int channels, int frames) {
   SF_INFO info = { 0 };
   SNDFILE *file;
@@ -24,7 +28,7 @@ static int write_song(const char *path, int format, int rate, int channels, int 
   samples = (short*)malloc(frames * channels * sizeof(short));
   for (i = 0; i < frames; i++) {
     for (c = 0; c < channels; c++)
-      samples[i*channels + c] = (short)(8000 * sin(i * 0.05) * (c + 1));
+      samples[i*channels + c] = (short)(Saw(i) * (c + 1));
   }
   sf_writef_short(file, samples, frames);
   sf_close(file);
@@ -48,8 +52,8 @@ UTEST(stream_song, a_stereo_song_at_the_games_rate_is_its_own_samples) {
   ASSERT_TRUE(write_song(SONG_DIR "/stereo.wav", SF_FORMAT_WAV | SF_FORMAT_PCM_16, STREAM_SONG_RATE, 2, 500));
   ASSERT_TRUE(StreamSongLoad(SONG_DIR "/stereo.wav", &song));
   ASSERT_EQ(500, (int)song.frames);
-  ASSERT_EQ((int16_t)(8000 * sin(10 * 0.05)), song.samples[2*10]);
-  ASSERT_EQ((int16_t)(16000 * sin(10 * 0.05)), song.samples[2*10 + 1]);
+  ASSERT_EQ((int16_t)Saw(10), song.samples[2*10]);
+  ASSERT_EQ((int16_t)(Saw(10) * 2), song.samples[2*10 + 1]);
   StreamSongFree(&song);
 }
 
