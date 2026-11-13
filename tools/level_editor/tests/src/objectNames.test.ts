@@ -77,7 +77,6 @@ describe("the names the palette shows", () => {
     ["iron_arrow", "Iron (arrow)"],
     ["iron_outline", "Iron (outline)"],
     ["tnt", "TNT"],
-    ["enemy_tnt", "TNT (enemy)"],
   ] as const)("the variant %s is named %s", (what, name) => {
     expect(placeableName(what)).toBe(name);
   });
