@@ -93,6 +93,8 @@ Each one's name in the level editor's palette is in brackets.
 - `rising_spiked_log` ("Spiked log (rising)"; The Great Gate, with the wood platform's texture pages): `at` is the floor it pushes up out of, about 4 m. `every` 6 by default.
 - `falling_spiked_log` ("Spiked log (falling)"; as the rising one): `at` is the floor it comes down on, from about 4 m above: keep that space clear. `every` 6 by default.
 - `fire_pit` (The Great Gate, with the wood platform's texture pages): its bowl reaches about 2 m towards the camera from `at`. `every` 4 by default.
+- `floor_fire` ("Fire (bursts from the floor)"; Sunset Vista): no model of its own (its hole is Sunset Vista's map), so put it on floor that suits it. `every` (the seconds between bursts) 2 by default; its flames only burst while Crash is within about 11 m, each on its own timer, so there's no `offset`.
+- `steady_fire` ("Fire (always burning)"; Sunset Vista): the same fire, never dying down.
 - `dropping_pillar` ("Pillar (drops)"; Boulder Dash; two texture pages): `at` is its top; it reaches about 6 m down. It doesn't come back.
 - `sliding_pillar` ("Pillar (slides)"; as the dropping one): default path about 2 m across the map; `speed` 1 m/s by default.
 - `tall_thin_gate` ("Gate (tall, thin)"; Boulder Dash; one texture page): stands on the floor at `at`, about 4 m tall and 2.3 m wide.
