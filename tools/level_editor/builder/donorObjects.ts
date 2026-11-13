@@ -605,13 +605,21 @@ const PLANK_CODE_ADDITION: CodeAddition = {
 };
 
 // sunset vista's ruins objects' code (RuiOC: its bats', and its floor fire's,
-// s4): a flame's burst (s10, state 7) holds at full height while a count,
-// adding 0x100 a frame, stays under 0x4000 (about 2 s). it takes its fire's
-// (its parent's) init flag C from the count instead, so a fire's flag C sets
-// its hold: -1 as the game's, 0 for good (see FIRE_HOLDS in makeMap.ts). the
-// game's fires have flag C 0, but only custom levels have this code
+// s4, whose flames are its s10s), its flames timed by their fire's flags:
+// - a burst (state 7) holds at full height while a count, adding 0x100 a frame,
+//   stays under 0x4000 (about 2 s): it takes its fire's (its parent's) init
+//   flag C from the count instead, -1 as the game's, 0 for good (FIRE_HOLDS
+//   in makeMap.ts). the game's fires have flag C 0, but only custom levels have this code
+// - a flame bursts once its wait is up and crash is within its obj[0x1e0] (its
+//   fire's flag A x 4; about 11 m without): it bursts on its timer wherever he is
+// - its timer starts as if its wait (obj[0x1e4]) were up: it starts obj[0x1e0]
+//   frames into it instead, so a fire's flag A puts its first burst off (fireStart)
+const FIRE_START_AT = 0x1b8;
+const FIRE_NEAR_CRASH_AT = 0x1df;
 const FIRE_HOLD_COUNT_AT = 0x25b;
 const SUNSET_RUINS_CODE_PATCHES: CodePatch[] = [
+  { at: FIRE_START_AT, was: 0x01e61e27, now: 0x01e60e27 }, // SUB obj[0x1e4], obj[0xfc] → SUB obj[0x1e0], obj[0xfc]
+  { at: FIRE_NEAR_CRASH_AT, was: 0x09e60e1f, now: 0x0c800e1f }, // SLT obj[0x1e0], pop() → SGE 0, pop(): always
   { at: FIRE_HOLD_COUNT_AT, was: 0x00801b04, now: 0x01c59b04 }, // ADD 0x100, 0x10($fp) → SUB parent[0xc4], 0x10($fp)
 ];
 

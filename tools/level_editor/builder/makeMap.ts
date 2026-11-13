@@ -369,15 +369,25 @@ function fireWait(fire: LevelObject): number {
 // (about 2 s), a steady fire's 0 for good
 const FIRE_HOLDS: Partial<Record<ObstacleType, number>> = { floor_fire: -1, steady_fire: 0 };
 
-// entity with a floor or steady fire's wait and hold in its init flags B and
-// C, not turned by them (flag A, how near crash must be, the game's own);
-// any other obstacle's as it is
+// a fire's init flag A: its flames' head start into their first wait, in 4s of
+// frames (their code patched: see SUNSET_RUINS_CODE_PATCHES), their wait less
+// its offset, so they first burst its offset in (at least 1: 0 is the game's own 11 m's worth)
+const FIRE_START_FRAMES = 4;
+function fireStart(fire: LevelObject): number {
+  const wait = fireWait(fire);
+  const offset = Math.round(numberSetting(fire, "offset") * FRAMES_A_SECOND) % wait;
+  return Math.max(1, Math.round((wait - offset) / FIRE_START_FRAMES));
+}
+
+// entity with a floor or steady fire's start, wait and hold in its init flags,
+// not turned by them; any other obstacle's as it is
 function withFireTiming(entity: Buffer, obstacle: LevelObject): Buffer {
   const hold = FIRE_HOLDS[obstacle.obstacle!];
   if (hold === undefined) {
     return entity;
   }
-  return withInitFlagC(withInitFlagB(withNoRotationFromFlags(entity), fireWait(obstacle)), hold);
+  const timed = withInitFlagB(withInitFlagA(withNoRotationFromFlags(entity), fireStart(obstacle)), fireWait(obstacle));
+  return withInitFlagC(timed, hold);
 }
 
 // an object placed from its own level's entity (see placeWithItsPath) with
