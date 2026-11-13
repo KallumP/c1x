@@ -606,13 +606,13 @@ const PLANK_CODE_ADDITION: CodeAddition = {
 
 // sunset vista's ruins objects' code (RuiOC: its bats', and its floor fire's,
 // s4): a flame's burst (s10, state 7) holds at full height while a count,
-// adding 0x100 a frame, stays under 0x4000 (about 2 s). it adds the flame's
-// obj[0x1e0] instead, which it takes from its fire (EARG 0x6000) as its init
-// flag A x 256 / 100 x 1.5625 (only an s15's flames, s16, used it: no level
-// has one), so a fire's flag A sets its hold: see FIRE_HOLDS in makeMap.ts
+// adding 0x100 a frame, stays under 0x4000 (about 2 s). it takes its fire's
+// (its parent's) init flag C from the count instead, so a fire's flag C sets
+// its hold: -1 as the game's, 0 for good (see FIRE_HOLDS in makeMap.ts). the
+// game's fires have flag C 0, but only custom levels have this code
 const FIRE_HOLD_COUNT_AT = 0x25b;
 const SUNSET_RUINS_CODE_PATCHES: CodePatch[] = [
-  { at: FIRE_HOLD_COUNT_AT, was: 0x00801b04, now: 0x00e60b04 }, // ADD 0x100, 0x10($fp) → ADD obj[0x1e0], 0x10($fp)
+  { at: FIRE_HOLD_COUNT_AT, was: 0x00801b04, now: 0x01c59b04 }, // ADD 0x100, 0x10($fp) → SUB parent[0xc4], 0x10($fp)
 ];
 
 const LIZARD_CODE_PATCHES: CodePatch[] = [
