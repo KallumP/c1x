@@ -736,10 +736,10 @@ describe("moving platforms", () => {
 });
 
 describe("dropping platforms", () => {
-  test("a dropping platform is an obstacle, with no path, shaking 2/3 of a second before it drops and staying down 2 without a shake and down (sunset vista's 20 and 60 frames)", () => {
+  test("a dropping platform is an obstacle, with no path, shaking 0.75 of a second before it drops (near sunset vista's 20 frames) and staying down 2 (its 60) without a shake and down", () => {
     expect(parseObjects('[{"kind": "obstacle", "type": "dropping_platform", "at": [1, 2, 0]}]'))
       .toEqual([{ kind: "obstacle", obstacle: "dropping_platform", at: [1, 2, 0], raise: 0, stack: 1 }]);
-    expect(numberSetting(obstacleObject("dropping_platform"), "shake")).toBeCloseTo(2 / 3);
+    expect(numberSetting(obstacleObject("dropping_platform"), "shake")).toBe(0.75);
     expect(numberSetting(obstacleObject("dropping_platform"), "down")).toBe(2);
     expect(() => parseObjects('[{"kind": "obstacle", "type": "dropping_platform", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]'))
       .toThrow("a dropping_platform has no path");
