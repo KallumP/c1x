@@ -5,6 +5,7 @@
 ### Added
 
 - a custom level's music: any of the game's songs, picked under **Music** in the level editor
+- a custom level's own song: a `music.mid` in its folder, with its own instruments in a `music.sf2` if wanted
 - the launcher's Levels tab says when a level is out of date: its sources were saved after it was built
 
 ### Changed
