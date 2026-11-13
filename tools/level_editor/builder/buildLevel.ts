@@ -11,6 +11,7 @@ import { readImage, type RgbImage } from "./images";
 import { levelOptions, type LevelOptions } from "./levelCfg";
 import { readLevel } from "./levelFiles";
 import { readObjectsFile } from "./levelObjects";
+import { copyLevelSongs } from "./levelSongs";
 import { writeLevel } from "./levelWriting";
 import { makeMap } from "./makeMap";
 import { readMtl } from "./obj";
@@ -128,6 +129,7 @@ export function buildLevel(source: string, { streamsDir, levelsDir, log }: Build
     const images = mapImages(objPath, text, log);
     const readOtherLevel = (lid: number) => readLevel(streamsDir, lid);
     writeLevel(makeMap(readLevel(streamsDir, BASE_LEVEL.lid), text, { ...options, images, objects, readOtherLevel }), levelsDir, name);
+    copyLevelSongs(dirname(objPath), levelsDir, name);
   } catch (error) {
     log(failureMessage(error, source, options.scale));
     return false;
