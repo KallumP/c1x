@@ -73,3 +73,50 @@ UTEST(stream_song, a_file_that_isnt_there_doesnt_load) {
   ASSERT_FALSE(StreamSongLoad(SONG_DIR "/missing.mp3", &song));
   ASSERT_TRUE(song.samples == 0);
 }
+
+/* a song of three frames, (1, -1), (2, -2), (3, -3), not playing */
+static int16_t three_frames[] = { 1, -1, 2, -2, 3, -3 };
+static stream_song ThreeFrameSong() {
+  stream_song song = { 0 };
+
+  song.samples = three_frames;
+  song.frames = 3;
+  return song;
+}
+
+UTEST(stream_song, a_playing_song_goes_back_round_to_its_start_at_its_end) {
+  stream_song song = ThreeFrameSong();
+  int16_t out[10];
+
+  StreamSongPlay(&song);
+  StreamSongRead(&song, out, 5);
+  ASSERT_EQ(3, out[4]);   /* its last frame */
+  ASSERT_EQ(1, out[6]);   /* then its first again */
+  ASSERT_EQ(-2, out[9]);
+}
+
+UTEST(stream_song, a_song_not_playing_is_silent_and_stays_where_it_is) {
+  stream_song song = ThreeFrameSong();
+  int16_t out[4] = { 9, 9, 9, 9 };
+
+  StreamSongRead(&song, out, 2);
+  ASSERT_EQ(0, out[0]);
+  ASSERT_EQ(0, out[3]);
+  ASSERT_EQ(0, (int)song.at);
+}
+
+UTEST(stream_song, playing_starts_it_from_its_start_and_stopping_goes_back_there) {
+  stream_song song = ThreeFrameSong();
+  int16_t out[4];
+
+  StreamSongPlay(&song);
+  StreamSongRead(&song, out, 2);
+  StreamSongStop(&song);
+  ASSERT_EQ(0, (int)song.at);
+  StreamSongRead(&song, out, 1);
+  ASSERT_EQ(0, out[0]);
+  song.at = 2;
+  StreamSongPlay(&song);
+  StreamSongRead(&song, out, 1);
+  ASSERT_EQ(1, out[0]);
+}
