@@ -109,14 +109,17 @@ END_FLOOR = FLOOR - 2.4
 # nowhere plank: 3 m across, 0.875 m deep) level with the end chamber, some
 # missing, between ropes: a hand rope sagging from tower to tower, netting
 # zigzagging down from it, and a rope along the deck's edge
-LEDGE_STEPS = [(128, 130, FLOOR), (130, 131.5, FLOOR - 1.2)]
 LEDGE_X = (-7, -1)
 BRIDGE_Y = (131.5, 164.5)
 CHAMBER_FLOOR_Y = (BRIDGE_Y[1] + 1.5, BRIDGE_Y[1] + 3.5)  # the end chamber's way in, from the far ledge
 END_CENTRE = (-4, BRIDGE_Y[1] + 7.5)
 BRIDGE_X = (-5.5, -2.5)
+STEP_COUNT = 4  # down from the crystal cavern's floor, each as high as the last one onto the deck
+STEP_RISE = (FLOOR - END_FLOOR) / STEP_COUNT
+STEP_DEPTH = (BRIDGE_Y[0] - 128) / STEP_COUNT
+LEDGE_STEPS = [(128 + k * STEP_DEPTH, 128 + (k + 1) * STEP_DEPTH, FLOOR - k * STEP_RISE) for k in range(STEP_COUNT)]
 SLAT_PITCH, SLAT_DEPTH, SLAT_THICKNESS = 1.0, 0.875, 0.12
-MISSING_SLATS = (3, 7, 8, 12, 16, 17, 21, 25, 26, 29)  # counted from the near end: gaps to jump, or for planks to fill
+KEPT_SLATS = (0, 1, 4, 8, 11, 16, 22, 27, 28, 31, 32)  # counted from the near end, uneven, fewest in the middle; the rest (22 of 33) left for planks placed in the editor
 CHASM_X = (-10, 2)
 CHASM_ACID = END_FLOOR - 6
 ROPE_X = (BRIDGE_X[0] - 0.05, BRIDGE_X[1] + 0.05)
@@ -142,7 +145,7 @@ def ledge_steps(parts):
     for y0, y1, z in LEDGE_STEPS:
         floor(parts["path"], LEDGE_X[0], y0, LEDGE_X[1], y1, z, lambda x, y, z: lit(path_light(x, y, -4, 3)))
         if z < FLOOR:
-            wall(parts["dark_moss"], (LEDGE_X[0], y0), (LEDGE_X[1], y0), z, z + 1.2, (0, 1, 0), lambda x, y, z: lit(80, glow=0.3))
+            wall(parts["dark_moss"], (LEDGE_X[0], y0), (LEDGE_X[1], y0), z, z + STEP_RISE, (0, 1, 0), lambda x, y, z: lit(80, glow=0.3))
         ledge_sides(parts, y0, y1, z)
 
 
@@ -178,7 +181,7 @@ def slat_spans():
     """each slat's near and far edge along y, but the missing ones"""
     count = round((BRIDGE_Y[1] - BRIDGE_Y[0]) / SLAT_PITCH)
     starts = [BRIDGE_Y[0] + (SLAT_PITCH - SLAT_DEPTH) / 2 + index * SLAT_PITCH for index in range(count)]
-    return [(y, y + SLAT_DEPTH) for index, y in enumerate(starts) if index not in MISSING_SLATS]
+    return [(y, y + SLAT_DEPTH) for index, y in enumerate(starts) if index in KEPT_SLATS]
 
 
 def bridge_slats(parts):
