@@ -114,6 +114,35 @@ describe("formatObjects", () => {
   });
 });
 
+describe("switch numbers", () => {
+  const switchBox = (fields: object) => ({ kind: "box", type: "switch", at: [0, 0, 0], ...fields });
+
+  test("reads a switch's number", () => {
+    const objects = parseObjects(JSON.stringify([switchBox({ switch: 1 }), switchBox({ switch: 2 })]));
+    expect(objects.map((object) => object.switch)).toEqual([1, 2]);
+  });
+
+  test("reads the number of a switch given by its subtype", () => {
+    const [object] = parseObjects(JSON.stringify([{ kind: "box", subtype: 7, at: [0, 0, 0], switch: 3 }]));
+    expect(object.switch).toBe(3);
+  });
+
+  test.each([
+    [[switchBox({})], "object 1: a switch needs a number"],
+    [[switchBox({ switch: 0 })], "object 1: a switch's number should be a whole number, 1 or more"],
+    [[switchBox({ switch: 1.5 })], "object 1: a switch's number should be a whole number, 1 or more"],
+    [[switchBox({ switch: 1 }), switchBox({ switch: 1 })], "object 2: there's already a switch 1"],
+    [[{ kind: "box", type: "basic", at: [0, 0, 0], switch: 1 }], "object 1: only a switch has a number"],
+  ])("refuses %j", (objects, message) => {
+    expect(() => parseObjects(JSON.stringify(objects))).toThrow(message);
+  });
+
+  test("writes a switch's number after its type", () => {
+    expect(formatObjects([{ kind: "box", box: "switch", switch: 2, at: [0, 0, 0], raise: 0, stack: 1 }]))
+      .toBe('[\n  {"kind": "box", "type": "switch", "switch": 2, "at": [0, 0, 0]}\n]\n');
+  });
+});
+
 describe("boxTypeName", () => {
   test("is the type a box was given", () => {
     expect(boxTypeName("life")).toBe("life");
