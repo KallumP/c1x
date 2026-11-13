@@ -50,7 +50,7 @@ export const ENEMY_ENTITIES: Record<EnemyType, [number, number]> = {
 // and the great gate's objects WalOC, subtype 0 its totem's wooden peg, and
 // jungle rollers' own JunOC, subtype 6 its rolling stone, and the great gate's
 // WalOC subtype 2, its mossy slide's invisible slider
-export const OBSTACLE_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2], wooden_peg: [33, 0], rolling_stone: [22, 6], mossy_slide: [33, 2], rising_spiked_log: [33, 3], falling_spiked_log: [33, 4], fire_pit: [33, 5], dropping_pillar: [11, 4], sliding_pillar: [11, 2], tall_thin_gate: [23, 13], low_wide_gate: [23, 18], pushing_block: [46, 4], pushing_platform: [46, 7], rotating_pots: [46, 0], rotating_platforms: [46, 8], slamming_walls: [6, 7], rising_pillar: [13, 6], carrying_platform: [13, 3], bounce_pad: [14, 0], steam_vent: [14, 1], moving_platform: [15, 2], dropping_platform: [46, 10], falling_platform: [20, 0], seesaw: [46, 2], timed_plank: [18, 1], breaking_plank: [18, 3] };
+export const OBSTACLE_ENTITIES: Record<ObstacleType, [number, number]> = { lily_pad: [28, 1], leaf: [28, 2], wooden_peg: [33, 0], rolling_stone: [22, 6], mossy_slide: [33, 2], rising_spiked_log: [33, 3], falling_spiked_log: [33, 4], fire_pit: [33, 5], dropping_pillar: [11, 4], sliding_pillar: [11, 2], tall_thin_gate: [23, 13], low_wide_gate: [23, 18], pushing_block: [46, 4], pushing_platform: [46, 7], rotating_pots: [46, 0], rotating_platforms: [46, 8], slamming_walls: [6, 7], rising_pillar: [13, 6], carrying_platform: [13, 3], bounce_pad: [14, 0], steam_vent: [14, 1], moving_platform: [15, 2], dropping_platform: [46, 10], falling_platform: [20, 0], seesaw: [46, 2], timed_plank: [18, 1], breaking_plank: [18, 3], rotating_pegs: [6, 0] };
 
 // temple ruins' slamming walls' left half (RuiOC subtype 8, in its level's slot):
 // slamming walls' entity is their right half (subtype 7), and the builder places
@@ -75,7 +75,8 @@ export const MOVED_ENEMY_CODE: Partial<Record<ObjectType, { donorSlot: number; n
   electric_scientist: { donorSlot: 54, name: "LabEC" }, // the lab's LabAC: stormy ascent's lab assistant has slot 54 and the name
   tall_thin_gate: { donorSlot: 22, name: "BldOC" }, // boulder dash's JunOC: jungle rollers' own, naming other models
   low_wide_gate: { donorSlot: 22, name: "BldOC" },
-  slamming_walls: { donorSlot: 42, name: "RuiWC" }, // temple ruins' RuiOC: sunset vista's (the bats') has slot 42 and the name
+  slamming_walls: { donorSlot: 42, name: "RuiWC" },
+  rotating_pegs: { donorSlot: 42, name: "RuiWC" }, // the slamming walls' code, moved the same // temple ruins' RuiOC: sunset vista's (the bats') has slot 42 and the name
   rising_pillar: { donorSlot: 11, name: "PoPTC" }, // temple ruins' PoPlC: boulder dash's pillars' has slot 11 and the name
   carrying_platform: { donorSlot: 11, name: "PoPTC" },
   moving_platform: { donorSlot: 11, name: "PoPCC" }, // slippery climb's PoPlC: boulder dash's and temple ruins' name their own models

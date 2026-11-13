@@ -8,7 +8,7 @@ import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { OBSTACLE_SHAPES, type ModelledObstacle } from "../obstacleShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
-import { GATES, isPathEnemy, isPathObstacle, numberSetting, PATH_ENEMIES, PATH_OBSTACLES, ROTATING_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
+import { GATES, isPathEnemy, isPathObstacle, numberSetting, pegCount, PATH_ENEMIES, PATH_OBSTACLES, ROTATING_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
@@ -477,17 +477,35 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
-  // rotating pots or platforms: as many as go round, spread round the upright
-  // circle they go round (across the map and up, as far out as set), and the circle
+  // the circle a rotating obstacle goes round: across the map and up for pots
+  // and platforms, across it and along it (level) for pegs
+  const rotatingCircleAxes = (object: LevelObject): [Vec3, Vec3] => {
+    const across = stoneRolling(turn);
+    if (object.obstacle === "rotating_pegs") {
+      return [across, [-across[1], across[0], 0]];
+    }
+    return [across, rising()];
+  };
+
+  // how many go round: pegs as many as the game's code can (see pegCount)
+  const rotatingCount = (object: LevelObject) => {
+    if (object.obstacle === "rotating_pegs") {
+      return pegCount(object);
+    }
+    return numberSetting(object, "platforms");
+  };
+
+  // rotating pots, platforms or pegs: as many as go round, spread round the
+  // circle they go round (as far out as set), and the circle
   const renderRotating = (object: LevelObject, index: number) => {
     const type = object.obstacle as ModelledObstacle;
     const [x, y, z] = object.at;
     const middle: Vec3 = [x, y, z + object.raise];
     const radius = numberSetting(object, "radius");
-    const [across, up] = [stoneRolling(turn), rising()];
+    const [across, up] = rotatingCircleAxes(object);
     const pointAt = (angle: number) =>
       middle.map((value, axis) => value + radius * (across[axis] * Math.cos(angle) + up[axis] * Math.sin(angle))) as Vec3;
-    const count = numberSetting(object, "platforms");
+    const count = rotatingCount(object);
     const angles = Array.from({ length: count }, (_, platform) => (2 * Math.PI * platform) / count);
     const circle = Array.from({ length: CIRCLE_POINTS + 1 }, (_, point) => blenderToView(pointAt((2 * Math.PI * point) / CIRCLE_POINTS)));
     return (
@@ -504,7 +522,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     if (isPathObstacle(object.obstacle)) {
       return renderPathObstacle(object, index);
     }
-    if (ROTATING_OBSTACLES.includes(object.obstacle!)) {
+    if (ROTATING_OBSTACLES.includes(object.obstacle!) || object.obstacle === "rotating_pegs") {
       return renderRotating(object, index);
     }
     if (object.obstacle === "rolling_stone") {
