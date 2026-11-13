@@ -2,7 +2,7 @@
 // the game's level it's named after. a music entry holds its tracks and its
 // instruments' header, and names up to 7 instrument entries, each on a page of
 // instruments (src/midi.c). every zone names the music it plays (ZONE_MIDI)
-import { DEFAULT_MUSIC, soundtrack } from "../src/music";
+import { DEFAULT_MUSIC, isAudioSongName, soundtrack } from "../src/music";
 import { EID_NONE } from "./entryIds";
 import { entriesById, PAGE_ENTRIES, type Entry, type Level, type Page } from "./levelFiles";
 import { ZONE_MIDI } from "./zones";
@@ -44,10 +44,10 @@ export function levelMusic(level: Level): LevelMusic {
 }
 
 // the music a level set to play name has from another level; null for the
-// default, jungle rollers', which the base level has already
+// default, jungle rollers', which the base level has already, and under an audio file song
 export function soundtrackMusic(name: string | undefined, readOtherLevel?: (lid: number) => Level): LevelMusic | null {
-  if (name === undefined || name === DEFAULT_MUSIC) {
-    return null;
+  if (name === undefined || name === DEFAULT_MUSIC || isAudioSongName(name)) {
+    return null; // an audio file plays over the default music (src/pc/audiosong.c)
   }
   const { label, lid } = soundtrack(name);
   const what = `${label} (s${lid.toString(16).padStart(7, "0")}.nsd)`;
