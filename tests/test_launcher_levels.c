@@ -182,6 +182,25 @@ UTEST(launcher_levels, finds_a_level_by_name) {
   ASSERT_EQ(-1, FindCustomLevel(&levels, "facing_castle"));
 }
 
+/* one level, called tide_ruins, built or not and out of date or not */
+static void MakeOneLevel(custom_levels *levels, int built, int out_of_date) {
+  levels->count = 1;
+  strcpy(levels->names[0], "tide_ruins");
+  levels->built[0] = built;
+  levels->out_of_date[0] = out_of_date;
+}
+
+UTEST(launcher_levels, statuses_say_whether_built_and_up_to_date) {
+  custom_levels levels;
+
+  MakeOneLevel(&levels, 0, 0);
+  ASSERT_STREQ("not built", CustomLevelStatus(&levels, 0));
+  MakeOneLevel(&levels, 1, 0);
+  ASSERT_STREQ("built", CustomLevelStatus(&levels, 0));
+  MakeOneLevel(&levels, 1, 1);
+  ASSERT_STREQ("out of date", CustomLevelStatus(&levels, 0));
+}
+
 UTEST(launcher_levels, a_built_levels_label_is_its_name) {
   custom_levels levels;
   char label[64];
