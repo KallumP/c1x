@@ -45,6 +45,7 @@ describe("the names the palette shows", () => {
     ["falling_platform", "Platform (falls when stood on)"],
     ["seesaw", "Seesaw"],
     ["timed_plank", "Plank (breaks after a moment)"],
+    ["breaking_plank", "Plank (breaks at once)"],
   ] as const)("the %s obstacle is named %s", (what, name) => {
     expect(placeableName(what)).toBe(name);
   });
