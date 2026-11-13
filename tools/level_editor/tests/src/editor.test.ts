@@ -92,6 +92,27 @@ describe("update", () => {
   });
 });
 
+describe("switch numbers", () => {
+  const switchBox = (x: number, number?: number): LevelObject => ({ ...newObject("switch", [x, 0, 0]), switch: number });
+  const added = (objects: LevelObject[], object: LevelObject) => editorReducer(withObjects(objects), { type: "add", object }).objects.at(-1)!;
+
+  test("a new switch gets the lowest number no switch in the level has", () => {
+    expect(added([], switchBox(0)).switch).toBe(1);
+    expect(added([switchBox(1, 1), switchBox(2, 3)], switchBox(0)).switch).toBe(2);
+  });
+
+  test("a box changed to a switch gets the next number, and stops being an outline", () => {
+    const state = editorReducer(withObjects([switchBox(1, 1), { ...box(2), outline: 1 }]), { type: "update", index: 1, changes: { box: "switch" } });
+    expect(state.objects[1].switch).toBe(2);
+    expect(state.objects[1].outline).toBeUndefined();
+  });
+
+  test("a switch changed to another box loses its number", () => {
+    const state = editorReducer(withObjects([switchBox(1, 1)]), { type: "update", index: 0, changes: { box: "life" } });
+    expect(state.objects[0]).not.toHaveProperty("switch");
+  });
+});
+
 describe("remove", () => {
   test("removes an object, and the selection if it was selected", () => {
     let state = editorReducer(withObjects([box(1), box(2)]), { type: "select", index: 1 });
