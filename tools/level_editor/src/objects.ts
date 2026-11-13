@@ -110,11 +110,13 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // - breaking_plank
 // temple ruins' stone columns, going round a level circle about their spot:
 // - rotating_pegs
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform", "bounce_pad", "steam_vent", "moving_platform", "dropping_platform", "falling_platform", "seesaw", "timed_plank", "breaking_plank", "rotating_pegs"] as const;
+// slippery climb's stone slab going up and down its path:
+// - lift_platform
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform", "bounce_pad", "steam_vent", "moving_platform", "dropping_platform", "falling_platform", "seesaw", "timed_plank", "breaking_plank", "rotating_pegs", "lift_platform"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
-export const PATH_OBSTACLES = ["leaf", "sliding_pillar", "carrying_platform", "moving_platform"] as const satisfies readonly ObstacleType[];
+export const PATH_OBSTACLES = ["leaf", "sliding_pillar", "carrying_platform", "moving_platform", "lift_platform"] as const satisfies readonly ObstacleType[];
 export type PathObstacle = (typeof PATH_OBSTACLES)[number];
 export const isPathObstacle = (type: ObstacleType | undefined) => PATH_OBSTACLES.some((obstacle) => obstacle === type);
 
@@ -271,7 +273,7 @@ function speedFallback(type: ObjectType | undefined): number {
   if (type === "carrying_platform") {
     return CARRYING_PLATFORM_SPEED;
   }
-  if (type === "moving_platform") {
+  if (type === "moving_platform" || type === "lift_platform") {
     return MOVING_PLATFORM_SPEED;
   }
   return 1;
@@ -298,7 +300,7 @@ interface NumberSettingRule {
 }
 
 export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
-  speed: { types: [...PATH_ENEMIES, "sliding_pillar", "carrying_platform", "moving_platform"], typesNamed: `${PATH_ENEMIES_NAMED}, sliding pillars, carrying platforms and moving platforms`, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: speedFallback, meaning: "times the game's own pace, or a sliding pillar's, carrying platform's or moving platform's metres a second", maxFor: { sliding_pillar: SLIDING_PILLAR_SPEED_MAX, carrying_platform: CARRYING_PLATFORM_SPEED_MAX, moving_platform: MOVING_PLATFORM_SPEED_MAX } },
+  speed: { types: [...PATH_ENEMIES, "sliding_pillar", "carrying_platform", "moving_platform", "lift_platform"], typesNamed: `${PATH_ENEMIES_NAMED}, sliding pillars, carrying platforms, moving platforms and lift platforms`, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: speedFallback, meaning: "times the game's own pace, or a sliding pillar's, carrying platform's, moving platform's or lift platform's metres a second", maxFor: { sliding_pillar: SLIDING_PILLAR_SPEED_MAX, carrying_platform: CARRYING_PLATFORM_SPEED_MAX, moving_platform: MOVING_PLATFORM_SPEED_MAX, lift_platform: MOVING_PLATFORM_SPEED_MAX } },
   start: { types: ["rolling_stone"], typesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
   count: { types: ["badger", "walking_spider", "bat", "leader_bats"], typesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
   delay: { types: ["bat", "leader_bats", "timed_plank"], typesNamed: "bats, leader bats and timed planks", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks, or before a timed plank breaks" },
@@ -469,7 +471,7 @@ function readObstaclePath(fields: Record<string, unknown>, obstacle: ObstacleTyp
     return {};
   }
   if (!isPathObstacle(obstacle)) {
-    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves, sliding pillars, carrying platforms and moving platforms do)`);
+    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves, sliding pillars, carrying platforms, moving platforms and lift platforms do)`);
   }
   checkPathLength(fields.path, objectNumber);
   return { path: pathNodes(fields.path, objectNumber) };

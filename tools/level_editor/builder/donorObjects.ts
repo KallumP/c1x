@@ -87,6 +87,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   bounce_pad: CASTLE_MACHINERY,
   steam_vent: CASTLE_MACHINERY,
   moving_platform: SLIPPERY_CLIMB,
+  lift_platform: SLIPPERY_CLIMB,
   dropping_platform: SUNSET_VISTA,
   falling_platform: THE_LOST_CITY,
   seesaw: SUNSET_VISTA,
@@ -411,6 +412,7 @@ const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   breaking_plank: planksBut("BE1k", "Be1k"), // and the falling plank it breaks into
   rising_pillar: ["PlDsG", "PlDsV", "PlPsG", "PlPsV"], // temple ruins' other pillars' models: its PoPlC's, which a rising pillar never shows
   carrying_platform: ["PlDsG", "PlDsV", "PlUsG", "PlUsV"], // and those a carrying platform never shows
+  lift_platform: ["PlD0G", "PlD0V", "PlPyG", "PlPyV"], // and those a lift platform never shows
   moving_platform: ["PlD0G", "PlD0V", "PlUyG", "PlUyV"], // slippery climb's other platforms' models, which a moving platform never shows
   tall_thin_gate: BOULDER_DASH_NON_GATE_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),
   low_wide_gate: BOULDER_DASH_NON_GATE_MODELS.flatMap((model) => [`${model}G`, `${model}V`]),

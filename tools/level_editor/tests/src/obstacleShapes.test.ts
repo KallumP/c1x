@@ -46,6 +46,8 @@ describe("obstacle shapes", () => {
     { obstacle: "breaking_plank", bottom: -50, top: [-10, 30], across: [1160, 1240], long: [320, 380] },
     // temple ruins' rotating peg Ra1sG: a stone column 953 across, its top at its spot and 3203 down
     { obstacle: "rotating_pegs", bottom: -3203, top: [-10, 30], across: [900, 1000], long: [900, 1000] },
+    // slippery climb's lift platform PlUyG: a slab 802 x 797 across, its top at its spot, 338 thick
+    { obstacle: "lift_platform", bottom: -338, top: [-10, 30], across: [760, 840], long: [760, 840] },
     // temple ruins' slamming walls, its two halves (RcRsG, RcLsG: 1200 across, 1031 tall, 606 deep) shut, meeting at its spot
     { obstacle: "slamming_walls", bottom: 0, top: [1000, 1060], across: [2350, 2450], long: [580, 640] },
     // temple ruins' rising pillar PlUsG: 953 across, its top at its spot and 3203 down

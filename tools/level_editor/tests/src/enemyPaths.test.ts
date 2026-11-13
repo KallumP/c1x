@@ -255,6 +255,16 @@ describe("a carrying platform's path", () => {
   });
 });
 
+describe("a lift platform's path", () => {
+  test("without a path of its own, its nodes are 3 m straight up", () => {
+    const lift = obstacleObject("lift_platform", { at: [1, 2, 0] });
+    expect(nodeCount(lift)).toBe(2);
+    const [start, end] = pathPositions(lift, 0, 400);
+    expectCloseTo(start, [1, 2, 0]);
+    expectCloseTo(end, [1, 2, 3]);
+  });
+});
+
 describe("a moving platform's path", () => {
   test("without a path of its own, its nodes are 4 m straight across the map", () => {
     const platform = obstacleObject("moving_platform", { at: [1, 2, 0] });

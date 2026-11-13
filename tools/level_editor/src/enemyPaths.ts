@@ -83,6 +83,11 @@ const carryingNodes = (turn: number): Vec3[] => [[0, 0, 0], scaled(stoneRolling(
 const PLATFORM_SLIDE = 4;
 const platformSlideNodes = (turn: number): Vec3[] => [[0, 0, 0], scaled(stoneRolling(turn), PLATFORM_SLIDE)];
 
+// a lift platform's nodes without a path of its own: LIFT_HEIGHT metres
+// straight up (slippery climb's go about 5 m up its towers)
+const LIFT_HEIGHT = 3;
+const liftNodes = (): Vec3[] => [[0, 0, 0], scaled(rising(), LIFT_HEIGHT)];
+
 // a sliding pillar's nodes without a path of its own: its slide's two ends, as boulder dash's
 function pillarSlideNodes(turn: number, scale: number): Vec3[] {
   const [length] = PILLAR_SLIDE[PILLAR_SLIDE.length - 1];
@@ -105,6 +110,9 @@ function defaultNodes(object: LevelObject, turn: number, scale: number): Vec3[] 
   }
   if (object.obstacle === "moving_platform") {
     return platformSlideNodes(turn);
+  }
+  if (object.obstacle === "lift_platform") {
+    return liftNodes();
   }
   if (object.enemy === "leader_bats") {
     return [leaderBatsGap(turn, scale)];
@@ -138,7 +146,7 @@ export function spotAndNode(object: LevelObject, turn: number, scale: number): V
 }
 
 // the path obstacles whose default path is two nodes: from their spot, and to their path's end
-const TWO_NODE_OBSTACLES: ObstacleType[] = ["sliding_pillar", "carrying_platform", "moving_platform"];
+const TWO_NODE_OBSTACLES: ObstacleType[] = ["sliding_pillar", "carrying_platform", "moving_platform", "lift_platform"];
 
 // how many nodes an enemy's path has: its own, or its default's (a one node enemy's one)
 export function nodeCount(object: LevelObject): number {
