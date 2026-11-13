@@ -1,8 +1,12 @@
 import type { ElementRef, ReactNode, RefObject } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import { MOUSE } from "three";
 
 export type Orbit = ElementRef<typeof OrbitControls>;
+
+// left-drag moves the camera sideways, right-drag turns it round, the wheel zooms
+const CAMERA_BUTTONS = { LEFT: MOUSE.PAN, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.ROTATE };
 
 // the 3d view: lit, orbited with the mouse. orbitRef lets the editor stop the
 // camera while an object is dragged, and onMiss is a click on nothing
@@ -27,7 +31,7 @@ export default function Scene({ orbitRef, onMiss, children }: {
       <color attach="background" args={["#2b2d31"]} />
       {renderLights()}
       {children}
-      <OrbitControls ref={orbitRef} makeDefault />
+      <OrbitControls ref={orbitRef} makeDefault mouseButtons={CAMERA_BUTTONS} />
     </Canvas>
   );
 }
