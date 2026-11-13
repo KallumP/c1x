@@ -74,5 +74,5 @@
   {"kind": "obstacle", "type": "rolling_stone", "at": [-5.5, 151.5, 0.299]},
   {"kind": "obstacle", "type": "rolling_stone", "at": [0, 140, 0.438]},
 
-  {"kind": "end", "at": [-4, 235, -2.1], "raise": 0.32}
+  {"kind": "end", "at": [-4, 257, -2.1], "raise": 0.32}
 ]

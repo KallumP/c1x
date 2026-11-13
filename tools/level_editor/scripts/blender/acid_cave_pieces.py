@@ -19,6 +19,9 @@ PURPLE_CARVED_DARK = "tex_098"
 CRYSTAL_PURPLE = "tex_056"
 CRYSTAL_GREEN = "tex_055"
 ACID = "acid"
+# not the cut level's: road to nowhere's (its stream's images), for the rope bridge
+BRIDGE_SLAT = "rtn_slat"
+BRIDGE_ROPE = "rtn_rope"
 
 FLOOR = 0.3          # the path's height, level with the cut level's end chamber
 ACID_LEVEL = -0.9    # the acid's surface, beside the paths
