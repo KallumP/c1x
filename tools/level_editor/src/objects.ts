@@ -252,7 +252,7 @@ export const ROTATING_RADIUS_MAX = 10;
 
 // the seconds a dropping platform shakes before it drops, and stays dropped:
 // without, sunset vista's code's own 20 and 60 frames
-export const SHAKE = 20 / 30;
+export const SHAKE = 0.75; // near the game's 20 frames, a step of its slider
 export const SHAKE_MIN = 0.25;
 export const SHAKE_MAX = 5;
 export const DOWN = 2;
