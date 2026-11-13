@@ -11,11 +11,14 @@ import { vialArc } from "../labAssistantThrow";
 import { GATES, isPathEnemy, isPathObstacle, numberSetting, pegCount, PATH_ENEMIES, PATH_OBSTACLES, ROTATING_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 import { isLeftPress } from "../three/clicks";
+import { numberTexture } from "../three/numberTexture";
 
 const CRASH_UNITS = 665; // crash's height in game units (MAP_SCALE's comment in builder/makeMap.ts)
 const STONE_THICKNESS = 0.35; // of the rolling stone's radius
 const TRACK_OPACITY = 0.25;   // of the outline of a rolling stone's track
 const BOX_EDGE_COLOUR = "#000000";
+const LABEL_SIZE = 0.6;  // a switch number's badge across, of a box's size
+const LABEL_LIFT = 0.45; // how far over the top of its stack, of a box's size
 const HANDLE_SIZE = 0.15;   // a path node's handle's radius, of a box's size
 const FAR_END_OPACITY = 0.4; // the enemy drawn at the far end of its path, faded: it starts at the other
 const SELECTED_GLOW = 0.35; // how much brighter the selected enemy's model is
@@ -124,12 +127,34 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     );
   };
 
+  // a number on a badge floating over the top of a stack (whose top box's middle is top), always facing the camera
+  const renderNumberLabel = (top: Vec3, number: number, ring: string) => {
+    const size = boxSize(scale);
+    const at: Vec3 = [top[0], top[1], top[2] + size * (0.5 + LABEL_LIFT)];
+    return (
+      <sprite position={blenderToView(at)} scale={[size * LABEL_SIZE, size * LABEL_SIZE, 1]} renderOrder={1}>
+        <spriteMaterial map={numberTexture(number, ring)} depthTest={false} />
+      </sprite>
+    );
+  };
+
+  // a switch's own number, or the number of the switch an outline belongs to
+  const renderSwitchLabel = (object: LevelObject, top: Vec3) => {
+    if (object.switch !== undefined) {
+      return renderNumberLabel(top, object.switch, boxStyle(object.box!).colour);
+    }
+    return null;
+  };
+
   const renderBoxStack = (object: LevelObject, index: number) => {
     const style = boxStyle(object.box!, object.outline !== undefined);
     const centres = stackCentres(object.at, object.raise, object.stack, scale);
     const edges = edgeColour(index, BOX_EDGE_COLOUR);
     return (
-      <>{centres.map((centre, boxIndex) => renderBox(centre, style, edges, boxIndex))}</>
+      <>
+        {centres.map((centre, boxIndex) => renderBox(centre, style, edges, boxIndex))}
+        {renderSwitchLabel(object, centres[centres.length - 1])}
+      </>
     );
   };
 
