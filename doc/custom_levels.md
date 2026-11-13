@@ -58,7 +58,9 @@ The level editor places Crash's spawn, the level's end, boxes, enemies and obsta
 Left-drag moves the camera, right-drag turns it, and the scroll wheel zooms. 
 Ctrl+Z undoes and Ctrl+Y redoes. 
 
-A box outlined in red is stuck in a wall or another box (this doesn't stop the level from building). **Drop to floor** puts the selected box just above the floor, and **raise** sets how far off the floor an object should be.
+A box outlined in red is stuck in a wall or another box (this doesn't stop the level from building), or is an outline whose switch isn't in the level (this does).
+
+Each switch has a number, shown over it. Tick **outline** on any other box and pick a switch under it to have that switch fill the box in. **Drop to floor** puts the selected box just above the floor, and **raise** sets how far off the floor an object should be.
 
 The arrow on the spawn object shows which way the camera faces at the start. With nothing selected, the right side shows the level's settings, saved to its `level.cfg`:
 
