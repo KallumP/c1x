@@ -118,5 +118,5 @@
   {"kind": "obstacle", "type": "fire_pit", "at": [2.53, 251.787, 2.531], "raise": 3, "every": 5, "offset": 3},
   {"kind": "obstacle", "type": "fire_pit", "at": [6, 252.2, 2.459], "raise": 3, "every": 5, "offset": 4},
 
-  {"kind": "end", "at": [-1.829, 247, 2.7], "raise": 0.25}
+  {"kind": "end", "at": [-1.829, 247, 2.7], "raise": 0.32}
 ]
