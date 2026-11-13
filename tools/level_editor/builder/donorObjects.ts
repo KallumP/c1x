@@ -397,7 +397,7 @@ const ruinsModelsBut = (own: string[]) => RUINS_OBJECT_MODELS.filter((model) => 
 
 // road to nowhere's planks' models (its BridC's) a plank leaves out: all but its own
 const PLANK_MODELS = ["BD1k", "BE1k", "BT1k", "Bs1k", "Be1k"];
-const planksBut = (own: string) => PLANK_MODELS.filter((model) => model !== own).flatMap((model) => [`${model}G`, `${model}V`]);
+const planksBut = (...own: string[]) => PLANK_MODELS.filter((model) => !own.includes(model)).flatMap((model) => [`${model}G`, `${model}V`]);
 
 const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   pushing_block: ruinsModelsBut(["Rp1w", "Rp7w"]),
@@ -407,7 +407,7 @@ const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   dropping_platform: ruinsModelsBut(["Rw2w"]),
   seesaw: ruinsModelsBut(["Rp4w"]),
   timed_plank: planksBut("BD1k"),
-  breaking_plank: planksBut("BE1k"),
+  breaking_plank: planksBut("BE1k", "Be1k"), // and the falling plank it breaks into
   rising_pillar: ["PlDsG", "PlDsV", "PlPsG", "PlPsV"], // temple ruins' other pillars' models: its PoPlC's, which a rising pillar never shows
   carrying_platform: ["PlDsG", "PlDsV", "PlUsG", "PlUsV"], // and those a carrying platform never shows
   moving_platform: ["PlD0G", "PlD0V", "PlUyG", "PlUyV"], // slippery climb's other platforms' models, which a moving platform never shows
