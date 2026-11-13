@@ -5,7 +5,7 @@ import math
 
 import bpy
 
-# the cave's materials (level_src/acid_cave), by what they look like
+# the cave's materials (level_src/4_acid_cave), by what they look like
 MOSS_PATH = "tex_077"
 DARK_MOSS = "tex_006"
 GREEN_ROCK = "tex_022"

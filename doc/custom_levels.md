@@ -6,7 +6,7 @@ You can turn a map made in Blender into a level that the game boots straight int
 2. [Place objects in the level editor](#2-place-objects-in-the-level-editor)
 3. [Build the level and play it](#3-build-the-level-and-play-it)
 
-Each level gets its own folder in `level_src/`, such as `level_src/tide_ruins/`. Some example levels are already there (see [level_src/README.md](../level_src/README.md)). To try one, skip to step 3.
+Each level gets its own folder in `level_src/`, such as `level_src/1_tide_ruins/`. Some example levels are already there (see [level_src/README.md](../level_src/README.md)). To try one, skip to step 3.
 
 ## 1. Make the map in Blender
 

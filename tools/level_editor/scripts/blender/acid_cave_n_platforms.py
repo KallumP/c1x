@@ -4,7 +4,7 @@
 # along +x, its top towards +y), then saves the .blend and exports the .obj.
 # the cut level maps the logo a quarter turn round, so run it headless after its
 # meshes are made or replaced (replace_cut_level_meshes.py):
-#   blender --background level_src/acid_cave/acid_cave.blend --python acid_cave_n_platforms.py
+#   blender --background level_src/4_acid_cave/acid_cave.blend --python acid_cave_n_platforms.py
 import os
 import sys
 

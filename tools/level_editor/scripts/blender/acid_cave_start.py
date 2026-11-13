@@ -5,7 +5,7 @@
 # lets crash walk its path; its ground either side is scenery with no edge.
 # then saves the .blend and exports the .obj. run headless after the other
 # acid_cave scripts (acid_cave_n_platforms.py):
-#   blender --background level_src/acid_cave/acid_cave.blend --python acid_cave_start.py
+#   blender --background level_src/4_acid_cave/acid_cave.blend --python acid_cave_start.py
 import math
 import os
 import sys

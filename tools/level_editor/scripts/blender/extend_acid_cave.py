@@ -1,11 +1,11 @@
-# extends the acid cave (level_src/acid_cave/acid_cave.blend) past the cut
+# extends the acid cave (level_src/4_acid_cave/acid_cave.blend) past the cut
 # level's end with new ground in its style, "reimagined": an organic middle
 # (acid_cave_middle.py: a drop into a crystal geode, a fungal grotto, a river
 # gorge), then a collapsed temple swallowed by the rock: a tiki hall between
 # acid channels, a crystal cavern crossed on stepping stones, and acid falls
 # stepping down to a round end chamber. it opens up the cut level's end into
 # them, saves the .blend and exports the .obj and .mtl again. run headless:
-#   blender --background level_src/acid_cave/acid_cave.blend --python extend_acid_cave.py
+#   blender --background level_src/4_acid_cave/acid_cave.blend --python extend_acid_cave.py
 # running it again replaces what it made before (objects named ext_... and pit_ext...)
 import math
 import os
