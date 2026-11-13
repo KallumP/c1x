@@ -22,8 +22,8 @@ describe("listLevels", () => {
     level("b_level", { "map.obj": "", "map.mtl": "" });
     level("a_level", { "a.obj": "" });
     expect(listLevels(root)).toEqual([
-      { name: "a_level", obj: "a.obj", scale: 400 },
-      { name: "b_level", obj: "map.obj", scale: 400 },
+      { name: "a_level", obj: "a.obj", scale: 400, songs: [] },
+      { name: "b_level", obj: "map.obj", scale: 400, songs: [] },
     ]);
   });
 
@@ -37,6 +37,11 @@ describe("listLevels", () => {
   test("takes the scale from level.cfg", () => {
     level("big", { "big.obj": "", "level.cfg": "scale = 2000\n" });
     expect(listLevels(root)[0].scale).toBe(2000);
+  });
+
+  test("lists the audio files in a level's folder, for it to pick as its song", () => {
+    level("cave", { "cave.obj": "", "Theme.MP3": "", "b.ogg": "", "a.wav": "", "c.flac": "", "music.mid": "", "notes.txt": "", "sub/d.mp3": "" });
+    expect(listLevels(root)[0].songs).toEqual(["a.wav", "b.ogg", "c.flac", "Theme.MP3"]);
   });
 });
 
