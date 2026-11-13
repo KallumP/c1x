@@ -5,6 +5,7 @@
  */
 #include <SDL2/SDL.h>
 #include <dirent.h>
+#include <sys/stat.h>
 #include "levels.h"
 #include "paths.h"
 
@@ -116,6 +117,58 @@ static void SortLevels(custom_levels *levels) {
   }
 }
 
+/* when the file at path was last saved; 0 if it isn't a file */
+static time_t SavedTime(const char *path) {
+  struct stat info;
+
+  if (stat(path, &info) != 0 || !S_ISREG(info.st_mode)) { return 0; }
+  return info.st_mtime;
+}
+
+/* whether the builder reads file_name: blender's own files it doesn't, only the map exported from them */
+static int IsBuildInput(const char *file_name) {
+  return !HasExtension(file_name, ".blend") && !HasExtension(file_name, ".blend1");
+}
+
+/* when a file in folder that the builder reads was last saved; 0 if none */
+static time_t NewestInputTime(const char *folder) {
+  DIR *dir = opendir(folder);
+  struct dirent *entry;
+  char path[PATH_MAX_LEN];
+  time_t newest = 0, saved;
+
+  if (!dir) { return 0; }
+  while ((entry = readdir(dir))) {
+    if (!IsBuildInput(entry->d_name)) { continue; }
+    JoinPath(path, sizeof(path), folder, entry->d_name);
+    saved = SavedTime(path);
+    if (saved > newest) { newest = saved; }
+  }
+  closedir(dir);
+  return newest;
+}
+
+/* whether a source of the built level called name was saved after it was built */
+static int IsOutOfDate(const char *repo, const char *name) {
+  char path[PATH_MAX_LEN], file[SETTINGS_BOOT_LEVEL_MAX+16];
+  time_t built;
+
+  SDL_snprintf(file, sizeof(file), "build/levels/%s.nsd", name);
+  JoinPath(path, sizeof(path), repo, file);
+  built = SavedTime(path);
+  SDL_snprintf(file, sizeof(file), "level_src/%s", name);
+  JoinPath(path, sizeof(path), repo, file);
+  return NewestInputTime(path) > built;
+}
+
+static void MarkOutOfDateLevels(const char *repo, custom_levels *levels) {
+  int i;
+
+  for (i = 0; i < levels->count; i++) {
+    levels->out_of_date[i] = levels->built[i] && IsOutOfDate(repo, levels->names[i]);
+  }
+}
+
 void ListCustomLevels(const char *repo, custom_levels *levels) {
   char folder[PATH_MAX_LEN];
 
@@ -125,6 +178,7 @@ void ListCustomLevels(const char *repo, custom_levels *levels) {
   JoinPath(folder, sizeof(folder), repo, "level_src");
   AddLevelSources(folder, levels);
   SortLevels(levels);
+  MarkOutOfDateLevels(repo, levels);
 }
 
 /* the index of the level called name, or -1 if there's none */

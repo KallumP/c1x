@@ -126,9 +126,9 @@ UTEST(launcher_levels, an_unbuilt_level_isnt_out_of_date) {
   custom_levels levels;
 
   MakeLevelsRepo();
-  MakeLevelSource("coral_reef", 1);
+  MakeLevelSource("wave_point", 1);
   ListCustomLevels(TEST_LEVELS_REPO, &levels);
-  ASSERT_FALSE(levels.out_of_date[FindCustomLevel(&levels, "coral_reef")]);
+  ASSERT_FALSE(levels.out_of_date[FindCustomLevel(&levels, "wave_point")]);
 }
 
 UTEST(launcher_levels, a_level_built_and_with_a_source_is_listed_once) {

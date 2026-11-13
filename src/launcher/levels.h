@@ -11,6 +11,7 @@ typedef struct {
   int count;
   char names[CUSTOM_LEVELS_MAX][SETTINGS_BOOT_LEVEL_MAX+1];
   int built[CUSTOM_LEVELS_MAX];
+  int out_of_date[CUSTOM_LEVELS_MAX]; /* built, but a source was saved since */
 } custom_levels;
 
 /* the repo's custom levels, sorted by name */
