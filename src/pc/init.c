@@ -8,6 +8,7 @@
 #endif
 
 #include "ns.h"
+#include "pc/audiosong.h"
 #include "math.h"
 #include "pad.h"
 #include "pc/gfx/gl.h"
@@ -188,6 +189,7 @@ static void InitBootLevel() {
     return;
   }
   NSSetCustomLevel(level);
+  AudioSongFind(level, &custom_level_audio_song);
   boot_lid = LID_TEST;
 }
 
