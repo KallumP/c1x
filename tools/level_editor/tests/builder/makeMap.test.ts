@@ -1686,6 +1686,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
     });
 
+    // it breaks into its falling plank (Be1kV, its code's animation 0xa00 for subtype 3, in its
+    // break, state 1): without it the game crashed the moment crash touched it
+    test("a breaking plank brings the falling plank it breaks into (Be1kG)", () => {
+      const { entries } = build([obstacle("breaking_plank")]);
+      expect(["Be1kG", "Be1kV"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
+
     test("timed and breaking planks share their code, each with its own plank", () => {
       const { entries } = build([obstacle("timed_plank"), obstacle("breaking_plank", { at: [1, 6, 0] })]);
       expect(["BD1kG", "BE1kG"].every((name) => entries.has(stringToEid(name)))).toBe(true);
