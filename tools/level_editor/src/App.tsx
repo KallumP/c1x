@@ -36,7 +36,7 @@ export default function App() {
   const warnings = useWarnings(state.objects, scale, triangles);
   const pathWarnings = usePathWarnings(state.objects, levelCfg.cfg.turn, scale, triangles);
   const [tool, setTool] = useState<Tool>(SELECT);
-  const [grid, setGrid] = useState(0.5);
+  const [grid, setGrid] = useState(0);
   const orbitRef = useRef<Orbit>(null);
   const turn = levelCfg.cfg.turn;
   const dragged = useRef<LevelObject | null>(null); // the object being dragged, as it was when grabbed
