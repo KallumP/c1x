@@ -612,11 +612,11 @@ describe("rotating platforms", () => {
 });
 
 describe("pushing blocks and platforms", () => {
-  test("they push out every so many seconds, put off by an offset, as a spiked log; without them, as sunset vista's (60 and 70 frames)", () => {
+  test("they push out every so many seconds, put off by an offset, as a spiked log; without them, as sunset vista's (60 frames) and near it (2.5 s, its platforms' 70 frames)", () => {
     const [block] = parseObjects('[{"kind": "obstacle", "type": "pushing_block", "at": [1, 2, 0], "every": 3, "offset": 1}]');
     expect([block.every, block.offset]).toEqual([3, 1]);
     expect(numberSetting(obstacleObject("pushing_block"), "every")).toBeCloseTo(2);
-    expect(numberSetting(obstacleObject("pushing_platform"), "every")).toBeCloseTo(70 / 30);
+    expect(numberSetting(obstacleObject("pushing_platform"), "every")).toBe(2.5);
   });
 
   test.each(["pushing_block", "pushing_platform"])("a %s is an obstacle, with no path", (type) => {

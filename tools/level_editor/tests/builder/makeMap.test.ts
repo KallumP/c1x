@@ -826,7 +826,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test.each([
       { type: "pushing_block", more: {}, flags: [60, 0] },
-      { type: "pushing_platform", more: {}, flags: [70, 0] },
+      { type: "pushing_platform", more: {}, flags: [75, 0] },
       { type: "pushing_platform", more: { every: 4, offset: 1 }, flags: [120, 90] },
     ] as const)("a $type ($more) has its timing in its init flags", ({ type, more, flags }) => {
       expect(initFlagsOf(build([obstacle(type, more)]).zone, OBSTACLE_ENTITIES[type]).slice(0, 2)).toEqual(flags);
