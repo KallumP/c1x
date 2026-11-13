@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { ByteWriter, padTo4 } from "../../builder/bytes";
 import {
-  BOX_TYPE, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityPath, entityType, linkSwitches, newEntityIds, withEntityId,
+  BOX_TYPE, ENTITY_IDS_MAX, ENTITY_INIT_FLAGS, entityId, entityPath, entityType, linkSwitches, newEntityIds, withEntityId, withInitFlagB,
   withPath, type PlacedBox,
 } from "../../builder/entities";
 import { BASE_LEVEL } from "../../builder/baseLevel";
@@ -69,36 +69,62 @@ describe("entity paths", () => {
 });
 
 describe("switches", () => {
-  // an outline box's second init flag marks where it is in its switch's chain
+  // a plain or iron outline box's second init flag marks where it is in its switch's chain
   const FIRST_IN_CHAIN = 12;
   const LATER_IN_CHAIN = 4;
   const initFlags = (item: Buffer) => [item.readInt16LE(ENTITY_INIT_FLAGS + 2), item.readInt16LE(ENTITY_INIT_FLAGS + 4)];
 
-  // the boxes as placed: each zone's entities in order
-  const placedBoxes = (entities: Buffer[][]): PlacedBox[] => entities.flatMap((zone, zoneIndex) =>
-    zone.map((item, index) => ({ subtype: entityType(item)[1], zone: zoneIndex, index, id: entityId(item) })));
+  // a switch numbered number, or an outline of switch outline, with its id
+  type Placing = { subtype: number; id: number; switch?: number; outline?: number };
+  // the boxes placed in zones, each a list of them in order, with the entities they place
+  function placed(zones: Placing[][]): { entities: Buffer[][]; boxes: PlacedBox[] } {
+    const entities = zones.map((zone) => zone.map(({ subtype, id }) => entity(BOX_TYPE, subtype, id, [])));
+    const boxes = zones.flatMap((zone, zoneIndex) => zone.map(({ id, ...rest }, index) => ({ ...rest, zone: zoneIndex, index, id })));
+    return { entities, boxes };
+  }
+  const switchBox = (id: number, number: number): Placing => ({ subtype: 7, id, switch: number });
+  const outline = (id: number, number: number, subtype = 13): Placing => ({ subtype, id, outline: number });
 
-  test("a switch makes the level's outline boxes solid, along a chain of their ids", () => {
+  test("a switch fills in its outline boxes along a chain of their ids, across zones", () => {
     // on n. sanity beach, the ! box's third init flag is the id of the first outline box, and each
     // outline box's is the next one's (0 for the last)
-    const entities = [[entity(BOX_TYPE, 13, 10, []), entity(BOX_TYPE, 7, 11, [])], [entity(BOX_TYPE, 13, 12, []), entity(BOX_TYPE, 13, 13, [])]];
-    linkSwitches(entities, placedBoxes(entities));
+    const { entities, boxes } = placed([[outline(10, 1), switchBox(11, 1)], [outline(12, 1), outline(13, 1)]]);
+    linkSwitches(entities, boxes);
     expect(initFlags(entities[0][1])[1]).toBe(10);
     expect([entities[0][0], entities[1][0], entities[1][1]].map(initFlags)).toEqual([[FIRST_IN_CHAIN, 12], [LATER_IN_CHAIN, 13], [LATER_IN_CHAIN, 0]]);
   });
 
-  test("iron outlines are in the same chain as outlines, in the order they're placed", () => {
+  test("each switch has its own chain, of the outlines with its number", () => {
+    // as road to nowhere's switches
+    const { entities, boxes } = placed([[switchBox(10, 1), switchBox(11, 2), outline(12, 2), outline(13, 1), outline(14, 2)]]);
+    linkSwitches(entities, boxes);
+    expect(entities[0].map((item) => initFlags(item)[1])).toEqual([13, 12, 14, 0, 0]);
+  });
+
+  test("iron outlines are in their switch's chain with plain ones, in the order they're placed", () => {
     // as in generator room, where the ! box's chain goes outline, iron outline, iron outline, outline, ...
-    const entities = [[entity(BOX_TYPE, 7, 10, []), entity(BOX_TYPE, 13, 11, []), entity(BOX_TYPE, 19, 12, []), entity(BOX_TYPE, 13, 13, [])]];
-    linkSwitches(entities, placedBoxes(entities));
+    const { entities, boxes } = placed([[switchBox(10, 1), outline(11, 1), outline(12, 1, 19), outline(13, 1)]]);
+    linkSwitches(entities, boxes);
     expect(initFlags(entities[0][0])[1]).toBe(11);
     expect(entities[0].slice(1).map(initFlags)).toEqual([[FIRST_IN_CHAIN, 12], [LATER_IN_CHAIN, 13], [LATER_IN_CHAIN, 0]]);
   });
 
+  test("an outline of any other box keeps its second init flag, which has it start as an outline", () => {
+    const { entities, boxes } = placed([[switchBox(10, 1), outline(11, 1, 8), outline(12, 1)]]);
+    entities[0][1] = withInitFlagB(entities[0][1], 3);
+    linkSwitches(entities, boxes);
+    expect(entities[0].slice(1).map(initFlags)).toEqual([[3, 12], [LATER_IN_CHAIN, 0]]);
+  });
+
   test("a switch without outline boxes links to none", () => {
-    const entities = [[entity(BOX_TYPE, 7, 10, [])]];
-    linkSwitches(entities, placedBoxes(entities));
+    const { entities, boxes } = placed([[switchBox(10, 1)]]);
+    linkSwitches(entities, boxes);
     expect(initFlags(entities[0][0])[1]).toBe(0);
+  });
+
+  test("an outline of a switch the level hasn't is an error", () => {
+    const { entities, boxes } = placed([[switchBox(10, 1), outline(11, 2)]]);
+    expect(() => linkSwitches(entities, boxes)).toThrow("an outline box is an outline of switch 2, but the level has no switch 2");
   });
 });
 
