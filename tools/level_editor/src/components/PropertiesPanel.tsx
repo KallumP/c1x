@@ -1,15 +1,15 @@
 // the selected object's settings, or the level's (its level.cfg) with nothing selected
 import { useEffect, useRef, useState } from "react";
 import type { LevelCfg } from "../api";
-import type { EditorAction, EditorState } from "../editor";
+import { switchNumbers, type EditorAction, type EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeHeading, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
-import { BOX_TYPES, boxTypeName, hasNodes, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, settingMax, PATH_NODES_MAX, ROTATING_OBSTACLES, type BoxType, type LevelObject, type NumberSetting, type ObjectType, type ObstacleType, type Vec3, objectType } from "../objects";
+import { BOX_TYPES, boxTypeName, hasNodes, hasOutlineModel, isSwitch, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, settingMax, PATH_NODES_MAX, ROTATING_OBSTACLES, type BoxType, type LevelObject, type NumberSetting, type ObjectType, type ObstacleType, type Vec3, objectType } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
 import { isAudioSongName, songChoices, songLabel } from "../music";
-import { ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
+import { CheckboxField, ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
 import "./PropertiesPanel.css";
 
 const AXES = ["x", "y"] as const;
@@ -109,6 +109,72 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
     ));
   };
 
+  const renderSwitchNumberField = (switchBox: LevelObject) => (
+    <NumberField
+      label="number"
+      value={switchBox.switch!}
+      step={1}
+      min={1}
+      onChange={(number) => change({ switch: Math.max(1, Math.round(number)) })}
+    />
+  );
+
+  // ticking a box's outline makes it an outline of the level's first switch; unticking, a box again
+  const toggleOutline = (isOutline: boolean, numbers: number[]) => {
+    if (isOutline) {
+      change({ outline: numbers[0] });
+      return;
+    }
+    change({ outline: undefined });
+  };
+
+  // which switch an outline belongs to: the level's switches, and its own even if it's gone (which warns)
+  const renderOutlineSwitchField = (box: LevelObject, numbers: number[]) => {
+    const choices = [...new Set([...numbers, box.outline!])].sort((first, second) => first - second).map(String);
+    return (
+      <ChoiceField
+        label="switch"
+        value={String(box.outline)}
+        choices={choices}
+        onChange={(number) => change({ outline: Number(number) })}
+      />
+    );
+  };
+
+  const renderOutlineHint = (box: LevelObject, numbers: number[]) => {
+    if (numbers.length === 0) {
+      return <p className="hint">Place a switch (! box) to make boxes outlines of it.</p>;
+    }
+    if (box.outline !== undefined && !hasOutlineModel(box.box!)) {
+      return <p className="hint">The game only has outlines of plain and iron boxes, so this one is hidden until its switch is hit.</p>;
+    }
+    return null;
+  };
+
+  const renderOutlineFields = (box: LevelObject) => {
+    const numbers = switchNumbers(state.objects);
+    const isOutline = box.outline !== undefined;
+    return (
+      <>
+        <CheckboxField
+          label="outline"
+          checked={isOutline}
+          disabled={!isOutline && numbers.length === 0}
+          onChange={(checked) => toggleOutline(checked, numbers)}
+        />
+        {isOutline && renderOutlineSwitchField(box, numbers)}
+        {renderOutlineHint(box, numbers)}
+      </>
+    );
+  };
+
+  const renderSwitchFields = (box: LevelObject) => {
+    if (isSwitch(box)) {
+      return renderSwitchNumberField(box);
+    }
+    return renderOutlineFields(box);
+  };
+
   const renderBoxFields = (box: LevelObject) => (
     <>
       <ChoiceField
@@ -117,6 +183,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, scale, 
         choices={Object.keys(BOX_TYPES) as BoxType[]}
         onChange={(boxType) => change({ box: boxType })}
       />
+      {renderSwitchFields(box)}
       <NumberField
         label="stack"
         value={box.stack}

@@ -154,6 +154,28 @@ function withSwitchSettings(object: LevelObject, others: Objects): LevelObject {
   return { ...rest, outline };
 }
 
+// the level's switch numbers, lowest first
+export const switchNumbers = (objects: Objects): number[] =>
+  objects.flatMap((object) => object.switch ?? []).sort((first, second) => first - second);
+
+// whether changes give a switch a number one of others has
+const takesTakenNumber = (changes: Partial<LevelObject>, others: Objects) =>
+  changes.switch !== undefined && switchNumbers(others).includes(changes.switch);
+
+// objects with the outlines of switch from moved to switch to, as their switch was renumbered
+function withOutlinesRenumbered(objects: Objects, from: number | undefined, to: number | undefined): Objects {
+  if (from === undefined || to === undefined || from === to) {
+    return objects;
+  }
+  const renumbered = (object: LevelObject) => {
+    if (object.outline !== from) {
+      return object;
+    }
+    return { ...object, outline: to };
+  };
+  return objects.map(renumbered);
+}
+
 // a level has one spawn and one end, so adding another moves it
 function add(state: EditorState, added: LevelObject): EditorState {
   const object = withSwitchSettings(added, state.objects);
@@ -170,8 +192,12 @@ function add(state: EditorState, added: LevelObject): EditorState {
 // checkpoint. either way, a selected node the path no longer has is let go of
 function update(state: EditorState, index: number, changes: Partial<LevelObject>, record: boolean): EditorState {
   const others = state.objects.filter((_, objectIndex) => objectIndex !== index);
+  if (takesTakenNumber(changes, others)) {
+    return state;
+  }
   const changed = (object: LevelObject) => withSwitchSettings({ ...object, ...changes }, others);
-  const objects = state.objects.map((object, objectIndex) => (objectIndex === index ? changed(object) : object));
+  const updated = state.objects.map((object, objectIndex) => (objectIndex === index ? changed(object) : object));
+  const objects = withOutlinesRenumbered(updated, state.objects[index].switch, updated[index].switch);
   if (record) {
     return change(state, objects, state.selected);
   }

@@ -555,6 +555,10 @@ function readStack(fields: Record<string, unknown>, objectNumber: number): Pick<
   return { stack };
 }
 
+// the boxes the game has outline boxes of; an outline of any other is hidden until its switch is hit
+const TYPES_WITH_OUTLINES: BoxType[] = ["basic", "iron"];
+export const hasOutlineModel = (box: NonNullable<LevelObject["box"]>) => TYPES_WITH_OUTLINES.includes(boxTypeName(box));
+
 // whether a box is a switch (! box), by its type or subtype
 export const isSwitch = (object: LevelObject) => object.kind === "box" && object.box !== undefined && boxTypeName(object.box) === "switch";
 
