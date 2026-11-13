@@ -40,6 +40,8 @@ describe("obstacle shapes", () => {
     { obstacle: "falling_platform", bottom: -444, top: [-10, 30], across: [930, 1010], long: [930, 1010] },
     // sunset vista's seesaw: four blocks (Rp4wG, 600 x 600, 800 out), two either side of its spot at 800 and 1600
     { obstacle: "seesaw", bottom: -600, top: [-10, 30], across: [3700, 3900], long: [760, 840] },
+    // road to nowhere's plank BD1kG: 1200 across, 350 deep, 50 thick, its top at its spot
+    { obstacle: "timed_plank", bottom: -50, top: [-10, 30], across: [1160, 1240], long: [320, 380] },
     // temple ruins' slamming walls, its two halves (RcRsG, RcLsG: 1200 across, 1031 tall, 606 deep) shut, meeting at its spot
     { obstacle: "slamming_walls", bottom: 0, top: [1000, 1060], across: [2350, 2450], long: [580, 640] },
     // temple ruins' rising pillar PlUsG: 953 across, its top at its spot and 3203 down

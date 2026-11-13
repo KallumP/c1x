@@ -104,7 +104,9 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // - falling_platform
 // sunset vista's seesaw, stone blocks either side of its spot, tipping by where crash stands:
 // - seesaw
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform", "bounce_pad", "steam_vent", "moving_platform", "dropping_platform", "falling_platform", "seesaw"] as const;
+// road to nowhere's wooden plank, breaking a moment after crash stands on it:
+// - timed_plank
+export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform", "bounce_pad", "steam_vent", "moving_platform", "dropping_platform", "falling_platform", "seesaw", "timed_plank"] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
@@ -165,14 +167,18 @@ function countFallback(enemy: ObjectType | undefined): number {
 // how many seconds between a bat roost's flocks: temple ruins' roosts' (their
 // code's default, 300 frames), and sunset vista's first leader bats' (135 frames)
 export const BAT_DELAY = 10;
+export const TIMED_PLANK_DELAY = 3; // seconds: near road to nowhere's random 57 to 146 frames
 export const LEADER_BATS_DELAY = 4.5;
 export const DELAY_MIN = 1;
 export const DELAY_MAX = 20;
 
-// the seconds between flocks for a bat roost without a delay
+// the seconds between flocks for a bat roost without a delay, or before a timed plank breaks
 function delayFallback(enemy: ObjectType | undefined): number {
   if (enemy === "leader_bats") {
     return LEADER_BATS_DELAY;
+  }
+  if (enemy === "timed_plank") {
+    return TIMED_PLANK_DELAY;
   }
   return BAT_DELAY;
 }
@@ -268,7 +274,7 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   speed: { types: [...PATH_ENEMIES, "sliding_pillar", "carrying_platform", "moving_platform"], typesNamed: `${PATH_ENEMIES_NAMED}, sliding pillars, carrying platforms and moving platforms`, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: speedFallback, meaning: "times the game's own pace, or a sliding pillar's, carrying platform's or moving platform's metres a second", maxFor: { sliding_pillar: SLIDING_PILLAR_SPEED_MAX, carrying_platform: CARRYING_PLATFORM_SPEED_MAX, moving_platform: MOVING_PLATFORM_SPEED_MAX } },
   start: { types: ["rolling_stone"], typesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
   count: { types: ["badger", "walking_spider", "bat", "leader_bats"], typesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
-  delay: { types: ["bat", "leader_bats"], typesNamed: "bats and leader bats", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks" },
+  delay: { types: ["bat", "leader_bats", "timed_plank"], typesNamed: "bats, leader bats and timed planks", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks, or before a timed plank breaks" },
   length: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_LENGTH_MIN, max: SLIDE_LENGTH_MAX, whole: false, fallback: () => SLIDE_LENGTH, meaning: "how long it is, in metres" },
   angle: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_ANGLE_MIN, max: SLIDE_ANGLE_MAX, whole: false, fallback: () => SLIDE_ANGLE, meaning: "how steeply it slopes, in degrees" },
   rotation: { types: ["mossy_slide", ...GATES], typesNamed: "mossy slides and gates", min: 0, max: SLIDE_ROTATION_MAX, whole: false, fallback: () => 0, meaning: "which way it slides down, from across the map, or falls, from towards the camera: degrees anticlockwise seen from above" },
@@ -314,7 +320,7 @@ export interface LevelObject {
   count?: number;       // how many badgers or walking spiders come out at once, or bats a roost sends (BADGER_COUNT, WALKING_SPIDER_COUNT, BAT_COUNT, LEADER_BATS_COUNT without one)
   every?: number;       // the seconds between a timed obstacle's pushes or flames (its own level's without one: see TIMED_EVERY)
   offset?: number;      // the seconds a spiked log's pushes are put off by, so a row can push in turn (0 without one)
-  delay?: number;       // the seconds between a bat roost's flocks (BAT_DELAY, LEADER_BATS_DELAY without one)
+  delay?: number;       // the seconds between a bat roost's flocks (BAT_DELAY, LEADER_BATS_DELAY without one), or before a timed plank breaks (TIMED_PLANK_DELAY)
   range?: number;       // how near crash comes, in metres, before a gunman shoots (GUNMAN_RANGE without one)
 }
 
@@ -351,7 +357,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 const SETTINGS = ["kind", "at", "raise"];
 const BOX_SETTINGS = ["type", "subtype", "stack"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
-const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset", "platforms", "radius", "shake", "down"];
+const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset", "platforms", "radius", "shake", "down", "delay"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
 // a word with "a" or "an" before it, as it sounds: "a box", "an enemy"

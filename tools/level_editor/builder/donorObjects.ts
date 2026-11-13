@@ -90,6 +90,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   dropping_platform: SUNSET_VISTA,
   falling_platform: THE_LOST_CITY,
   seesaw: SUNSET_VISTA,
+  timed_plank: ROAD_TO_NOWHERE,
 };
 
 export interface DonorObject {
@@ -393,6 +394,10 @@ const BOULDER_DASH_NON_GATE_MODELS = ["Jube", "JuBe", "JuFe", "JuLe", "JuSe"];
 // its rotating pots Rp3w and rotating platforms Rw1w)
 const ruinsModelsBut = (own: string[]) => RUINS_OBJECT_MODELS.filter((model) => !own.includes(model)).flatMap((model) => [`${model}G`, `${model}V`]);
 
+// road to nowhere's planks' models (its BridC's) a plank leaves out: all but its own
+const PLANK_MODELS = ["BD1k", "BE1k", "BT1k", "Bs1k", "Be1k"];
+const planksBut = (own: string) => PLANK_MODELS.filter((model) => model !== own).flatMap((model) => [`${model}G`, `${model}V`]);
+
 const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   pushing_block: ruinsModelsBut(["Rp1w", "Rp7w"]),
   pushing_platform: ruinsModelsBut(["Rw1w", "Rw3w"]),
@@ -400,6 +405,7 @@ const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   rotating_platforms: ruinsModelsBut(["Rw1w"]),
   dropping_platform: ruinsModelsBut(["Rw2w"]),
   seesaw: ruinsModelsBut(["Rp4w"]),
+  timed_plank: planksBut("BD1k"),
   rising_pillar: ["PlDsG", "PlDsV", "PlPsG", "PlPsV"], // temple ruins' other pillars' models: its PoPlC's, which a rising pillar never shows
   carrying_platform: ["PlDsG", "PlDsV", "PlUsG", "PlUsV"], // and those a carrying platform never shows
   moving_platform: ["PlD0G", "PlD0V", "PlUyG", "PlUyV"], // slippery climb's other platforms' models, which a moving platform never shows
@@ -551,6 +557,41 @@ const RUINS_OWN_CHILDREN: [number, number][] = [
 ];
 const SLAMMING_WALL_CODE_PATCHES: CodePatch[] = RUINS_OWN_CHILDREN.map(([at, was]) => childSpawnedAs(at, was, objectEntity("slamming_walls")[0]));
 
+// road to nowhere's planks' code's spawn of its own kind (its s7's), by its
+// slot there (23), which moves (see MOVED_ENEMY_CODE)
+const PLANK_OWN_CHILD: [number, number] = [0x106, 0x8a1171c1];
+// and its timed plank (s1, state 3) breaking as soon as crash is over its middle
+// (its status_a's 0x1000, which GoolCollide in src/gool.c sets while he's
+// inside its bound less its hotspot, and he's its collider): its break (CSNZ
+// state 1) branches to PLANK_CODE_ADDITION instead, which waits its delay first
+const PLANK_CODE_LENGTH = 0x163;
+const PLANK_BREAK_AT = 0x8e;
+const PLANK_CODE_PATCHES: CodePatch[] = [
+  childSpawnedAs(...PLANK_OWN_CHILD, objectEntity("timed_plank")[0]),
+  { at: PLANK_BREAK_AT, was: 0x8257c001, now: branch(PLANK_BREAK_AT, PLANK_CODE_LENGTH) }, // CSNZ self[0xdc], 1 → BRA to the addition
+];
+
+// the timed plank's break, its condition (crash over its middle) on the stack:
+// the first time, its frame count (obj[0xfc]) is kept in obj[0x16c] (s1 never
+// uses it), and it breaks once 0x100 times the frames since reach its init
+// flag A (obj[0xbc], in 256ths): its delay. GOOL's "OP a, b" works out b OP a
+const PLANK_CODE_ADDITION: CodeAddition = {
+  after: PLANK_CODE_LENGTH,
+  instructions: [
+    0x8227c003, // BEQZ self[0xdc], 3: crash isn't over its middle
+    0x11e43e1f, // MOVE obj[0x16c], push(): its timer's start
+    0x8217c001, // BNEZ self[0xdc], 1: started already
+    0x11e27e43, // MOVE obj[0xfc], obj[0x16c]: start it now
+    0x11e43e1f, // MOVE obj[0x16c], push()
+    0x8227c004, // BEQZ self[0xdc], 4: not started: return
+    0x01e43e27, // SUB obj[0x16c], obj[0xfc]: the frames since
+    0x02801e1f, // MULT 0x100, pop(): in 256ths, as its flags are
+    0x0ce17e1f, // SGE obj[0xbc], pop(): its delay's up
+    0x8257c001, // CSNZ self[0xdc], 1: break
+    0x82894000, // RET
+  ],
+};
+
 const LIZARD_CODE_PATCHES: CodePatch[] = [
   { at: GREEN_LEAP_SETS_X, was: MOVE_TO_X, now: branch(GREEN_LEAP_SETS_X, GREEN_LEAP_Z) },
   { at: RED_HOP_SETS_X, was: MOVE_TO_X, now: branch(RED_HOP_SETS_X, RED_HOP_Z) },
@@ -585,6 +626,7 @@ const LIZARD_CODE_ADDITION: CodeAddition = {
 const ENEMY_CODE_ADDITIONS: Partial<Record<ObjectType, CodeAddition>> = {
   lizard: LIZARD_CODE_ADDITION,
   red_lizard: LIZARD_CODE_ADDITION,
+  timed_plank: PLANK_CODE_ADDITION,
 };
 
 // toxic waste's barrels (BaraC) stop flattening crash 5 points short of their
@@ -633,6 +675,7 @@ const ENEMY_CODE_PATCHES: Partial<Record<ObjectType, CodePatch[]>> = {
   falling_spiked_log: GATE_OBJECTS_CODE_PATCHES,
   fire_pit: GATE_OBJECTS_CODE_PATCHES,
   slamming_walls: SLAMMING_WALL_CODE_PATCHES,
+  timed_plank: PLANK_CODE_PATCHES,
 };
 
 // instructions with an addition after their end; an error if they aren't as long as it needs

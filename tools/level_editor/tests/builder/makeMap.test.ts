@@ -1634,6 +1634,54 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasRoadToNowhere)("timed planks, from road to nowhere", () => {
+    // its slot (23) is the one boulder dash's gates' code (BldOC) takes in custom levels
+    test("a timed plank is road to nowhere's BridC subtype 1, moved to slot 18, at its spot, with its plank (BD1kG) and not its level's other planks", () => {
+      const { level, entries, zone } = build([obstacle("timed_plank")]);
+      expect(OBSTACLE_ENTITIES.timed_plank).toEqual([18, 1]);
+      expect(level.nsd.ldat.execMap[18]).toBe(stringToEid("BrgNC"));
+      expect(entries.has(stringToEid("BD1kG"))).toBe(true);
+      expect(entries.has(stringToEid("Bs1kG"))).toBe(false);
+      const placed = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.timed_plank))!;
+      expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
+    });
+
+    test("a timed plank's code spawns its own kind (CHLD 0x17 at 0x106) in its new slot", () => {
+      const code = build([obstacle("timed_plank")]).entries.get(stringToEid("BrgNC"))!.items[1];
+      expect((code.readUInt32LE(0x106 * 4) >>> 12) & 0x3f).toBe(18);
+    });
+
+    // init flag A: the frames it waits, once crash is first over its middle, before it breaks
+    test.each([
+      { more: {}, frames: 90 },
+      { more: { delay: 5 }, frames: 150 },
+    ])("a timed plank ($more) breaks $frames frames after crash stands on it, not turned by its flags", ({ more, frames }) => {
+      const placed = zoneEntities(build([obstacle("timed_plank", more as Partial<LevelObject>)]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.timed_plank))!;
+      expect(placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(frames);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
+
+    // it broke as soon as crash was over its middle (its status_a's 0x1000, set by GoolCollide in
+    // src/gool.c): its break (0x8e, CSNZ state 1) branches to added code (after its 0x163 words)
+    // that starts a timer the first time (obj[0xfc], its frame count, into obj[0x16c]) and breaks
+    // once 0x100 times the frames since reach its flag A (obj[0xbc]); its wobble's timing is as it was
+    test("a timed plank's code breaks its flag A's frames after crash is first over its middle", () => {
+      const code = build([obstacle("timed_plank")]).entries.get(stringToEid("BrgNC"))!;
+      const words = (from: number, count: number) => Array.from({ length: count }, (_, index) => code.items[1].readUInt32LE((from + index) * 4));
+      expect(words(0x73, 2)).toEqual([0x10017800, 0x00e1f018]);
+      expect(code.items[2].readInt32LE(0x5c)).toBe(90);
+      expect(words(0x8e, 1)).toEqual([(0x82094000 | (0x163 - 0x8f)) >>> 0]);
+      expect(words(0x163, 11)).toEqual([
+        0x8227c003, 0x11e43e1f, 0x8217c001, 0x11e27e43, 0x11e43e1f, 0x8227c004, 0x01e43e27, 0x02801e1f, 0x0ce17e1f, 0x8257c001, 0x82894000,
+      ]);
+    });
+
+    test("a level with timed planks and gates has both codes", () => {
+      const { level } = build([obstacle("timed_plank"), obstacle("tall_thin_gate", { at: [1, 6, 0] })]);
+      expect([level.nsd.ldat.execMap[18], level.nsd.ldat.execMap[23]]).toEqual([stringToEid("BrgNC"), stringToEid("BldOC")]);
+    });
+  });
+
   describe.skipIf(!hasSlipperyClimb)("moving platforms, from slippery climb", () => {
     const platform = (more: Partial<LevelObject> = {}) => {
       const { level, entries, zone } = build([obstacle("moving_platform", more)]);

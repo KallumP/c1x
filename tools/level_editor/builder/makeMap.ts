@@ -320,6 +320,15 @@ function withDropTiming(entity: Buffer, obstacle: LevelObject): Buffer {
   return withInitFlagB(withInitFlagA(withNoRotationFromFlags(entity), shake), down);
 }
 
+// entity with a timed plank's wait once crash stands on it before it breaks
+// (its delay, in frames) in its init flag A, not turned by it; any other's as it is
+function withBreakDelay(entity: Buffer, object: LevelObject): Buffer {
+  if (object.obstacle !== "timed_plank") {
+    return entity;
+  }
+  return withInitFlagA(withNoRotationFromFlags(entity), Math.round(numberSetting(object, "delay") * FRAMES_A_SECOND));
+}
+
 // how long a path through points is
 function pathLength(points: Vec3[]): number {
   return points.slice(1).reduce((sum, point, index) => sum + Math.hypot(...point.map((value, axis) => value - points[index][axis])), 0);
@@ -535,7 +544,7 @@ class ObjectPlacer {
   placeWithItsPath(object: LevelObject, example: Buffer): void {
     const { zone, at } = this.inZone(this.positionOf(object));
     const placed = withPathFrom(withEntityId(example, this.ids.shift()!), at, leapWay(object.reverse === true));
-    this.entities[zone].push(withDropTiming(withRiseTiming(withGateTurn(placed, object), object), object));
+    this.entities[zone].push(withBreakDelay(withDropTiming(withRiseTiming(withGateTurn(placed, object), object), object), object));
   }
 
   // a floating leaf or sliding pillar (example) moving along its path's nodes

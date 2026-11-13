@@ -26,6 +26,9 @@ function numberSlider(object: LevelObject, setting: NumberSetting): { label: str
   if (setting === "speed" && METRES_A_SECOND.includes(object.obstacle!)) {
     return { label: "speed m/s", step: 0.05 };
   }
+  if (setting === "delay" && object.obstacle === "timed_plank") {
+    return { label: "break delay s", step: 0.5 };
+  }
   if (setting === "every" && ROTATING_OBSTACLES.includes(object.obstacle!)) {
     return { label: "turn time s", step: 0.5 };
   }
