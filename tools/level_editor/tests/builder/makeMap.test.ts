@@ -1651,9 +1651,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect((code.readUInt32LE(0x106 * 4) >>> 12) & 0x3f).toBe(18);
     });
 
-    // init flag A: the frames it waits once crash stands on it before it breaks; its code's
-    // random 57 to 146 frames (RND ireg[0x5c] plus ireg[0x60]) reads it instead: SHA by
-    // ireg[0x5c], made -8, of its flag A (obj[0xbc]), plus 0
+    // init flag A: the frames it waits, once crash is first over its middle, before it breaks
     test.each([
       { more: {}, frames: 90 },
       { more: { delay: 5 }, frames: 150 },
@@ -1663,10 +1661,19 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(placed.readUInt16LE(4) & 1).toBe(1);
     });
 
-    test("a timed plank's code waits its flag A's frames, not a random while", () => {
+    // it broke as soon as crash was over its middle (its status_a's 0x1000, set by GoolCollide in
+    // src/gool.c): its break (0x8e, CSNZ state 1) branches to added code (after its 0x163 words)
+    // that starts a timer the first time (obj[0xfc], its frame count, into obj[0x16c]) and breaks
+    // once 0x100 times the frames since reach its flag A (obj[0xbc]); its wobble's timing is as it was
+    test("a timed plank's code breaks its flag A's frames after crash is first over its middle", () => {
       const code = build([obstacle("timed_plank")]).entries.get(stringToEid("BrgNC"))!;
-      expect([code.items[1].readUInt32LE(0x73 * 4), code.items[1].readUInt32LE(0x74 * 4)]).toEqual([0x15017e17, 0x00e1f800]);
-      expect(code.items[2].readInt32LE(0x5c)).toBe(-8);
+      const words = (from: number, count: number) => Array.from({ length: count }, (_, index) => code.items[1].readUInt32LE((from + index) * 4));
+      expect(words(0x73, 2)).toEqual([0x10017800, 0x00e1f018]);
+      expect(code.items[2].readInt32LE(0x5c)).toBe(90);
+      expect(words(0x8e, 1)).toEqual([0x82094000 | (0x163 - 0x8f)]);
+      expect(words(0x163, 11)).toEqual([
+        0x8227c003, 0x11e43e1f, 0x8217c001, 0x11e27e43, 0x11e43e1f, 0x8227c004, 0x01e43e27, 0x02801e1f, 0x0ce17e1f, 0x8257c001, 0x82894000,
+      ]);
     });
 
     test("a level with timed planks and gates has both codes", () => {
