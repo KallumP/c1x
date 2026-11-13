@@ -339,6 +339,7 @@ export interface LevelObject {
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
   switch?: number;      // a switch's number, which its outlines name (1 or more, one of a kind in the level)
+  outline?: number;     // the number of the switch a box is an outline of, which fills it in
   enemy?: EnemyType;    // an enemy's type
   obstacle?: ObstacleType; // an obstacle's type
   path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised); leader bats' second leader, from their first
@@ -390,7 +391,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 }
 
 const SETTINGS = ["kind", "at", "raise"];
-const BOX_SETTINGS = ["type", "subtype", "switch", "stack"];
+const BOX_SETTINGS = ["type", "subtype", "switch", "stack", "outline"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
 const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset", "platforms", "radius", "shake", "down", "delay"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
@@ -576,10 +577,25 @@ function readSwitchNumber(fields: Record<string, unknown>, box: LevelObject, obj
   return { switch: fields.switch };
 }
 
+// the switch a box is an outline of (its number), from its fields in objects.json.
+// a switch isn't an outline; an outline's switch needn't be in the level (the editor warns of it)
+function readOutline(fields: Record<string, unknown>, box: LevelObject, objectNumber: number): Pick<LevelObject, "outline"> {
+  if (!("outline" in fields)) {
+    return {};
+  }
+  if (isSwitch(box)) {
+    throw new Error(`object ${objectNumber}: a switch can't be an outline`);
+  }
+  if (!isWhole(fields.outline) || fields.outline < 1) {
+    throw new Error(`object ${objectNumber}: outline should be the number of a switch that fills it in`);
+  }
+  return { outline: fields.outline };
+}
+
 // a box's settings, from its fields in objects.json, after the objects before it
 function readBox(fields: Record<string, unknown>, objectNumber: number, earlier: LevelObject[]): Partial<LevelObject> {
   const box: LevelObject = { kind: "box", at: [0, 0, 0], raise: 0, stack: 1, ...readBoxType(fields, objectNumber) };
-  return { box: box.box, ...readStack(fields, objectNumber), ...readSwitchNumber(fields, box, objectNumber, earlier) };
+  return { box: box.box, ...readStack(fields, objectNumber), ...readSwitchNumber(fields, box, objectNumber, earlier), ...readOutline(fields, box, objectNumber) };
 }
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
@@ -675,6 +691,9 @@ function formatObject(object: LevelObject): string {
   }
   if (object.kind === "box" && object.stack !== 1) {
     parts.push(`"stack": ${object.stack}`);
+  }
+  if (object.outline !== undefined) {
+    parts.push(`"outline": ${object.outline}`);
   }
   if (object.path) {
     const nodes = object.path.map((node) => `[${node.map(roundToMillimetre).join(", ")}]`);
