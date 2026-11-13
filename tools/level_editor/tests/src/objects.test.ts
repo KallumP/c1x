@@ -612,11 +612,11 @@ describe("rotating platforms", () => {
 });
 
 describe("pushing blocks and platforms", () => {
-  test("they push out every so many seconds, put off by an offset, as a spiked log; without them, as sunset vista's (60 and 70 frames)", () => {
+  test("they push out every so many seconds, put off by an offset, as a spiked log; without them, as sunset vista's (60 frames) and near it (2.5 s, its platforms' 70 frames)", () => {
     const [block] = parseObjects('[{"kind": "obstacle", "type": "pushing_block", "at": [1, 2, 0], "every": 3, "offset": 1}]');
     expect([block.every, block.offset]).toEqual([3, 1]);
     expect(numberSetting(obstacleObject("pushing_block"), "every")).toBeCloseTo(2);
-    expect(numberSetting(obstacleObject("pushing_platform"), "every")).toBeCloseTo(70 / 30);
+    expect(numberSetting(obstacleObject("pushing_platform"), "every")).toBe(2.5);
   });
 
   test.each(["pushing_block", "pushing_platform"])("a %s is an obstacle, with no path", (type) => {
@@ -736,10 +736,10 @@ describe("moving platforms", () => {
 });
 
 describe("dropping platforms", () => {
-  test("a dropping platform is an obstacle, with no path, shaking 2/3 of a second before it drops and staying down 2 without a shake and down (sunset vista's 20 and 60 frames)", () => {
+  test("a dropping platform is an obstacle, with no path, shaking 0.75 of a second before it drops (near sunset vista's 20 frames) and staying down 2 (its 60) without a shake and down", () => {
     expect(parseObjects('[{"kind": "obstacle", "type": "dropping_platform", "at": [1, 2, 0]}]'))
       .toEqual([{ kind: "obstacle", obstacle: "dropping_platform", at: [1, 2, 0], raise: 0, stack: 1 }]);
-    expect(numberSetting(obstacleObject("dropping_platform"), "shake")).toBeCloseTo(2 / 3);
+    expect(numberSetting(obstacleObject("dropping_platform"), "shake")).toBe(0.75);
     expect(numberSetting(obstacleObject("dropping_platform"), "down")).toBe(2);
     expect(() => parseObjects('[{"kind": "obstacle", "type": "dropping_platform", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]'))
       .toThrow("a dropping_platform has no path");

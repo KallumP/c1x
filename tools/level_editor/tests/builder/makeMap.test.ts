@@ -826,7 +826,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
     test.each([
       { type: "pushing_block", more: {}, flags: [60, 0] },
-      { type: "pushing_platform", more: {}, flags: [70, 0] },
+      { type: "pushing_platform", more: {}, flags: [75, 0] },
       { type: "pushing_platform", more: { every: 4, offset: 1 }, flags: [120, 90] },
     ] as const)("a $type ($more) has its timing in its init flags", ({ type, more, flags }) => {
       expect(initFlagsOf(build([obstacle(type, more)]).zone, OBSTACLE_ENTITIES[type]).slice(0, 2)).toEqual(flags);
@@ -860,7 +860,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     // init flag A: the frames it shakes before it drops; B: the frames it stays dropped;
     // C 0: its short platform (Rw2w; 1 its long one, Rw4w)
     test.each([
-      { more: {}, flags: [20, 60, 0] },
+      { more: {}, flags: [23, 60, 0] },
       { more: { shake: 1, down: 3 }, flags: [30, 90, 0] },
     ])("a dropping platform ($more) is sunset vista's RWaOC subtype 10, at its spot, its timing in its init flags, not turned by them", ({ more, flags }) => {
       const { zone, entries } = build([obstacle("dropping_platform", more as Partial<LevelObject>)]);
