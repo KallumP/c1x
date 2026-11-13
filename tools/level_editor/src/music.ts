@@ -55,14 +55,14 @@ export function soundtrack(name: string): Soundtrack {
   return found;
 }
 
-// the songs a level can pick: the game's, then the audio files in its folder
-// (with the one it has picked, if its folder no longer has it)
+// the songs a level can pick: the audio files in its folder (with the one it
+// has picked, if its folder no longer has it), then the game's
 export function songChoices(songs: string[], music: string): string[] {
   const own = [...songs];
   if (isAudioSongName(music) && !own.includes(music)) {
     own.push(music);
   }
-  return [...SOUNDTRACKS.map(({ name }) => name), ...own];
+  return [...own, ...SOUNDTRACKS.map(({ name }) => name)];
 }
 
 // a song as the Music dropdown lists it: a soundtrack by its levels, starred
