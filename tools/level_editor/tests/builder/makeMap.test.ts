@@ -1734,6 +1734,44 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  describe.skipIf(!hasSlipperyClimb)("lift platforms, from slippery climb", () => {
+    const lift = (more: Partial<LevelObject> = {}) => {
+      const { level, entries, zone } = build([obstacle("lift_platform", more)]);
+      return { level, entries, placed: zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.lift_platform))! };
+    };
+
+    // the moving platform's code (slippery climb's PoPlC, moved to slot 15), its subtype 7
+    test("a lift platform is slippery climb's PoPlC subtype 7, in slot 15, with its slab (PlUyG)", () => {
+      const { level, entries } = lift();
+      expect(OBSTACLE_ENTITIES.lift_platform).toEqual([15, 7]);
+      expect(level.nsd.ldat.execMap[15]).toBe(stringToEid("PoPCC"));
+      expect(entries.has(stringToEid("PlUyG"))).toBe(true);
+    });
+
+    test("without a path, it goes from its spot 3 m straight up (at scale 256: 768), as many points as slippery climb's first", () => {
+      const path = entityPath(lift().placed);
+      expect(path.length).toBe(12);
+      expectNear(path[0], SPOT_IN_ZONE, 16);
+      expectNear(path.at(-1)!, [SPOT_IN_ZONE[0], SPOT_IN_ZONE[1] + 768, SPOT_IN_ZONE[2]], 16);
+    });
+
+    // its init flag A: its step along its points a frame, in 256ths of one, so its 11 steps
+    // take the frames its path's length takes at its speed (metres a second), as a carrying platform's
+    test.each([
+      { more: {}, step: 63 },             // 3 m at 2 m/s: 45 frames
+      { more: { speed: 1 }, step: 31 },   // 90 frames
+    ])("a lift platform ($more) steps $step 256ths of a point a frame, not turned by it", ({ more, step }) => {
+      const { placed } = lift(more as Partial<LevelObject>);
+      expect(placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(step);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
+
+    test("a level with lift and moving platforms shares their code, each with its slab", () => {
+      const { entries } = build([obstacle("lift_platform"), obstacle("moving_platform", { at: [1, 8, 0] })]);
+      expect(["PlUyG", "PlPyG"].every((name) => entries.has(stringToEid(name)))).toBe(true);
+    });
+  });
+
   describe.skipIf(!hasSlipperyClimb)("moving platforms, from slippery climb", () => {
     const platform = (more: Partial<LevelObject> = {}) => {
       const { level, entries, zone } = build([obstacle("moving_platform", more)]);
