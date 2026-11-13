@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, isAudioSongName, isMusicName, SOUNDTRACKS, soundtrack } from "../../src/music";
+import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, isAudioSongName, isMusicName, songChoices, songLabel, SOUNDTRACKS, soundtrack } from "../../src/music";
 
 describe("soundtracks", () => {
   test("a level plays jungle rollers' music unless it picks another, as before", () => {
@@ -37,5 +37,22 @@ describe("soundtracks", () => {
 
   test("an audio file's name is never a soundtrack's", () => {
     SOUNDTRACKS.forEach(({ name }) => expect(isAudioSongName(name)).toBe(false));
+  });
+
+  test("the songs a level can pick: the game's, then the audio files in its folder", () => {
+    const choices = songChoices(["a.mp3", "b.wav"], DEFAULT_MUSIC);
+    expect(choices.slice(0, SOUNDTRACKS.length)).toEqual(SOUNDTRACKS.map(({ name }) => name));
+    expect(choices.slice(SOUNDTRACKS.length)).toEqual(["a.mp3", "b.wav"]);
+  });
+
+  test("an audio file a level has picked stays a choice when its folder no longer has it", () => {
+    expect(songChoices([], "gone.mp3")).toContain("gone.mp3");
+    expect(songChoices(["gone.mp3"], "gone.mp3").filter((name) => name === "gone.mp3")).toHaveLength(1);
+  });
+
+  test("songs as the dropdown lists them: a game song by its levels, starred without aku aku's song; an audio file by its name", () => {
+    expect(songLabel("the_lost_city")).toBe("The Lost City, Sunset Vista");
+    expect(songLabel("hog_wild")).toBe("Hog Wild, Whole Hog *");
+    expect(songLabel("My Song.mp3")).toBe("My Song.mp3 (in the level's folder)");
   });
 });
