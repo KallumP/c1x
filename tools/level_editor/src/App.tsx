@@ -7,6 +7,7 @@ import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
 import Scene, { type Orbit } from "./components/Scene";
 import { draggedBy, newObject, type Tool } from "./editor";
+import { raisedEndPad, withEndPadRaise } from "./endPad";
 import type { LevelObject } from "./objects";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
@@ -47,7 +48,8 @@ export default function App() {
     },
     begin: () => dispatch({ type: "checkpoint" }),
     move: ({ index, node }, from, to) => {
-      const changes = draggedBy(dragged.current ?? state.objects[index], node, from, to, turn, scale);
+      const object = dragged.current ?? state.objects[index];
+      const changes = withEndPadRaise(object, draggedBy(object, node, from, to, turn, scale), scale, triangles);
       dispatch({ type: "update", index, changes, record: false });
     },
   });
@@ -90,7 +92,7 @@ export default function App() {
     }
     const at = clickedFloor(event, grid);
     if (at) {
-      dispatch({ type: "add", object: newObject(tool.what, at, scale) });
+      dispatch({ type: "add", object: raisedEndPad(newObject(tool.what, at, scale), scale, triangles) });
     }
   };
 

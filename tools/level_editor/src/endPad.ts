@@ -2,7 +2,7 @@
 // base shows over the floor around it
 import { PAD_RADIUS } from "./markerShapes";
 import { floorAbove, floorBelow, type Triangle } from "./overlaps";
-import type { Vec3 } from "./objects";
+import type { LevelObject, Vec3 } from "./objects";
 
 export const END_PAD_LIFT = 128; // game units over the floor a pad's raised to: its base only reaches 16 over where it stands
 
@@ -50,4 +50,20 @@ export function endPadRaise(at: Vec3, scale: number, triangles: Triangle[]): num
     .map(({ rise }) => rise as number);
   const highest = Math.max(0, ...rises);
   return roundToMillimetre(highest + END_PAD_LIFT / scale);
+}
+
+// object as placed: an end pad raised to clear the floor round it; anything else as it is
+export function raisedEndPad(object: LevelObject, scale: number, triangles: Triangle[]): LevelObject {
+  if (object.kind !== "end") {
+    return object;
+  }
+  return { ...object, raise: endPadRaise(object.at, scale, triangles) };
+}
+
+// changes dragging object makes: an end pad moved is raised for where it's moved to
+export function withEndPadRaise(object: LevelObject, changes: Partial<LevelObject>, scale: number, triangles: Triangle[]): Partial<LevelObject> {
+  if (object.kind !== "end" || !changes.at) {
+    return changes;
+  }
+  return { ...changes, raise: endPadRaise(changes.at, scale, triangles) };
 }
