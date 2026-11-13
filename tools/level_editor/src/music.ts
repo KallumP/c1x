@@ -54,3 +54,26 @@ export function soundtrack(name: string): Soundtrack {
   }
   return found;
 }
+
+// the songs a level can pick: the game's, then the audio files in its folder
+// (with the one it has picked, if its folder no longer has it)
+export function songChoices(songs: string[], music: string): string[] {
+  const own = [...songs];
+  if (isAudioSongName(music) && !own.includes(music)) {
+    own.push(music);
+  }
+  return [...SOUNDTRACKS.map(({ name }) => name), ...own];
+}
+
+// a song as the Music dropdown lists it: a soundtrack by its levels, starred
+// without aku aku's song, or an audio file by its name
+export function songLabel(name: string): string {
+  if (isAudioSongName(name)) {
+    return `${name} (in the level's folder)`;
+  }
+  const { label, akuAkuSong } = soundtrack(name);
+  if (akuAkuSong) {
+    return label;
+  }
+  return `${label} *`;
+}

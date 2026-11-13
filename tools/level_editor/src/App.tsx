@@ -14,6 +14,7 @@ import { useEditor } from "./hooks/useEditor";
 import { useLevelActions } from "./hooks/useLevelActions";
 import { useLevelCfg } from "./hooks/useLevelCfg";
 import { useLevelGroup } from "./hooks/useLevelGroup";
+import { useLevelSongs } from "./hooks/useLevelSongs";
 import { useLevels } from "./hooks/useLevels";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
@@ -31,6 +32,7 @@ export default function App() {
   const editor = useEditor(level, showError);
   const { state, dispatch } = editor;
   const levelCfg = useLevelCfg(level, showError);
+  const songs = useLevelSongs(level);
   const scale = levelCfg.cfg.scale; // as it's edited, so boxes follow it before it's saved
   const unsaved = editor.unsaved || levelCfg.unsaved;
   const triangles = useTriangles(group);
@@ -193,6 +195,7 @@ export default function App() {
         triangles={triangles}
         dispatch={dispatch}
         levelCfg={level ? levelCfg.cfg : null}
+        songs={songs}
         onLevelCfg={levelCfg.change}
       />
     </div>
