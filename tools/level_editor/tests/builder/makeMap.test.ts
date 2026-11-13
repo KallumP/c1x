@@ -1651,6 +1651,24 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect((code.readUInt32LE(0x106 * 4) >>> 12) & 0x3f).toBe(18);
     });
 
+    // init flag A: the frames it waits once crash stands on it before it breaks; its code's
+    // random 57 to 146 frames (RND ireg[0x5c] plus ireg[0x60]) reads it instead: SHA by
+    // ireg[0x5c], made -8, of its flag A (obj[0xbc]), plus 0
+    test.each([
+      { more: {}, frames: 90 },
+      { more: { delay: 5 }, frames: 150 },
+    ])("a timed plank ($more) breaks $frames frames after crash stands on it, not turned by its flags", ({ more, frames }) => {
+      const placed = zoneEntities(build([obstacle("timed_plank", more as Partial<LevelObject>)]).zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.timed_plank))!;
+      expect(placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(frames);
+      expect(placed.readUInt16LE(4) & 1).toBe(1);
+    });
+
+    test("a timed plank's code waits its flag A's frames, not a random while", () => {
+      const code = build([obstacle("timed_plank")]).entries.get(stringToEid("BrgNC"))!;
+      expect([code.items[1].readUInt32LE(0x73 * 4), code.items[1].readUInt32LE(0x74 * 4)]).toEqual([0x15017e17, 0x00e1f800]);
+      expect(code.items[2].readInt32LE(0x5c)).toBe(-8);
+    });
+
     test("a level with timed planks and gates has both codes", () => {
       const { level } = build([obstacle("timed_plank"), obstacle("tall_thin_gate", { at: [1, 6, 0] })]);
       expect([level.nsd.ldat.execMap[18], level.nsd.ldat.execMap[23]]).toEqual([stringToEid("BrgNC"), stringToEid("BldOC")]);
