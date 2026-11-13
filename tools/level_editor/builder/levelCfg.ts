@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DEFAULT_SCALE } from "../src/coords";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
-import { DEFAULT_MUSIC, isMusicName, SOUNDTRACKS } from "../src/music";
+import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, isAudioSongName, isMusicName, SOUNDTRACKS } from "../src/music";
 import { DEFAULT_SKY, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 
 export const LEVEL_CFG = "level.cfg";
@@ -15,7 +15,7 @@ export interface LevelOptions {
   turn: number;  // degrees to turn the level about the up axis
   sky: Sky;
   camera: Camera;
-  music: string; // one of SOUNDTRACKS' names
+  music: string; // one of SOUNDTRACKS' names, or an audio file in the level's folder (isAudioSongName)
 }
 
 // what a level.cfg sets, each by its key
@@ -76,16 +76,23 @@ function readCameraAngle(value: string, where: string): number {
   return angle;
 }
 
-// music: one of the soundtracks, by name
-function readMusic(value: string, where: string): string {
-  if (!isMusicName(value)) {
-    throw new Error(`${where}: music has to be one of ${SOUNDTRACKS.map(({ name }) => name).join(", ")}, not ${value || "nothing"}`);
+// music: one of the soundtracks, by name, or an audio file in the level's folder
+function readMusic(value: string, where: string, folder: string): string {
+  if (isMusicName(value)) {
+    return value;
+  }
+  if (!isAudioSongName(value)) {
+    const names = SOUNDTRACKS.map(({ name }) => name).join(", ");
+    throw new Error(`${where}: music has to be one of ${names}, or an audio file in the level's folder (${AUDIO_SONG_EXTENSIONS.join(", ")}), not ${value || "nothing"}`);
+  }
+  if (!existsSync(join(folder, value))) {
+    throw new Error(`${where}: music is ${value}, but the level's folder has no file called that`);
   }
   return value;
 }
 
 // the setting one line gives; an unknown setting, or a value it can't take, is an error
-function readSetting(line: string, where: string): [keyof LevelCfgSettings, number | Rgb | string] {
+function readSetting(line: string, where: string, folder: string): [keyof LevelCfgSettings, number | Rgb | string] {
   const equals = line.indexOf("=");
   if (equals < 0) {
     throw new Error(`${where}: expected key = value`);
@@ -108,7 +115,7 @@ function readSetting(line: string, where: string): [keyof LevelCfgSettings, numb
     return [key, readCameraAngle(value, where)];
   }
   if (key === "music") {
-    return [key, readMusic(value, where)];
+    return [key, readMusic(value, where, folder)];
   }
   return [key as keyof LevelCfgSettings, readWholeNumber(key, value, where)];
 }
@@ -123,7 +130,7 @@ export function readLevelCfg(folder: string): LevelCfgSettings {
   readFileSync(path, "utf8").split(/\r?\n/).forEach((rawLine, index) => {
     const line = rawLine.trim();
     if (!isComment(line)) {
-      const [key, value] = readSetting(line, `${path}, line ${index + 1}`);
+      const [key, value] = readSetting(line, `${path}, line ${index + 1}`, folder);
       settings[key] = value;
     }
   });

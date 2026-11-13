@@ -41,6 +41,11 @@ export const DEFAULT_MUSIC = "jungle_rollers"; // what custom levels always play
 
 export const isMusicName = (name: string) => SOUNDTRACKS.some((soundtrack) => soundtrack.name === name);
 
+// a level's own song can instead be an audio file in its folder, of these kinds
+export const AUDIO_SONG_EXTENSIONS = [".mp3", ".ogg", ".flac", ".wav"];
+
+export const isAudioSongName = (name: string) => AUDIO_SONG_EXTENSIONS.some((extension) => name.toLowerCase().endsWith(extension) && name.length > extension.length);
+
 // the soundtrack called name (one of SOUNDTRACKS)
 export function soundtrack(name: string): Soundtrack {
   const found = SOUNDTRACKS.find((soundtrack) => soundtrack.name === name);
