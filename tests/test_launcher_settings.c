@@ -53,6 +53,13 @@ UTEST(launcher_settings, set_adds_a_line_for_a_setting_not_in_the_file) {
   ASSERT_TRUE(SetLineGives("", "boot_level", "tide_ruins", "boot_level = tide_ruins\n"));
 }
 
+/* the game reads the last line for a setting, so a save that changed only the first would be lost */
+UTEST(launcher_settings, set_changes_every_line_for_a_setting_in_the_file_twice) {
+  ASSERT_TRUE(SetLineGives("speed_display = off\nreplay_speed = 1\nspeed_display = off\n",
+    "speed_display", "on",
+    "speed_display = on\nreplay_speed = 1\nspeed_display = on\n"));
+}
+
 UTEST(launcher_settings, set_leaves_commented_out_lines) {
   ASSERT_TRUE(SetLineGives("# boot_level = mossy_creek\n", "boot_level", "tide_ruins",
     "# boot_level = mossy_creek\nboot_level = tide_ruins\n"));

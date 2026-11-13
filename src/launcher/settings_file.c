@@ -33,10 +33,10 @@ static void AppendSettingLine(text_builder *b, const char *name, const char *val
 }
 
 /*
- * text (a settings file's) with its line setting name changed to set it to
- * value, or a line added at the end if there isn't one. the other lines,
- * commented out ones included, and the line endings stay as they are.
- * returns the new text, to SDL_free.
+ * text (a settings file's) with each line for setting name changed to set it
+ * to value (every one, as the game reads the last), or a line added at the
+ * end if there isn't one. the other lines, commented out ones included, and
+ * the line endings stay as they are. returns the new text, to SDL_free.
  */
 char *SetSettingLine(const char *text, const char *name, const char *value) {
   text_builder b = { 0 };
@@ -49,7 +49,7 @@ char *SetSettingLine(const char *text, const char *name, const char *value) {
   found = 0;
   for (line=text;*line;line=next) {
     line_end = EndOfLine(line, &next);
-    line_value = found ? 0 : ConfigLineValue(line, line_end - line, name, buf, sizeof(buf));
+    line_value = ConfigLineValue(line, line_end - line, name, buf, sizeof(buf));
     if (line_value && SDL_strcasecmp(line_value, value) != 0) {
       AppendSettingLine(&b, name, value);
       AppendText(&b, line_end, next - line_end);

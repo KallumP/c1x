@@ -2,6 +2,10 @@
 
 ## 2026-11-13
 
+### Added
+
+- the launcher's Levels tab says when a level is out of date: its sources were saved after it was built
+
 ### Changed
 
 - the level editor's mouse: left-drag moves the camera, right-drag turns it, only the left button picks up objects, and snap starts off

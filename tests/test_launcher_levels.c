@@ -1,4 +1,6 @@
 #include <string.h>
+#include <time.h>
+#include <utime.h>
 #include "utest.h"
 #include "launcher/levels.h"
 #include "test_files.h"
@@ -71,6 +73,64 @@ UTEST(launcher_levels, lists_level_sources_not_yet_built) {
   ASSERT_FALSE(levels.built[1]);
 }
 
+#define SOURCE_TIME 1000 /* seconds since 1970: the sources were saved, then the level built */
+#define BUILT_TIME 2000
+#define EDITED_TIME 3000
+
+static void SetFileTime(const char *folder, const char *name, time_t when) {
+  char path[256];
+  struct utimbuf times = { when, when };
+
+  snprintf(path, sizeof(path), "%s/%s", folder, name);
+  utime(path, &times);
+}
+
+/* tide_ruins, its sources saved before it was built */
+static void MakeBuiltLevelWithSource(void) {
+  MakeLevelsRepo();
+  MakeLevelSource("tide_ruins", 1);
+  MakeBuiltLevel("tide_ruins");
+  SetFileTime(TEST_SOURCES "/tide_ruins", "objects.json", SOURCE_TIME);
+  SetFileTime(TEST_SOURCES "/tide_ruins", "map.obj", SOURCE_TIME);
+  SetFileTime(TEST_BUILT, "tide_ruins.nsd", BUILT_TIME);
+}
+
+UTEST(launcher_levels, a_level_built_after_its_sources_is_up_to_date) {
+  custom_levels levels;
+
+  MakeBuiltLevelWithSource();
+  ListCustomLevels(TEST_LEVELS_REPO, &levels);
+  ASSERT_FALSE(levels.out_of_date[FindCustomLevel(&levels, "tide_ruins")]);
+}
+
+UTEST(launcher_levels, a_source_saved_after_the_build_makes_it_out_of_date) {
+  custom_levels levels;
+
+  MakeBuiltLevelWithSource();
+  SetFileTime(TEST_SOURCES "/tide_ruins", "objects.json", EDITED_TIME);
+  ListCustomLevels(TEST_LEVELS_REPO, &levels);
+  ASSERT_TRUE(levels.out_of_date[FindCustomLevel(&levels, "tide_ruins")]);
+}
+
+UTEST(launcher_levels, a_blend_file_saved_after_the_build_doesnt_count) {
+  custom_levels levels;
+
+  MakeBuiltLevelWithSource();
+  MakeEmptyFile(TEST_SOURCES "/tide_ruins", "tide_ruins.blend");
+  SetFileTime(TEST_SOURCES "/tide_ruins", "tide_ruins.blend", EDITED_TIME);
+  ListCustomLevels(TEST_LEVELS_REPO, &levels);
+  ASSERT_FALSE(levels.out_of_date[FindCustomLevel(&levels, "tide_ruins")]);
+}
+
+UTEST(launcher_levels, an_unbuilt_level_isnt_out_of_date) {
+  custom_levels levels;
+
+  MakeLevelsRepo();
+  MakeLevelSource("wave_point", 1);
+  ListCustomLevels(TEST_LEVELS_REPO, &levels);
+  ASSERT_FALSE(levels.out_of_date[FindCustomLevel(&levels, "wave_point")]);
+}
+
 UTEST(launcher_levels, a_level_built_and_with_a_source_is_listed_once) {
   custom_levels levels;
   int i, seen = 0;
@@ -120,6 +180,25 @@ UTEST(launcher_levels, finds_a_level_by_name) {
   strcpy(levels.names[1], "tide_ruins");
   ASSERT_EQ(1, FindCustomLevel(&levels, "tide_ruins"));
   ASSERT_EQ(-1, FindCustomLevel(&levels, "facing_castle"));
+}
+
+/* one level, called tide_ruins, built or not and out of date or not */
+static void MakeOneLevel(custom_levels *levels, int built, int out_of_date) {
+  levels->count = 1;
+  strcpy(levels->names[0], "tide_ruins");
+  levels->built[0] = built;
+  levels->out_of_date[0] = out_of_date;
+}
+
+UTEST(launcher_levels, statuses_say_whether_built_and_up_to_date) {
+  custom_levels levels;
+
+  MakeOneLevel(&levels, 0, 0);
+  ASSERT_STREQ("not built", CustomLevelStatus(&levels, 0));
+  MakeOneLevel(&levels, 1, 0);
+  ASSERT_STREQ("built", CustomLevelStatus(&levels, 0));
+  MakeOneLevel(&levels, 1, 1);
+  ASSERT_STREQ("out of date", CustomLevelStatus(&levels, 0));
 }
 
 UTEST(launcher_levels, a_built_levels_label_is_its_name) {

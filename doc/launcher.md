@@ -41,7 +41,7 @@ The Controls tab shows each PlayStation button's keys from `controls.cfg` (see [
 
 ## Levels
 
-The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`, saying whether it's built. **Build** builds that level with `build/build-level.exe`, without Node or the level editor, showing its output below. When it builds, it's set as the boot level and `settings.cfg` is saved. Only one level builds at a time. **Check again** looks for level sources added since the launcher opened.
+The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`, saying whether it's built. A level says `out of date` when a file in its source folder was saved after it was built (its `.blend` doesn't count: export the `.obj` again). **Build** builds that level with `build/build-level.exe`, without Node or the level editor, showing its output below. When it builds, it's set as the boot level and `settings.cfg` is saved. Only one level builds at a time. **Check again** looks for level sources added, and ones saved, since the launcher opened.
 
 If `build-level.exe` isn't there (`make` skips it without Node; see [Building](building.md#building-levels-without-node)), the tab says so and **Build** is greyed out.
 

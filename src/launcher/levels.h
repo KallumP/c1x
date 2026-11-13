@@ -11,11 +11,15 @@ typedef struct {
   int count;
   char names[CUSTOM_LEVELS_MAX][SETTINGS_BOOT_LEVEL_MAX+1];
   int built[CUSTOM_LEVELS_MAX];
+  int out_of_date[CUSTOM_LEVELS_MAX]; /* built, but a source was saved since */
 } custom_levels;
 
 /* the repo's custom levels, sorted by name */
 extern void ListCustomLevels(const char *repo, custom_levels *levels);
 extern int FindCustomLevel(const custom_levels *levels, const char *name);
+
+/* "built", "not built" or "out of date", for the levels tab */
+extern const char *CustomLevelStatus(const custom_levels *levels, int index);
 
 /* the level's name, saying if it isn't built, as the launcher lists it */
 extern void CustomLevelLabel(const custom_levels *levels, int index, char *label, size_t size);
