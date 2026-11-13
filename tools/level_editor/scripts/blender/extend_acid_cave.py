@@ -119,7 +119,7 @@ STEP_RISE = (FLOOR - END_FLOOR) / STEP_COUNT
 STEP_DEPTH = (BRIDGE_Y[0] - 128) / STEP_COUNT
 LEDGE_STEPS = [(128 + k * STEP_DEPTH, 128 + (k + 1) * STEP_DEPTH, FLOOR - k * STEP_RISE) for k in range(STEP_COUNT)]
 SLAT_PITCH, SLAT_DEPTH, SLAT_THICKNESS = 1.0, 0.875, 0.12
-KEPT_SLATS = (0, 1, 4, 8, 11, 16, 22, 27, 28, 31, 32)  # counted from the near end, uneven, fewest in the middle; the rest (22 of 33) left for planks placed in the editor
+KEPT_SLATS = (0, 1, 4, 8, 11, 27, 28, 31, 32)  # counted from the near end, uneven, none in the middle; the rest (24 of 33) left for planks placed in the editor
 CHASM_X = (-10, 2)
 CHASM_ACID = END_FLOOR - 6
 ROPE_X = (BRIDGE_X[0] - 0.05, BRIDGE_X[1] + 0.05)
@@ -173,6 +173,8 @@ def chasm(parts):
     rock = lambda x, y, z: lit(wall_light(z, CHASM_ACID, 7), glow=low_glow(z, CHASM_ACID + 1, 0.3))
     wall(parts["green_rock_veined"], (CHASM_X[0], 128), (CHASM_X[0], CHAMBER_FLOOR_Y[1]), CHASM_ACID - 0.2, 7, (1, 0, 0), rock)
     wall(parts["green_rock_veined"], (CHASM_X[1], 128), (CHASM_X[1], CHAMBER_FLOOR_Y[1]), CHASM_ACID - 0.2, 7, (-1, 0, 0), rock)
+    for x0, x1 in [(CHASM_X[0], LEDGE_X[0]), (LEDGE_X[1], CHASM_X[1])]:  # its far end, either side of the end ledge, in front of the end chamber's round wall
+        wall(parts["green_rock_veined"], (x0, BRIDGE_Y[1]), (x1, BRIDGE_Y[1]), CHASM_ACID - 0.2, 7, (0, -1, 0), rock)
     wall(parts["green_rock_veined"], (-13, 128), (CHASM_X[0], 128), ACID_LEVEL - 0.2, 8, (0, 1, 0), rock)
     wall(parts["green_rock_veined"], (CHASM_X[1], 128), (5, 128), ACID_LEVEL - 0.2, 8, (0, 1, 0), rock)
 
