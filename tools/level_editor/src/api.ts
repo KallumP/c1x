@@ -6,6 +6,7 @@ export interface LevelInfo {
   name: string;  // its folder in level_src/
   obj: string;   // its .obj
   scale: number; // game units per blender metre
+  songs: string[]; // the audio files in its folder, any of which it can pick as its song
 }
 
 export interface LevelCfg {
