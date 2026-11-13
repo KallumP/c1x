@@ -55,7 +55,10 @@ The level editor places Crash's spawn, the level's end, boxes, enemies and obsta
 1. Click **Select** (or press Esc), then click an object to select it. Drag it to move it, or change its properties on the right. **Delete** (or Del) removes it.
 1. Click **Save** (or press Ctrl+S), then **Build + boot** at the top right (or press F5), which builds the level and boots the game straight into it. [Step 3](#3-build-the-level-and-play-it) has more on building.
 
-Ctrl+Z undoes and Ctrl+Y redoes. A box outlined in red is stuck in a wall or another box (this doesn't stop the level from building). **Drop to floor** puts the selected box just above the floor, and **raise** sets how far off the floor an object should be.
+Left-drag moves the camera, right-drag turns it, and the scroll wheel zooms. 
+Ctrl+Z undoes and Ctrl+Y redoes. 
+
+A box outlined in red is stuck in a wall or another box (this doesn't stop the level from building). **Drop to floor** puts the selected box just above the floor, and **raise** sets how far off the floor an object should be.
 
 The arrow on the spawn object shows which way the camera faces at the start. With nothing selected, the right side shows the level's settings, saved to its `level.cfg`:
 
