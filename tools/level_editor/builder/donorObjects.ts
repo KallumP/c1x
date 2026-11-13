@@ -79,6 +79,7 @@ export const OBJECT_DONORS: Partial<Record<ObjectType, DonorLevel>> = {
   low_wide_gate: BOULDER_DASH,
   pushing_block: SUNSET_VISTA,
   pushing_platform: SUNSET_VISTA,
+  short_pushing_platform: SUNSET_VISTA,
   rotating_pots: SUNSET_VISTA,
   rotating_platforms: SUNSET_VISTA,
   slamming_walls: TEMPLE_RUINS,
@@ -406,6 +407,7 @@ const planksBut = (...own: string[]) => PLANK_MODELS.filter((model) => !own.incl
 const ENEMY_UNUSED_ENTRIES: Partial<Record<ObjectType, string[]>> = {
   pushing_block: ruinsModelsBut(["Rp1w", "Rp7w"]),
   pushing_platform: ruinsModelsBut(["Rw1w", "Rw3w"]),
+  short_pushing_platform: ruinsModelsBut(["Rw1w", "Rw3w"]),
   rotating_pots: ruinsModelsBut(["Rp3w"]),
   rotating_platforms: ruinsModelsBut(["Rw1w"]),
   dropping_platform: ruinsModelsBut(["Rw2w"]),

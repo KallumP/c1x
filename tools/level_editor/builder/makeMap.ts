@@ -444,6 +444,18 @@ function withBlockTop(entity: Buffer, obstacle: LevelObject): Buffer {
   return withInitFlagC(entity, entity.readInt16LE(ENTITY_INIT_FLAGS + 4) | BLOCK_WITH_TOP);
 }
 
+// a pushing platform's init flag C's bit 0 picks its long slab (Rw3w: sunset
+// vista's first has it set) over its short one (Rw1w)
+const PLATFORM_LONG = 1;
+
+// entity with a short pushing platform's short slab; any other obstacle's as it is
+function withShortSlab(entity: Buffer, obstacle: LevelObject): Buffer {
+  if (obstacle.obstacle !== "short_pushing_platform") {
+    return entity;
+  }
+  return withInitFlagC(entity, entity.readInt16LE(ENTITY_INIT_FLAGS + 4) & ~PLATFORM_LONG);
+}
+
 // how far along its path (0 to 1) each of an entity's points is
 function entityPathShares(entity: Buffer): number[] {
   const path = entityPath(entity);
@@ -605,7 +617,8 @@ class ObjectPlacer {
     const hung: Vec3 = [at[0], at[1] + timedObstacleHang(obstacle), at[2]];
     const [every, into] = obstacleTiming(obstacle);
     const placed = withNoRotationFromFlags(withPosition(withEntityId(example, this.ids.shift()!), hung));
-    this.entities[zone].push(withRotation(withBlockTop(withInitFlagB(withInitFlagA(placed, every), into), obstacle), obstacle, this.scale));
+    const timed = withInitFlagB(withInitFlagA(placed, every), into);
+    this.entities[zone].push(withRotation(withShortSlab(withBlockTop(timed, obstacle), obstacle), obstacle, this.scale));
   }
 
   // an enemy or obstacle that moves along its own level's path, as example, from

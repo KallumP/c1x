@@ -70,6 +70,7 @@ export const OBSTACLE_COLOURS: Record<ObstacleType, string> = {
   low_wide_gate: "#8f6236",
   pushing_block: "#4a5560",
   pushing_platform: "#5a4a48",
+  short_pushing_platform: "#6a5a54",
   rotating_pots: "#6a3a2a",
   rotating_platforms: "#6e5c52",
   slamming_walls: "#8a6a3a",
