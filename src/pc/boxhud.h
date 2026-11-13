@@ -11,7 +11,8 @@
  * a hud counter (exec 4) shows one of its registers, picked by HUD_SHOWN_REG_IDX.
  * its start code copies that register from its player link; then, while the two
  * differ, it slides in and counts its own copy up to the player's. the box
- * counter's player link is a source object holding the boxes broken instead
+ * counter's player link is a source object holding the boxes broken instead,
+ * and its copy is kept at the source's, so it only slides in with the hud (triangle)
  */
 #define HUD_EXEC            4    /* the hud counters' exec slot (DispC) */
 #define HUD_LIVES_SUBTYPE   0    /* the lives counter; it doesn't spin its icon, as wumpa does */
@@ -30,6 +31,7 @@
 
 extern void BoxHudSetUpCounter(gool_object *counter, gool_object *source);
 extern void BoxHudShowBoxes(gool_object *source, int boxes_broken);
+extern void BoxHudKeepCount(gool_object *counter, gool_object *source);
 extern void BoxHudText(char *text, size_t size, int broken, int total);
 extern int BoxHudIsCounterDigits(gool_object *digits, gool_object *source);
 extern void BoxHudSizeDigits(gool_object *digits);

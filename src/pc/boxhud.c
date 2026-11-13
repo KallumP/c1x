@@ -67,6 +67,14 @@ int32_t BoxHudTextDrop() {
   return BoxHudTextHeight(HUD_DIGITS_SCALE) - BoxHudTextHeight(BoxHudDigitsScale());
 }
 
+/*
+ * keep the counter's own count at its source's, so the two never differ and a
+ * box breaking doesn't slide it in; it shows only when the hud's shown (triangle)
+ */
+void BoxHudKeepCount(gool_object *counter, gool_object *source) {
+  counter->regs[HUD_COUNT_REG] = source->regs[HUD_COUNT_REG];
+}
+
 /* give the box counter's source the boxes broken (a gool number, 8 bits after the point, as box_count) */
 void BoxHudShowBoxes(gool_object *source, int boxes_broken) {
   source->regs[HUD_COUNT_REG] = boxes_broken;

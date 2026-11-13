@@ -15,6 +15,7 @@ extern gool_handle handles[8];
 
 static gool_object box_source;          /* the box counter's player link: holds the boxes broken */
 static gool_object *unset_box_counter;  /* created, but its start code hasn't run yet */
+static gool_object *box_counter;        /* set up, once its start code has run */
 
 /*
  * create the box counter with the other hud counters, when box_display is on.
@@ -25,6 +26,7 @@ void BoxHudCreate() {
   gool_object *counter;
 
   unset_box_counter = 0;
+  box_counter = 0;
   if (!game_settings.box_display) { return; }
   BoxHudShowBoxes(&box_source, box_count);
   counter = GoolObjectCreate(&handles[HUD_HANDLE], HUD_EXEC, HUD_LIVES_SUBTYPE, 0, 0, 0);
@@ -61,12 +63,25 @@ int32_t BoxHudCounterTextDrop(gool_object *obj) {
   return BoxHudTextDrop();
 }
 
-/* each frame, after the objects update: feed the box counter the boxes broken */
-void BoxHudUpdate() {
-  if (!game_settings.box_display) { return; }
-  BoxHudShowBoxes(&box_source, box_count);
+/* whether the set up box counter is still the box counter (its object not freed and reused) */
+static int IsBoxCounterAlive() {
+  return box_counter && box_counter->handle.type == OBJECT_HANDLE_TYPE && box_counter->player == &box_source;
+}
+
+/* once the counter's start code has run, make it the box counter */
+static void SetUpBoxCounterOnceStarted() {
   if (!unset_box_counter) { return; }
   if (unset_box_counter->state == HUD_START_STATE) { return; }
   BoxHudSetUpCounter(unset_box_counter, &box_source);
+  box_counter = unset_box_counter;
   unset_box_counter = 0;
+}
+
+/* each frame, after the objects update: feed the box counter the boxes broken,
+   keeping its own count up with them so only triangle slides it in */
+void BoxHudUpdate() {
+  if (!game_settings.box_display) { return; }
+  BoxHudShowBoxes(&box_source, box_count);
+  SetUpBoxCounterOnceStarted();
+  if (IsBoxCounterAlive()) { BoxHudKeepCount(box_counter, &box_source); }
 }
