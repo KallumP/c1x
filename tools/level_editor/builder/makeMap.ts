@@ -369,14 +369,16 @@ function fireWait(fire: LevelObject): number {
 // (about 2 s), a steady fire's 0 for good
 const FIRE_HOLDS: Partial<Record<ObstacleType, number>> = { floor_fire: -1, steady_fire: 0 };
 
-// a fire's init flag A: its flames' head start into their first wait, in 4s of
-// frames (their code patched: see SUNSET_RUINS_CODE_PATCHES), their wait less
-// its offset, so they first burst its offset in (at least 1: 0 is the game's own 11 m's worth)
-const FIRE_START_FRAMES = 4;
+// a fire's init flag A: its flames' head start into their first wait, in frames
+// (their code patched: see SUNSET_RUINS_CODE_PATCHES), their wait less its
+// offset, so they first burst its offset in; 0 without one (the code's huge default: at once)
 function fireStart(fire: LevelObject): number {
   const wait = fireWait(fire);
   const offset = Math.round(numberSetting(fire, "offset") * FRAMES_A_SECOND) % wait;
-  return Math.max(1, Math.round((wait - offset) / FIRE_START_FRAMES));
+  if (offset === 0) {
+    return 0;
+  }
+  return wait - offset;
 }
 
 // entity with a floor or steady fire's start, wait and hold in its init flags,
