@@ -61,3 +61,56 @@ UTEST(levelsong, a_level_with_a_song_plays_its_own) {
   LevelSongFind(TEST_SONG_LEVELS "/own", &song);
   ASSERT_TRUE(LevelSongIsOwn(&song));
 }
+
+/* a level_song with the files given, without looking for them */
+static level_song SongWith(int has_mid, int has_aku_mid, int has_sf2) {
+  level_song song;
+
+  memset(&song, 0, sizeof(song));
+  song.has_mid = has_mid;
+  song.has_aku_mid = has_aku_mid;
+  song.has_sf2 = has_sf2;
+  return song;
+}
+
+UTEST(levelsong, its_own_song_is_one_track_or_two_with_aku_akus_song) {
+  level_song just_song = SongWith(1, 0, 0), with_aku = SongWith(1, 1, 0);
+
+  ASSERT_EQ(1, LevelSongTrackCount(&just_song, 2));
+  ASSERT_EQ(2, LevelSongTrackCount(&with_aku, 1));
+}
+
+UTEST(levelsong, without_its_own_song_the_musics_tracks_stay) {
+  level_song none = SongWith(0, 0, 1);
+
+  ASSERT_EQ(2, LevelSongTrackCount(&none, 2));
+  ASSERT_EQ(2, LevelSongTrackCount(0, 2));
+}
+
+UTEST(levelsong, only_a_custom_level_plays_its_own_song) {
+  custom_level_song = SongWith(1, 0, 0);
+  ASSERT_TRUE(LevelSongToPlay(1) == &custom_level_song);
+  ASSERT_TRUE(LevelSongToPlay(0) == 0);
+  custom_level_song = SongWith(0, 0, 1);
+  ASSERT_TRUE(LevelSongToPlay(1) == 0);
+  memset(&custom_level_song, 0, sizeof(custom_level_song));
+}
+
+UTEST(levelsong, a_song_file_is_read_whole) {
+  uint8_t *data;
+  size_t size;
+
+  MakeFolder(TEST_SONG_LEVELS);
+  WriteWholeFile(TEST_SONG_LEVELS "/read.mid", "MThd1234");
+  data = LevelSongReadFile(TEST_SONG_LEVELS "/read.mid", &size);
+  ASSERT_TRUE(data != 0);
+  ASSERT_EQ((size_t)8, size);
+  ASSERT_EQ(0, memcmp(data, "MThd1234", 8));
+  free(data);
+}
+
+UTEST(levelsong, a_missing_song_file_reads_as_nothing) {
+  size_t size;
+
+  ASSERT_TRUE(LevelSongReadFile(TEST_SONG_LEVELS "/missing.mid", &size) == 0);
+}
