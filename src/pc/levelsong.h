@@ -25,5 +25,8 @@ extern level_song custom_level_song; /* the boot level's (InitBootLevel) */
 
 extern void LevelSongFind(const char *level, level_song *song);
 extern int LevelSongIsOwn(const level_song *song);
+extern const level_song *LevelSongToPlay(int in_custom_level);
+extern int LevelSongTrackCount(const level_song *song, int track_count);
+extern uint8_t *LevelSongReadFile(const char *path, size_t *size);
 
 #endif /* _PC_LEVELSONG_H_ */

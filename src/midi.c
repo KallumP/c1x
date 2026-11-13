@@ -1,6 +1,7 @@
 #include "midi.h"
 #include "globals.h"
 #include "level.h"
+#include "pc/levelsong.h"
 
 #define SepSetVol         SwSepSetVol
 #define SepPlay           SwSepPlay
@@ -231,6 +232,7 @@ int MidiOpenAndPlay(eid_t *eid) {
   }
   midi_state = 3; /* set state to resumed */
   seq_count = header->track_count; /* load seq count from midi header */
+  seq_count = LevelSongTrackCount(LevelSongToPlay(cur_lid == LID_TEST), seq_count); /* pc: a custom level's own song's */
   if (vab_id == -1) { /* no vab has been loaded? */
     vab_id = MidiGetVab(midi);
   }

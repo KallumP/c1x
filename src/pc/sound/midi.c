@@ -8,8 +8,12 @@
 #include "formats/smf.h"
 #include "formats/psx.h"
 #include "pc/time.h"
+#include "pc/levelsong.h"
+#include "common.h"
+#include "ns.h"
 
 extern int seq_count;
+extern lid_t cur_lid;
 extern uint8_t *vabs[2];
 
 typedef struct {
@@ -193,70 +197,115 @@ void SwMidiKill() {
   delete_fluid_settings(settings);
 }
 
-int16_t SwSepOpen(uint8_t *sep, int vab_id, int count) {
+/* stop the first count tracks' players and unload their instruments */
+static void SwResetContexts(int count) {
   midi_context_t *context;
   fluid_synth_t *synth;
-  fluid_player_t *player;
-  fluid_preset_t *preset;
-  mbuf_t buf;
-  PThd *pthd;
-  size_t sf2_size, seq_size, mid_size;
-  size_t midi_sizes[32];
-  uint8_t *vab, *sf2, *seq, *mid;
-  uint8_t *midi_data;
-  int i, sfid;
+  int i;
 
   for (i=0;i<count;i++) {
     context = &midi_contexts[i];
     synth = context->synth;
-    sfid = context->sfid;
-    player = context->player;
-    if (player) {
-      fluid_player_stop(player);
-      delete_fluid_player(player);
+    if (context->player) {
+      fluid_player_stop(context->player);
+      delete_fluid_player(context->player);
     }
-    if (sfid != -1)
-      fluid_synth_sfunload(synth, sfid, 1);
+    if (context->sfid != -1)
+      fluid_synth_sfunload(synth, context->sfid, 1);
     *context = def_context;
     context->synth = synth;
   }
-  vab = vabs[vab_id];
-  sf2 = (uint8_t*)malloc(0x400000);
-  sf2_size = VabToSf2(vab, sf2);
+}
+
+/* load the sf2 data into the first count tracks' synths */
+static void SwLoadSoundFont(uint8_t *sf2, size_t sf2_size, int count) {
+  midi_context_t *context;
+  mbuf_t buf;
+  int i;
+
   strcpy(buf.dummy, "buf");
   buf.data = sf2;
   buf.size = sf2_size;
   for (i=0;i<count;i++) {
     context = &midi_contexts[i];
-    synth = context->synth;
-    sfid = fluid_synth_sfload(synth, (const char*)&buf, 0);
-    context->sfid = sfid;
+    context->sfid = fluid_synth_sfload(context->synth, (const char*)&buf, 0);
   }
-  midi_data = (uint8_t*)malloc(0x100000);
-  mid = midi_data;
+}
+
+/* the instruments: pc, a custom level's own .sf2 if it has one, else the vab's, made a sf2 */
+static void SwLoadInstruments(const level_song *own, int vab_id, int count) {
+  uint8_t *sf2;
+  size_t sf2_size;
+
+  sf2 = 0;
+  if (own && own->has_sf2) {
+    sf2 = LevelSongReadFile(own->sf2, &sf2_size);
+    if (!sf2) { fprintf(stderr, "could not read %s, so the level's music has its own instruments\n", own->sf2); }
+  }
+  if (!sf2) {
+    sf2 = (uint8_t*)malloc(0x400000);
+    sf2_size = VabToSf2(vabs[vab_id], sf2);
+  }
+  SwLoadSoundFont(sf2, sf2_size, count);
+  free(sf2);
+}
+
+/* give track i a player for the mid data (fluidsynth keeps a copy) */
+static void SwSetTrack(int i, uint8_t *mid, size_t mid_size) {
+  midi_context_t *context;
+
+  context = &midi_contexts[i];
+  context->player = new_fluid_player(context->synth);
+  fluid_player_add_mem(context->player, mid, mid_size);
+  fluid_player_stop(context->player);
+}
+
+/* the tracks of the sep, each made a midi file */
+static void SwSetSepTracks(uint8_t *sep, int count) {
+  PThd *pthd;
+  size_t seq_size, mid_size;
+  uint8_t *seq, *mid;
+  int i;
+
+  mid = (uint8_t*)malloc(0x100000);
   pthd = (PThd*)sep;
   seq = pthd->data;
   for (i=0;i<count;i++) {
     mid_size = SeqToMid(seq, mid, &seq_size);
-    midi_sizes[i] = mid_size;
-    mid += mid_size;
+    SwSetTrack(i, mid, mid_size);
     seq += seq_size;
-  } 
-  mid = midi_data;
-  for (i=0;i<count;i++) {
-    mid_size = midi_sizes[i];
-    context = &midi_contexts[i];
-    synth = context->synth;
-    sfid = context->sfid;
-    player = new_fluid_player(synth);
-    fluid_player_add_mem(player, mid, mid_size);
-    fluid_player_stop(player);
-    context->player = player;
-    mid += mid_size;
   }
-  mid = midi_data;
-  free(sf2);
   free(mid);
+}
+
+/* pc: a custom level's own song as its tracks: its .mid, then aku aku's song (its _aku.mid) */
+static void SwSetOwnTracks(const level_song *own, int count) {
+  const char *paths[2];
+  uint8_t *mid;
+  size_t mid_size;
+  int i;
+
+  paths[0] = own->mid;
+  paths[1] = own->aku_mid;
+  for (i=0;i<count && i<2;i++) {
+    mid = LevelSongReadFile(paths[i], &mid_size);
+    if (!mid) {
+      fprintf(stderr, "could not read %s, so it doesn't play\n", paths[i]);
+      continue;
+    }
+    SwSetTrack(i, mid, mid_size);
+    free(mid);
+  }
+}
+
+int16_t SwSepOpen(uint8_t *sep, int vab_id, int count) {
+  const level_song *own;
+
+  SwResetContexts(count);
+  own = LevelSongToPlay(cur_lid == LID_TEST);
+  SwLoadInstruments(own, vab_id, count);
+  if (own) { SwSetOwnTracks(own, count); }
+  else { SwSetSepTracks(sep, count); }
   return 0;
 }
 
