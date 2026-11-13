@@ -827,6 +827,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     test.each([
       { type: "pushing_block", more: {}, flags: [60, 0] },
       { type: "pushing_platform", more: {}, flags: [75, 0] },
+      { type: "short_pushing_platform", more: {}, flags: [75, 0] },
       { type: "pushing_platform", more: { every: 4, offset: 1 }, flags: [120, 90] },
     ] as const)("a $type ($more) has its timing in its init flags", ({ type, more, flags }) => {
       expect(initFlagsOf(build([obstacle(type, more)]).zone, OBSTACLE_ENTITIES[type]).slice(0, 2)).toEqual(flags);
@@ -881,6 +882,17 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const placed = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.seesaw))!;
       expectNear(entityPath(placed)[0], SPOT_IN_ZONE, 16);
       expect(initFlagsOf(zone, OBSTACLE_ENTITIES.seesaw)).toEqual([0, 0, 0]);
+    });
+
+    // init flag C's bit 0 picks its slab: Rw3w (1800 out) set, as sunset vista's first's (3), or Rw1w (1000) clear
+    test.each([
+      { type: "pushing_platform", c: 3 },
+      { type: "short_pushing_platform", c: 2 },
+    ] as const)("a $type is sunset vista's RWaOC subtype 7 with init flag C $c", ({ type, c }) => {
+      const { zone, entries } = build([obstacle(type)]);
+      expect(OBSTACLE_ENTITIES[type]).toEqual([46, 7]);
+      expect(initFlagsOf(zone, OBSTACLE_ENTITIES[type])[2]).toBe(c);
+      expect(entries.has(stringToEid(c === 3 ? "Rw3wG" : "Rw1wG"))).toBe(true);
     });
 
     test("pushing blocks and platforms read sunset vista once", () => {
