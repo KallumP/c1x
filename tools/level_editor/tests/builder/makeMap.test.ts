@@ -1288,6 +1288,21 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(fire(type, more as Partial<LevelObject>).placed.readInt16LE(ENTITY_INIT_FLAGS + 2)).toBe(frames);
     });
 
+    // init flag A: how long its flames hold at full height. each frame of a burst's hold adds the
+    // flame's obj[0x1e0] (its fire's flag A x 256 / 100 x 1.5625), not 0x100, to 0x4000: a floor
+    // fire's 64 holds as the game's (about 2 s), a steady fire's 1 about 3 minutes
+    test.each([
+      { type: "floor_fire", flag: 64 },
+      { type: "steady_fire", flag: 1 },
+    ] as const)("a $type holds its flames by its init flag A ($flag)", ({ type, flag }) => {
+      expect(fire(type).placed.readInt16LE(ENTITY_INIT_FLAGS)).toBe(flag);
+    });
+
+    test.each(["floor_fire", "bat"] as const)("with a %s, the ruins objects' code holds a burst by its flame's obj[0x1e0]", (type) => {
+      const built = type === "bat" ? build([enemy("bat")]) : build([obstacle(type)]);
+      expect(built.entries.get(stringToEid("RuiOC"))!.items[1].readUInt32LE(0x25b * 4)).toBe(0x00e60b04);
+    });
+
     test("a level with floor fires and bats shares their code", () => {
       const { level } = build([obstacle("floor_fire"), enemy("bat", { at: [1, 10, 0] })]);
       expect(level.nsd.ldat.execMap[42]).toBe(stringToEid("RuiOC"));
