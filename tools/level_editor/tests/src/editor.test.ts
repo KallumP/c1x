@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { draggedBy, draggedTo, editorReducer, emptyEditor, newObject, placeableKind, type EditorAction, type EditorState, type Placeable } from "../../src/editor";
+import { draggedBy, draggedTo, editorReducer, emptyEditor, newObject, placeableKind, switchNumbers, type EditorAction, type EditorState, type Placeable } from "../../src/editor";
 import { BAT_SWOOP, DEFAULT_SCALE } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { enemyObject, obstacleObject } from "../helpers";
@@ -105,6 +105,22 @@ describe("switch numbers", () => {
     const state = editorReducer(withObjects([switchBox(1, 1), { ...box(2), outline: 1 }]), { type: "update", index: 1, changes: { box: "switch" } });
     expect(state.objects[1].switch).toBe(2);
     expect(state.objects[1].outline).toBeUndefined();
+  });
+
+  test("the level's switch numbers are listed lowest first", () => {
+    expect(switchNumbers([switchBox(1, 3), box(2), switchBox(3, 1)])).toEqual([1, 3]);
+  });
+
+  test("renumbering a switch takes its outlines with it", () => {
+    const objects = [switchBox(1, 1), { ...box(2), outline: 1 }, switchBox(3, 2), { ...box(4), outline: 2 }];
+    const state = editorReducer(withObjects(objects), { type: "update", index: 0, changes: { switch: 5 } });
+    expect(state.objects.map((object) => object.switch ?? object.outline)).toEqual([5, 5, 2, 2]);
+  });
+
+  test("a switch can't take a number another switch has", () => {
+    const objects = [switchBox(1, 1), switchBox(2, 2)];
+    const state = editorReducer(withObjects(objects), { type: "update", index: 0, changes: { switch: 2 } });
+    expect(state.objects.map((object) => object.switch)).toEqual([1, 2]);
   });
 
   test("a switch changed to another box loses its number", () => {
