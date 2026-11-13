@@ -326,14 +326,26 @@ function seesaw(): ShapePart[] {
   return SEESAW_BLOCKS_AT.map((x) => ({ kind: "box", size: [across, high, out], at: [x, -high / 2, out / 2], colour: RUINS_COLOURS.stone }));
 }
 
-const PLANK = { across: 1200, thick: 50, near: 19, out: 369 };
-const PLANK_COLOUR = "#8a6a40";
+const PLANK = { across: 1200, thick: 50, near: 19, out: 369, crack: 80 };
+const PLANK_COLOURS = { timed: "#8a6a40", breaking: "#c09060" };
 
-// road to nowhere's planks (BD1kG, BE1kG): 1200 across, 50 thick, its top at its spot,
-// from 19 to 369 towards the player
-function plank(): ShapePart[] {
-  const { across, thick, near, out } = PLANK;
-  return [{ kind: "box", size: [across, thick, out - near], at: [0, -thick / 2, (out + near) / 2], colour: PLANK_COLOUR }];
+// a plank's board across wide, its middle x across the map from its spot
+function plankBoard(across: number, x: number, colour: string): ShapePart {
+  const { thick, near, out } = PLANK;
+  return { kind: "box", size: [across, thick, out - near], at: [x, -thick / 2, (out + near) / 2], colour };
+}
+
+// road to nowhere's timed plank (BD1kG): one board 1200 across, 50 thick, its top
+// at its spot, from 19 to 369 towards the player
+function timedPlank(): ShapePart[] {
+  return [plankBoard(PLANK.across, 0, PLANK_COLOURS.timed)];
+}
+
+// its breaking plank (BE1kG): the same size, cracked in two down its middle, and lighter
+function breakingPlank(): ShapePart[] {
+  const half = (PLANK.across - PLANK.crack) / 2;
+  const offset = (half + PLANK.crack) / 2;
+  return [plankBoard(half, -offset, PLANK_COLOURS.breaking), plankBoard(half, offset, PLANK_COLOURS.breaking)];
 }
 
 // the obstacles with a model: all but the rolling stone and mossy slide, drawn as their track and slope
@@ -343,4 +355,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw(), timed_plank: plank(), breaking_plank: plank() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw(), timed_plank: timedPlank(), breaking_plank: breakingPlank() };
