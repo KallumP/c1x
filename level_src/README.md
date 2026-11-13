@@ -101,6 +101,7 @@ Each one's name in the level editor's palette is in brackets.
 - `low_wide_gate` ("Gate (low, wide)"; as the tall one): stands on the floor at `at`, about 1 m tall and 6 m wide.
 - `pushing_block` ("Block (pushes out)"; Sunset Vista; two texture pages): about 4 m tall, pushing about 5 m from `at` towards the camera. `every` 2 by default.
 - `pushing_platform` ("Platform (interval, long)"; Sunset Vista; three texture pages, with the block's): its top is just under `at`, so raise it to where Crash should stand; it slides about 4.5 m towards the camera. `every` 2.5 by default.
+- `short_pushing_platform` ("Platform (interval, short)"; as the long one): the same, its slab about 1 m out instead of 1.8 m.
 - `rotating_pots`, `rotating_platforms` ("Pots (rotating)", "Platforms (rotating)"; Sunset Vista): go round an upright circle across the map, its middle at `at`. `"platforms"` is how many (1 to 7: 3 pots or 2 platforms by default) and `"radius"` how far out (1 to 10 m, 3.5 by default); `every` 6 by default a turn, and `reverse` sends them round the other way.
 - `dropping_platform` ("Platform (retracts when stood on)"; Sunset Vista): sticks out 1 m towards the camera from `at`, as if from a wall. `"shake"` is the seconds it shakes before it drops (0.25 to 5, 0.75 by default) and `"down"` the seconds it stays dropped (0.5 to 10, 2 by default).
 - `seesaw` ("Seesaw"; Sunset Vista): five blocks 0.8 m apart, about 4 m end to end, the middle one's top at `at`.
