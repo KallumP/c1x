@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { endPadRaise } from "../../src/endPad";
+import { endPadRaise, raisedEndPad, withEndPadRaise } from "../../src/endPad";
+import { newObject } from "../../src/editor";
 import type { Triangle } from "../../src/overlaps";
 import type { Vec3 } from "../../src/objects";
 
@@ -37,6 +38,30 @@ describe("endPadRaise", () => {
     const ledge = floor(-5, -5, 0.5, 5, flat(0));
     const below = floor(0.5, -5, 5, 5, flat(-2));
     expect(endPadRaise([0, 0, 0], SCALE, [...ledge, ...below])).toBeCloseTo(128 / SCALE);
+  });
+
+  test("a placed end pad is raised to clear the floor round it", () => {
+    const slope = floor(-5, -5, 5, 5, (x) => 0.2 * x);
+    expect(raisedEndPad(newObject("end", [0, 0, 0], SCALE), SCALE, slope).raise).toBeCloseTo(0.2 + 128 / SCALE, 2);
+  });
+
+  test("anything else placed keeps its raise", () => {
+    const box = newObject("basic", [0, 0, 0], SCALE);
+    expect(raisedEndPad(box, SCALE, floor(-5, -5, 5, 5, (x) => 0.2 * x))).toBe(box);
+  });
+
+  test("dragging an end pad raises it for where it's dragged to", () => {
+    const slope = floor(-5, -5, 5, 5, (x) => 0.2 * x);
+    const pad = newObject("end", [0, 0, 0], SCALE);
+    const changes = withEndPadRaise(pad, { at: [2, 0, 0.4] }, SCALE, slope);
+    expect(changes.at).toEqual([2, 0, 0.4]);
+    expect(changes.raise).toBeCloseTo(0.2 + 128 / SCALE, 2);
+  });
+
+  test("dragging anything else, or an end pad's other settings, leaves its raise", () => {
+    const slope = floor(-5, -5, 5, 5, (x) => 0.2 * x);
+    expect(withEndPadRaise(newObject("basic", [0, 0, 0]), { at: [2, 0, 0.4] }, SCALE, slope)).toEqual({ at: [2, 0, 0.4] });
+    expect(withEndPadRaise(newObject("end", [0, 0, 0]), { raise: 1 }, SCALE, slope)).toEqual({ raise: 1 });
   });
 
   test("the raise is rounded to the millimetre", () => {
