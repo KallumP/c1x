@@ -119,10 +119,12 @@ export const IRON_OUTLINE = 19; // the game's iron outline box, which a switch f
 export const PLAIN_OUTLINE = 13; // and its plain outline box
 export const UNBREAKABLE_BOXES: number[] = [BOX_TYPES.iron, BOX_TYPES.switch, BOX_TYPES.iron_arrow, IRON_OUTLINE];
 
-// a switch (! box) makes the outline boxes solid along a chain of ids in their
+// a switch (! box) fills in its outline boxes along a chain of ids in their
 // entities' init_flags_c: the switch's is the first outline box's id, each
-// outline box's the next one's, and the last's 0. the first is marked 12 in its
-// init_flags_b, the rest 4 (as on n. sanity beach)
+// outline box's the next one's, and the last's 0; each switch has its own, as on
+// road to nowhere. a plain or iron outline's init_flags_b marks the first in
+// its chain 12, the rest 4 (as on n. sanity beach); any other box's (one the
+// game has no outline box of) is left as placed, which has it start as an outline
 const OUTLINE_FIRST = 12;
 const OUTLINE_REST = 4;
 
@@ -204,29 +206,58 @@ export function newEntityIds(count: number, taken: Set<number>): number[] {
   return free.slice(0, count);
 }
 
-// a box placed in a level: its subtype, the zone it's in, its index in the zone's entities, and its id
+// a box placed in a level: its subtype, the zone it's in, its index in the zone's
+// entities, and its id; a switch's number, or the number of the switch it's an outline of
 export interface PlacedBox {
   subtype: number;
   zone: number;
   index: number;
   id: number;
+  switch?: number;
+  outline?: number;
 }
 
-const OUTLINES: number[] = [PLAIN_OUTLINE, IRON_OUTLINE]; // what a switch fills in
+const GAME_OUTLINES: number[] = [PLAIN_OUTLINE, IRON_OUTLINE]; // the game's own outline boxes
 
-// chains the outline boxes (iron ones too, in the order they're placed, as in
-// generator room) and points every switch at the first, so any switch makes
-// them all solid; in place, in entities (a list per zone)
-export function linkSwitches(entities: Buffer[][], placedBoxes: PlacedBox[]): void {
-  const outlines = placedBoxes.filter((box) => OUTLINES.includes(box.subtype));
-  const switches = placedBoxes.filter((box) => box.subtype === BOX_TYPES.switch);
-  const firstOutline = outlines.length ? outlines[0].id : 0;
-  for (const { zone, index } of switches) {
-    entities[zone][index] = withInitFlagC(entities[zone][index], firstOutline);
-  }
-  outlines.forEach(({ zone, index }, place) => {
-    const nextOutline = place + 1 < outlines.length ? outlines[place + 1].id : 0;
-    const chained = withInitFlagC(entities[zone][index], nextOutline);
-    entities[zone][index] = withInitFlagB(chained, place ? OUTLINE_REST : OUTLINE_FIRST);
+// the entity of a placed box, changed by change, in place in entities (a list per zone)
+function changePlaced(entities: Buffer[][], { zone, index }: PlacedBox, change: (item: Buffer) => Buffer): void {
+  entities[zone][index] = change(entities[zone][index]);
+}
+
+// chains a switch's outline boxes (in the order they're placed) and points the switch at the first
+function linkSwitch(entities: Buffer[][], switchBox: PlacedBox, outlines: PlacedBox[]): void {
+  changePlaced(entities, switchBox, (item) => withInitFlagC(item, outlines[0]?.id ?? 0));
+  outlines.forEach((outline, place) => {
+    const next = outlines[place + 1]?.id ?? 0;
+    changePlaced(entities, outline, (item) => withChainPlace(withInitFlagC(item, next), outline.subtype, place));
   });
+}
+
+// a game outline box's entity with its place in its chain marked; any other box's as it was
+function withChainPlace(item: Buffer, subtype: number, place: number): Buffer {
+  if (!GAME_OUTLINES.includes(subtype)) {
+    return item;
+  }
+  if (place === 0) {
+    return withInitFlagB(item, OUTLINE_FIRST);
+  }
+  return withInitFlagB(item, OUTLINE_REST);
+}
+
+// an error if an outline is of a switch that isn't among switches
+function checkOutlinesHaveSwitches(placedBoxes: PlacedBox[], switches: PlacedBox[]): void {
+  const numbers = new Set(switches.map((box) => box.switch));
+  const orphan = placedBoxes.find((box) => box.outline !== undefined && !numbers.has(box.outline));
+  if (orphan) {
+    throw new Error(`an outline box is an outline of switch ${orphan.outline}, but the level has no switch ${orphan.outline}`);
+  }
+}
+
+// links each switch to the outline boxes with its number, in place in entities (a list per zone)
+export function linkSwitches(entities: Buffer[][], placedBoxes: PlacedBox[]): void {
+  const switches = placedBoxes.filter((box) => box.switch !== undefined);
+  checkOutlinesHaveSwitches(placedBoxes, switches);
+  for (const switchBox of switches) {
+    linkSwitch(entities, switchBox, placedBoxes.filter((box) => box.outline === switchBox.switch));
+  }
 }

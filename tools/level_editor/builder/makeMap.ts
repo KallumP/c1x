@@ -572,7 +572,7 @@ class ObjectPlacer {
     for (let k = 0; k < object.stack; k++) {
       const id = this.ids.shift()!;
       const box = withInitFlagB(withEntityId(this.templates.entity(BOX_TYPE, subtype), id), boxInitFlagB(object));
-      this.placedBoxes.push({ subtype, zone, index: this.entities[zone].length, id });
+      this.placedBoxes.push({ subtype, zone, index: this.entities[zone].length, id, switch: object.switch, outline: object.outline });
       this.entities[zone].push(withPosition(box, [at[0], at[1] + k * BOX_HEIGHT, at[2]]));
     }
   }
