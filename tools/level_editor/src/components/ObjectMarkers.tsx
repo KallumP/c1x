@@ -140,10 +140,11 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
 
   // a switch's own number, or the number of the switch an outline belongs to
   const renderSwitchLabel = (object: LevelObject, top: Vec3) => {
-    if (object.switch !== undefined) {
-      return renderNumberLabel(top, object.switch, boxStyle(object.box!).colour);
+    const number = object.switch ?? object.outline;
+    if (number === undefined) {
+      return null;
     }
-    return null;
+    return renderNumberLabel(top, number, boxStyle("switch").colour);
   };
 
   const renderBoxStack = (object: LevelObject, index: number) => {
