@@ -851,7 +851,6 @@ void GLUpdate() {
   GLDrawFade();
   GLDrawBorders();
 #ifdef CFLAGS_GUI
-  GuiUpdate();
   GuiDraw();
   ImGui_ImplOpenGL2_RenderDrawData(igGetDrawData());
 #endif

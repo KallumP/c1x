@@ -774,10 +774,11 @@ void GuiItem(gui_item *item) {
 void GuiIgInit() {
 }
 
-/* draw item and then overlay (if any) in one imgui frame */
+/* draw item (if any) and then overlay (if any) in one imgui frame */
 void GuiIgDraw(gui_item *item, void (*overlay)()) {
   igNewFrame();
-  GuiItem(item);
+  if (item)
+    GuiItem(item);
   if (overlay)
     (*overlay)();
   igRender();

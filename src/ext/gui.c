@@ -655,32 +655,15 @@ static gui_item *GuiDebugView() {
 }
 
 /** main **/
-gui_item *root;
-int gui_lock = 0;
 extern int pad_lock;
 
+/* wurlyfox's debug menu (GuiDebugView: the object tree and the rest, which Esc
+   opened and Tab focused) isn't made, as c1x doesn't show it: only the corner
+   text is drawn (GuiDraw) */
 void GuiInit() {
   pad_lock = 0;
   GuiIgInit();
   ReflInit(types);
-  root = GuiDebugView();
-}
-
-void GuiUpdate() {
-  if (GuiIgKeyPressed(526)) {
-    root->flags = (~root->flags & GUI_FLAGS_VISIBLE);
-  }
-  if (GuiIgKeyPressed(512) && (root->flags & GUI_FLAGS_VISIBLE)) {
-    gui_lock = !gui_lock;
-    if (!gui_lock) {
-      pad_lock = 3;
-      GuiIgNavEnableKeyboard();
-    }
-    else {
-      pad_lock = 0;
-      GuiIgNavDisableKeyboard();
-    }
-  }
 }
 
 /* what goes before a corner text line: a line break, unless it's the first */
@@ -749,6 +732,7 @@ static void GuiCornerOverlay() {
     GuiIgCornerText(text);
 }
 
+/* the corner text, the only gui the game shows */
 void GuiDraw() {
-  GuiIgDraw(root, GuiCornerOverlay);
+  GuiIgDraw(0, GuiCornerOverlay);
 }
