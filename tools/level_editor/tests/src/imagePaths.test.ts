@@ -31,7 +31,7 @@ describe("a material's image, as the editor asks for it", () => {
   const BASE = "/api/levels/cave/files/";
 
   test("one outside the level's folder is the file of its name in the folder", () => {
-    expect(levelImageUrl(BASE, `${BASE}C:\Users\me\textures\grass.png`)).toBe(`${BASE}grass.png`);
+    expect(levelImageUrl(BASE, `${BASE}C:\\Users\\me\\textures\\grass.png`)).toBe(`${BASE}grass.png`);
     expect(levelImageUrl(BASE, `${BASE}../textures/grass.png`)).toBe(`${BASE}grass.png`);
     expect(levelImageUrl(BASE, `${BASE}/home/me/grass.png`)).toBe(`${BASE}grass.png`);
   });
