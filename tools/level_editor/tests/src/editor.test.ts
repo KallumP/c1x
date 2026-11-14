@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { draggedBy, draggedTo, editorReducer, emptyEditor, newObject, placeableKind, switchNumbers, type EditorAction, type EditorState, type Placeable } from "../../src/editor";
+import { draggedBy, draggedTo, editorReducer, emptyEditor, newObject, outlineChoices, placeableKind, switchNumbers, type EditorAction, type EditorState, type Placeable } from "../../src/editor";
 import { BAT_SWOOP, DEFAULT_SCALE } from "../../src/coords";
 import type { LevelObject } from "../../src/objects";
 import { enemyObject, obstacleObject } from "../helpers";
@@ -101,10 +101,20 @@ describe("switch numbers", () => {
     expect(added([switchBox(1, 1), switchBox(2, 3)], switchBox(0)).switch).toBe(2);
   });
 
-  test("a box changed to a switch gets the next number, and stops being an outline", () => {
+  test("a box changed to a switch gets the next number, and stays an outline of its switch", () => {
     const state = editorReducer(withObjects([switchBox(1, 1), { ...box(2), outline: 1 }]), { type: "update", index: 1, changes: { box: "switch" } });
-    expect(state.objects[1].switch).toBe(2);
-    expect(state.objects[1].outline).toBeUndefined();
+    expect(state.objects[1]).toMatchObject({ switch: 2, outline: 1 });
+  });
+
+  test("a box changed to the switch it's an outline of stops being an outline", () => {
+    const state = editorReducer(withObjects([{ ...box(2), outline: 1 }]), { type: "update", index: 0, changes: { box: "switch" } });
+    expect(state.objects[0].switch).toBe(1);
+    expect(state.objects[0].outline).toBeUndefined();
+  });
+
+  test("a switch can be made an outline of another switch", () => {
+    const state = editorReducer(withObjects([switchBox(1, 1), switchBox(2, 2)]), { type: "update", index: 1, changes: { outline: 1 } });
+    expect(state.objects[1]).toMatchObject({ switch: 2, outline: 1 });
   });
 
   test("the level's switch numbers are listed lowest first", () => {
@@ -115,6 +125,12 @@ describe("switch numbers", () => {
     const objects = [switchBox(1, 1), { ...box(2), outline: 1 }, switchBox(3, 2), { ...box(4), outline: 2 }];
     const state = editorReducer(withObjects(objects), { type: "update", index: 0, changes: { switch: 5 } });
     expect(state.objects.map((object) => object.switch ?? object.outline)).toEqual([5, 5, 2, 2]);
+  });
+
+  test("renumbering a switch takes a switch that's its outline with it", () => {
+    const objects = [switchBox(1, 1), { ...switchBox(2, 2), outline: 1 }];
+    const state = editorReducer(withObjects(objects), { type: "update", index: 0, changes: { switch: 4 } });
+    expect(state.objects[1]).toMatchObject({ switch: 2, outline: 4 });
   });
 
   test("a switch can't take a number another switch has", () => {
@@ -284,5 +300,31 @@ describe("sliding a path's node count down", () => {
     let state = editorReducer(withObjects([{ ...newObject("turtle", [0, 0, 0]), path }]), { type: "selectNode", index: 0, node: 1 });
     state = editorReducer(state, { type: "update", index: 0, changes: { path: path.slice(0, 2) }, record: false });
     expect(state.selectedNode).toBe(1);
+  });
+});
+
+describe("outlineChoices", () => {
+  const switchBox = (number: number, outline?: number): LevelObject => ({ ...newObject("switch", [0, 0, 0]), switch: number, outline });
+  const box = (outline?: number): LevelObject => ({ ...newObject("basic", [0, 0, 0]), outline });
+
+  test("a box can be an outline of any of the level's switches", () => {
+    expect(outlineChoices([switchBox(2), box(), switchBox(1)], 1)).toEqual([1, 2]);
+  });
+
+  test("a switch can be an outline of the others", () => {
+    expect(outlineChoices([switchBox(1), switchBox(2), switchBox(3)], 1)).toEqual([1, 3]);
+  });
+
+  test("a switch can't be an outline of a switch hidden until it's hit, nor behind one that is", () => {
+    // switch 3 is hidden until 2 is hit, and 2 until 1 is hit: 1 being an outline of either would be a loop
+    expect(outlineChoices([switchBox(1), switchBox(2, 1), switchBox(3, 2)], 0)).toEqual([]);
+  });
+
+  test("a switch can't be an outline of a switch that fills in another switch already", () => {
+    expect(outlineChoices([switchBox(1), switchBox(2, 1), switchBox(3)], 2)).toEqual([2]);
+  });
+
+  test("a switch keeps the switch it's an outline of among its choices", () => {
+    expect(outlineChoices([switchBox(1), switchBox(2, 1), switchBox(3)], 1)).toEqual([1, 3]);
   });
 });
