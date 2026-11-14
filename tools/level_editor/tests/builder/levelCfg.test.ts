@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { levelOptions, readLevelCfg } from "../../builder/levelCfg";
 import { DEFAULT_CAMERA } from "../../src/camera";
-import { DEFAULT_MUSIC } from "../../src/music";
+import { DEFAULT_MUSIC, DEFAULT_MUSIC_VOLUME } from "../../src/music";
 import { DEFAULT_SKY } from "../../src/sky";
 
 // a temporary level source folder, holding level.cfg with text (if given)
@@ -19,11 +19,11 @@ function sourceFolder(text?: string): string {
 describe("a level's scale, turn and sky", () => {
   test("without a level.cfg, a level has the default options", () => {
     // the default scale, no turn and n. sanity beach's sky
-    expect(levelOptions(sourceFolder())).toEqual({ scale: 400, turn: 0, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC });
+    expect(levelOptions(sourceFolder())).toEqual({ scale: 400, turn: 0, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
   });
 
   test("level.cfg sets them, skipping comments and blank lines", () => {
-    expect(levelOptions(sourceFolder("# the castle\n\nturn = 270\nscale=2000\n"))).toEqual({ scale: 2000, turn: 270, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC });
+    expect(levelOptions(sourceFolder("# the castle\n\nturn = 270\nscale=2000\n"))).toEqual({ scale: 2000, turn: 270, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
   });
 
   test("level.cfg sets the sky", () => {
@@ -34,7 +34,7 @@ describe("a level's scale, turn and sky", () => {
   });
 
   test("level.cfg can set just one", () => {
-    expect(levelOptions(sourceFolder("turn = 90\n"))).toEqual({ scale: 400, turn: 90, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC });
+    expect(levelOptions(sourceFolder("turn = 90\n"))).toEqual({ scale: 400, turn: 90, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
   });
 
   test("level.cfg sets the camera's distance and angle", () => {
@@ -55,10 +55,15 @@ describe("a level's scale, turn and sky", () => {
     }
   });
 
+  test("level.cfg sets the volume of the level's own song, a percent of the game's music loudness", () => {
+    expect(levelOptions(sourceFolder("music_volume = 150\n")).musicVolume).toBe(150);
+    expect(levelOptions(sourceFolder("music_volume = 25\n")).musicVolume).toBe(25);
+  });
+
   test("ones given override level.cfg", () => {
     const folder = sourceFolder("turn = 270\nscale = 2000\n");
-    expect(levelOptions(folder, { scale: 1000 })).toEqual({ scale: 1000, turn: 270, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC });
-    expect(levelOptions(folder, { turn: 0 })).toEqual({ scale: 2000, turn: 0, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC });
+    expect(levelOptions(folder, { scale: 1000 })).toEqual({ scale: 1000, turn: 270, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
+    expect(levelOptions(folder, { turn: 0 })).toEqual({ scale: 2000, turn: 0, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
   });
 });
 
@@ -99,6 +104,12 @@ describe("a bad level.cfg is an error naming it and its line", () => {
 
   test("music naming a file that isn't audio the game plays, listing the kinds it does", () => {
     expect(readError("music = notes.txt\n")).toThrow(/music has to be one of n_sanity_beach, .*, or an audio file in the level's folder \(\.mp3, \.ogg, \.flac, \.wav\), not notes\.txt/);
+  });
+
+  test("a song volume out of its range, or not a whole percent", () => {
+    expect(readError("music_volume = 300\n")).toThrow(/level\.cfg, line 1: music_volume has to be 25 to 200, not 300/);
+    expect(readError("music_volume = 10\n")).toThrow(/music_volume has to be 25 to 200, not 10/);
+    expect(readError("music_volume = 50.5\n")).toThrow(/music_volume has to be a whole number, not 50\.5/);
   });
 
   test("a line without a value", () => {
