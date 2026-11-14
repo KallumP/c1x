@@ -1,6 +1,6 @@
 # Releasing
 
-A release is a zip players download from the repository's GitHub **Releases** page: the built launcher, game and `build-level.exe`, ready to run on Windows without installing anything (see [What's in the zip](#whats-in-the-zip)).
+A release is a zip players download from the repository's GitHub **Releases** page: the built launcher, game and tools (the level build and level editor, `c1x_tools.exe`), ready to run on Windows without installing anything (see [What's in the zip](#whats-in-the-zip)).
 
 ## Making a release
 
@@ -12,7 +12,7 @@ A release is a zip players download from the repository's GitHub **Releases** pa
    release.bat 0.1.0
    ```
 
-   It builds everything first with `rebuild.bat` (see [Building](building.md)), so the launcher, the game and `build-level.exe` match `master`; it needs MSYS2 and Node.js. Then it copies the release's files into `build/release/c1x-0.1.0/` and zips that folder to `build/release/c1x-0.1.0.zip`. If the build fails, or something the release needs isn't there, it says so and makes no zip.
+   It builds everything first with `rebuild.bat` (see [Building](building.md)), so the launcher, the game, `c1x_tools.exe` and the level editor's page match `master`; it needs MSYS2 and Node.js (players don't). Then it copies the release's files into `build/release/c1x-0.1.0/` and zips that folder to `build/release/c1x-0.1.0.zip`. If the build fails, or something the release needs isn't there, it says so and makes no zip.
 
    To make the zip without building, run `npm run release -- 0.1.0` in `tools/level_editor`.
 4. Try the zip as a player would: unzip it into an empty folder (on a PC without MSYS2, if you can), open `c1x_launcher.exe`, extract a disc image, play, and build one of the custom levels.
@@ -32,15 +32,16 @@ The zip has a `c1x-<version>` folder laid out like the repository, as the launch
 - `c1x_launcher.exe`, at the top
 - `README.md`, from [`doc/release/README.md`](release/README.md): what a player needs to know
 - `LICENSE`, `settings.example.cfg` and `controls.example.cfg`
-- `build/`: `c1x.exe`, `build-level.exe` and the game's DLLs
+- `build/`: `c1x.exe`, `c1x_tools.exe` and the game's DLLs, and `editor/`, the level editor's built page
 - `streams/README.md`: the game's files go there
-- `level_src/` and `tools/level_editor/`: the files git has, so the included custom levels and the level editor (without its tests or `node_modules`)
+- `level_src/`: the files git has, so the included custom levels
 - `doc/`: the docs for players (running, the launcher, controls, settings, custom levels and the changelog)
 
 What isn't in it:
 
 - The game's files (`streams/`) and built levels (`build/levels/`): custom levels are built from the game's own files, so a built level holds them too. Players build the custom levels themselves, in the launcher.
-- The source code, the tests and the docs for working on c1x.
+- The acid cave's textures from the game: they're made from the player's own `streams/` when it's built (see its `game_textures.json`).
+- The source code, the level editor's included (it's built, in `build/editor/` and `c1x_tools.exe`), the tests and the docs for working on c1x.
 - Anything of yours in `build/`, `level_src/` or the settings: only the files listed above go in.
 
 The list is in `tools/level_editor/scripts/release.ts`.

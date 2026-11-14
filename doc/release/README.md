@@ -16,17 +16,16 @@ The launcher also has your **Settings** and **Controls** (keyboard keys for each
 
 c1x comes with four custom levels, in `level_src/`. In the launcher's **Levels** tab, click **Build** on one, then **Play**: it boots straight into it. Choose **title screen** under **Boot level** in Settings to start the game normally again.
 
-To make your own, model a map in [Blender](https://www.blender.org/), then place boxes, enemies and obstacles in the level editor, in the launcher's **Level editor** tab. The editor needs [Node.js](https://nodejs.org/) 18 or later. See [Custom levels](doc/custom_levels.md).
+To make your own, model a map in [Blender](https://www.blender.org/), then place boxes, enemies and obstacles in the level editor, in the launcher's **Level editor** tab, which needs nothing installed. See [Custom levels](doc/custom_levels.md).
 
 ## What's here
 
 | | |
 |---|---|
 | `c1x_launcher.exe` | the launcher: open this |
-| `build/` | the game (`c1x.exe`), what it needs, and the levels you build |
+| `build/` | the game (`c1x.exe`), the level editor and level build (`c1x_tools.exe`, and the editor's page in `editor/`), what they need, and the levels you build |
 | `streams/` | the game's files, once you've added them |
 | `level_src/` | the custom levels' sources, and yours |
-| `tools/level_editor/` | the level editor |
 | `doc/` | more on running, controls, settings and custom levels, and the [changelog](doc/changelog.md) |
 
 ## Licence
