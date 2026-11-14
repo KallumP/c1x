@@ -96,6 +96,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/launcher/node.c \
 	src/launcher/command.c \
 	src/launcher/level_editor.c \
+	src/launcher/tools.c \
 	src/launcher/level_build.c
 
 # the launcher (see doc/launcher.md), plus the game sources it uses
@@ -120,6 +121,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/command.c \
 	src/launcher/ui.c \
 	src/launcher/level_editor.c \
+	src/launcher/tools.c \
 	src/launcher/level_build.c \
 	src/launcher/levels_section.c \
 	src/launcher/editor_section.c \
@@ -132,8 +134,8 @@ OUT = build/c1x
 TEST_OUT = build/tests
 # the launcher, in the top folder: the first thing a player opens
 LAUNCHER_OUT = c1x_launcher
-# the level build with node built in, for the launcher (see doc/building.md)
-BUILDER_OUT = build/build-level
+# the level build and the level editor with node built in, for the launcher (see doc/building.md)
+TOOLS_OUT = build/c1x_tools
 
 # include dirs.
 INCLUDE = -I./src/
@@ -148,7 +150,7 @@ LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lsndfile -lm -ls
 OUT = build/c1x.exe
 TEST_OUT = build/tests.exe
 LAUNCHER_OUT = c1x_launcher.exe
-BUILDER_OUT = build/build-level.exe
+TOOLS_OUT = build/c1x_tools.exe
 # linked statically, so the launcher needs no dlls beside it in the top folder
 LAUNCHER_LDLIBS = -static -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lcomdlg32 -lm -lstdc++ -mwindows \
 	-lkernel32 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lversion -luuid -ladvapi32 -lsetupapi -lshell32 -ldinput8
@@ -181,13 +183,14 @@ TEST_CIMGUI_OBJ = $(filter-out $(CIMGUI_PATH)/imgui/backends/%,$(CIMGUI_OBJ))
 OBJ += $(SRC:.c=.o)
 LAUNCHER_OBJ = $(CIMGUI_OBJ) $(LAUNCHER_SRC:.c=.o)
 
-# the level build's sources, and the editor's code it shares
+# the tools' sources: the level build, the editor's server, and the editor's code they share
 EDITOR_PATH = tools/level_editor
-BUILDER_SRC = $(wildcard $(EDITOR_PATH)/builder/*.ts $(EDITOR_PATH)/src/*.ts) 	$(EDITOR_PATH)/scripts/builderExe.ts $(EDITOR_PATH)/package.json
-# making build-level needs node; without it make builds the rest and says so
+TOOLS_SRC = $(wildcard $(EDITOR_PATH)/builder/*.ts $(EDITOR_PATH)/src/*.ts $(EDITOR_PATH)/server/*.ts $(EDITOR_PATH)/scripts/tools*.ts) \
+	$(EDITOR_PATH)/package.json
+# making the tools needs node; without it make builds the rest and says so
 HAVE_NODE := $(shell node --version 2>/dev/null)
 
-all: $(SRC) $(OUT) $(LAUNCHER_OUT) builder
+all: $(SRC) $(OUT) $(LAUNCHER_OUT) tools
 
 clean:
 	rm -r $(OBJ) $(OUT)
@@ -231,17 +234,17 @@ endif
 .PHONY: launcher
 launcher: $(LAUNCHER_OUT)
 
-.PHONY: builder
+.PHONY: tools
 ifneq ($(HAVE_NODE),)
-builder: $(BUILDER_OUT)
+tools: $(TOOLS_OUT)
 else
-builder:
-	@echo "skipping $(BUILDER_OUT): it needs Node.js 18 or later (see doc/building.md)"
+tools:
+	@echo "skipping $(TOOLS_OUT): it needs Node.js 18 or later (see doc/building.md)"
 endif
 
 # installs the editor's packages first if need be
-$(BUILDER_OUT): $(BUILDER_SRC)
-	cd $(EDITOR_PATH) && { [ -d node_modules ] || npm install; } && npm run builder-exe
+$(TOOLS_OUT): $(TOOLS_SRC)
+	cd $(EDITOR_PATH) && { [ -d node_modules ] || npm install; } && npm run tools-exe
 
 $(LAUNCHER_OUT): $(LAUNCHER_OBJ) $(LAUNCHER_ICON_OBJ)
 	@mkdir -p $(dir $(LAUNCHER_OUT))

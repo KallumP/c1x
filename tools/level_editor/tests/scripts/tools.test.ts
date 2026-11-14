@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { toolsCommand } from "../../scripts/toolsCli";
+import { toolsCommand } from "../../scripts/tools";
 
 describe("the tools exe's commands", () => {
   test("build-level <level> builds a level", () => {
