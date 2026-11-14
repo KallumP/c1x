@@ -118,7 +118,7 @@ Project structure is listed below, including descriptions for each file.
 │       │   ├── gui.c        # minimal GUI library ([c]imgui thin wrapper)
 │       │   ├── refl.c       # minimal type reflection library
 │       │   └── cimgui       # cimgui and imgui
-│       ├── gui.c,h          # in-game GUI
+│       ├── gui.c,h          # in-game GUI: the corner text (fps, speed, spins); wurlyfox's debug menu isn't shown
 │       ├── refl.c,h         # game-specific type metadata
 │       └── disgool.c,h      # GOOL disassembler
 ├── streams                  # game assets (.NSD/.NSF files)
