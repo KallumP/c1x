@@ -23,11 +23,11 @@ typedef struct {
   int playing;
 } stream_song;
 
-extern int StreamSongLoad(const char *path, stream_song *song);
+extern int StreamSongLoad(const char *path, float volume, stream_song *song);
 extern void StreamSongFree(stream_song *song);
 extern void StreamSongPlay(stream_song *song);
 extern void StreamSongStop(stream_song *song);
 extern void StreamSongRead(stream_song *song, int16_t *out, int frames);
-extern float StreamSongLoudnessScale(const float *samples, size_t count);
+extern float StreamSongLoudnessScale(const float *samples, size_t count, float volume);
 
 #endif /* _PC_SOUND_STREAM_H_ */

@@ -94,9 +94,10 @@ static float Peak(const float *samples, size_t count) {
   return peak;
 }
 
-/* what to turn samples (floats, full scale at 1) up or down by, so they're STREAM_SONG_LOUDNESS loud,
-   but no further up than their peak at full scale; silence as it is */
-float StreamSongLoudnessScale(const float *samples, size_t count) {
+/* what to turn samples (floats, full scale at 1) up or down by, so they're volume times
+   STREAM_SONG_LOUDNESS loud (volume 1 for as loud as the game's music), but no further up
+   than their peak at full scale; silence as it is */
+float StreamSongLoudnessScale(const float *samples, size_t count, float volume) {
   double mean_square, target, scale;
   float peak;
 
@@ -104,13 +105,13 @@ float StreamSongLoudnessScale(const float *samples, size_t count) {
   peak = Peak(samples, count);
   if (mean_square <= 0 || peak <= 0) { return 1.0f; }
   target = STREAM_SONG_LOUDNESS / 32768.0;
-  scale = target / SquareRoot(mean_square);
+  scale = volume * target / SquareRoot(mean_square);
   if (scale * peak > 1.0) { scale = 1.0 / peak; }
   return (float)scale;
 }
 
-/* the audio file at path as a song; whether it could be read */
-int StreamSongLoad(const char *path, stream_song *song) {
+/* the audio file at path as a song, volume times as loud as the game's music; whether it could be read */
+int StreamSongLoad(const char *path, float volume, stream_song *song) {
   SF_INFO info = { 0 };
   float *samples;
 
@@ -123,7 +124,7 @@ int StreamSongLoad(const char *path, stream_song *song) {
     free(samples);
     return 0;
   }
-  Resample(samples, &info, StreamSongLoudnessScale(samples, (size_t)info.frames * info.channels), song);
+  Resample(samples, &info, StreamSongLoudnessScale(samples, (size_t)info.frames * info.channels, volume), song);
   free(samples);
   return song->samples != 0;
 }
