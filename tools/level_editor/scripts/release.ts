@@ -3,12 +3,14 @@
 // paths are relative to the repo and to the release folder, with forward slashes
 import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, sep } from "node:path";
-import { htmlDocPage } from "./htmlDocs";
+import { basename, dirname, join, posix, sep } from "node:path";
+import { docLink, htmlDocPage } from "./htmlDocs";
 
 export type ReleaseFile = { from: string; to: string; asPage?: boolean }; // asPage: a doc, written as its html page
 type Command = { program: string; args: string[] };
 
+// where the docs a release doesn't have are, for its docs' links to them
+const ONLINE_DOCS = "https://github.com/KallumP/c1x/blob/master";
 // at the top of the release, as they are in the repo
 const LICENSE = "LICENSE";
 const TOP_FILES = ["c1x_launcher.exe", LICENSE, "settings.example.cfg", "controls.example.cfg", "streams/README.md"];
@@ -81,7 +83,32 @@ export function releaseFolder(repo: string, version: string): string {
   return join(repo, "release", `c1x-${version}`);
 }
 
-function copyReleaseFile(repo: string, file: ReleaseFile, folder: string): void {
+// a link's path, and the place on the page it goes to (with its #), if it has one
+function splitAnchor(href: string): { path: string; anchor: string } {
+  const hashAt = href.indexOf("#");
+  if (hashAt === -1) {
+    return { path: href, anchor: "" };
+  }
+  return { path: href.slice(0, hashAt), anchor: href.slice(hashAt) };
+}
+
+// a link in the doc that's page in the release (its path there), with released
+// the paths of everything in the release: to another doc's page, or to the doc
+// on github when the release doesn't have it (the docs for working on c1x)
+export function releasedLink(page: string, href: string, released: Set<string>): string {
+  const link = docLink(href);
+  if (link === href) {
+    return link; // a website, a place on the page, or anything that isn't a doc
+  }
+  const { path, anchor } = splitAnchor(href);
+  const target = posix.normalize(posix.join(posix.dirname(page), path));
+  if (released.has(docLink(target))) {
+    return link;
+  }
+  return `${ONLINE_DOCS}/${target}${anchor}`;
+}
+
+function copyReleaseFile(repo: string, file: ReleaseFile, folder: string, released: Set<string>): void {
   const from = join(repo, file.from);
   if (!existsSync(from)) {
     throw new Error(`${file.from} isn't there, so it can't go in the release`);
@@ -89,7 +116,7 @@ function copyReleaseFile(repo: string, file: ReleaseFile, folder: string): void 
   const to = join(folder, file.to);
   mkdirSync(dirname(to), { recursive: true });
   if (file.asPage) {
-    writeFileSync(to, htmlDocPage(readFileSync(from, "utf8")));
+    writeFileSync(to, htmlDocPage(readFileSync(from, "utf8"), (href) => releasedLink(file.to, href, released)));
     return;
   }
   copyFileSync(from, to);
@@ -97,9 +124,10 @@ function copyReleaseFile(repo: string, file: ReleaseFile, folder: string): void 
 
 // copies files from repo into folder, emptied first
 export function copyReleaseFiles(repo: string, files: ReleaseFile[], folder: string): void {
+  const released = new Set(files.map((file) => file.to));
   rmSync(folder, { recursive: true, force: true });
   mkdirSync(folder, { recursive: true });
-  files.forEach((file) => copyReleaseFile(repo, file, folder));
+  files.forEach((file) => copyReleaseFile(repo, file, folder, released));
 }
 
 // windows' own tar writes zips (-a, from the name); msys2's tar, which may be first on

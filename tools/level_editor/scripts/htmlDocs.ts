@@ -80,8 +80,8 @@ function titleAttribute(title: string | null | undefined): string {
   return ` title="${escapeHtml(title)}"`;
 }
 
-// marked, making one page: its headings anchored, its links to other docs to their pages
-function pageMarked(): Marked {
+// marked, making one page: its headings anchored, its links where linkFor sends them
+function pageMarked(linkFor: (href: string) => string): Marked {
   const used = new Map<string, number>();
   return new Marked({
     renderer: {
@@ -90,7 +90,7 @@ function pageMarked(): Marked {
         return `<h${depth} id="${uniqueSlug(headingSlug(plainText(html)), used)}">${html}</h${depth}>\n`;
       },
       link({ href, title, tokens }: Tokens.Link) {
-        return `<a href="${escapeHtml(docLink(href))}"${titleAttribute(title)}>${this.parser.parseInline(tokens)}</a>`;
+        return `<a href="${escapeHtml(linkFor(href))}"${titleAttribute(title)}>${this.parser.parseInline(tokens)}</a>`;
       },
     },
   });
@@ -113,9 +113,10 @@ function pageTitle(markdown: string): string {
   return `c1x: ${heading}`;
 }
 
-// a doc's markdown as a whole html page
-export function htmlDocPage(markdown: string): string {
-  const body = pageMarked().parse(markdown) as string;
+// a doc's markdown as a whole html page; linkFor says where each link goes
+// (by default, links to other docs to their pages)
+export function htmlDocPage(markdown: string, linkFor: (href: string) => string = docLink): string {
+  const body = pageMarked(linkFor).parse(markdown) as string;
   return `<!doctype html>
 <html lang="en">
 <head>
