@@ -11,7 +11,4 @@
 /* make a folder; fine if it already exists */
 extern void MakeFolder(const char *path);
 
-/* make repo/tools/level_editor/node_modules, as after the editor's npm install */
-extern void MakeRepoWithNodeModules(const char *repo);
-
 #endif /* _TEST_FILES_H_ */

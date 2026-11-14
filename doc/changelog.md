@@ -12,6 +12,7 @@
 
 - the launcher is now `c1x_launcher.exe` in the top folder, and needs no DLLs beside it
 - the game is now `build/c1x.exe`
+- the level editor needs nothing installed: no Node.js and no Install, as it runs from `build/c1x_tools.exe`, which builds levels in place of `build-level.exe`
 - the launcher's **Play** no longer opens a console window beside the game
 - mossy creek and sunset canyon no longer come with their own songs, and play the game's music
 

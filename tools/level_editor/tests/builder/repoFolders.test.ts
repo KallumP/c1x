@@ -8,6 +8,7 @@ describe("the level build's folders", () => {
       sourcesDir: join("games", "c1x", "level_src"),
       streamsDir: join("games", "c1x", "streams"),
       levelsDir: join("games", "c1x", "build", "levels"),
+      editorPageDir: join("games", "c1x", "build", "editor"),
     });
   });
 

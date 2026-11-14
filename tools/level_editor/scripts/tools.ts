@@ -1,0 +1,66 @@
+// c1x's tools for players, packed with node as build/c1x_tools.exe (toolsExe.ts)
+// so they need nothing installed: the level build and the level editor
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { buildLevel, levelSourcePath } from "../builder/buildLevel";
+import { repoFolders } from "../builder/repoFolders";
+import { addressLine, startEditorServer } from "../server/editorServer";
+
+export type ToolsCommand = { kind: "build-level"; level: string } | { kind: "editor" } | { kind: "usage" };
+
+export const USAGE = `usage: c1x_tools build-level <level>
+       c1x_tools editor
+       (from tools/level_editor: npm run build-level -- <level>, npm run editor)
+
+  build-level  builds a level source into build/levels: its name, such as
+               1_tide_ruins (its folder in level_src), or the path of a level
+               source's folder or .obj; its level.cfg and objects.json, which
+               the level editor sets, scale, turn and place things in it
+  editor       starts the level editor (its page built into build/editor by
+               make, or npm run build), and says where it is`;
+
+const EDITOR_PORT = 5173; // vite's, as npm run dev has it
+
+// what the command line asks for
+export function toolsCommand(args: string[]): ToolsCommand {
+  const [command, ...rest] = args;
+  if (command === "build-level" && rest.length === 1) {
+    return { kind: "build-level", level: rest[0] };
+  }
+  if (command === "editor" && rest.length === 0) {
+    return { kind: "editor" };
+  }
+  return { kind: "usage" };
+}
+
+// builds a level; whether it did
+function runBuildLevel(repo: string, level: string): boolean {
+  const { sourcesDir, streamsDir, levelsDir } = repoFolders(repo);
+  return buildLevel(levelSourcePath(level, sourcesDir), { streamsDir, levelsDir, log: console.log });
+}
+
+// starts the editor, which runs until the process is stopped; whether it started
+async function runEditor(repo: string): Promise<boolean> {
+  const { editorPageDir } = repoFolders(repo);
+  if (!existsSync(join(editorPageDir, "index.html"))) {
+    console.log(`the level editor's page isn't built in ${editorPageDir}: run make (or npm run build in tools/level_editor)`);
+    return false;
+  }
+  const { address } = await startEditorServer({ repo, pageDir: editorPageDir, firstPort: EDITOR_PORT });
+  console.log("c1x level editor");
+  console.log(addressLine(address));
+  return true;
+}
+
+// runs what the command line asks for, in the project's folder repo; its exit code
+export async function runTools(repo: string, args: string[]): Promise<number> {
+  const command = toolsCommand(args);
+  if (command.kind === "build-level") {
+    return Number(!runBuildLevel(repo, command.level));
+  }
+  if (command.kind === "editor") {
+    return Number(!(await runEditor(repo)));
+  }
+  console.log(USAGE);
+  return 1;
+}

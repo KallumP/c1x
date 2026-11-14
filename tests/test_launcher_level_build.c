@@ -1,40 +1,21 @@
 #include <string.h>
 #include "utest.h"
 #include "launcher/level_build.h"
-#include "test_files.h"
-
-#define TEST_BUILD_REPO "build/test_launcher_level_build"
 
 #ifdef _WIN32
-#define BUILDER "build-level.exe"
+#define TOOLS "c1x_tools.exe"
 #else
-#define BUILDER "build-level"
+#define TOOLS "c1x_tools"
 #endif
 
-UTEST(launcher_level_build, the_builder_is_in_the_build_folder) {
-  char path[256];
-
-  BuilderPath("c1x", path, sizeof(path));
-  ASSERT_STREQ("c1x/build/" BUILDER, path);
-}
-
-UTEST(launcher_level_build, the_builder_is_built_once_its_there) {
-  MakeFolder(TEST_BUILD_REPO);
-  MakeFolder(TEST_BUILD_REPO "/build");
-  remove(TEST_BUILD_REPO "/build/" BUILDER);
-  ASSERT_FALSE(IsBuilderBuilt(TEST_BUILD_REPO));
-  WriteWholeFile(TEST_BUILD_REPO "/build/" BUILDER, "");
-  ASSERT_TRUE(IsBuilderBuilt(TEST_BUILD_REPO));
-}
-
-UTEST(launcher_level_build, builds_the_level_with_the_builder) {
+UTEST(launcher_level_build, builds_the_level_with_the_tools) {
   char command[512];
 
   ASSERT_TRUE(BuildLevelCommand("C:/games/c1x", "tide_ruins", command, sizeof(command)));
 #ifdef _WIN32
-  ASSERT_STREQ("\"C:/games/c1x/build/" BUILDER "\" tide_ruins", command);
+  ASSERT_STREQ("\"C:/games/c1x/build/" TOOLS "\" build-level tide_ruins", command);
 #else
-  ASSERT_STREQ("'C:/games/c1x/build/" BUILDER "' tide_ruins", command);
+  ASSERT_STREQ("'C:/games/c1x/build/" TOOLS "' build-level tide_ruins", command);
 #endif
 }
 

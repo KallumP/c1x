@@ -8,6 +8,7 @@
 #include "cimgui.h"
 #include "levels_section.h"
 #include "level_build.h"
+#include "tools.h"
 #include "levels.h"
 #include "command.h"
 #include "paths.h"
@@ -40,7 +41,7 @@ void StartLevelBuild(const char *repo, const char *level) {
 }
 
 int CanBuildLevels(const char *repo) {
-  return IsBuilderBuilt(repo) && !IsBackgroundCommandRunning(&build);
+  return AreToolsBuilt(repo) && !IsBackgroundCommandRunning(&build);
 }
 
 /* once a build finishes, the levels it made are listed here and for
@@ -52,10 +53,10 @@ void UpdateLevelsSection(const char *repo) {
   if (build.exit_code == 0) { BootIntoLevel(repo, building); }
 }
 
-static void DrawBuilderMissing(const char *repo) {
+static void DrawToolsMissing(const char *repo) {
   char path[PATH_MAX_LEN];
 
-  BuilderPath(repo, path, sizeof(path));
+  ToolsPath(repo, path, sizeof(path));
   igTextColored(PROBLEM_COLOUR, "Levels can't be built: there's no %s.", path);
   igTextWrapped("Build it with make, which needs Node.js (see doc/building.md).");
 }
@@ -100,11 +101,11 @@ void DrawLevelBuildStatus(void) {
 }
 
 void DrawLevelsSection(const char *repo) {
-  int has_builder = IsBuilderBuilt(repo);
+  int has_tools = AreToolsBuilt(repo);
 
   igTextWrapped("Custom levels: each level source in level_src/ (a folder with its map), "
     "and the levels built from them to build/levels/.");
-  if (!has_builder) { DrawBuilderMissing(repo); }
+  if (!has_tools) { DrawToolsMissing(repo); }
   if (levels.count == 0) {
     igText("There are no level sources in level_src/.");
   }

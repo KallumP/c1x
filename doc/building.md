@@ -4,11 +4,13 @@ As of currently, compilation has only been tested on Ubuntu/Debian and on Window
 
 Note that only 32-bit target executables are currently supported. If you are not already running a 32-bit OS, you will need multilib versions of gcc and g++ and 32-bit versions of the dependencies.
 
-To compile c1x, install the dependencies listed below, `cd` into the main project directory, and run `make`. This builds the game, the [launcher](launcher.md), a window for starting the game, to `c1x_launcher.exe` in the project directory (`c1x_launcher` on Linux; `make launcher` builds just the launcher), and `build/build-level.exe` (`build/build-level` on Linux), which the launcher builds custom levels with (`make builder` builds just that).
+To compile c1x, install the dependencies listed below, `cd` into the main project directory, and run `make`. This builds the game, the [launcher](launcher.md), a window for starting the game, to `c1x_launcher.exe` in the project directory (`c1x_launcher` on Linux; `make launcher` builds just the launcher), and `build/c1x_tools.exe` (`build/c1x_tools` on Linux) with the level editor's page in `build/editor/`, which the launcher builds custom levels and runs the level editor with (`make tools` builds just those).
 
-## Building levels without Node
+## The level build and editor without Node
 
-`build-level.exe` is the level editor's level build (`tools/level_editor/builder/`) bundled into one file with Node.js built in (a [single executable application](https://nodejs.org/api/single-executable-applications.html)), so players can build [custom levels](custom_levels.md) from the launcher without installing Node or the editor. Making it needs [Node.js](https://nodejs.org/) 18 or later: `make` runs `npm install` in `tools/level_editor/` if it's never been run, then `npm run builder-exe`. It's about 85 MB. Without Node, `make` says it's skipping it and builds the rest; the launcher then says levels can't be built. Players running a build made elsewhere need nothing else installed.
+`c1x_tools.exe` is the level build (`tools/level_editor/builder/`) and the level editor's server (`server/`) bundled into one file with Node.js built in (a [single executable application](https://nodejs.org/api/single-executable-applications.html)), so players can build [custom levels](custom_levels.md) and use the level editor from the launcher without installing anything: `c1x_tools build-level <name>` builds a level, and `c1x_tools editor` serves the editor's page, built by Vite into `build/editor/`, and says where it's running. Making them needs [Node.js](https://nodejs.org/) 18 or later: `make` runs `npm install` in `tools/level_editor/` if it's never been run, then `npm run tools-exe` and `npm run build`, each only when its sources have changed (so `rebuild.bat` keeps them up to date too). The exe is about 85 MB. Without Node, `make` says it's skipping them and builds the rest; the launcher then says levels can't be built and the editor can't run. Players running a build made elsewhere need nothing else installed.
+
+To work on the editor itself, `npm run dev` in `tools/level_editor/` runs it with Vite, which reloads it as you change it; `npm run editor` runs the built page as the exe does.
 
 ## Dependencies
 
