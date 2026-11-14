@@ -3,6 +3,10 @@
 // made from the player's own copy of the game, so they needn't be shared
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { eidToString } from "./entryIds";
+import type { RgbImage } from "./images";
+import { PAGE_SIZE, PAGE_TEXTURE, readPages } from "./levelFiles";
+import { regionImage } from "./textureRegions";
 import { SIZES } from "./tpage";
 
 export const GAME_TEXTURES_FILE = "game_textures.json";
@@ -107,4 +111,24 @@ export function readGameTextures(folder: string): Map<string, GameTexture> {
   } catch (error) {
     throw new Error(`${GAME_TEXTURES_FILE}: ${error instanceof Error ? error.message : error}`);
   }
+}
+
+// a stream's texture pages, by entry name, read from its .nsf alone (as cut levels are; see scripts/cutLevel/readCutLevel.ts)
+export function readStreamTexturePages(streamsDir: string, stream: string): Map<string, Buffer> {
+  const path = join(streamsDir, `${stream}.nsf`);
+  if (!existsSync(path)) {
+    throw new Error(`${stream}.nsf isn't in ${streamsDir}`);
+  }
+  const nsf = readFileSync(path);
+  const pages = readPages(nsf, Math.floor(nsf.length / PAGE_SIZE)).filter((page) => page.type === PAGE_TEXTURE);
+  return new Map(pages.map((page) => [eidToString(page.eid), page.data]));
+}
+
+// the image name's game texture, from its stream's texture pages
+export function gameTextureImage(name: string, texture: GameTexture, pages: Map<string, Buffer>): RgbImage {
+  const page = pages.get(texture.page);
+  if (!page) {
+    throw new Error(`${name}'s page ${texture.page} isn't one of ${texture.stream}'s texture pages`);
+  }
+  return regionImage(page, texture);
 }
