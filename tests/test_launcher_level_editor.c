@@ -1,21 +1,19 @@
 #include "utest.h"
 #include "launcher/level_editor.h"
-#include "test_files.h"
 
-#define TEST_EDITOR_REPO "build/test_launcher_level_editor"
+#ifdef _WIN32
+#define TOOLS "c1x_tools.exe"
+#else
+#define TOOLS "c1x_tools"
+#endif
 
-UTEST(launcher_level_editor, is_in_the_tools_folder) {
-  char folder[256];
+UTEST(launcher_level_editor, runs_from_the_tools) {
+  char command[512];
 
-  LevelEditorFolder("/home/me/c1x", folder, sizeof(folder));
-  ASSERT_STREQ("/home/me/c1x/tools/level_editor", folder);
-}
-
-UTEST(launcher_level_editor, its_packages_are_installed_with_node_modules) {
-  MakeRepoWithNodeModules(TEST_EDITOR_REPO);
-  ASSERT_TRUE(AreLevelEditorPackagesInstalled(TEST_EDITOR_REPO));
-}
-
-UTEST(launcher_level_editor, packages_arent_installed_without_node_modules) {
-  ASSERT_FALSE(AreLevelEditorPackagesInstalled("build/no_such_repo"));
+  ASSERT_TRUE(LevelEditorCommand("C:/games/c1x", command, sizeof(command)));
+#ifdef _WIN32
+  ASSERT_STREQ("\"C:/games/c1x/build/" TOOLS "\" editor", command);
+#else
+  ASSERT_STREQ("'C:/games/c1x/build/" TOOLS "' editor", command);
+#endif
 }
