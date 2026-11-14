@@ -31,3 +31,17 @@ export function fileNameOf(path: string): string {
   const parts = path.split(/[\\/]/);
   return parts[parts.length - 1];
 }
+
+// an address the editor asks for one of a level's images by (base, the level's
+// files, then the .mtl's path): an image outside the level's folder is the
+// folder's file of the same name. other addresses are as they are
+export function levelImageUrl(base: string, url: string): string {
+  if (!url.startsWith(base)) {
+    return url;
+  }
+  const path = url.slice(base.length);
+  if (!isOutsideFolder(path)) {
+    return url;
+  }
+  return base + fileNameOf(path);
+}
