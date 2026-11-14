@@ -81,10 +81,6 @@ int TakeControlsKeyPress(SDL_Scancode code) {
   if (button == NOT_CAPTURING) { return 0; }
   capturing_button = NOT_CAPTURING;
   if (code == SDL_SCANCODE_ESCAPE) { return 1; } /* cancelled */
-  if (code == SDL_SCANCODE_TAB) {
-    SetStatus(1, "Tab can't be used: the game's debug GUI uses it.");
-    return 1;
-  }
   controls.keys[button][capturing_key] = code;
   if (capturing_key == controls.key_count[button]) { controls.key_count[button]++; }
   status[0] = 0;
