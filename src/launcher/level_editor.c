@@ -1,29 +1,13 @@
 /*
- * the level editor and the tools beside it, in tools/level_editor, which
- * need their npm packages installed, and the address the editor runs at
+ * the level editor, run by c1x's tools (c1x_tools editor), which have node
+ * built in, and the address it says it's running at
  */
 #include <SDL2/SDL.h>
-#include <sys/stat.h>
 #include "level_editor.h"
-#include "paths.h"
+#include "tools.h"
 
-void LevelEditorFolder(const char *repo, char *folder, size_t size) {
-  JoinPath(folder, size, repo, "tools/level_editor");
-}
-
-static int IsFolder(const char *path) {
-  struct stat info;
-
-  return stat(path, &info) == 0 && S_ISDIR(info.st_mode);
-}
-
-int AreLevelEditorPackagesInstalled(const char *repo) {
-  char folder[PATH_MAX_LEN];
-  char node_modules[PATH_MAX_LEN];
-
-  LevelEditorFolder(repo, folder, sizeof(folder));
-  JoinPath(node_modules, sizeof(node_modules), folder, "node_modules");
-  return IsFolder(node_modules);
+int LevelEditorCommand(const char *repo, char *command, size_t size) {
+  return ToolsCommand(repo, "editor", command, size);
 }
 
 #define ADDRESS_START "http://localhost:"
@@ -53,8 +37,8 @@ static char *WithoutColourCodes(const char *text) {
   return plain;
 }
 
-/* the editor's address in npm run dev's output, once vite says where it's
-   running ("Local:   http://localhost:5173/"); returns 0 if it hasn't yet */
+/* the editor's address in its output, once it says where it's running as
+   vite does ("Local:   http://localhost:5173/"); returns 0 if it hasn't yet */
 int FindLevelEditorAddress(const char *dev_output, char *address, size_t size) {
   char *plain, *start;
   size_t length = 0;

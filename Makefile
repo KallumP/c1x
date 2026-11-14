@@ -93,7 +93,6 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/launcher/extract.c \
 	src/launcher/disc_image.c \
 	src/launcher/extraction.c \
-	src/launcher/node.c \
 	src/launcher/command.c \
 	src/launcher/level_editor.c \
 	src/launcher/tools.c \
@@ -117,7 +116,6 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/extraction.c \
 	src/launcher/extract_section.c \
 	src/launcher/file_dialog.c \
-	src/launcher/node.c \
 	src/launcher/command.c \
 	src/launcher/ui.c \
 	src/launcher/level_editor.c \
