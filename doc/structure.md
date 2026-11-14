@@ -147,6 +147,7 @@ Project structure is listed below, including descriptions for each file.
 ├── settings.example.cfg     # default settings, which the launcher creates settings.cfg from
 ├── Makefile                 # project makefile
 ├── rebuild.bat              # windows rebuild script (runs make in MSYS2 MINGW32)
+├── release.bat              # windows release script: rebuild.bat, then the release zip (npm run release)
 ├── .github/CODEOWNERS       # every pull request asks KallumP for a review
 ├── LICENSE                  # MIT, for c1x's own changes and additions only
 └── README.md                # project overview and documentation links

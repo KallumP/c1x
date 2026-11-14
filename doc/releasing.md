@@ -6,22 +6,17 @@ A release is a zip players download from the repository's GitHub **Releases** pa
 
 1. On `master`, pulled, with nothing uncommitted.
 2. Pick the version, like `0.1.0`: the first number for big changes, the second for new features, the third for fixes.
-3. Build on Windows (see [Building](building.md)), so the launcher, the game and `build-level.exe` match `master`:
+3. On Windows, run `release.bat` from the project folder with the version, or double-click it and type the version when it asks:
 
    ```
-   rebuild.bat
+   release.bat 0.1.0
    ```
 
-   `build-level.exe` needs Node.js to make. Check `make` didn't say it skipped it.
-4. Make the zip, from `tools/level_editor`:
+   It builds everything first with `rebuild.bat` (see [Building](building.md)), so the launcher, the game and `build-level.exe` match `master`; it needs MSYS2 and Node.js. Then it copies the release's files into `build/release/c1x-0.1.0/` and zips that folder to `build/release/c1x-0.1.0.zip`. If the build fails, or something the release needs isn't there, it says so and makes no zip.
 
-   ```
-   npm run release -- 0.1.0
-   ```
-
-   It copies the release's files into `build/release/c1x-0.1.0/` and zips that folder to `build/release/c1x-0.1.0.zip`. If something it needs isn't built, it says what's missing.
-5. Try the zip as a player would: unzip it into an empty folder (on a PC without MSYS2, if you can), open `c1x_launcher.exe`, extract a disc image, play, and build one of the custom levels.
-6. On GitHub, open **Releases**, then **Draft a new release**:
+   To make the zip without building, run `npm run release -- 0.1.0` in `tools/level_editor`.
+4. Try the zip as a player would: unzip it into an empty folder (on a PC without MSYS2, if you can), open `c1x_launcher.exe`, extract a disc image, play, and build one of the custom levels.
+5. On GitHub, open **Releases**, then **Draft a new release**:
    - **Choose a tag**: type `v0.1.0` and choose to create it, on `master`.
    - **Release title**: `c1x 0.1.0`.
    - **Description**: what's changed since the last release, from the [changelog](changelog.md).
