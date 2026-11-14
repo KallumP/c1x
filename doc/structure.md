@@ -9,7 +9,7 @@ Project structure is listed below, including descriptions for each file.
 │   ├── issues.md            # project issues
 │   ├── building.md          # dependencies, compiling and tests
 │   ├── running.md           # game files and running the game
-│   ├── launcher.md          # the launcher (build/_launcher.exe)
+│   ├── launcher.md          # the launcher (c1x_launcher.exe)
 │   ├── controls.md          # default keys, and controls.cfg
 │   ├── structure.md         # project structure; this file
 │   ├── contributing.md      # commit messages and pull requests
@@ -138,7 +138,9 @@ Project structure is listed below, including descriptions for each file.
 │       ├── builder          # builds a level from its source in level_src/ (npm run build-level -- <name>), for the editor's build button
 │       ├── scripts          # exports a real level as a level source (npm run export-cut-level), and makes build-level.exe (npm run builder-exe)
 │       └── tests            # their tests (npm test)
+├── res                      # the windows icons (c1x.ico for the game, c1x_launcher.ico for the launcher), and the .rc files make links them in with
 ├── level_src                # level sources: maps modelled in blender, a folder each, to build levels from (ignored by git, apart from the included ones listed in level_src/README.md)
+├── c1x_launcher.exe         # the launcher, built by make (c1x_launcher on linux; ignored by git)
 ├── controls.example.cfg     # default key bindings, which the launcher creates controls.cfg from
 ├── settings.example.cfg     # default settings, which the launcher creates settings.cfg from
 ├── Makefile                 # project makefile

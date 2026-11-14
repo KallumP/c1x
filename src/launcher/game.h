@@ -4,9 +4,9 @@
 #include <stddef.h>
 
 #ifdef _WIN32
-#define GAME_FILE_NAME "c1.exe"
+#define GAME_FILE_NAME "c1x.exe"
 #else
-#define GAME_FILE_NAME "c1"
+#define GAME_FILE_NAME "c1x"
 #endif
 
 extern void GamePath(const char *repo, char *path, size_t size);

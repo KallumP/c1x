@@ -128,10 +128,10 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/pc/config.c
 
 OBJ = $(SRC:.c=.o)
-OUT = build/c1
+OUT = build/c1x
 TEST_OUT = build/tests
-# the launcher's _ sorts it first in build/
-LAUNCHER_OUT = build/_launcher
+# the launcher, in the top folder: the first thing a player opens
+LAUNCHER_OUT = c1x_launcher
 # the level build with node built in, for the launcher (see doc/building.md)
 BUILDER_OUT = build/build-level
 
@@ -145,11 +145,16 @@ TEST_CFLAGS = -g -fplan9-extensions -m32 -std=gnu17
 TEST_LDLIBS = -lSDL2 -lsndfile -lstdc++
 ifeq ($(OS),Windows_NT)
 LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lsndfile -lm -lstdc++
-OUT = build/c1.exe
+OUT = build/c1x.exe
 TEST_OUT = build/tests.exe
-LAUNCHER_OUT = build/_launcher.exe
+LAUNCHER_OUT = c1x_launcher.exe
 BUILDER_OUT = build/build-level.exe
-LAUNCHER_LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lcomdlg32 -lm -lstdc++ -mwindows
+# linked statically, so the launcher needs no dlls beside it in the top folder
+LAUNCHER_LDLIBS = -static -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lcomdlg32 -lm -lstdc++ -mwindows \
+	-lkernel32 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lversion -luuid -ladvapi32 -lsetupapi -lshell32 -ldinput8
+# each exe's icon (res/*.ico), linked in as a windows resource
+GAME_ICON_OBJ = res/c1x_icon.o
+LAUNCHER_ICON_OBJ = res/c1x_launcher_icon.o
 else
 LDLIBS = -lSDL2 -lGL -lfluidsynth -lsndfile -lm -lstdc++
 LAUNCHER_LDLIBS = -lSDL2 -lGL -lm -lstdc++
@@ -200,13 +205,16 @@ $(CIMGUI_OBJ):
 .c.o:
 	$(CC) $(INCLUDE) -c $< -o $@ $(CFLAGS)
 
-$(OUT): $(OBJ)
+res/%_icon.o: res/%.rc res/%.ico
+	windres -F pe-i386 --include-dir res $< -o $@
+
+$(OUT): $(OBJ) $(GAME_ICON_OBJ)
 	@mkdir -p $(dir $(OUT))
-	$(CC) $(OBJ) -o $(OUT) $(CFLAGS)
+	$(CC) $(OBJ) $(GAME_ICON_OBJ) -o $(OUT) $(CFLAGS)
 ifeq ($(OS),Windows_NT)
 	$(MAKE) dlls
 
-# copy the toolchain dlls c1.exe depends on into build/, so it runs outside msys2
+# copy the toolchain dlls c1x.exe depends on into build/, so it runs outside msys2
 DLLDIR = $(dir $(shell which gcc))
 dlls: $(OUT)
 	@todo="$(OUT)"; seen=""; \
@@ -235,9 +243,9 @@ endif
 $(BUILDER_OUT): $(BUILDER_SRC)
 	cd $(EDITOR_PATH) && { [ -d node_modules ] || npm install; } && npm run builder-exe
 
-$(LAUNCHER_OUT): $(LAUNCHER_OBJ)
+$(LAUNCHER_OUT): $(LAUNCHER_OBJ) $(LAUNCHER_ICON_OBJ)
 	@mkdir -p $(dir $(LAUNCHER_OUT))
-	$(CC) $(LAUNCHER_OBJ) -o $(LAUNCHER_OUT) -m32 $(LAUNCHER_LDLIBS)
+	$(CC) $(LAUNCHER_OBJ) $(LAUNCHER_ICON_OBJ) -o $(LAUNCHER_OUT) -m32 $(LAUNCHER_LDLIBS)
 
 .PHONY: test
 test: $(TEST_OUT)

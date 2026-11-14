@@ -44,7 +44,7 @@ static Uint32 WindowFlags() {
 void SDLInit() {
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); /* for fix_model_draw_order */
-  window = SDL_CreateWindow("c1",
+  window = SDL_CreateWindow("c1x",
     SDL_WINDOWPOS_UNDEFINED,
     SDL_WINDOWPOS_UNDEFINED,
     WINDOW_WIDTH, WINDOW_HEIGHT,
@@ -146,7 +146,7 @@ void SDLInput(gl_input *input) {
 
 /*
  * change to the directory containing streams/, so the game also works
- * when the executable is launched from elsewhere (e.g. build/c1.exe).
+ * when the executable is launched from elsewhere (e.g. build/c1x.exe).
  * checks the working directory, the executable's directory, then its parent.
  */
 static void FindDataDir() {

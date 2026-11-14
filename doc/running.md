@@ -1,6 +1,6 @@
 # Running
 
-To run c1, open the [launcher](launcher.md) (`build/_launcher.exe`) and click **Play**. See [building](building.md) for how to compile it.
+To run c1x, open the [launcher](launcher.md) (`c1x_launcher.exe`, in the project folder) and click **Play**. See [building](building.md) for how to compile it.
 
 The game needs the `.nsd`/`.nsf` files from your Crash Bandicoot disc in `streams/`. From the disc itself, copy every file in its `S0` to `S3` folders into `streams/`, renamed to lowercase.
 

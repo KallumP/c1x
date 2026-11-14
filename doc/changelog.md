@@ -5,9 +5,13 @@
 ### Added
 
 - a volume slider for a custom level's own song, under **Music** in the level editor
+- the game and the launcher have their own icons
 
 ### Changed
 
+- the launcher is now `c1x_launcher.exe` in the top folder, and needs no DLLs beside it
+- the game is now `build/c1x.exe`
+- the launcher's **Play** no longer opens a console window beside the game
 - mossy creek and sunset canyon no longer come with their own songs, and play the game's music
 
 ### Fixed

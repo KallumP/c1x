@@ -40,7 +40,7 @@ popd
 
 echo.
 if "%RESULT%"=="0" (
-  if "%TARGET%"=="test" (echo Tests passed.) else (echo Build succeeded: build\c1.exe)
+  if "%TARGET%"=="test" (echo Tests passed.) else (echo Build succeeded: c1x_launcher.exe and build\c1x.exe)
 ) else (
   echo Failed with exit code %RESULT%.
 )

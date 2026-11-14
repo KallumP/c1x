@@ -120,7 +120,8 @@ static void CloseHandles(process *p) {
   if (p->job) { CloseHandle(p->job); }
 }
 
-/* start program in folder, left to run on its own; returns 0 if it can't */
+/* start program in folder, left to run on its own and without a console
+   window (the game is a console program); returns 0 if it can't */
 int ProcessStartDetached(const char *folder, const char *program) {
   STARTUPINFOA startup = { 0 };
   PROCESS_INFORMATION started;
@@ -128,7 +129,7 @@ int ProcessStartDetached(const char *folder, const char *program) {
 
   snprintf(command_line, sizeof(command_line), "\"%s\"", program);
   startup.cb = sizeof(startup);
-  if (!CreateProcessA(program, command_line, 0, 0, FALSE, 0, 0, folder,
+  if (!CreateProcessA(program, command_line, 0, 0, FALSE, CREATE_NO_WINDOW, 0, folder,
     &startup, &started)) {
     return 0;
   }
