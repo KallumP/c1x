@@ -138,6 +138,7 @@ Project structure is listed below, including descriptions for each file.
 │       ├── builder          # builds a level from its source in level_src/ (npm run build-level -- <name>), for the editor's build button
 │       ├── scripts          # exports a real level as a level source (npm run export-cut-level), and makes build-level.exe (npm run builder-exe)
 │       └── tests            # their tests (npm test)
+├── res                      # the windows icons (c1x.ico for the game, c1x_launcher.ico for the launcher), and the .rc files make links them in with
 ├── level_src                # level sources: maps modelled in blender, a folder each, to build levels from (ignored by git, apart from the included ones listed in level_src/README.md)
 ├── c1x_launcher.exe         # the launcher, built by make (c1x_launcher on linux; ignored by git)
 ├── controls.example.cfg     # default key bindings, which the launcher creates controls.cfg from

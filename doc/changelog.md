@@ -5,6 +5,7 @@
 ### Added
 
 - a volume slider for a custom level's own song, under **Music** in the level editor
+- the game and the launcher have their own icons
 
 ### Changed
 
