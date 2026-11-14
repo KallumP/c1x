@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { copyReleaseFiles, releaseFiles, releaseFolderName, zipCommand, zipFolder } from "../../scripts/release";
+import { copyReleaseFiles, releaseFiles, releaseFolder, zipCommand, zipFolder } from "../../scripts/release";
 
 // a repo with a few files in it, and an empty folder to release into
 function repoAndRelease() {
@@ -88,13 +88,13 @@ describe("the release zip's files", () => {
 });
 
 describe("the release folder", () => {
-  test("is named for the version", () => {
-    expect(releaseFolderName("0.1.0")).toBe("c1x-0.1.0");
+  test("is named for the version, in release/ beside release.bat", () => {
+    expect(releaseFolder("c1x", "0.1.0")).toBe(join("c1x", "release", "c1x-0.1.0"));
   });
 
   test("a version that isn't like 1.2.3 is an error", () => {
     ["v0.1.0", "0.1", "", "1.2.3-beta"].forEach((version) =>
-      expect(() => releaseFolderName(version)).toThrow(`the version has to be like 1.2.3, not "${version}"`));
+      expect(() => releaseFolder("c1x", version)).toThrow(`the version has to be like 1.2.3, not "${version}"`));
   });
 
   test("has each file copied to its place in it", () => {
