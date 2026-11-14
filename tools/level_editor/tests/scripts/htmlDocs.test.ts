@@ -70,3 +70,10 @@ describe("a doc's page", () => {
     expect(htmlDocPage("# A & B\n")).toContain("<title>c1x: A &amp; B</title>");
   });
 });
+
+describe("a doc's page, with its own links", () => {
+  test("has its links to other docs as the release says they go", () => {
+    const page = htmlDocPage("# Running\n\nSee [Building](building.md).\n", (href) => `https://example.com/${href}`);
+    expect(page).toContain('<a href="https://example.com/building.md">Building</a>');
+  });
+});

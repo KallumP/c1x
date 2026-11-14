@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { copyReleaseFiles, releaseFiles, releaseFolder, zipCommand, zipFolder } from "../../scripts/release";
+import { copyReleaseFiles, releasedLink, releaseFiles, releaseFolder, zipCommand, zipFolder } from "../../scripts/release";
 
 // a repo with a few files in it, and an empty folder to release into
 function repoAndRelease() {
@@ -164,5 +164,26 @@ describe("the release zip", () => {
     expect(zip).toBe(`${release}.zip`);
     const listing = execFileSync(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe"), ["-t", "-f", zip], { encoding: "utf8" });
     expect(listing).toContain("c1x-1.0.0/build/c1x.exe");
+  });
+});
+
+describe("a link in one of the release's docs", () => {
+  const RELEASED = new Set(["README.html", "doc/controls.html", "doc/launcher.html", "LICENSE.txt"]);
+
+  test("to a doc the release has is to its page, from where the page is in the release", () => {
+    expect(releasedLink("doc/launcher.html", "controls.md#keys", RELEASED)).toBe("controls.html#keys");
+    expect(releasedLink("README.html", "doc/controls.md", RELEASED)).toBe("doc/controls.html");
+    expect(releasedLink("README.html", "LICENSE", RELEASED)).toBe("LICENSE.txt");
+  });
+
+  test("to a doc the release doesn't have is to it on github", () => {
+    expect(releasedLink("doc/launcher.html", "building.md#the-level-build", RELEASED))
+      .toBe("https://github.com/KallumP/c1x/blob/master/doc/building.md#the-level-build");
+    expect(releasedLink("README.html", "doc/releasing.md", RELEASED)).toBe("https://github.com/KallumP/c1x/blob/master/doc/releasing.md");
+  });
+
+  test("to a website, or within its page, is as it is", () => {
+    expect(releasedLink("doc/launcher.html", "https://nodejs.org/", RELEASED)).toBe("https://nodejs.org/");
+    expect(releasedLink("doc/launcher.html", "#level-editor", RELEASED)).toBe("#level-editor");
   });
 });
