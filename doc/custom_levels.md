@@ -30,7 +30,7 @@ Each level gets its own folder in `level_src/`, such as `level_src/1_tide_ruins/
 
 1. Make a folder for the level in `level_src/`, such as `level_src/my_level/`.
 2. Use File > Export > Wavefront (.obj) and save into that folder. Keep the default settings, but turn on **Materials**.
-3. Copy the images into the same folder. The build and the level editor find them there, wherever on your PC the `.mtl` says they are.
+3. Copy the textures you used into the same folder. The build and the level editor find them there, wherever on your PC the `.mtl` says they are.
 
 The folder should now look like this:
 
