@@ -224,10 +224,23 @@ function changePlaced(entities: Buffer[][], { zone, index }: PlacedBox, change: 
   entities[zone][index] = change(entities[zone][index]);
 }
 
-// chains a switch's outline boxes (in the order they're placed) and points the switch at the first
+const isSwitchBox = (box: PlacedBox) => box.switch !== undefined;
+
+// the outline boxes of switch number, in the order they're placed, but a switch last: each box filled
+// in fills in the next, so a switch's own chain follows on from it (the game stops it there, until
+// the switch is hit: src/pc/switchchain.h)
+function outlinesOf(placedBoxes: PlacedBox[], number: number): PlacedBox[] {
+  const outlines = placedBoxes.filter((box) => box.outline === number);
+  return [...outlines.filter((box) => !isSwitchBox(box)), ...outlines.filter(isSwitchBox)];
+}
+
+// chains a switch's outline boxes and points the switch at the first; a switch among them keeps its own chain
 function linkSwitch(entities: Buffer[][], switchBox: PlacedBox, outlines: PlacedBox[]): void {
   changePlaced(entities, switchBox, (item) => withInitFlagC(item, outlines[0]?.id ?? 0));
   outlines.forEach((outline, place) => {
+    if (isSwitchBox(outline)) {
+      return;
+    }
     const next = outlines[place + 1]?.id ?? 0;
     changePlaced(entities, outline, (item) => withChainPlace(withInitFlagC(item, next), outline.subtype, place));
   });
@@ -253,11 +266,57 @@ function checkOutlinesHaveSwitches(placedBoxes: PlacedBox[], switches: PlacedBox
   }
 }
 
+// numbers in words: "2", "2 and 3", "2, 3 and 4"
+function listNumbers(numbers: number[]): string {
+  if (numbers.length === 1) {
+    return `${numbers[0]}`;
+  }
+  return `${numbers.slice(0, -1).join(", ")} and ${numbers[numbers.length - 1]}`;
+}
+
+// an error if a switch fills in more than one switch: only the last box of its chain can be one
+function checkOneSwitchOutlineEach(switches: PlacedBox[]): void {
+  for (const switchBox of switches) {
+    const switchOutlines = switches.filter((box) => box.outline === switchBox.switch);
+    if (switchOutlines.length > 1) {
+      const numbers = listNumbers(switchOutlines.map((box) => box.switch!));
+      throw new Error(`switch ${switchBox.switch} fills in switches ${numbers}, but a switch can fill in only one switch`);
+    }
+  }
+}
+
+// the switches hidden until one another is hit, going from switchBox to the switch it's an outline of (none if no loop)
+function switchLoopFrom(switchBox: PlacedBox, switches: PlacedBox[]): number[] {
+  const line: number[] = [];
+  let current: PlacedBox | undefined = switchBox;
+  while (current?.outline !== undefined && !line.includes(current.switch!)) {
+    line.push(current.switch!);
+    const outline: number = current.outline;
+    current = switches.find((box) => box.switch === outline);
+  }
+  if (current === undefined || !line.includes(current.switch!)) {
+    return [];
+  }
+  return line.slice(line.indexOf(current.switch!));
+}
+
+// an error if switches are outlines of one another in a loop, so none of them can be hit
+function checkNoSwitchLoops(switches: PlacedBox[]): void {
+  for (const switchBox of switches) {
+    const loop = switchLoopFrom(switchBox, switches);
+    if (loop.length > 0) {
+      throw new Error(`switches ${listNumbers(loop)} are each hidden until another of them is hit, so none of them can be hit`);
+    }
+  }
+}
+
 // links each switch to the outline boxes with its number, in place in entities (a list per zone)
 export function linkSwitches(entities: Buffer[][], placedBoxes: PlacedBox[]): void {
-  const switches = placedBoxes.filter((box) => box.switch !== undefined);
+  const switches = placedBoxes.filter(isSwitchBox);
   checkOutlinesHaveSwitches(placedBoxes, switches);
+  checkOneSwitchOutlineEach(switches);
+  checkNoSwitchLoops(switches);
   for (const switchBox of switches) {
-    linkSwitch(entities, switchBox, placedBoxes.filter((box) => box.outline === switchBox.switch));
+    linkSwitch(entities, switchBox, outlinesOf(placedBoxes, switchBox.switch!));
   }
 }
