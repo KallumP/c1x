@@ -5,7 +5,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
 import { DEFAULT_SCALE } from "../src/coords";
-import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, isAudioSongName, isMusicName, SOUNDTRACKS } from "../src/music";
+import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, DEFAULT_MUSIC_VOLUME, isAudioSongName, isMusicName, isMusicVolume, MUSIC_VOLUME_MAX, MUSIC_VOLUME_MIN, SOUNDTRACKS } from "../src/music";
 import { DEFAULT_SKY, formatRgb, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 import { levelFolder } from "./levels";
 
@@ -15,6 +15,7 @@ export interface LevelCfg {
   sky: Sky;
   camera: Camera;
   music: string; // one of SOUNDTRACKS' names, or an audio file in the level's folder
+  musicVolume: number; // how loud an audio file music plays, a percent of the game's music loudness
 }
 
 const TURNS = [0, 90, 180, 270]; // the build turns in steps of 90 degrees
@@ -66,6 +67,15 @@ function parseMusic(text: string): string {
   return DEFAULT_MUSIC;
 }
 
+// how loud the level's own song plays, 100 if it isn't set (or is set wrong)
+function parseMusicVolume(text: string): number {
+  const volume = parseWholeNumber(text, "music_volume", DEFAULT_MUSIC_VOLUME);
+  if (!isMusicVolume(volume)) {
+    return DEFAULT_MUSIC_VOLUME;
+  }
+  return volume;
+}
+
 // turn, scale, sky, camera and music from level.cfg's text, the defaults for what it doesn't set (or sets wrong)
 export function parseLevelCfg(text: string): LevelCfg {
   return {
@@ -74,6 +84,7 @@ export function parseLevelCfg(text: string): LevelCfg {
     sky: parseSky(text),
     camera: parseCamera(text),
     music: parseMusic(text),
+    musicVolume: parseMusicVolume(text),
   };
 }
 
@@ -104,6 +115,9 @@ function checkLevelCfg(cfg: LevelCfg): void {
     const names = SOUNDTRACKS.map(({ name }) => name).join(", ");
     throw new Error(`music has to be one of ${names}, or an audio file (${AUDIO_SONG_EXTENSIONS.join(", ")}), not ${cfg.music}`);
   }
+  if (!isMusicVolume(cfg.musicVolume)) {
+    throw new Error(`music_volume has to be ${MUSIC_VOLUME_MIN} to ${MUSIC_VOLUME_MAX}, not ${cfg.musicVolume}`);
+  }
 }
 
 // each setting's line, and whether it's its default (a default sky, camera or music setting is only written over a line it already has)
@@ -117,6 +131,7 @@ function settingLines(cfg: LevelCfg): [string, string, boolean][] {
     ["camera_distance", `camera_distance = ${cfg.camera.distance}`, cfg.camera.distance === DEFAULT_CAMERA.distance],
     ["camera_angle", `camera_angle = ${cfg.camera.angle}`, cfg.camera.angle === DEFAULT_CAMERA.angle],
     ["music", `music = ${cfg.music}`, cfg.music === DEFAULT_MUSIC],
+    ["music_volume", `music_volume = ${cfg.musicVolume}`, cfg.musicVolume === DEFAULT_MUSIC_VOLUME],
   ];
 }
 
