@@ -14,6 +14,8 @@ Project structure is listed below, including descriptions for each file.
 │   ├── structure.md         # project structure; this file
 │   ├── contributing.md      # commit messages and pull requests
 │   ├── coding.md            # project coding standards
+│   ├── releasing.md         # making the release zip and publishing it
+│   ├── release/README.md    # the release zip's readme, for players
 │   ├── settings.md          # settings.cfg settings and their defaults
 │   ├── outline.md           # game outline
 │   ├── funcs.md             # function descriptions
@@ -136,7 +138,7 @@ Project structure is listed below, including descriptions for each file.
 │   └── level_editor         # the level editor and the tools beside it, in typescript (npm install first)
 │       ├── src, server      # the level editor (npm run dev): places a level source's objects, sets its turn and scale, and builds and boots it
 │       ├── builder          # builds a level from its source in level_src/ (npm run build-level -- <name>), for the editor's build button
-│       ├── scripts          # exports a real level as a level source (npm run export-cut-level), and makes build-level.exe (npm run builder-exe)
+│       ├── scripts          # exports a real level as a level source (npm run export-cut-level), makes build-level.exe (npm run builder-exe), and makes the release zip (npm run release -- <version>)
 │       └── tests            # their tests (npm test)
 ├── res                      # the windows icons (c1x.ico for the game, c1x_launcher.ico for the launcher), and the .rc files make links them in with
 ├── level_src                # level sources: maps modelled in blender, a folder each, to build levels from (ignored by git, apart from the included ones listed in level_src/README.md)
@@ -145,5 +147,7 @@ Project structure is listed below, including descriptions for each file.
 ├── settings.example.cfg     # default settings, which the launcher creates settings.cfg from
 ├── Makefile                 # project makefile
 ├── rebuild.bat              # windows rebuild script (runs make in MSYS2 MINGW32)
+├── .github/CODEOWNERS       # every pull request asks KallumP for a review
+├── LICENSE                  # MIT, for c1x's own changes and additions only
 └── README.md                # project overview and documentation links
 ```
