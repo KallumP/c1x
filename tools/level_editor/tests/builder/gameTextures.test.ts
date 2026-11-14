@@ -2,7 +2,32 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { readGameTextures, type GameTexture } from "../../builder/gameTextures";
+import { eidToString } from "../../builder/entryIds";
+import { gameTextureImage, readGameTextures, readStreamTexturePages, type GameTexture } from "../../builder/gameTextures";
+import { texinfoBytes, texturePage, TILE } from "../../builder/tpage";
+import { readTexinfo } from "../../scripts/cutLevel/textures";
+
+// a texture page whose pixel at (x, y) is palette colour (x + y) % 16, each colour a shade of red
+// (5 bit red, so index * 16 in 8 bit; never 0, which the game takes as see-through)
+const PAGE_EID = 0x12345671;
+const redShade = (index: number) => Math.max(index * 2, 1);
+const palette = Array.from({ length: 16 }, (_, index) => redShade(index));
+const pixels = Array.from({ length: TILE * TILE }, (_, index) => ((index % TILE) + Math.floor(index / TILE)) % 16);
+const { page, places } = texturePage(PAGE_EID, [{ pixels, palette }]);
+
+// a streams folder holding s0000004.nsf, whose only page is that texture page
+function streamsWithPage(): string {
+  const streams = mkdtempSync(join(tmpdir(), "game-textures-streams-"));
+  writeFileSync(join(streams, "s0000004.nsf"), page);
+  return streams;
+}
+
+// the region of the page's tile from (x, y), w by h, as a polygon's texture info has it
+function tileRegion(x: number, y: number, w: number, h: number): GameTexture {
+  const header = Buffer.concat([Buffer.alloc(64), texinfoBytes(places[0], 0, { x, y, w, h })]); // texinfos start at 64
+  const { colourMode, x: pageX, y: pageY, clutX, clutY } = readTexinfo(header, 0);
+  return { stream: "s0000004", page: eidToString(PAGE_EID), colourMode, x: pageX, y: pageY, w, h, clutX, clutY };
+}
 
 const ROCK: GameTexture = { stream: "s0000004", page: "abcde", colourMode: 1, x: 64, y: 32, w: 32, h: 16, clutX: 3, clutY: 120 };
 
@@ -70,5 +95,30 @@ describe("a level source's game textures", () => {
   test("the palette is on its page", () => {
     expect(readRock({ clutX: 16 })).toThrow("game_textures.json: rock.png's clutX has to be 0 to 15, not 16");
     expect(readRock({ clutY: 128 })).toThrow("game_textures.json: rock.png's clutY has to be 0 to 127, not 128");
+  });
+});
+
+describe("a game texture's image", () => {
+  test("a stream's texture pages are by entry name", () => {
+    const pages = readStreamTexturePages(streamsWithPage(), "s0000004");
+    expect([...pages.keys()]).toEqual([eidToString(PAGE_EID)]);
+  });
+
+  test("is its region of its page, in its palette's colours", () => {
+    const pages = readStreamTexturePages(streamsWithPage(), "s0000004");
+    const image = gameTextureImage("rock.png", tileRegion(0, 0, 8, 4), pages);
+    expect([image.width, image.height]).toEqual([8, 4]);
+    // pixel (3, 2) is colour 5: red 10 of 31, 80 in 8 bit
+    expect([...image.rgb.subarray((2 * 8 + 3) * 3, (2 * 8 + 3) * 3 + 3)]).toEqual([80, 0, 0]);
+  });
+
+  test("a stream that isn't in the streams folder is an error", () => {
+    expect(() => readStreamTexturePages(streamsWithPage(), "s0000014")).toThrow(/^s0000014\.nsf isn't in .*game-textures-streams-/);
+  });
+
+  test("a page that isn't one of its stream's texture pages is an error", () => {
+    const pages = readStreamTexturePages(streamsWithPage(), "s0000004");
+    expect(() => gameTextureImage("rock.png", { ...tileRegion(0, 0, 8, 4), page: "nopes" }, pages))
+      .toThrow("rock.png's page nopes isn't one of s0000004's texture pages");
   });
 });
