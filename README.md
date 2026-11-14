@@ -15,7 +15,6 @@ This repository is a fork of [wurlyfox/c1](https://github.com/wurlyfox/c1), the 
 - [Controls](doc/controls.md): the default keys, and changing them in the launcher
 - [Settings](doc/settings.md): what each game setting does, such as the loading screen, speed display and skipping the splash screens
 - [Custom levels](doc/custom_levels.md): turning a map modelled in Blender into a level, placing its objects in the level editor, and booting into it
-- [Structure](doc/structure.md): what each file and directory in the project is for
 - [Contributing](doc/contributing.md): commit messages, pull requests and coding standards
 - [Releasing](doc/releasing.md): making the zip players download, and publishing it on GitHub
 
