@@ -3,7 +3,7 @@
 // paths are relative to the repo and to the release folder, with forward slashes
 import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, sep } from "node:path";
 
 export type ReleaseFile = { from: string; to: string };
 type Command = { program: string; args: string[] };
@@ -13,11 +13,13 @@ const TOP_FILES = ["c1x_launcher.exe", "LICENSE", "settings.example.cfg", "contr
 const PLAYER_README = "doc/release/README.md";
 // the docs for players; the rest are for building and working on c1x
 const PLAYER_DOCS = ["running", "launcher", "controls", "settings", "custom_levels", "changelog"].map((name) => `doc/${name}.md`);
-// built by make, and needed in the release
-const BUILT_FILES = ["c1x.exe", "build-level.exe"];
-// folders whose files git has go in whole, apart from the excluded ones
-const GIT_FOLDERS = ["level_src/", "tools/level_editor/"];
-const EXCLUDED_GIT_FOLDERS = ["tools/level_editor/tests/"];
+// built by make, and needed in the release: the game, and the tools (the level build and editor)
+const BUILT_FILES = ["c1x.exe", "c1x_tools.exe"];
+// the level editor's page, built by make, which the tools serve
+const EDITOR_PAGE_DIR = "build/editor";
+const EDITOR_PAGE_INDEX = "index.html";
+// the level sources git has go in, so not a player's own
+const GIT_FOLDER = "level_src/";
 
 const sameName = (path: string): ReleaseFile => ({ from: path, to: path });
 
@@ -30,23 +32,30 @@ function checkBuilt(buildFiles: string[]): void {
   }
 }
 
-// the game, build-level.exe and the game's dlls, from the names of the files in build/
+// the game, the tools and the game's dlls, from the names of the files in build/
 function buildFolderFiles(buildFiles: string[]): ReleaseFile[] {
   checkBuilt(buildFiles);
   return [...BUILT_FILES, ...buildFiles.filter(isDll)].map((name) => sameName(`build/${name}`));
 }
 
-const isReleasedGitFile = (path: string): boolean =>
-  GIT_FOLDERS.some((folder) => path.startsWith(folder)) && !EXCLUDED_GIT_FOLDERS.some((folder) => path.startsWith(folder));
+// the editor's built page, from its files' paths in build/editor/
+function editorPageFiles(pageFiles: string[]): ReleaseFile[] {
+  if (!pageFiles.includes(EDITOR_PAGE_INDEX)) {
+    throw new Error(`${EDITOR_PAGE_DIR}/${EDITOR_PAGE_INDEX} isn't built: run make first`);
+  }
+  return pageFiles.map((path) => sameName(`${EDITOR_PAGE_DIR}/${path}`));
+}
 
-// gitFiles: every file git has (git ls-files); buildFiles: the names of the files in build/
-export function releaseFiles(gitFiles: string[], buildFiles: string[]): ReleaseFile[] {
+// gitFiles: every file git has (git ls-files); buildFiles: the names of the files
+// in build/; pageFiles: the paths of the files in build/editor/
+export function releaseFiles(gitFiles: string[], buildFiles: string[], pageFiles: string[]): ReleaseFile[] {
   return [
     ...TOP_FILES.map(sameName),
     { from: PLAYER_README, to: "README.md" },
     ...PLAYER_DOCS.map(sameName),
     ...buildFolderFiles(buildFiles),
-    ...gitFiles.filter(isReleasedGitFile).map(sameName),
+    ...editorPageFiles(pageFiles),
+    ...gitFiles.filter((path) => path.startsWith(GIT_FOLDER)).map(sameName),
   ];
 }
 
@@ -103,9 +112,19 @@ function buildFilesIn(repo: string): string[] {
   return readdirSync(build).filter((name) => statSync(join(build, name)).isFile());
 }
 
+// the paths of the files in folder and its subfolders, with forward slashes; none if it isn't there
+function filesUnder(folder: string): string[] {
+  if (!existsSync(folder)) {
+    return [];
+  }
+  return readdirSync(folder, { recursive: true, encoding: "utf8" })
+    .filter((path) => statSync(join(folder, path)).isFile())
+    .map((path) => path.split(sep).join("/"));
+}
+
 // makes build/release/c1x-<version>/ and its zip; returns the zip's path
 export function makeRelease(repo: string, version: string): string {
   const folder = join(repo, "build", "release", releaseFolderName(version));
-  copyReleaseFiles(repo, releaseFiles(gitFilesIn(repo), buildFilesIn(repo)), folder);
+  copyReleaseFiles(repo, releaseFiles(gitFilesIn(repo), buildFilesIn(repo), filesUnder(join(repo, EDITOR_PAGE_DIR))), folder);
   return zipFolder(folder);
 }
