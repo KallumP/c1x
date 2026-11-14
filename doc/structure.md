@@ -95,7 +95,8 @@ Project structure is listed below, including descriptions for each file.
 │   │   ├── extract_section.c,h  # the disc image field, Browse and Extract
 │   │   ├── file_dialog.c,h  # choosing a file with the system's dialog (windows)
 │   │   ├── game.c,h         # the game: is it built, and starting it
-│   │   ├── game_section.c,h # the game section (Play)
+│   │   ├── game_section.c,h # the game section (Help, Play)
+│   │   ├── help.c,h         # where Help goes: a release's README.html, or the docs on github
 │   │   ├── level_editor.c,h # starting the level editor (c1x_tools editor), and its address
 │   │   ├── level_build.c,h  # building a level (c1x_tools build-level <name>)
 │   │   ├── levels.c,h       # the custom levels: built to build/levels/ or sources in level_src/
@@ -138,7 +139,7 @@ Project structure is listed below, including descriptions for each file.
 │   └── level_editor         # the level editor and the tools beside it, in typescript (npm install first; make builds them as build/c1x_tools.exe and build/editor/)
 │       ├── src, server      # the level editor (npm run dev, or npm run editor for its built page): places a level source's objects, sets its turn and scale, and builds and boots it
 │       ├── builder          # builds a level from its source in level_src/ (npm run build-level -- <name>), for the editor's build button
-│       ├── scripts          # exports a real level as a level source (npm run export-cut-level), the tools (tools.ts: build-level and editor) and makes build/c1x_tools.exe from them (npm run tools-exe), and makes the release zip (npm run release -- <version>)
+│       ├── scripts          # exports a real level as a level source (npm run export-cut-level), the tools (tools.ts: build-level and editor) and makes build/c1x_tools.exe from them (npm run tools-exe), and makes the release zip (npm run release -- <version>), its docs as html pages (htmlDocs.ts)
 │       └── tests            # their tests (npm test)
 ├── res                      # the windows icons (c1x.ico for the game, c1x_launcher.ico for the launcher), and the .rc files make links them in with
 ├── level_src                # level sources: maps modelled in blender, a folder each, to build levels from (ignored by git, apart from the included ones listed in level_src/README.md)
