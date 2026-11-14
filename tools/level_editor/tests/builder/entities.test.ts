@@ -122,6 +122,34 @@ describe("switches", () => {
     expect(initFlags(entities[0][0])[1]).toBe(0);
   });
 
+  // a switch numbered number that's an outline of switch outline
+  const switchOutline = (id: number, number: number, outline: number): Placing => ({ subtype: 7, id, switch: number, outline });
+
+  test("a switch that's an outline is last in its switch's chain, and keeps its own", () => {
+    // each box filled in fills in the next, so the switch's own chain follows on from it: the game
+    // stops the fill there until the switch is hit (src/pc/switchchain.h)
+    const { entities, boxes } = placed([[switchBox(10, 1), switchOutline(11, 2, 1), outline(12, 2), outline(13, 1)]]);
+    linkSwitches(entities, boxes);
+    expect(entities[0].map((item) => initFlags(item)[1])).toEqual([13, 12, 0, 11]);
+  });
+
+  test("switches can be outlines along a line of them", () => {
+    const { entities, boxes } = placed([[switchBox(10, 1), switchOutline(11, 2, 1), switchOutline(12, 3, 2), outline(13, 3)]]);
+    linkSwitches(entities, boxes);
+    expect(entities[0].map((item) => initFlags(item)[1])).toEqual([11, 12, 13, 0]);
+  });
+
+  test("a switch that fills in two switches is an error", () => {
+    // only the last box of a chain can be a switch
+    const { entities, boxes } = placed([[switchBox(10, 1), switchOutline(11, 2, 1), switchOutline(12, 3, 1)]]);
+    expect(() => linkSwitches(entities, boxes)).toThrow("switch 1 fills in switches 2 and 3, but a switch can fill in only one switch");
+  });
+
+  test("switches that are outlines of each other are an error", () => {
+    const { entities, boxes } = placed([[switchOutline(10, 1, 3), switchOutline(11, 2, 1), switchOutline(12, 3, 2)]]);
+    expect(() => linkSwitches(entities, boxes)).toThrow("switches 1, 3 and 2 are each hidden until another of them is hit, so none of them can be hit");
+  });
+
   test("an outline of a switch the level hasn't is an error", () => {
     const { entities, boxes } = placed([[switchBox(10, 1), outline(11, 2)]]);
     expect(() => linkSwitches(entities, boxes)).toThrow("an outline box is an outline of switch 2, but the level has no switch 2");
