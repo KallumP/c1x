@@ -5,13 +5,24 @@
 
 #define LAUNCHER_CONTROLS_PATH "build/test_launcher_controls.cfg"
 
-UTEST(launcher_controls, reset_binds_cross_to_z_and_start_to_return) {
+UTEST(launcher_controls, reset_binds_cross_to_space_and_start_to_return) {
   launcher_controls c;
 
   ResetControls(&c);
   ASSERT_EQ(1, c.key_count[FindPadButton("cross")]);
-  ASSERT_EQ(SDL_SCANCODE_Z, c.keys[FindPadButton("cross")][0]);
+  ASSERT_EQ(SDL_SCANCODE_SPACE, c.keys[FindPadButton("cross")][0]);
   ASSERT_EQ(SDL_SCANCODE_RETURN, c.keys[FindPadButton("start")][0]);
+}
+
+UTEST(launcher_controls, reset_gives_a_direction_its_letter_and_its_arrow) {
+  launcher_controls c;
+  int up;
+
+  ResetControls(&c);
+  up = FindPadButton("up");
+  ASSERT_EQ(2, c.key_count[up]);
+  ASSERT_EQ(SDL_SCANCODE_W, c.keys[up][0]);
+  ASSERT_EQ(SDL_SCANCODE_UP, c.keys[up][1]);
 }
 
 UTEST(launcher_controls, an_unknown_button_isnt_found) {
