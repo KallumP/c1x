@@ -1,5 +1,5 @@
 [
-  {"kind": "spawn", "at": [-1.469, 2.234, 0.032]},
+  {"kind": "spawn", "at": [-1.995, 2.506, 0.042]},
 
   {"kind": "box", "type": "aku_aku", "at": [-1.27, 15.15, 0]},
   {"kind": "box", "type": "basic", "at": [-2.25, 14.15, 0.09], "raise": -0.08},
@@ -28,9 +28,9 @@
   {"kind": "box", "type": "iron", "at": [5.5, 26, -1], "outline": 1},
   {"kind": "box", "type": "tnt", "at": [-7.823, 39.855, 1.538]},
   {"kind": "box", "type": "basic", "at": [-3.253, 63.89, 2.102]},
-  {"kind": "box", "type": "basic", "at": [9.182, 73.906, 3.169]},
-  {"kind": "box", "type": "basic", "at": [8.393, 72.016, 3.012]},
-  {"kind": "box", "type": "basic", "at": [7.828, 69.76, 2.85]},
+  {"kind": "box", "type": "basic", "at": [9.182, 73.906, 3.169], "outline": 2},
+  {"kind": "box", "type": "basic", "at": [8.393, 72.016, 3.012], "outline": 2},
+  {"kind": "box", "type": "basic", "at": [7.783, 69.767, 2.844], "outline": 2},
   {"kind": "box", "type": "basic", "at": [1.868, 107.002, 1.511]},
   {"kind": "box", "type": "life", "at": [3.926, 109.08, 1.577]},
   {"kind": "box", "type": "question", "at": [2.457, 108.541, 1.585]},
@@ -39,8 +39,8 @@
   {"kind": "box", "type": "slatted", "at": [2.422, 105.354, 1.582]},
   {"kind": "box", "type": "aku_aku", "at": [3.786, 104.623, 1.579]},
   {"kind": "box", "type": "basic", "at": [5.176, 105.248, 1.51]},
-  {"kind": "box", "type": "life", "at": [3.822, 106.97, 1.571], "raise": 4},
-  {"kind": "box", "type": "basic", "at": [-14.109, 1.983, -1], "raise": 0.5},
+  {"kind": "box", "type": "switch", "switch": 2, "at": [3.822, 106.97, 1.571], "raise": 4},
+  {"kind": "box", "type": "basic", "at": [-13.909, 1.983, -1], "raise": 0.5},
 
   {"kind": "enemy", "type": "green_river_plant", "at": [-3, 24, -1]},
   {"kind": "enemy", "type": "turtle", "at": [-0.901, 94.89, -0.04], "path": [[-6.45, -4.034, 0.644], [-4.98, -1.809, 0.592], [-2.661, -0.622, 0.313], [0.295, -0.14, 0.16], [3.176, -0.789, 0.099], [5.302, -1.894, 0.189], [7.418, -4.239, 0.335]]},
