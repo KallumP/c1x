@@ -1,6 +1,6 @@
 /*
- * paths for the launcher, which lives in build/ and works on the repo
- * folder above it, whatever folder it's started from
+ * paths for the launcher, which lives in the repo's top folder and works
+ * on that folder, whatever folder it's started from
  */
 #include <SDL2/SDL.h>
 #include "paths.h"
@@ -9,15 +9,13 @@ static int IsSeparator(char c) {
   return c == '/' || c == '\\';
 }
 
-/* the folder above launcher_folder (the launcher's own, e.g. ".../c1x/build/") */
+/* launcher_folder (the launcher's own, e.g. ".../c1x/") without its trailing separators */
 void RepoFolderFromLauncherFolder(const char *launcher_folder, char *repo, size_t size) {
   size_t len;
 
   SDL_strlcpy(repo, launcher_folder, size);
   len = SDL_strlen(repo);
-  while (len > 0 && IsSeparator(repo[len-1])) { len--; } /* trailing separators */
-  while (len > 0 && !IsSeparator(repo[len-1])) { len--; } /* the build folder's name */
-  while (len > 1 && IsSeparator(repo[len-1])) { len--; } /* the separator before it */
+  while (len > 1 && IsSeparator(repo[len-1])) { len--; }
   repo[len] = 0;
 }
 
