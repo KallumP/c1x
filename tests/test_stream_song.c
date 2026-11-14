@@ -104,10 +104,10 @@ UTEST(stream_song, a_quiet_song_is_turned_up_to_the_games_music) {
 }
 
 UTEST(stream_song, a_song_is_never_turned_up_past_full_scale) {
-  float *samples = Square(0.0001f, 100);
+  float *samples = Square(0.0001f, 10000);
 
-  samples[0] = 0.5f; /* a peak, among a near silence */
-  ASSERT_NEAR(2.0, StreamSongLoudnessScale(samples, 100), 0.0001);
+  samples[0] = 0.5f; /* a peak, among a long near silence that would be turned up 6 times */
+  ASSERT_NEAR(2.0, StreamSongLoudnessScale(samples, 10000), 0.0001);
   free(samples);
 }
 
