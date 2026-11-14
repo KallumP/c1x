@@ -128,7 +128,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/pc/config.c
 
 OBJ = $(SRC:.c=.o)
-OUT = build/c1
+OUT = build/c1x
 TEST_OUT = build/tests
 # the launcher, in the top folder: the first thing a player opens
 LAUNCHER_OUT = c1x_launcher
@@ -145,7 +145,7 @@ TEST_CFLAGS = -g -fplan9-extensions -m32 -std=gnu17
 TEST_LDLIBS = -lSDL2 -lsndfile -lstdc++
 ifeq ($(OS),Windows_NT)
 LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lsndfile -lm -lstdc++
-OUT = build/c1.exe
+OUT = build/c1x.exe
 TEST_OUT = build/tests.exe
 LAUNCHER_OUT = c1x_launcher.exe
 BUILDER_OUT = build/build-level.exe
@@ -208,7 +208,7 @@ $(OUT): $(OBJ)
 ifeq ($(OS),Windows_NT)
 	$(MAKE) dlls
 
-# copy the toolchain dlls c1.exe depends on into build/, so it runs outside msys2
+# copy the toolchain dlls c1x.exe depends on into build/, so it runs outside msys2
 DLLDIR = $(dir $(shell which gcc))
 dlls: $(OUT)
 	@todo="$(OUT)"; seen=""; \

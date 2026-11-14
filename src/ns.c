@@ -239,7 +239,7 @@ uint8_t *NSFileReadRange(char *filename, int start, int end, size_t *size) {
       "Copy the game's .NSD/.NSF files into the streams directory "
       "(see streams/README.md).", filename);
     fprintf(stderr, "%s\n", msg);
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "c1", msg, 0);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "c1x", msg, 0);
     exit(1);
   }
   fseek(file, 0, SEEK_END);

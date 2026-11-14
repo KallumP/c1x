@@ -1,6 +1,5 @@
 # compile output
 *.o
-c1
 /c1x_launcher
 /c1x_launcher.exe
 build/
