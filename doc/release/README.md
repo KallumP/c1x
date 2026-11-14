@@ -6,16 +6,10 @@ c1x is a fan-made PC version of *Crash Bandicoot*, with extra options and new le
 
 ## Playing
 
-### The first time
-
 1. Open `c1x_launcher.exe`.
-2. It says the game's files are missing. Click **Browse...**, choose your disc image, then click **Extract**.
+2. The first time, it says the game's files are missing. Click **Browse...**, choose your disc image, then click **Extract**. You only need to do this once.
    - Using the disc instead? See [getting the game's files](streams/README.md).
 3. Click **Play**.
-
-### After that
-
-Open `c1x_launcher.exe` and click **Play**.
 
 ### Controls and settings
 
