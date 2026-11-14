@@ -106,6 +106,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/game.c \
 	src/launcher/game_section.c \
 	src/launcher/help.c \
+	src/launcher/help_section.c \
 	src/launcher/settings_file.c \
 	src/launcher/text_file.c \
 	src/launcher/controls_file.c \

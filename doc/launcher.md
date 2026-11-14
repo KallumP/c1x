@@ -10,7 +10,7 @@ It's a second program in C, built from SDL 2, OpenGL and cimgui, which the game 
 
 Run `c1x_launcher.exe`, by double-clicking it or from any folder. It works on its own folder, the project folder, wherever it's started from, and finds the game and the rest in `build/` from there. On Windows it has SDL2 and the GCC runtime built in, so it needs no DLLs beside it.
 
-**Play** is at the top, with a tab each for Settings, Controls and the Level editor below it. **Help**, above Play, opens c1x's guide in your browser: a release's `README.html` (its docs as pages; see [Releasing](releasing.md#whats-in-the-zip)), or the docs on GitHub in a project folder without one.
+**Play** is at the top, with a tab each for Settings, Controls, Levels, the Level editor and Help below it.
 
 ## Game
 
@@ -52,3 +52,7 @@ The level editor (see [Custom levels](custom_levels.md)) runs from `build/c1x_to
 - **Open editor** starts the editor, which opens in your browser.
 - While it runs, the launcher shows its address, with **Open in browser** to open it again and **Stop** to stop it.
 - Closing the launcher stops it too.
+
+## Help
+
+The Help tab has a button for each page of c1x's guide (getting started, controls, settings, custom levels and what's new), which opens it in your browser: a release's own page (its docs as pages; see [Releasing](releasing.md#whats-in-the-zip)), or the doc on GitHub in a project folder without them.

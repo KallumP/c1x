@@ -2,17 +2,28 @@
 #define _LAUNCHER_HELP_H_
 
 /*
- * the launcher's Help: a release's README.html (its docs as pages, made by the
- * release script), or the docs on github in a folder without one
+ * the launcher's Help tab: the pages of c1x's guide, a release's own (its docs
+ * as html pages, made by the release script), or the docs on github in a
+ * folder without them
  */
 #include <stddef.h>
 
-#define HELP_ONLINE_ADDRESS "https://github.com/KallumP/c1x#readme"
+#define HELP_ONLINE_DOCS "https://github.com/KallumP/c1x/blob/master/"
+#define HELP_PAGE_COUNT 5
+
+typedef struct {
+  const char *name;         /* its button */
+  const char *release_page; /* the page in a release */
+  const char *repo_doc;     /* the doc it's made from, on github */
+  const char *about;        /* what's in it */
+} help_page;
+
+extern const help_page help_pages[HELP_PAGE_COUNT];
 
 /* path as a file:/// address, its backslashes as slashes and spaces and #s escaped */
 extern void FileUrl(const char *path, char *url, size_t size);
 
-/* where Help goes for repo: its README.html, or the docs on github */
-extern void HelpAddress(const char *repo, char *url, size_t size);
+/* where page is for repo: its own page, or the doc on github */
+extern void HelpPageAddress(const char *repo, const help_page *page, char *url, size_t size);
 
 #endif /* _LAUNCHER_HELP_H_ */

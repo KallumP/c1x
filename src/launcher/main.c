@@ -15,6 +15,7 @@
 #include "editor_section.h"
 #include "levels_section.h"
 #include "controls_section.h"
+#include "help_section.h"
 #include "ui.h"
 
 #define WINDOW_WIDTH  720
@@ -77,6 +78,7 @@ static void DrawTabs() {
   DrawTab("Controls", DrawControlsSection);
   DrawTab("Levels", DrawLevelsSection);
   DrawTab("Level editor", DrawEditorSection);
+  DrawTab("Help", DrawHelpSection);
   igEndTabBar();
 }
 

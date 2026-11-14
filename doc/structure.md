@@ -95,8 +95,9 @@ Project structure is listed below, including descriptions for each file.
 │   │   ├── extract_section.c,h  # the disc image field, Browse and Extract
 │   │   ├── file_dialog.c,h  # choosing a file with the system's dialog (windows)
 │   │   ├── game.c,h         # the game: is it built, and starting it
-│   │   ├── game_section.c,h # the game section (Help, Play)
-│   │   ├── help.c,h         # where Help goes: a release's README.html, or the docs on github
+│   │   ├── game_section.c,h # the game section (Play)
+│   │   ├── help.c,h         # the guide's pages: a release's own, or the docs on github
+│   │   ├── help_section.c,h # the help tab (a button for each of the guide's pages)
 │   │   ├── level_editor.c,h # starting the level editor (c1x_tools editor), and its address
 │   │   ├── level_build.c,h  # building a level (c1x_tools build-level <name>)
 │   │   ├── levels.c,h       # the custom levels: built to build/levels/ or sources in level_src/

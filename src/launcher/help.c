@@ -1,12 +1,24 @@
 /*
- * the launcher's Help: a release's README.html, opened in the browser as a
- * file:/// address, or the docs on github in a folder without one
+ * the pages of c1x's guide, for the launcher's Help tab: a release's own,
+ * opened in the browser as file:/// addresses, or the docs on github in a
+ * folder without them
  */
 #include <SDL2/SDL.h>
 #include "help.h"
 #include "paths.h"
 
-#define README_PAGE "README.html"
+const help_page help_pages[HELP_PAGE_COUNT] = {
+  { "Getting started", "README.html", "doc/release/README.md",
+    "Getting the game's files, playing, and what's in c1x's folder." },
+  { "Controls", "doc/controls.html", "doc/controls.md",
+    "The keys to start with, and changing them." },
+  { "Settings", "doc/settings.html", "doc/settings.md",
+    "What each setting does." },
+  { "Custom levels", "doc/custom_levels.html", "doc/custom_levels.md",
+    "Playing the new levels, and making your own." },
+  { "What's new", "doc/changelog.html", "doc/changelog.md",
+    "What's changed in each version." },
+};
 
 /* how one character of a path goes in a file address */
 static const char *UrlCharacter(char c, char *one) {
@@ -39,12 +51,12 @@ static int IsFileThere(const char *path) {
   return 1;
 }
 
-void HelpAddress(const char *repo, char *url, size_t size) {
+void HelpPageAddress(const char *repo, const help_page *page, char *url, size_t size) {
   char path[PATH_MAX_LEN];
 
-  JoinPath(path, sizeof(path), repo, README_PAGE);
+  JoinPath(path, sizeof(path), repo, page->release_page);
   if (!IsFileThere(path)) {
-    SDL_strlcpy(url, HELP_ONLINE_ADDRESS, size);
+    SDL_snprintf(url, size, "%s%s", HELP_ONLINE_DOCS, page->repo_doc);
     return;
   }
   FileUrl(path, url, size);

@@ -18,7 +18,7 @@ The launcher has a tab for each:
 - **Controls**: choose which keys do what. See [Controls](doc/controls.md) for the keys to start with.
 - **Settings**: such as full screen and the speed display. See [Settings](doc/settings.md) for what each one does.
 
-**Help**, in the launcher, opens this guide.
+The launcher's **Help** tab opens this guide, and the others.
 
 ## Custom levels
 

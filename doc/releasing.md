@@ -27,7 +27,7 @@ A release is a zip players download from the repository's GitHub **Releases** pa
 
 ## What's in the zip
 
-The zip has a `c1x-<version>` folder laid out like the repository, as the launcher works on the folder it's in and finds the game in `build/`. Its docs are HTML pages, made from the `.md` files when the release is built, as players may have nothing that shows Markdown: they open in any browser, and the launcher's **Help** opens `README.html`. Their links to each other go to the pages, and to headings in them as on GitHub.
+The zip has a `c1x-<version>` folder laid out like the repository, as the launcher works on the folder it's in and finds the game in `build/`. Its docs are HTML pages, made from the `.md` files when the release is built, as players may have nothing that shows Markdown: they open in any browser, and the launcher's **Help** tab opens them. Their links to each other go to the pages, and to headings in them as on GitHub.
 
 - `c1x_launcher.exe`, at the top
 - `README.html`, from [`doc/release/README.md`](release/README.md): what a player needs to know

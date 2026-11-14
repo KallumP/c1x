@@ -7,7 +7,6 @@
 #include "cimgui.h"
 #include "game_section.h"
 #include "game.h"
-#include "help.h"
 #include "paths.h"
 #include "settings_section.h"
 #include "controls_section.h"
@@ -79,20 +78,8 @@ static void DrawPlayButton(const char *repo) {
   if (play_problem[0]) { igTextColored(PROBLEM_COLOUR, "%s", play_problem); }
 }
 
-/* opens the guide in the browser: there whatever's stopping the game, as that's when it's needed */
-static void DrawHelpButton(const char *repo) {
-  char url[PATH_MAX_LEN * 3];
-
-  if (igButton("Help", (ImVec2){0, 0})) {
-    HelpAddress(repo, url, sizeof(url));
-    SDL_OpenURL(url);
-  }
-  DrawTooltip("Open c1x's guide in your browser: getting the game's files, controls, settings and custom levels.");
-}
-
 void DrawGameSection(const char *repo) {
   DrawHeading("Game");
-  DrawHelpButton(repo);
   if (!IsGameBuilt(repo)) {
     DrawNotBuilt(repo);
     return;
