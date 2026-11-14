@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { copyAudioSong } from "../../builder/audioSong";
+import { copyAudioSong, writeAudioSongVolume } from "../../builder/audioSong";
 
 // a level source folder and a levels folder, both empty
 function folders() {
@@ -40,5 +40,27 @@ describe("a level's audio song", () => {
     writeFileSync(join(levels, "1_tide_ruins.mp3"), "theirs");
     copyAudioSong(source, levels, "4_acid_cave", "the_lost_city");
     expect(existsSync(join(levels, "1_tide_ruins.mp3"))).toBe(true);
+  });
+});
+
+describe("a level's audio song's volume", () => {
+  test("a song turned up or down has its volume, a percent, next to the built level", () => {
+    const { levels } = folders();
+    writeAudioSongVolume(levels, "3_sunset_canyon", "Gerudo Valley.mp3", 150);
+    expect(readFileSync(join(levels, "3_sunset_canyon.volume"), "utf8")).toBe("150");
+  });
+
+  test("a song at the game's music loudness has none, and one an earlier build left is removed", () => {
+    const { levels } = folders();
+    writeFileSync(join(levels, "3_sunset_canyon.volume"), "150");
+    writeAudioSongVolume(levels, "3_sunset_canyon", "Gerudo Valley.mp3", 100);
+    expect(existsSync(join(levels, "3_sunset_canyon.volume"))).toBe(false);
+  });
+
+  test("a level playing one of the game's songs has none", () => {
+    const { levels } = folders();
+    writeFileSync(join(levels, "3_sunset_canyon.volume"), "150");
+    writeAudioSongVolume(levels, "3_sunset_canyon", "the_lost_city", 150);
+    expect(existsSync(join(levels, "3_sunset_canyon.volume"))).toBe(false);
   });
 });
