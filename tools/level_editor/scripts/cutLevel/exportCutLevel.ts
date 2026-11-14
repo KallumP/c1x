@@ -3,8 +3,7 @@
 // makes into a .blend and exports as the level source's .obj and .mtl
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { PNG } from "pngjs";
-import type { RgbImage } from "../../builder/images";
+import { pngBytes } from "../../builder/images";
 import type { Vec3 } from "../../builder/vectors";
 import type { CutLevel } from "./readCutLevel";
 import { formatObjects } from "../../src/objects";
@@ -24,14 +23,6 @@ export function sceneCentre(level: CutLevel): Vec3 {
     throw new Error("the level has no spawn (an entity of type 0)");
   }
   return [(Math.min(...xs) + Math.max(...xs)) / 2, Math.min(...level.entities.map(({ at }) => at[1])), crash.at[2]];
-}
-
-function pngBytes(image: RgbImage): Buffer {
-  const png = new PNG({ width: image.width, height: image.height });
-  for (let pixel = 0; pixel < image.width * image.height; pixel++) {
-    png.data.set([...image.rgb.subarray(3 * pixel, 3 * pixel + 3), 255], 4 * pixel);
-  }
-  return PNG.sync.write(png);
 }
 
 // the scene as json: its objects and materials (images are written as pngs)

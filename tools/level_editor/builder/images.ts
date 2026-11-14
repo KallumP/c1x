@@ -57,3 +57,12 @@ export function readImage(path: string): RgbImage {
   }
   throw new Error(`${basename(path)} isn't a PNG, JPEG or TIFF, so it can't be a texture`);
 }
+
+// an image as a PNG's bytes, opaque
+export function pngBytes(image: RgbImage): Buffer {
+  const png = new PNG({ width: image.width, height: image.height });
+  for (let pixel = 0; pixel < image.width * image.height; pixel++) {
+    png.data.set([...image.rgb.subarray(3 * pixel, 3 * pixel + 3), 255], 4 * pixel);
+  }
+  return PNG.sync.write(png);
+}

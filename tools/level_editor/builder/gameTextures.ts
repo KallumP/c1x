@@ -1,10 +1,10 @@
 // a level source's game textures (see doc/custom_levels.md): images that are
 // regions of the game's own texture pages, named in its game_textures.json and
 // made from the player's own copy of the game, so they needn't be shared
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { eidToString } from "./entryIds";
-import type { RgbImage } from "./images";
+import { pngBytes, type RgbImage } from "./images";
 import { PAGE_SIZE, PAGE_TEXTURE, readPages } from "./levelFiles";
 import { regionImage } from "./textureRegions";
 import { SIZES } from "./tpage";
@@ -131,4 +131,31 @@ export function gameTextureImage(name: string, texture: GameTexture, pages: Map<
     throw new Error(`${name}'s page ${texture.page} isn't one of ${texture.stream}'s texture pages`);
   }
   return regionImage(page, texture);
+}
+
+// each missing image's stream has to be in streamsDir; it says which image needs which
+function checkStreamsThere(missing: [string, GameTexture][], streamsDir: string): void {
+  const notThere = missing.find(([, texture]) => !existsSync(join(streamsDir, `${texture.stream}.nsf`)));
+  if (notThere) {
+    const [name, { stream }] = notThere;
+    throw new Error(`${name} is from the game's ${stream}.nsf, which isn't in ${streamsDir} (see doc/running.md)`);
+  }
+}
+
+// writes the game textures a level source's folder names but doesn't have, from
+// the game's files in streamsDir; the names of the images it wrote
+export function writeGameTextures(folder: string, streamsDir: string): string[] {
+  const missing = [...readGameTextures(folder)].filter(([name]) => !existsSync(join(folder, name)));
+  checkStreamsThere(missing, streamsDir);
+  const pagesByStream = new Map<string, Map<string, Buffer>>();
+  const pagesOf = (stream: string) => {
+    if (!pagesByStream.has(stream)) {
+      pagesByStream.set(stream, readStreamTexturePages(streamsDir, stream));
+    }
+    return pagesByStream.get(stream)!;
+  };
+  for (const [name, texture] of missing) {
+    writeFileSync(join(folder, name), pngBytes(gameTextureImage(name, texture, pagesOf(texture.stream))));
+  }
+  return missing.map(([name]) => name);
 }
