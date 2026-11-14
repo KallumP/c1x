@@ -42,6 +42,10 @@ level_src/my_level/grass.png
 ...
 ```
 
+### Textures from the game
+
+A level can use the game's own textures without sharing them: list them in a `game_textures.json` in the level's folder, instead of copying the images in. The build and the level editor make each one from the game's files in `streams/` when it isn't in the folder, so Blender has it too once the level has been opened or built. The acid cave's (`level_src/4_acid_cave/game_textures.json`) shows the layout: each image's file name, the game's file it's from (such as `s0000004`), the texture page, and where on the page it is. `npm run export-cut-level` writes one for a level it exports.
+
 ## 2. Place objects in the level editor
 
 The level editor places Crash's spawn, the level's end, boxes, enemies and obstacles.
@@ -101,4 +105,5 @@ See [Objects](../level_src/README.md#objects) for how each box, enemy and obstac
 - **Faces have the wrong textures:** the build warned that an image wasn't found (hover over the build message to see it). Check the `map_Kd` lines in the `.mtl`.
 - **Parts of the map are missing:** the faces point the wrong way. Flip them in Blender.
 - **The build says a level couldn't be read, and an enemy comes from it:** some enemies are taken from the game's own levels, such as the crab from N. Sanity Beach. Extract all the game's files into `streams/` (see [Running](running.md)).
+- **The build says an image is from one of the game's files that isn't in `streams/`:** the level uses textures from the game (see [Textures from the game](#textures-from-the-game)). Extract all the game's files into `streams/`.
 - **The build says there are more texture pages than the game holds:** each image on the map and each kind of enemy from another level takes room for textures. Use fewer images or fewer kinds of enemy.
