@@ -39,6 +39,14 @@ export const SOUNDTRACKS: Soundtrack[] = [
 
 export const DEFAULT_MUSIC = "jungle_rollers"; // what custom levels always played
 
+// how loud a level's own song plays, as a percent of the game's music loudness (level.cfg's music_volume)
+export const DEFAULT_MUSIC_VOLUME = 100;
+export const MUSIC_VOLUME_MIN = 25;
+export const MUSIC_VOLUME_MAX = 200;
+
+export const isMusicVolume = (volume: number) =>
+  Number.isInteger(volume) && volume >= MUSIC_VOLUME_MIN && volume <= MUSIC_VOLUME_MAX;
+
 export const isMusicName = (name: string) => SOUNDTRACKS.some((soundtrack) => soundtrack.name === name);
 
 // a level's own song can instead be an audio file in its folder, of these kinds

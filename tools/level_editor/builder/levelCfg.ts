@@ -1,11 +1,11 @@
-// a level source's level.cfg: the scale, turn, sky, camera and music the level is built with,
+// a level source's level.cfg: the scale, turn, sky, camera and music (and its volume) the level is built with,
 // one "key = value" a line. the build reads it strictly, so a mistake stops it
 // with a message; the editor reads it leniently (server/levelCfg.ts)
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DEFAULT_SCALE } from "../src/coords";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
-import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, isAudioSongName, isMusicName, SOUNDTRACKS } from "../src/music";
+import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, DEFAULT_MUSIC_VOLUME, isAudioSongName, isMusicName, isMusicVolume, MUSIC_VOLUME_MAX, MUSIC_VOLUME_MIN, SOUNDTRACKS } from "../src/music";
 import { DEFAULT_SKY, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 
 export const LEVEL_CFG = "level.cfg";
@@ -16,6 +16,7 @@ export interface LevelOptions {
   sky: Sky;
   camera: Camera;
   music: string; // one of SOUNDTRACKS' names, or an audio file in the level's folder (isAudioSongName)
+  musicVolume: number; // how loud an audio file music plays, a percent of the game's music loudness
 }
 
 // what a level.cfg sets, each by its key
@@ -28,11 +29,12 @@ export interface LevelCfgSettings {
   camera_distance?: number;
   camera_angle?: number;
   music?: string;
+  music_volume?: number;
 }
 
 const WHOLE_NUMBERS = ["scale", "turn"];
 const COLOURS = ["sky_top", "sky_bottom"];
-const SETTINGS = [...WHOLE_NUMBERS, ...COLOURS, "sky_split", "camera_distance", "camera_angle", "music"];
+const SETTINGS = [...WHOLE_NUMBERS, ...COLOURS, "sky_split", "camera_distance", "camera_angle", "music", "music_volume"];
 
 const isComment = (line: string) => line === "" || line.startsWith("#");
 const isWholeNumber = (value: string) => /^[+-]?\d+$/.test(value);
@@ -91,6 +93,14 @@ function readMusic(value: string, where: string, folder: string): string {
   return value;
 }
 
+function readMusicVolume(value: string, where: string): number {
+  const volume = readWholeNumber("music_volume", value, where);
+  if (!isMusicVolume(volume)) {
+    throw new Error(`${where}: music_volume has to be ${MUSIC_VOLUME_MIN} to ${MUSIC_VOLUME_MAX}, not ${value}`);
+  }
+  return volume;
+}
+
 // the setting one line gives; an unknown setting, or a value it can't take, is an error
 function readSetting(line: string, where: string, folder: string): [keyof LevelCfgSettings, number | Rgb | string] {
   const equals = line.indexOf("=");
@@ -116,6 +126,9 @@ function readSetting(line: string, where: string, folder: string): [keyof LevelC
   }
   if (key === "music") {
     return [key, readMusic(value, where, folder)];
+  }
+  if (key === "music_volume") {
+    return [key, readMusicVolume(value, where)];
   }
   return [key as keyof LevelCfgSettings, readWholeNumber(key, value, where)];
 }
@@ -163,5 +176,6 @@ export function levelOptions(folder: string, given: Partial<LevelOptions> = {}):
     sky: given.sky ?? skyOf(settings),
     camera: given.camera ?? cameraOf(settings),
     music: given.music ?? settings.music ?? DEFAULT_MUSIC,
+    musicVolume: given.musicVolume ?? settings.music_volume ?? DEFAULT_MUSIC_VOLUME,
   };
 }
