@@ -7,7 +7,7 @@ const ONCE: Kind[] = ["spawn", "end"]; // a level has at most one of these
 
 // every box the game has, by name: its subtype, which the level build places
 // it by. the base level (jungle rollers, see builder/baseLevel.ts) has all
-// their models. any box but a switch can be an outline of a switch, which fills
+// their models. any box, even a switch, can be an outline of a switch, which fills
 // it in (see outline in LevelObject). (the game's
 // subtype 11, placed for an enemy to be spun into, turns itself into a tnt as
 // it spawns, so it isn't one of these.) in the order the palette lists them:
@@ -583,16 +583,16 @@ function readSwitchNumber(fields: Record<string, unknown>, box: LevelObject, obj
 }
 
 // the switch a box is an outline of (its number), from its fields in objects.json.
-// a switch isn't an outline; an outline's switch needn't be in the level (the editor warns of it)
+// a switch can be an outline of another switch; an outline's switch needn't be in the level (the editor warns of it)
 function readOutline(fields: Record<string, unknown>, box: LevelObject, objectNumber: number): Pick<LevelObject, "outline"> {
   if (!("outline" in fields)) {
     return {};
   }
-  if (isSwitch(box)) {
-    throw new Error(`object ${objectNumber}: a switch can't be an outline`);
-  }
   if (!isWhole(fields.outline) || fields.outline < 1) {
     throw new Error(`object ${objectNumber}: outline should be the number of a switch that fills it in`);
+  }
+  if (isSwitch(box) && fields.outline === fields.switch) {
+    throw new Error(`object ${objectNumber}: a switch can't be an outline of itself`);
   }
   return { outline: fields.outline };
 }
