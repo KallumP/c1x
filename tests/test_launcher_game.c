@@ -7,9 +7,9 @@ UTEST(launcher_game, game_is_in_the_build_folder) {
 
   GamePath("/home/me/c1x", path, sizeof(path));
 #ifdef _WIN32
-  ASSERT_STREQ("/home/me/c1x/build/c1.exe", path);
+  ASSERT_STREQ("/home/me/c1x/build/c1x.exe", path);
 #else
-  ASSERT_STREQ("/home/me/c1x/build/c1", path);
+  ASSERT_STREQ("/home/me/c1x/build/c1x", path);
 #endif
 }
 

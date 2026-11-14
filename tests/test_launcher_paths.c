@@ -34,6 +34,6 @@ UTEST(launcher_paths, joins_a_folder_and_a_name) {
 
   JoinPath(path, sizeof(path), "/home/me/c1x", "streams");
   ASSERT_STREQ("/home/me/c1x/streams", path);
-  JoinPath(path, sizeof(path), "C:\\code\\c1x\\", "build/c1.exe");
-  ASSERT_STREQ("C:\\code\\c1x\\build/c1.exe", path);
+  JoinPath(path, sizeof(path), "C:\\code\\c1x\\", "build/c1x.exe");
+  ASSERT_STREQ("C:\\code\\c1x\\build/c1x.exe", path);
 }
