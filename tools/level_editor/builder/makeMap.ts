@@ -18,7 +18,7 @@ import {
 import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
 import type { RgbImage } from "./images";
 import { ENTRY_SLST, type Level } from "./levelFiles";
-import { boxSubtype, toZone } from "./levelObjects";
+import { boxInitFlagB, boxSubtype, toZone } from "./levelObjects";
 import { addMapPiece, TEXINFO_WORDS_MAX, textureWorlds } from "./mapTextures";
 import { readObj, type Mesh } from "./obj";
 import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
@@ -571,8 +571,8 @@ class ObjectPlacer {
     const subtype = boxSubtype(object);
     for (let k = 0; k < object.stack; k++) {
       const id = this.ids.shift()!;
-      const box = withEntityId(this.templates.entity(BOX_TYPE, subtype), id);
-      this.placedBoxes.push({ subtype, zone, index: this.entities[zone].length, id });
+      const box = withInitFlagB(withEntityId(this.templates.entity(BOX_TYPE, subtype), id), boxInitFlagB(object));
+      this.placedBoxes.push({ subtype, zone, index: this.entities[zone].length, id, switch: object.switch, outline: object.outline });
       this.entities[zone].push(withPosition(box, [at[0], at[1] + k * BOX_HEIGHT, at[2]]));
     }
   }

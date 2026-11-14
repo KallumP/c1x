@@ -17,6 +17,7 @@
 #include "pc/tween.h"
 #include "pc/frames.h"
 #include "pc/boxhud.h"
+#include "pc/switchchain.h"
 int CardControl(int op, int part_idx) { return 1; }
 
 /* forward declarations for unexported funcs */
@@ -3440,6 +3441,24 @@ static int GoolFlungPastReach(gool_object *sender, gool_object *recipient, uint3
   return !FlingBreaksBox(ns.ldat->lid, &stood, &sender->trans);
 }
 
+static switch_chain_stops switch_chain_stops_now;
+
+/* pc: whether event is a switch, filled in by another's chain, passing the fill on into its own before it's hit (switchchain.h) */
+static int GoolSwitchChainStops(gool_object *sender, gool_object *recipient, uint32_t event) {
+  zone_entity *entity;
+
+  if (!SwitchChainIsFill(event)) { return 0; }
+  if (sender && sender->entity) {
+    entity = sender->entity;
+    if (SwitchChainStopsFill(&switch_chain_stops_now, entity->type, entity->subtype, entity->id)) { return 1; }
+  }
+  if (recipient->entity) {
+    entity = recipient->entity;
+    SwitchChainFilled(&switch_chain_stops_now, entity->type, entity->subtype, entity->id, entity->init_flags_c);
+  }
+  return 0;
+}
+
 int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event, int argc, uint32_t *argv) {
   entry *exec;
   gool_header *header;
@@ -3453,6 +3472,8 @@ int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event, i
 
   if (recipient && GoolFlungPastReach(sender, recipient, event))
     recipient = 0; /* pc: it flies on through the box, as if it weren't there */
+  if (recipient && GoolSwitchChainStops(sender, recipient, event))
+    recipient = 0; /* pc: the switch's own chain waits for it to be hit */
   if (sender)
     sender->misc_flag = !!recipient;
   if (!recipient) { return SUCCESS; }

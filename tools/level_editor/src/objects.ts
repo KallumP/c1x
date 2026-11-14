@@ -7,15 +7,16 @@ const ONCE: Kind[] = ["spawn", "end"]; // a level has at most one of these
 
 // every box the game has, by name: its subtype, which the level build places
 // it by. the base level (jungle rollers, see builder/baseLevel.ts) has all
-// their models. a switch fills an iron_outline in as an iron box. (the game's
+// their models. any box, even a switch, can be an outline of a switch, which fills
+// it in (see outline in LevelObject). (the game's
 // subtype 11, placed for an enemy to be spun into, turns itself into a tnt as
 // it spawns, so it isn't one of these.) in the order the palette lists them:
-// plain, bonus, tnt, the switch and its outlines, then iron
+// plain, bonus, tnt, the switch, then iron
 export const BOX_TYPES = {
   basic: 2, slatted: 6, arrow: 3,
   question: 10, life: 8, aku_aku: 9, checkpoint: 4,
   tnt: 0,
-  switch: 7, outline: 13, iron_outline: 19,
+  switch: 7,
   iron: 5, iron_arrow: 15,
 } as const;
 export type BoxType = keyof typeof BOX_TYPES;
@@ -338,6 +339,8 @@ export interface LevelObject {
   raise: number;        // metres above at
   stack: number;        // boxes high (1 for anything else)
   box?: BoxType | number; // a box's type, or its subtype number
+  switch?: number;      // a switch's number, which its outlines name (1 or more, one of a kind in the level)
+  outline?: number;     // the number of the switch a box is an outline of, which fills it in
   enemy?: EnemyType;    // an enemy's type
   obstacle?: ObstacleType; // an obstacle's type
   path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised); leader bats' second leader, from their first
@@ -389,7 +392,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 }
 
 const SETTINGS = ["kind", "at", "raise"];
-const BOX_SETTINGS = ["type", "subtype", "stack"];
+const BOX_SETTINGS = ["type", "subtype", "switch", "stack", "outline"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
 const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset", "platforms", "radius", "shake", "down", "delay"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
@@ -525,6 +528,81 @@ function readReverse(fields: Record<string, unknown>, type: ObjectType, objectNu
   return fields.reverse ? { reverse: true } : {};
 }
 
+// a box's type, from its fields in objects.json: its type name or its subtype number
+function readBoxType(fields: Record<string, unknown>, objectNumber: number): Pick<LevelObject, "box"> {
+  const boxTypes = Object.keys(BOX_TYPES).join(", ");
+  if (("type" in fields) === ("subtype" in fields)) {
+    throw new Error(`object ${objectNumber}: a box needs a type (${boxTypes}) or a subtype number, not both`);
+  }
+  if ("type" in fields) {
+    if (!(typeof fields.type === "string" && fields.type in BOX_TYPES)) {
+      throw new Error(`object ${objectNumber}: unknown box type ${fields.type} (it can be ${boxTypes})`);
+    }
+    return { box: fields.type as BoxType };
+  }
+  if (!isWhole(fields.subtype) || !BOX_SUBTYPES.includes(fields.subtype)) {
+    throw new Error(`object ${objectNumber}: a box's subtype should be one of ${BOX_SUBTYPES.join(", ")}`);
+  }
+  return { box: fields.subtype };
+}
+
+// how many boxes high a box is, from its fields in objects.json
+function readStack(fields: Record<string, unknown>, objectNumber: number): Pick<LevelObject, "stack"> {
+  const stack = fields.stack ?? 1;
+  if (!isWhole(stack) || stack < 1) {
+    throw new Error(`object ${objectNumber}: stack should be how many boxes high it is, 1 or more`);
+  }
+  return { stack };
+}
+
+// the boxes the game has outline boxes of; an outline of any other is hidden until its switch is hit
+const TYPES_WITH_OUTLINES: BoxType[] = ["basic", "iron"];
+export const hasOutlineModel = (box: NonNullable<LevelObject["box"]>) => TYPES_WITH_OUTLINES.includes(boxTypeName(box));
+
+// whether a box is a switch (! box), by its type or subtype
+export const isSwitch = (object: LevelObject) => object.kind === "box" && object.box !== undefined && boxTypeName(object.box) === "switch";
+
+// a switch's number, from its fields in objects.json: one no earlier switch has
+function readSwitchNumber(fields: Record<string, unknown>, box: LevelObject, objectNumber: number, earlier: LevelObject[]): Pick<LevelObject, "switch"> {
+  if (!isSwitch(box)) {
+    if ("switch" in fields) {
+      throw new Error(`object ${objectNumber}: only a switch has a number`);
+    }
+    return {};
+  }
+  if (!("switch" in fields)) {
+    throw new Error(`object ${objectNumber}: a switch needs a number (its "switch")`);
+  }
+  if (!isWhole(fields.switch) || fields.switch < 1) {
+    throw new Error(`object ${objectNumber}: a switch's number should be a whole number, 1 or more`);
+  }
+  if (earlier.some((object) => object.switch === fields.switch)) {
+    throw new Error(`object ${objectNumber}: there's already a switch ${fields.switch}`);
+  }
+  return { switch: fields.switch };
+}
+
+// the switch a box is an outline of (its number), from its fields in objects.json.
+// a switch can be an outline of another switch; an outline's switch needn't be in the level (the editor warns of it)
+function readOutline(fields: Record<string, unknown>, box: LevelObject, objectNumber: number): Pick<LevelObject, "outline"> {
+  if (!("outline" in fields)) {
+    return {};
+  }
+  if (!isWhole(fields.outline) || fields.outline < 1) {
+    throw new Error(`object ${objectNumber}: outline should be the number of a switch that fills it in`);
+  }
+  if (isSwitch(box) && fields.outline === fields.switch) {
+    throw new Error(`object ${objectNumber}: a switch can't be an outline of itself`);
+  }
+  return { outline: fields.outline };
+}
+
+// a box's settings, from its fields in objects.json, after the objects before it
+function readBox(fields: Record<string, unknown>, objectNumber: number, earlier: LevelObject[]): Partial<LevelObject> {
+  const box: LevelObject = { kind: "box", at: [0, 0, 0], raise: 0, stack: 1, ...readBoxType(fields, objectNumber) };
+  return { box: box.box, ...readStack(fields, objectNumber), ...readSwitchNumber(fields, box, objectNumber, earlier), ...readOutline(fields, box, objectNumber) };
+}
+
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
 export function parseObjects(text: string): LevelObject[] {
   let entries: unknown;
@@ -575,27 +653,7 @@ export function parseObjects(text: string): LevelObject[] {
     const object: LevelObject = { kind: kind as Kind, at: [at[0], at[1], at[2]], raise, stack: 1 };
 
     if (kind === "box") {
-      const boxTypes = Object.keys(BOX_TYPES).join(", ");
-      if (("type" in fields) === ("subtype" in fields)) {
-        throw new Error(`object ${objectNumber}: a box needs a type (${boxTypes}) or a subtype number, not both`);
-      }
-      if ("type" in fields) {
-        if (!(typeof fields.type === "string" && fields.type in BOX_TYPES)) {
-          throw new Error(`object ${objectNumber}: unknown box type ${fields.type} (it can be ${boxTypes})`);
-        }
-        object.box = fields.type as BoxType;
-      } else {
-        if (!isWhole(fields.subtype) || !BOX_SUBTYPES.includes(fields.subtype)) {
-          throw new Error(`object ${objectNumber}: a box's subtype should be one of ${BOX_SUBTYPES.join(", ")}`);
-        }
-        object.box = fields.subtype;
-      }
-
-      const stack = fields.stack ?? 1;
-      if (!isWhole(stack) || stack < 1) {
-        throw new Error(`object ${objectNumber}: stack should be how many boxes high it is, 1 or more`);
-      }
-      object.stack = stack;
+      Object.assign(object, readBox(fields, objectNumber, objects));
     }
     if (kind === "enemy") {
       Object.assign(object, readEnemy(fields, objectNumber));
@@ -622,6 +680,9 @@ function formatObject(object: LevelObject): string {
   if (object.kind === "box" && object.box !== undefined) {
     parts.push(typeof object.box === "number" ? `"subtype": ${object.box}` : `"type": ${JSON.stringify(object.box)}`);
   }
+  if (object.switch !== undefined) {
+    parts.push(`"switch": ${object.switch}`);
+  }
   if (object.kind === "enemy" && object.enemy !== undefined) {
     parts.push(`"type": ${JSON.stringify(object.enemy)}`);
   }
@@ -635,6 +696,9 @@ function formatObject(object: LevelObject): string {
   }
   if (object.kind === "box" && object.stack !== 1) {
     parts.push(`"stack": ${object.stack}`);
+  }
+  if (object.outline !== undefined) {
+    parts.push(`"outline": ${object.outline}`);
   }
   if (object.path) {
     const nodes = object.path.map((node) => `[${node.map(roundToMillimetre).join(", ")}]`);

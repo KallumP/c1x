@@ -68,6 +68,17 @@ export function ColourField({ label, value, onChange }: {
   );
 }
 
+// a tick box, greyed out and unchangeable if disabled
+export function CheckboxField({ label, checked, disabled = false, onChange }: {
+  label: string; checked: boolean; disabled?: boolean; onChange: (checked: boolean) => void;
+}) {
+  return (
+    <Field label={label}>
+      <input type="checkbox" checked={checked} disabled={disabled} onChange={(event) => onChange(event.target.checked)} />
+    </Field>
+  );
+}
+
 // a choice's name as a dropdown shows it, its first _ a space
 const spacedName = (choice: string) => choice.replace("_", " ");
 

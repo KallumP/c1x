@@ -7,13 +7,13 @@ describe("parseObjects", () => {
     const objects = parseObjects(`[
       {"kind": "spawn", "at": [0.5, 3.5, 0.3]},
       {"kind": "box", "type": "basic", "at": [1, 10, 0], "stack": 2},
-      {"kind": "box", "subtype": 13, "at": [2, 10, 0], "raise": 1.5},
+      {"kind": "box", "subtype": 9, "at": [2, 10, 0], "raise": 1.5},
       {"kind": "end", "at": [0, 48, 1.2], "raise": 0.15}
     ]`);
     expect(objects).toEqual([
       { kind: "spawn", at: [0.5, 3.5, 0.3], raise: 0, stack: 1 },
       { kind: "box", box: "basic", at: [1, 10, 0], raise: 0, stack: 2 },
-      { kind: "box", box: 13, at: [2, 10, 0], raise: 1.5, stack: 1 },
+      { kind: "box", box: 9, at: [2, 10, 0], raise: 1.5, stack: 1 },
       { kind: "end", at: [0, 48, 1.2], raise: 0.15, stack: 1 },
     ]);
   });
@@ -22,10 +22,10 @@ describe("parseObjects", () => {
     const objects = parseObjects(`[
       {"kind": "box", "type": "tnt", "at": [0, 0, 0]},
       {"kind": "box", "type": "iron_arrow", "at": [1, 0, 0]},
-      {"kind": "box", "subtype": 19, "at": [2, 0, 0]},
+      {"kind": "box", "subtype": 15, "at": [2, 0, 0]},
       {"kind": "box", "subtype": 0, "at": [3, 0, 0]}
     ]`);
-    expect(objects.map((object) => object.box)).toEqual(["tnt", "iron_arrow", 19, 0]);
+    expect(objects.map((object) => object.box)).toEqual(["tnt", "iron_arrow", 15, 0]);
   });
 
   test.each([
@@ -41,6 +41,7 @@ describe("parseObjects", () => {
     ['[{"kind": "box", "type": "nitro", "at": [0, 0, 0]}]', "object 1: unknown box type nitro"],
     ['[{"kind": "box", "subtype": 1, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
     ['[{"kind": "box", "subtype": 12, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
+    ['[{"kind": "box", "subtype": 13, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "stack": 0}]', "object 1: stack should be"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "stack": 1.5}]', "object 1: stack should be"],
   ])("refuses %s", (text, message) => {
@@ -66,11 +67,11 @@ describe("formatObjects", () => {
   test("writes one object a line, leaving out default settings", () => {
     expect(formatObjects([
       { kind: "box", box: "basic", at: [1, 10, 0], raise: 0, stack: 2 },
-      { kind: "box", box: 13, at: [2, 10, 0], raise: 1.5, stack: 1 },
+      { kind: "box", box: 9, at: [2, 10, 0], raise: 1.5, stack: 1 },
     ])).toBe(
       "[\n" +
       '  {"kind": "box", "type": "basic", "at": [1, 10, 0], "stack": 2},\n' +
-      '  {"kind": "box", "subtype": 13, "at": [2, 10, 0], "raise": 1.5}\n' +
+      '  {"kind": "box", "subtype": 9, "at": [2, 10, 0], "raise": 1.5}\n' +
       "]\n");
   });
 
@@ -92,11 +93,11 @@ describe("formatObjects", () => {
     const text = formatObjects([
       { kind: "box", box: "basic", at: [1, 0, 0], raise: 0, stack: 1 },
       { kind: "end", at: [0, 9, 0], raise: 0, stack: 1 },
-      { kind: "box", box: "outline", at: [2, 0, 0], raise: 0, stack: 1 },
+      { kind: "box", box: "life", at: [2, 0, 0], raise: 0, stack: 1 },
       { kind: "spawn", at: [0, 0, 0], raise: 0, stack: 1 },
     ]);
     const kinds = parseObjects(text).map((object) => (object.box === undefined ? object.kind : `${object.kind} ${object.box}`));
-    expect(kinds).toEqual(["spawn", "box basic", "box outline", "end"]);
+    expect(kinds).toEqual(["spawn", "box basic", "box life", "end"]);
   });
 
   test("rounds positions to the millimetre", () => {
@@ -114,13 +115,80 @@ describe("formatObjects", () => {
   });
 });
 
+describe("switch numbers", () => {
+  const switchBox = (fields: object) => ({ kind: "box", type: "switch", at: [0, 0, 0], ...fields });
+
+  test("reads a switch's number", () => {
+    const objects = parseObjects(JSON.stringify([switchBox({ switch: 1 }), switchBox({ switch: 2 })]));
+    expect(objects.map((object) => object.switch)).toEqual([1, 2]);
+  });
+
+  test("reads the number of a switch given by its subtype", () => {
+    const [object] = parseObjects(JSON.stringify([{ kind: "box", subtype: 7, at: [0, 0, 0], switch: 3 }]));
+    expect(object.switch).toBe(3);
+  });
+
+  test.each([
+    [[switchBox({})], "object 1: a switch needs a number"],
+    [[switchBox({ switch: 0 })], "object 1: a switch's number should be a whole number, 1 or more"],
+    [[switchBox({ switch: 1.5 })], "object 1: a switch's number should be a whole number, 1 or more"],
+    [[switchBox({ switch: 1 }), switchBox({ switch: 1 })], "object 2: there's already a switch 1"],
+    [[{ kind: "box", type: "basic", at: [0, 0, 0], switch: 1 }], "object 1: only a switch has a number"],
+  ])("refuses %j", (objects, message) => {
+    expect(() => parseObjects(JSON.stringify(objects))).toThrow(message);
+  });
+
+  test("writes a switch's number after its type", () => {
+    expect(formatObjects([{ kind: "box", box: "switch", switch: 2, at: [0, 0, 0], raise: 0, stack: 1 }]))
+      .toBe('[\n  {"kind": "box", "type": "switch", "switch": 2, "at": [0, 0, 0]}\n]\n');
+  });
+});
+
+describe("outlines", () => {
+  const switchBox = (number: number) => ({ kind: "box", type: "switch", at: [0, 0, 0], switch: number });
+  const box = (type: string, fields: object) => ({ kind: "box", type, at: [0, 0, 0], ...fields });
+
+  test("reads the switch a box is an outline of, before or after it", () => {
+    const objects = parseObjects(JSON.stringify([box("life", { outline: 2 }), switchBox(1), switchBox(2), box("basic", { outline: 1 })]));
+    expect(objects.map((object) => object.outline)).toEqual([2, undefined, undefined, 1]);
+  });
+
+  test("reads a switch that's an outline of another switch", () => {
+    const objects = parseObjects(JSON.stringify([switchBox(1), { ...switchBox(2), outline: 1 }]));
+    expect(objects[1]).toMatchObject({ switch: 2, outline: 1 });
+  });
+
+  test("writes a switch's outline after its number", () => {
+    expect(formatObjects([{ kind: "box", box: "switch", switch: 2, outline: 1, at: [0, 0, 0], raise: 0, stack: 1 }]))
+      .toBe('[\n  {"kind": "box", "type": "switch", "switch": 2, "at": [0, 0, 0], "outline": 1}\n]\n');
+  });
+
+  test("reads an outline whose switch isn't in the level, which the editor warns of", () => {
+    const [object] = parseObjects(JSON.stringify([box("basic", { outline: 4 })]));
+    expect(object.outline).toBe(4);
+  });
+
+  test.each([
+    [[switchBox(1), box("basic", { outline: 0 })], "object 2: outline should be the number of a switch"],
+    [[switchBox(1), box("basic", { outline: "1" })], "object 2: outline should be the number of a switch"],
+    [[{ ...switchBox(1), outline: 1 }], "object 1: a switch can't be an outline of itself"],
+  ])("refuses %j", (objects, message) => {
+    expect(() => parseObjects(JSON.stringify(objects))).toThrow(message);
+  });
+
+  test("writes the switch a box is an outline of after its stack", () => {
+    expect(formatObjects([{ kind: "box", box: "tnt", outline: 3, at: [0, 0, 0], raise: 0, stack: 2 }]))
+      .toBe('[\n  {"kind": "box", "type": "tnt", "at": [0, 0, 0], "stack": 2, "outline": 3}\n]\n');
+  });
+});
+
 describe("boxTypeName", () => {
   test("is the type a box was given", () => {
     expect(boxTypeName("life")).toBe("life");
   });
 
   test("is the type a subtype number has", () => {
-    expect(boxTypeName(13)).toBe("outline");
+    expect(boxTypeName(5)).toBe("iron");
     expect(boxTypeName(9)).toBe("aku_aku");
   });
 });

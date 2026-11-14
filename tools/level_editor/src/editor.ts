@@ -3,7 +3,7 @@
 import { nodeCount, pathPositions, withNodeAt } from "./enemyPaths";
 import { BAT_ROOST_HEIGHT, DEFAULT_SCALE, LEADER_BAT_HEIGHT } from "./coords";
 import { END_PAD_LIFT } from "./endPad";
-import { BOX_TYPES, ENEMY_TYPES, OBSTACLE_TYPES, type BoxType, type EnemyType, type LevelObject, type ObstacleType, type Vec3 } from "./objects";
+import { BOX_TYPES, ENEMY_TYPES, isSwitch, OBSTACLE_TYPES, type BoxType, type EnemyType, type LevelObject, type ObstacleType, type Vec3 } from "./objects";
 
 export type Placeable = "spawn" | "end" | BoxType | EnemyType | ObstacleType;
 
@@ -128,8 +128,97 @@ function change(state: EditorState, objects: Objects, selected: number | null): 
   return { objects, selected, selectedNode, past: [...state.past, state.objects], future: [] };
 }
 
+// the lowest switch number (from 1) no switch among objects has
+export function nextSwitchNumber(objects: Objects): number {
+  const taken = new Set(objects.map((object) => object.switch));
+  let number = 1;
+  while (taken.has(number)) {
+    number++;
+  }
+  return number;
+}
+
+// a box as a switch or not: a switch has a number (the next free among others
+// if it has none) and isn't an outline of itself; any other box has no number
+function withSwitchSettings(object: LevelObject, others: Objects): LevelObject {
+  if (object.kind !== "box") {
+    return object;
+  }
+  const { switch: number, outline, ...rest } = object;
+  if (!isSwitch(object)) {
+    return withOutline(rest, outline);
+  }
+  const ownNumber = number ?? nextSwitchNumber(others);
+  if (outline === ownNumber) {
+    return { ...rest, switch: ownNumber };
+  }
+  return withOutline({ ...rest, switch: ownNumber }, outline);
+}
+
+// a box, an outline of switch outline if it's given one
+function withOutline(box: LevelObject, outline: number | undefined): LevelObject {
+  if (outline === undefined) {
+    return box;
+  }
+  return { ...box, outline };
+}
+
+// the level's switch numbers, lowest first
+export const switchNumbers = (objects: Objects): number[] =>
+  objects.flatMap((object) => object.switch ?? []).sort((first, second) => first - second);
+
+// the switch numbers along the line from switch number to the switches it's hidden behind (an
+// outline of), and theirs, stopping at one already in the line
+function switchesBehind(objects: Objects, number: number): number[] {
+  const line: number[] = [];
+  let current: number | undefined = number;
+  while (current !== undefined && !line.includes(current)) {
+    line.push(current);
+    const switchNumber: number = current;
+    current = objects.find((object) => object.switch === switchNumber)?.outline;
+  }
+  return line;
+}
+
+// whether switch number already fills in a switch other than the one at index
+const fillsInAnotherSwitch = (objects: Objects, number: number, index: number) =>
+  objects.some((object, objectIndex) => objectIndex !== index && isSwitch(object) && object.outline === number);
+
+// the switches the box at index can be an outline of, lowest first: any for a box; for a
+// switch, others not hidden behind it (a loop) and filling in no other switch (a chain ends
+// with its only switch)
+export function outlineChoices(objects: Objects, index: number): number[] {
+  const box = objects[index];
+  const numbers = switchNumbers(objects);
+  if (!isSwitch(box)) {
+    return numbers;
+  }
+  const isChoice = (number: number) =>
+    !switchesBehind(objects, number).includes(box.switch!) && !fillsInAnotherSwitch(objects, number, index);
+  return numbers.filter(isChoice);
+}
+
+// whether changes give a switch a number one of others has
+const takesTakenNumber = (changes: Partial<LevelObject>, others: Objects) =>
+  changes.switch !== undefined && switchNumbers(others).includes(changes.switch);
+
+// objects with the outlines of switch from moved to switch to, as their switch was renumbered
+function withOutlinesRenumbered(objects: Objects, from: number | undefined, to: number | undefined): Objects {
+  if (from === undefined || to === undefined || from === to) {
+    return objects;
+  }
+  const renumbered = (object: LevelObject) => {
+    if (object.outline !== from) {
+      return object;
+    }
+    return { ...object, outline: to };
+  };
+  return objects.map(renumbered);
+}
+
 // a level has one spawn and one end, so adding another moves it
-function add(state: EditorState, object: LevelObject): EditorState {
+function add(state: EditorState, added: LevelObject): EditorState {
+  const object = withSwitchSettings(added, state.objects);
   const isOnce = object.kind === "spawn" || object.kind === "end";
   const existing = isOnce ? state.objects.findIndex((other) => other.kind === object.kind) : -1;
   if (existing >= 0) {
@@ -142,7 +231,13 @@ function add(state: EditorState, object: LevelObject): EditorState {
 // record: false for the steps of a drag or a slide, which are one change from its
 // checkpoint. either way, a selected node the path no longer has is let go of
 function update(state: EditorState, index: number, changes: Partial<LevelObject>, record: boolean): EditorState {
-  const objects = state.objects.map((object, objectIndex) => (objectIndex === index ? { ...object, ...changes } : object));
+  const others = state.objects.filter((_, objectIndex) => objectIndex !== index);
+  if (takesTakenNumber(changes, others)) {
+    return state;
+  }
+  const changed = (object: LevelObject) => withSwitchSettings({ ...object, ...changes }, others);
+  const updated = state.objects.map((object, objectIndex) => (objectIndex === index ? changed(object) : object));
+  const objects = withOutlinesRenumbered(updated, state.objects[index].switch, updated[index].switch);
   if (record) {
     return change(state, objects, state.selected);
   }
