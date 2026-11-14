@@ -53,6 +53,15 @@ describe("levelFilePath", () => {
     expect(levelFilePath(root, "lvl", "textures/grass.png")).toBe(join(root, "lvl", "textures", "grass.png"));
   });
 
+  test("a file that isn't at the path asked for is the level's file of the same name", () => {
+    // as a .mtl Blender wrote with whole paths, or ones going up out of the folder
+    level("lvl", { "lvl.obj": "", "grass.png": "" });
+    const grass = join(root, "lvl", "grass.png");
+    expect(levelFilePath(root, "lvl", "C:\\Users\\me\\textures\\grass.png")).toBe(grass);
+    expect(levelFilePath(root, "lvl", "../textures/grass.png")).toBe(grass);
+    expect(levelFilePath(root, "lvl", "textures/grass.png")).toBe(grass);
+  });
+
   test("is null outside the level's folder, or for a missing file or level", () => {
     level("lvl", { "lvl.obj": "" });
     level("other", { "secret.txt": "" });
