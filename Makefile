@@ -130,8 +130,8 @@ LAUNCHER_SRC = src/launcher/main.c \
 OBJ = $(SRC:.c=.o)
 OUT = build/c1
 TEST_OUT = build/tests
-# the launcher's _ sorts it first in build/
-LAUNCHER_OUT = build/_launcher
+# the launcher, in the top folder: the first thing a player opens
+LAUNCHER_OUT = c1x
 # the level build with node built in, for the launcher (see doc/building.md)
 BUILDER_OUT = build/build-level
 
@@ -147,9 +147,11 @@ ifeq ($(OS),Windows_NT)
 LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lsndfile -lm -lstdc++
 OUT = build/c1.exe
 TEST_OUT = build/tests.exe
-LAUNCHER_OUT = build/_launcher.exe
+LAUNCHER_OUT = c1x.exe
 BUILDER_OUT = build/build-level.exe
-LAUNCHER_LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lcomdlg32 -lm -lstdc++ -mwindows
+# linked statically, so the launcher needs no dlls beside it in the top folder
+LAUNCHER_LDLIBS = -static -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lcomdlg32 -lm -lstdc++ -mwindows \
+	-lkernel32 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lversion -luuid -ladvapi32 -lsetupapi -lshell32 -ldinput8
 else
 LDLIBS = -lSDL2 -lGL -lfluidsynth -lsndfile -lm -lstdc++
 LAUNCHER_LDLIBS = -lSDL2 -lGL -lm -lstdc++
