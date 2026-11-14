@@ -8,6 +8,7 @@ import type { LevelObject } from "../src/objects";
 import { copyAudioSong, writeAudioSongVolume } from "./audioSong";
 import { BASE_LEVEL } from "./baseLevel";
 import { TooBig } from "./fit";
+import { writeGameTextures } from "./gameTextures";
 import { readImage, type RgbImage } from "./images";
 import { levelOptions, type LevelOptions } from "./levelCfg";
 import { readLevel } from "./levelFiles";
@@ -126,6 +127,7 @@ export function buildLevel(source: string, { streamsDir, levelsDir, log }: Build
   const { objPath, name, options, objects } = level;
   try {
     const text = readFileSync(objPath, "utf8");
+    writeGameTextures(dirname(objPath), streamsDir);
     const images = mapImages(objPath, text, log);
     const readOtherLevel = (lid: number) => readLevel(streamsDir, lid);
     writeLevel(makeMap(readLevel(streamsDir, BASE_LEVEL.lid), text, { ...options, images, objects, readOtherLevel }), levelsDir, name);
