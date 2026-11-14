@@ -15,6 +15,7 @@ Each level gets its own folder in `level_src/`, such as `level_src/1_tide_ruins/
 - Make the route run towards +Y (away from you in Blender's front view). The camera follows Crash from behind, looking that way.
 - Model at 1 m per Blender unit. Crash is about 1.7 m tall.
 - Make faces point to where Crash walks. Turn on the Face Orientation overlay: the side Crash sees should be blue.
+- Keep walls upright or leaning away from where Crash walks. A wall that hangs over a floor (leaning in, an overhang or an arch) is only solid up to where it starts to hang, so Crash can walk right through it.
 - To make a floor kill Crash (such as water), put it in an object whose name starts with `pit`, such as `pit.001`.
 - Keep the map under about 40 m wide and 40 m tall. It can be as long as you like.
 
