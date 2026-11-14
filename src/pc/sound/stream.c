@@ -52,8 +52,8 @@ static float SampleAt(const float *samples, const SF_INFO *info, double at, int 
                + samples[next*info->channels + channel] * blend);
 }
 
-/* the file's samples as stereo at the game's rate */
-static void Resample(const float *samples, const SF_INFO *info, stream_song *song) {
+/* the file's samples as stereo at the game's rate, turned up or down by scale */
+static void Resample(const float *samples, const SF_INFO *info, float scale, stream_song *song) {
   double step;
   size_t i;
 
@@ -61,13 +61,57 @@ static void Resample(const float *samples, const SF_INFO *info, stream_song *son
   song->frames = (size_t)((double)info->frames / step);
   song->samples = (int16_t*)malloc(song->frames * 2 * sizeof(int16_t));
   for (i = 0; song->samples && i < song->frames; i++) {
-    song->samples[2*i] = ToSample(SampleAt(samples, info, i * step, 0));
-    song->samples[2*i + 1] = ToSample(SampleAt(samples, info, i * step, 1));
+    song->samples[2*i] = ToSample(SampleAt(samples, info, i * step, 0) * scale);
+    song->samples[2*i + 1] = ToSample(SampleAt(samples, info, i * step, 1) * scale);
   }
 }
 
-/* the audio file at path as a song; whether it could be read */
-int StreamSongLoad(const char *path, stream_song *song) {
+/* gcc's own square root: <math.h> is the game's src/math.h here, on the include path */
+static double SquareRoot(double value) {
+  return __builtin_sqrt(value);
+}
+
+/* the mean square of samples (floats, full scale at 1) */
+static double MeanSquare(const float *samples, size_t count) {
+  double sum;
+  size_t i;
+
+  sum = 0;
+  for (i = 0; i < count; i++) { sum += (double)samples[i] * samples[i]; }
+  return sum / count;
+}
+
+/* the loudest of samples, either way */
+static float Peak(const float *samples, size_t count) {
+  float peak;
+  size_t i;
+
+  peak = 0;
+  for (i = 0; i < count; i++) {
+    if (samples[i] > peak) { peak = samples[i]; }
+    if (-samples[i] > peak) { peak = -samples[i]; }
+  }
+  return peak;
+}
+
+/* what to turn samples (floats, full scale at 1) up or down by, so they're volume times
+   STREAM_SONG_LOUDNESS loud (volume 1 for as loud as the game's music), but no further up
+   than their peak at full scale; silence as it is */
+float StreamSongLoudnessScale(const float *samples, size_t count, float volume) {
+  double mean_square, target, scale;
+  float peak;
+
+  mean_square = MeanSquare(samples, count);
+  peak = Peak(samples, count);
+  if (mean_square <= 0 || peak <= 0) { return 1.0f; }
+  target = STREAM_SONG_LOUDNESS / 32768.0;
+  scale = volume * target / SquareRoot(mean_square);
+  if (scale * peak > 1.0) { scale = 1.0 / peak; }
+  return (float)scale;
+}
+
+/* the audio file at path as a song, volume times as loud as the game's music; whether it could be read */
+int StreamSongLoad(const char *path, float volume, stream_song *song) {
   SF_INFO info = { 0 };
   float *samples;
 
@@ -80,7 +124,7 @@ int StreamSongLoad(const char *path, stream_song *song) {
     free(samples);
     return 0;
   }
-  Resample(samples, &info, song);
+  Resample(samples, &info, StreamSongLoudnessScale(samples, (size_t)info.frames * info.channels, volume), song);
   free(samples);
   return song->samples != 0;
 }

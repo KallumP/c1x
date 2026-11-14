@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sndfile.h>
 #include "utest.h"
@@ -40,28 +41,88 @@ UTEST(stream_song, a_mono_song_at_half_the_rate_plays_at_the_games_rate_on_both_
   stream_song song;
 
   ASSERT_TRUE(write_song(SONG_DIR "/mono.wav", SF_FORMAT_WAV | SF_FORMAT_PCM_16, 22050, 1, 1000));
-  ASSERT_TRUE(StreamSongLoad(SONG_DIR "/mono.wav", &song));
+  ASSERT_TRUE(StreamSongLoad(SONG_DIR "/mono.wav", 1.0f, &song));
   ASSERT_EQ(2000, (int)song.frames);
   ASSERT_EQ(song.samples[2*100], song.samples[2*100 + 1]); /* left as right */
   StreamSongFree(&song);
 }
 
-UTEST(stream_song, a_stereo_song_at_the_games_rate_is_its_own_samples) {
+/* the mean square of a song's samples: its loudness, squared */
+static double MeanSquare(const int16_t *samples, size_t count) {
+  double sum;
+  size_t i;
+
+  sum = 0;
+  for (i = 0; i < count; i++) { sum += (double)samples[i] * samples[i]; }
+  return sum / count;
+}
+
+UTEST(stream_song, a_stereo_song_at_the_games_rate_keeps_its_frames_and_balance) {
   stream_song song;
 
   ASSERT_TRUE(write_song(SONG_DIR "/stereo.wav", SF_FORMAT_WAV | SF_FORMAT_PCM_16, STREAM_SONG_RATE, 2, 500));
-  ASSERT_TRUE(StreamSongLoad(SONG_DIR "/stereo.wav", &song));
+  ASSERT_TRUE(StreamSongLoad(SONG_DIR "/stereo.wav", 1.0f, &song));
   ASSERT_EQ(500, (int)song.frames);
-  ASSERT_EQ((int16_t)Saw(10), song.samples[2*10]);
-  ASSERT_EQ((int16_t)(Saw(10) * 2), song.samples[2*10 + 1]);
+  ASSERT_NEAR(2.0, (double)song.samples[2*10 + 1] / song.samples[2*10], 0.01); /* the right twice the left */
   StreamSongFree(&song);
+}
+
+UTEST(stream_song, a_song_plays_as_loud_as_the_games_music) {
+  stream_song song;
+
+  ASSERT_TRUE(write_song(SONG_DIR "/loud.wav", SF_FORMAT_WAV | SF_FORMAT_PCM_16, STREAM_SONG_RATE, 2, 4096));
+  ASSERT_TRUE(StreamSongLoad(SONG_DIR "/loud.wav", 1.0f, &song));
+  ASSERT_NEAR(1.0, MeanSquare(song.samples, song.frames * 2) / ((double)STREAM_SONG_LOUDNESS * STREAM_SONG_LOUDNESS), 0.04);
+  StreamSongFree(&song);
+}
+
+/* count samples of a square wave, between -height and height */
+static float *Square(float height, size_t count) {
+  float *samples;
+  size_t i;
+
+  samples = (float*)malloc(count * sizeof(float));
+  for (i = 0; i < count; i++) {
+    samples[i] = height;
+    if (i % 2) { samples[i] = -height; }
+  }
+  return samples;
+}
+
+UTEST(stream_song, a_loud_song_is_turned_down_to_the_games_music) {
+  float *samples = Square(0.5f, 100);
+
+  ASSERT_NEAR(STREAM_SONG_LOUDNESS / (0.5 * 32768), StreamSongLoudnessScale(samples, 100, 1.0f), 0.0001);
+  free(samples);
+}
+
+UTEST(stream_song, a_quiet_song_is_turned_up_to_the_games_music) {
+  float *samples = Square(0.01f, 100);
+
+  ASSERT_NEAR(STREAM_SONG_LOUDNESS / (0.01 * 32768), StreamSongLoudnessScale(samples, 100, 1.0f), 0.001);
+  free(samples);
+}
+
+UTEST(stream_song, a_song_is_never_turned_up_past_full_scale) {
+  float *samples = Square(0.0001f, 10000);
+
+  samples[0] = 0.5f; /* a peak, among a long near silence that would be turned up 6 times */
+  ASSERT_NEAR(2.0, StreamSongLoudnessScale(samples, 10000, 1.0f), 0.0001);
+  free(samples);
+}
+
+UTEST(stream_song, a_silent_song_stays_as_it_is) {
+  float *samples = Square(0.0f, 100);
+
+  ASSERT_EQ(1.0f, StreamSongLoudnessScale(samples, 100, 1.0f));
+  free(samples);
 }
 
 UTEST(stream_song, an_mp3_plays) {
   stream_song song;
 
   ASSERT_TRUE(write_song(SONG_DIR "/song.mp3", SF_FORMAT_MPEG | SF_FORMAT_MPEG_LAYER_III, STREAM_SONG_RATE, 2, STREAM_SONG_RATE));
-  ASSERT_TRUE(StreamSongLoad(SONG_DIR "/song.mp3", &song));
+  ASSERT_TRUE(StreamSongLoad(SONG_DIR "/song.mp3", 1.0f, &song));
   ASSERT_TRUE(song.frames > STREAM_SONG_RATE * 9 / 10); /* about a second (mp3 pads its start and end) */
   ASSERT_TRUE(song.frames < STREAM_SONG_RATE * 11 / 10);
   StreamSongFree(&song);
@@ -70,7 +131,7 @@ UTEST(stream_song, an_mp3_plays) {
 UTEST(stream_song, a_file_that_isnt_there_doesnt_load) {
   stream_song song;
 
-  ASSERT_FALSE(StreamSongLoad(SONG_DIR "/missing.mp3", &song));
+  ASSERT_FALSE(StreamSongLoad(SONG_DIR "/missing.mp3", 1.0f, &song));
   ASSERT_TRUE(song.samples == 0);
 }
 
@@ -119,4 +180,31 @@ UTEST(stream_song, playing_starts_it_from_its_start_and_stopping_goes_back_there
   StreamSongPlay(&song);
   StreamSongRead(&song, out, 1);
   ASSERT_EQ(1, out[0]);
+}
+
+UTEST(stream_song, a_song_is_turned_up_or_down_by_its_volume) {
+  float *samples = Square(0.01f, 100);
+
+  ASSERT_NEAR(1.5 * STREAM_SONG_LOUDNESS / (0.01 * 32768), StreamSongLoudnessScale(samples, 100, 1.5f), 0.001);
+  ASSERT_NEAR(0.5 * STREAM_SONG_LOUDNESS / (0.01 * 32768), StreamSongLoudnessScale(samples, 100, 0.5f), 0.001);
+  free(samples);
+}
+
+UTEST(stream_song, a_songs_volume_never_takes_it_past_full_scale) {
+  float *samples = Square(0.0001f, 10000);
+
+  samples[0] = 0.5f;
+  ASSERT_NEAR(2.0, StreamSongLoudnessScale(samples, 10000, 2.0f), 0.0001);
+  free(samples);
+}
+
+UTEST(stream_song, a_song_loaded_at_150_plays_one_and_a_half_times_as_loud) {
+  stream_song song;
+  double loudness;
+
+  ASSERT_TRUE(write_song(SONG_DIR "/loud.wav", SF_FORMAT_WAV | SF_FORMAT_PCM_16, STREAM_SONG_RATE, 2, 4096));
+  ASSERT_TRUE(StreamSongLoad(SONG_DIR "/loud.wav", 1.5f, &song));
+  loudness = 1.5 * STREAM_SONG_LOUDNESS;
+  ASSERT_NEAR(1.0, MeanSquare(song.samples, song.frames * 2) / (loudness * loudness), 0.04);
+  StreamSongFree(&song);
 }

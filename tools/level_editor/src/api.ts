@@ -14,7 +14,8 @@ export interface LevelCfg {
   scale: number; // game units per blender metre
   sky: Sky;
   camera: Camera; // how the follow camera looks at crash
-  music: string;  // one of the soundtracks (music.ts)
+  music: string;  // one of the soundtracks (music.ts), or an audio file in the level's folder
+  musicVolume: number; // how loud an audio file music plays, a percent of the game's music loudness
 }
 
 export interface BuildResult {

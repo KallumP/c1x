@@ -5,7 +5,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, dirname, extname, join, normalize } from "node:path";
 import type { LevelObject } from "../src/objects";
-import { copyAudioSong } from "./audioSong";
+import { copyAudioSong, writeAudioSongVolume } from "./audioSong";
 import { BASE_LEVEL } from "./baseLevel";
 import { TooBig } from "./fit";
 import { readImage, type RgbImage } from "./images";
@@ -130,6 +130,7 @@ export function buildLevel(source: string, { streamsDir, levelsDir, log }: Build
     const readOtherLevel = (lid: number) => readLevel(streamsDir, lid);
     writeLevel(makeMap(readLevel(streamsDir, BASE_LEVEL.lid), text, { ...options, images, objects, readOtherLevel }), levelsDir, name);
     copyAudioSong(dirname(objPath), levelsDir, name, options.music);
+    writeAudioSongVolume(levelsDir, name, options.music, options.musicVolume);
   } catch (error) {
     log(failureMessage(error, source, options.scale));
     return false;

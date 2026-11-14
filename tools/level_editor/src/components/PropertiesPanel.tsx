@@ -8,7 +8,7 @@ import { BOX_TYPES, boxTypeName, hasNodes, hasOutlineModel, isSwitch, hasNumberS
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
-import { isAudioSongName, songChoices, songLabel } from "../music";
+import { isAudioSongName, MUSIC_VOLUME_MAX, MUSIC_VOLUME_MIN, songChoices, songLabel } from "../music";
 import { CheckboxField, ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
 import "./PropertiesPanel.css";
 
@@ -431,16 +431,30 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   // what the Music section says about the song picked
   const musicHint = (music: string) => {
     if (isAudioSongName(music)) {
-      return `${music}, in the level's folder, plays on a loop, through aku aku's invincibility too.`;
+      return `${music}, in the level's folder, plays on a loop, through aku aku's invincibility too. At 100% it's as loud as the game's music.`;
     }
     return "The song of the game's levels named. A song starred has no aku aku song, so his invincibility keeps the level's playing.";
   };
 
+  // how loud the level's own song plays, a percent of the game's music loudness
+  const renderMusicVolumeField = (musicVolume: number) => (
+    <SliderField
+      label="volume %"
+      value={musicVolume}
+      min={MUSIC_VOLUME_MIN}
+      max={MUSIC_VOLUME_MAX}
+      step={5}
+      onGrab={() => {}}
+      onChange={(volume) => onLevelCfg({ musicVolume: volume })}
+    />
+  );
+
   // the music the level plays in the game; saved to its level.cfg with the rest
-  const renderMusicFields = (music: string) => (
+  const renderMusicFields = (music: string, musicVolume: number) => (
     <>
       <h3>Music</h3>
       <ChoiceField label="song" value={music} choices={songChoices(songs, music)} labelOf={songLabel} onChange={(name) => onLevelCfg({ music: name })} />
+      {isAudioSongName(music) && renderMusicVolumeField(musicVolume)}
       <p className="hint">
         {musicHint(music)} Put an .mp3, .ogg, .flac or .wav in the level's folder to pick it here.
         Build the level to hear it in the game.
@@ -476,7 +490,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
           {levelCfg && renderLevelFields(levelCfg)}
           {levelCfg && renderSkyFields(levelCfg.sky)}
           {levelCfg && renderCameraFields(levelCfg.camera)}
-          {levelCfg && renderMusicFields(levelCfg.music)}
+          {levelCfg && renderMusicFields(levelCfg.music, levelCfg.musicVolume)}
           {renderHint()}
         </>
       )}

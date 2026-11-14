@@ -4,11 +4,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseLevelCfg, readLevelCfg, setLevelCfg, writeLevelCfg, type LevelCfg } from "../../server/levelCfg";
 import { DEFAULT_CAMERA } from "../../src/camera";
-import { DEFAULT_MUSIC } from "../../src/music";
+import { DEFAULT_MUSIC, DEFAULT_MUSIC_VOLUME } from "../../src/music";
 import { DEFAULT_SKY } from "../../src/sky";
 
 // the default level.cfg, with changes
-const cfg = (changes: Partial<LevelCfg> = {}): LevelCfg => ({ turn: 0, scale: 400, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, ...changes });
+const cfg = (changes: Partial<LevelCfg> = {}): LevelCfg =>
+  ({ turn: 0, scale: 400, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME, ...changes });
 
 describe("parseLevelCfg", () => {
   test("reads turn and scale, skipping comments", () => {
@@ -39,6 +40,13 @@ describe("parseLevelCfg", () => {
     expect(parseLevelCfg("music = the_lost_city\n").music).toBe("the_lost_city");
     expect(parseLevelCfg("").music).toBe(DEFAULT_MUSIC);
     expect(parseLevelCfg("music = sunset_vista\n").music).toBe(DEFAULT_MUSIC);
+  });
+
+  test("reads the song's volume, 100 for what isn't set or isn't a whole percent from 25 to 200", () => {
+    expect(parseLevelCfg("music_volume = 150\n").musicVolume).toBe(150);
+    expect(parseLevelCfg("").musicVolume).toBe(100);
+    expect(parseLevelCfg("music_volume = 300\n").musicVolume).toBe(100);
+    expect(parseLevelCfg("music_volume = 50.5\n").musicVolume).toBe(100);
   });
 
   test("reads a negative turn", () => {
@@ -102,6 +110,16 @@ describe("setLevelCfg", () => {
   test("reads and writes an audio file in the level's folder as the music", () => {
     expect(parseLevelCfg("music = My Song.mp3\n").music).toBe("My Song.mp3");
     expect(setLevelCfg("music = boulders\n", cfg({ music: "theme.ogg" }))).toBe("music = theme.ogg\nturn = 0\nscale = 400\n");
+  });
+
+  test("writes a song volume that isn't 100, and changes one already there, even to 100", () => {
+    expect(setLevelCfg("", cfg({ musicVolume: 150 }))).toBe("turn = 0\nscale = 400\nmusic_volume = 150\n");
+    expect(setLevelCfg("music_volume = 150\n", cfg())).toBe("music_volume = 100\nturn = 0\nscale = 400\n");
+  });
+
+  test("refuses a song volume the build can't take", () => {
+    expect(() => setLevelCfg("", cfg({ musicVolume: 300 }))).toThrow("music_volume has to be 25 to 200");
+    expect(() => setLevelCfg("", cfg({ musicVolume: 50.5 }))).toThrow("music_volume has to be 25 to 200");
   });
 
   test("refuses music that isn't one of the soundtracks", () => {

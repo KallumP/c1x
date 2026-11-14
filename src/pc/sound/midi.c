@@ -237,7 +237,7 @@ static void SwOpenAudioSong() {
   level_audio_song_path[0] = 0;
   has_audio_song = 0;
   if (!own) { return; }
-  has_audio_song = StreamSongLoad(own->path, &level_audio_song);
+  has_audio_song = StreamSongLoad(own->path, own->volume / 100.0f, &level_audio_song);
   if (!has_audio_song) {
     fprintf(stderr, "could not play %s, so the level plays its music\n", own->path);
     return;
