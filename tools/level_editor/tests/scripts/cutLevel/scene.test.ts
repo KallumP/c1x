@@ -123,6 +123,14 @@ describe("a cut level as a blender scene", () => {
     expect(scene.images.has(scene.materials.find(({ name }) => name === "flat_000000")!.image)).toBe(true);
   });
 
+  test("each texture region's image keeps where it is on its page, so it can be made from the game", () => {
+    // the acid's and the rock's, not the flat colour's
+    const scene = cutLevelScene(levelOf(worldWith([ACID_WORD, ROCK_WORD, BLACK_WORD])), OPTIONS);
+    const rock = scene.materials.find(({ name }) => name.startsWith("tex_"))!;
+    expect([...scene.regions.keys()].sort()).toEqual(["acid.png", rock.image]);
+    expect(scene.regions.get(rock.image)).toMatchObject({ page: PAGE, x: expect.any(Number), w: 32, h: 32 });
+  });
+
   test("faces reaching more than halfWidth across from the centre are cropped", () => {
     const scene = cutLevelScene(levelOf(worldWith([ROCK_WORD], [0, 0, 0], 7800)), OPTIONS);
     expect(scene.objects.flatMap(({ faces }) => faces)).toEqual([]);

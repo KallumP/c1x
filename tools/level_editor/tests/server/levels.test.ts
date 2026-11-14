@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { levelFilePath, listLevels, readObjects, writeObjects } from "../../server/levels";
+import { eidToString } from "../../builder/entryIds";
+import { texturePage, TILE } from "../../builder/tpage";
+import { levelFileMakingGameTextures, levelFilePath, listLevels, readObjects, writeObjects } from "../../server/levels";
 
 let root: string;
 
@@ -87,5 +89,38 @@ describe("objects.json", () => {
   test("won't read or write a level that isn't listed", () => {
     expect(() => readObjects(root, "nope")).toThrow("no level source nope");
     expect(() => writeObjects(root, "../x", "[]")).toThrow("no level source ../x");
+  });
+});
+
+describe("levelFileMakingGameTextures", () => {
+  // a streams folder whose s0000004.nsf is one texture page; a level whose rock.png is a region of it
+  const PAGE_EID = 0x12345671;
+  function streams(): string {
+    const folder = mkdtempSync(join(tmpdir(), "streams-"));
+    const tile = { pixels: Array(TILE * TILE).fill(3), palette: Array(16).fill(0x7c00) };
+    writeFileSync(join(folder, "s0000004.nsf"), texturePage(PAGE_EID, [tile]).page);
+    return folder;
+  }
+  const rock = (stream: string) => JSON.stringify({ "rock.png": { stream, page: eidToString(PAGE_EID), colourMode: 0, x: 0, y: 0, w: 16, h: 16, clutX: 0, clutY: 0 } });
+
+  test("a game texture that isn't there is made from the game's files, then given", () => {
+    level("cave", { "cave.obj": "", "game_textures.json": rock("s0000004") });
+    expect(levelFileMakingGameTextures(root, streams(), "cave", "rock.png", () => {})).toBe(join(root, "cave", "rock.png"));
+    expect(existsSync(join(root, "cave", "rock.png"))).toBe(true);
+  });
+
+  test("one that can't be made is warned about and not found", () => {
+    level("cave", { "cave.obj": "", "game_textures.json": rock("s0000014") });
+    const warnings: string[] = [];
+    expect(levelFileMakingGameTextures(root, streams(), "cave", "rock.png", (line) => warnings.push(line))).toBeNull();
+    expect(warnings).toEqual([expect.stringMatching(/^cave: rock\.png is from the game's s0000014\.nsf, which isn't in /)]);
+  });
+
+  test("other files are as levelFilePath gives them, without the game's files", () => {
+    level("cave", { "cave.obj": "", "game_textures.json": rock("s0000014") });
+    const warnings: string[] = [];
+    expect(levelFileMakingGameTextures(root, join(root, "no-streams"), "cave", "cave.obj", (line) => warnings.push(line))).toBe(join(root, "cave", "cave.obj"));
+    expect(levelFileMakingGameTextures(root, join(root, "no-streams"), "cave", "nope.png", (line) => warnings.push(line))).toBeNull();
+    expect(warnings).toEqual([]);
   });
 });

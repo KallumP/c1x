@@ -1,6 +1,6 @@
 // the editor's api, served by vite's dev server:
 //   GET /api/levels                     the level sources (LevelInfo[])
-//   GET /api/levels/<name>/files/<file> a file in a level's folder (its .obj, .mtl, images)
+//   GET /api/levels/<name>/files/<file> a file in a level's folder (its .obj, .mtl, images; game textures are made first)
 //   GET /api/levels/<name>/objects      its objects.json
 //   PUT /api/levels/<name>/objects      saves its objects.json
 //   GET /api/levels/<name>/cfg          its level.cfg's turn and scale (LevelCfg)
@@ -11,9 +11,10 @@ import { readFileSync } from "node:fs";
 import { dirname, extname } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
+import { repoFolders } from "../builder/repoFolders";
 import { buildLevel } from "./build";
 import { readLevelCfg, writeLevelCfg } from "./levelCfg";
-import { levelFilePath, listLevels, readObjects, writeObjects } from "./levels";
+import { levelFileMakingGameTextures, listLevels, readObjects, writeObjects } from "./levels";
 import { bootLevel } from "./settings";
 
 const TYPES: Record<string, string> = {
@@ -52,7 +53,7 @@ export function levelSourcesApi(root: string): Plugin {
           }
           const [name, what, ...rest] = parts;
           if (what === "files" && req.method === "GET") {
-            const path = levelFilePath(root, name, rest.join("/"));
+            const path = levelFileMakingGameTextures(root, repoFolders(repo).streamsDir, name, rest.join("/"), console.warn);
             if (!path) {
               return send(res, 404, "text/plain", "not found");
             }

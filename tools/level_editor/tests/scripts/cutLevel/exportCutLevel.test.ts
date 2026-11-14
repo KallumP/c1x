@@ -1,8 +1,9 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { GAME_TEXTURES_FILE, readGameTextures, writeGameTextures } from "../../../builder/gameTextures";
 import { readImage } from "../../../builder/images";
 import { readCutLevel } from "../../../scripts/cutLevel/readCutLevel";
 import { exportCutLevel, sceneCentre } from "../../../scripts/cutLevel/exportCutLevel";
@@ -22,12 +23,28 @@ describe.skipIf(!existsSync(ACID_CAVE))("exporting the cut acid cave for blender
   });
 
   test("writes each material's image as a png, and the scene for blender beside them", () => {
-    exportCutLevel(level, out, "acid_cave");
+    exportCutLevel(level, out, "acid_cave", "s0000004");
     const scene = JSON.parse(readFileSync(join(out, "acid_cave.scene.json"), "utf8"));
     expect(scene.objects.map(({ name }: { name: string }) => name)).toContain("pit_acid");
     expect(scene.materials.length).toBeGreaterThan(50);
     for (const { image } of scene.materials) {
       expect(readImage(join(out, image)).width).toBeGreaterThan(0);
     }
+  });
+
+  test("writes game_textures.json, from which each texture region's image is made just as it exported it", () => {
+    exportCutLevel(level, out, "acid_cave", "s0000004");
+    const textures = readGameTextures(out);
+    expect([...textures.keys()]).toContain("acid.png");
+    expect([...textures.keys()].some((name) => name.startsWith("flat_"))).toBe(false);
+    expect([...textures.values()].every(({ stream }) => stream === "s0000004")).toBe(true);
+    // made again, in a folder of only game_textures.json, from the game's files
+    const again = mkdtempSync(join(tmpdir(), "acid-again-"));
+    copyFileSync(join(out, GAME_TEXTURES_FILE), join(again, GAME_TEXTURES_FILE));
+    writeGameTextures(again, dirname(ACID_CAVE));
+    for (const name of textures.keys()) {
+      expect(readImage(join(again, name))).toEqual(readImage(join(out, name)));
+    }
+    rmSync(again, { recursive: true, force: true });
   });
 });

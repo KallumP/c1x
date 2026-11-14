@@ -6,6 +6,7 @@
 
 - a volume slider for a custom level's own song, under **Music** in the level editor
 - the game and the launcher have their own icons
+- custom levels can use the game's own textures, made from your copy of the game when they're built (`game_textures.json`); the acid cave's are now made this way
 
 ### Changed
 

@@ -12,6 +12,11 @@ level_src/*
 !level_src/2_mossy_creek/
 !level_src/3_sunset_canyon/
 !level_src/4_acid_cave/
+# the acid cave's textures are the game's: made from streams/ when it's built or
+# opened in the level editor (see its game_textures.json)
+level_src/4_acid_cave/tex_*.png
+level_src/4_acid_cave/acid.png
+level_src/4_acid_cave/rtn_*.png
 imgui.ini
 controls.cfg
 settings.cfg

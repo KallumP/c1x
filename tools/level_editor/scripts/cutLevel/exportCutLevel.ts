@@ -3,8 +3,9 @@
 // makes into a .blend and exports as the level source's .obj and .mtl
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { PNG } from "pngjs";
-import type { RgbImage } from "../../builder/images";
+import { eidToString } from "../../builder/entryIds";
+import { GAME_TEXTURES_FILE, type GameTexture } from "../../builder/gameTextures";
+import { pngBytes } from "../../builder/images";
 import type { Vec3 } from "../../builder/vectors";
 import type { CutLevel } from "./readCutLevel";
 import { formatObjects } from "../../src/objects";
@@ -26,14 +27,6 @@ export function sceneCentre(level: CutLevel): Vec3 {
   return [(Math.min(...xs) + Math.max(...xs)) / 2, Math.min(...level.entities.map(({ at }) => at[1])), crash.at[2]];
 }
 
-function pngBytes(image: RgbImage): Buffer {
-  const png = new PNG({ width: image.width, height: image.height });
-  for (let pixel = 0; pixel < image.width * image.height; pixel++) {
-    png.data.set([...image.rgb.subarray(3 * pixel, 3 * pixel + 3), 255], 4 * pixel);
-  }
-  return PNG.sync.write(png);
-}
-
 // the scene as json: its objects and materials (images are written as pngs)
 const sceneJson = ({ objects, materials }: CutLevelScene) => JSON.stringify({ objects, materials });
 
@@ -51,6 +44,17 @@ function sceneWithPads(level: CutLevel, options: SceneOptions): CutLevelScene {
   return { ...scene, objects: [...scene.objects, platformPads(level, options, mostUsedRock(scene)), collisionFloors(level, options)] };
 }
 
+// game_textures.json: each texture region's image, by where it is in stream, so
+// the level build can make it from the player's own copy of the game
+function gameTexturesJson(scene: CutLevelScene, stream: string): string {
+  const textures: Record<string, GameTexture> = {};
+  scene.regions.forEach(({ page, colourMode, x, y, w, h, clutX, clutY }, image) => {
+    textures[image] = { stream, page: eidToString(page), colourMode, x, y, w, h, clutX, clutY };
+  });
+  return `${JSON.stringify(textures, null, 2)}
+`;
+}
+
 // its objects.json, unless it has one (which may have been changed in the level editor since)
 function writeObjectsOnce(level: CutLevel, outDir: string, options: SceneOptions): void {
   const path = join(outDir, "objects.json");
@@ -59,15 +63,17 @@ function writeObjectsOnce(level: CutLevel, outDir: string, options: SceneOptions
   }
 }
 
-// writes level's material images, its scene (name.scene.json) and its objects
-// (objects.json, if it has none) to outDir; the scene's path
-export function exportCutLevel(level: CutLevel, outDir: string, name: string): string {
+// writes level's material images, game_textures.json for those from the game
+// (level is stream's, such as s0000004), its scene (name.scene.json) and its
+// objects (objects.json, if it has none) to outDir; the scene's path
+export function exportCutLevel(level: CutLevel, outDir: string, name: string, stream: string): string {
   const placement = { centre: sceneCentre(level), scale: SCENE_SCALE };
   const options = { ...placement, halfWidth: SCENE_HALF_WIDTH };
   const scene = sceneWithPads(level, options);
   mkdirSync(outDir, { recursive: true });
   writeObjectsOnce(level, outDir, options);
   scene.images.forEach((image, file) => writeFileSync(join(outDir, file), pngBytes(image)));
+  writeFileSync(join(outDir, GAME_TEXTURES_FILE), gameTexturesJson(scene, stream));
   const scenePath = join(outDir, `${name}.scene.json`);
   writeFileSync(scenePath, sceneJson(scene));
   return scenePath;

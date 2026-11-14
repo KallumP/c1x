@@ -2,6 +2,7 @@
 // editor's dev server: which there are, their files, and their objects.json
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
+import { readGameTextures, writeGameTextures } from "../builder/gameTextures";
 import { isAudioSongName } from "../src/music";
 import { parseLevelCfg } from "./levelCfg";
 
@@ -60,6 +61,44 @@ export function levelFilePath(root: string, name: string, file: string): string 
     return null;
   }
   return existsSync(path) && statSync(path).isFile() ? path : null;
+}
+
+const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
+// whether file is one of a level's game textures that isn't in its folder yet
+function isMissingGameTexture(folder: string, file: string): boolean {
+  try {
+    return readGameTextures(folder).has(file) && !existsSync(join(folder, file));
+  } catch {
+    return false;
+  }
+}
+
+// a file in a level's folder, as levelFilePath gives it; a game texture that
+// isn't there is made first (with the level's others) from the game's files in
+// streamsDir, and one that can't be is warned about and not found
+export function levelFileMakingGameTextures(root: string, streamsDir: string, name: string, file: string, warn: (line: string) => void): string | null {
+  const folder = levelFolderOrNull(root, name);
+  if (folder && isMissingGameTexture(folder, file)) {
+    makeGameTextures(folder, streamsDir, (line) => warn(`${name}: ${line}`));
+  }
+  return levelFilePath(root, name, file);
+}
+
+function levelFolderOrNull(root: string, name: string): string | null {
+  try {
+    return levelFolder(root, name);
+  } catch {
+    return null;
+  }
+}
+
+function makeGameTextures(folder: string, streamsDir: string, warn: (line: string) => void): void {
+  try {
+    writeGameTextures(folder, streamsDir);
+  } catch (error) {
+    warn(messageOf(error));
+  }
 }
 
 // the text of a level's objects.json, or an empty list without one
