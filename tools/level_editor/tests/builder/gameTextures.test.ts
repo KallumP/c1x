@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 import { eidToString } from "../../builder/entryIds";
 import { gameTextureImage, readGameTextures, readStreamTexturePages, writeGameTextures, type GameTexture } from "../../builder/gameTextures";
 import { readImage } from "../../builder/images";
+import { NSD_PTB_COUNT, SECTOR_SIZE } from "../../builder/levelFiles";
 import { texinfoBytes, texturePage, TILE } from "../../builder/tpage";
 import { readTexinfo } from "../../scripts/cutLevel/textures";
 
@@ -111,6 +112,19 @@ describe("a game texture's image", () => {
     expect([image.width, image.height]).toEqual([8, 4]);
     // pixel (3, 2) is colour 5: red 10 of 31, 80 in 8 bit
     expect([...image.rgb.subarray((2 * 8 + 3) * 3, (2 * 8 + 3) * 3 + 3)]).toEqual([80, 0, 0]);
+  });
+
+  test("a normal level's texture pages are after its compressed ones, where its .nsd says", () => {
+    // an .nsd saying its one page starts 2 sectors in, after a compressed page (magic 0x1235)
+    const streams = mkdtempSync(join(tmpdir(), "game-textures-streams-"));
+    const nsd = Buffer.alloc(4 * NSD_PTB_COUNT + 64);
+    nsd.writeInt32LE(1, 4 * NSD_PTB_COUNT);           // its page count
+    nsd.writeUInt32LE(2, 4 * NSD_PTB_COUNT + 24);     // its pages' offset, in sectors
+    writeFileSync(join(streams, "s0000014.nsd"), nsd);
+    const compressed = Buffer.alloc(2 * SECTOR_SIZE);
+    compressed.writeUInt16LE(0x1235, 0);
+    writeFileSync(join(streams, "s0000014.nsf"), Buffer.concat([compressed, page]));
+    expect([...readStreamTexturePages(streams, "s0000014").keys()]).toEqual([eidToString(PAGE_EID)]);
   });
 
   test("a stream that isn't in the streams folder is an error", () => {
