@@ -116,10 +116,14 @@ describe("the release folder", () => {
 
 describe("the release zip", () => {
   test("is made with windows' own tar, which writes zips, not one msys2 may put first on the path", () => {
-    expect(zipCommand("c1x-1.0.0", "win32", "C:\Windows")).toEqual({
-      program: join("C:\Windows", "System32", "tar.exe"),
+    expect(zipCommand("c1x-1.0.0", "win32", "D:\\Win")).toEqual({
+      program: join("D:\\Win", "System32", "tar.exe"),
       args: ["-a", "-c", "-f", "c1x-1.0.0.zip", "c1x-1.0.0"],
     });
+  });
+
+  test("windows' tar is in C:\\Windows when the system root isn't set", () => {
+    expect(zipCommand("c1x-1.0.0", "win32", undefined).program).toBe(join("C:\\Windows", "System32", "tar.exe"));
   });
 
   test("is made with zip elsewhere", () => {
@@ -131,7 +135,7 @@ describe("the release zip", () => {
     copyReleaseFiles(repo, [{ from: "build/c1x.exe", to: "build/c1x.exe" }], release);
     const zip = zipFolder(release);
     expect(zip).toBe(`${release}.zip`);
-    const listing = execFileSync(join(process.env.SystemRoot ?? "C:\Windows", "System32", "tar.exe"), ["-t", "-f", zip], { encoding: "utf8" });
+    const listing = execFileSync(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe"), ["-t", "-f", zip], { encoding: "utf8" });
     expect(listing).toContain("c1x-1.0.0/build/c1x.exe");
   });
 });
