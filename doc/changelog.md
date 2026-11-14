@@ -2,6 +2,10 @@
 
 ## 2026-11-14
 
+### Changed
+
+- mossy creek and sunset canyon no longer come with their own songs, and play the game's music
+
 ### Fixed
 
 - a custom level's own song played much louder than the game's music

@@ -46,14 +46,14 @@ describe("a level's audio song", () => {
 describe("a level's audio song's volume", () => {
   test("a song turned up or down has its volume, a percent, next to the built level", () => {
     const { levels } = folders();
-    writeAudioSongVolume(levels, "3_sunset_canyon", "Gerudo Valley.mp3", 150);
+    writeAudioSongVolume(levels, "3_sunset_canyon", "song.mp3", 150);
     expect(readFileSync(join(levels, "3_sunset_canyon.volume"), "utf8")).toBe("150");
   });
 
   test("a song at the game's music loudness has none, and one an earlier build left is removed", () => {
     const { levels } = folders();
     writeFileSync(join(levels, "3_sunset_canyon.volume"), "150");
-    writeAudioSongVolume(levels, "3_sunset_canyon", "Gerudo Valley.mp3", 100);
+    writeAudioSongVolume(levels, "3_sunset_canyon", "song.mp3", 100);
     expect(existsSync(join(levels, "3_sunset_canyon.volume"))).toBe(false);
   });
 
