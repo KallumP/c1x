@@ -50,11 +50,9 @@ A level can use the game's own textures without sharing them: list them in a `ga
 
 The level editor places Crash's spawn, the level's end, boxes, enemies and obstacles.
 
-**Set it up (once):** install [Node.js](https://nodejs.org/) 18 or later, then click **Install** in the [launcher](launcher.md#level-editor)'s Level editor section.
-
 **Use it:**
 
-1. In the launcher, click **Open editor**. It opens in your browser.
+1. In the [launcher](launcher.md#level-editor)'s Level editor tab, click **Open editor**. It opens in your browser.
 1. Pick your level at the top left.
 1. Pick `spawn`, `end`, `box`, `enemy` or `obstacle` on the left bar, then click the floor to place it. Box, enemy and obstacle place the type you last picked of them, and list their types underneath to pick another. A level needs at least a spawn and an end to be played.
 1. Click **Select** (or press Esc), then click an object to select it. Drag it to move it, or change its properties on the right. **Delete** (or Del) removes it.

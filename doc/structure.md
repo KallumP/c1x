@@ -86,7 +86,7 @@ Project structure is listed below, including descriptions for each file.
 │   │   ├── command.c,h      # a command run in the background, keeping its output
 │   │   ├── controls_file.c,h    # reading controls.cfg, and saving it keeping its other lines
 │   │   ├── controls_section.c,h # the controls tab (each button's keys, Save)
-│   │   ├── editor_section.c,h   # the level editor section (Node check, Install, Open editor)
+│   │   ├── editor_section.c,h   # the level editor section (Open editor, its address, Stop)
 │   │   ├── disc_image.c,h   # reading a disc image's ISO9660 file system (.bin or .iso)
 │   │   ├── extract.c,h      # extracting the game's files from a disc image into streams/
 │   │   ├── extraction.c,h   # running the extraction on a thread
@@ -94,12 +94,12 @@ Project structure is listed below, including descriptions for each file.
 │   │   ├── file_dialog.c,h  # choosing a file with the system's dialog (windows)
 │   │   ├── game.c,h         # the game: is it built, and starting it
 │   │   ├── game_section.c,h # the game section (Play)
-│   │   ├── level_editor.c,h # the level editor's folder, packages and address
-│   │   ├── level_build.c,h  # building a level with build/build-level.exe
+│   │   ├── level_editor.c,h # starting the level editor (c1x_tools editor), and its address
+│   │   ├── level_build.c,h  # building a level (c1x_tools build-level <name>)
 │   │   ├── levels.c,h       # the custom levels: built to build/levels/ or sources in level_src/
 │   │   ├── levels_section.c,h   # the levels tab (each custom level, Build)
-│   │   ├── node.c,h         # node's version
 │   │   ├── paths.c,h        # the repo folder, from the launcher's own path
+│   │   ├── tools.c,h        # c1x's tools (build/c1x_tools.exe): where they are, and commands running them
 │   │   ├── process.c,h      # running programs, and commands in the background with their output
 │   │   ├── settings_file.c,h    # reading settings.cfg, and saving it keeping its other lines
 │   │   ├── settings_section.c,h # the settings section (a field for each setting, Save)
@@ -130,13 +130,13 @@ Project structure is listed below, including descriptions for each file.
 │   ├── test_gui.c           # in-game GUI tree node insertion and removal
 │   ├── test_speed.c         # crash's speed measurement and tracking
 │   ├── test_follow.c        # the follow camera's sideways offset
-│   ├── test_launcher_*.c    # the launcher: its paths, running commands, the game, its files in streams/ and extracting them, controls.cfg, node, the level editor, built levels and settings.cfg
+│   ├── test_launcher_*.c    # the launcher: its paths, running commands, the game, its files in streams/ and extracting them, controls.cfg, the tools, the level editor, built levels and settings.cfg
 │   └── test_sf2.c           # soundfont record struct sizes
 ├── tools                    # helper scripts
-│   └── level_editor         # the level editor and the tools beside it, in typescript (npm install first)
-│       ├── src, server      # the level editor (npm run dev): places a level source's objects, sets its turn and scale, and builds and boots it
+│   └── level_editor         # the level editor and the tools beside it, in typescript (npm install first; make builds them as build/c1x_tools.exe and build/editor/)
+│       ├── src, server      # the level editor (npm run dev, or npm run editor for its built page): places a level source's objects, sets its turn and scale, and builds and boots it
 │       ├── builder          # builds a level from its source in level_src/ (npm run build-level -- <name>), for the editor's build button
-│       ├── scripts          # exports a real level as a level source (npm run export-cut-level), and makes build-level.exe (npm run builder-exe)
+│       ├── scripts          # exports a real level as a level source (npm run export-cut-level), and the tools (tools.ts: build-level and editor), and makes build/c1x_tools.exe from them (npm run tools-exe)
 │       └── tests            # their tests (npm test)
 ├── res                      # the windows icons (c1x.ico for the game, c1x_launcher.ico for the launcher), and the .rc files make links them in with
 ├── level_src                # level sources: maps modelled in blender, a folder each, to build levels from (ignored by git, apart from the included ones listed in level_src/README.md)

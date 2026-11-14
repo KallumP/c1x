@@ -41,15 +41,13 @@ The Controls tab shows each PlayStation button's keys from `controls.cfg` (see [
 
 ## Levels
 
-The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`, saying whether it's built. A level says `out of date` when a file in its source folder was saved after it was built (its `.blend` doesn't count: export the `.obj` again). **Build** builds that level with `build/build-level.exe`, without Node or the level editor, showing its output below. When it builds, it's set as the boot level and `settings.cfg` is saved. Only one level builds at a time. **Check again** looks for level sources added, and ones saved, since the launcher opened.
+The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`, saying whether it's built. A level says `out of date` when a file in its source folder was saved after it was built (its `.blend` doesn't count: export the `.obj` again). **Build** builds that level with `build/c1x_tools.exe`, without Node or the level editor, showing its output below. When it builds, it's set as the boot level and `settings.cfg` is saved. Only one level builds at a time. **Check again** looks for level sources added, and ones saved, since the launcher opened.
 
-If `build-level.exe` isn't there (`make` skips it without Node; see [Building](building.md#building-levels-without-node)), the tab says so and **Build** is greyed out.
+If `c1x_tools.exe` isn't there (`make` skips it without Node; see [Building](building.md#the-level-build-and-editor-without-node)), the tab says so and **Build** is greyed out.
 
 ## Level editor
 
-The level editor (see [Custom levels](custom_levels.md)) needs [Node.js](https://nodejs.org/) 18 or later. The launcher checks for it when it opens, and if it's missing or too old, says so with **Get Node.js**. After installing it, click **Check again**, or reopen the launcher if that doesn't find it.
-
-The first time, **Install** downloads the editor's packages (`npm install`), showing its output. After that:
+The level editor (see [Custom levels](custom_levels.md)) runs from `build/c1x_tools.exe`, so it needs nothing installed. If that isn't there (see [Building](building.md#the-level-build-and-editor-without-node)), the tab says so.
 
 - **Open editor** starts the editor, which opens in your browser.
 - While it runs, the launcher shows its address, with **Open in browser** to open it again and **Stop** to stop it.
