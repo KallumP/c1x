@@ -21,6 +21,18 @@ This repository is a fork of [wurlyfox/c1](https://github.com/wurlyfox/c1), the 
 
 Further documentation, such as the [changelog](doc/changelog.md), known [issues](doc/issues.md) and descriptions of the game's files and functions, is in the [`doc`](doc) directory.
 
+## Project layout
+
+- `src/`: the game, in C (wurlyfox's port, and c1x's additions in `src/pc/`), and the launcher, in `src/launcher/`
+- `tools/level_editor/`: the level editor and the level build, in TypeScript, which `make` packs into `build/c1x_tools.exe`
+- `tests/`: the game's and the launcher's unit tests (`make test`); the level editor's are in `tools/level_editor/tests/`
+- `level_src/`: custom level sources, a folder each; the ones made for c1x are listed in [`level_src/README.md`](level_src/README.md)
+- `streams/`: the game's files, from your own copy (not in the repository)
+- `build/`: what `make` builds: the game, the tools and the custom levels (not in the repository)
+- `res/`: the game's and the launcher's icons
+- `doc/`: the documentation
+- `rebuild.bat` and `release.bat`: building on Windows, and making the release zip
+
 ## Licence
 
 c1x's own changes and additions are under the MIT licence; see [LICENSE](LICENSE). It doesn't cover the original c1 port, whose repository gives no licence, so that code is still wurlyfox's and its other contributors'. Crash Bandicoot and its assets belong to their owners, and no game files are included: c1x needs the files from a copy of the game you own. This is an unofficial fan project.
