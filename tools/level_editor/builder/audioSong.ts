@@ -2,9 +2,9 @@
 // music naming an .mp3, .ogg, .flac or .wav in its source's folder. the build
 // puts it next to the level, named after it, where the game looks for it
 // (src/pc/audiosong.c)
-import { copyFileSync, rmSync } from "node:fs";
+import { copyFileSync, rmSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
-import { AUDIO_SONG_EXTENSIONS, isAudioSongName } from "../src/music";
+import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC_VOLUME, isAudioSongName } from "../src/music";
 
 // the kind of audio file (its extension) music names, if it names one
 function keptKind(music: string): string | null {
@@ -25,4 +25,17 @@ export function copyAudioSong(folder: string, levelsDir: string, name: string, m
   if (kept) {
     copyFileSync(join(folder, music), join(levelsDir, `${name}${kept}`));
   }
+}
+
+// writes how loud the audio file music names plays (volume, a percent of the game's music
+// loudness) next to the level called name in levelsDir, as <name>.volume, where the game reads
+// it with the song; a level without one plays it at 100, so none is written for that (and any
+// an earlier build left is removed)
+export function writeAudioSongVolume(levelsDir: string, name: string, music: string, volume: number): void {
+  const path = join(levelsDir, `${name}.volume`);
+  if (!isAudioSongName(music) || volume === DEFAULT_MUSIC_VOLUME) {
+    rmSync(path, { force: true });
+    return;
+  }
+  writeFileSync(path, String(volume));
 }
