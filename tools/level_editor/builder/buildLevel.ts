@@ -3,7 +3,8 @@
 // crash, and the objects its objects.json places, from the base level. the
 // level goes to build/levels/<name>, next to the game
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { basename, dirname, extname, join, normalize } from "node:path";
+import { basename, dirname, extname, join, normalize, relative } from "node:path";
+import { fileNameOf, isOutsideFolder } from "../src/imagePaths";
 import type { LevelObject } from "../src/objects";
 import { copyAudioSong, writeAudioSongVolume } from "./audioSong";
 import { BASE_LEVEL } from "./baseLevel";
@@ -62,6 +63,25 @@ function readImageOrWarn(path: string, material: string, warn: (line: string) =>
   }
 }
 
+// where a material's image is (see src/imagePaths.ts): the path its .mtl gives,
+// when that's a file in the level's folder; else the folder's file of the same
+// name, so copying the images in is all it takes; else the path, with a warning
+// when it's a file outside the folder, as a level that's shared won't have it
+function levelImagePath(folder: string, imagePath: string, material: string, warn: (line: string) => void): string {
+  const outside = isOutsideFolder(relative(folder, imagePath));
+  if (!outside && existsSync(imagePath)) {
+    return imagePath;
+  }
+  const inFolder = join(folder, fileNameOf(imagePath));
+  if (existsSync(inFolder)) {
+    return inFolder;
+  }
+  if (outside && existsSync(imagePath)) {
+    warn(`warning: ${imagePath} (material ${material}) isn't in the level's folder, so anyone you share the level with won't have it: copy it in`);
+  }
+  return imagePath;
+}
+
 // each material's image, from the .mtl files a .obj (its path and text) names,
 // next to it. missing files are skipped with a warning
 export function mapImages(objPath: string, text: string, warn: (line: string) => void): Map<string, RgbImage> {
@@ -73,7 +93,7 @@ export function mapImages(objPath: string, text: string, warn: (line: string) =>
       continue;
     }
     for (const [material, imagePath] of readMtl(readFileSync(mtlPath, "utf8"), dirname(mtlPath))) {
-      const image = readImageOrWarn(imagePath, material, warn);
+      const image = readImageOrWarn(levelImagePath(dirname(objPath), imagePath, material, warn), material, warn);
       if (image) {
         images.set(material, image);
       }
