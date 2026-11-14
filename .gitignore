@@ -1,6 +1,8 @@
 # compile output
 *.o
 c1
+/c1x
+/c1x.exe
 build/
 __pycache__/
 
