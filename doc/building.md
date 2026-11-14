@@ -28,7 +28,7 @@ Ubuntu/Debian:
 
 Fedora (64-bit): `sudo dnf install make gcc gcc-c++ glibc-devel.i686 libstdc++-devel.i686 mesa-libGL-devel.i686 sdl2-compat-devel.i686 fluidsynth-devel.i686`
 
-On Linux, `make` builds the game to `build/c1` and the launcher to `c1x_launcher`. Run `./c1x_launcher` and click **Play** (see [Launcher](launcher.md)).
+On Linux, `make` builds the game to `build/c1x` and the launcher to `c1x_launcher`. Run `./c1x_launcher` and click **Play** (see [Launcher](launcher.md)).
 
 Windows (MSYS2):
 

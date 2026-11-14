@@ -9,6 +9,7 @@
 ### Changed
 
 - the launcher is now `c1x_launcher.exe` in the top folder, and needs no DLLs beside it
+- the game is now `build/c1x.exe`
 - mossy creek and sunset canyon no longer come with their own songs, and play the game's music
 
 ### Fixed

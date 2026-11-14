@@ -146,7 +146,7 @@ void SDLInput(gl_input *input) {
 
 /*
  * change to the directory containing streams/, so the game also works
- * when the executable is launched from elsewhere (e.g. build/c1.exe).
+ * when the executable is launched from elsewhere (e.g. build/c1x.exe).
  * checks the working directory, the executable's directory, then its parent.
  */
 static void FindDataDir() {
