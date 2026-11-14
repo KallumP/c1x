@@ -27,15 +27,15 @@ A release is a zip players download from the repository's GitHub **Releases** pa
 
 ## What's in the zip
 
-The zip has a `c1x-<version>` folder laid out like the repository, as the launcher works on the folder it's in and finds the game in `build/`:
+The zip has a `c1x-<version>` folder laid out like the repository, as the launcher works on the folder it's in and finds the game in `build/`. Its docs are HTML pages, made from the `.md` files when the release is built, as players may have nothing that shows Markdown: they open in any browser, and the launcher's **Help** tab opens them. Their links to each other go to the pages, and to headings in them as on GitHub.
 
 - `c1x_launcher.exe`, at the top
-- `README.md`, from [`doc/release/README.md`](release/README.md): what a player needs to know
-- `LICENSE`, `settings.example.cfg` and `controls.example.cfg`
+- `README.html`, from [`doc/release/README.md`](release/README.md): what a player needs to know
+- `LICENSE.txt` (`LICENSE`, as a text file a browser shows), `settings.example.cfg` and `controls.example.cfg`
 - `build/`: `c1x.exe`, `c1x_tools.exe` and the game's DLLs, and `editor/`, the level editor's built page
-- `streams/README.md`: the game's files go there
-- `level_src/`: the files git has, so the included custom levels
-- `doc/`: the docs for players (running, the launcher, controls, settings, custom levels and the changelog)
+- `streams/README.html`: the game's files go there
+- `level_src/`: the files git has, so the included custom levels, with its readme as `README.html`
+- `doc/`: the docs for players, as pages (running, the launcher, controls, settings, custom levels and the changelog)
 
 What isn't in it:
 
@@ -44,4 +44,4 @@ What isn't in it:
 - The source code, the level editor's included (it's built, in `build/editor/` and `c1x_tools.exe`), the tests and the docs for working on c1x.
 - Anything of yours in `build/`, `level_src/` or the settings: only the files listed above go in.
 
-The list is in `tools/level_editor/scripts/release.ts`.
+The list is in `tools/level_editor/scripts/release.ts`, and the pages are made by `scripts/htmlDocs.ts`.

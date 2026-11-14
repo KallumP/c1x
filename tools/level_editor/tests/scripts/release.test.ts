@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { copyReleaseFiles, releaseFiles, releaseFolder, zipCommand, zipFolder } from "../../scripts/release";
+import { copyReleaseFiles, releasedLink, releaseFiles, releaseFolder, zipCommand, zipFolder } from "../../scripts/release";
 
 // a repo with a few files in it, and an empty folder to release into
 function repoAndRelease() {
@@ -34,11 +34,16 @@ const sourceOf = (to: string) => files().find((file) => file.to === to)?.from;
 
 describe("the release zip's files", () => {
   test("the launcher is at the top, with the licence and the example cfgs", () => {
-    expect(destinations()).toEqual(expect.arrayContaining(["c1x_launcher.exe", "LICENSE", "settings.example.cfg", "controls.example.cfg"]));
+    expect(destinations()).toEqual(expect.arrayContaining(["c1x_launcher.exe", "LICENSE.txt", "settings.example.cfg", "controls.example.cfg"]));
   });
 
-  test("the player readme is the top-level README.md", () => {
-    expect(sourceOf("README.md")).toBe("doc/release/README.md");
+  test("the licence is a text file, which a browser shows", () => {
+    expect(sourceOf("LICENSE.txt")).toBe("LICENSE");
+  });
+
+  test("the player readme is the top-level README.html, a page made from it", () => {
+    expect(sourceOf("README.html")).toBe("doc/release/README.md");
+    expect(files().find((file) => file.to === "README.html")?.asPage).toBe(true);
   });
 
   test("the game, the tools and the game's dlls are in build/", () => {
@@ -56,16 +61,24 @@ describe("the release zip's files", () => {
   });
 
   test("streams/ has only its readme", () => {
-    expect(destinations().filter((to) => to.startsWith("streams/"))).toEqual(["streams/README.md"]);
+    expect(destinations().filter((to) => to.startsWith("streams/"))).toEqual(["streams/README.html"]);
   });
 
   test("level_src/ has only the level sources git has, so not a player's own", () => {
-    expect(destinations().filter((to) => to.startsWith("level_src/")).sort()).toEqual(["level_src/1_tide_ruins/level.cfg", "level_src/1_tide_ruins/tide_ruins.obj", "level_src/README.md"]);
+    expect(destinations().filter((to) => to.startsWith("level_src/")).sort()).toEqual(["level_src/1_tide_ruins/level.cfg", "level_src/1_tide_ruins/tide_ruins.obj", "level_src/README.html"]);
   });
 
   test("doc/ has the docs for players, not the ones for building c1x", () => {
     const docs = destinations().filter((to) => to.startsWith("doc/"));
-    expect(docs.sort()).toEqual(["doc/changelog.md", "doc/controls.md", "doc/custom_levels.md", "doc/launcher.md", "doc/running.md", "doc/settings.md"]);
+    expect(docs.sort()).toEqual(["doc/changelog.html", "doc/controls.html", "doc/custom_levels.html", "doc/launcher.html", "doc/running.html", "doc/settings.html"]);
+  });
+
+  test("each doc is a page made from its markdown, and nothing else is", () => {
+    files().forEach((file) => expect(Boolean(file.asPage)).toBe(file.from.endsWith(".md")));
+  });
+
+  test("no markdown goes in: every doc is a page", () => {
+    expect(destinations().filter((to) => to.endsWith(".md"))).toEqual([]);
   });
 
   test("the source code doesn't go in: the game's, or the editor's and level build's", () => {
@@ -74,10 +87,11 @@ describe("the release zip's files", () => {
     expect(destinations().filter((to) => to.startsWith("tools/"))).toEqual([]);
   });
 
-  test("each file comes from the same place in the repo, apart from the player readme", () => {
+  test("each file comes from the same place in the repo, apart from the player readme and the licence", () => {
+    const sameNamed = (path: string) => path.replace(/\.md$/, ".html");
     files()
-      .filter((file) => file.to !== "README.md")
-      .forEach((file) => expect(file.from).toBe(file.to));
+      .filter((file) => !["README.html", "LICENSE.txt"].includes(file.to))
+      .forEach((file) => expect(sameNamed(file.from)).toBe(file.to));
   });
 
   test("a build without the game, the tools or the editor's page is an error", () => {
@@ -112,6 +126,16 @@ describe("the release folder", () => {
     expect(existsSync(join(release, "old.txt"))).toBe(false);
   });
 
+  test("a doc is written as its page", () => {
+    const { repo, release } = repoAndRelease();
+    writeFileSync(join(repo, "running.md"), "# Running\n\nSee [Controls](controls.md).\n");
+    writeFileSync(join(repo, "controls.md"), "# Controls\n");
+    copyReleaseFiles(repo, [{ from: "running.md", to: "running.html", asPage: true }, { from: "controls.md", to: "controls.html", asPage: true }], release);
+    const page = readFileSync(join(release, "running.html"), "utf8");
+    expect(page).toMatch(/^<!doctype html>/);
+    expect(page).toContain('<a href="controls.html">Controls</a>');
+  });
+
   test("a file that isn't there is an error", () => {
     const { repo, release } = repoAndRelease();
     expect(() => copyReleaseFiles(repo, [{ from: "LICENSE", to: "LICENSE" }], release)).toThrow("LICENSE isn't there, so it can't go in the release");
@@ -141,5 +165,26 @@ describe("the release zip", () => {
     expect(zip).toBe(`${release}.zip`);
     const listing = execFileSync(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe"), ["-t", "-f", zip], { encoding: "utf8" });
     expect(listing).toContain("c1x-1.0.0/build/c1x.exe");
+  });
+});
+
+describe("a link in one of the release's docs", () => {
+  const RELEASED = new Set(["README.html", "doc/controls.html", "doc/launcher.html", "LICENSE.txt"]);
+
+  test("to a doc the release has is to its page, from where the page is in the release", () => {
+    expect(releasedLink("doc/launcher.html", "controls.md#keys", RELEASED)).toBe("controls.html#keys");
+    expect(releasedLink("README.html", "doc/controls.md", RELEASED)).toBe("doc/controls.html");
+    expect(releasedLink("README.html", "LICENSE", RELEASED)).toBe("LICENSE.txt");
+  });
+
+  test("to a doc the release doesn't have is to it on github", () => {
+    expect(releasedLink("doc/launcher.html", "building.md#the-level-build", RELEASED))
+      .toBe("https://github.com/KallumP/c1x/blob/master/doc/building.md#the-level-build");
+    expect(releasedLink("README.html", "doc/releasing.md", RELEASED)).toBe("https://github.com/KallumP/c1x/blob/master/doc/releasing.md");
+  });
+
+  test("to a website, or within its page, is as it is", () => {
+    expect(releasedLink("doc/launcher.html", "https://nodejs.org/", RELEASED)).toBe("https://nodejs.org/");
+    expect(releasedLink("doc/launcher.html", "#level-editor", RELEASED)).toBe("#level-editor");
   });
 });

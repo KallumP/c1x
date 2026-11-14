@@ -33,6 +33,7 @@
     "@types/three": "0.169.0",
     "@types/utif": "3.0.6",
     "@vitejs/plugin-react": "4.3.3",
+    "marked": "15.0.12",
     "postject": "1.0.0-alpha.6",
     "tsx": "4.21.1",
     "typescript": "5.6.3",
