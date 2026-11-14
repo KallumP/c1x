@@ -27,15 +27,15 @@ static int FindPadButtonByBits(uint32_t bits) {
   return -1;
 }
 
-/* every button back to its one default key */
+/* every button back to its default keys (two for each direction: its letter and its arrow) */
 void ResetControls(launcher_controls *c) {
   int i, button;
 
   SDL_zerop(c);
-  for (i = 0; i < PAD_BUTTON_COUNT; i++) {
+  for (i = 0; i < PAD_DEFAULT_KEY_COUNT; i++) {
     button = FindPadButtonByBits(pad_default_mappings[i].bits);
-    c->keys[button][0] = pad_default_mappings[i].code;
-    c->key_count[button] = 1;
+    c->keys[button][c->key_count[button]] = pad_default_mappings[i].code;
+    c->key_count[button]++;
   }
 }
 
