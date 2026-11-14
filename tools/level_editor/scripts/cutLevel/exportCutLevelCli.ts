@@ -1,9 +1,9 @@
 // npm run export-cut-level -- <nsf> <name> [blender]: exports a level cut from
 // the game (such as streams/s0000004.nsf, the acid cave) to level_src/<name>:
-// its textures as pngs, and with blender (headless), its .blend, .obj and .mtl
+// its textures as pngs (and where each is in the game, in game_textures.json), and with blender (headless), its .blend, .obj and .mtl
 import { execFileSync } from "node:child_process";
 import { existsSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { basename, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { exportCutLevel } from "./exportCutLevel";
 import { readCutLevel } from "./readCutLevel";
@@ -35,7 +35,7 @@ if (!nsf || !name) {
   process.exitCode = 1;
 } else {
   const folder = join(LEVEL_SRC, name);
-  const scenePath = exportCutLevel(readCutLevel(nsf), folder, name);
+  const scenePath = exportCutLevel(readCutLevel(nsf), folder, name, basename(nsf, extname(nsf)));
   if (blender) {
     runBlender(blender, scenePath, folder, name);
   }

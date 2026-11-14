@@ -30,6 +30,7 @@ export interface CutLevelScene {
   objects: SceneObject[];
   materials: SceneMaterial[];
   images: Map<string, RgbImage>; // by file name
+  regions: Map<string, PolygonTexture>; // each texture region's, by its image's file name: where it is in the game
 }
 
 export interface SceneOptions {
@@ -85,6 +86,7 @@ const isAcid = (material: string) => material === ACID_MATERIAL || material.star
 class Materials {
   readonly materials: SceneMaterial[] = [];
   readonly images = new Map<string, RgbImage>();
+  readonly regions = new Map<string, PolygonTexture>();
   private readonly byKey = new Map<string, string>();
 
   constructor(private readonly texturePages: Map<number, Buffer>) {}
@@ -97,7 +99,7 @@ class Materials {
     }
     const image = this.imageOf(texture);
     const name = this.nameFor(texture, image);
-    this.add(key, name, image);
+    this.add(key, name, image, texture);
     return name;
   }
 
@@ -118,9 +120,12 @@ class Materials {
     return `tex_${String(this.materials.length).padStart(3, "0")}`;
   }
 
-  private add(key: string, name: string, image: RgbImage): void {
+  private add(key: string, name: string, image: RgbImage, texture: PolygonTexture): void {
     this.byKey.set(key, name);
     this.images.set(`${name}.png`, image);
+    if (texture.textured) {
+      this.regions.set(`${name}.png`, texture);
+    }
     this.materials.push({ name, image: `${name}.png` });
   }
 }
@@ -199,5 +204,5 @@ export function cutLevelScene(level: CutLevel, options: SceneOptions): CutLevelS
     objects.push({ name: world.name, faces: faces.filter(({ material }) => !isAcid(material)) });
     pit.faces.push(...faces.filter(({ material }) => isAcid(material)));
   }
-  return { objects: [...objects, pit].filter(({ faces }) => faces.length > 0), materials: materials.materials, images: materials.images };
+  return { objects: [...objects, pit].filter(({ faces }) => faces.length > 0), materials: materials.materials, images: materials.images, regions: materials.regions };
 }
