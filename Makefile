@@ -187,6 +187,10 @@ LAUNCHER_OBJ = $(CIMGUI_OBJ) $(LAUNCHER_SRC:.c=.o)
 EDITOR_PATH = tools/level_editor
 TOOLS_SRC = $(wildcard $(EDITOR_PATH)/builder/*.ts $(EDITOR_PATH)/src/*.ts $(EDITOR_PATH)/server/*.ts $(EDITOR_PATH)/scripts/tools*.ts) \
 	$(EDITOR_PATH)/package.json
+# the level editor's page, built by vite into build/editor for the tools to serve, and its sources
+EDITOR_PAGE = build/editor/index.html
+EDITOR_PAGE_SRC = $(wildcard $(EDITOR_PATH)/src/*.ts $(EDITOR_PATH)/src/*.tsx $(EDITOR_PATH)/src/*/*.ts $(EDITOR_PATH)/src/*/*.tsx) \
+	$(EDITOR_PATH)/index.html $(EDITOR_PATH)/vite.config.ts $(EDITOR_PATH)/package.json
 # making the tools needs node; without it make builds the rest and says so
 HAVE_NODE := $(shell node --version 2>/dev/null)
 
@@ -236,15 +240,18 @@ launcher: $(LAUNCHER_OUT)
 
 .PHONY: tools
 ifneq ($(HAVE_NODE),)
-tools: $(TOOLS_OUT)
+tools: $(TOOLS_OUT) $(EDITOR_PAGE)
 else
 tools:
-	@echo "skipping $(TOOLS_OUT): it needs Node.js 18 or later (see doc/building.md)"
+	@echo "skipping $(TOOLS_OUT) and the level editor's page: they need Node.js 18 or later (see doc/building.md)"
 endif
 
-# installs the editor's packages first if need be
+# both install the editor's packages first if need be
 $(TOOLS_OUT): $(TOOLS_SRC)
 	cd $(EDITOR_PATH) && { [ -d node_modules ] || npm install; } && npm run tools-exe
+
+$(EDITOR_PAGE): $(EDITOR_PAGE_SRC)
+	cd $(EDITOR_PATH) && { [ -d node_modules ] || npm install; } && npm run build
 
 $(LAUNCHER_OUT): $(LAUNCHER_OBJ) $(LAUNCHER_ICON_OBJ)
 	@mkdir -p $(dir $(LAUNCHER_OUT))
