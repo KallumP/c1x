@@ -128,10 +128,7 @@ describe("the release folder", () => {
 
   test("a doc is written as its page", () => {
     const { repo, release } = repoAndRelease();
-    writeFileSync(join(repo, "running.md"), "# Running
-
-See [Controls](controls.md).
-");
+    writeFileSync(join(repo, "running.md"), "# Running\n\nSee [Controls](controls.md).\n");
     copyReleaseFiles(repo, [{ from: "running.md", to: "running.html", asPage: true }], release);
     const page = readFileSync(join(release, "running.html"), "utf8");
     expect(page).toMatch(/^<!doctype html>/);
