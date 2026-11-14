@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { levelFilesUrl, type LevelInfo } from "../api";
+import { levelImageUrl } from "../imagePaths";
 import { boxUvs } from "./boxUvs";
 import { isCollisionOnly } from "./collisionObjects";
 
@@ -16,7 +17,10 @@ async function materialsFor(objText: string, base: string) {
   const mtllib = /^mtllib\s+(.+)$/m.exec(objText)?.[1].trim();
   const mtlText = mtllib ? await fetchText(base + mtllib) : null;
   if (!mtlText) return null;
-  const materials = new MTLLoader().setResourcePath(base).parse(mtlText, base);
+  // an image outside the level's folder is asked for as the folder's file of its name
+  const manager = new THREE.LoadingManager();
+  manager.setURLModifier((url) => levelImageUrl(base, url));
+  const materials = new MTLLoader(manager).setResourcePath(base).parse(mtlText, base);
   materials.preload();
   return materials;
 }

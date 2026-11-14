@@ -1,8 +1,9 @@
 // the level sources in level_src/ (see doc/custom_levels.md), for the
 // editor's dev server: which there are, their files, and their objects.json
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { join, relative, resolve, sep } from "node:path";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { readGameTextures, writeGameTextures } from "../builder/gameTextures";
+import { fileNameOf } from "../src/imagePaths";
 import { isAudioSongName } from "../src/music";
 import { parseLevelCfg } from "./levelCfg";
 
@@ -47,7 +48,9 @@ export function levelFolder(root: string, name: string): string {
   return join(root, name);
 }
 
-// the path of file in a level's folder, or null if it isn't one (or is outside it)
+// the path of file in a level's folder, or else the folder's file of the same
+// name (as for a .mtl's image Blender wrote as a whole path; see src/imagePaths.ts),
+// or null if neither is there. nothing outside the folder is given
 export function levelFilePath(root: string, name: string, file: string): string | null {
   let folder: string;
   try {
@@ -55,12 +58,20 @@ export function levelFilePath(root: string, name: string, file: string): string 
   } catch {
     return null;
   }
+  return fileInFolder(folder, file) ?? fileInFolder(folder, fileNameOf(file));
+}
+
+// the file at file's path in folder, or null if there isn't one (or it's outside folder)
+function fileInFolder(folder: string, file: string): string | null {
   const path = resolve(folder, file);
   const fromFolder = relative(folder, path);
-  if (fromFolder.startsWith("..") || fromFolder.includes(`..${sep}`) || resolve(path) === resolve(folder)) {
+  if (fromFolder.startsWith("..") || fromFolder.includes(`..${sep}`) || isAbsolute(fromFolder) || path === resolve(folder)) {
     return null;
   }
-  return existsSync(path) && statSync(path).isFile() ? path : null;
+  if (!existsSync(path) || !statSync(path).isFile()) {
+    return null;
+  }
+  return path;
 }
 
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));

@@ -68,6 +68,38 @@ describe("a map's images", () => {
     expect([...images.get("stone")!.rgb.subarray(0, 3)]).toEqual([90, 90, 100]);
   });
 
+  // a level's folder and a textures folder beside it, each with its own stone.png
+  // (green in the level's folder, red outside it), and a .mtl pointing at path
+  function stoneOutsideAndIn(path: (outside: string) => string, copyIn = true) {
+    const parent = mkdtempSync(join(tmpdir(), "build-level-"));
+    const folder = join(parent, "level");
+    const outside = join(parent, "textures");
+    mkdirSync(folder);
+    mkdirSync(outside);
+    writePng(join(outside, "stone.png"), [200, 0, 0]);
+    if (copyIn) {
+      writePng(join(folder, "stone.png"), [0, 200, 0]);
+    }
+    writeFileSync(join(folder, "level.mtl"), `newmtl stone\nmap_Kd ${path(outside)}\n`);
+    const warnings: string[] = [];
+    const images = mapImages(join(folder, "level.obj"), "mtllib level.mtl\n", (line) => warnings.push(line));
+    return { colour: [...images.get("stone")!.rgb.subarray(0, 3)], warnings };
+  }
+
+  test("one Blender wrote as a whole path elsewhere is the one of its name in the level's folder", () => {
+    expect(stoneOutsideAndIn((outside) => join(outside, "stone.png"))).toEqual({ colour: [0, 200, 0], warnings: [] });
+  });
+
+  test("one going up out of the level's folder is the one of its name in it", () => {
+    expect(stoneOutsideAndIn(() => "../textures/stone.png")).toEqual({ colour: [0, 200, 0], warnings: [] });
+  });
+
+  test("one only outside the level's folder is used, with a warning that a shared level won't have it", () => {
+    const { colour, warnings } = stoneOutsideAndIn((outside) => join(outside, "stone.png"), false);
+    expect(colour).toEqual([200, 0, 0]);
+    expect(warnings).toEqual([expect.stringMatching(/stone\.png \(material stone\) isn't in the level's folder, so anyone you share the level with won't have it: copy it in/)]);
+  });
+
   test("missing ones are warned about and left out", () => {
     const folder = newFolder("missing");
     writeFileSync(join(folder, "level.mtl"), "newmtl stone\nmap_Kd stone.png\n");
