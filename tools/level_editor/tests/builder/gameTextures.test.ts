@@ -1,9 +1,10 @@
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { eidToString } from "../../builder/entryIds";
-import { gameTextureImage, readGameTextures, readStreamTexturePages, type GameTexture } from "../../builder/gameTextures";
+import { gameTextureImage, readGameTextures, readStreamTexturePages, writeGameTextures, type GameTexture } from "../../builder/gameTextures";
+import { readImage } from "../../builder/images";
 import { texinfoBytes, texturePage, TILE } from "../../builder/tpage";
 import { readTexinfo } from "../../scripts/cutLevel/textures";
 
@@ -120,5 +121,35 @@ describe("a game texture's image", () => {
     const pages = readStreamTexturePages(streamsWithPage(), "s0000004");
     expect(() => gameTextureImage("rock.png", { ...tileRegion(0, 0, 8, 4), page: "nopes" }, pages))
       .toThrow("rock.png's page nopes isn't one of s0000004's texture pages");
+  });
+});
+
+describe("writing a level source's game textures", () => {
+  const sourceWith = (textures: Record<string, GameTexture>) => sourceFolder(JSON.stringify(textures));
+
+  test("each image that isn't in its folder is made from the game, as a png", () => {
+    const folder = sourceWith({ "rock.png": tileRegion(0, 0, 8, 4) });
+    expect(writeGameTextures(folder, streamsWithPage())).toEqual(["rock.png"]);
+    const image = readImage(join(folder, "rock.png"));
+    const fromGame = gameTextureImage("rock.png", tileRegion(0, 0, 8, 4), readStreamTexturePages(streamsWithPage(), "s0000004"));
+    expect([image.width, image.height, [...image.rgb]]).toEqual([8, 4, [...fromGame.rgb]]);
+  });
+
+  test("an image already there is left as it is", () => {
+    const folder = sourceWith({ "rock.png": tileRegion(0, 0, 8, 4), "moss.png": tileRegion(8, 0, 8, 8) });
+    writeFileSync(join(folder, "rock.png"), "mine");
+    expect(writeGameTextures(folder, streamsWithPage())).toEqual(["moss.png"]);
+    expect(readFileSync(join(folder, "rock.png"), "utf8")).toBe("mine");
+  });
+
+  test("a source without game textures has nothing written, and needs no streams", () => {
+    expect(writeGameTextures(sourceFolder(), join(tmpdir(), "no-such-streams"))).toEqual([]);
+  });
+
+  test("an image from a stream that isn't in the streams folder is an error saying which", () => {
+    const folder = sourceWith({ "rope.png": { ...tileRegion(0, 0, 8, 4), stream: "s0000014" } });
+    expect(() => writeGameTextures(folder, streamsWithPage()))
+      .toThrow(/^rope\.png is from the game's s0000014\.nsf, which isn't in .*game-textures-streams-.* \(see doc\/running\.md\)$/);
+    expect(existsSync(join(folder, "rope.png"))).toBe(false);
   });
 });
