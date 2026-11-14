@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-14
+
+### Fixed
+
+- a custom level's own song played much louder than the game's music
+
 ## 2026-11-13
 
 ### Added

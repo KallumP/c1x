@@ -69,7 +69,7 @@ The arrow on the spawn object shows which way the camera faces at the start. Wit
 - **Sky** sets a top colour down to **split** and a bottom colour below it.
 - **Camera** sets how far the camera is from Crash (**distance**, times its usual distance) and how far above him it looks down from (**angle**, in degrees; 42 is usual).
 - **Music** picks the song the level plays, from the game's own levels. A song starred has no aku aku song, so his invincibility keeps the level's song playing.
-- **Your own song:** put an `.mp3`, `.ogg`, `.flac` or `.wav` in the level's folder and pick it under **Music**. It plays on a loop, through aku aku's invincibility too, so a song that loops cleanly sounds best. It goes with the level if you share it.
+- **Your own song:** put an `.mp3`, `.ogg`, `.flac` or `.wav` in the level's folder and pick it under **Music**. It plays on a loop, through aku aku's invincibility too, so a song that loops cleanly sounds best. It plays as loud as the game's own music, however loud the file is. It goes with the level if you share it.
 
 **Paths:** an enemy or obstacle that moves along a path is drawn with it, solid where it starts and faded where it ends or turns back. Select it to drag its nodes (or set their x, y and z on the right); **nodes** sets how many there are and **Reverse direction** which way it goes first. A path drawn red runs through a wall or off the floor. A few have one handle instead of a path to drag: a bat roost's swoop, leader bats' second leader, and where a lab assistant's vials land.
 
