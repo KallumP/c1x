@@ -1,6 +1,6 @@
 # Launcher
 
-The launcher is a small window for starting the game, changing its settings and controls, and opening the level editor. It's built alongside the game, as `build/_launcher.exe` (`build/_launcher` on Linux).
+The launcher is a small window for starting the game, changing its settings and controls, and opening the level editor. It's built alongside the game, as `c1x.exe` in the project folder (`c1x` on Linux).
 
 It's a second program in C, built from SDL 2, OpenGL and cimgui, which the game already uses. So it needs nothing more to build, and it runs wherever the game runs.
 
@@ -8,7 +8,7 @@ It's a second program in C, built from SDL 2, OpenGL and cimgui, which the game 
 
 `make` builds the launcher along with the game (see [Building](building.md)). To build only the launcher, run `make launcher`. On Windows, `rebuild.bat` builds both.
 
-Run `build/_launcher.exe`, by double-clicking it or from any folder. It works on the project folder above its own `build` folder, wherever it's started from.
+Run `c1x.exe`, by double-clicking it or from any folder. It works on its own folder, the project folder, wherever it's started from, and finds the game and the rest in `build/` from there. On Windows it has SDL2 and the GCC runtime built in, so it needs no DLLs beside it.
 
 **Play** is at the top, with a tab each for Settings, Controls and the Level editor below it.
 
