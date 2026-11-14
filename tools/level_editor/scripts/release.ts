@@ -2,14 +2,16 @@
 // copied into release/c1x-<version>/ (beside release.bat) and zipped there.
 // paths are relative to the repo and to the release folder, with forward slashes
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, sep } from "node:path";
+import { htmlDocPage } from "./htmlDocs";
 
-export type ReleaseFile = { from: string; to: string };
+export type ReleaseFile = { from: string; to: string; asPage?: boolean }; // asPage: a doc, written as its html page
 type Command = { program: string; args: string[] };
 
 // at the top of the release, as they are in the repo
-const TOP_FILES = ["c1x_launcher.exe", "LICENSE", "settings.example.cfg", "controls.example.cfg", "streams/README.md"];
+const LICENSE = "LICENSE";
+const TOP_FILES = ["c1x_launcher.exe", LICENSE, "settings.example.cfg", "controls.example.cfg", "streams/README.md"];
 const PLAYER_README = "doc/release/README.md";
 // the docs for players; the rest are for building and working on c1x
 const PLAYER_DOCS = ["running", "launcher", "controls", "settings", "custom_levels", "changelog"].map((name) => `doc/${name}.md`);
@@ -46,6 +48,18 @@ function editorPageFiles(pageFiles: string[]): ReleaseFile[] {
   return pageFiles.map((path) => sameName(`${EDITOR_PAGE_DIR}/${path}`));
 }
 
+// a doc goes in as its page (htmlDocs.ts), which opens in any browser, and the
+// licence as a text file, which a browser shows
+function asReleased(file: ReleaseFile): ReleaseFile {
+  if (/\.md$/i.test(file.from)) {
+    return { from: file.from, to: file.to.replace(/\.md$/i, ".html"), asPage: true };
+  }
+  if (file.to === LICENSE) {
+    return { ...file, to: `${LICENSE}.txt` };
+  }
+  return file;
+}
+
 // gitFiles: every file git has (git ls-files); buildFiles: the names of the files
 // in build/; pageFiles: the paths of the files in build/editor/
 export function releaseFiles(gitFiles: string[], buildFiles: string[], pageFiles: string[]): ReleaseFile[] {
@@ -56,7 +70,7 @@ export function releaseFiles(gitFiles: string[], buildFiles: string[], pageFiles
     ...buildFolderFiles(buildFiles),
     ...editorPageFiles(pageFiles),
     ...gitFiles.filter((path) => path.startsWith(GIT_FOLDER)).map(sameName),
-  ];
+  ].map(asReleased);
 }
 
 // repo's release/c1x-<version>, beside release.bat, for a version like 1.2.3
@@ -74,6 +88,10 @@ function copyReleaseFile(repo: string, file: ReleaseFile, folder: string): void 
   }
   const to = join(folder, file.to);
   mkdirSync(dirname(to), { recursive: true });
+  if (file.asPage) {
+    writeFileSync(to, htmlDocPage(readFileSync(from, "utf8")));
+    return;
+  }
   copyFileSync(from, to);
 }
 
