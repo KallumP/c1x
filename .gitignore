@@ -4,6 +4,8 @@
 /c1x_launcher.exe
 build/
 __pycache__/
+# release.bat's releases
+/release/
 
 # user files
 streams/*

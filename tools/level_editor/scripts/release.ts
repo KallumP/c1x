@@ -1,5 +1,5 @@
 // the player release zip (see doc/releasing.md): which of the repo's files go in it,
-// copied into build/release/c1x-<version>/ and zipped there.
+// copied into release/c1x-<version>/ (beside release.bat) and zipped there.
 // paths are relative to the repo and to the release folder, with forward slashes
 import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
@@ -59,12 +59,12 @@ export function releaseFiles(gitFiles: string[], buildFiles: string[], pageFiles
   ];
 }
 
-// c1x-<version>, for a version like 1.2.3
-export function releaseFolderName(version: string): string {
+// repo's release/c1x-<version>, beside release.bat, for a version like 1.2.3
+export function releaseFolder(repo: string, version: string): string {
   if (!/^\d+\.\d+\.\d+$/.test(version)) {
     throw new Error(`the version has to be like 1.2.3, not "${version}"`);
   }
-  return `c1x-${version}`;
+  return join(repo, "release", `c1x-${version}`);
 }
 
 function copyReleaseFile(repo: string, file: ReleaseFile, folder: string): void {
@@ -122,9 +122,9 @@ function filesUnder(folder: string): string[] {
     .map((path) => path.split(sep).join("/"));
 }
 
-// makes build/release/c1x-<version>/ and its zip; returns the zip's path
+// makes release/c1x-<version>/ and its zip; returns the zip's path
 export function makeRelease(repo: string, version: string): string {
-  const folder = join(repo, "build", "release", releaseFolderName(version));
+  const folder = releaseFolder(repo, version);
   copyReleaseFiles(repo, releaseFiles(gitFilesIn(repo), buildFilesIn(repo), filesUnder(join(repo, EDITOR_PAGE_DIR))), folder);
   return zipFolder(folder);
 }

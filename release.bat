@@ -1,5 +1,5 @@
 @echo off
-rem Make the player release zip, build\release\c1x-<version>.zip (see doc/releasing.md):
+rem Make the player release zip, release\c1x-<version>.zip beside this script (see doc/releasing.md):
 rem build everything with rebuild.bat, then zip the release with the level editor's
 rem release script (npm run release).
 rem
@@ -31,7 +31,7 @@ popd
 
 echo.
 if "%RESULT%"=="0" (
-  echo Release made: build\release\c1x-%VERSION%.zip
+  echo Release made: release\c1x-%VERSION%.zip
 ) else (
   echo The release failed with exit code %RESULT%.
 )

@@ -12,7 +12,7 @@ A release is a zip players download from the repository's GitHub **Releases** pa
    release.bat 0.1.0
    ```
 
-   It builds everything first with `rebuild.bat` (see [Building](building.md)), so the launcher, the game, `c1x_tools.exe` and the level editor's page match `master`; it needs MSYS2 and Node.js (players don't). Then it copies the release's files into `build/release/c1x-0.1.0/` and zips that folder to `build/release/c1x-0.1.0.zip`. If the build fails, or something the release needs isn't there, it says so and makes no zip.
+   It builds everything first with `rebuild.bat` (see [Building](building.md)), so the launcher, the game, `c1x_tools.exe` and the level editor's page match `master`; it needs MSYS2 and Node.js (players don't). Then it copies the release's files into `release/c1x-0.1.0/` (in the project folder, beside `release.bat`) and zips that folder to `release/c1x-0.1.0.zip`. If the build fails, or something the release needs isn't there, it says so and makes no zip.
 
    To make the zip without building, run `npm run release -- 0.1.0` in `tools/level_editor`.
 4. Try the zip as a player would: unzip it into an empty folder (on a PC without MSYS2, if you can), open `c1x_launcher.exe`, extract a disc image, play, and build one of the custom levels.
@@ -20,10 +20,10 @@ A release is a zip players download from the repository's GitHub **Releases** pa
    - **Choose a tag**: type `v0.1.0` and choose to create it, on `master`.
    - **Release title**: `c1x 0.1.0`.
    - **Description**: what's changed since the last release, from the [changelog](changelog.md).
-   - Attach `build/release/c1x-0.1.0.zip`.
+   - Attach `release/c1x-0.1.0.zip`.
    - **Publish release**.
 
-   With the [GitHub CLI](https://cli.github.com/) instead: `gh release create v0.1.0 build/release/c1x-0.1.0.zip --title "c1x 0.1.0" --notes-file notes.md`.
+   With the [GitHub CLI](https://cli.github.com/) instead: `gh release create v0.1.0 release/c1x-0.1.0.zip --title "c1x 0.1.0" --notes-file notes.md`.
 
 ## What's in the zip
 
