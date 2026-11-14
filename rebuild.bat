@@ -26,9 +26,12 @@ if not "%~1"=="" if not defined TARGET (
   goto done
 )
 
-rem run make in a MINGW32 login shell, from this script's directory
+rem run make in a MINGW32 login shell, from this script's directory. it keeps
+rem the Windows PATH after its own, so make finds Node.js for c1x_tools.exe and
+rem the level editor's page
 set "MSYSTEM=MINGW32"
 set "CHERE_INVOKING=1"
+set "MSYS2_PATH_TYPE=inherit"
 pushd "%~dp0"
 if "%TARGET%"=="clean" (
   "%BASH%" -lc "export OS=Windows_NT; make clean; make"
