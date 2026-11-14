@@ -20,6 +20,7 @@
 ### Fixed
 
 - a custom level's own song played much louder than the game's music
+- a custom level's textures needed their `.mtl` edited by hand when Blender pointed it elsewhere; copying the images into the level's folder is enough now
 
 ## 2026-11-13
 

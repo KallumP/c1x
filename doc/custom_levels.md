@@ -30,8 +30,7 @@ Each level gets its own folder in `level_src/`, such as `level_src/1_tide_ruins/
 
 1. Make a folder for the level in `level_src/`, such as `level_src/my_level/`.
 2. Use File > Export > Wavefront (.obj) and save into that folder. Keep the default settings, but turn on **Materials**.
-3. Copy the images into the same folder.
-4. Open the `.mtl` file in a text editor. Change each `map_Kd` line so it has just the image's file name, such as `map_Kd grass.png`.
+3. Copy the images into the same folder. The build and the level editor find them there, wherever on your PC the `.mtl` says they are.
 
 The folder should now look like this:
 
@@ -100,7 +99,7 @@ See [Objects](../level_src/README.md#objects) for how each box, enemy and obstac
 
 - **Crash faces sideways or backwards:** the route doesn't run along +Y. With nothing selected in the editor, set **turn** under **Level** so the arrow at the spawn points along the route, then build again.
 - **Crash looks too big or too small:** set **scale** under **Level** to a different number (400 is normal; bigger makes the map bigger), then build again.
-- **Faces have the wrong textures:** the build warned that an image wasn't found (hover over the build message to see it). Check the `map_Kd` lines in the `.mtl`.
+- **Faces have the wrong textures:** the build warned that an image wasn't found, or isn't in the level's folder (hover over the build message to see it). Copy that image into the level's folder.
 - **Parts of the map are missing:** the faces point the wrong way. Flip them in Blender.
 - **The build says a level couldn't be read, and an enemy comes from it:** some enemies are taken from the game's own levels, such as the crab from N. Sanity Beach. Extract all the game's files into `streams/` (see [Running](running.md)).
 - **The build says an image is from one of the game's files that isn't in `streams/`:** the level uses textures from the game (see [Textures from the game](#textures-from-the-game)). Extract all the game's files into `streams/`.
