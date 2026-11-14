@@ -60,7 +60,7 @@ Ctrl+Z undoes and Ctrl+Y redoes.
 
 A box outlined in red is stuck in a wall or another box (this doesn't stop the level from building), or is an outline whose switch isn't in the level (this does).
 
-Each switch has a number, shown over it. Tick **outline** on any other box and pick a switch under it to have that switch fill the box in. **Drop to floor** puts the selected box just above the floor, and **raise** sets how far off the floor an object should be.
+Each switch has a number, shown over it. Tick **outline** on a box and pick a switch under it to have that switch fill the box in. A switch can be an outline too: it appears when its switch is hit, and fills in its own outlines only when it's hit itself. A switch can fill in only one other switch. **Drop to floor** puts the selected box just above the floor, and **raise** sets how far off the floor an object should be.
 
 The arrow on the spawn object shows which way the camera faces at the start. With nothing selected, the right side shows the level's settings, saved to its `level.cfg`:
 

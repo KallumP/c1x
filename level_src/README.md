@@ -49,7 +49,7 @@ What each enemy and obstacle takes is listed in its entry below; this is what th
 - `tnt`
 - `iron_arrow`: an iron box that bounces Crash
 
-Any other box can be an outline: `"outline"` is the number of the switch that fills it in. The game only has outlines of `basic` and `iron` boxes, so an outline of any other type is hidden until its switch is hit, as on Road to Nowhere.
+Any box can be an outline: `"outline"` is the number of the switch that fills it in. The game only has outlines of `basic` and `iron` boxes, so an outline of any other type is hidden until its switch is hit, as on Road to Nowhere. A switch can be an outline of another switch: it appears when that switch is hit, and fills in its own outlines when it's hit itself. A switch can fill in only one other switch, and switches can't be outlines of each other in a loop.
 
 ### Enemies
 
