@@ -17,5 +17,10 @@ This repository is a fork of [wurlyfox/c1](https://github.com/wurlyfox/c1), the 
 - [Custom levels](doc/custom_levels.md): turning a map modelled in Blender into a level, placing its objects in the level editor, and booting into it
 - [Structure](doc/structure.md): what each file and directory in the project is for
 - [Contributing](doc/contributing.md): commit messages, pull requests and coding standards
+- [Releasing](doc/releasing.md): making the zip players download, and publishing it on GitHub
 
 Further documentation, such as the [changelog](doc/changelog.md), known [issues](doc/issues.md) and descriptions of the game's files and functions, is in the [`doc`](doc) directory.
+
+## Licence
+
+c1x's own changes and additions are under the MIT licence; see [LICENSE](LICENSE). It doesn't cover the original c1 port, whose repository gives no licence, so that code is still wurlyfox's and its other contributors'. Crash Bandicoot and its assets belong to their owners, and no game files are included: c1x needs the files from a copy of the game you own. This is an unofficial fan project.

@@ -11,7 +11,8 @@
     "build-level": "tsx builder/buildLevelCli.ts",
     "bundle-builder": "esbuild builder/buildLevelCli.ts --bundle --platform=node --format=cjs --log-level=error --outfile=../../build/build-level/build-level.cjs",
     "builder-exe": "npm run bundle-builder && tsx scripts/builderExeCli.ts",
-    "export-cut-level": "tsx scripts/cutLevel/exportCutLevelCli.ts"
+    "export-cut-level": "tsx scripts/cutLevel/exportCutLevelCli.ts",
+    "release": "tsx scripts/releaseCli.ts"
   },
   "dependencies": {
     "@react-three/drei": "9.114.0",
