@@ -152,6 +152,9 @@ BUILDER_OUT = build/build-level.exe
 # linked statically, so the launcher needs no dlls beside it in the top folder
 LAUNCHER_LDLIBS = -static -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lws2_32 -lcomdlg32 -lm -lstdc++ -mwindows \
 	-lkernel32 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lversion -luuid -ladvapi32 -lsetupapi -lshell32 -ldinput8
+# each exe's icon (res/*.ico), linked in as a windows resource
+GAME_ICON_OBJ = res/c1x_icon.o
+LAUNCHER_ICON_OBJ = res/c1x_launcher_icon.o
 else
 LDLIBS = -lSDL2 -lGL -lfluidsynth -lsndfile -lm -lstdc++
 LAUNCHER_LDLIBS = -lSDL2 -lGL -lm -lstdc++
@@ -202,9 +205,12 @@ $(CIMGUI_OBJ):
 .c.o:
 	$(CC) $(INCLUDE) -c $< -o $@ $(CFLAGS)
 
-$(OUT): $(OBJ)
+res/%_icon.o: res/%.rc res/%.ico
+	windres -F pe-i386 --include-dir res $< -o $@
+
+$(OUT): $(OBJ) $(GAME_ICON_OBJ)
 	@mkdir -p $(dir $(OUT))
-	$(CC) $(OBJ) -o $(OUT) $(CFLAGS)
+	$(CC) $(OBJ) $(GAME_ICON_OBJ) -o $(OUT) $(CFLAGS)
 ifeq ($(OS),Windows_NT)
 	$(MAKE) dlls
 
@@ -237,9 +243,9 @@ endif
 $(BUILDER_OUT): $(BUILDER_SRC)
 	cd $(EDITOR_PATH) && { [ -d node_modules ] || npm install; } && npm run builder-exe
 
-$(LAUNCHER_OUT): $(LAUNCHER_OBJ)
+$(LAUNCHER_OUT): $(LAUNCHER_OBJ) $(LAUNCHER_ICON_OBJ)
 	@mkdir -p $(dir $(LAUNCHER_OUT))
-	$(CC) $(LAUNCHER_OBJ) -o $(LAUNCHER_OUT) -m32 $(LAUNCHER_LDLIBS)
+	$(CC) $(LAUNCHER_OBJ) $(LAUNCHER_ICON_OBJ) -o $(LAUNCHER_OUT) -m32 $(LAUNCHER_LDLIBS)
 
 .PHONY: test
 test: $(TEST_OUT)
