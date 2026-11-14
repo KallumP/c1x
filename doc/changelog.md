@@ -2,6 +2,10 @@
 
 ## 2026-11-14
 
+### Added
+
+- a volume slider for a custom level's own song, under **Music** in the level editor
+
 ### Changed
 
 - mossy creek and sunset canyon no longer come with their own songs, and play the game's music
