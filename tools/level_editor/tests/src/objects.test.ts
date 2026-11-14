@@ -153,6 +153,16 @@ describe("outlines", () => {
     expect(objects.map((object) => object.outline)).toEqual([2, undefined, undefined, 1]);
   });
 
+  test("reads a switch that's an outline of another switch", () => {
+    const objects = parseObjects(JSON.stringify([switchBox(1), { ...switchBox(2), outline: 1 }]));
+    expect(objects[1]).toMatchObject({ switch: 2, outline: 1 });
+  });
+
+  test("writes a switch's outline after its number", () => {
+    expect(formatObjects([{ kind: "box", box: "switch", switch: 2, outline: 1, at: [0, 0, 0], raise: 0, stack: 1 }]))
+      .toBe('[\n  {"kind": "box", "type": "switch", "switch": 2, "at": [0, 0, 0], "outline": 1}\n]\n');
+  });
+
   test("reads an outline whose switch isn't in the level, which the editor warns of", () => {
     const [object] = parseObjects(JSON.stringify([box("basic", { outline: 4 })]));
     expect(object.outline).toBe(4);
@@ -161,7 +171,7 @@ describe("outlines", () => {
   test.each([
     [[switchBox(1), box("basic", { outline: 0 })], "object 2: outline should be the number of a switch"],
     [[switchBox(1), box("basic", { outline: "1" })], "object 2: outline should be the number of a switch"],
-    [[switchBox(1), { ...switchBox(2), outline: 1 }], "object 2: a switch can't be an outline"],
+    [[{ ...switchBox(1), outline: 1 }], "object 1: a switch can't be an outline of itself"],
   ])("refuses %j", (objects, message) => {
     expect(() => parseObjects(JSON.stringify(objects))).toThrow(message);
   });
