@@ -5,7 +5,9 @@ import { fileURLToPath } from "node:url";
 import { PNG } from "pngjs";
 import { describe, expect, test } from "vitest";
 import { buildLevel, fittingScale, levelSource, levelSourcePath, mapImages } from "../../builder/buildLevel";
+import { eidToString } from "../../builder/entryIds";
 import { fit, TooBig } from "../../builder/fit";
+import { texturePage, TILE } from "../../builder/tpage";
 import { boxMesh } from "./meshes";
 
 const newFolder = (name: string) => {
@@ -137,6 +139,37 @@ describe("building a level", () => {
     const streams = newFolder("streams");
     ["nsd", "nsf"].forEach((extension) => copyFileSync(join(STREAMS, `s000000c.${extension}`), join(streams, `s000000c.${extension}`)));
     expect(quietBuild(crabLevel(), streams)).toEqual({ ok: false, output: expect.stringMatching(/N\. Sanity Beach \(s0000009\.nsd\).*crab/) });
+  });
+
+  // the game's files, with s0000004.nsf only a test texture page; and a level
+  // source whose one material is a region of it, named in its game_textures.json
+  const TEXTURE_PAGE_EID = 0x12345671;
+  function streamsWithTexturePage(): string {
+    const streams = newFolder("streams");
+    ["s0000009", "s000000c"].forEach((file) => ["nsd", "nsf"].forEach((extension) =>
+      copyFileSync(join(STREAMS, `${file}.${extension}`), join(streams, `${file}.${extension}`))));
+    const tile = { pixels: Array(TILE * TILE).fill(3), palette: Array(16).fill(0x7c00) };
+    writeFileSync(join(streams, "s0000004.nsf"), texturePage(TEXTURE_PAGE_EID, [tile]).page);
+    return streams;
+  }
+  function gameTexturedLevel(stream: string): string {
+    const folder = newFolder("cave");
+    writeFileSync(join(folder, "cave.obj"), "mtllib cave.mtl\no Floor\nusemtl rock\nv -4 0 -8\nv -4 0 8\nv 4 0 8\nv 4 0 -8\nvt 0 0\nvt 0 1\nvt 1 1\nvt 1 0\nf 1/1 2/2 3/3 4/4\n");
+    writeFileSync(join(folder, "cave.mtl"), "newmtl rock\nmap_Kd rock.png\n");
+    const region = { stream, page: eidToString(TEXTURE_PAGE_EID), colourMode: 0, x: 0, y: 0, w: 16, h: 16, clutX: 0, clutY: 0 };
+    writeFileSync(join(folder, "game_textures.json"), JSON.stringify({ "rock.png": region }));
+    return folder;
+  }
+
+  test.skipIf(!hasStreams)("a level's game textures are made from the game's files before its images are read", () => {
+    const folder = gameTexturedLevel("s0000004");
+    expect(quietBuild(folder, streamsWithTexturePage())).toEqual({ ok: true, output: expect.stringMatching(/^wrote /) });
+    expect(existsSync(join(folder, "rock.png"))).toBe(true);
+  });
+
+  test.skipIf(!hasStreams)("a level whose game texture's stream is missing stops with a message saying so", () => {
+    const output = quietBuild(gameTexturedLevel("s0000014"), streamsWithTexturePage());
+    expect(output).toEqual({ ok: false, output: expect.stringMatching(/rock\.png is from the game's s0000014\.nsf, which isn't in /) });
   });
 });
 
