@@ -139,24 +139,64 @@ export function nextSwitchNumber(objects: Objects): number {
 }
 
 // a box as a switch or not: a switch has a number (the next free among others
-// if it has none) and isn't an outline; any other box has no number
+// if it has none) and isn't an outline of itself; any other box has no number
 function withSwitchSettings(object: LevelObject, others: Objects): LevelObject {
   if (object.kind !== "box") {
     return object;
   }
   const { switch: number, outline, ...rest } = object;
-  if (isSwitch(object)) {
-    return { ...rest, switch: number ?? nextSwitchNumber(others) };
+  if (!isSwitch(object)) {
+    return withOutline(rest, outline);
   }
+  const ownNumber = number ?? nextSwitchNumber(others);
+  if (outline === ownNumber) {
+    return { ...rest, switch: ownNumber };
+  }
+  return withOutline({ ...rest, switch: ownNumber }, outline);
+}
+
+// a box, an outline of switch outline if it's given one
+function withOutline(box: LevelObject, outline: number | undefined): LevelObject {
   if (outline === undefined) {
-    return rest;
+    return box;
   }
-  return { ...rest, outline };
+  return { ...box, outline };
 }
 
 // the level's switch numbers, lowest first
 export const switchNumbers = (objects: Objects): number[] =>
   objects.flatMap((object) => object.switch ?? []).sort((first, second) => first - second);
+
+// the switch numbers along the line from switch number to the switches it's hidden behind (an
+// outline of), and theirs, stopping at one already in the line
+function switchesBehind(objects: Objects, number: number): number[] {
+  const line: number[] = [];
+  let current: number | undefined = number;
+  while (current !== undefined && !line.includes(current)) {
+    line.push(current);
+    const switchNumber: number = current;
+    current = objects.find((object) => object.switch === switchNumber)?.outline;
+  }
+  return line;
+}
+
+// whether switch number already fills in a switch other than the one at index
+const fillsInAnotherSwitch = (objects: Objects, number: number, index: number) =>
+  objects.some((object, objectIndex) => objectIndex !== index && isSwitch(object) && object.outline === number);
+
+// the switches the box at index can be an outline of, lowest first: any for a box; for a
+// switch, others not hidden behind it (a loop) and filling in no other switch (a chain ends
+// with its only switch)
+export function outlineChoices(objects: Objects, index: number): number[] {
+  const box = objects[index];
+  const numbers = switchNumbers(objects);
+  if (!isSwitch(box)) {
+    return numbers;
+  }
+  const isChoice = (number: number) =>
+    !switchesBehind(objects, number).includes(box.switch!) && !fillsInAnotherSwitch(objects, number, index);
+  return numbers.filter(isChoice);
+}
 
 // whether changes give a switch a number one of others has
 const takesTakenNumber = (changes: Partial<LevelObject>, others: Objects) =>

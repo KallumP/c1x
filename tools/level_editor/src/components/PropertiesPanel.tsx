@@ -1,7 +1,7 @@
 // the selected object's settings, or the level's (its level.cfg) with nothing selected
 import { useEffect, useRef, useState } from "react";
 import type { LevelCfg } from "../api";
-import { switchNumbers, type EditorAction, type EditorState } from "../editor";
+import { outlineChoices, type EditorAction, type EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeHeading, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
 import { BOX_TYPES, boxTypeName, hasNodes, hasOutlineModel, isSwitch, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, settingMax, PATH_NODES_MAX, ROTATING_OBSTACLES, type BoxType, type LevelObject, type NumberSetting, type ObjectType, type ObstacleType, type Vec3, objectType } from "../objects";
@@ -143,6 +143,9 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   };
 
   const renderOutlineHint = (box: LevelObject, numbers: number[]) => {
+    if (isSwitch(box)) {
+      return renderSwitchOutlineHint(box, numbers);
+    }
     if (numbers.length === 0) {
       return <p className="hint">Place a switch (! box) to make boxes outlines of it.</p>;
     }
@@ -152,8 +155,18 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
     return null;
   };
 
+  const renderSwitchOutlineHint = (switchBox: LevelObject, numbers: number[]) => {
+    if (switchBox.outline !== undefined) {
+      return <p className="hint">Hidden until switch {switchBox.outline} is hit; its own outlines fill in when it's hit.</p>;
+    }
+    if (numbers.length === 0) {
+      return <p className="hint">A switch can be an outline of another switch that fills in no other switch.</p>;
+    }
+    return null;
+  };
+
   const renderOutlineFields = (box: LevelObject) => {
-    const numbers = switchNumbers(state.objects);
+    const numbers = outlineChoices(state.objects, index!);
     const isOutline = box.outline !== undefined;
     return (
       <>
@@ -169,12 +182,12 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
     );
   };
 
-  const renderSwitchFields = (box: LevelObject) => {
-    if (isSwitch(box)) {
-      return renderSwitchNumberField(box);
-    }
-    return renderOutlineFields(box);
-  };
+  const renderSwitchFields = (box: LevelObject) => (
+    <>
+      {isSwitch(box) && renderSwitchNumberField(box)}
+      {renderOutlineFields(box)}
+    </>
+  );
 
   const renderBoxFields = (box: LevelObject) => (
     <>
