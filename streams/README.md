@@ -1,8 +1,7 @@
-Copy each of the asset files (.NSD/.NSF) on the Crash Bandicoot game disc from its respective `/S*` directory into this directory. Then rename each file from the uppercase format `S00000%%.NS[F,D]` format to the lowercase format `s00000%%.ns[f,d]`.
+The game's files go in this folder: the `.nsd` and `.nsf` files from a copy of Crash Bandicoot you own. None are included with c1x.
 
-If you instead have a disc image (`.bin` or `.iso`) made from a copy of the game you own, run the following from `tools/level_editor/` (after `npm install` there, with [Node.js](https://nodejs.org/) 18 or later) to extract and rename the files into this directory:
+If you have a disc image (`.bin` or `.iso`) of the game, the launcher (`c1x_launcher.exe`, in the folder above this one) extracts them for you: open it, choose the image with **Browse...** in its missing files message, and click **Extract**.
 
-```
-npm run extract-streams -- path/to/crash.bin
-```
+From the disc itself, copy every file in its `S0` to `S3` folders into this folder, renamed to lowercase (`S0000003.NSD` becomes `s0000003.nsd`).
 
+See [Running](../doc/running.md) for more.

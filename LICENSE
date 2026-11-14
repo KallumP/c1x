@@ -1,0 +1,50 @@
+c1x is a fork of c1 (https://github.com/wurlyfox/c1), a port of Crash Bandicoot to C
+by wurlyfox, with contributions from others. Read this whole file: the MIT licence
+below does not cover everything in this repository.
+
+What the MIT licence covers
+---------------------------
+
+The MIT licence below covers only the changes and additions made in c1x (this fork)
+by its contributors: everything in this repository that is not part of the original
+c1 port. That includes the launcher, the level editor and level build, the custom
+level sources in level_src/, and c1x's changes to the original port's code.
+
+What it does not cover
+----------------------
+
+- The original c1 port. Its code, and the reverse engineering behind it, are the work
+  of wurlyfox and the port's other contributors. The original repository gives no
+  licence, so no licence is granted here for that code, and the MIT licence below
+  cannot grant one. Where a file mixes the original port's code with c1x's changes,
+  the MIT licence covers only c1x's changes.
+- Crash Bandicoot. The game, its name, characters, art, music and other assets
+  belong to their owners. c1x is an unofficial fan project that is not affiliated
+  with or endorsed by them. No game files are included: the game needs files from
+  a copy of Crash Bandicoot you own.
+- Third-party code and libraries, such as Dear ImGui and cimgui (in
+  src/ext/lib/cimgui) and utest.h (in tests), which keep their own licences, and the
+  libraries the game is built with, such as SDL 2 and FluidSynth.
+
+MIT License
+-----------
+
+Copyright (c) 2026 KallumP and the c1x contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

@@ -12,7 +12,8 @@
     "editor": "tsx scripts/toolsCli.ts editor",
     "bundle-tools": "esbuild scripts/toolsCli.ts --bundle --platform=node --format=cjs --log-level=error --outfile=../../build/tools_bundle/c1x_tools.cjs",
     "tools-exe": "npm run bundle-tools && tsx scripts/toolsExeCli.ts",
-    "export-cut-level": "tsx scripts/cutLevel/exportCutLevelCli.ts"
+    "export-cut-level": "tsx scripts/cutLevel/exportCutLevelCli.ts",
+    "release": "tsx scripts/releaseCli.ts"
   },
   "dependencies": {
     "@react-three/drei": "9.114.0",
