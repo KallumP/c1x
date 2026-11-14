@@ -98,6 +98,13 @@ function readLdat(data: Buffer, offset: number): Ldat {
   };
 }
 
+// how many uncompressed pages an .nsd says its .nsf has, and how many sectors in
+// they start, without reading its tables (a cut level's .nsd is an older layout)
+export function nsdPageLayout(data: Buffer): { pageCount: number; pagesOffset: number } {
+  const header = 4 * NSD_PTB_COUNT;
+  return { pageCount: data.readInt32LE(header), pagesOffset: data.readUInt32LE(header + 24) };
+}
+
 export function readNsd(data: Buffer): Nsd {
   const header = 4 * NSD_PTB_COUNT;
   const tableSize = data.readUInt32LE(header + 4);

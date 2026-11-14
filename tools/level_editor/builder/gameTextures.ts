@@ -5,7 +5,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { eidToString } from "./entryIds";
 import { pngBytes, type RgbImage } from "./images";
-import { PAGE_SIZE, PAGE_TEXTURE, readPages } from "./levelFiles";
+import { nsdPageLayout, PAGE_SIZE, PAGE_TEXTURE, readPages, SECTOR_SIZE } from "./levelFiles";
 import { regionImage } from "./textureRegions";
 import { SIZES } from "./tpage";
 
@@ -113,14 +113,31 @@ export function readGameTextures(folder: string): Map<string, GameTexture> {
   }
 }
 
-// a stream's texture pages, by entry name, read from its .nsf alone (as cut levels are; see scripts/cutLevel/readCutLevel.ts)
+// where a stream's uncompressed pages are in its .nsf: where its .nsd says, if
+// that fits the .nsf exactly (a normal level's, after its compressed pages);
+// otherwise the whole .nsf (a cut level's, whose .nsd is an older layout; see
+// scripts/cutLevel/readCutLevel.ts)
+function uncompressedPages(nsdPath: string, nsfLength: number): { pageCount: number; pagesOffset: number } {
+  const wholeNsf = { pageCount: Math.floor(nsfLength / PAGE_SIZE), pagesOffset: 0 };
+  if (!existsSync(nsdPath)) {
+    return wholeNsf;
+  }
+  const layout = nsdPageLayout(readFileSync(nsdPath));
+  if (layout.pageCount > 0 && layout.pagesOffset * SECTOR_SIZE + layout.pageCount * PAGE_SIZE === nsfLength) {
+    return layout;
+  }
+  return wholeNsf;
+}
+
+// a stream's texture pages, by entry name
 export function readStreamTexturePages(streamsDir: string, stream: string): Map<string, Buffer> {
   const path = join(streamsDir, `${stream}.nsf`);
   if (!existsSync(path)) {
     throw new Error(`${stream}.nsf isn't in ${streamsDir}`);
   }
   const nsf = readFileSync(path);
-  const pages = readPages(nsf, Math.floor(nsf.length / PAGE_SIZE)).filter((page) => page.type === PAGE_TEXTURE);
+  const { pageCount, pagesOffset } = uncompressedPages(join(streamsDir, `${stream}.nsd`), nsf.length);
+  const pages = readPages(nsf, pageCount, pagesOffset).filter((page) => page.type === PAGE_TEXTURE);
   return new Map(pages.map((page) => [eidToString(page.eid), page.data]));
 }
 
