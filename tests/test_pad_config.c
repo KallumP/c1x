@@ -15,11 +15,28 @@ static uint32_t held_for(SDL_Scancode code) {
   return SwPadRead(0) >> 16;
 }
 
+/* WASD to move (the arrows too), space to jump, shift to spin */
+UTEST(pad_config, the_default_keys_are_a_wasd_layout) {
+  static const struct { SDL_Scancode key; uint32_t buttons; } layout[] = {
+    { SDL_SCANCODE_W, PAD_UP }, { SDL_SCANCODE_A, PAD_LEFT }, { SDL_SCANCODE_S, PAD_DOWN }, { SDL_SCANCODE_D, PAD_RIGHT },
+    { SDL_SCANCODE_UP, PAD_UP }, { SDL_SCANCODE_LEFT, PAD_LEFT }, { SDL_SCANCODE_DOWN, PAD_DOWN }, { SDL_SCANCODE_RIGHT, PAD_RIGHT },
+    { SDL_SCANCODE_SPACE, PAD_CROSS }, { SDL_SCANCODE_LSHIFT, PAD_SQUARE }, { SDL_SCANCODE_C, PAD_CIRCLE }, { SDL_SCANCODE_F, PAD_TRIANGLE },
+    { SDL_SCANCODE_Z, PAD_L1 }, { SDL_SCANCODE_X, PAD_R1 }, { SDL_SCANCODE_Q, PAD_L2 }, { SDL_SCANCODE_E, PAD_R2 },
+    { SDL_SCANCODE_1, PAD_L3 }, { SDL_SCANCODE_3, PAD_R3 }, { SDL_SCANCODE_RETURN, PAD_START }, { SDL_SCANCODE_BACKSPACE, PAD_SELECT },
+  };
+  size_t i;
+
+  PadResetBindings();
+  for (i = 0; i < sizeof(layout) / sizeof(layout[0]); i++) {
+    EXPECT_EQ(layout[i].buttons, held_for(layout[i].key));
+  }
+}
+
 UTEST(pad_config, missing_file_keeps_defaults) {
   PadResetBindings();
   remove(CONFIG_PATH);
   ASSERT_EQ(-1, PadLoadBindings(CONFIG_PATH));
-  ASSERT_EQ((uint32_t)PAD_CROSS, held_for(SDL_SCANCODE_Z));
+  ASSERT_EQ((uint32_t)PAD_CROSS, held_for(SDL_SCANCODE_SPACE));
 }
 
 UTEST(pad_config, binding_replaces_default_key) {
@@ -27,14 +44,14 @@ UTEST(pad_config, binding_replaces_default_key) {
   WriteWholeFile(CONFIG_PATH, "cross = V\n");
   ASSERT_EQ(1, PadLoadBindings(CONFIG_PATH));
   ASSERT_EQ((uint32_t)PAD_CROSS, held_for(SDL_SCANCODE_V));
-  ASSERT_EQ(0u, held_for(SDL_SCANCODE_Z));
+  ASSERT_EQ(0u, held_for(SDL_SCANCODE_SPACE));
 }
 
 UTEST(pad_config, unlisted_buttons_keep_defaults) {
   PadResetBindings();
   WriteWholeFile(CONFIG_PATH, "cross = V\n");
   ASSERT_EQ(1, PadLoadBindings(CONFIG_PATH));
-  ASSERT_EQ((uint32_t)PAD_SQUARE, held_for(SDL_SCANCODE_X));
+  ASSERT_EQ((uint32_t)PAD_SQUARE, held_for(SDL_SCANCODE_LSHIFT));
   ASSERT_EQ((uint32_t)PAD_UP, held_for(SDL_SCANCODE_UP));
 }
 
@@ -44,7 +61,7 @@ UTEST(pad_config, invalid_lines_are_skipped) {
   ASSERT_EQ(1, PadLoadBindings(CONFIG_PATH));
   ASSERT_EQ((uint32_t)PAD_CIRCLE, held_for(SDL_SCANCODE_B));
   ASSERT_EQ(0u, held_for(SDL_SCANCODE_C));
-  ASSERT_EQ((uint32_t)PAD_CROSS, held_for(SDL_SCANCODE_Z));
+  ASSERT_EQ((uint32_t)PAD_CROSS, held_for(SDL_SCANCODE_SPACE));
 }
 
 UTEST(pad_config, comments_and_blank_lines_are_ignored) {
@@ -52,14 +69,14 @@ UTEST(pad_config, comments_and_blank_lines_are_ignored) {
   WriteWholeFile(CONFIG_PATH, "# controls\n\ntriangle = V\n");
   ASSERT_EQ(1, PadLoadBindings(CONFIG_PATH));
   ASSERT_EQ((uint32_t)PAD_TRIANGLE, held_for(SDL_SCANCODE_V));
-  ASSERT_EQ(0u, held_for(SDL_SCANCODE_S));
+  ASSERT_EQ(0u, held_for(SDL_SCANCODE_F));
 }
 
 UTEST(pad_config, reset_restores_defaults) {
   WriteWholeFile(CONFIG_PATH, "cross = V\n");
   PadLoadBindings(CONFIG_PATH);
   PadResetBindings();
-  ASSERT_EQ((uint32_t)PAD_CROSS, held_for(SDL_SCANCODE_Z));
+  ASSERT_EQ((uint32_t)PAD_CROSS, held_for(SDL_SCANCODE_SPACE));
   ASSERT_EQ(0u, held_for(SDL_SCANCODE_V));
 }
 
@@ -69,7 +86,7 @@ UTEST(pad_config, repeated_lines_add_keys) {
   ASSERT_EQ(2, PadLoadBindings(CONFIG_PATH));
   ASSERT_EQ((uint32_t)PAD_CROSS, held_for(SDL_SCANCODE_V));
   ASSERT_EQ((uint32_t)PAD_CROSS, held_for(SDL_SCANCODE_B));
-  ASSERT_EQ(0u, held_for(SDL_SCANCODE_Z));
+  ASSERT_EQ(0u, held_for(SDL_SCANCODE_SPACE));
 }
 
 UTEST(pad_config, one_key_can_press_several_buttons) {
@@ -99,7 +116,7 @@ UTEST(pad_config, example_controls_file_matches_defaults) {
   for (i=0;i<512;i++)
     defaults[i] = held_for((SDL_Scancode)i);
   /* run from the project root */
-  ASSERT_EQ(PAD_BUTTON_COUNT, PadLoadBindings("controls.example.cfg")); /* a line per button */
+  ASSERT_EQ(PAD_DEFAULT_KEY_COUNT, PadLoadBindings("controls.example.cfg")); /* a line per default key */
   for (i=0;i<512;i++)
     EXPECT_EQ(defaults[i], held_for((SDL_Scancode)i));
 }

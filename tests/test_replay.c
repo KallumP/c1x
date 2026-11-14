@@ -48,9 +48,9 @@ UTEST(replay, each_update_records_the_clock_and_the_buttons_held) {
   PadResetBindings();
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   start = GetTicksElapsed();
-  keys[SDL_SCANCODE_Z] = 1;
+  keys[SDL_SCANCODE_SPACE] = 1;
   ReplayUpdate();
-  keys[SDL_SCANCODE_Z] = 0;
+  keys[SDL_SCANCODE_SPACE] = 0;
   TimeAdvance(FRAME_TICKS);
   ReplayUpdate();
   ReplayStop();
@@ -86,7 +86,7 @@ static void Record(uint32_t lid, SDL_Scancode *held, int count) {
 }
 
 UTEST(replay, replay_feeds_the_recorded_buttons_instead_of_the_keyboard) {
-  SDL_Scancode held[2] = { SDL_SCANCODE_Z, 0 };
+  SDL_Scancode held[2] = { SDL_SCANCODE_SPACE, 0 };
 
   Record(RECORDED_LEVEL, held, 2);
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
@@ -115,7 +115,7 @@ UTEST(replay, replay_starts_on_the_fixed_clock_at_the_recorded_time) {
 }
 
 UTEST(replay, keyboard_and_real_clock_take_over_at_the_end_of_the_recording) {
-  SDL_Scancode held[1] = { SDL_SCANCODE_Z };
+  SDL_Scancode held[1] = { SDL_SCANCODE_SPACE };
 
   Record(RECORDED_LEVEL, held, 1);
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
