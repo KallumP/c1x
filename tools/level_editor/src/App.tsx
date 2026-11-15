@@ -209,6 +209,7 @@ export default function App() {
         triangles={triangles}
         dispatch={dispatch}
         levelCfg={level ? levelCfg.cfg : null}
+        levelName={level ? level.name : ""}
         songs={songs}
         onLevelCfg={levelCfg.change}
       />

@@ -19,6 +19,11 @@ export function defaultLevelTitle(folderName: string): string {
   return unnumbered.map(capitalised).join(" ");
 }
 
+// a title as it's typed, keeping only the characters the font draws, up to the most there can be
+export function drawableTitle(typed: string): string {
+  return [...typed].filter(isTitleCharacter).join("").slice(0, TITLE_MAX_LENGTH);
+}
+
 // why a title can't be drawn on the loading screen, or null if it can
 export function levelTitleProblem(title: string): string | null {
   if (title.length > TITLE_MAX_LENGTH) {
