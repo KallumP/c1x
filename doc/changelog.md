@@ -12,6 +12,7 @@
 ### Fixed
 
 - the game no longer crashes when you touch an enemy while invincible
+- the game's own levels' loading screens are no longer too bright and washed out
 
 ## 2026-11-14
 
