@@ -16,7 +16,7 @@ pc_settings game_settings = {
   .fix_model_draw_order = 1,
   .replay_inputs = 0,
   .replay_speed = 1,
-  .frame_rate = 144,
+  .frame_rate = 60,
   .fullscreen = 0,
   .boot_level = ""
 };
@@ -33,7 +33,7 @@ void SettingsReset(pc_settings *s) {
   s->fix_model_draw_order = 1;
   s->replay_inputs = 0;
   s->replay_speed = 1;
-  s->frame_rate = 144;
+  s->frame_rate = 60;
   s->fullscreen = 0;
   s->boot_level[0] = 0;
 }
