@@ -18,6 +18,7 @@
 - the game no longer crashes when you touch an enemy while invincible
 - the game's loading screen is no longer too high contrast
 - the game no longer sometimes crashes on screens with text, such as after getting a gem
+- a gem you've collected now shows on the map and can't be collected again
 
 ## 2026-11-14
 
