@@ -5,24 +5,22 @@
 
 #define LAUNCHER_CONTROLS_PATH "build/test_launcher_controls.cfg"
 
-UTEST(launcher_controls, reset_binds_cross_to_space_and_start_to_return) {
+UTEST(launcher_controls, reset_binds_cross_to_space_and_start_to_j) {
   launcher_controls c;
 
   ResetControls(&c);
   ASSERT_EQ(1, c.key_count[FindPadButton("cross")]);
   ASSERT_EQ(SDL_SCANCODE_SPACE, c.keys[FindPadButton("cross")][0]);
-  ASSERT_EQ(SDL_SCANCODE_RETURN, c.keys[FindPadButton("start")][0]);
+  ASSERT_EQ(SDL_SCANCODE_J, c.keys[FindPadButton("start")][0]);
 }
 
-UTEST(launcher_controls, reset_gives_a_direction_its_letter_and_its_arrow) {
+UTEST(launcher_controls, reset_gives_each_button_one_key) {
   launcher_controls c;
-  int up;
+  int button;
 
   ResetControls(&c);
-  up = FindPadButton("up");
-  ASSERT_EQ(2, c.key_count[up]);
-  ASSERT_EQ(SDL_SCANCODE_W, c.keys[up][0]);
-  ASSERT_EQ(SDL_SCANCODE_UP, c.keys[up][1]);
+  for (button = 0; button < PAD_BUTTON_COUNT; button++) { ASSERT_EQ(1, c.key_count[button]); }
+  ASSERT_EQ(SDL_SCANCODE_W, c.keys[FindPadButton("up")][0]);
 }
 
 UTEST(launcher_controls, an_unknown_button_isnt_found) {
@@ -48,7 +46,7 @@ UTEST(launcher_controls, a_buttons_lines_replace_its_default_key) {
   ASSERT_EQ(2, c.key_count[cross]);
   ASSERT_EQ(SDL_SCANCODE_SPACE, c.keys[cross][0]);
   ASSERT_EQ(SDL_SCANCODE_K, c.keys[cross][1]);
-  ASSERT_EQ(SDL_SCANCODE_RETURN, c.keys[FindPadButton("start")][0]);
+  ASSERT_EQ(SDL_SCANCODE_J, c.keys[FindPadButton("start")][0]);
 }
 
 UTEST(launcher_controls, extra_keys_past_the_limit_are_dropped) {

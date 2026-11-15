@@ -24,12 +24,9 @@ UTEST(pad, space_presses_cross) {
   ASSERT_EQ(HELD(PAD_CROSS), SwPadRead(0));
 }
 
-UTEST(pad, w_and_the_up_arrow_both_press_up) {
+UTEST(pad, w_presses_up) {
   memset(keys, 0, sizeof(keys));
   press(SDL_SCANCODE_W);
-  ASSERT_EQ(HELD(PAD_UP), SwPadRead(0));
-  memset(keys, 0, sizeof(keys));
-  press(SDL_SCANCODE_UP);
   ASSERT_EQ(HELD(PAD_UP), SwPadRead(0));
 }
 
@@ -37,7 +34,7 @@ UTEST(pad, held_buttons_combine) {
   memset(keys, 0, sizeof(keys));
   press(SDL_SCANCODE_SPACE);
   press(SDL_SCANCODE_A);
-  press(SDL_SCANCODE_RETURN);
+  press(SDL_SCANCODE_J);
   ASSERT_EQ(HELD(PAD_CROSS | PAD_LEFT | PAD_START), SwPadRead(0));
 }
 
