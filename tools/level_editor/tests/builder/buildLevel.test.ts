@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,7 +7,10 @@ import { describe, expect, test } from "vitest";
 import { buildLevel, fittingScale, levelSource, levelSourcePath, mapImages } from "../../builder/buildLevel";
 import { eidToString } from "../../builder/entryIds";
 import { fit, TooBig } from "../../builder/fit";
+import { readNsd } from "../../builder/levelFiles";
+import { LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH, loadingImageBytes, titleCard } from "../../builder/loadingImage";
 import { texturePage, TILE } from "../../builder/tpage";
+import { DEFAULT_SKY } from "../../src/sky";
 import { boxMesh } from "./meshes";
 
 const newFolder = (name: string) => {
@@ -151,6 +154,16 @@ describe("building a level", () => {
     expect(lines).toEqual([`wrote ${join(levelsDir, "tiny")}`]);
     expect(existsSync(join(levelsDir, "tiny.nsd"))).toBe(true);
     expect(existsSync(join(levelsDir, "tiny.nsf"))).toBe(true);
+  });
+
+  test.skipIf(!existsSync(join(STREAMS, "s000000c.nsd")))("a level's loading screen is its title card, not jungle rollers'", () => {
+    const folder = newFolder("2_tiny_ruins");
+    writeFileSync(join(folder, "tiny.obj"), "o Floor\nv -4 0 -8\nv -4 0 8\nv 4 0 8\nv 4 0 -8\nf 1 2 3 4\n");
+    const levelsDir = newFolder("levels");
+    expect(buildLevel(folder, { streamsDir: STREAMS, levelsDir, log: () => {} })).toBe(true);
+    const nsd = readNsd(readFileSync(join(levelsDir, "2_tiny_ruins.nsd")));
+    expect([nsd.hasLoadingImage, nsd.loadingImageWidth, nsd.loadingImageHeight]).toEqual([1, LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT]);
+    expect(nsd.ldat.image.equals(loadingImageBytes(titleCard("Tiny Ruins", DEFAULT_SKY)))).toBe(true);
   });
 
   const crabLevel = () => {
