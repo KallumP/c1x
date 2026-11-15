@@ -27,7 +27,7 @@ static int FindPadButtonByBits(uint32_t bits) {
   return -1;
 }
 
-/* every button back to its default keys (two for each direction: its letter and its arrow) */
+/* every button back to its default keys, from the game's pad_default_mappings */
 void ResetControls(launcher_controls *c) {
   int i, button;
 
