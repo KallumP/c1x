@@ -15,11 +15,22 @@ This repository is a fork of [wurlyfox/c1](https://github.com/wurlyfox/c1), the 
 - [Controls](doc/controls.md): the default keys, and changing them in the launcher
 - [Settings](doc/settings.md): what each game setting does, such as the loading screen, speed display and skipping the splash screens
 - [Custom levels](doc/custom_levels.md): turning a map modelled in Blender into a level, placing its objects in the level editor, and booting into it
-- [Structure](doc/structure.md): what each file and directory in the project is for
 - [Contributing](doc/contributing.md): commit messages, pull requests and coding standards
 - [Releasing](doc/releasing.md): making the zip players download, and publishing it on GitHub
 
 Further documentation, such as the [changelog](doc/changelog.md), known [issues](doc/issues.md) and descriptions of the game's files and functions, is in the [`doc`](doc) directory.
+
+## Project layout
+
+- `src/`: the game, in C (wurlyfox's port, and c1x's additions in `src/pc/`), and the launcher, in `src/launcher/`
+- `tools/level_editor/`: the level editor and the level build, in TypeScript, which `make` packs into `build/c1x_tools.exe`
+- `tests/`: the game's and the launcher's unit tests (`make test`); the level editor's are in `tools/level_editor/tests/`
+- `level_src/`: custom level sources, a folder each; the ones made for c1x are listed in [`level_src/README.md`](level_src/README.md)
+- `streams/`: the game's files, from your own copy (not in the repository)
+- `build/`: what `make` builds: the game, the tools and the custom levels (not in the repository)
+- `res/`: the game's and the launcher's icons
+- `doc/`: the documentation
+- `rebuild.bat` and `release.bat`: building on Windows, and making the release zip
 
 ## Licence
 
