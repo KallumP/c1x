@@ -7,7 +7,7 @@
 
 pc_settings game_settings = {
   .loading_screen = 1,
-  .loading_screen_min_ms = 750,
+  .loading_screen_min_ms = 1000,
   .speed_display = 0,
   .fps_display = 1,
   .spin_display = 0,
@@ -24,7 +24,7 @@ pc_settings game_settings = {
 /* restore the default settings */
 void SettingsReset(pc_settings *s) {
   s->loading_screen = 1;
-  s->loading_screen_min_ms = 750;
+  s->loading_screen_min_ms = 1000;
   s->speed_display = 0;
   s->fps_display = 1;
   s->spin_display = 0;
