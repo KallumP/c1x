@@ -371,8 +371,8 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
           onChange={(units) => onLevelCfg({ scale: Math.max(1, Math.round(units)) })}
         />
         <p className="hint">
-          Title is the name its loading screen shows (its folder's name if it's empty), unless the level's folder has a
-          loading.png. Turn turns the level in the game, so its route runs the way Crash faces. Scale is the game's units a metre (400 is
+          Title is the name its loading screen shows under the game's "LOADING" sign (its folder's name if it's empty), in
+          the game's letters, so only letters, spaces and full stops; a loading.png in the level's folder shows instead. Turn turns the level in the game, so its route runs the way Crash faces. Scale is the game's units a metre (400 is
           normal): a bigger scale makes the map bigger in the game, so boxes look smaller on it.
         </p>
       </>
