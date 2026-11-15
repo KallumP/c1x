@@ -80,7 +80,7 @@ static void ToggleFullscreen() {
   }
 }
 
-/* a key going down; alt+enter isn't the game's, so enter doesn't press start */
+/* a key going down; a fullscreen toggle (alt+enter, f11) isn't the game's, so enter doesn't press start */
 static void PressKey(SDL_KeyboardEvent *key) {
   if (IsFullscreenToggle(key->keysym.scancode, key->keysym.mod)) {
     if (!key->repeat) { ToggleFullscreen(); }
