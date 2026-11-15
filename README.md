@@ -22,7 +22,7 @@ Further documentation, such as the [changelog](doc/changelog.md), known [issues]
 
 ## Project layout
 
-- `src/`: the game, in C (wurlyfox's port, and c1x's additions in `src/pc/`), and the launcher, in `src/launcher/`
+- `src/`: the game, in C (wurlyfox's port, and c1x's additions in `src/pc/`; see [where code goes](doc/coding.md#where-code-goes)), and the launcher, in `src/launcher/`
 - `tools/level_editor/`: the level editor and the level build, in TypeScript, which `make` packs into `build/c1x_tools.exe`
 - `tests/`: the game's and the launcher's unit tests (`make test`); the level editor's are in `tools/level_editor/tests/`
 - `level_src/`: custom level sources, a folder each; the ones made for c1x are listed in [`level_src/README.md`](level_src/README.md)
