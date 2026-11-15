@@ -188,6 +188,32 @@ void GLDrawOverlay(int brightness) {
   }
 }
 
+/*
+ * a picture's quad, with the texture's own colours (pc): drawing the game's
+ * tris leaves the texture environment doubling them (GL_RGB_SCALE 2, see
+ * GLSetTexture), which made a loading screen drawn after them twice as bright;
+ * the game's texture environment is put back after
+ */
+static void GLDrawImageQuad(quad *q) {
+  GLint env_mode;
+  GLfloat rgb_scale;
+  int i;
+
+  glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &env_mode);
+  glGetTexEnvfv(GL_TEXTURE_ENV, GL_RGB_SCALE, &rgb_scale);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  glTexEnvf(GL_TEXTURE_ENV, GL_RGB_SCALE, 1.0f);
+  glBegin(GL_QUADS);
+  glColor4ub(255, 255, 255, 255);
+  for (i=0;i<4;i++) {
+    glTexCoord2f((i%3)?1.0:0, (i/2)?1.0:0);
+    glVertex3i(q->p[i].x, -q->p[i].y, -1);
+  }
+  glEnd();
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, env_mode);
+  glTexEnvf(GL_TEXTURE_ENV, GL_RGB_SCALE, rgb_scale);
+}
+
 void GLDrawImage(dim2 *dim, uint8_t *buf, pnt2 *loc) {
   quad q;
   rect2 rect;
@@ -215,13 +241,7 @@ void GLDrawImage(dim2 *dim, uint8_t *buf, pnt2 *loc) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, image_texid);
   glEnable(GL_TEXTURE_2D);
-  glBegin(GL_QUADS);
-  glColor4ub(255, 255, 255, 255);
-  for (i=0;i<4;i++) {
-    glTexCoord2f((i%3)?1.0:0, (i/2)?1.0:0);
-    glVertex3i(q.p[i].x, -q.p[i].y, -1);
-  }
-  glEnd();
+  GLDrawImageQuad(&q);
   glDisable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
