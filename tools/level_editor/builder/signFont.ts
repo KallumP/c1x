@@ -2,8 +2,7 @@
 // out of those names: white with grey shading and a black outline. The names have every
 // capital but Q and Z, so Q is made from O and R, and Z from N
 import type { RgbImage } from "./images";
-import type { LoadingScreen } from "./loadingScreens";
-import { isLetterWhite, nameFill, NAME_BOTTOM, NAME_LEFT, NAME_RIGHT, NAME_TOP } from "./loadingSign";
+import { isLetterWhite, nameFill, NAME_BOTTOM, NAME_LEFT, NAME_RIGHT, NAME_TOP, pixelAt, type LoadingScreen } from "./loadingScreens";
 import type { Rgb } from "./tpage";
 
 export const SIGN_FONT_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ.";
@@ -21,9 +20,6 @@ const Q_TAIL_ROWS = 5;       // the rows of R's leg that are Q's tail...
 const Q_TAIL_DROP = 2;       // ...and how far below the bottom of O it reaches
 
 type Span = [number, number]; // a letter's first and last column of white
-
-const pixelAt = (image: RgbImage, x: number, y: number): Rgb =>
-  [...image.rgb.subarray((y * image.width + x) * 3, (y * image.width + x) * 3 + 3)] as Rgb;
 
 const glyphPixel = (glyph: Glyph, x: number, y: number) => glyph.pixels[y * glyph.width + x];
 
