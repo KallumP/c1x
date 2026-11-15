@@ -55,9 +55,9 @@ async function objectsResponse(root: string, name: string, method: string, readB
   return NOT_FOUND;
 }
 
-// a request without a sky, camera, music or volume keeps the level's; writeLevelCfg checks them
+// a request without a sky, camera, music, volume or title keeps the level's; writeLevelCfg checks them
 async function saveCfg(root: string, name: string, readBody: ReadBody): Promise<ApiResponse> {
-  const { turn, scale, sky, camera, music, musicVolume } = JSON.parse(await readBody());
+  const { turn, scale, sky, camera, music, musicVolume, title } = JSON.parse(await readBody());
   const saved = readLevelCfg(root, name);
   writeLevelCfg(root, name, {
     turn: Number(turn),
@@ -66,6 +66,7 @@ async function saveCfg(root: string, name: string, readBody: ReadBody): Promise<
     camera: camera ?? saved.camera,
     music: music ?? saved.music,
     musicVolume: musicVolume ?? saved.musicVolume,
+    title: title ?? saved.title,
   });
   return SAVED;
 }

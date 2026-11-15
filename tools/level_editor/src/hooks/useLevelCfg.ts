@@ -9,12 +9,12 @@ const isSameCamera = (first: Camera, second: Camera) => first.distance === secon
 
 const sameCfg = (first: LevelCfg, second: LevelCfg) =>
   first.turn === second.turn && first.scale === second.scale && isSameSky(first.sky, second.sky) && isSameCamera(first.camera, second.camera)
-  && first.music === second.music && first.musicVolume === second.musicVolume;
+  && first.music === second.music && first.musicVolume === second.musicVolume && first.title === second.title;
 
 // the level list's scale, until level.cfg is read, so boxes don't change size as it opens
-const listedCfg = (level: LevelInfo | null): LevelCfg => ({ turn: 0, scale: level ? level.scale : DEFAULT_SCALE, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
+const listedCfg = (level: LevelInfo | null): LevelCfg => ({ turn: 0, scale: level ? level.scale : DEFAULT_SCALE, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME, title: "" });
 
-// the open level's turn, scale, sky, camera and music as they're edited: read from its level.cfg when it
+// the open level's turn, scale, sky, camera, music and title as they're edited: read from its level.cfg when it
 // opens, and written back on save. unsaved is whether they differ from the file
 export function useLevelCfg(level: LevelInfo | null, onError: (message: string) => void) {
   const [cfg, setCfg] = useState<LevelCfg>(listedCfg(level));
