@@ -4,8 +4,10 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import type { RgbImage } from "../../builder/images";
 import { LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH } from "../../builder/loadingImage";
-import { ORIGINAL_LOADING_SCREENS, readLoadingScreens, type LoadingScreen } from "../../builder/loadingScreens";
-import { blankSign, isNameFill, NAME_BOTTOM, NAME_LEFT, NAME_RIGHT, NAME_TOP } from "../../builder/loadingSign";
+import { isNameFill, nameFill, NAME_BOTTOM, NAME_LEFT, NAME_RIGHT, NAME_TOP, ORIGINAL_LOADING_SCREENS, readLoadingScreens, type LoadingScreen } from "../../builder/loadingScreens";
+import { blankSign, NAME_CENTRE, NAME_MAX_WIDTH, signWithTitle } from "../../builder/loadingSign";
+import { signFont, type Glyph } from "../../builder/signFont";
+import type { Rgb } from "../../builder/tpage";
 
 const WOOD = (x: number, y: number) => [100 + (x % 40), 30 + (y % 20), 10];
 const WHITE = [240, 240, 240];
@@ -59,6 +61,79 @@ describe("the loading sign with no name on it", () => {
 const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
 const hasStreams = ORIGINAL_LOADING_SCREENS.every(({ file }) => existsSync(join(STREAMS, `${file}.nsd`)));
 
+// a font of plain blocks: each letter a white block width columns wide, with a black outline
+function blockFont(widths: Record<string, number>): Map<string, Glyph> {
+  return new Map(Object.entries(widths).map(([letter, width]) => {
+    const glyph: Glyph = { width: width + 2, height: 15, pixels: [] };
+    for (let y = 0; y < glyph.height; y++) {
+      for (let x = 0; x < glyph.width; x++) {
+        const isEdge = y === 0 || y === glyph.height - 1 || x === 0 || x === glyph.width - 1;
+        if (isEdge) {
+          glyph.pixels.push(BLACK as Rgb);
+        } else {
+          glyph.pixels.push(WHITE as Rgb);
+        }
+      }
+    }
+    return [letter, glyph];
+  }));
+}
+
+// the columns the title's white is drawn in, on a wooden sign
+function whiteColumns(image: RgbImage): number[] {
+  const columns = new Set<number>();
+  for (let y = NAME_TOP; y < NAME_BOTTOM; y++) {
+    for (let x = NAME_LEFT; x < NAME_RIGHT; x++) {
+      if (isNameFill(image, x, y)) {
+        columns.add(x);
+      }
+    }
+  }
+  return [...columns].sort((a, b) => a - b);
+}
+
+// the runs of columns in columns: [first, last] each
+function runsOf(columns: number[]): [number, number][] {
+  const runs: [number, number][] = [];
+  columns.forEach((column) => {
+    const last = runs[runs.length - 1];
+    if (last !== undefined && last[1] === column - 1) {
+      last[1] = column;
+    } else {
+      runs.push([column, column]);
+    }
+  });
+  return runs;
+}
+
+describe("a title on the loading sign", () => {
+  const font = blockFont({ A: 13, I: 10, M: 14 });
+
+  test("is drawn in capitals, 3 columns between letters and 13 between words", () => {
+    const runs = runsOf(whiteColumns(signWithTitle(woodSign(), font, "Ai a")));
+    const widths = runs.map(([first, last]) => last - first + 1);
+    const gaps = runs.slice(1).map(([first], index) => first - runs[index][1] - 1);
+    expect(widths).toEqual([13, 10, 13]);
+    expect(gaps).toEqual([3, 13]);
+  });
+
+  test("is in the middle of the sign", () => {
+    const columns = whiteColumns(signWithTitle(woodSign(), font, "AIM"));
+    const middle = (columns[0] + columns[columns.length - 1]) / 2;
+    expect(Math.abs(middle - NAME_CENTRE)).toBeLessThanOrEqual(1);
+  });
+
+  test("has its letters closer together if it's too wide for the sign", () => {
+    const columns = whiteColumns(signWithTitle(woodSign(), font, "MMMMMMMMMMMMMMMMMMMM"));
+    expect(columns[columns.length - 1] - columns[0] + 1).toBeLessThanOrEqual(NAME_MAX_WIDTH);
+    expect(runsOf(columns).length).toBe(20);
+  });
+
+  test("can't have a letter the font hasn't", () => {
+    expect(() => signWithTitle(woodSign(), font, "AB")).toThrow("B");
+  });
+});
+
 describe.skipIf(!hasStreams)("the game's loading sign with no name on it", () => {
   test("has none of a name's white letters left", () => {
     const blank = blankSign(readLoadingScreens(STREAMS));
@@ -71,5 +146,20 @@ describe.skipIf(!hasStreams)("the game's loading sign with no name on it", () =>
       }
     }
     expect(white).toEqual([]);
+  });
+
+  test.each(["N. SANITY BEACH", "CORTEX POWER", "THE GREAT GATE"])("with %s drawn on it in the other screens' letters looks like the game's", (name) => {
+    const screens = readLoadingScreens(STREAMS);
+    const original = screens.find((screen) => screen.name === name)!.image;
+    const others = screens.filter((screen) => screen.name !== name);
+    const sign = blankSign(others);
+    const drawn = signWithTitle(sign, signFont(others, sign), name);
+    // the game's names are placed and spaced by hand, a column or two either way, so they're compared
+    // by their letters, how wide they are and how much white they have
+    const widthOf = (columns: number[]) => columns[columns.length - 1] - columns[0] + 1;
+    const whiteCount = (image: RgbImage) => nameFill(image).reduce((count, isWhite) => count + isWhite, 0);
+    expect(runsOf(whiteColumns(drawn)).length).toBe(runsOf(whiteColumns(original)).length);
+    expect(Math.abs(widthOf(whiteColumns(drawn)) - widthOf(whiteColumns(original)))).toBeLessThanOrEqual(4);
+    expect(Math.abs(whiteCount(drawn) / whiteCount(original) - 1)).toBeLessThan(0.05);
   });
 });

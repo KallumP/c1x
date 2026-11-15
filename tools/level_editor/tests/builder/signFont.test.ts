@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import type { RgbImage } from "../../builder/images";
 import { LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH } from "../../builder/loadingImage";
-import { ORIGINAL_LOADING_SCREENS, readLoadingScreens, type LoadingScreen } from "../../builder/loadingScreens";
-import { blankSign, NAME_TOP } from "../../builder/loadingSign";
+import { NAME_TOP, ORIGINAL_LOADING_SCREENS, readLoadingScreens, type LoadingScreen } from "../../builder/loadingScreens";
+import { blankSign } from "../../builder/loadingSign";
 import { baselineOf, fillColumnsOf, signFont, SIGN_FONT_CHARACTERS, type Glyph } from "../../builder/signFont";
 
 const WOOD = [120, 40, 10];
