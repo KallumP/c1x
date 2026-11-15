@@ -5,7 +5,7 @@
 #include "pc/pad.h"
 
 #define PAD_BUTTON_COUNT 16
-#define PAD_DEFAULT_KEY_COUNT 20 /* a key for each button, and the arrows as well for the d-pad */
+#define PAD_DEFAULT_KEY_COUNT 16 /* a key for each button */
 
 /* a key bound to a button (or buttons) */
 typedef struct {
