@@ -9,7 +9,7 @@ import { DEFAULT_SKY } from "../../src/sky";
 
 // the default level.cfg, with changes
 const cfg = (changes: Partial<LevelCfg> = {}): LevelCfg =>
-  ({ turn: 0, scale: 400, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME, ...changes });
+  ({ turn: 0, scale: 400, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME, title: "", ...changes });
 
 describe("parseLevelCfg", () => {
   test("reads turn and scale, skipping comments", () => {
@@ -120,6 +120,21 @@ describe("setLevelCfg", () => {
   test("refuses a song volume the build can't take", () => {
     expect(() => setLevelCfg("", cfg({ musicVolume: 300 }))).toThrow("music_volume has to be 25 to 200");
     expect(() => setLevelCfg("", cfg({ musicVolume: 50.5 }))).toThrow("music_volume has to be 25 to 200");
+  });
+
+  test("reads the title, none (the folder's name) for what isn't set or can't be drawn", () => {
+    expect(parseLevelCfg("title = Rock & Roll\n").title).toBe("Rock & Roll");
+    expect(parseLevelCfg("").title).toBe("");
+    expect(parseLevelCfg("title = Café\n").title).toBe("");
+  });
+
+  test("writes a title, and changes one already there, even to none", () => {
+    expect(setLevelCfg("", cfg({ title: "Tide Ruins" }))).toBe("turn = 0\nscale = 400\ntitle = Tide Ruins\n");
+    expect(setLevelCfg("title = Tide Ruins\n", cfg())).toBe("title =\nturn = 0\nscale = 400\n");
+  });
+
+  test("refuses a title the loading screen can't draw", () => {
+    expect(() => setLevelCfg("", cfg({ title: "Café" }))).toThrow("a title can only have");
   });
 
   test("refuses music that isn't one of the soundtracks", () => {
