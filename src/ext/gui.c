@@ -2,7 +2,8 @@
  * the game's in-game gui: the text in the top right corner (see GuiCornerOverlay)
  */
 #include "./ext/gui.h"
-#include "./ext/lib/gui.h"
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include "cimgui.h"
 
 #include "gool.h"
 #include "globals.h"
@@ -18,9 +19,6 @@ extern uint32_t frames_elapsed; /* gool.c */
 extern gool_object *crash;
 extern gl_context context;
 
-void GuiInit() {
-  GuiIgInit();
-}
 
 /* what goes before a corner text line: a line break, unless it's the first */
 static const char *GuiLineBreak(int len) {
@@ -51,6 +49,26 @@ static int GuiSpinText(char *text, size_t size, const char *line_break) {
   tenths = GuiCrashSpinRefillTenths();
   return snprintf(text, size, "%sspins %6d\nrefill %3d.%d", line_break,
     GuiCrashSpinsLeft(), tenths / 10, tenths % 10);
+}
+
+/* draw text in a small, see-through, borderless box in the top right corner */
+static void GuiCornerText(const char *text) {
+  ImGuiIO *io;
+  ImVec2 pos, pivot;
+
+  io = igGetIO();
+  pos.x = io->DisplaySize.x - 10;
+  pos.y = 10;
+  pivot.x = 1; /* anchor the box's top right corner */
+  pivot.y = 0;
+  igSetNextWindowPos(pos, ImGuiCond_Always, pivot);
+  igSetNextWindowBgAlpha(0.35f);
+  igBegin("##corner_text", 0, ImGuiWindowFlags_NoDecoration
+    | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings
+    | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav
+    | ImGuiWindowFlags_NoInputs);
+  igTextUnformatted(text, 0);
+  igEnd();
 }
 
 /*
@@ -85,10 +103,12 @@ static void GuiCornerOverlay() {
   if (game_settings.spin_display)
     GuiSpinText(&text[len], sizeof(text) - len, GuiLineBreak(len));
   if (text[0])
-    GuiIgCornerText(text);
+    GuiCornerText(text);
 }
 
-/* the corner text, the only gui the game shows */
+/* the corner text, the only gui the game shows, in its own imgui frame */
 void GuiDraw() {
-  GuiIgDraw(0, GuiCornerOverlay);
+  igNewFrame();
+  GuiCornerOverlay();
+  igRender();
 }

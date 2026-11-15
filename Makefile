@@ -46,9 +46,6 @@ SRC =	src/ns.c \
 	src/pc/sound/stream.c \
 	src/pc/sound/audio.c \
 	src/pc/sound/mix.c \
-	src/util/list.c \
-	src/util/tree.c \
-	src/ext/lib/gui.c \
 	src/ext/gui.c \
 	src/ext/disgool.c
 
@@ -77,9 +74,6 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/sound/mix.c \
 	src/pc/sound/stream.c \
 	src/pc/sound/util.c \
-	src/ext/lib/gui.c \
-	src/util/tree.c \
-	src/util/list.c \
 	src/launcher/process.c \
 	src/launcher/paths.c \
 	src/launcher/game.c \
@@ -177,8 +171,6 @@ CIMGUI_OBJ = $(CIMGUI_PATH)/imgui/backends/imgui_impl_opengl2.o \
 	$(CIMGUI_PATH)/cimgui.o
 INCLUDE += -I$(CIMGUI_PATH) -I$(CIMGUI_PATH)/imgui
 OBJ = $(CIMGUI_OBJ)
-# the tests use the in-game gui library but not the sdl/opengl backends
-TEST_CIMGUI_OBJ = $(filter-out $(CIMGUI_PATH)/imgui/backends/%,$(CIMGUI_OBJ))
 OBJ += $(SRC:.c=.o)
 LAUNCHER_OBJ = $(CIMGUI_OBJ) $(LAUNCHER_SRC:.c=.o)
 
@@ -260,6 +252,6 @@ $(LAUNCHER_OUT): $(LAUNCHER_OBJ) $(LAUNCHER_ICON_OBJ)
 test: $(TEST_OUT)
 	./$(TEST_OUT)
 
-$(TEST_OUT): $(TEST_SRC) tests/utest.h $(TEST_CIMGUI_OBJ)
+$(TEST_OUT): $(TEST_SRC) tests/utest.h
 	@mkdir -p $(dir $(TEST_OUT))
-	$(CC) $(INCLUDE) $(TEST_SRC) $(TEST_CIMGUI_OBJ) -o $(TEST_OUT) $(TEST_CFLAGS) $(TEST_LDLIBS)
+	$(CC) $(INCLUDE) $(TEST_SRC) -o $(TEST_OUT) $(TEST_CFLAGS) $(TEST_LDLIBS)
