@@ -20,7 +20,7 @@ UTEST(settings, reset_gives_each_setting_its_default) {
   {
     setting_default defaults[] = {
       { "loading_screen",        s.loading_screen,        1 },
-      { "loading_screen_min_ms", s.loading_screen_min_ms, 750 }, /* three quarters of a second */
+      { "loading_screen_min_ms", s.loading_screen_min_ms, 1000 }, /* a second */
       { "speed_display",         s.speed_display,         0 },
       { "fps_display",           s.fps_display,           1 },
       { "spin_display",          s.spin_display,          0 },
