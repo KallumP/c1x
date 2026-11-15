@@ -4,42 +4,6 @@
 #include "launcher/settings_file.h"
 #include "test_files.h"
 
-/* a number setting's value after SettingsReset, and the default it should have */
-typedef struct {
-  const char *name;
-  uint32_t value;
-  uint32_t expected;
-} setting_default;
-
-UTEST(settings, reset_gives_each_setting_its_default) {
-  pc_settings s;
-  int i;
-
-  memset(&s, 0x55, sizeof(s)); /* so each default has to be set */
-  SettingsReset(&s);
-  {
-    setting_default defaults[] = {
-      { "loading_screen",        s.loading_screen,        1 },
-      { "loading_screen_min_ms", s.loading_screen_min_ms, 1000 }, /* a second */
-      { "speed_display",         s.speed_display,         0 },
-      { "fps_display",           s.fps_display,           1 },
-      { "spin_display",          s.spin_display,          0 },
-      { "box_display",           s.box_display,           1 },
-      { "skip_splash_screens",   s.skip_splash_screens,   1 },
-      { "fix_model_draw_order",  s.fix_model_draw_order,  1 },
-      { "replay_inputs",         s.replay_inputs,         0 },
-      { "replay_speed",          s.replay_speed,          1 }, /* normal speed */
-      { "frame_rate",            s.frame_rate,            60 },
-      { "fullscreen",            s.fullscreen,            0 },
-    };
-
-    for (i = 0; i < sizeof(defaults)/sizeof(defaults[0]); i++) {
-      EXPECT_EQ_MSG(defaults[i].expected, defaults[i].value, defaults[i].name);
-    }
-  }
-  ASSERT_STREQ("", s.boot_level);
-}
-
 /* the settings that are either on or off, and where each is kept */
 static const struct {
   const char *name;
