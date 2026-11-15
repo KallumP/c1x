@@ -233,6 +233,7 @@ int init() {
   FindDataDir();
   PadInit(2); /* initialize 2 joypad structs */
   PadLoadBindings("controls.cfg"); /* keeps the default bindings if missing */
+  SettingsReset(&game_settings);
   SettingsLoad("settings.cfg"); /* keeps the default settings if missing */
   SetTicksElapsed(0);
   SDLInit();
