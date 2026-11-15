@@ -47,6 +47,7 @@ describe("a picture of the level's own as its loading screen", () => {
 
 describe("the loading screen in the game's format", () => {
   const PALETTE_COLOURS = 256;
+  const OPAQUE = 0x8000; // the top bit, set on every colour of the game's own loading screens
 
   // the colour the game shows at x, y of the ldat's image bytes: its palette entry for the pixel's index
   function shownColour(bytes: Buffer, x: number, y: number): number {
@@ -65,8 +66,20 @@ describe("the loading screen in the game's format", () => {
     };
     const bytes = loadingImageBytes(stripes(LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT, blueThenGreen));
     expect(bytes.length).toBe(LDAT_IMAGE_SIZE);
-    expect(shownColour(bytes, 0, 0)).toBe(colour5551([0, 0, 200]));
-    expect(shownColour(bytes, LOADING_IMAGE_WIDTH - 1, LOADING_IMAGE_HEIGHT - 1)).toBe(colour5551([0, 120, 0]));
+    expect(shownColour(bytes, 0, 0)).toBe(OPAQUE | colour5551([0, 0, 200]));
+    expect(shownColour(bytes, LOADING_IMAGE_WIDTH - 1, LOADING_IMAGE_HEIGHT - 1)).toBe(OPAQUE | colour5551([0, 120, 0]));
+  });
+
+  test("has its colours opaque, black as the game's own loading screens' black", () => {
+    const blackThenRed = (x: number) => {
+      if (x < LOADING_IMAGE_WIDTH / 2) {
+        return [0, 0, 0];
+      }
+      return [8, 0, 0];
+    };
+    const bytes = loadingImageBytes(stripes(LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT, blackThenRed));
+    expect(shownColour(bytes, 0, 0)).toBe(OPAQUE);
+    expect(shownColour(bytes, LOADING_IMAGE_WIDTH - 1, 0)).toBe(OPAQUE | 1);
   });
 
   test("reads back as the picture, its colours in 16 bit", () => {
