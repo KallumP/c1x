@@ -3,8 +3,9 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { readImage, type RgbImage } from "./images";
-import { LDAT_IMAGE_SIZE, type Level } from "./levelFiles";
+import { LDAT_IMAGE_SIZE, type Level, type Nsd } from "./levelFiles";
 import { paletteImage } from "./tiles";
+import { rgbOf5551 } from "./tpage";
 import { GLYPH_HEIGHT, textMask, textWidth, type Mask } from "./pixelFont";
 import type { Rgb, Sky } from "../src/sky";
 
@@ -150,6 +151,22 @@ export function loadingImageBytes(image: RgbImage): Buffer {
   bytes.set(pixels, paletteAt + 2 * LOADING_PALETTE_COLOURS);
   return bytes;
 }
+
+// the width x height loading screen in the ldat's image bytes: the opposite of loadingImageBytes
+export function loadingImageFromBytes(bytes: Buffer, width: number, height: number): RgbImage {
+  const pixelCount = width * height;
+  const paletteAt = bytes.length - (2 * LOADING_PALETTE_COLOURS + pixelCount);
+  const pixelsAt = paletteAt + 2 * LOADING_PALETTE_COLOURS;
+  const image: RgbImage = { width, height, rgb: new Uint8Array(pixelCount * 3) };
+  for (let pixel = 0; pixel < pixelCount; pixel++) {
+    image.rgb.set(rgbOf5551(bytes.readUInt16LE(paletteAt + 2 * bytes[pixelsAt + pixel])), pixel * 3);
+  }
+  return image;
+}
+
+// the loading screen a level's .nsd has
+export const loadingImageOf = (nsd: Nsd): RgbImage =>
+  loadingImageFromBytes(nsd.ldat.image, nsd.loadingImageWidth, nsd.loadingImageHeight);
 
 // level's .nsd with image as its loading screen, in place of the one it was built from
 export function setLoadingImage(level: Level, image: RgbImage): void {

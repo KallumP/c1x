@@ -20,6 +20,17 @@ export function colour5551([red, green, blue]: Rgb): number {
   return ((red >> 3) | ((green >> 3) << 5) | ((blue >> 3) << 10)) || 1;
 }
 
+// the 5 bit channel of colour from bit shift up, spread over 0-255
+function channelOf(colour: number, shift: number): number {
+  const fiveBits = (colour >> shift) & 31;
+  return (fiveBits << 3) | (fiveBits >> 2);
+}
+
+// one of the game's 16 bit colours as (r, g, b), 0-255: the opposite of colour5551
+export function rgbOf5551(colour: number): Rgb {
+  return [channelOf(colour, 0), channelOf(colour, 5), channelOf(colour, 10)];
+}
+
 // a texture page is the whole 64 KB page (header included) read as ROWS rows
 // of ROW_BYTES bytes: 1024 4 bit pixels, or 256 16 bit colours. it's split
 // into TILE x TILE slots; the first holds the header in its top row, so it
