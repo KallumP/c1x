@@ -1,10 +1,15 @@
 // a custom level's loading screen in the game's own style: the "LOADING" sign every one of the
 // game's loading screens has (loadingScreens.ts), with the level's title under it in the
 // letters the game's names are drawn in (signFont.ts)
-import type { RgbImage } from "./images";
-import { nameFill, pixelAt, type LoadingScreen } from "./loadingScreens";
-import { baselineOf, fillColumnsOf, type Glyph } from "./signFont";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { readImage, type RgbImage } from "./images";
+import { fillLoadingImage } from "./loadingImage";
+import { nameFill, pixelAt, readLoadingScreens, type LoadingScreen } from "./loadingScreens";
+import { baselineOf, fillColumnsOf, signFont, type Glyph } from "./signFont";
 import type { Rgb } from "./tpage";
+
+export const LOADING_PICTURE = "loading.png"; // a picture in the level's folder to show instead of the sign
 
 const NAME_MARGIN = 2;       // the columns and rows around a name's letters that are their outline and shading
 const NAME_BASELINE = 94;    // the row most of the game's names stand on
@@ -154,6 +159,22 @@ function drawGlyph(image: RgbImage, glyph: Glyph, whiteLeft: number): void {
       }
     }
   }
+}
+
+// the game's loading sign with title under it, made from the game's loading screens in streamsDir
+export function gameLoadingSign(streamsDir: string, title: string): RgbImage {
+  const screens = readLoadingScreens(streamsDir);
+  const sign = blankSign(screens);
+  return signWithTitle(sign, signFont(screens, sign), title);
+}
+
+// the level's loading screen: the loading.png in its folder if it has one, else the game's sign with its title
+export function loadingImageFor(folder: string, title: string, streamsDir: string): RgbImage {
+  const picturePath = join(folder, LOADING_PICTURE);
+  if (existsSync(picturePath)) {
+    return fillLoadingImage(readImage(picturePath));
+  }
+  return gameLoadingSign(streamsDir, title);
 }
 
 // sign with title under it in font's letters (signFont.ts), centred and spaced as the game's names are
