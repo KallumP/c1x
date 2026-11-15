@@ -16,9 +16,17 @@ export interface Tile {
 // an (r, g, b) colour (0-255) as the game's 16 bit colour: 5 bits each of red,
 // green and blue from the low bits up (pixel_5551_8888 in src/pc/gfx/pixel.h).
 // 0 is drawn transparent, so black is nudged off it
-export function colour5551([red, green, blue]: Rgb): number {
-  return ((red >> 3) | ((green >> 3) << 5) | ((blue >> 3) << 10)) || 1;
+export function colour5551(colour: Rgb): number {
+  return packed5551(colour) || 1;
 }
+
+const packed5551 = ([red, green, blue]: Rgb) => (red >> 3) | ((green >> 3) << 5) | ((blue >> 3) << 10);
+
+const OPAQUE_BIT = 0x8000;
+
+// an (r, g, b) colour as the game's 16 bit colour with its top bit set, as every colour of the
+// game's own loading screens has: then black (0x8000) isn't 0, so it needn't be nudged off it
+export const opaqueColour5551 = (colour: Rgb): number => OPAQUE_BIT | packed5551(colour);
 
 // the 5 bit channel of colour from bit shift up, spread over 0-255
 function channelOf(colour: number, shift: number): number {

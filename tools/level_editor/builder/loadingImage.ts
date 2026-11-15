@@ -3,7 +3,7 @@
 import type { RgbImage } from "./images";
 import { LDAT_IMAGE_SIZE, type Level, type Nsd } from "./levelFiles";
 import { paletteImage } from "./tiles";
-import { rgbOf5551, type Rgb } from "./tpage";
+import { opaqueColour5551, rgbOf5551, type Rgb } from "./tpage";
 
 export const LOADING_IMAGE_WIDTH = 432;
 export const LOADING_IMAGE_HEIGHT = 144;
@@ -49,7 +49,7 @@ const LOADING_PALETTE_COLOURS = 256; // the loading screen's pixels are 8 bit in
 // the loading screen as the ldat's image bytes (src/pc/loading.c's LoadingImageConvert): its palette
 // of 256 16 bit colours and then a byte a pixel, at the end of the LDAT_IMAGE_SIZE bytes
 export function loadingImageBytes(image: RgbImage): Buffer {
-  const { pixels, palette } = paletteImage(image, LOADING_PALETTE_COLOURS);
+  const { pixels, palette } = paletteImage(image, LOADING_PALETTE_COLOURS, opaqueColour5551);
   const bytes = Buffer.alloc(LDAT_IMAGE_SIZE);
   const paletteAt = LDAT_IMAGE_SIZE - (2 * LOADING_PALETTE_COLOURS + pixels.length);
   palette.forEach((colour, index) => bytes.writeUInt16LE(colour, paletteAt + 2 * index));

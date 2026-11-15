@@ -176,8 +176,11 @@ function reduceColours(image: RgbImage, counts: Map<number, number>, maxColours:
   return { ...image, rgb };
 }
 
-// the image as palette indices, its palette (paletteSize colours) in the order colours first appear
-function indexColours(image: RgbImage, paletteSize: number): Tile {
+// the game's 16 bit colour for an (r, g, b) one: colour5551, or opaqueColour5551 for a loading screen
+type Encoding = (colour: Rgb) => number;
+
+// the image as palette indices, its palette (paletteSize colours, encoded) in the order colours first appear
+function indexColours(image: RgbImage, paletteSize: number, encode: Encoding): Tile {
   const indexOf = new Map<number, number>();
   const pixels = [];
   for (let pixel = 0; pixel < image.width * image.height; pixel++) {
@@ -187,18 +190,18 @@ function indexColours(image: RgbImage, paletteSize: number): Tile {
     }
     pixels.push(indexOf.get(packed)!);
   }
-  const palette = [...indexOf.keys()].map((packed) => colour5551(unpackColour(packed)));
+  const palette = [...indexOf.keys()].map((packed) => encode(unpackColour(packed)));
   return { pixels, palette: palette.concat(Array(paletteSize - palette.length).fill(0)) };
 }
 
-// the image as indices into a palette of paletteSize of the game's 16 bit colours, its colours
-// reduced (by median cut) if it has more
-export function paletteImage(image: RgbImage, paletteSize: number): Tile {
+// the image as indices into a palette of paletteSize of the game's 16 bit colours (encoded), its
+// colours reduced (by median cut) if it has more
+export function paletteImage(image: RgbImage, paletteSize: number, encode: Encoding = colour5551): Tile {
   const counts = countColours(image);
   if (counts.size > paletteSize) {
-    return indexColours(reduceColours(image, counts, paletteSize), paletteSize);
+    return indexColours(reduceColours(image, counts, paletteSize), paletteSize, encode);
   }
-  return indexColours(image, paletteSize);
+  return indexColours(image, paletteSize, encode);
 }
 
 export function tileFromImage(image: RgbImage): Tile {
