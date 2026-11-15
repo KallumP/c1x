@@ -267,7 +267,8 @@ void LevelUpdate(entry *zone, zone_path *path, int32_t progress, uint32_t flags)
   if (change || !header->world_count) {
     if (zone != cur_zone) { /* change in zone? */
       flag = 1;
-      item_pool1 = 0;
+      /* item_pool1 holds the collected gems, so it is not cleared here;
+         clearing it lost a level's gem as soon as the map loaded */
       cur_header = 0;
       if (game_state == GAME_STATE_TITLE)
         flag = (flags & 2);
