@@ -46,8 +46,7 @@ SRC =	src/ns.c \
 	src/pc/sound/stream.c \
 	src/pc/sound/audio.c \
 	src/pc/sound/mix.c \
-	src/ext/gui.c \
-	src/ext/disgool.c
+	src/ext/gui.c
 
 # test sources (run with utest.h), plus the game sources they test
 TEST_SRC = $(wildcard tests/*.c) \
@@ -134,7 +133,7 @@ TOOLS_OUT = build/c1x_tools
 INCLUDE = -I./src/
 
 # C compiler flags (-g -O3 -Wall)
-DEFS = -DCFLAGS_GFX_SW_PERSP -DCFLAGS_DRAW_EXTENSIONS -DCFLAGS_GUI -DCFLAGS_GOOL_DEBUG
+DEFS = -DCFLAGS_GFX_SW_PERSP -DCFLAGS_DRAW_EXTENSIONS -DCFLAGS_GUI
 CFLAGS = -g -fplan9-extensions -m32 -std=gnu17 -Wno-error=incompatible-pointer-types
 TEST_CFLAGS = -g -fplan9-extensions -m32 -std=gnu17
 TEST_LDLIBS = -lSDL2 -lsndfile -lstdc++
