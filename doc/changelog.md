@@ -13,6 +13,7 @@
 
 - the game no longer crashes when you touch an enemy while invincible
 - the game's loading screen is no longer too high contrast
+- the game no longer crashes when you press X at the end of getting a gem
 
 ## 2026-11-14
 
