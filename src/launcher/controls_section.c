@@ -11,6 +11,7 @@
 #include "ui.h"
 
 #define KEY_MIN_WIDTH 72.0f /* so one letter keys are still easy to click */
+#define REMOVE_KEY_GAP 4.0f /* between a key and its x */
 #define LABEL_WIDTH 120.0f
 #define ROW_SPACING ((ImVec2){6, 4})
 #define NOT_CAPTURING -1
@@ -118,7 +119,7 @@ static int DrawKeyButton(const char *name) {
 static void DrawRemoveKey(int button, int key) {
   ImVec2 text_size;
 
-  igSameLine(0, 1);
+  igSameLine(0, REMOVE_KEY_GAP);
   if (controls.key_count[button] == 1) {
     igCalcTextSize(&text_size, "x", 0, false, -1);
     igDummy((ImVec2){text_size.x + 2 * igGetStyle()->FramePadding.x, igGetFrameHeight()});
