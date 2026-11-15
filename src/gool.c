@@ -1481,6 +1481,21 @@ static int GoolTextStringTransform(
   return max_x;
 }
 
+/*
+ * pc: drop text's trailing spaces, keeping its first character. the port
+ * searched for text's end from where its string starts in the object's
+ * strings rather than from 0, so it read and wrote past the end of the
+ * 256 byte buffer it's in (the gem screen's strings start ~1400 in)
+ */
+static void GoolTextTrimSpaces(char *text) {
+  size_t len;
+
+  len = strlen(text);
+  while (len > 1 && text[len-1] == ' ')
+    len--;
+  text[len] = 0;
+}
+
 //----- (8001E7D8) --------------------------------------------------------
 void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, void *ot, int flag) {
   gool_font *font;
@@ -1491,7 +1506,7 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
   void **prims_tail;
   uint32_t size, font_offset;
   int32_t arg;
-  int i, j, res, start;
+  int i, j, res;
 
   BoxHudSizeCounterText(obj); /* pc: the box counter's digits are smaller */
   size = abs(obj->scale.x) / 27279; /* scale ignores flip */
@@ -1510,7 +1525,6 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
   for (i=0,j=0;j<terms_skip;i++) {
     if (str[i] == 0) { j++; }
   }
-  start = i;
   anims = obj->global->items[5];
   font_offset = obj->invincibility_state >> 8;
   if (font_offset == 0)
@@ -1518,15 +1532,7 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
   else
     font = (gool_font*)&anims[font_offset*4];
   sprintf(buf, &str[i], obj->sp[-2], obj->sp[-3], obj->sp[-4], obj->sp[-5]);
-  while(buf[i++] != 0); /* skip to first null term char */
-  i--;
-  if (i-- != start) { /* not a zero length str? */
-    while (i!=start) { /* truncate trailing spaces */
-      if (buf[i] != ' ') { break; }
-      i--;
-    }
-    buf[i+1] = 0; /* place null term at end of truncated string */
-  }
+  GoolTextTrimSpaces(buf);
   if (BoxHudCounterText(obj, buf, sizeof(buf))) /* pc: the box counter's "broken/total", centred */
     flag = 1;
   tpag = font->tpage;
