@@ -1,4 +1,17 @@
 # Coding Standards
+## Where code goes
+- `src/` - the original game's logic, ported from the PS1 game function by function (`gool.c`, `level.c`, `ns.c`, `cam.c` and so on). [Outline](outline.md) follows the game through these files.
+- `src/formats/` - the layouts of the game's file entries
+- `src/pc/` - everything the PS1 doesn't do for us, and c1x's own features:
+  - stand-ins for the PS1's hardware and libraries: `gfx/` for the GPU and GTE, `sound/` for the SPU, `pad.c` for the controller, `math.c` for the sine tables, `init.c` and `time.c`
+  - c1x's features, such as replays, settings and controls, the box HUD and the loading screen
+- `src/ext/` - the in-game GUI, and the libraries it uses
+- `src/launcher/` - the launcher
+
+Some names appear in both `src/` and `src/pc/`. They aren't copies: the `src/` file is the original game's code, and it calls into the `src/pc/` one. For example, `src/pad.c` works out which buttons are tapped and held, and gets them from `SwPadRead` in `src/pc/pad.c`, which reads the keyboard.
+
+`src/` and `src/pc/` were split this way so the shared code could build for both the PS1 and the PC, with `src/psx/` holding the PS1 side. The PS1 build has been removed (see [PS1 build](psx-build.md)), so the split is now between the original game and what c1x adds. For a new feature, put its code in `src/pc/` and keep its changes to the original game's files to a call or a check, so they stay close to the original.
+
 ## Formatting
 - 2 space tab size
 - no newlines before open brackets
@@ -24,7 +37,7 @@
 
 ## Functions
 - `UpperCamelCase` for function names
-- precede function definition with address of original implementation
+- precede function definition with address of original implementation (functions ported from the game, in `src/`)
 
 ## Types
 - use plain `int` for:
