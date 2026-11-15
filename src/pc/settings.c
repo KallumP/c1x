@@ -5,32 +5,18 @@
 #include "settings.h"
 #include "config.h"
 
-pc_settings game_settings = {
-  .loading_screen = 1,
-  .loading_screen_min_ms = 2000,
-  .speed_display = 0,
-  .fps_display = 0,
-  .spin_display = 0,
-  .box_display = 0,
-  .skip_splash_screens = 0,
-  .fix_model_draw_order = 0,
-  .replay_inputs = 0,
-  .replay_speed = 1,
-  .frame_rate = 60,
-  .fullscreen = 0,
-  .boot_level = ""
-};
+pc_settings game_settings; /* SettingsReset gives it the defaults, at startup (init.c) */
 
 /* restore the default settings */
 void SettingsReset(pc_settings *s) {
   s->loading_screen = 1;
-  s->loading_screen_min_ms = 2000;
+  s->loading_screen_min_ms = 1000;
   s->speed_display = 0;
-  s->fps_display = 0;
+  s->fps_display = 1;
   s->spin_display = 0;
-  s->box_display = 0;
-  s->skip_splash_screens = 0;
-  s->fix_model_draw_order = 0;
+  s->box_display = 1;
+  s->skip_splash_screens = 1;
+  s->fix_model_draw_order = 1;
   s->replay_inputs = 0;
   s->replay_speed = 1;
   s->frame_rate = 60;

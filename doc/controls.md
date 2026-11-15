@@ -15,7 +15,7 @@ Change the controls in the [launcher](launcher.md#controls)'s Controls tab. The 
 - R3 - <kbd>U</kbd>
 - start - <kbd>J</kbd>
 - select - <kbd>F</kbd>
-- toggle fullscreen - <kbd>Alt</kbd>+<kbd>Enter</kbd> (it doesn't press start)
+- toggle fullscreen - <kbd>Alt</kbd>+<kbd>Enter</kbd> (it doesn't press start) or <kbd>F11</kbd>
 
 Only keyboard input is supported, and only for player 1.
 

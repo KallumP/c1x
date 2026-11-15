@@ -193,7 +193,7 @@ UTEST(launcher_settings, settings_differing_in_fps_display_arent_equal) {
 
   SettingsReset(&a);
   SettingsReset(&b);
-  b.fps_display = 1;
+  b.fps_display = !a.fps_display;
   ASSERT_FALSE(AreSettingsEqual(&a, &b));
 }
 
@@ -211,7 +211,7 @@ UTEST(launcher_settings, settings_differing_in_box_display_arent_equal) {
 
   SettingsReset(&a);
   SettingsReset(&b);
-  b.box_display = 1;
+  b.box_display = !a.box_display;
   ASSERT_FALSE(AreSettingsEqual(&a, &b));
 }
 

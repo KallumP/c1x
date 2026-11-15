@@ -80,7 +80,7 @@ static void ToggleFullscreen() {
   }
 }
 
-/* a key going down; alt+enter isn't the game's, so enter doesn't press start */
+/* a key going down; a fullscreen toggle (alt+enter, f11) isn't the game's, so enter doesn't press start */
 static void PressKey(SDL_KeyboardEvent *key) {
   if (IsFullscreenToggle(key->keysym.scancode, key->keysym.mod)) {
     if (!key->repeat) { ToggleFullscreen(); }
@@ -233,6 +233,7 @@ int init() {
   FindDataDir();
   PadInit(2); /* initialize 2 joypad structs */
   PadLoadBindings("controls.cfg"); /* keeps the default bindings if missing */
+  SettingsReset(&game_settings);
   SettingsLoad("settings.cfg"); /* keeps the default settings if missing */
   SetTicksElapsed(0);
   SDLInit();
