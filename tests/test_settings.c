@@ -20,16 +20,16 @@ UTEST(settings, reset_gives_each_setting_its_default) {
   {
     setting_default defaults[] = {
       { "loading_screen",        s.loading_screen,        1 },
-      { "loading_screen_min_ms", s.loading_screen_min_ms, 2000 }, /* 2 seconds */
+      { "loading_screen_min_ms", s.loading_screen_min_ms, 750 }, /* three quarters of a second */
       { "speed_display",         s.speed_display,         0 },
-      { "fps_display",           s.fps_display,           0 },
+      { "fps_display",           s.fps_display,           1 },
       { "spin_display",          s.spin_display,          0 },
-      { "box_display",           s.box_display,           0 },
-      { "skip_splash_screens",   s.skip_splash_screens,   0 },
-      { "fix_model_draw_order",  s.fix_model_draw_order,  0 },
+      { "box_display",           s.box_display,           1 },
+      { "skip_splash_screens",   s.skip_splash_screens,   1 },
+      { "fix_model_draw_order",  s.fix_model_draw_order,  1 },
       { "replay_inputs",         s.replay_inputs,         0 },
       { "replay_speed",          s.replay_speed,          1 }, /* normal speed */
-      { "frame_rate",            s.frame_rate,            60 },
+      { "frame_rate",            s.frame_rate,            144 },
       { "fullscreen",            s.fullscreen,            0 },
     };
 
