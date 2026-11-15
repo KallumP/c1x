@@ -122,11 +122,11 @@ UTEST(replay, keyboard_and_real_clock_take_over_at_the_end_of_the_recording) {
   ReplayUpdate(); /* the only recorded frame */
   ASSERT_EQ((uint32_t)PAD_CROSS << 16, SwPadRead(0));
   TimeWaitFrame(FRAME_TICKS);
-  keys[SDL_SCANCODE_LEFT] = 1;
+  keys[SDL_SCANCODE_A] = 1;
   ReplayUpdate(); /* past the end */
   ASSERT_EQ((uint32_t)PAD_LEFT << 16, SwPadRead(0));
   ASSERT_FALSE(TimeIsFixed());
-  keys[SDL_SCANCODE_LEFT] = 0;
+  keys[SDL_SCANCODE_A] = 0;
 }
 
 UTEST(replay, ending_a_replay_goes_back_to_normal_speed) {
