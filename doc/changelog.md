@@ -2,6 +2,10 @@
 
 ## 2026-11-15
 
+### Added
+
+- a custom level's loading screen shows its own title (set under **Level** in the editor), or a `loading.png` from its folder
+
 ### Changed
 
 - the launcher's **Controls** tab lists movement, jump and spin first

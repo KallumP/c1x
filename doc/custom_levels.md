@@ -66,6 +66,8 @@ Each switch has a number, shown over it. Tick **outline** on a box and pick a sw
 
 The arrow on the spawn object shows which way the camera faces at the start. With nothing selected, the right side shows the level's settings, saved to its `level.cfg`:
 
+- **title** is the name the level's loading screen shows, in big letters over its sky. Left empty, it's the folder's name (`1_tide_ruins` shows "Tide Ruins").
+- **Your own loading screen:** put a `loading.png` in the level's folder to show it instead of the title. It's shown at 432 by 144, so a picture that shape fits best; another shape is cut at its edges to fill it. It goes with the level if you share it.
 - **turn** and **scale** line the map up with the game (see [If something looks wrong](#if-something-looks-wrong)).
 - **Sky** sets a top colour down to **split** and a bottom colour below it.
 - **Camera** sets how far the camera is from Crash (**distance**, times its usual distance) and how far above him it looks down from (**angle**, in degrees; 42 is usual).
