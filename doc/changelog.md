@@ -6,6 +6,7 @@
 
 - the launcher's **Controls** tab lists movement, jump and spin first
 - the in-game debug menu is gone, so Esc and Tab do nothing in the game, and Tab can be bound to a button
+- F11 switches fullscreen on and off too, like Alt+Enter
 - new default settings: the FPS and box counters on, the splash screens skipped, models drawn in depth order, 144 frames a second and a shorter loading screen; your own settings stay until you change them
 
 ### Fixed
