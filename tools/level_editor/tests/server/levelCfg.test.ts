@@ -123,7 +123,7 @@ describe("setLevelCfg", () => {
   });
 
   test("reads the title, none (the folder's name) for what isn't set or can't be drawn", () => {
-    expect(parseLevelCfg("title = Rock & Roll\n").title).toBe("Rock & Roll");
+    expect(parseLevelCfg("title = Rock N Roll\n").title).toBe("Rock N Roll");
     expect(parseLevelCfg("").title).toBe("");
     expect(parseLevelCfg("title = Café\n").title).toBe("");
   });

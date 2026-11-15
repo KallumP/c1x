@@ -61,7 +61,7 @@ describe("a level's scale, turn and sky", () => {
   });
 
   test("level.cfg sets the title its loading screen shows", () => {
-    expect(levelOptions(sourceFolder("title = Rock & Roll\n")).title).toBe("Rock & Roll");
+    expect(levelOptions(sourceFolder("title = Rock N Roll\n")).title).toBe("Rock N Roll");
   });
 
   test("without a title, the level's is its folder's name in words", () => {
@@ -125,7 +125,7 @@ describe("a bad level.cfg is an error naming it and its line", () => {
   });
 
   test("a title the loading screen can't draw", () => {
-    expect(readError("title = Café\n")).toThrow(/level\.cfg, line 1: a title can only have letters, numbers, spaces and .*, not é/);
+    expect(readError("title = Café\n")).toThrow(/level\.cfg, line 1: a title can only have letters, spaces and .*, not é/);
   });
 
   test("a line without a value", () => {

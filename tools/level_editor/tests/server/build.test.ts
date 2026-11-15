@@ -4,10 +4,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BASE_LEVEL } from "../../builder/baseLevel";
+import { ORIGINAL_LOADING_SCREENS } from "../../builder/loadingScreens";
 import { buildLevel } from "../../server/build";
 
-const BASE = fileURLToPath(new URL(`../../../../streams/${BASE_LEVEL.file}`, import.meta.url));
-const hasBase = existsSync(`${BASE}.nsd`);
+const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
+const BASE = join(STREAMS, BASE_LEVEL.file);
+const hasBase = existsSync(`${BASE}.nsd`) && ORIGINAL_LOADING_SCREENS.every(({ file }) => existsSync(join(STREAMS, `${file}.nsd`)));
 
 // a repo with a level source, lvl: a floor
 let repo: string;
@@ -19,11 +21,14 @@ beforeEach(() => {
 });
 afterEach(() => { rmSync(repo, { recursive: true, force: true }); });
 
-// the base level (jungle rollers) in the repo's streams, to build from
+// the base level (jungle rollers) in the repo's streams, to build from, and the loading screens its own is made from
 function addBase(): void {
   mkdirSync(join(repo, "streams"));
   for (const extension of ["nsd", "nsf"]) {
     copyFileSync(`${BASE}.${extension}`, join(repo, "streams", `${BASE_LEVEL.file}.${extension}`));
+  }
+  for (const { file } of ORIGINAL_LOADING_SCREENS) {
+    copyFileSync(join(STREAMS, `${file}.nsd`), join(repo, "streams", `${file}.nsd`));
   }
 }
 
