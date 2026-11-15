@@ -5,25 +5,25 @@ A release is a zip players download from the repository's GitHub **Releases** pa
 ## Making a release
 
 1. On `master`, pulled, with nothing uncommitted.
-2. Pick the version, like `0.1.0`: the first number for big changes, the second for new features, the third for fixes.
+2. Pick the version, two numbers like `1.3`: the first number for big changes, the second for everything else.
 3. On Windows, run `release.bat` from the project folder with the version, or double-click it and type the version when it asks:
 
    ```
-   release.bat 0.1.0
+   release.bat 1.3
    ```
 
-   It builds everything first with `rebuild.bat` (see [Building](building.md)), so the launcher, the game, `c1x_tools.exe` and the level editor's page match `master`; it needs MSYS2 and Node.js (players don't). Then it copies the release's files into `release/c1x-0.1.0/` (in the project folder, beside `release.bat`) and zips that folder to `release/c1x-0.1.0.zip`. If the build fails, or something the release needs isn't there, it says so and makes no zip.
+   It builds everything first with `rebuild.bat` (see [Building](building.md)), so the launcher, the game, `c1x_tools.exe` and the level editor's page match `master`; it needs MSYS2 and Node.js (players don't). Then it copies the release's files into `release/c1x-1.3/` (in the project folder, beside `release.bat`) and zips that folder to `release/c1x-1.3.zip`. If the build fails, or something the release needs isn't there, it says so and makes no zip.
 
-   To make the zip without building, run `npm run release -- 0.1.0` in `tools/level_editor`.
+   To make the zip without building, run `npm run release -- 1.3` in `tools/level_editor`.
 4. Try the zip as a player would: unzip it into an empty folder (on a PC without MSYS2, if you can), open `c1x_launcher.exe`, extract a disc image, play, and build one of the custom levels.
 5. On GitHub, open **Releases**, then **Draft a new release**:
-   - **Choose a tag**: type `v0.1.0` and choose to create it, on `master`.
-   - **Release title**: `c1x 0.1.0`.
+   - **Choose a tag**: type `1.3` and choose to create it, on `master`.
+   - **Release title**: `c1x 1.3`.
    - **Description**: what's changed since the last release, from the [changelog](changelog.md).
-   - Attach `release/c1x-0.1.0.zip`.
+   - Attach `release/c1x-1.3.zip`.
    - **Publish release**.
 
-   With the [GitHub CLI](https://cli.github.com/) instead: `gh release create v0.1.0 release/c1x-0.1.0.zip --title "c1x 0.1.0" --notes-file notes.md`.
+   With the [GitHub CLI](https://cli.github.com/) instead: `gh release create 1.3 release/c1x-1.3.zip --title "c1x 1.3" --notes-file notes.md`.
 
 ## What's in the zip
 
