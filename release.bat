@@ -3,16 +3,16 @@ rem Make the player release zip, release\c1x-<version>.zip beside this script (s
 rem build everything with rebuild.bat, then zip the release with the level editor's
 rem release script (npm run release).
 rem
-rem   release.bat 0.1.0    make the 0.1.0 release
+rem   release.bat 1.3      make the 1.3 release
 rem   release.bat          ask for the version
 rem
 rem Needs MSYS2 (as rebuild.bat does) and Node.js.
 
 setlocal
 set "VERSION=%~1"
-if "%VERSION%"=="" set /p "VERSION=Version (like 0.1.0): "
+if "%VERSION%"=="" set /p "VERSION=Version (like 1.3): "
 if "%VERSION%"=="" (
-  echo No version given. Use: release.bat 0.1.0
+  echo No version given. Use: release.bat 1.3
   set "RESULT=1"
   goto done
 )
