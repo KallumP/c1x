@@ -1555,6 +1555,7 @@ static inline int GoolObjectColorByZone(gool_object *obj) {
 int GoolObjectColors(gool_object *obj) {
   gool_header *g_header;
   gool_object *collider;
+  uint32_t no_argument = 0;
   int invincibility_state, elapsed_since;
   int mod, val;
 
@@ -1567,8 +1568,8 @@ int GoolObjectColors(gool_object *obj) {
     if (obj->collider) {
       collider = obj->collider;
       g_header = (gool_header*)collider->global->items[0];
-      if (g_header->category == 0x300)
-        GoolSendEvent(obj, collider, GOOL_EVENT_HIT_INVINCIBLE, 1, 0);
+      if (g_header->category == 0x300) /* pc: an argument, not a null list (on the psx, null still read ram) */
+        GoolSendEvent(obj, collider, GOOL_EVENT_HIT_INVINCIBLE, 1, &no_argument);
     }
   case 3:
     if (invincibility_state == 3 && elapsed_since > 451) /* 7.5s at 60fps */
