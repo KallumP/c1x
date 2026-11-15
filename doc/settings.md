@@ -5,7 +5,7 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | Setting | Default | What it does |
 |---|---|---|
 | `loading_screen` | `on` | Show each level's loading screen while it loads. |
-| `loading_screen_min_ms` | `750` | Keep the loading screen up for at least this many milliseconds (up to `60000`), as levels load much faster than from the PS1's CD. `0` shows it only while loading. |
+| `loading_screen_min_ms` | `1000` | Keep the loading screen up for at least this many milliseconds (up to `60000`), as levels load much faster than from the PS1's CD. `0` shows it only while loading. |
 | `speed_display` | `off` | Show how fast Crash is moving in the top right corner. |
 | `fps_display` | `on` | Show how many frames are drawn a second in the top right corner (see `frame_rate`). |
 | `spin_display` | `off` | Show how many spins Crash has left in the top right corner, and the seconds until the next comes back. He holds up to 5, and each comes back 2 seconds after it's used. |
