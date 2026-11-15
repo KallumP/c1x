@@ -176,8 +176,8 @@ function reduceColours(image: RgbImage, counts: Map<number, number>, maxColours:
   return { ...image, rgb };
 }
 
-// the image as palette indices, its palette in the order colours first appear
-function indexColours(image: RgbImage): Tile {
+// the image as palette indices, its palette (paletteSize colours) in the order colours first appear
+function indexColours(image: RgbImage, paletteSize: number): Tile {
   const indexOf = new Map<number, number>();
   const pixels = [];
   for (let pixel = 0; pixel < image.width * image.height; pixel++) {
@@ -188,12 +188,19 @@ function indexColours(image: RgbImage): Tile {
     pixels.push(indexOf.get(packed)!);
   }
   const palette = [...indexOf.keys()].map((packed) => colour5551(unpackColour(packed)));
-  return { pixels, palette: palette.concat(Array(COLOURS - palette.length).fill(0)) };
+  return { pixels, palette: palette.concat(Array(paletteSize - palette.length).fill(0)) };
+}
+
+// the image as indices into a palette of paletteSize of the game's 16 bit colours, its colours
+// reduced (by median cut) if it has more
+export function paletteImage(image: RgbImage, paletteSize: number): Tile {
+  const counts = countColours(image);
+  if (counts.size > paletteSize) {
+    return indexColours(reduceColours(image, counts, paletteSize), paletteSize);
+  }
+  return indexColours(image, paletteSize);
 }
 
 export function tileFromImage(image: RgbImage): Tile {
-  const resized = resizeToTile(image);
-  const counts = countColours(resized);
-  const reduced = counts.size > COLOURS ? reduceColours(resized, counts, COLOURS) : resized;
-  return indexColours(reduced);
+  return paletteImage(resizeToTile(image), COLOURS);
 }

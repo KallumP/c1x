@@ -3,6 +3,8 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { readImage, type RgbImage } from "./images";
+import { LDAT_IMAGE_SIZE } from "./levelFiles";
+import { paletteImage } from "./tiles";
 import { GLYPH_HEIGHT, textMask, textWidth, type Mask } from "./pixelFont";
 import type { Rgb, Sky } from "../src/sky";
 
@@ -134,4 +136,17 @@ export function loadingImageFor(folder: string, title: string, sky: Sky): RgbIma
     return fillLoadingImage(readImage(picturePath));
   }
   return titleCard(title, sky);
+}
+
+const LOADING_PALETTE_COLOURS = 256; // the loading screen's pixels are 8 bit indices into a palette
+
+// the loading screen as the ldat's image bytes (src/pc/loading.c's LoadingImageConvert): its palette
+// of 256 16 bit colours and then a byte a pixel, at the end of the LDAT_IMAGE_SIZE bytes
+export function loadingImageBytes(image: RgbImage): Buffer {
+  const { pixels, palette } = paletteImage(image, LOADING_PALETTE_COLOURS);
+  const bytes = Buffer.alloc(LDAT_IMAGE_SIZE);
+  const paletteAt = LDAT_IMAGE_SIZE - (2 * LOADING_PALETTE_COLOURS + pixels.length);
+  palette.forEach((colour, index) => bytes.writeUInt16LE(colour, paletteAt + 2 * index));
+  bytes.set(pixels, paletteAt + 2 * LOADING_PALETTE_COLOURS);
+  return bytes;
 }
