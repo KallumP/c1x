@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { defaultLevelTitle, levelTitleProblem, TITLE_MAX_LENGTH } from "../../src/levelTitle";
+import { defaultLevelTitle, drawableTitle, levelTitleProblem, TITLE_MAX_LENGTH } from "../../src/levelTitle";
 
 describe("a level's default title", () => {
   test("is its folder's name in words, without the number in front", () => {
@@ -29,5 +29,12 @@ describe("which titles can be drawn", () => {
 
   test("not one with a character the font hasn't got, which it names", () => {
     expect(levelTitleProblem("Café")).toMatch(/é/);
+  });
+});
+
+describe("a title as it's typed", () => {
+  test("drops the characters the font hasn't got, and stops at the most it can have", () => {
+    expect(drawableTitle("Café Ruins")).toBe("Caf Ruins");
+    expect(drawableTitle("a".repeat(TITLE_MAX_LENGTH + 5))).toBe("a".repeat(TITLE_MAX_LENGTH));
   });
 });
