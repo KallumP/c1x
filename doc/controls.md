@@ -15,8 +15,6 @@ Change the controls in the [launcher](launcher.md#controls)'s Controls tab. The 
 - R3 - <kbd>U</kbd>
 - start - <kbd>J</kbd>
 - select - <kbd>F</kbd>
-- toggle in-game GUI - <kbd>Esc</kbd>
-- toggle in-game GUI keyboard focus - <kbd>Tab</kbd>
 - toggle fullscreen - <kbd>Alt</kbd>+<kbd>Enter</kbd> (it doesn't press start)
 
 Only keyboard input is supported, and only for player 1.

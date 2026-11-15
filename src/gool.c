@@ -6,9 +6,6 @@
 #include "level.h"
 #include "audio.h"
 #include "midi.h"
-#ifdef GOOL_DEBUG
-#include "ext/disgool.h"
-#endif
 #include "pc/gfx/soft.h"
 #include "pc/gfx/gte.h"
 #include "pc/levelend.h"
@@ -36,9 +33,6 @@ void GoolTextObjectTransform(gool_object*,gool_text*,int,void*,int);
 int GoolProject(vec*,vec*);
 int GoolSendToColliders2(gool_object*,gool_object*,uint32_t,int,int,uint32_t*);
 int GoolObjectInterrupt(gool_object*,uint32_t,int,uint32_t*);
-#ifdef GOOL_DEBUG
-void GoolObjectPrintDebug(gool_object*,FILE*);
-#endif
 
 #define init_obj          player
 #define main_obj          crash
@@ -1150,37 +1144,19 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
     }
   }
   if (animate && flag) {
-#ifdef CFLAGS_GOOL_DEBUG
-    gool_debug *dbg;
-    dbg = GoolObjectDebug(obj);
-#endif
     if ((status_b & GOOL_FLAG_STALL) && (obj->anim_counter != 0)) {
       obj->anim_counter--; /* decrement while stall flag is set */
       if (obj->anim_counter == 0)
         obj->status_b &= ~GOOL_FLAG_STALL; /* clear stall flag when 0 is reached */
     }
-#ifdef CFLAGS_GOOL_DEBUG
-    else if ((dbg->flags & GOOL_FLAGS_PAUSED) == GOOL_FLAGS_PAUSED) {}
-#endif
     else { /* countdown finished in previous frame */
       obj->anim_stamp = frames_elapsed; /* record 'timestamp' */
       if ((status_b & GOOL_FLAG_COLLIDABLE) && /* collidable object? */
         obj->anim_stamp == crash->anim_stamp) /* same frame as crash? */
         GoolObjectBound(obj); /* calculate bound */
-#ifdef CFLAGS_GOOL_DEBUG
-      if (dbg->flags & GOOL_FLAG_PAUSED_TRANS) {}
-      else if (obj->tp) {
-        if (!(dbg->flags & GOOL_FLAG_RESTORED_TRANS)) { /* not resuming from trans block? */
-          GoolObjectPushFrame(obj, 0, 0xFFFF);
-          obj->pc = obj->tp;
-        }
-        else
-          dbg->flags &= ~GOOL_FLAG_RESTORED_TRANS;
-#else
       if (obj->tp) { /* is there a trans block to run? */
         GoolObjectPushFrame(obj, 0, 0xFFFF);
         obj->pc = obj->tp;
-#endif
         flags = GOOL_FLAG_SUSPEND_ON_RET | GOOL_FLAG_SUSPEND_ON_RETLNK;
         res = GoolObjectInterpret(obj, flags, &response); /* run it */
         if (ISERRORCODE(res)) { return res; } /* return on fail */
@@ -1189,10 +1165,6 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
       timestamp = top & 0x00FFFFFF;
       wait = (top & 0xFF000000) >> 24;
       elapsed_since = frames_elapsed - timestamp;
-#ifdef CFLAGS_GOOL_DEBUG
-      if (dbg->flags & GOOL_FLAG_PAUSED_CODE) {}
-      else
-#endif
       if (elapsed_since >= wait) { /* if the required wait time (or more) has elapsed */
         obj->sp--;                 /* get rid of the now useless tag */
         res = GoolObjectInterpret(obj, GOOL_FLAG_SUSPEND_ON_ANIM, &response); /* ...and continue execution until another animation instruction is reached */
@@ -2092,10 +2064,6 @@ G_TRANS_GOPB(obj,ins,b)
 (((a) == 0x1F) ? GoolObjectPop(obj) \
                : obj->regs[a])
 
-#ifdef CFLAGS_GOOL_DEBUG
-gool_debug_cache debug_cache = { 0 };
-int GoolObjectTryBreak(gool_object *obj, uint32_t opcode, uint32_t flags, int res);
-#endif /* CFLAGS_GOOL_DEBUG */
 
 /* pc: whether obj is a native (The Great Gate's SheNC) in a custom level */
 static int GoolObjectIsCustomLevelNative(gool_object *obj) {
@@ -2165,16 +2133,7 @@ static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_
 #define sb r2.sb
 #define sl r2.sl
 #define dst r2.dst
-#ifdef CFLAGS_GOOL_DEBUG
-  gool_debug *dbg;
-
-  dbg = GoolObjectDebug(obj);
-  if (dbg && ((dbg->flags & GOOL_FLAGS_PAUSED)==GOOL_FLAGS_PAUSED)) { return SUCCESS; } /* paused */
-#endif
   while (1) {
-#ifdef CFLAGS_GOOL_DEBUG
-    if (dbg) { dbg->obj_prev = *obj; }
-#endif
     res = 0;
     instruction = *(obj->pc++);
     opcode = G_OPCODE(instruction);
@@ -2440,9 +2399,6 @@ static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_
       GoolOpReactSolidSurfaces(obj,instruction);
       break;
     }
-#ifdef CFLAGS_GOOL_DEBUG
-    res = GoolObjectTryBreak(obj,opcode,flags,res);
-#endif
     if (ISCODE(res)) { return res; }
   }
 }
@@ -2457,56 +2413,6 @@ static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_
 #undef sl
 #undef dst
 
-#ifdef CFLAGS_GOOL_DEBUG
-#define GOOL_FLAGS_TRANS_BLOCK (GOOL_FLAG_SUSPEND_ON_RET | GOOL_FLAG_SUSPEND_ON_RETLNK)
-#define GOOL_FLAGS_CODE_BLOCK GOOL_FLAG_SUSPEND_ON_ANIM
-int GoolObjectTryBreak(gool_object *obj, uint32_t opcode, uint32_t flags, int res) {
-  gool_debug *dbg;
-  uint32_t offs, mask, idx;
-  int brk, rtn;
-
-  dbg = GoolObjectDebug(obj);
-  if (!dbg) { return res; }
-  brk = 0;
-  rtn = ISCODE(res);
-  if ((flags & GOOL_FLAGS_TRANS_BLOCK) == GOOL_FLAGS_TRANS_BLOCK) { /* trans block currently executing? */
-    if ((dbg->flags & GOOL_FLAG_STEP_TRANS)
-     && (!(dbg->flags & GOOL_FLAG_SERIAL_STEP) || !(dbg->flags & GOOL_FLAG_SERIAL_STATE))) {
-      brk = 1;
-      if (rtn && (dbg->flags & GOOL_FLAG_SERIAL_STEP))
-        dbg->flags |= GOOL_FLAG_SERIAL_STATE;
-    }
-  }
-  if ((flags & GOOL_FLAGS_CODE_BLOCK) == GOOL_FLAGS_CODE_BLOCK) {
-    if ((dbg->flags & GOOL_FLAG_STEP_CODE)
-     && (!(dbg->flags & GOOL_FLAG_SERIAL_STEP) || (dbg->flags & GOOL_FLAG_SERIAL_STATE))) {
-      brk = 2;
-      if (rtn && (dbg->flags & GOOL_FLAG_SERIAL_STEP))
-        dbg->flags &= ~GOOL_FLAG_SERIAL_STATE;
-    }
-  }
-  if (!brk) {
-    offs = (uint32_t)(obj->pc-(uint32_t*)obj->external->items[1]);
-    mask = 0x80000000 >> (offs % 32);
-    idx = offs/32;
-    if (dbg->breakpoints[idx] & mask) { brk=1; }
-  }
-  if (brk) {
-    if (rtn && (opcode == 0x83 || opcode == 0x84)) {}
-    else if (brk==2) {
-      GoolObjectPush(obj, 0); /* wait value */
-    }
-    GoolObjectPause(obj, brk, ((brk==1) && !rtn));
-    if (brk==1)
-      dbg->flags &= ~GOOL_FLAG_STEP_TRANS;
-    else if (brk==2)
-      dbg->flags &= ~GOOL_FLAG_STEP_CODE;
-    if (rtn) { return res; }
-    return SUCCESS;
-  }
-  return res;
-}
-#endif
 
 static inline
 void GoolOp13unnamed(gool_object *obj, uint32_t instruction) {
@@ -3913,235 +3819,3 @@ int GoolObjectInterrupt(gool_object *obj, uint32_t addr, int argc, uint32_t *arg
   res = GoolObjectInterpret(obj, flags, 0);
   return res;
 }
-
-//------ object debugging extensions -------------------------------------
-#ifdef CFLAGS_GOOL_DEBUG
-
-#define GOOL_DEBUG_DISLEN 8
-extern char *GoolDisassemble(uint32_t, uint32_t);
-
-void GoolObjectPrint(gool_object *obj, FILE *stream) {
-  gool_header *header;
-  uint8_t *stack;
-  uint32_t fp, sp, base_sp, offs;
-  int i;
-
-  header = (gool_header*)obj->global->items[0];
-  base_sp = header->init_sp*4;
-  stack = ((uint8_t*)&obj->process) + base_sp;
-  fp = (uint32_t)obj->fp - (uint32_t)stack;
-  sp = (uint32_t)obj->sp - (uint32_t)stack;
-  // fprintf(stream, "stack start: %x+60\n", base_sp);
-  // fprintf(stream, "stack size: %x\n", sp);
-  // fprintf(stream, "stack frame: %x | %x\n", base_sp+fp, base_sp+sp);
-  fprintf(stream, "memory contents: \n");
-  for (i=0;i<sp;i++) {
-    offs = i % 16;
-    if (offs == 0)
-      fprintf(stream, "%03x+60:", base_sp+i);
-    if (i == fp)
-      fprintf(stream, "(%02x", stack[i]);
-    else if (i == sp-1)
-      fprintf(stream, " %02x)", stack[i]);
-    else
-      fprintf(stream, " %02x", stack[i]);
-    if (offs == 15)
-      fprintf(stream, "\n");
-  }
-  if (offs != 15)
-    fprintf(stream, "\n");
-  fprintf(stream, "\n");
-}
-
-void GoolObjectPrintDebug(gool_object *obj, FILE *stream) {
-  char *line;
-  uint32_t *code, ins, pc, pcins, pcs, pcn;
-
-  GoolObjectPrint(obj, stream);
-  code = (uint32_t*)obj->external->items[1];
-  pcins = (uint32_t)obj->pc - (uint32_t)code;
-  pcs = max(pcins - ((GOOL_DEBUG_DISLEN/2)*4), 0);
-  pcn = pcs + (GOOL_DEBUG_DISLEN*4);
-  // fprintf(stream, "current code window:\n");
-  for (pc=pcs;pc<pcn;pc+=4) {
-    ins = code[pc/4];
-    line = GoolDisassemble(ins, pc);
-    if (pc == pcins)
-      fprintf(stream, "*** %s\n", line);
-    else
-      fprintf(stream, "    %s\n", line);
-  }
-}
-
-static void GoolObjectPreserveFrames(gool_object *obj) {
-  gool_debug *dbg;
-  gool_frame *frame;
-  uint32_t *pc, *fp, *sp, *psp;
-  uint32_t flags, range;
-  uint16_t rsp, rfp;
-  uint32_t *prev_sp;
-  int i,j,frame_count;
-
-  dbg = GoolObjectDebug(obj);
-  if (!dbg) { return; }
-  dbg->prev_pc = obj->pc;
-  fp = obj->fp; sp = obj->sp;
-  frame_count = 0;
-  do {
-    flags = *fp;
-    range = *(fp+2);
-    rfp=range>>16;
-    fp = (uint32_t*)((uint8_t*)&obj->process + rfp);
-    ++frame_count;
-  } while (flags != 0xFFFF);
-  fp = obj->fp; sp = obj->sp;
-  i=0;
-  for (i=frame_count-1;i>=0;i--) {
-    frame = &dbg->frames[i];
-    flags = *fp;
-    range = *(fp+2);
-    rsp=range&0xFFFF;rfp=range>>16;
-    psp = (uint32_t*)((uint8_t*)&obj->process + rsp);
-    frame->argc = fp - psp;
-    for (j=0;psp!=fp;j++)
-      frame->argv[j] = *(psp++);
-    pc = (uint32_t*)*(fp+1);
-    frame->flags = flags;
-    frame->pc = pc;
-    if (i==0) { frame->pc = (uint32_t*)-1; }
-    fp+=3;
-    for (j=0;fp!=sp;j++)
-      frame->data[j] = *(fp++);
-    frame->len = j;
-    fp = (uint32_t*)((uint8_t*)&obj->process + rfp);
-    sp = (uint32_t*)((uint8_t*)&obj->process + rsp);
-  }
-  dbg->frame_count = frame_count;
-  obj->pc = pc;
-  obj->fp = fp;
-  obj->sp = sp;
-}
-
-static void GoolObjectRestoreFrames(gool_object *obj) {
-  gool_debug *dbg;
-  gool_frame *frame;
-  int i,j;
-
-  dbg = GoolObjectDebug(obj);
-  if (!dbg) { return; }
-  for (i=0;i<dbg->frame_count;i++) {
-    frame = &dbg->frames[i];
-    for (j=0;j<frame->argc;j++)
-      GoolObjectPush(obj, frame->argv[j]);
-    GoolObjectPushFrame(obj, frame->argc, frame->flags);
-    if ((int)frame->pc != -1)
-      *(obj->fp+1) = (uint32_t)frame->pc;
-    for (j=0;j<frame->len;j++)
-      GoolObjectPush(obj, frame->data[j]);
-  }
-  obj->pc = dbg->prev_pc;
-}
-
-static gool_debug *GoolObjectDebugAlloc() {
-  gool_debug_cache *cache;
-  int i;
-
-  cache = &debug_cache;
-  if (!cache->inited) {
-    for (i=0;i<512;i++)
-      cache->free_dbgs[i] = &cache->debugs[i];
-    cache->free_count=512;
-    cache->inited = 1;
-  }
-  if (cache->free_count == 0) { return (gool_debug*)-1; }
-  i = --cache->free_count;
-  return cache->free_dbgs[i];
-}
-
-static void GoolObjectDebugFree(gool_debug *dbg) {
-  gool_debug_cache *cache;
-  int i;
-
-  cache = &debug_cache;
-  if (!cache->inited) { return; }
-  i = cache->free_count++;
-  cache->free_dbgs[i] = dbg;
-}
-
-gool_debug *GoolObjectDebug(gool_object *obj) {
-  gool_debug *dbg;
-  uint32_t id;
-  int i;
-
-  dbg = 0;
-  if (obj->entity) {
-    id = obj->pid_flags >> 8;
-    dbg = debug_cache.by_id[id];
-    if (!dbg) {
-      dbg = debug_cache.by_id[id] = GoolObjectDebugAlloc();
-    }
-  }
-  else {
-    for (i=0;i<32;i++) {
-      dbg = debug_cache.by_ptr[i];
-      if (!dbg) {
-        dbg = debug_cache.by_ptr[i] = GoolObjectDebugAlloc();
-        break;
-      }
-      if (dbg->obj == obj) { break; }
-    }
-  }
-  return dbg;
-}
-
-void GoolObjectPause(gool_object *obj, int type, int trans) {
-  gool_debug *dbg;
-  int block_type;
-
-  dbg = GoolObjectDebug(obj);
-  if (!dbg) { return; }
-  if (type == 0)
-    dbg->flags |= GOOL_FLAGS_PAUSED;
-  else if (type == 1)
-    dbg->flags |= GOOL_FLAG_PAUSED_TRANS;
-  else if (type == 2)
-    dbg->flags |= GOOL_FLAG_PAUSED_CODE;
-  if (trans) {
-    GoolObjectPreserveFrames(obj);
-    dbg->flags |= GOOL_FLAG_SAVED_TRANS;
-  }
-}
-
-void GoolObjectResume(gool_object *obj, int type) {
-  gool_debug *dbg;
-
-  dbg = GoolObjectDebug(obj);
-  if (!dbg) { return; }
-  if (type == 0)
-    dbg->flags &= ~GOOL_FLAGS_PAUSED;
-  else if (type == 1)
-    dbg->flags &= ~GOOL_FLAG_PAUSED_TRANS;
-  else if (type == 2)
-    dbg->flags &= ~GOOL_FLAG_PAUSED_CODE;
-  if (dbg->flags & GOOL_FLAG_SAVED_TRANS) {
-    GoolObjectRestoreFrames(obj);
-    dbg->flags &= ~GOOL_FLAG_SAVED_TRANS;
-    dbg->flags |= GOOL_FLAG_RESTORED_TRANS;
-  }
-}
-
-void GoolObjectStep(gool_object *obj, int type) {
-  gool_debug *dbg;
-
-  dbg = GoolObjectDebug(obj);
-  if (!dbg) { return; }
-  GoolObjectResume(obj, type);
-  if (type == 0)
-    dbg->flags |= GOOL_FLAGS_STEP;
-  else if (type == 1)
-    dbg->flags |= GOOL_FLAG_STEP_TRANS;
-  else if (type == 2)
-    dbg->flags |= GOOL_FLAG_STEP_CODE;
-}
-
-#endif

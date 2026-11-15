@@ -79,7 +79,6 @@ extern pbak_frame *cur_pbak_frame;
 
 #ifdef CFLAGS_GUI
 void GLInitGui() {
-  GuiInit();
   ImGui_ImplOpenGL2_Init();
 }
 
@@ -851,7 +850,6 @@ void GLUpdate() {
   GLDrawFade();
   GLDrawBorders();
 #ifdef CFLAGS_GUI
-  GuiUpdate();
   GuiDraw();
   ImGui_ImplOpenGL2_RenderDrawData(igGetDrawData());
 #endif

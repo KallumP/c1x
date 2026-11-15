@@ -110,17 +110,10 @@ Project structure is listed below, including descriptions for each file.
 │   │   ├── streams.c,h      # the game's files missing from streams/
 │   │   ├── text_file.c,h    # editing a "name = value" file a line at a time
 │   │   └── ui.c,h           # the launcher's look, and the parts the sections share
-│   ├── util                 # utilities
-│   │   ├── list.c,h         # generic linked list
-│   │   └── tree.c,h         # generic tree
 │   └── ext                  # extensions to original game code
 │       ├── lib              # libraries
-│       │   ├── gui.c        # minimal GUI library ([c]imgui thin wrapper)
-│       │   ├── refl.c       # minimal type reflection library
 │       │   └── cimgui       # cimgui and imgui
-│       ├── gui.c,h          # in-game GUI
-│       ├── refl.c,h         # game-specific type metadata
-│       └── disgool.c,h      # GOOL disassembler
+│       └── gui.c,h          # in-game GUI: the corner text (fps, speed, spins)
 ├── streams                  # game assets (.NSD/.NSF files)
 ├── tests                    # unit tests (make test)
 │   ├── main.c               # test runner
@@ -131,7 +124,6 @@ Project structure is listed below, including descriptions for each file.
 │   ├── test_config.c        # shared "name = value" file parsing
 │   ├── test_settings.c      # settings.cfg parsing and loading
 │   ├── test_loading.c       # loading screen image conversion and timing
-│   ├── test_gui.c           # in-game GUI tree node insertion and removal
 │   ├── test_speed.c         # crash's speed measurement and tracking
 │   ├── test_follow.c        # the follow camera's sideways offset
 │   ├── test_launcher_*.c    # the launcher: its paths, running commands, the game, its files in streams/ and extracting them, controls.cfg, the tools, the level editor, built levels and settings.cfg

@@ -34,7 +34,7 @@ When something else changes `settings.cfg`, such as the level editor's **Build +
 
 The Controls tab shows each PlayStation button's keys from `controls.cfg` (see [Controls](controls.md)), which it creates from `controls.example.cfg` if there isn't one. They're grouped by what they do: movement first, then jump, spin, start and select, then the other buttons.
 
-- Click a key, then press the key you want instead. Esc cancels. Tab can't be used, as the game's debug GUI uses it.
+- Click a key, then press the key you want instead. Esc cancels.
 - **+** gives a button another key, and **x** removes one. A button always keeps at least one.
 - **Reset to defaults** puts every button back to its default key.
 - **Save** writes `controls.cfg`, changing only the lines for buttons whose keys changed and keeping the rest of the file. **Play** saves too.

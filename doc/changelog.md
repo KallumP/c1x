@@ -5,6 +5,7 @@
 ### Changed
 
 - the launcher's **Controls** tab lists movement, jump and spin first
+- the in-game debug menu is gone, so Esc and Tab do nothing in the game, and Tab can be bound to a button
 
 ## 2026-11-14
 
