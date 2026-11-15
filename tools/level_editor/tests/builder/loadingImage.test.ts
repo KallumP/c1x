@@ -1,6 +1,10 @@
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { PNG } from "pngjs";
 import { describe, expect, test } from "vitest";
 import type { RgbImage } from "../../builder/images";
-import { LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH, TITLE_MARGIN, titleCard } from "../../builder/loadingImage";
+import { fillLoadingImage, LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH, loadingImageFor, TITLE_MARGIN, titleCard } from "../../builder/loadingImage";
 import type { Sky } from "../../src/sky";
 
 const SKY: Sky = { top: [0, 0, 200], bottom: [0, 120, 0], split: 100 };
@@ -41,5 +45,53 @@ describe("a level's title card", () => {
     expect(long[0]).toBeGreaterThanOrEqual(TITLE_MARGIN);
     expect(long[1]).toBeLessThan(LOADING_IMAGE_WIDTH - TITLE_MARGIN);
     expect(short[1] - short[0]).toBeGreaterThan(60); // a short one is drawn big, not at the smallest size
+  });
+});
+
+// a width x height image, each pixel the colour colourAt gives for its column
+function stripes(width: number, height: number, colourAt: (x: number) => number[]): RgbImage {
+  const rgb = new Uint8Array(width * height * 3);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      rgb.set(colourAt(x), (y * width + x) * 3);
+    }
+  }
+  return { width, height, rgb };
+}
+
+const colours = (image: RgbImage) => new Set(Array.from({ length: image.width * image.height }, (_, i) => [...image.rgb.subarray(i * 3, i * 3 + 3)].join()));
+
+describe("a picture of the level's own as its loading screen", () => {
+  test("one the loading screen's size stays as it is", () => {
+    const picture = stripes(LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT, (x) => [x % 256, 0, 0]);
+    expect(fillLoadingImage(picture)).toEqual(picture);
+  });
+
+  test("a wider one is cut at its sides, keeping its middle", () => {
+    const red = [255, 0, 0], green = [0, 255, 0], blue = [0, 0, 255];
+    const width = 2 * LOADING_IMAGE_WIDTH;
+    const picture = stripes(width, LOADING_IMAGE_HEIGHT, (x) => (x < width / 4 ? red : x >= (3 * width) / 4 ? blue : green));
+    expect(colours(fillLoadingImage(picture))).toEqual(new Set([green.join()]));
+  });
+
+  test("a smaller one is stretched to fill it", () => {
+    const filled = fillLoadingImage(stripes(LOADING_IMAGE_WIDTH / 2, LOADING_IMAGE_HEIGHT / 2, () => [9, 8, 7]));
+    expect([filled.width, filled.height]).toEqual([LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT]);
+    expect(colours(filled)).toEqual(new Set(["9,8,7"]));
+  });
+});
+
+describe("a level's loading screen", () => {
+  test("is its folder's loading.png if it has one", () => {
+    const folder = mkdtempSync(join(tmpdir(), "loading-"));
+    const png = new PNG({ width: LOADING_IMAGE_WIDTH, height: LOADING_IMAGE_HEIGHT });
+    png.data.fill(200);
+    writeFileSync(join(folder, "loading.png"), PNG.sync.write(png));
+    expect(colours(loadingImageFor(folder, "Tide Ruins", SKY))).toEqual(new Set(["200,200,200"]));
+  });
+
+  test("is its title card if it hasn't", () => {
+    const folder = mkdtempSync(join(tmpdir(), "loading-"));
+    expect(loadingImageFor(folder, "Tide Ruins", SKY)).toEqual(titleCard("Tide Ruins", SKY));
   });
 });
