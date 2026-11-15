@@ -68,10 +68,16 @@ describe("a picture of the level's own as its loading screen", () => {
   });
 
   test("a wider one is cut at its sides, keeping its middle", () => {
-    const red = [255, 0, 0], green = [0, 255, 0], blue = [0, 0, 255];
     const width = 2 * LOADING_IMAGE_WIDTH;
-    const picture = stripes(width, LOADING_IMAGE_HEIGHT, (x) => (x < width / 4 ? red : x >= (3 * width) / 4 ? blue : green));
-    expect(colours(fillLoadingImage(picture))).toEqual(new Set([green.join()]));
+    const isMiddleHalf = (x: number) => x >= width / 4 && x < (3 * width) / 4;
+    const greenInTheMiddle = (x: number) => {
+      if (isMiddleHalf(x)) {
+        return [0, 255, 0];
+      }
+      return [255, 0, 0];
+    };
+    const picture = stripes(width, LOADING_IMAGE_HEIGHT, greenInTheMiddle);
+    expect(colours(fillLoadingImage(picture))).toEqual(new Set(["0,255,0"]));
   });
 
   test("a smaller one is stretched to fill it", () => {

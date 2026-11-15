@@ -1,12 +1,15 @@
 // a custom level's loading screen: a title card with its title (src/levelTitle.ts) in big
 // outlined letters over its sky, the same size as the game's own loading screens
-import type { RgbImage } from "./images";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { readImage, type RgbImage } from "./images";
 import { GLYPH_HEIGHT, textMask, textWidth, type Mask } from "./pixelFont";
 import type { Rgb, Sky } from "../src/sky";
 
 export const LOADING_IMAGE_WIDTH = 432;
 export const LOADING_IMAGE_HEIGHT = 144;
 export const TITLE_MARGIN = 24; // the most of the card's edge the title is kept clear of
+export const LOADING_PICTURE = "loading.png"; // a picture in the level's folder to show instead of the title card
 
 const TITLE_SCALE_MAX = 10;    // the biggest the font is drawn, for a short title
 const TITLE_TOP: Rgb = [255, 225, 70];   // the letters' colour at their top...
@@ -90,4 +93,45 @@ export function titleCard(title: string, sky: Sky): RgbImage {
   drawOutline(image, mask, left, top, outlineOf(scale));
   drawLetters(image, mask, left, top);
   return image;
+}
+
+// the average colour of picture's pixels from (left, top) up to (right, bottom), each at least one pixel on
+function averageColour(picture: RgbImage, left: number, top: number, right: number, bottom: number): Rgb {
+  const total = [0, 0, 0];
+  let count = 0;
+  for (let y = top; y < Math.max(bottom, top + 1); y++) {
+    for (let x = left; x < Math.max(right, left + 1); x++) {
+      const at = (y * picture.width + x) * 3;
+      total[0] += picture.rgb[at];
+      total[1] += picture.rgb[at + 1];
+      total[2] += picture.rgb[at + 2];
+      count++;
+    }
+  }
+  return total.map((part) => Math.round(part / count)) as Rgb;
+}
+
+// picture filling the loading screen: scaled until it covers it, its middle kept and its overhang cut off
+export function fillLoadingImage(picture: RgbImage): RgbImage {
+  const scale = Math.max(LOADING_IMAGE_WIDTH / picture.width, LOADING_IMAGE_HEIGHT / picture.height);
+  const cutX = (picture.width - LOADING_IMAGE_WIDTH / scale) / 2; // picture pixels cut off each side
+  const cutY = (picture.height - LOADING_IMAGE_HEIGHT / scale) / 2;
+  const sourceX = (x: number) => Math.floor(cutX + x / scale);
+  const sourceY = (y: number) => Math.floor(cutY + y / scale);
+  const image: RgbImage = { width: LOADING_IMAGE_WIDTH, height: LOADING_IMAGE_HEIGHT, rgb: new Uint8Array(LOADING_IMAGE_WIDTH * LOADING_IMAGE_HEIGHT * 3) };
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) {
+      setPixel(image, x, y, averageColour(picture, sourceX(x), sourceY(y), sourceX(x + 1), sourceY(y + 1)));
+    }
+  }
+  return image;
+}
+
+// the level's loading screen: the loading.png in its folder if it has one, else its title card
+export function loadingImageFor(folder: string, title: string, sky: Sky): RgbImage {
+  const picturePath = join(folder, LOADING_PICTURE);
+  if (existsSync(picturePath)) {
+    return fillLoadingImage(readImage(picturePath));
+  }
+  return titleCard(title, sky);
 }
