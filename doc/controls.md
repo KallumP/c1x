@@ -2,19 +2,19 @@
 
 Change the controls in the [launcher](launcher.md#controls)'s Controls tab. The defaults are a WASD layout:
 
-- move - <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>, or the arrow keys
+- move - <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>
 - jump (X) - <kbd>Space</kbd>
-- spin (square) - <kbd>Left Shift</kbd>
-- circle - <kbd>C</kbd>
-- triangle - <kbd>F</kbd>
-- L1 - <kbd>Z</kbd>
-- R1 - <kbd>X</kbd>
-- L2 - <kbd>Q</kbd>
-- R2 - <kbd>E</kbd>
-- L3 - <kbd>1</kbd>
-- R3 - <kbd>3</kbd>
-- start - <kbd>Enter</kbd>
-- select - <kbd>Backspace</kbd>
+- spin (square) - <kbd>K</kbd>
+- circle - <kbd>;</kbd>
+- triangle - <kbd>O</kbd>
+- L1 - <kbd>Q</kbd>
+- R1 - <kbd>P</kbd>
+- L2 - <kbd>E</kbd>
+- R2 - <kbd>I</kbd>
+- L3 - <kbd>R</kbd>
+- R3 - <kbd>U</kbd>
+- start - <kbd>J</kbd>
+- select - <kbd>F</kbd>
 - toggle in-game GUI - <kbd>Esc</kbd>
 - toggle in-game GUI keyboard focus - <kbd>Tab</kbd>
 - toggle fullscreen - <kbd>Alt</kbd>+<kbd>Enter</kbd> (it doesn't press start)
