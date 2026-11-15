@@ -190,7 +190,7 @@ static void DrawBootLevel(const char *repo) {
 static void DrawFields(const char *repo) {
   if (!BeginFieldRows("settings_fields")) { return; }
   DrawOnOff("Fullscreen", &settings.fullscreen,
-    "Fill the screen instead of a window. Alt+Enter or F11 switches while playing.");
+    "Alt+Enter or F11 switches while playing.");
   DrawOnOff("Loading screen", &settings.loading_screen,
     "Show each level's loading screen while it loads.");
   DrawNumber("Minimum loading screen time (ms)", &settings.loading_screen_min_ms,
@@ -203,18 +203,18 @@ static void DrawFields(const char *repo) {
   DrawOnOff("Fix model draw order", &settings.fix_model_draw_order,
     "Draw 3D models in front of or behind each other by their actual depth.");
   DrawOnOff("Replay inputs", &settings.replay_inputs,
-    "Play back the newest recording in build/recorded_inputs/ instead of recording.");
+    "Play back the newest recording in build/recorded_inputs/");
   DrawNumber("Replay speed", &settings.replay_speed, 1, SETTINGS_REPLAY_SPEED_MAX,
-    "How many times normal speed replays play at, or 0 for as fast as possible.");
+    "The speed replays play at, or 0 for as fast as possible.");
   DrawSlider("Frame rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
     SETTINGS_FRAME_RATE_MAX,
     "Frames drawn a second. The game logic still runs at 30 fps, so it plays the same.");
   DrawOnOff("FPS display", &settings.fps_display,
-    "Show how many frames are drawn a second in the top right corner.");
+    "Shows an FPS counter in the top right corner.");
   DrawOnOff("Spin display", &settings.spin_display,
     "Show how many spins Crash has left in the top right corner.");
   DrawOnOff("Box counter", &settings.box_display,
-    "Show how many of the level's boxes Crash has broken (such as 12/49) at the top of the screen.");
+    "Show the level's boxes count (eg 12/49) in the in-game hud");
   DrawBootLevel(repo);
   EndFieldRows();
 }
