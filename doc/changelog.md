@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-15
+
+### Changed
+
+- the launcher's **Controls** tab lists movement, jump and spin first
+
 ## 2026-11-14
 
 ### Added
