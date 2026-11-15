@@ -4,7 +4,9 @@ import { join } from "node:path";
 import { PNG } from "pngjs";
 import { describe, expect, test } from "vitest";
 import type { RgbImage } from "../../builder/images";
-import { fillLoadingImage, LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH, loadingImageFor, TITLE_MARGIN, titleCard } from "../../builder/loadingImage";
+import { fillLoadingImage, LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH, loadingImageBytes, loadingImageFor, TITLE_MARGIN, titleCard } from "../../builder/loadingImage";
+import { LDAT_IMAGE_SIZE } from "../../builder/levelFiles";
+import { colour5551 } from "../../builder/tpage";
 import type { Sky } from "../../src/sky";
 
 const SKY: Sky = { top: [0, 0, 200], bottom: [0, 120, 0], split: 100 };
@@ -99,5 +101,32 @@ describe("a level's loading screen", () => {
   test("is its title card if it hasn't", () => {
     const folder = mkdtempSync(join(tmpdir(), "loading-"));
     expect(loadingImageFor(folder, "Tide Ruins", SKY)).toEqual(titleCard("Tide Ruins", SKY));
+  });
+});
+
+describe("the loading screen in the game's format", () => {
+  const PALETTE_COLOURS = 256;
+
+  // the colour the game shows at x, y of the ldat's image bytes: its palette entry for the pixel's index
+  function shownColour(bytes: Buffer, x: number, y: number): number {
+    const pixels = LOADING_IMAGE_WIDTH * LOADING_IMAGE_HEIGHT;
+    const paletteAt = bytes.length - (2 * PALETTE_COLOURS + pixels);
+    const index = bytes[paletteAt + 2 * PALETTE_COLOURS + y * LOADING_IMAGE_WIDTH + x];
+    return bytes.readUInt16LE(paletteAt + 2 * index);
+  }
+
+  test("fills the ldat's image bytes, its palette and pixels at their end", () => {
+    const bytes = loadingImageBytes(titleCard("Tide Ruins", SKY));
+    expect(bytes.length).toBe(LDAT_IMAGE_SIZE);
+    expect(shownColour(bytes, 0, 0)).toBe(colour5551(SKY.top));
+    expect(shownColour(bytes, 0, LOADING_IMAGE_HEIGHT - 1)).toBe(colour5551(SKY.bottom));
+  });
+
+  test("keeps a picture's colours in 16 bit, cutting it to 256 if it has more", () => {
+    const picture = stripes(LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT, (x) => [x % 256, (x * 7) % 256, (x * 13) % 256]);
+    const bytes = loadingImageBytes(picture);
+    const shown = new Set(Array.from({ length: LOADING_IMAGE_WIDTH }, (_, x) => shownColour(bytes, x, 0)));
+    expect(shown.size).toBeLessThanOrEqual(PALETTE_COLOURS);
+    expect(shown.size).toBeGreaterThan(100);
   });
 });
