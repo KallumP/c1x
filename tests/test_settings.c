@@ -29,7 +29,7 @@ UTEST(settings, reset_gives_each_setting_its_default) {
       { "fix_model_draw_order",  s.fix_model_draw_order,  1 },
       { "replay_inputs",         s.replay_inputs,         0 },
       { "replay_speed",          s.replay_speed,          1 }, /* normal speed */
-      { "frame_rate",            s.frame_rate,            144 },
+      { "frame_rate",            s.frame_rate,            60 },
       { "fullscreen",            s.fullscreen,            0 },
     };
 
