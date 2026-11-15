@@ -16,12 +16,13 @@ const NAME_MARGIN = 2; // the columns and rows around a name's letters that are 
 const pixelAt = (image: RgbImage, x: number, y: number): Rgb =>
   [...image.rgb.subarray((y * image.width + x) * 3, (y * image.width + x) * 3 + 3)] as Rgb;
 
-// whether x, y is in the white or light grey middle of a name's letters: the sign has no other
+// whether colour is the white or light grey of a name's letters' middle: the sign has no other
 // light colour without red or yellow in it
-export function isNameFill(image: RgbImage, x: number, y: number): boolean {
-  const colour = pixelAt(image, x, y);
-  return Math.min(...colour) > 110 && Math.max(...colour) - Math.min(...colour) < 60;
-}
+export const isLetterWhite = (colour: Rgb): boolean =>
+  Math.min(...colour) > 110 && Math.max(...colour) - Math.min(...colour) < 60;
+
+// whether x, y is in the white middle of a name's letters
+export const isNameFill = (image: RgbImage, x: number, y: number): boolean => isLetterWhite(pixelAt(image, x, y));
 
 // which of image's pixels are in its name's letters, 1 for each
 export function nameFill(image: RgbImage): Uint8Array {
