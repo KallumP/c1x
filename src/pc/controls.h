@@ -5,6 +5,7 @@
 #include "pc/pad.h"
 
 #define PAD_BUTTON_COUNT 16
+#define PAD_DEFAULT_KEY_COUNT 16 /* a key for each button */
 
 /* a key bound to a button (or buttons) */
 typedef struct {
@@ -18,7 +19,7 @@ typedef struct {
   uint32_t bits;
 } pad_button_name;
 
-extern const sw_pad_mapping pad_default_mappings[PAD_BUTTON_COUNT];
+extern const sw_pad_mapping pad_default_mappings[PAD_DEFAULT_KEY_COUNT];
 extern const pad_button_name pad_button_names[PAD_BUTTON_COUNT];
 
 int PadParseBinding(const char *name, const char *key, uint32_t *bits, SDL_Scancode *code);

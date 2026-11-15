@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-15
+
+### Changed
+
+- the launcher's **Controls** tab lists movement, jump and spin first
+
 ## 2026-11-14
 
 ### Added
@@ -16,6 +22,7 @@
 - the level editor needs nothing installed: no Node.js and no Install, as it runs from `build/c1x_tools.exe`, which builds levels in place of `build-level.exe`
 - the launcher's **Play** no longer opens a console window beside the game
 - mossy creek and sunset canyon no longer come with their own songs, and play the game's music
+- the default controls are WASD to move, Space to jump and K to spin; your own controls stay until you **Reset to defaults**
 
 ### Fixed
 

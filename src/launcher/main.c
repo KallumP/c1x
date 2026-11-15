@@ -19,7 +19,7 @@
 #include "ui.h"
 
 #define WINDOW_WIDTH  720
-#define WINDOW_HEIGHT 820 /* the controls tab's 16 rows */
+#define WINDOW_HEIGHT 880 /* the controls tab's 16 rows, and its group headings */
 
 static SDL_Window *window;
 static SDL_GLContext gl_context;

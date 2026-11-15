@@ -5,13 +5,22 @@
 
 #define LAUNCHER_CONTROLS_PATH "build/test_launcher_controls.cfg"
 
-UTEST(launcher_controls, reset_binds_cross_to_z_and_start_to_return) {
+UTEST(launcher_controls, reset_binds_cross_to_space_and_start_to_j) {
   launcher_controls c;
 
   ResetControls(&c);
   ASSERT_EQ(1, c.key_count[FindPadButton("cross")]);
-  ASSERT_EQ(SDL_SCANCODE_Z, c.keys[FindPadButton("cross")][0]);
-  ASSERT_EQ(SDL_SCANCODE_RETURN, c.keys[FindPadButton("start")][0]);
+  ASSERT_EQ(SDL_SCANCODE_SPACE, c.keys[FindPadButton("cross")][0]);
+  ASSERT_EQ(SDL_SCANCODE_J, c.keys[FindPadButton("start")][0]);
+}
+
+UTEST(launcher_controls, reset_gives_each_button_one_key) {
+  launcher_controls c;
+  int button;
+
+  ResetControls(&c);
+  for (button = 0; button < PAD_BUTTON_COUNT; button++) { ASSERT_EQ(1, c.key_count[button]); }
+  ASSERT_EQ(SDL_SCANCODE_W, c.keys[FindPadButton("up")][0]);
 }
 
 UTEST(launcher_controls, an_unknown_button_isnt_found) {
@@ -37,7 +46,7 @@ UTEST(launcher_controls, a_buttons_lines_replace_its_default_key) {
   ASSERT_EQ(2, c.key_count[cross]);
   ASSERT_EQ(SDL_SCANCODE_SPACE, c.keys[cross][0]);
   ASSERT_EQ(SDL_SCANCODE_K, c.keys[cross][1]);
-  ASSERT_EQ(SDL_SCANCODE_RETURN, c.keys[FindPadButton("start")][0]);
+  ASSERT_EQ(SDL_SCANCODE_J, c.keys[FindPadButton("start")][0]);
 }
 
 UTEST(launcher_controls, extra_keys_past_the_limit_are_dropped) {
