@@ -49,9 +49,7 @@ SRC =	src/ns.c \
 	src/util/list.c \
 	src/util/tree.c \
 	src/ext/lib/gui.c \
-	src/ext/lib/refl.c \
 	src/ext/gui.c \
-	src/ext/refl.c \
 	src/ext/disgool.c
 
 # test sources (run with utest.h), plus the game sources they test
