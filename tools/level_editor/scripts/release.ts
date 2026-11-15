@@ -75,10 +75,10 @@ export function releaseFiles(gitFiles: string[], buildFiles: string[], pageFiles
   ].map(asReleased);
 }
 
-// repo's release/c1x-<version>, beside release.bat, for a version like 1.2.3
+// repo's release/c1x-<version>, beside release.bat, for a two-number version like 1.3
 export function releaseFolder(repo: string, version: string): string {
-  if (!/^\d+\.\d+\.\d+$/.test(version)) {
-    throw new Error(`the version has to be like 1.2.3, not "${version}"`);
+  if (!/^\d+\.\d+$/.test(version)) {
+    throw new Error(`the version has to be two numbers, like 1.3, not "${version}"`);
   }
   return join(repo, "release", `c1x-${version}`);
 }
