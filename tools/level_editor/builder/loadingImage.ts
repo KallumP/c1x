@@ -3,7 +3,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { readImage, type RgbImage } from "./images";
-import { LDAT_IMAGE_SIZE } from "./levelFiles";
+import { LDAT_IMAGE_SIZE, type Level } from "./levelFiles";
 import { paletteImage } from "./tiles";
 import { GLYPH_HEIGHT, textMask, textWidth, type Mask } from "./pixelFont";
 import type { Rgb, Sky } from "../src/sky";
@@ -149,4 +149,12 @@ export function loadingImageBytes(image: RgbImage): Buffer {
   palette.forEach((colour, index) => bytes.writeUInt16LE(colour, paletteAt + 2 * index));
   bytes.set(pixels, paletteAt + 2 * LOADING_PALETTE_COLOURS);
   return bytes;
+}
+
+// level's .nsd with image as its loading screen, in place of the one it was built from
+export function setLoadingImage(level: Level, image: RgbImage): void {
+  level.nsd.hasLoadingImage = 1;
+  level.nsd.loadingImageWidth = image.width;
+  level.nsd.loadingImageHeight = image.height;
+  level.nsd.ldat.image = loadingImageBytes(image);
 }

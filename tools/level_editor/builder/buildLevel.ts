@@ -12,6 +12,7 @@ import { TooBig } from "./fit";
 import { writeGameTextures } from "./gameTextures";
 import { readImage, type RgbImage } from "./images";
 import { levelOptions, type LevelOptions } from "./levelCfg";
+import { loadingImageFor, setLoadingImage } from "./loadingImage";
 import { readLevel } from "./levelFiles";
 import { readObjectsFile } from "./levelObjects";
 import { writeLevel } from "./levelWriting";
@@ -150,7 +151,9 @@ export function buildLevel(source: string, { streamsDir, levelsDir, log }: Build
     writeGameTextures(dirname(objPath), streamsDir);
     const images = mapImages(objPath, text, log);
     const readOtherLevel = (lid: number) => readLevel(streamsDir, lid);
-    writeLevel(makeMap(readLevel(streamsDir, BASE_LEVEL.lid), text, { ...options, images, objects, readOtherLevel }), levelsDir, name);
+    const built = makeMap(readLevel(streamsDir, BASE_LEVEL.lid), text, { ...options, images, objects, readOtherLevel });
+    setLoadingImage(built, loadingImageFor(dirname(objPath), options.title, options.sky));
+    writeLevel(built, levelsDir, name);
     copyAudioSong(dirname(objPath), levelsDir, name, options.music);
     writeAudioSongVolume(levelsDir, name, options.music, options.musicVolume);
   } catch (error) {
