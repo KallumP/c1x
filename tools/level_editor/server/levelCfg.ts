@@ -1,11 +1,12 @@
 // a level source's level.cfg (see doc/custom_levels.md): the turn, scale, sky,
-// camera and music the level is built with (builder/levelCfg.ts reads it for the build),
+// camera, music and title the level is built with (builder/levelCfg.ts reads it for the build),
 // read and set by the editor
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
 import { DEFAULT_SCALE } from "../src/coords";
 import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, DEFAULT_MUSIC_VOLUME, isAudioSongName, isMusicName, isMusicVolume, MUSIC_VOLUME_MAX, MUSIC_VOLUME_MIN, SOUNDTRACKS } from "../src/music";
+import { levelTitleProblem } from "../src/levelTitle";
 import { DEFAULT_SKY, formatRgb, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 import { levelFolder } from "./levels";
 
@@ -16,6 +17,7 @@ export interface LevelCfg {
   camera: Camera;
   music: string; // one of SOUNDTRACKS' names, or an audio file in the level's folder
   musicVolume: number; // how loud an audio file music plays, a percent of the game's music loudness
+  title: string; // the title its loading screen shows, or "" for its folder's name (src/levelTitle.ts)
 }
 
 const TURNS = [0, 90, 180, 270]; // the build turns in steps of 90 degrees
@@ -76,7 +78,16 @@ function parseMusicVolume(text: string): number {
   return volume;
 }
 
-// turn, scale, sky, camera and music from level.cfg's text, the defaults for what it doesn't set (or sets wrong)
+// the title, or "" (the folder's name) if it isn't set or can't be drawn
+function parseTitle(text: string): string {
+  const title = settingValue(text, "title");
+  if (title === undefined || levelTitleProblem(title)) {
+    return "";
+  }
+  return title;
+}
+
+// turn, scale, sky, camera, music and title from level.cfg's text, the defaults for what it doesn't set (or sets wrong)
 export function parseLevelCfg(text: string): LevelCfg {
   return {
     turn: parseWholeNumber(text, "turn", 0),
@@ -85,6 +96,7 @@ export function parseLevelCfg(text: string): LevelCfg {
     camera: parseCamera(text),
     music: parseMusic(text),
     musicVolume: parseMusicVolume(text),
+    title: parseTitle(text),
   };
 }
 
@@ -118,6 +130,18 @@ function checkLevelCfg(cfg: LevelCfg): void {
   if (!isMusicVolume(cfg.musicVolume)) {
     throw new Error(`music_volume has to be ${MUSIC_VOLUME_MIN} to ${MUSIC_VOLUME_MAX}, not ${cfg.musicVolume}`);
   }
+  const titleProblem = levelTitleProblem(cfg.title);
+  if (titleProblem) {
+    throw new Error(titleProblem);
+  }
+}
+
+// the title's line: "title =" alone for none, the folder's name
+function titleLine(title: string): string {
+  if (title === "") {
+    return "title =";
+  }
+  return `title = ${title}`;
 }
 
 // each setting's line, and whether it's its default (a default sky, camera or music setting is only written over a line it already has)
@@ -132,6 +156,7 @@ function settingLines(cfg: LevelCfg): [string, string, boolean][] {
     ["camera_angle", `camera_angle = ${cfg.camera.angle}`, cfg.camera.angle === DEFAULT_CAMERA.angle],
     ["music", `music = ${cfg.music}`, cfg.music === DEFAULT_MUSIC],
     ["music_volume", `music_volume = ${cfg.musicVolume}`, cfg.musicVolume === DEFAULT_MUSIC_VOLUME],
+    ["title", titleLine(cfg.title), cfg.title === ""],
   ];
 }
 

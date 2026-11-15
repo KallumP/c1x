@@ -9,7 +9,8 @@ import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
 import { isAudioSongName, MUSIC_VOLUME_MAX, MUSIC_VOLUME_MIN, songChoices, songLabel } from "../music";
-import { CheckboxField, ChoiceField, ColourField, NumberField, SliderField } from "./Fields";
+import { defaultLevelTitle, drawableTitle } from "../levelTitle";
+import { CheckboxField, ChoiceField, ColourField, NumberField, SliderField, TextField } from "./Fields";
 import "./PropertiesPanel.css";
 
 const AXES = ["x", "y"] as const;
@@ -68,7 +69,7 @@ const ACROSS_REVERSE_TITLES: Partial<Record<ObjectType, string>> = {
 };
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
-export default function PropertiesPanel({ state, warnings, pathWarnings, outlineWarnings, scale, triangles, dispatch, levelCfg, songs, onLevelCfg }: {
+export default function PropertiesPanel({ state, warnings, pathWarnings, outlineWarnings, scale, triangles, dispatch, levelCfg, levelName, songs, onLevelCfg }: {
   state: EditorState;
   warnings: Set<number>;
   pathWarnings: Set<number>; // the path enemies whose paths leave the floor or run through a wall
@@ -77,6 +78,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   triangles: Triangle[]; // the level's, for dropping a box to the floor
   dispatch: (action: EditorAction) => void;
   levelCfg: LevelCfg | null; // null with no level open
+  levelName: string; // the open level's folder name, whose words are its title if it doesn't set one
   songs: string[]; // the audio files in the level's folder, which it can pick as its song
   onLevelCfg: (changes: Partial<LevelCfg>) => void;
 }) {
@@ -338,12 +340,23 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
 
   const renderOverlapNote = () => <p className="warning">This box is in a wall or another box.</p>;
 
-  // the scale and turn the level is built with; saved to its level.cfg with the objects
+  // the title the level's loading screen shows; saved to its level.cfg with the rest
+  const renderTitleField = (title: string) => (
+    <TextField
+      label="title"
+      value={title}
+      placeholder={defaultLevelTitle(levelName)}
+      onChange={(typed) => onLevelCfg({ title: drawableTitle(typed) })}
+    />
+  );
+
+  // the title, scale and turn the level is built with; saved to its level.cfg with the objects
   const renderLevelFields = (cfg: LevelCfg) => {
     const turn = String(cfg.turn) as (typeof TURNS)[number];
     return (
       <>
         <h3>Level</h3>
+        {renderTitleField(cfg.title)}
         <ChoiceField
           label="turn"
           value={TURNS.includes(turn) ? turn : "0"}
@@ -358,7 +371,8 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
           onChange={(units) => onLevelCfg({ scale: Math.max(1, Math.round(units)) })}
         />
         <p className="hint">
-          Turn turns the level in the game, so its route runs the way Crash faces. Scale is the game's units a metre (400 is
+          Title is the name its loading screen shows under the game's "LOADING" sign (its folder's name if it's empty), in
+          the game's letters, so only letters, spaces and full stops; a loading.png in the level's folder shows instead. Turn turns the level in the game, so its route runs the way Crash faces. Scale is the game's units a metre (400 is
           normal): a bigger scale makes the map bigger in the game, so boxes look smaller on it.
         </p>
       </>

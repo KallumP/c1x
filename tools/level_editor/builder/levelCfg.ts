@@ -1,11 +1,12 @@
-// a level source's level.cfg: the scale, turn, sky, camera and music (and its volume) the level is built with,
+// a level source's level.cfg: the scale, turn, sky, camera, music (and its volume) and title the level is built with,
 // one "key = value" a line. the build reads it strictly, so a mistake stops it
 // with a message; the editor reads it leniently (server/levelCfg.ts)
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { DEFAULT_SCALE } from "../src/coords";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
 import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, DEFAULT_MUSIC_VOLUME, isAudioSongName, isMusicName, isMusicVolume, MUSIC_VOLUME_MAX, MUSIC_VOLUME_MIN, SOUNDTRACKS } from "../src/music";
+import { defaultLevelTitle, levelTitleProblem } from "../src/levelTitle";
 import { DEFAULT_SKY, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 
 export const LEVEL_CFG = "level.cfg";
@@ -17,6 +18,7 @@ export interface LevelOptions {
   camera: Camera;
   music: string; // one of SOUNDTRACKS' names, or an audio file in the level's folder (isAudioSongName)
   musicVolume: number; // how loud an audio file music plays, a percent of the game's music loudness
+  title: string; // the title its loading screen shows (src/levelTitle.ts)
 }
 
 // what a level.cfg sets, each by its key
@@ -30,11 +32,12 @@ export interface LevelCfgSettings {
   camera_angle?: number;
   music?: string;
   music_volume?: number;
+  title?: string;
 }
 
 const WHOLE_NUMBERS = ["scale", "turn"];
 const COLOURS = ["sky_top", "sky_bottom"];
-const SETTINGS = [...WHOLE_NUMBERS, ...COLOURS, "sky_split", "camera_distance", "camera_angle", "music", "music_volume"];
+const SETTINGS = [...WHOLE_NUMBERS, ...COLOURS, "sky_split", "camera_distance", "camera_angle", "music", "music_volume", "title"];
 
 const isComment = (line: string) => line === "" || line.startsWith("#");
 const isWholeNumber = (value: string) => /^[+-]?\d+$/.test(value);
@@ -101,6 +104,15 @@ function readMusicVolume(value: string, where: string): number {
   return volume;
 }
 
+// the title its loading screen shows, or "" for its folder's name
+function readTitle(value: string, where: string): string {
+  const problem = levelTitleProblem(value);
+  if (problem) {
+    throw new Error(`${where}: ${problem}`);
+  }
+  return value;
+}
+
 // the setting one line gives; an unknown setting, or a value it can't take, is an error
 function readSetting(line: string, where: string, folder: string): [keyof LevelCfgSettings, number | Rgb | string] {
   const equals = line.indexOf("=");
@@ -129,6 +141,9 @@ function readSetting(line: string, where: string, folder: string): [keyof LevelC
   }
   if (key === "music_volume") {
     return [key, readMusicVolume(value, where)];
+  }
+  if (key === "title") {
+    return [key, readTitle(value, where)];
   }
   return [key as keyof LevelCfgSettings, readWholeNumber(key, value, where)];
 }
@@ -167,7 +182,12 @@ function cameraOf(settings: LevelCfgSettings): Camera {
   };
 }
 
-// the scale, turn, sky, camera and music for the level source in folder: those given, else its level.cfg's, else the defaults
+// the level's title: what its level.cfg sets, else its folder's name in words
+function titleOf(settings: LevelCfgSettings, folder: string): string {
+  return settings.title || defaultLevelTitle(basename(folder));
+}
+
+// the scale, turn, sky, camera, music and title for the level source in folder: those given, else its level.cfg's, else the defaults
 export function levelOptions(folder: string, given: Partial<LevelOptions> = {}): LevelOptions {
   const settings = readLevelCfg(folder);
   return {
@@ -177,5 +197,6 @@ export function levelOptions(folder: string, given: Partial<LevelOptions> = {}):
     camera: given.camera ?? cameraOf(settings),
     music: given.music ?? settings.music ?? DEFAULT_MUSIC,
     musicVolume: given.musicVolume ?? settings.music_volume ?? DEFAULT_MUSIC_VOLUME,
+    title: given.title ?? titleOf(settings, folder),
   };
 }

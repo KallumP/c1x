@@ -38,6 +38,17 @@ export function NumberField({ label, value, step, min, onChange }: {
   );
 }
 
+// a line of text, showing placeholder while it's empty
+export function TextField({ label, value, placeholder, onChange }: {
+  label: string; value: string; placeholder: string; onChange: (value: string) => void;
+}) {
+  return (
+    <Field label={label}>
+      <input type="text" value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+    </Field>
+  );
+}
+
 // a slider, in steps of step (whole numbers unless given); onGrab runs as it's pressed or keyed, before it changes
 export function SliderField({ label, value, min, max, step = 1, onGrab, onChange }: {
   label: string; value: number; min: number; max: number; step?: number; onGrab: () => void; onChange: (value: number) => void;

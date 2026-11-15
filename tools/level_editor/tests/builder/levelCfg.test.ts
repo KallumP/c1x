@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -19,11 +19,11 @@ function sourceFolder(text?: string): string {
 describe("a level's scale, turn and sky", () => {
   test("without a level.cfg, a level has the default options", () => {
     // the default scale, no turn and n. sanity beach's sky
-    expect(levelOptions(sourceFolder())).toEqual({ scale: 400, turn: 0, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
+    expect(levelOptions(sourceFolder())).toMatchObject({ scale: 400, turn: 0, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
   });
 
   test("level.cfg sets them, skipping comments and blank lines", () => {
-    expect(levelOptions(sourceFolder("# the castle\n\nturn = 270\nscale=2000\n"))).toEqual({ scale: 2000, turn: 270, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
+    expect(levelOptions(sourceFolder("# the castle\n\nturn = 270\nscale=2000\n"))).toMatchObject({ scale: 2000, turn: 270, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
   });
 
   test("level.cfg sets the sky", () => {
@@ -34,7 +34,7 @@ describe("a level's scale, turn and sky", () => {
   });
 
   test("level.cfg can set just one", () => {
-    expect(levelOptions(sourceFolder("turn = 90\n"))).toEqual({ scale: 400, turn: 90, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
+    expect(levelOptions(sourceFolder("turn = 90\n"))).toMatchObject({ scale: 400, turn: 90, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
   });
 
   test("level.cfg sets the camera's distance and angle", () => {
@@ -60,10 +60,22 @@ describe("a level's scale, turn and sky", () => {
     expect(levelOptions(sourceFolder("music_volume = 25\n")).musicVolume).toBe(25);
   });
 
+  test("level.cfg sets the title its loading screen shows", () => {
+    expect(levelOptions(sourceFolder("title = Rock N Roll\n")).title).toBe("Rock N Roll");
+  });
+
+  test("without a title, the level's is its folder's name in words", () => {
+    const folder = join(mkdtempSync(join(tmpdir(), "level-cfg-")), "2_mossy_creek");
+    mkdirSync(folder);
+    expect(levelOptions(folder).title).toBe("Mossy Creek");
+    writeFileSync(join(folder, "level.cfg"), "title =\n");
+    expect(levelOptions(folder).title).toBe("Mossy Creek");
+  });
+
   test("ones given override level.cfg", () => {
     const folder = sourceFolder("turn = 270\nscale = 2000\n");
-    expect(levelOptions(folder, { scale: 1000 })).toEqual({ scale: 1000, turn: 270, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
-    expect(levelOptions(folder, { turn: 0 })).toEqual({ scale: 2000, turn: 0, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
+    expect(levelOptions(folder, { scale: 1000 })).toMatchObject({ scale: 1000, turn: 270, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
+    expect(levelOptions(folder, { turn: 0 })).toMatchObject({ scale: 2000, turn: 0, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME });
   });
 });
 
@@ -110,6 +122,10 @@ describe("a bad level.cfg is an error naming it and its line", () => {
     expect(readError("music_volume = 300\n")).toThrow(/level\.cfg, line 1: music_volume has to be 25 to 200, not 300/);
     expect(readError("music_volume = 10\n")).toThrow(/music_volume has to be 25 to 200, not 10/);
     expect(readError("music_volume = 50.5\n")).toThrow(/music_volume has to be a whole number, not 50\.5/);
+  });
+
+  test("a title the loading screen can't draw", () => {
+    expect(readError("title = Café\n")).toThrow(/level\.cfg, line 1: a title can only have letters, spaces and .*, not é/);
   });
 
   test("a line without a value", () => {
