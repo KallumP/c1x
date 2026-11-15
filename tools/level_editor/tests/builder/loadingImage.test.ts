@@ -4,9 +4,9 @@ import { join } from "node:path";
 import { PNG } from "pngjs";
 import { describe, expect, test } from "vitest";
 import type { RgbImage } from "../../builder/images";
-import { fillLoadingImage, LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH, loadingImageBytes, loadingImageFor, TITLE_MARGIN, titleCard } from "../../builder/loadingImage";
+import { fillLoadingImage, LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH, loadingImageBytes, loadingImageFor, loadingImageFromBytes, TITLE_MARGIN, titleCard } from "../../builder/loadingImage";
 import { LDAT_IMAGE_SIZE } from "../../builder/levelFiles";
-import { colour5551 } from "../../builder/tpage";
+import { colour5551, type Rgb } from "../../builder/tpage";
 import type { Sky } from "../../src/sky";
 
 const SKY: Sky = { top: [0, 0, 200], bottom: [0, 120, 0], split: 100 };
@@ -120,6 +120,14 @@ describe("the loading screen in the game's format", () => {
     expect(bytes.length).toBe(LDAT_IMAGE_SIZE);
     expect(shownColour(bytes, 0, 0)).toBe(colour5551(SKY.top));
     expect(shownColour(bytes, 0, LOADING_IMAGE_HEIGHT - 1)).toBe(colour5551(SKY.bottom));
+  });
+
+  test("reads back as the picture, its colours in 16 bit", () => {
+    const picture = stripes(LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT, (x) => [(x % 32) * 8, 248 - (x % 32) * 8, 64]);
+    const read = loadingImageFromBytes(loadingImageBytes(picture), LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT);
+    expect([read.width, read.height]).toEqual([LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT]);
+    expect(Array.from({ length: LOADING_IMAGE_WIDTH }, (_, x) => colour5551(pixelAt(read, x, 7) as Rgb)))
+      .toEqual(Array.from({ length: LOADING_IMAGE_WIDTH }, (_, x) => colour5551(pixelAt(picture, x, 7) as Rgb)));
   });
 
   test("keeps a picture's colours in 16 bit, cutting it to 256 if it has more", () => {
