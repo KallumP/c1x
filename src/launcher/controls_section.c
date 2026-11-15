@@ -11,6 +11,7 @@
 #include "ui.h"
 
 #define KEY_MIN_WIDTH 72.0f /* so one letter keys are still easy to click */
+#define REMOVE_KEY_GAP 4.0f /* between a key and its x */
 #define LABEL_WIDTH 120.0f
 #define ROW_SPACING ((ImVec2){6, 4})
 #define NOT_CAPTURING -1
@@ -113,17 +114,28 @@ static int DrawKeyButton(const char *name) {
   return igButton(name, (ImVec2){SDL_max(text_size.x + 2 * igGetStyle()->FramePadding.x, KEY_MIN_WIDTH), 0});
 }
 
+/* the remove button beside a key, or a gap as wide when it's its button's only key,
+   so every key takes the same room and the keys and + line up down the column */
+static void DrawRemoveKey(int button, int key) {
+  ImVec2 text_size;
+
+  igSameLine(0, REMOVE_KEY_GAP);
+  if (controls.key_count[button] == 1) {
+    igCalcTextSize(&text_size, "x", 0, false, -1);
+    igDummy((ImVec2){text_size.x + 2 * igGetStyle()->FramePadding.x, igGetFrameHeight()});
+    return;
+  }
+  if (igButton("x", (ImVec2){0, 0})) { RemoveKey(button, key); }
+  DrawTooltip("Remove this key");
+}
+
 static void DrawKey(int button, int key) {
   const char *name;
 
   name = IsCapturing(button, key) ? "Press a key" : SDL_GetScancodeName(controls.keys[button][key]);
   igPushID_Int(key);
   if (DrawKeyButton(name)) { StartCapture(button, key); }
-  if (controls.key_count[button] > 1) {
-    igSameLine(0, 1);
-    if (igButton("x", (ImVec2){0, 0})) { RemoveKey(button, key); }
-    DrawTooltip("Remove this key");
-  }
+  DrawRemoveKey(button, key);
   igPopID();
   igSameLine(0, 12); /* a gap between one key and the next */
 }
