@@ -4,7 +4,7 @@
 
 ### Added
 
-- a custom level's loading screen shows its own title (set under **Level** in the editor), or a `loading.png` from its folder
+- a custom level's loading screen shows its own title under the game's "LOADING" sign (set under **Level** in the editor), or a `loading.png` from its folder
 
 ### Changed
 
