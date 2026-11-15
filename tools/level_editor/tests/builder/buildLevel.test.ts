@@ -8,9 +8,10 @@ import { buildLevel, fittingScale, levelSource, levelSourcePath, mapImages } fro
 import { eidToString } from "../../builder/entryIds";
 import { fit, TooBig } from "../../builder/fit";
 import { readNsd } from "../../builder/levelFiles";
-import { LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH, loadingImageBytes, titleCard } from "../../builder/loadingImage";
+import { LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH, loadingImageBytes } from "../../builder/loadingImage";
+import { ORIGINAL_LOADING_SCREENS } from "../../builder/loadingScreens";
+import { gameLoadingSign } from "../../builder/loadingSign";
 import { texturePage, TILE } from "../../builder/tpage";
-import { DEFAULT_SKY } from "../../src/sky";
 import { boxMesh } from "./meshes";
 
 const newFolder = (name: string) => {
@@ -144,6 +145,7 @@ describe("building a level", () => {
   });
 
   const STREAMS = fileURLToPath(new URL("../../../../streams", import.meta.url));
+  const hasLoadingScreens = ORIGINAL_LOADING_SCREENS.every(({ file }) => existsSync(join(STREAMS, `${file}.nsd`)));
 
   test.skipIf(!existsSync(join(STREAMS, "s0000009.nsd")))("a level source is written to the levels folder", () => {
     const folder = newFolder("tiny");
@@ -156,14 +158,14 @@ describe("building a level", () => {
     expect(existsSync(join(levelsDir, "tiny.nsf"))).toBe(true);
   });
 
-  test.skipIf(!existsSync(join(STREAMS, "s000000c.nsd")))("a level's loading screen is its title card, not jungle rollers'", () => {
+  test.skipIf(!hasLoadingScreens)("a level's loading screen is the game's sign with its title, not jungle rollers'", () => {
     const folder = newFolder("2_tiny_ruins");
     writeFileSync(join(folder, "tiny.obj"), "o Floor\nv -4 0 -8\nv -4 0 8\nv 4 0 8\nv 4 0 -8\nf 1 2 3 4\n");
     const levelsDir = newFolder("levels");
     expect(buildLevel(folder, { streamsDir: STREAMS, levelsDir, log: () => {} })).toBe(true);
     const nsd = readNsd(readFileSync(join(levelsDir, "2_tiny_ruins.nsd")));
     expect([nsd.hasLoadingImage, nsd.loadingImageWidth, nsd.loadingImageHeight]).toEqual([1, LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT]);
-    expect(nsd.ldat.image.equals(loadingImageBytes(titleCard("Tiny Ruins", DEFAULT_SKY)))).toBe(true);
+    expect(nsd.ldat.image.equals(loadingImageBytes(gameLoadingSign(STREAMS, "Tiny Ruins")))).toBe(true);
   });
 
   const crabLevel = () => {
@@ -172,7 +174,11 @@ describe("building a level", () => {
     writeFileSync(join(folder, "objects.json"), '[{"kind": "enemy", "type": "crab", "at": [0, 0, 0]}]');
     return folder;
   };
-  const hasStreams = ["s0000009", "s000000c"].every((file) => existsSync(join(STREAMS, `${file}.nsd`)));
+  const hasStreams = hasLoadingScreens && ["s0000009", "s000000c"].every((file) => existsSync(join(STREAMS, `${file}.nsd`)));
+
+  // the .nsd files the loading screen is made from, into streams
+  const copyLoadingScreens = (streams: string) =>
+    ORIGINAL_LOADING_SCREENS.forEach(({ file }) => copyFileSync(join(STREAMS, `${file}.nsd`), join(streams, `${file}.nsd`)));
 
   test.skipIf(!hasStreams)("a level with an enemy takes its code from the streams folder", () => {
     // a crab, from n. sanity beach
@@ -193,6 +199,7 @@ describe("building a level", () => {
     const streams = newFolder("streams");
     ["s0000009", "s000000c"].forEach((file) => ["nsd", "nsf"].forEach((extension) =>
       copyFileSync(join(STREAMS, `${file}.${extension}`), join(streams, `${file}.${extension}`))));
+    copyLoadingScreens(streams);
     const tile = { pixels: Array(TILE * TILE).fill(3), palette: Array(16).fill(0x7c00) };
     writeFileSync(join(streams, "s0000004.nsf"), texturePage(TEXTURE_PAGE_EID, [tile]).page);
     return streams;

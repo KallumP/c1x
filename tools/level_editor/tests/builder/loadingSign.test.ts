@@ -1,11 +1,13 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PNG } from "pngjs";
 import { describe, expect, test } from "vitest";
 import type { RgbImage } from "../../builder/images";
 import { LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH } from "../../builder/loadingImage";
 import { isNameFill, nameFill, NAME_BOTTOM, NAME_LEFT, NAME_RIGHT, NAME_TOP, ORIGINAL_LOADING_SCREENS, readLoadingScreens, type LoadingScreen } from "../../builder/loadingScreens";
-import { blankSign, NAME_CENTRE, NAME_MAX_WIDTH, signWithTitle } from "../../builder/loadingSign";
+import { blankSign, gameLoadingSign, LOADING_PICTURE, loadingImageFor, NAME_CENTRE, NAME_MAX_WIDTH, signWithTitle } from "../../builder/loadingSign";
 import { signFont, type Glyph } from "../../builder/signFont";
 import type { Rgb } from "../../builder/tpage";
 
@@ -131,6 +133,23 @@ describe("a title on the loading sign", () => {
 
   test("can't have a letter the font hasn't", () => {
     expect(() => signWithTitle(woodSign(), font, "AB")).toThrow("B");
+  });
+});
+
+describe("a level's loading screen", () => {
+  test("is its folder's loading.png if it has one, without the game's files", () => {
+    const folder = mkdtempSync(join(tmpdir(), "loading-"));
+    const png = new PNG({ width: LOADING_IMAGE_WIDTH, height: LOADING_IMAGE_HEIGHT });
+    png.data.fill(200);
+    writeFileSync(join(folder, LOADING_PICTURE), PNG.sync.write(png));
+    const image = loadingImageFor(folder, "Tide Ruins", join(folder, "no streams"));
+    expect(new Set(Array.from({ length: image.width * image.height }, (_, i) => pixelAt(image, i % image.width, Math.floor(i / image.width)).join())))
+      .toEqual(new Set(["200,200,200"]));
+  });
+
+  test.skipIf(!hasStreams)("is the game's sign with its title if it hasn't", () => {
+    const folder = mkdtempSync(join(tmpdir(), "loading-"));
+    expect(loadingImageFor(folder, "Tide Ruins", STREAMS)).toEqual(gameLoadingSign(STREAMS, "Tide Ruins"));
   });
 });
 

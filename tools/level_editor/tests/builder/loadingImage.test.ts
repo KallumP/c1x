@@ -1,54 +1,10 @@
-import { mkdtempSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { PNG } from "pngjs";
 import { describe, expect, test } from "vitest";
 import type { RgbImage } from "../../builder/images";
-import { fillLoadingImage, LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH, loadingImageBytes, loadingImageFor, loadingImageFromBytes, TITLE_MARGIN, titleCard } from "../../builder/loadingImage";
+import { fillLoadingImage, LOADING_IMAGE_HEIGHT, LOADING_IMAGE_WIDTH, loadingImageBytes, loadingImageFromBytes } from "../../builder/loadingImage";
 import { LDAT_IMAGE_SIZE } from "../../builder/levelFiles";
 import { colour5551, type Rgb } from "../../builder/tpage";
-import type { Sky } from "../../src/sky";
-
-const SKY: Sky = { top: [0, 0, 200], bottom: [0, 120, 0], split: 100 };
 
 const pixelAt = (image: RgbImage, x: number, y: number) => [...image.rgb.subarray((y * image.width + x) * 3, (y * image.width + x) * 3 + 3)];
-
-const isSkyColumn = (image: RgbImage, x: number, sky: RgbImage) =>
-  Array.from({ length: image.height }, (_, y) => pixelAt(image, x, y).join() === pixelAt(sky, x, y).join()).every(Boolean);
-
-// the leftmost and rightmost columns the title draws in, against the card with no title
-function titleColumns(image: RgbImage): [number, number] {
-  const sky = titleCard("", SKY);
-  const drawn = Array.from({ length: image.width }, (_, x) => x).filter((x) => !isSkyColumn(image, x, sky));
-  return [drawn[0], drawn[drawn.length - 1]];
-}
-
-describe("a level's title card", () => {
-  test("is the loading screen's size", () => {
-    const card = titleCard("Tide Ruins", SKY);
-    expect([card.width, card.height]).toEqual([LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT]);
-    expect(card.rgb.length).toBe(LOADING_IMAGE_WIDTH * LOADING_IMAGE_HEIGHT * 3);
-  });
-
-  test("fades from the level's sky top colour to its bottom one, behind the title", () => {
-    const card = titleCard("Tide Ruins", SKY);
-    expect(pixelAt(card, 0, 0)).toEqual(SKY.top);
-    expect(pixelAt(card, 0, LOADING_IMAGE_HEIGHT - 1)).toEqual(SKY.bottom);
-  });
-
-  test("puts the title in the middle", () => {
-    const [left, right] = titleColumns(titleCard("Tide Ruins", SKY));
-    expect(Math.abs(left - (LOADING_IMAGE_WIDTH - 1 - right))).toBeLessThanOrEqual(1);
-  });
-
-  test("draws a long title smaller, so it still fits inside the margins", () => {
-    const short = titleColumns(titleCard("Lab", SKY));
-    const long = titleColumns(titleCard("A".repeat(30), SKY));
-    expect(long[0]).toBeGreaterThanOrEqual(TITLE_MARGIN);
-    expect(long[1]).toBeLessThan(LOADING_IMAGE_WIDTH - TITLE_MARGIN);
-    expect(short[1] - short[0]).toBeGreaterThan(60); // a short one is drawn big, not at the smallest size
-  });
-});
 
 // a width x height image, each pixel the colour colourAt gives for its column
 function stripes(width: number, height: number, colourAt: (x: number) => number[]): RgbImage {
@@ -89,21 +45,6 @@ describe("a picture of the level's own as its loading screen", () => {
   });
 });
 
-describe("a level's loading screen", () => {
-  test("is its folder's loading.png if it has one", () => {
-    const folder = mkdtempSync(join(tmpdir(), "loading-"));
-    const png = new PNG({ width: LOADING_IMAGE_WIDTH, height: LOADING_IMAGE_HEIGHT });
-    png.data.fill(200);
-    writeFileSync(join(folder, "loading.png"), PNG.sync.write(png));
-    expect(colours(loadingImageFor(folder, "Tide Ruins", SKY))).toEqual(new Set(["200,200,200"]));
-  });
-
-  test("is its title card if it hasn't", () => {
-    const folder = mkdtempSync(join(tmpdir(), "loading-"));
-    expect(loadingImageFor(folder, "Tide Ruins", SKY)).toEqual(titleCard("Tide Ruins", SKY));
-  });
-});
-
 describe("the loading screen in the game's format", () => {
   const PALETTE_COLOURS = 256;
 
@@ -116,10 +57,16 @@ describe("the loading screen in the game's format", () => {
   }
 
   test("fills the ldat's image bytes, its palette and pixels at their end", () => {
-    const bytes = loadingImageBytes(titleCard("Tide Ruins", SKY));
+    const blueThenGreen = (x: number) => {
+      if (x < LOADING_IMAGE_WIDTH / 2) {
+        return [0, 0, 200];
+      }
+      return [0, 120, 0];
+    };
+    const bytes = loadingImageBytes(stripes(LOADING_IMAGE_WIDTH, LOADING_IMAGE_HEIGHT, blueThenGreen));
     expect(bytes.length).toBe(LDAT_IMAGE_SIZE);
-    expect(shownColour(bytes, 0, 0)).toBe(colour5551(SKY.top));
-    expect(shownColour(bytes, 0, LOADING_IMAGE_HEIGHT - 1)).toBe(colour5551(SKY.bottom));
+    expect(shownColour(bytes, 0, 0)).toBe(colour5551([0, 0, 200]));
+    expect(shownColour(bytes, LOADING_IMAGE_WIDTH - 1, LOADING_IMAGE_HEIGHT - 1)).toBe(colour5551([0, 120, 0]));
   });
 
   test("reads back as the picture, its colours in 16 bit", () => {
