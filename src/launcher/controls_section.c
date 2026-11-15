@@ -11,23 +11,29 @@
 #include "ui.h"
 
 #define KEY_MIN_WIDTH 72.0f /* so one letter keys are still easy to click */
-#define LABEL_WIDTH 100.0f
+#define LABEL_WIDTH 120.0f
 #define ROW_SPACING ((ImVec2){6, 4})
 #define NOT_CAPTURING -1
+#define SAME_GROUP NULL
+#define UNTITLED_GROUP ""
 
-/* the buttons in the order they're shown, one to a row */
+/*
+ * the buttons in the order they're shown, one to a row, grouped by what they do.
+ * a row with a group starts a new group, under that heading if it has one
+ */
 static const struct {
+  const char *group;
   const char *name;  /* in controls.cfg */
   const char *label;
 } shown_buttons[PAD_BUTTON_COUNT] = {
-  { "cross", "Cross" }, { "square", "Square" },
-  { "circle", "Circle" }, { "triangle", "Triangle" },
-  { "l1", "L1" }, { "r1", "R1" },
-  { "l2", "L2" }, { "r2", "R2" },
-  { "l3", "L3" }, { "r3", "R3" },
-  { "up", "Up" }, { "down", "Down" },
-  { "left", "Left" }, { "right", "Right" },
-  { "start", "Start" }, { "select", "Select" },
+  { "Movement", "up", "Up" }, { SAME_GROUP, "down", "Down" },
+  { SAME_GROUP, "left", "Left" }, { SAME_GROUP, "right", "Right" },
+  { UNTITLED_GROUP, "cross", "Jump (Cross)" }, { SAME_GROUP, "square", "Spin (Square)" },
+  { SAME_GROUP, "start", "Start" }, { SAME_GROUP, "select", "Select" },
+  { "Other buttons", "circle", "Circle" }, { SAME_GROUP, "triangle", "Triangle" },
+  { SAME_GROUP, "l1", "L1" }, { SAME_GROUP, "r1", "R1" },
+  { SAME_GROUP, "l2", "L2" }, { SAME_GROUP, "r2", "R2" },
+  { SAME_GROUP, "l3", "L3" }, { SAME_GROUP, "r3", "R3" },
 };
 
 static launcher_controls controls;
@@ -138,9 +144,21 @@ static void DrawAddKey(int button) {
   DrawTooltip("Add another key for this button");
 }
 
+/* a gap before each group but the first, and its heading if it has one */
+static void DrawGroupStart(int shown) {
+  const char *group = shown_buttons[shown].group;
+
+  if (group == SAME_GROUP) { return; }
+  igTableNextRow(0, 0);
+  igTableNextColumn();
+  if (shown > 0) { igSpacing(); }
+  if (group[0] != 0) { igTextDisabled("%s", group); }
+}
+
 static void DrawButtonKeys(int shown) {
   int button, key;
 
+  DrawGroupStart(shown);
   button = FindPadButton(shown_buttons[shown].name);
   igTableNextRow(0, 0);
   igTableNextColumn();
