@@ -1,6 +1,6 @@
 # c1x
 
-c1x ("c1, extended") is a port of the game *Crash Bandicoot* to C, upgraded with quality of life improvements and packed with new features, such as custom levels built in Blender.
+c1x ("c1, N-Hanced") is a port of the game *Crash Bandicoot* to C, upgraded with quality of life improvements and packed with new features, such as custom levels built in Blender.
 
 The code was originally designed to compile for both psx and pc. As of 30 October 2026, this fork no longer supports building for the PS1 and only builds for pc; see [PS1 build](doc/psx-build.md) for why.
 
