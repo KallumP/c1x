@@ -20,6 +20,7 @@ typedef struct {
   int box_display;                /* show a counter of the boxes broken with the hud */
   int skip_splash_screens;        /* boot straight to the main menu */
   int fix_model_draw_order;       /* depth test 3d models against each other */
+  int spin_ledge_jump;            /* crash can jump just after a spin carries him off a ledge */
   int replay_inputs;              /* replay the newest recording instead of recording */
   uint32_t replay_speed;          /* times normal speed, 0 = as fast as possible */
   uint32_t frame_rate;            /* frames drawn a second; the game itself runs at 30 */

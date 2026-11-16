@@ -17,6 +17,7 @@ void SettingsReset(pc_settings *s) {
   s->box_display = 1;
   s->skip_splash_screens = 1;
   s->fix_model_draw_order = 1;
+  s->spin_ledge_jump = 1;
   s->replay_inputs = 0;
   s->replay_speed = 1;
   s->frame_rate = 60;
@@ -89,6 +90,8 @@ static int SettingsApply(const char *name, const char *value, pc_settings *s) {
     return SettingsParseOnOff(value, &s->skip_splash_screens) ? 1 : -1;
   if (SDL_strcasecmp(name, "fix_model_draw_order") == 0)
     return SettingsParseOnOff(value, &s->fix_model_draw_order) ? 1 : -1;
+  if (SDL_strcasecmp(name, "spin_ledge_jump") == 0)
+    return SettingsParseOnOff(value, &s->spin_ledge_jump) ? 1 : -1;
   if (SDL_strcasecmp(name, "replay_inputs") == 0)
     return SettingsParseOnOff(value, &s->replay_inputs) ? 1 : -1;
   if (SDL_strcasecmp(name, "replay_speed") == 0)

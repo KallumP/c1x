@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-16
+
+### Added
+
+- a `spin_ledge_jump` setting, on by default: Crash can jump straight after a spin carries him off a ledge
+
 ## 2026-11-15
 
 ### Added
