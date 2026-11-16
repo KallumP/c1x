@@ -2,22 +2,39 @@
 
 The game's settings are in `settings.cfg`, next to `streams/`. Change them in the [launcher](launcher.md#settings), which creates the file from [`settings.example.cfg`](../settings.example.cfg) and keeps it up to date. The game reads it when it starts.
 
+### Display
+
 | Setting | Default | What it does |
 |---|---|---|
+| `fullscreen` | `off` | Fill the screen instead of a 1024x768 window. The picture keeps its 4:3 shape, with black bars at the sides on a widescreen. <kbd>Alt</kbd>+<kbd>Enter</kbd> or <kbd>F11</kbd> switches between the two while playing, without changing the setting. |
+| `fps_display` | `on` | Show how many frames are drawn a second in the top right corner (see `frame_rate`). |
+| `frame_rate` | `60` | How many frames a second to draw, from `30` to `240`. The game itself still runs at 30 frames a second, as on the PS1, so it plays the same; the frames in between show the camera and everything moving smoothly between them. `30` draws only the game's own frames. |
+| `box_display` | `on` | Show how many of the level's boxes Crash has broken at the top of the screen, such as `12/49`. It slides in with the lives and wumpa counters when triangle shows them, not each time a box breaks. Levels without a box gem (bosses, bonus rounds) show only the number broken. |
+
+### Game adjustments
+
+| Setting | Default | What it does |
+|---|---|---|
+| `skip_splash_screens` | `on` | Go straight to the main menu, skipping the Sony, Universal and Naughty Dog screens. |
 | `skip_loading_screen` | `off` | Don't show each level's loading screen while it loads. |
 | `loading_screen_min_ms` | `1000` | Keep the loading screen up for at least this many milliseconds (up to `60000`), as levels load much faster than from the PS1's CD. `0` shows it only while loading. |
-| `speed_display` | `off` | Show how fast Crash is moving in the top right corner. |
-| `fps_display` | `on` | Show how many frames are drawn a second in the top right corner (see `frame_rate`). |
-| `spin_display` | `off` | Show how many spins Crash has left in the top right corner, and the seconds until the next comes back. He holds up to 5, and each comes back 2 seconds after it's used. |
-| `box_display` | `on` | Show how many of the level's boxes Crash has broken at the top of the screen, such as `12/49`. It slides in with the lives and wumpa counters when triangle shows them, not each time a box breaks. Levels without a box gem (bosses, bonus rounds) show only the number broken. |
-| `skip_splash_screens` | `on` | Go straight to the main menu, skipping the Sony, Universal and Naughty Dog screens. |
 | `fix_model_draw_order` | `on` | Draw 3D models in front of or behind each other by their actual depth, so a crate can't be drawn over Crash in front of it. `off` keeps the original game's order. |
 | `spin_ledge_jump` | `on` | Let Crash jump for a moment after a spin carries him off a ledge (such as one he landed on mid-spin), as he can after walking off one. `off` keeps the original game, where he can't jump until the spin ends. |
+| `speed_display` | `off` | Show how fast Crash is moving in the top right corner. |
+| `spin_display` | `off` | Show how many spins Crash has left in the top right corner, and the seconds until the next comes back. He holds up to 5, and each comes back 2 seconds after it's used. |
+
+### Start
+
+| Setting | Default | What it does |
+|---|---|---|
+| `boot_level` | none | Start in a custom level built to `build/levels/` instead of the title screen (see [Custom levels](custom_levels.md)). |
+
+### Replays
+
+| Setting | Default | What it does |
+|---|---|---|
 | `replay_inputs` | `off` | Play back the newest recording (see below) instead of recording this run. |
 | `replay_speed` | `1` | How fast a replay plays: this many times normal speed (up to `16`), or `0` for as fast as possible. |
-| `frame_rate` | `60` | How many frames a second to draw, from `30` to `240`. The game itself still runs at 30 frames a second, as on the PS1, so it plays the same; the frames in between show the camera and everything moving smoothly between them. `30` draws only the game's own frames. |
-| `fullscreen` | `off` | Fill the screen instead of a 1024x768 window. The picture keeps its 4:3 shape, with black bars at the sides on a widescreen. <kbd>Alt</kbd>+<kbd>Enter</kbd> or <kbd>F11</kbd> switches between the two while playing, without changing the setting. |
-| `boot_level` | none | Start in a custom level built to `build/levels/` instead of the title screen (see [Custom levels](custom_levels.md)). |
 
 ## Recorded inputs
 
