@@ -17,6 +17,7 @@
 #define BODY_FONT_SIZE    18.0f
 #define HEADING_FONT_SIZE 22.0f
 #define LABEL_WIDTH 260.0f
+#define TOOLTIP_WRAP_WIDTH 420.0f /* tooltip lines wrap at this width */
 #define OUTPUT_HEIGHT 160
 #define BIG_BUTTON_SIZE ((ImVec2){240, 48})
 
@@ -77,8 +78,14 @@ int DrawBigButton(const char *label) {
   return pressed;
 }
 
+/* a tooltip for the last item, wrapped so a long one stays in the window */
 void DrawTooltip(const char *text) {
-  if (igIsItemHovered(0)) { igSetTooltip("%s", text); }
+  if (!igIsItemHovered(0)) { return; }
+  igBeginTooltip();
+  igPushTextWrapPos(TOOLTIP_WRAP_WIDTH);
+  igTextUnformatted(text, 0);
+  igPopTextWrapPos();
+  igEndTooltip();
 }
 
 /* rows of a label, then its field; returns 0 if there's nothing to draw */
