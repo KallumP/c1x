@@ -15,6 +15,7 @@
 #include "pc/frames.h"
 #include "pc/boxhud.h"
 #include "pc/switchchain.h"
+#include "pc/enhancedtitle.h"
 #include "pc/jumpgrace.h"
 #include "pc/settings.h"
 int CardControl(int op, int part_idx) { return 1; }
@@ -1128,6 +1129,7 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
   int res;
 
   if (obj->handle.subtype != 3) { return SUCCESS; }
+  EnhancedTitleSeeObject(obj); /* pc: has the title's logo landed? */
   if (obj == crash) {
     PadUpdate();
     CrashJumpGrace(obj);
@@ -1558,6 +1560,7 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
     arg = 0;
   prims_tail = GLGetPrimsTail();
   GoolTextStringTransform(obj, buf, -arg/2, font, tpag, size, prims_tail);
+  EnhancedTitleSeeMenuText(buf); /* pc: N-HANCED goes with the title's START */
 }
 
 static inline int GoolObjectColorByZone(gool_object *obj) {

@@ -22,8 +22,11 @@ const BUILT_FILES = ["c1x.exe", "c1x_tools.exe"];
 // the level editor's page, built by make, which the tools serve
 const EDITOR_PAGE_DIR = "build/editor";
 const EDITOR_PAGE_INDEX = "index.html";
-// the level sources git has go in, so not a player's own
-const GIT_FOLDER = "level_src/";
+// the folders whose files git has go in: the level sources (so not a player's own),
+// and the game's own pictures
+const GIT_FOLDERS = ["level_src/", "assets/"];
+
+const isInGitFolder = (path: string): boolean => GIT_FOLDERS.some((folder) => path.startsWith(folder));
 
 const sameName = (path: string): ReleaseFile => ({ from: path, to: path });
 
@@ -71,7 +74,7 @@ export function releaseFiles(gitFiles: string[], buildFiles: string[], pageFiles
     ...PLAYER_DOCS.map(sameName),
     ...buildFolderFiles(buildFiles),
     ...editorPageFiles(pageFiles),
-    ...gitFiles.filter((path) => path.startsWith(GIT_FOLDER)).map(sameName),
+    ...gitFiles.filter(isInGitFolder).map(sameName),
   ].map(asReleased);
 }
 
