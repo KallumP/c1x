@@ -12,7 +12,7 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | `box_display` | `on` | Show how many of the level's boxes Crash has broken at the top of the screen, such as `12/49`. It slides in with the lives and wumpa counters when triangle shows them, not each time a box breaks. Levels without a box gem (bosses, bonus rounds) show only the number broken. |
 | `skip_splash_screens` | `on` | Go straight to the main menu, skipping the Sony, Universal and Naughty Dog screens. |
 | `fix_model_draw_order` | `on` | Draw 3D models in front of or behind each other by their actual depth, so a crate can't be drawn over Crash in front of it. `off` keeps the original game's order. |
-| `spin_ledge_jump` | `on` | Let Crash jump for a moment after a spin carries him off a ledge, as he can after walking off one. `off` keeps the original game, where the jump only works if he's still on the ledge. |
+| `spin_ledge_jump` | `on` | Let Crash jump for a moment after a spin carries him off a ledge (such as one he landed on mid-spin), as he can after walking off one. `off` keeps the original game, where he can't jump until the spin ends. |
 | `replay_inputs` | `off` | Play back the newest recording (see below) instead of recording this run. |
 | `replay_speed` | `1` | How fast a replay plays: this many times normal speed (up to `16`), or `0` for as fast as possible. |
 | `frame_rate` | `60` | How many frames a second to draw, from `30` to `240`. The game itself still runs at 30 frames a second, as on the PS1, so it plays the same; the frames in between show the camera and everything moving smoothly between them. `30` draws only the game's own frames. |
