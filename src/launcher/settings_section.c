@@ -93,11 +93,12 @@ static void DrawOnOff(const char *label, int *setting, const char *tooltip) {
   DrawTooltip(tooltip);
 }
 
-static void DrawNumber(const char *label, uint32_t *setting, uint32_t step,
+/* a number box stacked under the setting above, as part of it */
+static void DrawStackedNumber(const char *label, uint32_t *setting, uint32_t step,
   uint32_t max, const char *tooltip) {
   uint32_t step_fast;
 
-  BeginFieldRow(label, tooltip);
+  BeginStackedFieldRow(label, tooltip);
   step_fast = step * 10;
   igSetNextItemWidth(NUMBER_WIDTH);
   igPushID_Str(label);
@@ -108,10 +109,11 @@ static void DrawNumber(const char *label, uint32_t *setting, uint32_t step,
   DrawTooltip(tooltip);
 }
 
-/* a slider from min to max (ctrl+click to type a value, still kept in range) */
-static void DrawSlider(const char *label, uint32_t *setting, uint32_t min,
+/* a slider from min to max (ctrl+click to type a value, still kept in range),
+   stacked under the setting above, as part of it */
+static void DrawStackedSlider(const char *label, uint32_t *setting, uint32_t min,
   uint32_t max, const char *tooltip) {
-  BeginFieldRow(label, tooltip);
+  BeginStackedFieldRow(label, tooltip);
   igSetNextItemWidth(SLIDER_WIDTH);
   igPushID_Str(label);
   igSliderScalar("##slider", ImGuiDataType_U32, setting, &min, &max, "%u",
@@ -187,37 +189,59 @@ static void DrawBootLevel(const char *repo) {
   DrawLevelBuildStatus();
 }
 
-static void DrawFields(const char *repo) {
-  if (!BeginFieldRows("settings_fields")) { return; }
+/* the window and what's shown over the game */
+static void DrawDisplayFields(void) {
+  DrawFieldGroupTitle("Display");
   DrawOnOff("Fullscreen", &settings.fullscreen,
     "Alt+Enter or F11 switches while playing.");
-  DrawOnOff("Skip loading screen", &settings.skip_loading_screen,
-    "Don't show each level's loading screen while it loads.");
-  DrawNumber("Minimum loading screen time (ms)", &settings.loading_screen_min_ms,
-    100, SETTINGS_LOADING_SCREEN_MAX_MS,
-    "Keep the loading screen up for at least this long. 0 shows it only while loading.");
+  DrawOnOff("FPS display", &settings.fps_display,
+    "Shows an FPS counter in the top right corner.");
+  DrawStackedSlider("Target frame rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
+    SETTINGS_FRAME_RATE_MAX,
+    "Frames drawn a second. The game logic still runs at 30 fps, so it plays the same.");
+  DrawOnOff("Box counter", &settings.box_display,
+    "Show the level's boxes count (eg 12/49) in the in-game hud");
   DrawOnOff("Speed display", &settings.speed_display,
     "Show how fast Crash is moving in the top right corner.");
+  DrawOnOff("Spin display", &settings.spin_display,
+    "Show how many spins Crash has left in the top right corner.");
+}
+
+/* changes to how the original game plays or looks */
+static void DrawGameFixFields(void) {
+  DrawFieldGroupTitle("Game fixes");
   DrawOnOff("Skip splash screens", &settings.skip_splash_screens,
     "Go straight to the main menu when the game starts.");
+  DrawOnOff("Skip loading screen", &settings.skip_loading_screen,
+    "Don't show each level's loading screen while it loads.");
+  DrawStackedNumber("Minimum loading screen time (ms)", &settings.loading_screen_min_ms,
+    100, SETTINGS_LOADING_SCREEN_MAX_MS,
+    "Keep the loading screen up for at least this long. 0 shows it only while loading.");
   DrawOnOff("Fix model draw order", &settings.fix_model_draw_order,
     "Draw 3D models in front of or behind each other by their actual depth.");
   DrawOnOff("Fix jumping while spinning off a ledge", &settings.spin_ledge_jump,
     "In the original, once a spin carries Crash off a ledge (such as one he landed on mid-spin), he can't jump until the spin ends. This lets him jump for a moment after leaving the ledge, as he can when walking off one.");
+}
+
+static void DrawStartFields(const char *repo) {
+  DrawFieldGroupTitle("Start");
+  DrawBootLevel(repo);
+}
+
+static void DrawReplayFields(void) {
+  DrawFieldGroupTitle("Replays");
   DrawOnOff("Replay inputs", &settings.replay_inputs,
     "Play back the newest recording in build/recorded_inputs/");
-  DrawNumber("Replay speed", &settings.replay_speed, 1, SETTINGS_REPLAY_SPEED_MAX,
+  DrawStackedNumber("Replay speed", &settings.replay_speed, 1, SETTINGS_REPLAY_SPEED_MAX,
     "The speed replays play at, or 0 for as fast as possible.");
-  DrawSlider("Frame rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
-    SETTINGS_FRAME_RATE_MAX,
-    "Frames drawn a second. The game logic still runs at 30 fps, so it plays the same.");
-  DrawOnOff("FPS display", &settings.fps_display,
-    "Shows an FPS counter in the top right corner.");
-  DrawOnOff("Spin display", &settings.spin_display,
-    "Show how many spins Crash has left in the top right corner.");
-  DrawOnOff("Box counter", &settings.box_display,
-    "Show the level's boxes count (eg 12/49) in the in-game hud");
-  DrawBootLevel(repo);
+}
+
+static void DrawFields(const char *repo) {
+  if (!BeginFieldRows("settings_fields")) { return; }
+  DrawDisplayFields();
+  DrawGameFixFields();
+  DrawStartFields(repo);
+  DrawReplayFields();
   EndFieldRows();
 }
 

@@ -18,6 +18,8 @@
 #define HEADING_FONT_SIZE 22.0f
 #define LABEL_WIDTH 260.0f
 #define TOOLTIP_WRAP_WIDTH 420.0f /* tooltip lines wrap at this width */
+#define STACKED_FIELD_INDENT 20.0f /* a stacked row's label, in from its parent's */
+#define FIELD_GROUP_GAP 6.0f       /* space above a group's title */
 #define OUTPUT_HEIGHT 160
 #define BIG_BUTTON_SIZE ((ImVec2){240, 48})
 
@@ -96,14 +98,34 @@ int BeginFieldRows(const char *id) {
   return 1;
 }
 
-/* a row's label (hover it for tooltip); the field drawn next goes beside it */
-void BeginFieldRow(const char *label, const char *tooltip) {
+/* a dimmed title over a group of rows, with a gap above it */
+void DrawFieldGroupTitle(const char *title) {
   igTableNextRow(0, 0);
   igTableNextColumn();
+  igDummy((ImVec2){0, FIELD_GROUP_GAP});
+  igTextDisabled("%s", title);
+  igTableNextColumn();
+}
+
+static void DrawFieldLabel(const char *label, const char *tooltip, float indent) {
+  igTableNextRow(0, 0);
+  igTableNextColumn();
+  if (indent > 0) { igIndent(indent); }
   igAlignTextToFramePadding();
   igText("%s", label);
+  if (indent > 0) { igUnindent(indent); }
   DrawTooltip(tooltip);
   igTableNextColumn();
+}
+
+/* a row's label (hover it for tooltip); the field drawn next goes beside it */
+void BeginFieldRow(const char *label, const char *tooltip) {
+  DrawFieldLabel(label, tooltip, 0);
+}
+
+/* a row stacked under the one above, as part of its setting: its label is indented */
+void BeginStackedFieldRow(const char *label, const char *tooltip) {
+  DrawFieldLabel(label, tooltip, STACKED_FIELD_INDENT);
 }
 
 void EndFieldRows(void) {
