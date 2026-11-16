@@ -38,6 +38,7 @@ extern lid_t cur_lid;
 #include "pc/loading.h"
 #include "pc/settings.h"
 #include "pc/enhancedtitle.h"
+#include "pc/custommenu.h"
 extern gl_context context;
 
 //----- (80031BAC) --------------------------------------------------------
@@ -186,6 +187,7 @@ int TitleLoadState() {
   case 5: /* main menu */
     LevelResetGlobals(1);
     EnhancedTitleLoaded(); /* pc: N-Hanced waits for the logo again */
+    CustomMenuLoaded(); /* pc: the cursor starts off CUSTOM LEVEL */
     eid = NSStringToEID("0c_pZ");
     type = 3;
     break;

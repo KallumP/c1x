@@ -16,6 +16,7 @@
 #include "pc/boxhud.h"
 #include "pc/switchchain.h"
 #include "pc/enhancedtitle.h"
+#include "pc/custommenu.h"
 #include "pc/jumpgrace.h"
 #include "pc/settings.h"
 int CardControl(int op, int part_idx) { return 1; }
@@ -1130,8 +1131,10 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
 
   if (obj->handle.subtype != 3) { return SUCCESS; }
   EnhancedTitleSeeObject(obj); /* pc: has the title's logo landed? */
+  CustomMenuSeeObject(obj); /* pc: which row is the title menu's cursor on? */
   if (obj == crash) {
     PadUpdate();
+    CustomMenuReadPad(); /* pc: before the title's menu reads it */
     CrashJumpGrace(obj);
   }
   cur_obj = obj;
@@ -1514,6 +1517,24 @@ static void GoolTextTrimSpaces(char *text) {
   text[len] = 0;
 }
 
+/*
+ * pc: text in the letters and size of obj's own, at another place (x and y in
+ * the game's units, as an object's trans is)
+ */
+static void GoolTextDrawAt(gool_object *obj, gool_font *font, eid_t tpag,
+  uint32_t size, const char *text, int32_t x, int32_t y) {
+  gool_vectors vectors;
+  char buf[64];
+
+  vectors = obj->vectors;
+  vectors.trans.x = x;
+  vectors.trans.y = y;
+  if (!SwCalcSpriteRotMatrix(&vectors, (gool_vectors*)&cam_trans_prev,
+    (obj->status_b & GOOL_FLAG_2D), size, &ms_rot, screen_proj, 0x3C00, &params)) { return; }
+  snprintf(buf, sizeof(buf), "%s", text); /* the transform takes a string it may change */
+  GoolTextStringTransform(obj, buf, 0, font, tpag, size, GLGetPrimsTail());
+}
+
 //----- (8001E7D8) --------------------------------------------------------
 void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, void *ot, int flag) {
   gool_font *font;
@@ -1539,6 +1560,7 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
     &params);
   if (!res) { return; }
   params.trans.y += BoxHudCounterTextDrop(obj); /* pc: onto the other counters' line */
+  params.trans.y += CustomMenuTextDrop(obj); /* pc: the title menu's rows make room for CUSTOM LEVEL */
   str = text->strings;
   for (i=0,j=0;j<terms_skip;i++) {
     if (str[i] == 0) { j++; }
@@ -1561,6 +1583,8 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
   prims_tail = GLGetPrimsTail();
   GoolTextStringTransform(obj, buf, -arg/2, font, tpag, size, prims_tail);
   EnhancedTitleSeeMenuText(buf); /* pc: N-Hanced goes with the title's START */
+  if (CustomMenuIsTopItem(obj)) /* pc: CUSTOM LEVEL, in the title menu's letters */
+    GoolTextDrawAt(obj, font, tpag, size, CUSTOM_MENU_TEXT, MENU_ITEM_X, CUSTOM_MENU_Y);
 }
 
 static inline int GoolObjectColorByZone(gool_object *obj) {

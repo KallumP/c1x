@@ -40,4 +40,25 @@ extern uint32_t CustomMenuShowGame(custom_menu *menu, int game_row, uint32_t hel
 extern int CustomMenuItemRow(int game_row);
 extern int CustomMenuCursorRow(const custom_menu *menu, int game_row);
 
+/*
+ * the game's main menu (custommenu_game.c). its cursor and items are gool
+ * objects (GamOC subtype 20), placed in the game's 2D units: the cursor at
+ * MENU_CURSOR_X, the items at MENU_ITEM_X, a row every MENU_ROW_HEIGHT down
+ * from MENU_TOP_ROW_Y (MENU_ROW_SCREEN_HEIGHT on screen)
+ */
+#define MENU_SUBTYPE            20
+#define MENU_CURSOR_X           -50624
+#define MENU_ITEM_X             -46528
+#define MENU_TOP_ROW_Y          -7040
+#define MENU_ROW_HEIGHT         4096
+#define MENU_ROW_SCREEN_HEIGHT  16
+#define CUSTOM_MENU_Y           (MENU_TOP_ROW_Y - CUSTOM_MENU_ROW * MENU_ROW_HEIGHT)
+
+struct _gool_object;
+extern void CustomMenuLoaded(void);
+extern void CustomMenuSeeObject(struct _gool_object *obj);
+extern void CustomMenuReadPad(void);
+extern int32_t CustomMenuTextDrop(struct _gool_object *obj);
+extern int CustomMenuIsTopItem(struct _gool_object *obj);
+
 #endif /* _PC_CUSTOMMENU_H_ */
