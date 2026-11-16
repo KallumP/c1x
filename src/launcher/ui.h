@@ -13,8 +13,8 @@ extern void DrawHeading(const char *text);
 extern int DrawBigButton(const char *label);
 extern void DrawTooltip(const char *text);
 extern int BeginFieldRows(const char *id);
-extern void BeginFieldRow(const char *label, const char *tooltip);
-extern void EndFieldRows(void);
+extern void DrawFieldGroupTitle(const char *title);
+extern void BeginFieldRow(const char *label, const char *tooltip);extern void EndFieldRows(void);
 extern void DrawCommandOutput(const char *id, const background_command *c);
 
 #endif /* _LAUNCHER_UI_H_ */

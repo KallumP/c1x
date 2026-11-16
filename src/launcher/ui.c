@@ -18,6 +18,7 @@
 #define HEADING_FONT_SIZE 22.0f
 #define LABEL_WIDTH 260.0f
 #define TOOLTIP_WRAP_WIDTH 420.0f /* tooltip lines wrap at this width */
+#define FIELD_GROUP_GAP 6.0f /* space above a group's title */
 #define OUTPUT_HEIGHT 160
 #define BIG_BUTTON_SIZE ((ImVec2){240, 48})
 
@@ -94,6 +95,15 @@ int BeginFieldRows(const char *id) {
   igTableSetupColumn("label", ImGuiTableColumnFlags_WidthFixed, LABEL_WIDTH, 0);
   igTableSetupColumn("field", ImGuiTableColumnFlags_WidthStretch, 0, 0);
   return 1;
+}
+
+/* a dimmed title over a group of rows, with a gap above it */
+void DrawFieldGroupTitle(const char *title) {
+  igTableNextRow(0, 0);
+  igTableNextColumn();
+  igDummy((ImVec2){0, FIELD_GROUP_GAP});
+  igTextDisabled("%s", title);
+  igTableNextColumn();
 }
 
 /* a row's label (hover it for tooltip); the field drawn next goes beside it */

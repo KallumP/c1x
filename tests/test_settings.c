@@ -9,7 +9,7 @@ static const struct {
   const char *name;
   size_t offset;
 } on_off_settings[] = {
-  { "loading_screen",       offsetof(pc_settings, loading_screen) },
+  { "skip_loading_screen",  offsetof(pc_settings, skip_loading_screen) },
   { "speed_display",        offsetof(pc_settings, speed_display) },
   { "fps_display",          offsetof(pc_settings, fps_display) },
   { "spin_display",         offsetof(pc_settings, spin_display) },
@@ -69,8 +69,8 @@ UTEST(settings, names_and_on_off_are_case_insensitive) {
   pc_settings s;
 
   SettingsReset(&s);
-  ASSERT_EQ(1, SettingsParseLine("Loading_Screen = OFF", &s));
-  ASSERT_EQ(0, s.loading_screen);
+  ASSERT_EQ(1, SettingsParseLine("Skip_Loading_Screen = ON", &s));
+  ASSERT_EQ(1, s.skip_loading_screen);
 }
 
 UTEST(settings, loading_screen_min_ms) {
@@ -119,9 +119,9 @@ UTEST(settings, load_missing_file_keeps_defaults) {
 
 UTEST(settings, load_applies_each_setting) {
   SettingsReset(&game_settings);
-  WriteWholeFile(SETTINGS_TEST_PATH, "# settings\r\nloading_screen = off\r\nloading_screen_min_ms = 750\r\n");
+  WriteWholeFile(SETTINGS_TEST_PATH, "# settings\r\nskip_loading_screen = on\r\nloading_screen_min_ms = 750\r\n");
   ASSERT_EQ(2, SettingsLoad(SETTINGS_TEST_PATH));
-  ASSERT_EQ(0, game_settings.loading_screen);
+  ASSERT_EQ(1, game_settings.skip_loading_screen);
   ASSERT_EQ(750u, game_settings.loading_screen_min_ms);
   SettingsReset(&game_settings);
 }
@@ -131,9 +131,9 @@ UTEST(settings, load_skips_invalid_lines) {
 
   SettingsReset(&defaults);
   SettingsReset(&game_settings);
-  WriteWholeFile(SETTINGS_TEST_PATH, "no_such_setting = on\nloading_screen_min_ms = lots\nloading_screen = off\n");
+  WriteWholeFile(SETTINGS_TEST_PATH, "no_such_setting = on\nloading_screen_min_ms = lots\nskip_loading_screen = on\n");
   ASSERT_EQ(1, SettingsLoad(SETTINGS_TEST_PATH));
-  ASSERT_EQ(0, game_settings.loading_screen);
+  ASSERT_EQ(1, game_settings.skip_loading_screen);
   ASSERT_EQ(defaults.loading_screen_min_ms, game_settings.loading_screen_min_ms);
   SettingsReset(&game_settings);
 }
@@ -154,6 +154,13 @@ UTEST(settings, example_settings_file_matches_defaults) {
   ASSERT_NE(-1, SettingsLoad("settings.example.cfg"));
   ASSERT_TRUE(AreSettingsEqual(&defaults, &game_settings));
   SettingsReset(&game_settings);
+}
+
+UTEST(settings, the_loading_screen_shows_by_default) {
+  pc_settings s;
+
+  SettingsReset(&s);
+  ASSERT_EQ(0, s.skip_loading_screen);
 }
 
 UTEST(settings, spin_ledge_jump_is_on_by_default) {

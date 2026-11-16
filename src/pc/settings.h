@@ -12,7 +12,7 @@
 
 /* game settings (pc), read from settings.cfg */
 typedef struct {
-  int loading_screen;             /* show each level's loading screen */
+  int skip_loading_screen;        /* don't show each level's loading screen */
   uint32_t loading_screen_min_ms; /* minimum time it is shown for */
   int speed_display;              /* show crash's speed in the top right */
   int fps_display;                /* show the frames drawn a second in the top right */

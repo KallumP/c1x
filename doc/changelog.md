@@ -6,6 +6,12 @@
 
 - a `spin_ledge_jump` setting, on by default: Crash can jump straight after a spin carries him off a ledge
 
+### Changed
+
+- the loading screen setting is now **Skip loading screen**, ticked to skip like **Skip splash screens** (`skip_loading_screen` in `settings.cfg`)
+- the launcher's settings are grouped into display, game adjustments, start and replays, with the frame rate, loading screen time and replay speed beside the setting they go with
+- the launcher's **Controls** tab lists triangle as **HUD (Triangle)**, under spin
+
 ## 2026-11-15
 
 ### Added

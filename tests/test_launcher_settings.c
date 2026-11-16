@@ -13,7 +13,7 @@ UTEST(launcher_settings, reads_a_settings_file) {
   WriteWholeFile(LAUNCHER_SETTINGS_PATH, "# comment\nspeed_display = on\n");
   ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &s));
   ASSERT_EQ(1, s.speed_display);
-  ASSERT_EQ(defaults.loading_screen, s.loading_screen); /* not in the file */
+  ASSERT_EQ(defaults.skip_loading_screen, s.skip_loading_screen); /* not in the file */
 }
 
 UTEST(launcher_settings, uses_the_defaults_without_a_settings_file) {
@@ -110,7 +110,7 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
 
   remove(LAUNCHER_SETTINGS_PATH);
   SettingsReset(&s);
-  s.loading_screen = 0;
+  s.skip_loading_screen = 1;
   s.loading_screen_min_ms = 500;
   s.skip_splash_screens = 1;
   s.fix_model_draw_order = 1;
