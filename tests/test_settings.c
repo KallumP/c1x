@@ -16,6 +16,7 @@ static const struct {
   { "box_display",          offsetof(pc_settings, box_display) },
   { "skip_splash_screens",  offsetof(pc_settings, skip_splash_screens) },
   { "fix_model_draw_order", offsetof(pc_settings, fix_model_draw_order) },
+  { "spin_ledge_jump",      offsetof(pc_settings, spin_ledge_jump) },
   { "replay_inputs",        offsetof(pc_settings, replay_inputs) },
   { "fullscreen",           offsetof(pc_settings, fullscreen) },
 };
@@ -153,6 +154,13 @@ UTEST(settings, example_settings_file_matches_defaults) {
   ASSERT_NE(-1, SettingsLoad("settings.example.cfg"));
   ASSERT_TRUE(AreSettingsEqual(&defaults, &game_settings));
   SettingsReset(&game_settings);
+}
+
+UTEST(settings, spin_ledge_jump_is_on_by_default) {
+  pc_settings s;
+
+  SettingsReset(&s);
+  ASSERT_EQ(1, s.spin_ledge_jump);
 }
 
 UTEST(settings, boot_level_takes_a_level_name) {

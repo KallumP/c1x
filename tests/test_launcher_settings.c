@@ -121,6 +121,7 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
   s.spin_display = 1;
   s.box_display = 1;
   s.fullscreen = 1;
+  s.spin_ledge_jump = 0;
   strcpy(s.boot_level, "tide_ruins");
   ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
   ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &read));
@@ -130,6 +131,7 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
   ASSERT_EQ(1, read.spin_display);
   ASSERT_EQ(1, read.box_display);
   ASSERT_EQ(1, read.fullscreen);
+  ASSERT_EQ(0, read.spin_ledge_jump);
 }
 
 /* CommentOutSettingLine's result for text, compared with expected, then freed */
@@ -203,6 +205,15 @@ UTEST(launcher_settings, settings_differing_in_spin_display_arent_equal) {
   SettingsReset(&a);
   SettingsReset(&b);
   b.spin_display = 1;
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, settings_differing_in_spin_ledge_jump_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  b.spin_ledge_jump = !a.spin_ledge_jump;
   ASSERT_FALSE(AreSettingsEqual(&a, &b));
 }
 
