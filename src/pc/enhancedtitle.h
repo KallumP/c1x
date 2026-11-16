@@ -4,7 +4,7 @@
 #include "common.h"
 
 /*
- * "N-HANCED" under the title screen's logo (pc), a picture in the style of the
+ * "N-Hanced" under the title screen's logo (pc), a picture in the style of the
  * logo. the logo is game objects (GamOC subtype 11) that swing in after crash
  * runs up; once they've landed, the game shows the logo's TM, a 2D object of
  * the same subtype. from then on, the picture is drawn on the frames the main

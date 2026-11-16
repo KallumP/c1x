@@ -17,7 +17,7 @@ void EnhancedTitleNoteObject(enhanced_title *title, uint32_t subtype,
     title->logo_landed = 1;
 }
 
-/* whether ENHANCED is drawn along with the menu item reading menu_text */
+/* whether N-Hanced is drawn along with the menu item reading menu_text */
 int EnhancedTitleDrawsWith(const enhanced_title *title, const char *menu_text) {
   if (!title->logo_landed) { return 0; }
   return strcmp(menu_text, ENHANCED_TITLE_ANCHOR) == 0;
