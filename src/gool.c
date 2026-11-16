@@ -16,6 +16,7 @@
 #include "pc/boxhud.h"
 #include "pc/switchchain.h"
 #include "pc/jumpgrace.h"
+#include "pc/settings.h"
 int CardControl(int op, int part_idx) { return 1; }
 
 /* forward declarations for unexported funcs */
@@ -1105,11 +1106,13 @@ static int GoolObjectPopFrame(gool_object *obj, uint32_t *flags) {
 }
 
 /* pc: a jump tapped just after leaving the floor counts him as on it, so a
-   spin that carries him off a ledge doesn't lose the jump (JumpGraceCountsAsFloor) */
+   spin that carries him off a ledge doesn't lose the jump (JumpGraceCountsAsFloor),
+   when the spin_ledge_jump setting is on */
 static void CrashJumpGrace(gool_object *obj) {
   static jump_grace grace;
 
   JumpGraceTrackFloor(&grace, obj->status_a & 1);
+  if (!game_settings.spin_ledge_jump) { return; }
   if (JumpGraceCountsAsFloor(&grace, obj->velocity.y, pads[0].tapped))
     obj->status_a |= JUMP_GRACE_FLOOR;
 }
