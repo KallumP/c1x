@@ -169,13 +169,15 @@ static void FindDataDir() {
   SDL_free(base);
 }
 
-lid_t boot_lid = LID_BOOTLEVEL; /* level the game starts in */
+lid_t boot_lid = LID_BOOTLEVEL; /* level the game starts in: the title screen */
 
 /*
- * boot into levels/<boot_level> next to the executable (as the test level)
- * if boot_level is set and the level's files are there
+ * make levels/<boot_level> next to the executable the custom level (the
+ * test level), if boot_level is set and the level's files are there. the
+ * game still starts at the title screen: its main menu's CUSTOM LEVEL
+ * starts the level (see pc/custommenu.h)
  */
-static void InitBootLevel() {
+static void InitCustomLevel() {
   char level[900], path[1024], *base;
 
   if (!game_settings.boot_level[0]) { return; }
@@ -190,7 +192,6 @@ static void InitBootLevel() {
   }
   NSSetCustomLevel(level);
   AudioSongFind(level, &custom_level_audio_song);
-  boot_lid = LID_TEST;
 }
 
 /*
@@ -245,7 +246,7 @@ int init() {
   callbacks.drawable_size = SDLDrawableSize;
   GLInit(&callbacks);
   sranda2();
-  InitBootLevel();
+  InitCustomLevel();
   InitReplay();
   for (i=1;i<4;i++)
     insts[i] = EID_NONE;
