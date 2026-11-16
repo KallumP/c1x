@@ -15,6 +15,7 @@
 #include "pc/frames.h"
 #include "pc/boxhud.h"
 #include "pc/switchchain.h"
+#include "pc/jumpgrace.h"
 int CardControl(int op, int part_idx) { return 1; }
 
 /* forward declarations for unexported funcs */
@@ -1103,6 +1104,16 @@ static int GoolObjectPopFrame(gool_object *obj, uint32_t *flags) {
   return SUCCESS;
 }
 
+/* pc: a jump tapped just after leaving the floor counts him as on it, so a
+   spin that carries him off a ledge doesn't lose the jump (JumpGraceCountsAsFloor) */
+static void CrashJumpGrace(gool_object *obj) {
+  static jump_grace grace;
+
+  JumpGraceTrackFloor(&grace, obj->status_a & 1);
+  if (JumpGraceCountsAsFloor(&grace, obj->velocity.y, pads[0].tapped))
+    obj->status_a |= JUMP_GRACE_FLOOR;
+}
+
 //----- (8001DA0C) --------------------------------------------------------
 int GoolObjectUpdate(gool_object *obj, int flag) {
   gool_header *header;
@@ -1114,8 +1125,10 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
   int res;
 
   if (obj->handle.subtype != 3) { return SUCCESS; }
-  if (obj == crash)
+  if (obj == crash) {
     PadUpdate();
+    CrashJumpGrace(obj);
+  }
   cur_obj = obj;
   status_b = obj->status_b;
   if ((cur_display_flags & GOOL_FLAG_ANIMATE) == 0)
