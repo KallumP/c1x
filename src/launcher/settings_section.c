@@ -93,15 +93,16 @@ static void DrawOnOff(const char *label, int *setting, const char *tooltip) {
   DrawTooltip(tooltip);
 }
 
-/* a number box stacked under the setting above, as part of it */
-static void DrawStackedNumber(const char *label, uint32_t *setting, uint32_t step,
+/* a number box beside the setting drawn just before it, as part of it;
+   name (for the tooltip) tells it apart */
+static void DrawNumberBeside(const char *name, uint32_t *setting, uint32_t step,
   uint32_t max, const char *tooltip) {
   uint32_t step_fast;
 
-  BeginStackedFieldRow(label, tooltip);
+  igSameLine(0, -1);
   step_fast = step * 10;
   igSetNextItemWidth(NUMBER_WIDTH);
-  igPushID_Str(label);
+  igPushID_Str(name);
   if (igInputScalar("##number", ImGuiDataType_U32, setting, &step, &step_fast, "%u", 0)) {
     if (*setting > max) { *setting = max; }
   }
@@ -110,12 +111,12 @@ static void DrawStackedNumber(const char *label, uint32_t *setting, uint32_t ste
 }
 
 /* a slider from min to max (ctrl+click to type a value, still kept in range),
-   stacked under the setting above, as part of it */
-static void DrawStackedSlider(const char *label, uint32_t *setting, uint32_t min,
+   beside the setting drawn just before it, as part of it */
+static void DrawSliderBeside(const char *name, uint32_t *setting, uint32_t min,
   uint32_t max, const char *tooltip) {
-  BeginStackedFieldRow(label, tooltip);
+  igSameLine(0, -1);
   igSetNextItemWidth(SLIDER_WIDTH);
-  igPushID_Str(label);
+  igPushID_Str(name);
   igSliderScalar("##slider", ImGuiDataType_U32, setting, &min, &max, "%u",
     ImGuiSliderFlags_AlwaysClamp);
   igPopID();
@@ -196,9 +197,9 @@ static void DrawDisplayFields(void) {
     "Alt+Enter or F11 switches while playing.");
   DrawOnOff("FPS display", &settings.fps_display,
     "Shows an FPS counter in the top right corner.");
-  DrawStackedSlider("Target frame rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
+  DrawSliderBeside("frame_rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
     SETTINGS_FRAME_RATE_MAX,
-    "Frames drawn a second. The game logic still runs at 30 fps, so it plays the same.");
+    "Target frame rate: frames drawn a second. The game logic still runs at 30 fps, so it plays the same.");
   DrawOnOff("Box counter", &settings.box_display,
     "Show the level's boxes count (eg 12/49) in the in-game hud");
 }
@@ -210,9 +211,9 @@ static void DrawGameAdjustmentFields(void) {
     "Go straight to the main menu when the game starts.");
   DrawOnOff("Skip loading screen", &settings.skip_loading_screen,
     "Don't show each level's loading screen while it loads.");
-  DrawStackedNumber("Minimum loading screen time (ms)", &settings.loading_screen_min_ms,
+  DrawNumberBeside("loading_screen_min_ms", &settings.loading_screen_min_ms,
     100, SETTINGS_LOADING_SCREEN_MAX_MS,
-    "Keep the loading screen up for at least this long. 0 shows it only while loading.");
+    "Minimum loading screen time (ms): keep the loading screen up for at least this long. 0 shows it only while loading.");
   DrawOnOff("Fix model draw order", &settings.fix_model_draw_order,
     "Draw 3D models in front of or behind each other by their actual depth.");
   DrawOnOff("Fix jumping while spinning off a ledge", &settings.spin_ledge_jump,
@@ -232,8 +233,8 @@ static void DrawReplayFields(void) {
   DrawFieldGroupTitle("Replays");
   DrawOnOff("Replay inputs", &settings.replay_inputs,
     "Play back the newest recording in build/recorded_inputs/");
-  DrawStackedNumber("Replay speed", &settings.replay_speed, 1, SETTINGS_REPLAY_SPEED_MAX,
-    "The speed replays play at, or 0 for as fast as possible.");
+  DrawNumberBeside("replay_speed", &settings.replay_speed, 1, SETTINGS_REPLAY_SPEED_MAX,
+    "Replay speed: how many times normal speed replays play at, or 0 for as fast as possible.");
 }
 
 static void DrawFields(const char *repo) {
