@@ -1,6 +1,6 @@
 # Custom levels
 
-You can turn a map made in Blender into a level that the game boots straight into. There are three steps:
+You can turn a map made in Blender into a level that the game starts from its title screen: **CUSTOM LEVEL**, under **LOAD GAME**. There are three steps:
 
 1. [Make the map in Blender](#1-make-the-map-in-blender)
 2. [Place objects in the level editor](#2-place-objects-in-the-level-editor)
@@ -55,7 +55,7 @@ The level editor places Crash's spawn, the level's end, boxes, enemies and obsta
 1. Pick your level at the top left.
 1. Pick `spawn`, `end`, `box`, `enemy` or `obstacle` on the left bar, then click the floor to place it. Box, enemy and obstacle place the type you last picked of them, and list their types underneath to pick another. A level needs at least a spawn and an end to be played.
 1. Click **Select** (or press Esc), then click an object to select it. Drag it to move it, or change its properties on the right. **Delete** (or Del) removes it.
-1. Click **Save** (or press Ctrl+S), then **Build + boot** at the top right (or press F5), which builds the level and boots the game straight into it. [Step 3](#3-build-the-level-and-play-it) has more on building.
+1. Click **Save** (or press Ctrl+S), then **Build + boot** at the top right (or press F5), which builds the level and sets it as the one **CUSTOM LEVEL** on the game's title screen starts. [Step 3](#3-build-the-level-and-play-it) has more on building.
 
 Left-drag moves the camera, right-drag turns it, and the scroll wheel zooms. 
 Ctrl+Z undoes and Ctrl+Y redoes. 
@@ -84,18 +84,18 @@ See [Objects](../level_src/README.md#objects) for how each box, enemy and obstac
 
 **Set it up (once):** build the game (see [Building](building.md)), and put its files in `streams/` (see [Running](running.md)). The launcher and the level editor build levels themselves, so there's nothing else to install.
 
-**From the launcher** (no editor needed, as for a level someone sent you: put its folder in `level_src/`): in the **Levels** tab, click **Build** beside the level, or choose it as the **Boot level**, where a level that isn't built yet says `(not built)` and builds when chosen. Once it builds, the game boots into it. Click **Play**.
+**From the launcher** (no editor needed, as for a level someone sent you: put its folder in `level_src/`): in the **Levels** tab, click **Build** beside the level, or choose it as the **Boot level**, where a level that isn't built yet says `(not built)` and builds when chosen. Once it builds, it's the level the title screen's **CUSTOM LEVEL** starts. Click **Play**, then choose **CUSTOM LEVEL** (under **LOAD GAME**).
 
 **From the level editor:**
 
-1. Click **Build + boot** at the top right (or press **F5**). It saves your changes, builds the level, then, if the build worked, sets the game to start in it by writing `boot_level = my_level` in `settings.cfg`. A bar slides along the bottom of the top bar while it works, and it says `The game boots into my_level` when it's done, or why it failed (hover over the message for the full output).
-2. In the launcher, click **Play**.
+1. Click **Build + boot** at the top right (or press **F5**). It saves your changes, builds the level, then, if the build worked, sets it as the game's custom level by writing `boot_level = my_level` in `settings.cfg`. A bar slides along the bottom of the top bar while it works, and it says `CUSTOM LEVEL on the game's title screen starts my_level` when it's done, or why it failed (hover over the message for the full output).
+2. In the launcher, click **Play**, then choose **CUSTOM LEVEL** on the title screen (under **LOAD GAME**). When the level ends, the game is back at the title screen.
 
-**Build** (or Ctrl+Shift+B) on its own saves and builds the level without changing which level the game boots into. Hovering over a button shows its shortcut.
+**Build** (or Ctrl+Shift+B) on its own saves and builds the level without changing which level **CUSTOM LEVEL** starts. Hovering over a button shows its shortcut.
 
 **After any change** to the map or objects, build again. You don't need to rebuild the game.
 
-**To stop booting into the level** and start at the title screen again, choose **title screen** as the launcher's **Boot level**. The game keeps booting into the level until you do, even after you close the editor.
+**To take CUSTOM LEVEL off the title screen**, choose **none** as the launcher's **Boot level**. It stays there, starting the level, until you do, even after you close the editor.
 
 ### If something looks wrong
 

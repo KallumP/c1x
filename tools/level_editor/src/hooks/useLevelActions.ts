@@ -10,7 +10,7 @@ export interface ActionStatus {
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
 const lastLine = (output: string) => output.trim().split(/\r?\n/).pop() ?? "";
 
-// building the open level, and setting the game to boot into it (or both, F5)
+// building the open level, and setting it as the game's custom level (or both, F5)
 export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save: () => Promise<boolean>) {
   const [isBusy, setIsBusy] = useState(false);
   const [status, setStatus] = useState<ActionStatus | null>(null);
@@ -55,16 +55,16 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
     }
   };
 
-  // busy (and saying so) until boot_level is set
+  // busy (and saying so) until boot_level is set: the level the title screen's CUSTOM LEVEL starts
   const boot = async () => {
     if (!level) {
       return;
     }
     setIsBusy(true);
-    setStatus({ text: "Setting the game to boot into it..." });
+    setStatus({ text: "Setting it as the game's custom level..." });
     try {
       await bootLevel(level.name);
-      setStatus({ text: `The game boots into ${level.name}` });
+      setStatus({ text: `CUSTOM LEVEL on the game's title screen starts ${level.name}` });
     } catch (error) {
       setStatus({ text: `Couldn't set boot_level: ${messageOf(error)}`, failed: true });
     } finally {

@@ -61,7 +61,7 @@ static void DrawEditorRunning(void) {
 }
 
 static void DrawOpenEditor(const char *repo) {
-  igTextWrapped("Places a level's spawn, end and boxes on its map, then builds it and boots the game into it.");
+  igTextWrapped("Places a level's spawn, end and boxes on its map, then builds it and sets it as the level CUSTOM LEVEL on the game's title screen starts.");
   if (igButton("Open editor", (ImVec2){BUTTON_WIDTH, 0})) { StartEditor(repo); }
   if (problem[0]) {
     igTextColored(PROBLEM_COLOUR, "%s", problem);

@@ -134,7 +134,7 @@ static char *SettingsTextWith(char *text, const pc_settings *s) {
     text = ReplaceSettingLine(text, "boot_level", s->boot_level);
   }
   else {
-    text = CommentOutLine(text, "boot_level"); /* start at the title screen */
+    text = CommentOutLine(text, "boot_level"); /* no custom level */
   }
   return text;
 }

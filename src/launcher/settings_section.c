@@ -16,7 +16,7 @@
 #define NUMBER_WIDTH 160.0f
 #define SLIDER_WIDTH 320.0f
 #define BOOT_LEVEL_WIDTH 240.0f
-#define TITLE_SCREEN "title screen"
+#define NO_BOOT_LEVEL "none"
 #define CHANGE_CHECK_MS 500 /* how often to look for settings.cfg changing */
 
 static pc_settings settings;
@@ -164,7 +164,7 @@ static void DrawCustomLevelChoice(const char *repo, int index) {
 /* what the boot level dropdown shows for the current boot_level */
 static void BootLevelPreview(char *preview, size_t size) {
   if (!settings.boot_level[0]) {
-    SDL_strlcpy(preview, TITLE_SCREEN, size);
+    SDL_strlcpy(preview, NO_BOOT_LEVEL, size);
   }
   else if (!IsCustomLevelBuilt(settings.boot_level)) {
     SDL_snprintf(preview, size, "%s (not built)", settings.boot_level);
@@ -174,7 +174,7 @@ static void BootLevelPreview(char *preview, size_t size) {
   }
 }
 
-#define BOOT_LEVEL_TOOLTIP "Start in a custom level instead of the title screen. Choosing one that isn't built builds it first."
+#define BOOT_LEVEL_TOOLTIP "The level that CUSTOM LEVEL on the game's title screen starts. Choosing one that isn't built builds it first."
 
 static void DrawBootLevel(const char *repo) {
   char preview[64];
@@ -184,7 +184,7 @@ static void DrawBootLevel(const char *repo) {
   BootLevelPreview(preview, sizeof(preview));
   igSetNextItemWidth(BOOT_LEVEL_WIDTH);
   if (igBeginCombo("##boot_level", preview, 0)) {
-    DrawBootLevelChoice(TITLE_SCREEN, "");
+    DrawBootLevelChoice(NO_BOOT_LEVEL, "");
     for (i=0;i<levels.count;i++) { DrawCustomLevelChoice(repo, i); }
     igEndCombo();
   }

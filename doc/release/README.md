@@ -28,9 +28,9 @@ c1x comes with four new levels.
 
 1. In the launcher, open the **Levels** tab.
 2. Click **Build** next to a level.
-3. Click **Play**. The game starts in that level.
+3. Click **Play**, then choose **CUSTOM LEVEL** on the title screen (under **LOAD GAME**).
 
-To play the normal game again, open **Settings**, set **Boot level** to **title screen**, then click **Play**.
+The normal game is still there: choose **START** instead. To take **CUSTOM LEVEL** off the title screen, open **Settings** and set **Boot level** to **none**.
 
 ### Make your own
 
