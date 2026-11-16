@@ -185,7 +185,7 @@ int TitleLoadState() {
   switch (title->state) {
   case 5: /* main menu */
     LevelResetGlobals(1);
-    EnhancedTitleLoaded(); /* pc: ENHANCED waits for the logo again */
+    EnhancedTitleLoaded(); /* pc: N-HANCED waits for the logo again */
     eid = NSStringToEID("0c_pZ");
     type = 3;
     break;
