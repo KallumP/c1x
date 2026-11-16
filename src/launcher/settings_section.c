@@ -201,15 +201,11 @@ static void DrawDisplayFields(void) {
     "Frames drawn a second. The game logic still runs at 30 fps, so it plays the same.");
   DrawOnOff("Box counter", &settings.box_display,
     "Show the level's boxes count (eg 12/49) in the in-game hud");
-  DrawOnOff("Speed display", &settings.speed_display,
-    "Show how fast Crash is moving in the top right corner.");
-  DrawOnOff("Spin display", &settings.spin_display,
-    "Show how many spins Crash has left in the top right corner.");
 }
 
 /* changes to how the original game plays or looks */
-static void DrawGameFixFields(void) {
-  DrawFieldGroupTitle("Game fixes");
+static void DrawGameAdjustmentFields(void) {
+  DrawFieldGroupTitle("Game adjustments");
   DrawOnOff("Skip splash screens", &settings.skip_splash_screens,
     "Go straight to the main menu when the game starts.");
   DrawOnOff("Skip loading screen", &settings.skip_loading_screen,
@@ -221,6 +217,10 @@ static void DrawGameFixFields(void) {
     "Draw 3D models in front of or behind each other by their actual depth.");
   DrawOnOff("Fix jumping while spinning off a ledge", &settings.spin_ledge_jump,
     "In the original, once a spin carries Crash off a ledge (such as one he landed on mid-spin), he can't jump until the spin ends. This lets him jump for a moment after leaving the ledge, as he can when walking off one.");
+  DrawOnOff("Speed display", &settings.speed_display,
+    "Show how fast Crash is moving in the top right corner.");
+  DrawOnOff("Spin display", &settings.spin_display,
+    "Show how many spins Crash has left in the top right corner.");
 }
 
 static void DrawStartFields(const char *repo) {
@@ -239,7 +239,7 @@ static void DrawReplayFields(void) {
 static void DrawFields(const char *repo) {
   if (!BeginFieldRows("settings_fields")) { return; }
   DrawDisplayFields();
-  DrawGameFixFields();
+  DrawGameAdjustmentFields();
   DrawStartFields(repo);
   DrawReplayFields();
   EndFieldRows();
