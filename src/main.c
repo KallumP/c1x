@@ -82,7 +82,7 @@ void CoreLoop(lid_t lid);
 int main() {
   use_cd = 0;
   init();
-  CoreLoop(boot_lid); /* LID_BOOTLEVEL, unless booting into a custom level */
+  CoreLoop(boot_lid); /* LID_BOOTLEVEL: the title screen */
   _kill();
   return 0;
 }

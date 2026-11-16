@@ -17,6 +17,14 @@ UTEST(ns_files, custom_level_loads_from_its_path) {
   NSSetCustomLevel("");
 }
 
+UTEST(ns_files, there_is_a_custom_level_once_its_path_is_set) {
+  ASSERT_FALSE(NSHasCustomLevel());
+  NSSetCustomLevel("build/levels/mock");
+  ASSERT_TRUE(NSHasCustomLevel());
+  NSSetCustomLevel("");
+  ASSERT_FALSE(NSHasCustomLevel());
+}
+
 UTEST(ns_files, a_long_custom_level_path_isnt_cut_short) {
   char path[300], nsd[310];
 

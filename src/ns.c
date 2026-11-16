@@ -145,6 +145,11 @@ void NSSetCustomLevel(const char *path) {
   snprintf(custom_level, sizeof(custom_level), "%s", path);
 }
 
+/* whether there's a custom level for the test level id to load */
+int NSHasCustomLevel() {
+  return custom_level[0] != 0;
+}
+
 /* how many boxes the custom level has to break, from its nsd; kept while
    other levels' nsds (such as the level end screen's) load */
 static int custom_box_total = 0;

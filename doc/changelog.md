@@ -12,6 +12,7 @@
 - the loading screen setting is now **Skip loading screen**, ticked to skip like **Skip splash screens** (`skip_loading_screen` in `settings.cfg`)
 - the launcher's settings are grouped into display, game adjustments, start and replays, with the frame rate, loading screen time and replay speed beside the setting they go with
 - the launcher's **Controls** tab lists triangle as **HUD (Triangle)**, under spin
+- with a boot level set, the game starts at the title screen, where **CUSTOM LEVEL** (under **LOAD GAME**) starts it; it's back at the title screen when the level ends
 
 ## 2026-11-15
 

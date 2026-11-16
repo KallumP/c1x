@@ -258,6 +258,7 @@ extern int NSAlphaNumIndex(char c);
 extern char *NSGetFilename(int type, uint32_t lid);
 extern char *NSGetFilename2(int type, uint32_t lid, char *path, char *subdir);
 extern void NSSetCustomLevel(const char *path);
+extern int NSHasCustomLevel();
 extern nsd_pte *NSProbeSafe(eid_t eid);
 extern void NSKeepBoxTotal(uint32_t lid, nsd_ldat *ldat);
 extern int NSCustomBoxTotal();

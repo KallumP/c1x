@@ -20,7 +20,7 @@ typedef struct {
   int volume; /* a percent */
 } audio_song;
 
-extern audio_song custom_level_audio_song; /* the boot level's (InitBootLevel) */
+extern audio_song custom_level_audio_song; /* the custom level's (InitCustomLevel) */
 
 extern void AudioSongFind(const char *level, audio_song *song);
 extern const audio_song *AudioSongToPlay(int in_custom_level);

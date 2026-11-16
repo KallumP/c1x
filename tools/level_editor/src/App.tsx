@@ -149,7 +149,7 @@ export default function App() {
         <button disabled={!level || isBusy} onClick={build} title="Build this level, saving first (Ctrl+Shift+B)">
           Build
         </button>
-        <button disabled={!level || isBusy} onClick={buildAndBoot} title="Build this level, then set the game to boot into it (F5)">
+        <button disabled={!level || isBusy} onClick={buildAndBoot} title="Build this level, then set it as the level CUSTOM LEVEL on the game's title screen starts (F5)">
           Build + boot
         </button>
       </div>

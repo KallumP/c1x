@@ -27,7 +27,7 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 
 | Setting | Default | What it does |
 |---|---|---|
-| `boot_level` | none | Start in a custom level built to `build/levels/` instead of the title screen (see [Custom levels](custom_levels.md)). |
+| `boot_level` | none | The custom level, built to `build/levels/`, that **CUSTOM LEVEL** on the title screen starts; without one, the title screen has no **CUSTOM LEVEL** (see [Custom levels](custom_levels.md)). |
 
 ### Replays
 
