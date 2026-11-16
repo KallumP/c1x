@@ -93,19 +93,21 @@ static void DrawOnOff(const char *label, int *setting, const char *tooltip) {
   DrawTooltip(tooltip);
 }
 
-/* a number box beside the setting drawn just before it, as part of it;
-   name (for the tooltip) tells it apart */
+/* a number box beside the setting drawn just before it, as part of it, greyed
+   out when it doesn't apply; name tells it apart */
 static void DrawNumberBeside(const char *name, uint32_t *setting, uint32_t step,
-  uint32_t max, const char *tooltip) {
+  uint32_t max, int applies, const char *tooltip) {
   uint32_t step_fast;
 
   igSameLine(0, -1);
   step_fast = step * 10;
   igSetNextItemWidth(NUMBER_WIDTH);
   igPushID_Str(name);
+  igBeginDisabled(!applies);
   if (igInputScalar("##number", ImGuiDataType_U32, setting, &step, &step_fast, "%u", 0)) {
     if (*setting > max) { *setting = max; }
   }
+  igEndDisabled();
   igPopID();
   DrawTooltip(tooltip);
 }
@@ -212,7 +214,7 @@ static void DrawGameAdjustmentFields(void) {
   DrawOnOff("Skip loading screen", &settings.skip_loading_screen,
     "Don't show each level's loading screen while it loads.");
   DrawNumberBeside("loading_screen_min_ms", &settings.loading_screen_min_ms,
-    100, SETTINGS_LOADING_SCREEN_MAX_MS,
+    100, SETTINGS_LOADING_SCREEN_MAX_MS, !settings.skip_loading_screen,
     "Minimum loading screen time (ms): keep the loading screen up for at least this long. 0 shows it only while loading.");
   DrawOnOff("Fix model draw order", &settings.fix_model_draw_order,
     "Draw 3D models in front of or behind each other by their actual depth.");
@@ -234,7 +236,7 @@ static void DrawReplayFields(void) {
   DrawOnOff("Replay inputs", &settings.replay_inputs,
     "Play back the newest recording in build/recorded_inputs/");
   DrawNumberBeside("replay_speed", &settings.replay_speed, 1, SETTINGS_REPLAY_SPEED_MAX,
-    "Replay speed: how many times normal speed replays play at, or 0 for as fast as possible.");
+    settings.replay_inputs, "Replay speed: how many times normal speed replays play at, or 0 for as fast as possible.");
 }
 
 static void DrawFields(const char *repo) {
