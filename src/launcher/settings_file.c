@@ -117,7 +117,7 @@ static char *ReplaceNumberLine(char *text, const char *name, uint32_t number) {
 
 /* text (a settings file's, to SDL_free) with every setting in s set */
 static char *SettingsTextWith(char *text, const pc_settings *s) {
-  text = ReplaceOnOffLine(text, "loading_screen", s->loading_screen);
+  text = ReplaceOnOffLine(text, "skip_loading_screen", s->skip_loading_screen);
   text = ReplaceNumberLine(text, "loading_screen_min_ms", s->loading_screen_min_ms);
   text = ReplaceOnOffLine(text, "speed_display", s->speed_display);
   text = ReplaceOnOffLine(text, "fps_display", s->fps_display);
@@ -159,7 +159,7 @@ int SaveSettingsFile(const char *path, const char *example_path, const pc_settin
 
 /* whether a and b set the same settings (boot_level by its text, not what's after it) */
 int AreSettingsEqual(const pc_settings *a, const pc_settings *b) {
-  return a->loading_screen == b->loading_screen
+  return a->skip_loading_screen == b->skip_loading_screen
     && a->loading_screen_min_ms == b->loading_screen_min_ms
     && a->speed_display == b->speed_display
     && a->fps_display == b->fps_display

@@ -191,8 +191,8 @@ static void DrawFields(const char *repo) {
   if (!BeginFieldRows("settings_fields")) { return; }
   DrawOnOff("Fullscreen", &settings.fullscreen,
     "Alt+Enter or F11 switches while playing.");
-  DrawOnOff("Loading screen", &settings.loading_screen,
-    "Show each level's loading screen while it loads.");
+  DrawOnOff("Skip loading screen", &settings.skip_loading_screen,
+    "Don't show each level's loading screen while it loads.");
   DrawNumber("Minimum loading screen time (ms)", &settings.loading_screen_min_ms,
     100, SETTINGS_LOADING_SCREEN_MAX_MS,
     "Keep the loading screen up for at least this long. 0 shows it only while loading.");

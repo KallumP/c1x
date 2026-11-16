@@ -294,7 +294,7 @@ int TitleLoading(lid_t lid, uint8_t *image_data, nsd *nsd) {
    * frame, unless turned off in settings.cfg
    */
   dim.w = w; dim.h = h;
-  if (game_settings.loading_screen
+  if (!game_settings.skip_loading_screen
    && LoadingImageConvert(image_data, sizeof(ns.ldat->image_data), w, h,
                           image_cvt, sizeof(image_cvt)/sizeof(image_cvt[0]))) {
     GLShowImage(&dim, (uint8_t*)image_cvt);
