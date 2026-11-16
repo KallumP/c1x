@@ -35,6 +35,7 @@ SRC =	src/ns.c \
 	src/pc/audiosong.c \
 	src/pc/boxhud.c \
 	src/pc/enhancedtitle.c \
+	src/pc/custommenu.c \
 	src/pc/boxtotals.c \
 	src/pc/slash.c \
 	src/pc/screen_fit.c \
@@ -71,6 +72,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/audiosong.c \
 	src/pc/boxhud.c \
 	src/pc/enhancedtitle.c \
+	src/pc/custommenu.c \
 	src/pc/boxtotals.c \
 	src/pc/slash.c \
 	src/pc/screen_fit.c \
