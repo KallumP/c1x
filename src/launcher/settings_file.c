@@ -125,6 +125,7 @@ static char *SettingsTextWith(char *text, const pc_settings *s) {
   text = ReplaceOnOffLine(text, "box_display", s->box_display);
   text = ReplaceOnOffLine(text, "skip_splash_screens", s->skip_splash_screens);
   text = ReplaceOnOffLine(text, "fix_model_draw_order", s->fix_model_draw_order);
+  text = ReplaceOnOffLine(text, "spin_ledge_jump", s->spin_ledge_jump);
   text = ReplaceOnOffLine(text, "replay_inputs", s->replay_inputs);
   text = ReplaceNumberLine(text, "replay_speed", s->replay_speed);
   text = ReplaceNumberLine(text, "frame_rate", s->frame_rate);
@@ -166,6 +167,7 @@ int AreSettingsEqual(const pc_settings *a, const pc_settings *b) {
     && a->box_display == b->box_display
     && a->skip_splash_screens == b->skip_splash_screens
     && a->fix_model_draw_order == b->fix_model_draw_order
+    && a->spin_ledge_jump == b->spin_ledge_jump
     && a->replay_inputs == b->replay_inputs
     && a->replay_speed == b->replay_speed
     && a->frame_rate == b->frame_rate

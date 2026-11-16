@@ -202,6 +202,8 @@ static void DrawFields(const char *repo) {
     "Go straight to the main menu when the game starts.");
   DrawOnOff("Fix model draw order", &settings.fix_model_draw_order,
     "Draw 3D models in front of or behind each other by their actual depth.");
+  DrawOnOff("Jump after a spin off a ledge", &settings.spin_ledge_jump,
+    "Crash can still jump just after a spin carries him off a ledge, as he can after walking off one.");
   DrawOnOff("Replay inputs", &settings.replay_inputs,
     "Play back the newest recording in build/recorded_inputs/");
   DrawNumber("Replay speed", &settings.replay_speed, 1, SETTINGS_REPLAY_SPEED_MAX,
