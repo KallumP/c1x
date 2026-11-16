@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-16
+
+### Fixed
+
+- Crash can jump straight after a spin carries him off a ledge
+
 ## 2026-11-15
 
 ### Added
