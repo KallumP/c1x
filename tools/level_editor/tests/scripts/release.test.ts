@@ -20,6 +20,7 @@ const GIT_FILES = [
   "level_src/README.md",
   "level_src/1_tide_ruins/level.cfg",
   "level_src/1_tide_ruins/tide_ruins.obj",
+  "assets/enhanced_title.bmp",
   "tools/level_editor/package.json",
   "tools/level_editor/src/music.ts",
   "doc/building.md",
@@ -58,6 +59,10 @@ describe("the release zip's files", () => {
   test("nothing else in build/ goes in: no tests, logs or test files", () => {
     const build = destinations().filter((to) => to.startsWith("build/") && !to.startsWith("build/editor/"));
     expect(build.sort()).toEqual(["build/SDL2.dll", "build/c1x.exe", "build/c1x_tools.exe", "build/libgcc_s_dw2-1.DLL"]);
+  });
+
+  test("the game's own pictures in assets/ go in, for the game to show", () => {
+    expect(destinations().filter((to) => to.startsWith("assets/"))).toEqual(["assets/enhanced_title.bmp"]);
   });
 
   test("streams/ has only its readme", () => {
