@@ -5,7 +5,7 @@
 ### Added
 
 - a `spin_ledge_jump` setting, on by default: Crash can jump straight after a spin carries him off a ledge
-- the title screen says N-HANCED under the logo once it lands
+- the title screen says N-Hanced under the logo once it lands
 
 ### Changed
 

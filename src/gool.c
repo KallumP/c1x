@@ -1560,7 +1560,7 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
     arg = 0;
   prims_tail = GLGetPrimsTail();
   GoolTextStringTransform(obj, buf, -arg/2, font, tpag, size, prims_tail);
-  EnhancedTitleSeeMenuText(buf); /* pc: N-HANCED goes with the title's START */
+  EnhancedTitleSeeMenuText(buf); /* pc: N-Hanced goes with the title's START */
 }
 
 static inline int GoolObjectColorByZone(gool_object *obj) {

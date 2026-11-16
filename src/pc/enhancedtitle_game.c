@@ -1,5 +1,5 @@
 /*
- * N-HANCED under the logo on the game's title screen (pc): follows its
+ * N-Hanced under the logo on the game's title screen (pc): follows its
  * objects to see when the logo has landed, and draws the picture on the
  * frames the main menu is drawn. see enhancedtitle.h
  */
