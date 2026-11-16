@@ -37,6 +37,7 @@ extern lid_t cur_lid;
 #include "pc/gfx/tex.h"
 #include "pc/loading.h"
 #include "pc/settings.h"
+#include "pc/enhancedtitle.h"
 extern gl_context context;
 
 //----- (80031BAC) --------------------------------------------------------
@@ -184,6 +185,7 @@ int TitleLoadState() {
   switch (title->state) {
   case 5: /* main menu */
     LevelResetGlobals(1);
+    EnhancedTitleLoaded(); /* pc: ENHANCED waits for the logo again */
     eid = NSStringToEID("0c_pZ");
     type = 3;
     break;

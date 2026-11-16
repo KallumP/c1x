@@ -24,6 +24,7 @@ static PFNGLBLENDEQUATIONPROC pglBlendEquation;
 #include "pc/pace.h"
 #include "pc/tween.h"
 #include "pc/screen_fit.h"
+#include "pc/enhancedtitle.h"
 
 #ifdef CFLAGS_GUI
 #include "ext/gui.h"
@@ -212,6 +213,36 @@ static void GLDrawImageQuad(quad *q) {
   glEnd();
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, env_mode);
   glTexEnvf(GL_TEXTURE_ENV, GL_RGB_SCALE, rgb_scale);
+}
+
+/* a texture for a picture drawn bigger or smaller than its pixels: smoothed */
+int GLCreatePictureTexture(dim2 dim, uint8_t *buf) {
+  int texid;
+
+  texid = GLCreateTexture(dim, buf);
+  glBindTexture(GL_TEXTURE_2D, texid);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  return texid;
+}
+
+/* a picture with see-through parts over what's drawn, filling at (in screen units, from the centre) */
+void GLDrawPicture(int texid, rect2 *at) {
+  quad q;
+
+  q.p[0].x = at->x;         q.p[0].y = at->y;
+  q.p[1].x = at->x + at->w; q.p[1].y = at->y;
+  q.p[2].x = at->x + at->w; q.p[2].y = at->y + at->h;
+  q.p[3].x = at->x;         q.p[3].y = at->y + at->h;
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texid);
+  glEnable(GL_TEXTURE_2D);
+  glEnable(GL_BLEND);
+  GLDrawImageQuad(&q);
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void GLDrawImage(dim2 *dim, uint8_t *buf, pnt2 *loc) {
@@ -866,6 +897,7 @@ void GLUpdate() {
     ns.draw_skip_counter--;
   if (ns.draw_skip_counter == 0)
     GLDraw(context.ot);
+  EnhancedTitleDraw(); /* over the title screen's objects, under the fade */
   GLResetPrims(&context);
   GLDrawFade();
   GLDrawBorders();
