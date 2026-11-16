@@ -1,0 +1,55 @@
+#include "utest.h"
+#include "pc/enhancedtitle.h"
+
+#define LOGO_PIECE_STATUS 0x0          /* the logo's 3D pieces */
+#define MENU_SUBTYPE      20
+
+/* a title screen just loaded */
+static enhanced_title JustLoaded(void) {
+  enhanced_title title;
+
+  EnhancedTitleReset(&title);
+  return title;
+}
+
+/* a title screen whose logo has landed: its TM has appeared */
+static enhanced_title LogoLanded(void) {
+  enhanced_title title = JustLoaded();
+
+  EnhancedTitleNoteObject(&title, TITLE_LOGO_SUBTYPE, TITLE_LOGO_FLAG_2D);
+  return title;
+}
+
+UTEST(enhancedtitle, not_drawn_before_the_logo_lands) {
+  enhanced_title title = JustLoaded();
+
+  EnhancedTitleNoteObject(&title, TITLE_LOGO_SUBTYPE, LOGO_PIECE_STATUS); /* swinging in */
+  ASSERT_FALSE(EnhancedTitleDrawsWith(&title, ENHANCED_TITLE_ANCHOR));
+}
+
+UTEST(enhancedtitle, drawn_with_start_once_the_logos_tm_appears) {
+  enhanced_title title = LogoLanded();
+
+  ASSERT_TRUE(EnhancedTitleDrawsWith(&title, "START"));
+}
+
+UTEST(enhancedtitle, drawn_only_with_start) {
+  enhanced_title title = LogoLanded();
+
+  ASSERT_FALSE(EnhancedTitleDrawsWith(&title, "OPTIONS"));
+  ASSERT_FALSE(EnhancedTitleDrawsWith(&title, ">"));
+}
+
+UTEST(enhancedtitle, other_flat_objects_arent_the_tm) {
+  enhanced_title title = JustLoaded();
+
+  EnhancedTitleNoteObject(&title, MENU_SUBTYPE, TITLE_LOGO_FLAG_2D);
+  ASSERT_FALSE(EnhancedTitleDrawsWith(&title, ENHANCED_TITLE_ANCHOR));
+}
+
+UTEST(enhancedtitle, loading_the_title_again_waits_for_the_logo_again) {
+  enhanced_title title = LogoLanded();
+
+  EnhancedTitleReset(&title);
+  ASSERT_FALSE(EnhancedTitleDrawsWith(&title, ENHANCED_TITLE_ANCHOR));
+}
