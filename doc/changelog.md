@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-17
+
+### Fixed
+
+- the mouse cursor no longer shows over the game
+
 ## 2026-11-16
 
 ### Added

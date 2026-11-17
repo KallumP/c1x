@@ -49,6 +49,7 @@ void SDLInit() {
     SDL_WINDOWPOS_UNDEFINED,
     WINDOW_WIDTH, WINDOW_HEIGHT,
     WindowFlags());
+  SDL_ShowCursor(SDL_DISABLE); /* the game is played with keys or a pad; only hidden over its window */
   ogl_context = SDL_GL_CreateContext(window);
   /* frames are drawn between game frames on their own timing (see pc/tween.h), so
      a swap mustn't wait for the screen: that would push the game frame past its time */
@@ -56,6 +57,7 @@ void SDLInit() {
     SDL_GL_SetSwapInterval(0);
 #ifdef CFLAGS_GUI
   igCreateContext(0);
+  igGetIO()->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange; /* else it shows the cursor every frame */
   ImGui_ImplSDL2_InitForOpenGL(window, ogl_context);
 #endif
 }
