@@ -83,7 +83,7 @@ static void DrawPlayButton(const char *repo) {
   igBeginDisabled(building);
   if (DrawBigButton("Play")) { SaveAndStartGame(repo); }
   igEndDisabled();
-  if (building) { igText("Play is back once the level has built."); }
+  if (building) { igText("A custom level is being built, you can play when it's done."); }
   if (play_problem[0]) { igTextColored(PROBLEM_COLOUR, "%s", play_problem); }
 }
 
