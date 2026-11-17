@@ -30,7 +30,7 @@ c1x comes with four new levels.
 2. Click **Build** next to a level.
 3. Click **Play**, then choose **CUSTOM LEVEL** on the title screen (under **LOAD GAME**).
 
-The normal game is still there: choose **START** instead. To take **CUSTOM LEVEL** off the title screen, open **Settings** and set **Boot level** to **none**.
+The normal game is still there: choose **START** instead. To take **CUSTOM LEVEL** off the title screen, open **Settings** and set **Custom level** to **none**.
 
 ### Make your own
 

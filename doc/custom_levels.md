@@ -84,7 +84,7 @@ See [Objects](../level_src/README.md#objects) for how each box, enemy and obstac
 
 **Set it up (once):** build the game (see [Building](building.md)), and put its files in `streams/` (see [Running](running.md)). The launcher and the level editor build levels themselves, so there's nothing else to install.
 
-**From the launcher** (no editor needed, as for a level someone sent you: put its folder in `level_src/`): in the **Levels** tab, click **Build** beside the level, or choose it as the **Boot level**, where a level that isn't built yet says `(not built)` and builds when chosen. Once it builds, it's the level the title screen's **CUSTOM LEVEL** starts. Click **Play**, then choose **CUSTOM LEVEL** (under **LOAD GAME**).
+**From the launcher** (no editor needed, as for a level someone sent you: put its folder in `level_src/`): in the **Levels** tab, click **Build** beside the level, or choose it as the **Custom level**, where a level that isn't built yet says `(not built)` and builds when chosen. Once it builds, it's the level the title screen's **CUSTOM LEVEL** starts. Click **Play**, then choose **CUSTOM LEVEL** (under **LOAD GAME**).
 
 **From the level editor:**
 
@@ -95,7 +95,7 @@ See [Objects](../level_src/README.md#objects) for how each box, enemy and obstac
 
 **After any change** to the map or objects, build again. You don't need to rebuild the game.
 
-**To take CUSTOM LEVEL off the title screen**, choose **none** as the launcher's **Boot level**. It stays there, starting the level, until you do, even after you close the editor.
+**To take CUSTOM LEVEL off the title screen**, choose **none** as the launcher's **Custom level**. It stays there, starting the level, until you do, even after you close the editor.
 
 ### If something looks wrong
 

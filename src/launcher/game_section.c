@@ -12,6 +12,7 @@
 #include "controls_section.h"
 #include "streams.h"
 #include "extract_section.h"
+#include "levels_section.h"
 #include "ui.h"
 
 #define MISSING_FILES_SHOWN 8
@@ -61,20 +62,28 @@ static void DrawStreamsMissing(const char *repo) {
   if (DrawExtractStreams(repo)) { LoadGameSection(repo); }
 }
 
-static void DrawPlayButton(const char *repo) {
+static void SaveAndStartGame(const char *repo) {
   char path[PATH_MAX_LEN];
 
-  if (DrawBigButton("Play")) {
-    play_problem[0] = 0;
-    if (!SaveSettingsSection(repo) || !SaveControlsSection(repo)) {
-      SDL_strlcpy(play_problem, "Couldn't save the settings or controls, so the game wasn't started.",
-        sizeof(play_problem));
-    }
-    else if (!StartGame(repo)) {
-      GamePath(repo, path, sizeof(path));
-      SDL_snprintf(play_problem, sizeof(play_problem), "Couldn't start %s.", path);
-    }
+  play_problem[0] = 0;
+  if (!SaveSettingsSection(repo) || !SaveControlsSection(repo)) {
+    SDL_strlcpy(play_problem, "Couldn't save the settings or controls, so the game wasn't started.",
+      sizeof(play_problem));
   }
+  else if (!StartGame(repo)) {
+    GamePath(repo, path, sizeof(path));
+    SDL_snprintf(play_problem, sizeof(play_problem), "Couldn't start %s.", path);
+  }
+}
+
+/* Play waits while a level builds, as the game would start without it */
+static void DrawPlayButton(const char *repo) {
+  int building = IsLevelBuilding();
+
+  igBeginDisabled(building);
+  if (DrawBigButton("Play")) { SaveAndStartGame(repo); }
+  igEndDisabled();
+  if (building) { igText("A custom level is being built, you can play when it's done."); }
   if (play_problem[0]) { igTextColored(PROBLEM_COLOUR, "%s", play_problem); }
 }
 

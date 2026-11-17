@@ -180,7 +180,7 @@ static void DrawBootLevel(const char *repo) {
   char preview[64];
   int i;
 
-  BeginFieldRow("Boot level", BOOT_LEVEL_TOOLTIP);
+  BeginFieldRow("Custom level", BOOT_LEVEL_TOOLTIP);
   BootLevelPreview(preview, sizeof(preview));
   igSetNextItemWidth(BOOT_LEVEL_WIDTH);
   if (igBeginCombo("##boot_level", preview, 0)) {
@@ -226,11 +226,6 @@ static void DrawGameAdjustmentFields(void) {
     "Show how many spins Crash has left in the top right corner.");
 }
 
-static void DrawStartFields(const char *repo) {
-  DrawFieldGroupTitle("Start");
-  DrawBootLevel(repo);
-}
-
 static void DrawReplayFields(void) {
   DrawFieldGroupTitle("Replays");
   DrawOnOff("Replay inputs", &settings.replay_inputs,
@@ -241,9 +236,9 @@ static void DrawReplayFields(void) {
 
 static void DrawFields(const char *repo) {
   if (!BeginFieldRows("settings_fields")) { return; }
+  DrawBootLevel(repo);
   DrawDisplayFields();
   DrawGameAdjustmentFields();
-  DrawStartFields(repo);
   DrawReplayFields();
   EndFieldRows();
 }

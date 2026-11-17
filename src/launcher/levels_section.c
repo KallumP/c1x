@@ -40,8 +40,12 @@ void StartLevelBuild(const char *repo, const char *level) {
   }
 }
 
+int IsLevelBuilding(void) {
+  return IsBackgroundCommandRunning(&build);
+}
+
 int CanBuildLevels(const char *repo) {
-  return AreToolsBuilt(repo) && !IsBackgroundCommandRunning(&build);
+  return AreToolsBuilt(repo) && !IsLevelBuilding();
 }
 
 /* once a build finishes, the levels it made are listed here and for
