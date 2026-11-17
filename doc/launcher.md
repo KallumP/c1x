@@ -24,7 +24,7 @@ If any of the game's files are missing from `streams/`, the launcher lists them 
 
 The launcher has a field for each setting in `settings.cfg` (see [Settings](settings.md)): a checkbox for each on/off setting, and a box for each number. Hover over a field to see what it does. When it opens, the fields show what `settings.cfg` sets. If there isn't one, it creates it from `settings.example.cfg`, with the defaults.
 
-**Boot level** is the custom level that **CUSTOM LEVEL** on the game's title screen starts (under **LOAD GAME**): it lists the custom levels (see [Levels](#levels)), and **none**, which leaves **CUSTOM LEVEL** off the title screen. A level that isn't built says `(not built)`; choosing it builds it, then sets it as the boot level once it builds.
+**Custom level**, the first setting, is the custom level that **CUSTOM LEVEL** on the game's title screen starts (under **LOAD GAME**): it lists the custom levels (see [Levels](#levels)), and **none**, which leaves **CUSTOM LEVEL** off the title screen. A level that isn't built says `(not built)`; choosing it builds it, then sets it as the boot level once it builds.
 
 **Save** writes the settings to `settings.cfg`. It changes each setting's line, or adds one for a setting the file doesn't have, and keeps the rest of the file as it is, comments included. Choosing **none** comments out the `boot_level` line. **Play** saves too, so you only need **Save** to keep the settings without playing.
 
