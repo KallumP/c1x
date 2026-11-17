@@ -2,6 +2,10 @@
 
 ## 2026-11-17
 
+### Changed
+
+- the launcher's **Boot level** setting is now **Custom level**, at the top of the settings
+
 ### Fixed
 
 - the mouse cursor no longer shows over the game
