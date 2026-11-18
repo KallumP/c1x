@@ -42,7 +42,7 @@ static Uint32 WindowFlags() {
 }
 
 void SDLInit() {
-  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); /* for fix_model_draw_order */
   window = SDL_CreateWindow("c1x",
     SDL_WINDOWPOS_UNDEFINED,
@@ -82,6 +82,20 @@ static void ToggleFullscreen() {
   }
 }
 
+/* connect a controller that was plugged in (also sent for ones there at startup) */
+static void ConnectController(int device_index) {
+  if (!SDL_IsGameController(device_index)) { return; }
+  SDL_GameControllerOpen(device_index);
+}
+
+/* let go of a controller that was unplugged */
+static void DisconnectController(SDL_JoystickID instance_id) {
+  SDL_GameController *controller;
+
+  controller = SDL_GameControllerFromInstanceID(instance_id);
+  if (controller) { SDL_GameControllerClose(controller); }
+}
+
 /* a key going down; a fullscreen toggle (alt+enter, f11) isn't the game's, so enter doesn't press start */
 static void PressKey(SDL_KeyboardEvent *key) {
   if (IsFullscreenToggle(key->keysym.scancode, key->keysym.mod)) {
@@ -106,6 +120,12 @@ void SDLUpdate() {
       break;
     case SDL_KEYUP:
       keys[e.key.keysym.scancode] = 0;
+      break;
+    case SDL_CONTROLLERDEVICEADDED:
+      ConnectController(e.cdevice.which);
+      break;
+    case SDL_CONTROLLERDEVICEREMOVED:
+      DisconnectController(e.cdevice.which);
       break;
     case SDL_MOUSEBUTTONUP:
     case SDL_MOUSEBUTTONDOWN:
