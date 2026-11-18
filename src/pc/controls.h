@@ -19,7 +19,14 @@ typedef struct {
   uint32_t bits;
 } pad_button_name;
 
+/* a game controller control (see pc/gamepad.h) bound to a button */
+typedef struct {
+  int control;
+  uint32_t bits;
+} gamepad_mapping;
+
 extern const sw_pad_mapping pad_default_mappings[PAD_DEFAULT_KEY_COUNT];
+extern const gamepad_mapping gamepad_default_mappings[PAD_BUTTON_COUNT];
 extern const pad_button_name pad_button_names[PAD_BUTTON_COUNT];
 
 int PadParseBinding(const char *name, const char *key, uint32_t *bits, SDL_Scancode *code);

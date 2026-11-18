@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include "pc/controls.h"
 #include "pc/config.h"
+#include "pc/gamepad.h"
 
 /* a WASD layout: WASD to move, space to jump, K to spin; a key for each button */
 const sw_pad_mapping pad_default_mappings[PAD_DEFAULT_KEY_COUNT] = {
@@ -24,6 +25,26 @@ const sw_pad_mapping pad_default_mappings[PAD_DEFAULT_KEY_COUNT] = {
   { .code = SDL_SCANCODE_SEMICOLON, .bits = PAD_CIRCLE   },
   { .code = SDL_SCANCODE_SPACE,     .bits = PAD_CROSS    },
   { .code = SDL_SCANCODE_K,         .bits = PAD_SQUARE   },
+};
+
+/* a controller's buttons where a PlayStation pad's are: the bottom face button is cross */
+const gamepad_mapping gamepad_default_mappings[PAD_BUTTON_COUNT] = {
+  { .control = SDL_CONTROLLER_BUTTON_BACK,          .bits = PAD_SELECT   },
+  { .control = SDL_CONTROLLER_BUTTON_LEFTSTICK,     .bits = PAD_L3       },
+  { .control = SDL_CONTROLLER_BUTTON_RIGHTSTICK,    .bits = PAD_R3       },
+  { .control = SDL_CONTROLLER_BUTTON_START,         .bits = PAD_START    },
+  { .control = SDL_CONTROLLER_BUTTON_DPAD_UP,       .bits = PAD_UP       },
+  { .control = SDL_CONTROLLER_BUTTON_DPAD_RIGHT,    .bits = PAD_RIGHT    },
+  { .control = SDL_CONTROLLER_BUTTON_DPAD_DOWN,     .bits = PAD_DOWN     },
+  { .control = SDL_CONTROLLER_BUTTON_DPAD_LEFT,     .bits = PAD_LEFT     },
+  { .control = GAMEPAD_LEFT_TRIGGER,                .bits = PAD_L2       },
+  { .control = GAMEPAD_RIGHT_TRIGGER,               .bits = PAD_R2       },
+  { .control = SDL_CONTROLLER_BUTTON_LEFTSHOULDER,  .bits = PAD_L1       },
+  { .control = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, .bits = PAD_R1       },
+  { .control = SDL_CONTROLLER_BUTTON_Y,             .bits = PAD_TRIANGLE },
+  { .control = SDL_CONTROLLER_BUTTON_B,             .bits = PAD_CIRCLE   },
+  { .control = SDL_CONTROLLER_BUTTON_A,             .bits = PAD_CROSS    },
+  { .control = SDL_CONTROLLER_BUTTON_X,             .bits = PAD_SQUARE   },
 };
 
 /* button names used in controls files */
