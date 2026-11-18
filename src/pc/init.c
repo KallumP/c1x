@@ -11,6 +11,7 @@
 #include "pc/audiosong.h"
 #include "math.h"
 #include "pad.h"
+#include "pc/gamepad.h"
 #include "pc/gfx/gl.h"
 #include "pc/time.h"
 #include "pc/settings.h"
@@ -94,6 +95,7 @@ static void DisconnectController(SDL_JoystickID instance_id) {
 
   controller = SDL_GameControllerFromInstanceID(instance_id);
   if (controller) { SDL_GameControllerClose(controller); }
+  GamepadReleaseAll(); /* so nothing stays held from the unplugged one */
 }
 
 /* a key going down; a fullscreen toggle (alt+enter, f11) isn't the game's, so enter doesn't press start */
@@ -126,6 +128,13 @@ void SDLUpdate() {
       break;
     case SDL_CONTROLLERDEVICEREMOVED:
       DisconnectController(e.cdevice.which);
+      break;
+    case SDL_CONTROLLERBUTTONDOWN:
+    case SDL_CONTROLLERBUTTONUP:
+      GamepadSetButton(e.cbutton.button, e.type == SDL_CONTROLLERBUTTONDOWN);
+      break;
+    case SDL_CONTROLLERAXISMOTION:
+      GamepadSetAxis(e.caxis.axis, e.caxis.value);
       break;
     case SDL_MOUSEBUTTONUP:
     case SDL_MOUSEBUTTONDOWN:

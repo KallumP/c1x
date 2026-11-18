@@ -20,6 +20,7 @@ SRC =	src/ns.c \
 	src/pc/math.c \
 	src/pc/pad.c \
 	src/pc/controls.c \
+	src/pc/gamepad.c \
 	src/pc/config.c \
 	src/pc/settings.c \
 	src/pc/speed.c \
@@ -58,6 +59,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/ns.c \
 	src/pc/pad.c \
 	src/pc/controls.c \
+	src/pc/gamepad.c \
 	src/pc/config.c \
 	src/pc/settings.c \
 	src/pc/speed.c \
