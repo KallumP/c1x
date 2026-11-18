@@ -47,3 +47,40 @@ UTEST(pad_gamepad, held_controller_buttons_combine) {
   ASSERT_EQ((uint32_t)(PAD_CROSS | PAD_LEFT), PadGamepadHeld());
   GamepadReleaseAll();
 }
+
+/* the buttons held with the left stick at x, y (SDL's y is down) */
+static uint32_t held_for_stick(int x, int y) {
+  GamepadReleaseAll();
+  GamepadSetAxis(SDL_CONTROLLER_AXIS_LEFTX, x);
+  GamepadSetAxis(SDL_CONTROLLER_AXIS_LEFTY, y);
+  return PadGamepadHeld();
+}
+
+UTEST(pad_gamepad, the_left_stick_pushed_far_presses_its_direction) {
+  PadResetBindings();
+  EXPECT_EQ((uint32_t)PAD_LEFT, held_for_stick(-32768, 0));
+  EXPECT_EQ((uint32_t)PAD_RIGHT, held_for_stick(32767, 0));
+  EXPECT_EQ((uint32_t)PAD_UP, held_for_stick(0, -32768));
+  EXPECT_EQ((uint32_t)PAD_DOWN, held_for_stick(0, 32767));
+  GamepadReleaseAll();
+}
+
+UTEST(pad_gamepad, the_left_stick_barely_pushed_presses_nothing) {
+  PadResetBindings();
+  EXPECT_EQ(0u, held_for_stick(8000, -8000));
+  GamepadReleaseAll();
+}
+
+UTEST(pad_gamepad, the_left_stick_pushed_diagonally_presses_both_directions) {
+  PadResetBindings();
+  EXPECT_EQ((uint32_t)(PAD_UP | PAD_RIGHT), held_for_stick(23000, -23000));
+  GamepadReleaseAll();
+}
+
+UTEST(pad_gamepad, the_right_stick_presses_nothing) {
+  PadResetBindings();
+  GamepadReleaseAll();
+  GamepadSetAxis(SDL_CONTROLLER_AXIS_RIGHTX, 32767);
+  EXPECT_EQ(0u, PadGamepadHeld());
+  GamepadReleaseAll();
+}
