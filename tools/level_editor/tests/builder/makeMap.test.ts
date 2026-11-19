@@ -2184,6 +2184,14 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(zones.map(neighbours)).toEqual([[a, b], [b, a, c], [c, b]]);
     });
 
+    test("its zones aren't left/right zones, and their camera paths run along -z", () => {
+      const ZONE_FLAG_SIDE_SCROLL = 0x4000;
+      for (const zone of zones) {
+        expect(headerOf(zone).flags & ZONE_FLAG_SIDE_SCROLL).toBe(0);
+        expect(cameraPathOf(zone).direction).toEqual([0, 0, -4096]);
+      }
+    });
+
     test("its paths lead on to the next zones and back", () => {
       // a link is (relation, the zone's index in the zone's neighbours, its path's index there, goal)
       const [BEFORE, AFTER] = [1, 2]; // the path before or after this one
@@ -2285,6 +2293,15 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
           expect(points.every(([x]) => x >= 0 && x < ZONE_LENGTH)).toBe(true);
           expect(points.slice(1).every((point, index) => point[0] > points[index][0])).toBe(true);
           expect(points.every(([, y, z]) => z === crashZ + CAM_LEAD && y === crashY - CRASH_LIFT + CAM_OFFSET[1])).toBe(true);
+        }
+      });
+
+      test("its zones are left/right zones, and their camera paths run right (+x)", () => {
+        // ZONE_FLAG_SIDE_SCROLL in src/formats/zdat.h: src/cam.c looks ahead the way such a zone's path runs
+        const ZONE_FLAG_SIDE_SCROLL = 0x4000;
+        for (const zone of zones) {
+          expect(headerOf(zone).flags & ZONE_FLAG_SIDE_SCROLL).toBe(ZONE_FLAG_SIDE_SCROLL);
+          expect(cameraPathOf(zone).direction).toEqual([4096, 0, 0]);
         }
       });
 

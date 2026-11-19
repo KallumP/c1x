@@ -16,6 +16,7 @@ const PATH_LENGTH = 30;
 const PATH_CAM_MODE = 32;
 const PATH_ZOOM = 36;
 const PATH_FOLLOW_HEIGHT = 38; // its first spare field (unknown_a)
+const PATH_DIRECTION = 44; // direction_x, y and z: the way the path runs
 const PATH_POINTS = 50;
 const PATH_POINT_SIZE = 12; // x, y, z, then the camera's rotation about y, x and z
 
@@ -26,6 +27,7 @@ export interface CameraPathFields {
   camMode: number;
   zoom: number;
   followHeight: number;
+  direction: Vec3;
   points: PathPoint[];
 }
 
@@ -48,15 +50,17 @@ export function readCameraPath(path: Buffer): CameraPathFields {
     camMode: path.readUInt16LE(PATH_CAM_MODE),
     zoom: path.readInt16LE(PATH_ZOOM),
     followHeight: path.readUInt16LE(PATH_FOLLOW_HEIGHT),
+    direction: [0, 1, 2].map((axis) => path.readInt16LE(PATH_DIRECTION + 2 * axis)) as Vec3,
     points: Array.from({ length }, (_, index) => readPathPoint(path, index)),
   };
 }
 
 // zone_header's fields. zone_gfx follows the load list and its display flags:
-// the sky's split, how far away objects are drawn, and the sky's top and bottom colours
+// the sky's split, how far away objects are drawn, the zone's flags, and the sky's top and bottom colours
 const ZONE_GFX = ZONE_LOADLIST + 168 + 4;
 const ZONE_SKY_SPLIT = ZONE_GFX;
 const ZONE_VISIBILITY_DEPTH = ZONE_GFX + 8;
+const ZONE_FLAGS = ZONE_GFX + 28;
 const ZONE_SKY_TOP = ZONE_GFX + 44;
 const ZONE_SKY_BOTTOM = ZONE_GFX + 48;
 
@@ -68,6 +72,7 @@ export interface ZoneHeaderFields {
   neighbours: number[]; // itself first, then the zones either side
   loadList: { entryCount: number; pageCount: number };
   midi: number;
+  flags: number;
   sky: { split: number; visibility: number; top: Rgb; bottom: Rgb };
 }
 
@@ -89,6 +94,7 @@ export function readZoneHeader(header: Buffer): ZoneHeaderFields {
     neighbours: readWords(header, ZONE_NEIGHBORS, neighbourCount),
     loadList: { entryCount: header.readInt32LE(ZONE_LOADLIST), pageCount: header.readInt32LE(ZONE_LOADLIST + 4) },
     midi: header.readUInt32LE(ZONE_MIDI),
+    flags: header.readUInt32LE(ZONE_FLAGS),
     sky: {
       split: header.readUInt32LE(ZONE_SKY_SPLIT),
       visibility: header.readUInt32LE(ZONE_VISIBILITY_DEPTH),
