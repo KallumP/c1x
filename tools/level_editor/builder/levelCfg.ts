@@ -4,7 +4,19 @@
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { DEFAULT_SCALE } from "../src/coords";
-import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
+import {
+  CAMERA_ANGLE_MAX,
+  CAMERA_ANGLE_MIN,
+  CAMERA_DISTANCE_MAX,
+  CAMERA_DISTANCE_MIN,
+  CAMERA_VIEWS,
+  DEFAULT_CAMERA,
+  isCameraAngle,
+  isCameraDistance,
+  isCameraView,
+  type Camera,
+  type CameraView,
+} from "../src/camera";
 import {
   DEFAULT_MUSIC,
   DEFAULT_MUSIC_VOLUME,
@@ -38,6 +50,7 @@ export interface LevelCfgSettings {
   sky_split?: number;
   camera_distance?: number;
   camera_angle?: number;
+  camera_view?: CameraView;
   music?: string;
   music_volume?: number;
   title?: string;
@@ -45,7 +58,17 @@ export interface LevelCfgSettings {
 
 const WHOLE_NUMBERS = ["scale", "turn"];
 const COLOURS = ["sky_top", "sky_bottom"];
-const SETTINGS = [...WHOLE_NUMBERS, ...COLOURS, "sky_split", "camera_distance", "camera_angle", "music", "music_volume", "title"];
+const SETTINGS = [
+  ...WHOLE_NUMBERS,
+  ...COLOURS,
+  "sky_split",
+  "camera_distance",
+  "camera_angle",
+  "camera_view",
+  "music",
+  "music_volume",
+  "title",
+];
 
 const isComment = (line: string) => line === "" || line.startsWith("#");
 const isWholeNumber = (value: string) => /^[+-]?\d+$/.test(value);
@@ -87,6 +110,13 @@ function readCameraAngle(value: string, where: string): number {
     throw new Error(`${where}: camera_angle has to be ${CAMERA_ANGLE_MIN} to ${CAMERA_ANGLE_MAX}, not ${value}`);
   }
   return angle;
+}
+
+function readCameraView(value: string, where: string): CameraView {
+  if (!isCameraView(value)) {
+    throw new Error(`${where}: camera_view has to be ${CAMERA_VIEWS.join(" or ")}, not ${value || "nothing"}`);
+  }
+  return value;
 }
 
 // music: one of the soundtracks, by name, or an audio file in the level's folder
@@ -143,6 +173,9 @@ function readSetting(line: string, where: string, folder: string): [keyof LevelC
   if (key === "camera_angle") {
     return [key, readCameraAngle(value, where)];
   }
+  if (key === "camera_view") {
+    return [key, readCameraView(value, where)];
+  }
   if (key === "music") {
     return [key, readMusic(value, where, folder)];
   }
@@ -186,6 +219,7 @@ function cameraOf(settings: LevelCfgSettings): Camera {
   return {
     distance: settings.camera_distance ?? DEFAULT_CAMERA.distance,
     angle: settings.camera_angle ?? DEFAULT_CAMERA.angle,
+    view: settings.camera_view ?? DEFAULT_CAMERA.view,
   };
 }
 

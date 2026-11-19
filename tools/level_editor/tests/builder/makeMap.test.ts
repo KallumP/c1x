@@ -205,21 +205,21 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   test("a larger camera distance puts the camera further back and higher", () => {
     const usual = cameraPathFor();
-    const far = cameraPathFor({ distance: 2, angle: 42 });
+    const far = cameraPathFor({ distance: 2, angle: 42, view: "behind" });
     expect(far.followHeight).toBeGreaterThan(usual.followHeight);
     expect(far.points[0][1]).toBeGreaterThan(usual.points[0][1]); // higher above the floor
     expect(far.zoom).toBeGreaterThan(usual.zoom); // further behind crash along its path
   });
 
   test("a steeper camera angle keeps the camera nearer behind crash", () => {
-    expect(cameraPathFor({ distance: 1, angle: 70 }).zoom).toBeLessThan(cameraPathFor().zoom); // and higher up
+    expect(cameraPathFor({ distance: 1, angle: 70, view: "behind" }).zoom).toBeLessThan(cameraPathFor().zoom); // and higher up
   });
 
   test("a steeper camera angle tilts the camera further down", () => {
     const USUAL_ANGLE = 42;
     const USUAL_TILT = -181; // n. sanity beach's
     const ANGLE_UNITS = 4096; // a whole turn, in the game's angles
-    const tiltOf = (angle: number) => cameraPathFor({ distance: 1, angle }).points[0][3];
+    const tiltOf = (angle: number) => cameraPathFor({ distance: 1, angle, view: "behind" }).points[0][3];
     expect(tiltOf(USUAL_ANGLE)).toBe(USUAL_TILT);
     expect(tiltOf(USUAL_ANGLE + 18)).toBe(USUAL_TILT - Math.round((18 * ANGLE_UNITS) / 360));
   });
