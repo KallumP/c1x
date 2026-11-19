@@ -5,6 +5,7 @@ import { LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
 import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, leafDriftShares, LEADER_BATS_FLIGHT, leaderBatsGap, pillarSlideShares } from "../../src/coords";
 import type { EnemyType, LevelObject, ObstacleType } from "../../src/objects";
 import { DEFAULT_SKY, type Sky } from "../../src/sky";
+import { DEFAULT_CAMERA } from "../../src/camera";
 import { enemyObject, expectNear, obstacleObject } from "../helpers";
 import { readCameraPath, readZoneHeader, readZoneRect } from "./zoneReaders";
 import { BASE_LEVEL } from "../../builder/baseLevel";
@@ -2225,6 +2226,63 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const [pad] = warpPads(withEnd);
       expect(pad.zone.eid).toBe(zonesOf(withEnd)[2].eid);
       expectNear(pad.at[2], 128 + 2000, 16);
+    });
+  });
+
+  describe("a side view", () => {
+    const SIDE = { camera: { ...DEFAULT_CAMERA, view: "side" as const } };
+    const ZONE_LENGTH = 16384; // along the route, the most a zone holds
+    const zoneX = (zone: Entry) => readZoneRect(zone.items[1]).at[0];
+    // the zones from the start of the route (-x) to its end (+x)
+    const zonesAlongX = ({ entries }: Built) => 
+        [...entries.values()]
+        .filter((entry) => entry.type === ENTRY_ZDAT)
+        .sort((first, second) => zoneX(first) - zoneX(second));
+
+    test("turns the map so its route runs left to right (along +x)", () => {
+      const vertices = worldVertices(build([], SIDE));
+      const extentAlong = (axis: number) => Math.max(...vertices.map((vertex) => vertex[axis])) - Math.min(...vertices.map((vertex) => vertex[axis]));
+      // the floor, 16 m along the route, is 16 m along x and 8 m across, along z
+      expect([0, 1, 2].map(extentAlong)).toEqual([16 * 256, 2 * 256, 8 * 256]);
+    });
+
+    test("crash starts as far along the route as he does behind, from the left end", () => {
+      const behind = build();
+      const side = build([], SIDE);
+      const fromStartBehind = readZoneRect(behind.zone.items[1]).depth - crashAt(behind.zone)[2]; // from the +z end
+      expectNear(crashAt(side.zone)[0], fromStartBehind, 16); // from the -x end
+    });
+
+    describe("of a long map", () => {
+      const built = hasBase ? make(LONG_OBJ, SIDE) : null!;
+      const zones = hasBase ? zonesAlongX(built) : [];
+
+      test("is a chain of zones along +x", () => {
+        expect(zones.length).toBe(3);
+        const rects = zones.map((zone) => readZoneRect(zone.items[1]));
+        rects.slice(1).forEach((next, index) => {
+          const { at: [x, y, z], width, height, depth } = rects[index];
+          expect(width).toBe(ZONE_LENGTH);
+          expect(next.at[0]).toBe(x + ZONE_LENGTH); // the next one along +x, touching
+          expect([next.at[1], next.at[2], next.height, next.depth]).toEqual([y, z, height, depth]);
+        });
+      });
+
+      test("each zone lists itself, then the zones either side", () => {
+        const [a, b, c] = zones.map(({ eid }) => eid);
+        expect(zones.map((zone) => headerOf(zone).neighbours)).toEqual([[a, b], [b, a, c], [c, b]]);
+      });
+
+      test("crash starts in the left-most zone", () => {
+        expect(built.level.nsd.ldat.zoneSpawn).toBe(zones[0].eid);
+        expect(zones.map((zone) => headerOf(zone).entityCount)).toEqual([1, 0, 0]);
+      });
+
+      test("an end object far along it is in the right-most zone", () => {
+        const withEnd = make(LONG_OBJ, { ...SIDE, objects: [object("end", [0, 45, 0])] });
+        const [pad] = warpPads(withEnd);
+        expect(pad.zone.eid).toBe(zonesAlongX(withEnd)[2].eid);
+      });
     });
   });
 });
