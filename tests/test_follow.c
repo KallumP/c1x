@@ -96,14 +96,11 @@ UTEST(follow, slides_sideways_towards_crash_along_a_path_behind_him) {
   ASSERT_EQ(FollowCamOffset(0, 8000), FollowCamSlide(0, 8000, PATH_ALONG_Z));
 }
 
-UTEST(follow, doesnt_slide_along_a_side_views_path) {
-  /* it follows crash along the path itself, looking ahead the way he runs */
-  ASSERT_EQ(0, FollowCamSlide(0, 8000, PATH_RIGHT));
-  ASSERT_EQ(0, FollowCamSlide(0, -8000, PATH_LEFT));
-}
-
-UTEST(follow, drops_a_slide_it_had_on_reaching_a_side_views_path) {
-  ASSERT_EQ(0, FollowCamSlide(5000, 8000, PATH_RIGHT));
+UTEST(follow, keeps_level_with_crash_along_a_side_views_path) {
+  /* at once, left and right: it never trails him or looks ahead of him */
+  ASSERT_EQ(8000, FollowCamSlide(0, 8000, PATH_RIGHT));
+  ASSERT_EQ(-8000, FollowCamSlide(0, -8000, PATH_LEFT));
+  ASSERT_EQ(8000, FollowCamSlide(5000, 8000, PATH_RIGHT));
 }
 
 UTEST(follow, its_height_above_crash_is_the_one_its_path_keeps_or_the_usual_one) {
