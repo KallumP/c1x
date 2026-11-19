@@ -3,7 +3,19 @@
 // read and set by the editor
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
+import {
+  CAMERA_ANGLE_MAX,
+  CAMERA_ANGLE_MIN,
+  CAMERA_DISTANCE_MAX,
+  CAMERA_DISTANCE_MIN,
+  CAMERA_VIEWS,
+  DEFAULT_CAMERA,
+  isCameraAngle,
+  isCameraDistance,
+  isCameraView,
+  type Camera,
+  type CameraView,
+} from "../src/camera";
 import { DEFAULT_SCALE } from "../src/coords";
 import {
   DEFAULT_MUSIC,
@@ -57,12 +69,22 @@ function parseSky(text: string): Sky {
   };
 }
 
+// the camera's view: behind crash if it isn't set (or isn't behind or side)
+function parseCameraView(text: string): CameraView {
+  const view = settingValue(text, "camera_view");
+  if (isCameraView(view)) {
+    return view;
+  }
+  return DEFAULT_CAMERA.view;
+}
+
 function parseCamera(text: string): Camera {
   const distance = Number(settingValue(text, "camera_distance"));
   const angle = Number(settingValue(text, "camera_angle"));
   return {
     distance: isCameraDistance(distance) ? distance : DEFAULT_CAMERA.distance,
     angle: isCameraAngle(angle) ? angle : DEFAULT_CAMERA.angle,
+    view: parseCameraView(text),
   };
 }
 
@@ -131,6 +153,9 @@ function checkLevelCfg(cfg: LevelCfg): void {
   if (!isCameraAngle(cfg.camera.angle)) {
     throw new Error(`camera_angle has to be ${CAMERA_ANGLE_MIN} to ${CAMERA_ANGLE_MAX}, not ${cfg.camera.angle}`);
   }
+  if (!isCameraView(cfg.camera.view)) {
+    throw new Error(`camera_view has to be ${CAMERA_VIEWS.join(" or ")}, not ${cfg.camera.view}`);
+  }
   if (!isSongName(cfg.music)) {
     throw new Error(`music has to be one of the game's songs, or an audio file, not ${cfg.music}`);
   }
@@ -161,6 +186,7 @@ function settingLines(cfg: LevelCfg): [string, string, boolean][] {
     ["sky_bottom", `sky_bottom = ${formatRgb(cfg.sky.bottom)}`, formatRgb(cfg.sky.bottom) === formatRgb(DEFAULT_SKY.bottom)],
     ["camera_distance", `camera_distance = ${cfg.camera.distance}`, cfg.camera.distance === DEFAULT_CAMERA.distance],
     ["camera_angle", `camera_angle = ${cfg.camera.angle}`, cfg.camera.angle === DEFAULT_CAMERA.angle],
+    ["camera_view", `camera_view = ${cfg.camera.view}`, cfg.camera.view === DEFAULT_CAMERA.view],
     ["music", `music = ${cfg.music}`, cfg.music === DEFAULT_MUSIC],
     ["music_volume", `music_volume = ${cfg.musicVolume}`, cfg.musicVolume === DEFAULT_MUSIC_VOLUME],
     ["title", titleLine(cfg.title), cfg.title === ""],
