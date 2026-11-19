@@ -63,66 +63,81 @@ UTEST(tween, lerp_vec_lerps_each_axis) {
   ASSERT_EQ(0, out.z);
 }
 
-/* draw a game frame of frame_ticks and the frames between it is due, a tick at a time; returns the frames drawn */
-static int DrawGameFrame(tween_pacer *p, int32_t frame_ticks, uint32_t rate) {
+/*
+ * draw a game frame of frame_ticks and the frames between it that are due, a
+ * tick at a time, noting the ticks each frame between was drawn at in
+ * drawn_at (if given); returns the frames drawn, the game frame's own included
+ */
+static int DrawGameFrame(tween_pacer *p, int32_t frame_ticks, uint32_t rate, int32_t *drawn_at) {
   int32_t elapsed;
   int drawn;
 
   drawn = 1; /* the game frame's own */
   for (elapsed = 0; elapsed < frame_ticks; elapsed++) {
     if (TweenFrameDue(p, elapsed, frame_ticks, rate, 0)) {
-      TweenPacerDrew(p, elapsed, rate);
+      TweenPacerDrew(p, elapsed, frame_ticks, rate, 0);
+      if (drawn_at) { drawn_at[drawn - 1] = elapsed; }
       drawn++;
     }
   }
-  TweenPacerNextGameFrame(p, frame_ticks, rate);
+  TweenPacerNextGameFrame(p, 0);
   return drawn;
 }
 
-/* frames drawn a second over 10 seconds of 34-tick game frames */
-static double FramesASecond(uint32_t rate) {
-  tween_pacer p;
-  int frames, game_frames, i;
-  double seconds;
-
-  TweenPacerReset(&p);
-  game_frames = 305; /* 10 s: 34000000/0x8000 ticks a second */
-  frames = 0;
-  for (i = 0; i < game_frames; i++)
-    frames += DrawGameFrame(&p, 34, rate);
-  seconds = (game_frames * 34.0) * 0x8000 / 34000000.0;
-  return frames / seconds;
+UTEST(tween_pacing, a_game_frame_has_the_frame_rates_share_of_frames_rounded) {
+  ASSERT_EQ(2, TweenFramesPerGameFrame(34, 60));  /* 1.97: 34 ticks is just under 1/30 s */
+  ASSERT_EQ(4, TweenFramesPerGameFrame(34, 120));
+  ASSERT_EQ(5, TweenFramesPerGameFrame(34, 144)); /* 4.72 */
+  ASSERT_EQ(1, TweenFramesPerGameFrame(34, 30));
+  ASSERT_EQ(3, TweenFramesPerGameFrame(51, 60));  /* the intro's 3-vblank frames */
 }
 
-UTEST(tween_pacing, frames_drawn_a_second_match_the_frame_rate) {
-  uint32_t rates[] = { 60, 120, 144, 165, 240 };
+UTEST(tween_pacing, a_game_frame_always_has_at_least_its_own_frame) {
+  ASSERT_EQ(1, TweenFramesPerGameFrame(34, 10));
+}
+
+UTEST(tween_pacing, at_60_fps_the_frame_between_is_halfway_through_every_game_frame) {
+  tween_pacer p;
+  int32_t drawn_at[8];
   int i;
 
-  for (i = 0; i < 5; i++) {
-    EXPECT_NEAR((double)rates[i], FramesASecond(rates[i]), 1.0);
+  TweenPacerReset(&p);
+  for (i = 0; i < 100; i++) { /* it doesn't drift from one game frame to the next */
+    ASSERT_EQ(2, DrawGameFrame(&p, 34, 60, drawn_at));
+    ASSERT_EQ(17, drawn_at[0]);
   }
 }
 
-UTEST(tween_pacing, at_144_fps_three_or_four_frames_are_drawn_between_each_game_frame) {
+UTEST(tween_pacing, at_144_fps_the_frames_between_are_evenly_spaced) {
   tween_pacer p;
-  int i, between;
+  int32_t drawn_at[8];
 
   TweenPacerReset(&p);
-  for (i = 0; i < 60; i++) {
-    between = DrawGameFrame(&p, 34, 144) - 1;
-    ASSERT_GE(between, 3);
-    ASSERT_LE(between, 4);
-  }
+  ASSERT_EQ(5, DrawGameFrame(&p, 34, 144, drawn_at));
+  ASSERT_EQ(7, drawn_at[0]); /* 6.8 ticks apart, each at or just after its time */
+  ASSERT_EQ(14, drawn_at[1]);
+  ASSERT_EQ(21, drawn_at[2]);
+  ASSERT_EQ(28, drawn_at[3]);
 }
 
-UTEST(tween_pacing, a_frame_is_due_once_its_slot_comes_round) {
+UTEST(tween_pacing, a_frame_is_due_once_its_time_comes_round) {
   tween_pacer p;
 
   TweenPacerReset(&p);
-  ASSERT_FALSE(TweenFrameDue(&p, 17, 34, 60, 0)); /* slot 1 is 17.3 ticks in */
-  ASSERT_TRUE(TweenFrameDue(&p, 18, 34, 60, 0));
-  TweenPacerDrew(&p, 18, 60);
-  ASSERT_FALSE(TweenFrameDue(&p, 20, 34, 60, 0)); /* slot 1 is drawn */
+  ASSERT_FALSE(TweenFrameDue(&p, 16, 34, 60, 0));
+  ASSERT_TRUE(TweenFrameDue(&p, 17, 34, 60, 0));
+  TweenPacerDrew(&p, 17, 34, 60, 0);
+  ASSERT_FALSE(TweenFrameDue(&p, 20, 34, 60, 0)); /* already drawn */
+}
+
+UTEST(tween_pacing, a_late_frame_doesnt_make_up_the_frames_it_missed) {
+  tween_pacer p;
+
+  TweenPacerReset(&p);
+  ASSERT_TRUE(TweenFrameDue(&p, 22, 34, 144, 0)); /* 7, 14 and 21 have all come round */
+  TweenPacerDrew(&p, 22, 34, 144, 0);
+  ASSERT_FALSE(TweenFrameDue(&p, 23, 34, 144, 0));
+  ASSERT_TRUE(TweenFrameDue(&p, 28, 34, 144, 0));
 }
 
 UTEST(tween_pacing, no_frame_is_due_at_the_game_frame_itself) {
@@ -137,16 +152,48 @@ UTEST(tween_pacing, no_frame_is_drawn_without_time_to_draw_it_before_the_game_fr
   tween_pacer p;
 
   TweenPacerReset(&p);
-  ASSERT_TRUE(TweenFrameDue(&p, 18, 34, 60, 10));
-  ASSERT_FALSE(TweenFrameDue(&p, 18, 34, 60, 16)); /* it would end when the game frame is due */
+  ASSERT_TRUE(TweenFrameDue(&p, 17, 34, 60, 10));
+  ASSERT_FALSE(TweenFrameDue(&p, 17, 34, 60, 17)); /* it would end when the game frame is due */
 }
 
 UTEST(tween_pacing, a_longer_game_frame_has_more_frames_between) {
   tween_pacer p;
+  int32_t drawn_at[8];
 
   TweenPacerReset(&p);
-  TweenPacerDrew(&p, 18, 60);
-  ASSERT_TRUE(TweenFrameDue(&p, 35, 51, 60, 0)); /* the intro's 3-vblank frames: slot 2 is 34.6 ticks in */
+  ASSERT_EQ(3, DrawGameFrame(&p, 51, 60, drawn_at));
+  ASSERT_EQ(17, drawn_at[0]);
+  ASSERT_EQ(34, drawn_at[1]);
+}
+
+/* a game frame shown 1 tick into it, and frames between that take 5 ticks to show */
+UTEST(tween_pacing, a_frame_between_starts_early_enough_to_be_shown_halfway) {
+  tween_pacer p;
+
+  TweenPacerReset(&p);
+  TweenPacerNextGameFrame(&p, 1);
+  ASSERT_FALSE(TweenFrameDue(&p, 12, 34, 60, 5));
+  ASSERT_TRUE(TweenFrameDue(&p, 13, 34, 60, 5)); /* shown at 18: 17 after the game frame's own */
+  TweenPacerDrew(&p, 13, 34, 60, 5);
+  ASSERT_FALSE(TweenFrameDue(&p, 14, 34, 60, 5));
+}
+
+UTEST(tween_pacing, a_game_frame_shown_late_moves_its_frames_between_later) {
+  tween_pacer p;
+
+  TweenPacerReset(&p);
+  TweenPacerNextGameFrame(&p, 4);
+  ASSERT_FALSE(TweenFrameDue(&p, 20, 34, 60, 0));
+  ASSERT_TRUE(TweenFrameDue(&p, 21, 34, 60, 0));
+}
+
+UTEST(tween_pacing, a_new_game_frame_starts_its_frames_between_afresh) {
+  tween_pacer p;
+
+  TweenPacerReset(&p);
+  TweenPacerDrew(&p, 17, 34, 60, 0);
+  TweenPacerNextGameFrame(&p, 0);
+  ASSERT_TRUE(TweenFrameDue(&p, 17, 34, 60, 0));
 }
 
 UTEST(tween_pacing, at_30_fps_no_frames_are_drawn_between_game_frames) {
@@ -155,7 +202,7 @@ UTEST(tween_pacing, at_30_fps_no_frames_are_drawn_between_game_frames) {
 
   TweenPacerReset(&p);
   for (i = 0; i < 60; i++)
-    ASSERT_EQ(1, DrawGameFrame(&p, 34, 30));
+    ASSERT_EQ(1, DrawGameFrame(&p, 34, 30, 0));
 }
 
 UTEST(tween, lerp_ang_lerps_each_angle) {

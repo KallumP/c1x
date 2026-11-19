@@ -52,22 +52,19 @@ static inline void TweenLerpVec(vec *a, vec *b, int32_t alpha, vec *out) {
     out->c[i] = TweenLerp(a->c[i], b->c[i], alpha);
 }
 
-/*
- * pacing frames between game frames. a slot is when a frame is due at
- * frame_rate; slots run on, carried from one game frame to the next
- */
+/* pacing frames between game frames: evenly spaced, by when they're shown */
 typedef struct {
-  int64_t phase; /* where the slots were at the game frame's start, from the slot its own frame took */
-  int drawn;     /* the last slot drawn this game frame */
+  int drawn;           /* the frames between drawn (or passed) this game frame */
+  int32_t shown_ticks; /* how far into the game frame its own frame was shown */
 } tween_pacer;
 
 extern void TweenPacerReset(tween_pacer *p);
-extern int TweenSlotsDue(const tween_pacer *p, int32_t elapsed, uint32_t frame_rate);
-extern int32_t TweenSlotTicks(const tween_pacer *p, int slot, uint32_t frame_rate);
+extern int TweenFramesPerGameFrame(int32_t frame_ticks, uint32_t frame_rate);
 extern int TweenFrameDue(const tween_pacer *p, int32_t elapsed, int32_t frame_ticks,
   uint32_t frame_rate, int32_t draw_ticks);
-extern void TweenPacerDrew(tween_pacer *p, int32_t elapsed, uint32_t frame_rate);
-extern void TweenPacerNextGameFrame(tween_pacer *p, int32_t frame_ticks, uint32_t frame_rate);
+extern void TweenPacerDrew(tween_pacer *p, int32_t elapsed, int32_t frame_ticks, uint32_t frame_rate,
+  int32_t draw_ticks);
+extern void TweenPacerNextGameFrame(tween_pacer *p, int32_t shown_ticks);
 
 static inline void TweenLerpAng(ang *a, ang *b, int32_t alpha, ang *out) {
   int i;

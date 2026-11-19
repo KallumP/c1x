@@ -8,7 +8,7 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 |---|---|---|
 | `fullscreen` | `off` | Fill the screen instead of a 1024x768 window. The picture keeps its 4:3 shape, with black bars at the sides on a widescreen. <kbd>Alt</kbd>+<kbd>Enter</kbd> or <kbd>F11</kbd> switches between the two while playing, without changing the setting. |
 | `fps_display` | `on` | Show how many frames are drawn a second in the top right corner (see `frame_rate`). |
-| `frame_rate` | `60` | How many frames a second to draw, from `30` to `240`. The game itself still runs at 30 frames a second, as on the PS1, so it plays the same; the frames in between show the camera and everything moving smoothly between them. `30` draws only the game's own frames. |
+| `frame_rate` | `60` | How many frames a second to draw, from `30` to `240`. The game itself still runs at 30 frames a second, as on the PS1, so it plays the same; the frames in between show the camera and everything moving smoothly between them. `30` draws only the game's own frames. The game's frames are a little faster than 30 a second, and each gets the same whole number of frames, so the counter can read a little over the setting: `60` shows 61, and `144` about 152. |
 | `box_display` | `on` | Show how many of the level's boxes Crash has broken at the top of the screen, such as `12/49`. It slides in with the lives and wumpa counters when triangle shows them, not each time a box breaks. Levels without a box gem (bosses, bonus rounds) show only the number broken. |
 
 ### Game adjustments

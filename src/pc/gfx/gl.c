@@ -767,7 +767,7 @@ static void GLDrawBorders() {
  * frame; frames are drawn while GLUpdate waits for the next game frame
  */
 static void (*tween_draw)(int32_t alpha) = 0;
-static tween_pacer tween_pace = { 0, 0 }; /* when frames between are due */
+static tween_pacer tween_pace = { 0 }; /* when frames between are due */
 static int tween_frames_drawn = 0; /* frames drawn between since the last game frame */
 
 void GLSetTweenDraw(void (*draw)(int32_t alpha)) {
@@ -783,19 +783,20 @@ static int GLIsTweening() {
 }
 
 /*
- * how long the last frame (between, or the game's own) took to draw and
- * show, in real ticks, so a frame between is only started with time to
- * finish it before the game frame is due
+ * how long the last frame between took to draw and show, in real ticks, so
+ * one is only started with time to show it before the game frame is due, and
+ * early enough to be shown on time. the game frame's own is timed too: how
+ * far into the game frame it's shown, which the frames between are spaced from
  */
-static int32_t draw_ticks = 0;
+static int32_t between_draw_ticks = 0;
 static int32_t draw_start = 0;
 
 static void GLStartTimingDraw() {
   draw_start = TimeRealTicks();
 }
 
-static void GLStopTimingDraw() {
-  draw_ticks = TimeRealTicks() - draw_start;
+static int32_t GLTicksSinceDrawStart() {
+  return TimeRealTicks() - draw_start;
 }
 
 /*
@@ -822,17 +823,22 @@ static void GLDrawTweenFrame(int32_t alpha) {
   context = game_frame;
 }
 
+/* how far a frame between started now is from the game frame's own to the next, by when it'll be shown */
+static int32_t GLBetweenFrameAlpha(int32_t elapsed, int32_t ticks) {
+  return TweenAlpha(elapsed + between_draw_ticks - tween_pace.shown_ticks, ticks);
+}
+
 /* draw a frame between game frames if one is due, elapsed ticks into a game frame of ticks */
 static void GLDrawBetweenFrames(int32_t elapsed, int32_t ticks) {
   uint32_t rate;
 
   rate = game_settings.frame_rate;
-  if (!TweenFrameDue(&tween_pace, elapsed, ticks, rate, draw_ticks)) { return; }
-  TweenPacerDrew(&tween_pace, elapsed, rate);
+  if (!TweenFrameDue(&tween_pace, elapsed, ticks, rate, between_draw_ticks)) { return; }
+  TweenPacerDrew(&tween_pace, elapsed, ticks, rate, between_draw_ticks);
   tween_frames_drawn++;
   GLStartTimingDraw();
-  GLDrawTweenFrame(TweenAlpha(elapsed, ticks));
-  GLStopTimingDraw();
+  GLDrawTweenFrame(GLBetweenFrameAlpha(elapsed, ticks));
+  between_draw_ticks = GLTicksSinceDrawStart();
 }
 
 /* wait until the game frame is due, frame_ticks after the last, drawing frames between if on */
@@ -851,7 +857,6 @@ static void GLWaitForFrame(int32_t frame_ticks) {
       if (between) { (*between)(elapsed, frame_ticks); }
     }
   }
-  TweenPacerNextGameFrame(&tween_pace, frame_ticks, game_settings.frame_rate);
 }
 
 void GLUpdate() {
@@ -907,5 +912,5 @@ void GLUpdate() {
 #endif
   if (callbacks.post_update)
     (*callbacks.post_update)();
-  GLStopTimingDraw();
+  TweenPacerNextGameFrame(&tween_pace, GLTicksSinceDrawStart()); /* its own frame was just shown */
 }
