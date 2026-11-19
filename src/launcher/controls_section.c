@@ -58,6 +58,7 @@ static const char *const controller_labels[GAMEPAD_CONTROL_COUNT] = {
 
 static launcher_controls controls;
 static binding_kind shown_kind = KEYBOARD;      /* the tab being drawn */
+static float binding_width;                     /* every binding on the tab, so they line up */
 static int capturing_button = NOT_CAPTURING;    /* waiting for a press for this button */
 static int capturing_index;                     /* the binding it replaces, or the count to add one */
 static binding_kind capturing_kind;             /* a key press or a controller press */
@@ -184,12 +185,31 @@ static const char *PressPrompt(void) {
   return "Press a key";
 }
 
-/* a button wide enough for name, and at least KEY_MIN_WIDTH */
-static int DrawBindingButton(const char *name) {
+/* how wide a button showing text is */
+static float ButtonWidthFor(const char *text) {
   ImVec2 text_size;
 
-  igCalcTextSize(&text_size, name, 0, false, -1);
-  return igButton(name, (ImVec2){SDL_max(text_size.x + 2 * igGetStyle()->FramePadding.x, KEY_MIN_WIDTH), 0});
+  igCalcTextSize(&text_size, text, 0, false, -1);
+  return text_size.x + 2 * igGetStyle()->FramePadding.x;
+}
+
+/* the widest of the tab's bindings and its press prompt, and at least KEY_MIN_WIDTH */
+static float WidestBindingWidth(void) {
+  float widest;
+  int button, index;
+
+  widest = SDL_max(KEY_MIN_WIDTH, ButtonWidthFor(PressPrompt()));
+  for (button = 0; button < PAD_BUTTON_COUNT; button++) {
+    for (index = 0; index < *BindingCount(shown_kind, button); index++) {
+      widest = SDL_max(widest, ButtonWidthFor(BindingLabel(shown_kind, BindingAt(shown_kind, button, index))));
+    }
+  }
+  return widest;
+}
+
+/* a binding's button, as wide as every other on the tab */
+static int DrawBindingButton(const char *name) {
+  return igButton(name, (ImVec2){binding_width, 0});
 }
 
 /* the remove button beside a binding, or a gap as wide when it's its button's only one,
@@ -302,6 +322,7 @@ static void DrawControllerHelp(void) {
 static void DrawBindingTab(const char *name, binding_kind kind, void (*draw_help)(void)) {
   if (!igBeginTabItem(name, 0, 0)) { return; }
   shown_kind = kind;
+  binding_width = WidestBindingWidth();
   if (capturing_button != NOT_CAPTURING && capturing_kind != kind) { StopCapture(); } /* left its tab */
   igSpacing();
   draw_help();
