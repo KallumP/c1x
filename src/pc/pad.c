@@ -30,6 +30,7 @@ uint32_t SwPadRead(int idx) {
       held |= bits;
     }
   }
+  held |= PadGamepadHeld();
   return (held << 16);
 }
 
