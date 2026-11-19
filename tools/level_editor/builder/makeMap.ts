@@ -30,7 +30,6 @@ import {
 import {
   fit,
   inSpan,
-  ROUTE_SIDE,
   zoneCells,
   zoneSpans,
   type Fit,
@@ -59,7 +58,7 @@ import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
 import { soundtrackMusic, withMusic, type LevelMusic } from "./music";
-import { withSideScroll, withSky } from "./zones";
+import { withSky } from "./zones";
 
 export { LID_TEST } from "./assembleLevel";
 
@@ -835,23 +834,10 @@ function withLevelMusic(header: Buffer, music: LevelMusic | null): Buffer {
   return withMusic(header, music.eid);
 }
 
-// the base level's zone header marked left/right for a side view's level
-function withRouteFlags(header: Buffer, route: Route): Buffer {
-  if (route === ROUTE_SIDE) {
-    return withSideScroll(header);
-  }
-  return header;
-}
-
 // the header every zone's is made from: the base level's, with the level's sky,
-// its music if it isn't the base level's, and marked left/right for a side view
-function zoneHeaderTemplate(
-  header: Buffer,
-  sky: Sky,
-  music: LevelMusic | null,
-  route: Route,
-): Buffer {
-  return withRouteFlags(withLevelMusic(withSky(header, sky), music), route);
+// and its music if it isn't the base level's
+function zoneHeaderTemplate(header: Buffer, sky: Sky, music: LevelMusic | null): Buffer {
+  return withLevelMusic(withSky(header, sky), music);
 }
 
 export function makeMap(level: Level, text: string, options: MapOptions = {}): Level {
@@ -861,7 +847,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const turn = levelTurn(options.turn ?? 0, camera);
   const route = routeOf(camera);
   const base = readTemplates(level);
-  const header = zoneHeaderTemplate(base.header, sky, music, route);
+  const header = zoneHeaderTemplate(base.header, sky, music);
   const templates = { ...base, header }; // every zone's header is made from this one
   const map = fitMap(text, scale, turn, route);
   const { fitted, spans } = map;

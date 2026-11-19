@@ -238,15 +238,15 @@ function pathBehind(ground: Ground, size: Vec3, cell: number, start: Vec3, step:
   return points;
 }
 
-// points step apart along +x from beside crash's start to the far end of the
-// zone, offsets.lead out across from him (+z) and offsets.height above the
-// ground beside each, along crash's start z
+// points step apart along +x the whole zone, so the camera follows crash
+// whichever way he goes from his start, offsets.lead out across from him (+z)
+// and offsets.height above the ground beside each, along crash's start z
 function pathBeside(ground: Ground, size: Vec3, cell: number, start: Vec3, step: number, offsets: CameraOffsets): Vec3[] {
-  const [x, startHeight, z] = start;
+  const [, startHeight, z] = start;
   const k = floorDivide(z, cell);
   const heightAt = groundFollower(ground, startHeight);
   const points: Vec3[] = [];
-  for (let cameraX = Math.max(x, CAM_EDGE); cameraX < size[0] - CAM_EDGE; cameraX += step) {
+  for (let cameraX = CAM_EDGE; cameraX < size[0] - CAM_EDGE; cameraX += step) {
     const height = heightAt(floorDivide(cameraX, cell), k);
     points.push([cameraX, height + offsets.height, z + offsets.lead]);
   }
