@@ -6,6 +6,10 @@
 
 - play with a game controller, and change its buttons on the launcher's **Controls** tab
 
+### Fixed
+
+- the game no longer stutters at 60 fps
+
 ## 2026-11-17
 
 ### Changed
