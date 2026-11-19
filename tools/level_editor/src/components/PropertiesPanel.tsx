@@ -27,7 +27,14 @@ import {
   objectType,
 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
-import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
+import {
+  CAMERA_ANGLE_MAX,
+  CAMERA_ANGLE_MIN,
+  CAMERA_DISTANCE_MAX,
+  CAMERA_DISTANCE_MIN,
+  CAMERA_VIEWS,
+  type Camera,
+} from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
 import { isAudioSongName, MUSIC_VOLUME_MAX, MUSIC_VOLUME_MIN, songChoices, songLabel } from "../music";
 import { defaultLevelTitle, drawableTitle } from "../levelTitle";
@@ -433,6 +440,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
     return (
       <>
         <h3>Camera</h3>
+        <ChoiceField label="view" value={camera.view} choices={CAMERA_VIEWS} onChange={(view) => changeCamera({ view })} />
         <SliderField
           label="distance Ã—"
           value={camera.distance}
@@ -451,8 +459,9 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
           onChange={(angle) => changeCamera({ angle })}
         />
         <p className="hint">
-          Distance is how far the camera is from Crash, times its usual distance. Angle is how far above him it looks
-          down from (42 is usual). Build the level to see it in the game.
+          View is behind Crash, or side to watch him from the side as he runs left to right. Distance is how far the
+          camera is from Crash, times its usual distance. Angle is how far above him it looks down from (42 is usual).
+          Build the level to see it in the game.
         </p>
       </>
     );
