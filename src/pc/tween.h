@@ -52,17 +52,19 @@ static inline void TweenLerpVec(vec *a, vec *b, int32_t alpha, vec *out) {
     out->c[i] = TweenLerp(a->c[i], b->c[i], alpha);
 }
 
-/* pacing frames between game frames: evenly spaced inside each game frame */
+/* pacing frames between game frames: evenly spaced, by when they're shown */
 typedef struct {
-  int drawn; /* the frames between drawn (or passed) this game frame */
+  int drawn;           /* the frames between drawn (or passed) this game frame */
+  int32_t shown_ticks; /* how far into the game frame its own frame was shown */
 } tween_pacer;
 
 extern void TweenPacerReset(tween_pacer *p);
 extern int TweenFramesPerGameFrame(int32_t frame_ticks, uint32_t frame_rate);
 extern int TweenFrameDue(const tween_pacer *p, int32_t elapsed, int32_t frame_ticks,
   uint32_t frame_rate, int32_t draw_ticks);
-extern void TweenPacerDrew(tween_pacer *p, int32_t elapsed, int32_t frame_ticks, uint32_t frame_rate);
-extern void TweenPacerNextGameFrame(tween_pacer *p);
+extern void TweenPacerDrew(tween_pacer *p, int32_t elapsed, int32_t frame_ticks, uint32_t frame_rate,
+  int32_t draw_ticks);
+extern void TweenPacerNextGameFrame(tween_pacer *p, int32_t shown_ticks);
 
 static inline void TweenLerpAng(ang *a, ang *b, int32_t alpha, ang *out) {
   int i;

@@ -77,18 +77,24 @@ void TweenCameraAt(int32_t alpha, tween_pose *out) {
 }
 
 /*
- * a game frame's frames are spaced evenly inside it: its own at its start,
- * then the frames between. the clock runs at 34000000/0x8000 ticks a second
- * (pc/time.c), so a game frame of frame_ticks is frame_ticks x frame_rate x
- * 0x8000 / 34000000 frames' worth at frame_rate, rounded to whole frames.
- * spacing them inside each game frame, rather than on a frame_rate clock of
- * their own, keeps them evenly apart: 34-tick game frames are a little
- * shorter than 1/30 s, so a clock of their own would drift across them
+ * a game frame's frames are spaced evenly: its own, then the frames between.
+ * the clock runs at 34000000/0x8000 ticks a second (pc/time.c), so a game
+ * frame of frame_ticks is frame_ticks x frame_rate x 0x8000 / 34000000
+ * frames' worth at frame_rate, rounded to whole frames. spacing them inside
+ * each game frame, rather than on a frame_rate clock of their own, keeps them
+ * evenly apart: 34-tick game frames are a little shorter than 1/30 s, so a
+ * clock of their own would drift across them.
+ *
+ * they're spaced by when they're shown, from when the game frame's own was
+ * (shown_ticks into it): a frame between takes longer to show than the game
+ * frame's own, which was worked out before the wait, so it starts that much
+ * earlier (draw_ticks, how long one takes to show)
  */
 #define TICKS_A_SECOND_UNITS 34000000 /* a second, in ticks x 0x8000 */
 
 void TweenPacerReset(tween_pacer *p) {
   p->drawn = 0;
+  p->shown_ticks = 0;
 }
 
 /* how many frames a game frame of frame_ticks has at frame_rate, its own included (at least 1) */
@@ -102,31 +108,39 @@ int TweenFramesPerGameFrame(int32_t frame_ticks, uint32_t frame_rate) {
   return frames;
 }
 
-/* the frames between whose time has come by elapsed ticks into the game frame (the kth is k/frames of the way) */
-static int FramesBetweenStarted(int32_t elapsed, int32_t frame_ticks, uint32_t frame_rate) {
-  return (int)((int64_t)elapsed * TweenFramesPerGameFrame(frame_ticks, frame_rate) / frame_ticks);
+/* how far after the game frame's own a frame between started now would be shown */
+static int32_t ShownAfterGameFrame(const tween_pacer *p, int32_t elapsed, int32_t draw_ticks) {
+  return elapsed + draw_ticks - p->shown_ticks;
+}
+
+/* the frames between due to be shown by ticks after the game frame's own (the kth is k/frames of the way) */
+static int FramesBetweenStarted(int32_t ticks, int32_t frame_ticks, uint32_t frame_rate) {
+  if (ticks < 0) { return 0; }
+  return (int)((int64_t)ticks * TweenFramesPerGameFrame(frame_ticks, frame_rate) / frame_ticks);
 }
 
 static int IsFrameBetween(int frame, int32_t frame_ticks, uint32_t frame_rate) {
   return frame < TweenFramesPerGameFrame(frame_ticks, frame_rate);
 }
 
-/* whether to draw a frame between now, elapsed ticks into a game frame, with time to draw it (draw_ticks) */
+/* whether to start a frame between now, elapsed ticks into a game frame, one taking draw_ticks to show */
 int TweenFrameDue(const tween_pacer *p, int32_t elapsed, int32_t frame_ticks,
   uint32_t frame_rate, int32_t draw_ticks) {
   int started;
 
-  if (elapsed + draw_ticks >= frame_ticks) { return 0; }
-  started = FramesBetweenStarted(elapsed, frame_ticks, frame_rate);
+  if (elapsed + draw_ticks >= frame_ticks) { return 0; } /* no time to show it before the game frame */
+  started = FramesBetweenStarted(ShownAfterGameFrame(p, elapsed, draw_ticks), frame_ticks, frame_rate);
   return started > p->drawn && IsFrameBetween(started, frame_ticks, frame_rate);
 }
 
-/* a frame was drawn between game frames, elapsed ticks in: it (and any it was too late for) are done */
-void TweenPacerDrew(tween_pacer *p, int32_t elapsed, int32_t frame_ticks, uint32_t frame_rate) {
-  p->drawn = FramesBetweenStarted(elapsed, frame_ticks, frame_rate);
+/* a frame between was started, elapsed ticks in: it (and any it was too late for) are done */
+void TweenPacerDrew(tween_pacer *p, int32_t elapsed, int32_t frame_ticks, uint32_t frame_rate,
+  int32_t draw_ticks) {
+  p->drawn = FramesBetweenStarted(ShownAfterGameFrame(p, elapsed, draw_ticks), frame_ticks, frame_rate);
 }
 
-/* move on to the next game frame, whose frames between start afresh */
-void TweenPacerNextGameFrame(tween_pacer *p) {
+/* move on to the next game frame, its own shown shown_ticks into it: its frames between start afresh */
+void TweenPacerNextGameFrame(tween_pacer *p, int32_t shown_ticks) {
   p->drawn = 0;
+  p->shown_ticks = shown_ticks;
 }
