@@ -25,6 +25,8 @@
 ### Added
 
 - play with a game controller, and change its buttons on the launcher's **Controls** tab
+- side-on custom levels: set the camera's **view** to **side** in the level editor
+- Grave Switchback, a spooky side-on level
 
 ### Fixed
 
