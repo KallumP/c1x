@@ -31,23 +31,12 @@ export function cameraOffsets({ distance, angle }: Camera): CameraOffsets {
 const USUAL_OFFSETS: CameraOffsets = { lead: CAM_LEAD, height: CAM_OFFSET[1] };
 const HEADROOM = 2;                    // empty cells crash needs above the ground to start on it
 
-// a side view turns the level three quarters further, so a route built along -z runs along +x
-const SIDE_TURN = 270;
-
 // the route a camera view's level runs along
 export function routeOf({ view }: Camera): Route {
   if (view === "side") {
     return ROUTE_SIDE;
   }
   return ROUTE_BEHIND;
-}
-
-// how far the level is turned (degrees, see readObj): level.cfg's turn, and a side view's on top
-export function levelTurn(turn: number, { view }: Camera): number {
-  if (view === "side") {
-    return turn + SIDE_TURN;
-  }
-  return turn;
 }
 
 // a column of cells (i, k) by its place across the route and along it

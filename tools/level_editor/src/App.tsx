@@ -6,6 +6,7 @@ import ObjectMarkers from "./components/ObjectMarkers";
 import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
 import Scene, { type Orbit } from "./components/Scene";
+import { levelTurn } from "./camera";
 import { draggedBy, newObject, type Tool } from "./editor";
 import { raisedEndPad, withEndPadRaise } from "./endPad";
 import type { LevelObject } from "./objects";
@@ -35,15 +36,16 @@ export default function App() {
   const songs = useLevelSongs(level);
   const scale = levelCfg.cfg.scale; // as it's edited, so boxes follow it before it's saved
   const unsaved = editor.unsaved || levelCfg.unsaved;
+  // how far the objects are turned, as the build turns them
+  const turn = levelTurn(levelCfg.cfg.turn, levelCfg.cfg.camera);
   const triangles = useTriangles(group);
   const warnings = useWarnings(state.objects, scale, triangles);
-  const pathWarnings = usePathWarnings(state.objects, levelCfg.cfg.turn, scale, triangles);
+  const pathWarnings = usePathWarnings(state.objects, turn, scale, triangles);
   const outlineWarnings = useOutlineWarnings(state.objects);
   const boxWarnings = useMemo(() => new Set([...warnings, ...outlineWarnings]), [warnings, outlineWarnings]);
   const [tool, setTool] = useState<Tool>(SELECT);
   const [grid, setGrid] = useState(0);
   const orbitRef = useRef<Orbit>(null);
-  const turn = levelCfg.cfg.turn;
   const dragged = useRef<LevelObject | null>(null); // the object being dragged, as it was when grabbed
   const drag = useDrag(orbitRef, grid, {
     grab: ({ index, node }) => {

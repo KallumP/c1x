@@ -33,6 +33,7 @@ import {
   CAMERA_DISTANCE_MAX,
   CAMERA_DISTANCE_MIN,
   CAMERA_VIEWS,
+  levelTurn,
   type Camera,
 } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
@@ -235,9 +236,17 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
     </>
   );
 
+  // how far the level's objects are turned, as the build turns them (none until its level.cfg is read)
+  const objectTurn = () => {
+    if (!levelCfg) {
+      return 0;
+    }
+    return levelTurn(levelCfg.turn, levelCfg.camera);
+  };
+
   // the selected node of a path enemy's path, or leader bats' second leader: where it is in blender
   const renderNodeFields = (enemy: LevelObject, node: number) => {
-    const turn = levelCfg ? levelCfg.turn : 0;
+    const turn = objectTurn();
     const position = pathPositions(enemy, turn, scale)[node];
     const setAxis = (axis: number, value: number) => {
       const moved = position.map((current, axisIndex) => (axisIndex === axis ? value : current)) as Vec3;
@@ -258,7 +267,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   // as it was when the slider was grabbed, so sliding down and back keeps its
   // shape, and the whole slide is one change to undo
   const renderNodeSlider = (enemy: LevelObject) => {
-    const turn = levelCfg ? levelCfg.turn : 0;
+    const turn = objectTurn();
     const grab = () => {
       grabbedPath.current = enemyPath(enemy, turn, scale);
       dispatch({ type: "checkpoint" });
@@ -304,7 +313,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   // turns an enemy's path round, so it starts at the other end; a selected node stays selected
   const renderTurnRoundButton = (enemy: LevelObject) => {
     const turnRound = () => {
-      const turn = levelCfg ? levelCfg.turn : 0;
+      const turn = objectTurn();
       change({ path: turnedRound(enemy, turn, scale) });
       if (index !== null && state.selectedNode !== null) {
         dispatch({ type: "selectNode", index, node: nodeTurnedRound(state.selectedNode, nodeCount(enemy)) });
