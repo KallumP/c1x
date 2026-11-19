@@ -767,7 +767,7 @@ static void GLDrawBorders() {
  * frame; frames are drawn while GLUpdate waits for the next game frame
  */
 static void (*tween_draw)(int32_t alpha) = 0;
-static tween_pacer tween_pace = { 0, 0 }; /* when frames between are due */
+static tween_pacer tween_pace = { 0 }; /* when frames between are due */
 static int tween_frames_drawn = 0; /* frames drawn between since the last game frame */
 
 void GLSetTweenDraw(void (*draw)(int32_t alpha)) {
@@ -828,7 +828,7 @@ static void GLDrawBetweenFrames(int32_t elapsed, int32_t ticks) {
 
   rate = game_settings.frame_rate;
   if (!TweenFrameDue(&tween_pace, elapsed, ticks, rate, draw_ticks)) { return; }
-  TweenPacerDrew(&tween_pace, elapsed, rate);
+  TweenPacerDrew(&tween_pace, elapsed, ticks, rate);
   tween_frames_drawn++;
   GLStartTimingDraw();
   GLDrawTweenFrame(TweenAlpha(elapsed, ticks));
@@ -851,7 +851,7 @@ static void GLWaitForFrame(int32_t frame_ticks) {
       if (between) { (*between)(elapsed, frame_ticks); }
     }
   }
-  TweenPacerNextGameFrame(&tween_pace, frame_ticks, game_settings.frame_rate);
+  TweenPacerNextGameFrame(&tween_pace);
 }
 
 void GLUpdate() {
