@@ -1,7 +1,11 @@
+#include <string.h>
 #include "utest.h"
 #include <SDL2/SDL.h>
 #include "pc/pad.h"
 #include "pc/gamepad.h"
+#include "test_files.h"
+
+extern uint8_t keys[512]; /* defined in test_pad.c */
 
 /* the buttons held while only the given controller control is held */
 static uint32_t held_for_control(int control) {
@@ -82,5 +86,57 @@ UTEST(pad_gamepad, the_right_stick_presses_nothing) {
   GamepadReleaseAll();
   GamepadSetAxis(SDL_CONTROLLER_AXIS_RIGHTX, 32767);
   EXPECT_EQ(0u, PadGamepadHeld());
+  GamepadReleaseAll();
+}
+
+#define GAMEPAD_CONFIG_PATH "build/test_gamepad_controls.cfg"
+
+/* load the controls file text, over the defaults */
+static int load_controls(const char *text) {
+  PadResetBindings();
+  WriteWholeFile(GAMEPAD_CONFIG_PATH, text);
+  return PadLoadBindings(GAMEPAD_CONFIG_PATH);
+}
+
+UTEST(pad_gamepad, a_pad_line_replaces_the_buttons_default_controller_button) {
+  ASSERT_EQ(1, load_controls("cross = pad:b\n"));
+  EXPECT_EQ((uint32_t)PAD_CROSS, held_for_control(SDL_CONTROLLER_BUTTON_B));
+  EXPECT_EQ(0u, held_for_control(SDL_CONTROLLER_BUTTON_A));
+  GamepadReleaseAll();
+}
+
+UTEST(pad_gamepad, a_pad_line_keeps_the_buttons_keys) {
+  ASSERT_EQ(1, load_controls("cross = pad:b\n"));
+  memset(keys, 0, sizeof(keys));
+  keys[SDL_SCANCODE_SPACE] = 1;
+  GamepadReleaseAll();
+  EXPECT_EQ((uint32_t)PAD_CROSS << 16, SwPadRead(0));
+  keys[SDL_SCANCODE_SPACE] = 0;
+}
+
+UTEST(pad_gamepad, a_key_line_keeps_the_buttons_controller_button) {
+  ASSERT_EQ(1, load_controls("cross = V\n"));
+  EXPECT_EQ((uint32_t)PAD_CROSS, held_for_control(SDL_CONTROLLER_BUTTON_A));
+  GamepadReleaseAll();
+}
+
+UTEST(pad_gamepad, repeated_pad_lines_add_controller_buttons) {
+  ASSERT_EQ(2, load_controls("cross = pad:a\ncross = pad:righttrigger\n"));
+  EXPECT_EQ((uint32_t)PAD_CROSS, held_for_control(SDL_CONTROLLER_BUTTON_A));
+  EXPECT_EQ((uint32_t)(PAD_CROSS | PAD_R2), held_for_control(GAMEPAD_RIGHT_TRIGGER));
+  GamepadReleaseAll();
+}
+
+UTEST(pad_gamepad, an_unknown_controller_button_line_is_skipped) {
+  ASSERT_EQ(0, load_controls("cross = pad:banana\n"));
+  EXPECT_EQ((uint32_t)PAD_CROSS, held_for_control(SDL_CONTROLLER_BUTTON_A));
+  GamepadReleaseAll();
+}
+
+UTEST(pad_gamepad, reset_restores_the_default_controller_layout) {
+  load_controls("cross = pad:b\n");
+  PadResetBindings();
+  EXPECT_EQ((uint32_t)PAD_CROSS, held_for_control(SDL_CONTROLLER_BUTTON_A));
+  EXPECT_EQ((uint32_t)PAD_CIRCLE, held_for_control(SDL_CONTROLLER_BUTTON_B));
   GamepadReleaseAll();
 }
