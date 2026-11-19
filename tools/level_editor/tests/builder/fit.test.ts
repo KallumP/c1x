@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { Cells } from "../../builder/collision";
-import { fit, TooBig, zoneCells, zoneSpans } from "../../builder/fit";
+import { fit, ROUTE_BEHIND, TooBig, zoneCells, zoneSpans } from "../../builder/fit";
 import { toZone } from "../../builder/levelObjects";
 import { readObj } from "../../builder/obj";
 import type { Vec3 } from "../../builder/vectors";
@@ -56,20 +56,20 @@ describe("fitting a map into a zone", () => {
   });
 
   test("the route can run on for several zones", () => {
-    const fitted = fit(boxMesh(0, 0, 0, 1000, 10, 40000), 128, 0, 128, true);
+    const fitted = fit(boxMesh(0, 0, 0, 1000, 10, 40000), 128, 0, 128, ROUTE_BEHIND);
     expect(fitted.size[2]).toBe(3 * 16384);
     expect(highest(fitted.mesh.vertices)[2]).toBe(40000 + 128);
-    expect(() => fit(boxMesh(0, 0, 0, 20000, 10, 40000), 128, 0, 128, true)).toThrow(TooBig);
+    expect(() => fit(boxMesh(0, 0, 0, 20000, 10, 40000), 128, 0, 128, ROUTE_BEHIND)).toThrow(TooBig);
   });
 
   test("a route shorter than a zone fits like a plain map", () => {
-    expect(fit(boxMesh(0, 0, 0, 1000, 140, 5000), 128, 0, 0, true).size).toEqual([1024, 256, 8192]);
+    expect(fit(boxMesh(0, 0, 0, 1000, 140, 5000), 128, 0, 0, ROUTE_BEHIND).size).toEqual([1024, 256, 8192]);
   });
 
   test("an object lands where a vertex in the .obj at the same place does", () => {
     const obj = "v 1.5 0.25 2\nv -4 0 -8\nv 4 2 8\nf 1 2 3\n"; // the first at blender (1.5, -2, 0.25)
     for (const turn of [0, 90, 180, 270]) {
-      const fitted = fit(readObj(obj, 256, turn), 128, 1024, 128, true);
+      const fitted = fit(readObj(obj, 256, turn), 128, 1024, 128, ROUTE_BEHIND);
       const at = toZone([1.5, -2, 0.25], 256, turn, fitted.offset);
       fitted.mesh.vertices[0].forEach((coordinate, axis) => {
         expect(Math.abs(coordinate - at[axis])).toBeLessThanOrEqual(4);

@@ -3,7 +3,7 @@
 // and y so textures, which cover a whole polygon, are about the same size
 // everywhere; split into meshes of at most WGEO_MAX vertices and polygons
 import { facesDown, facesUp, FACING, isCollisionOnly, isSpawn, normal } from "./faces";
-import type { Span } from "./fit";
+import { inSpan, ROUTE_BEHIND, type Route, type Span } from "./fit";
 import type { Colour, Mesh, Triangle, Uv } from "./obj";
 import { floorDivide, roundHalfToEven } from "./pyMath";
 import { tileRegion, uvTileRegion, type RegionOnTile } from "./tileRegions";
@@ -55,6 +55,7 @@ export interface WorldMeshOptions {
   textured?: Set<string>;    // the materials with their own image
   regionsMax?: number;       // tile regions (texinfos) a mesh can have
   span?: Span;               // only the pieces in this zone (on multiples of piece), relative to it
+  route?: Route;             // the route the span is along (behind crash, along z, without one)
   worldsMax?: number;        // meshes there can be
 }
 
@@ -257,9 +258,9 @@ function isHidden(facing: Vec3): boolean {
   return facesDown(facing) || (facing[1] <= FACING && facing[2] < -FACING);
 }
 
-function isInSpan(part: Vec3[], span: Span): boolean {
-  const middleZ = part.reduce((sum, point) => sum + point[2], 0) / part.length;
-  return span[0] <= middleZ && middleZ < span[1];
+function isInSpan(part: Vec3[], span: Span, route: Route): boolean {
+  const middle = part.reduce((sum, point) => sum + point[route.axis], 0) / part.length;
+  return span[0] <= middle && middle < span[1];
 }
 
 // world meshes for a mesh's faces, sliced every piece along z and every tile
@@ -268,7 +269,7 @@ function isInSpan(part: Vec3[], span: Span): boolean {
 // tile units. a mesh's tile regions become texinfos in its header (8 bytes each,
 // like a vertex), so they count towards fitting it in a page
 export function worldMeshes(mesh: Mesh, options: WorldMeshOptions): WorldMesh[] {
-  const { piece, ground, side, textured = new Set(), span, worldsMax = WORLDS_MAX } = options;
+  const { piece, ground, side, textured = new Set(), span, route = ROUTE_BEHIND, worldsMax = WORLDS_MAX } = options;
   const tile = options.tile || piece;
   const slicing: Slicing = [[2, piece], [0, tile], [1, tile]];
   const filler = new WorldMeshFiller(options.regionsMax);
@@ -282,7 +283,7 @@ export function worldMeshes(mesh: Mesh, options: WorldMeshOptions): WorldMesh[] 
     const corners = triangle.corners.map((index) => mesh.vertices[index]);
     const colourAt = faceColouring(corners, triangleColours(mesh, triangle), shade(facing));
     for (const part of slices(corners, faceSlicing(slicing, isTextured && keepsItsUvs(triangle), corners)).map((points) => points.map(snapToVertexGrid))) {
-      if (span && !isInSpan(part, span)) {
+      if (span && !isInSpan(part, span, route)) {
         continue;
       }
       for (let k = 1; k < part.length - 1; k++) {
@@ -291,7 +292,7 @@ export function worldMeshes(mesh: Mesh, options: WorldMeshOptions): WorldMesh[] 
           continue;
         }
         const texture = isTextured ? { material: triangle.material!, ...tileRegionOf(fan, corners, triangle, facing, tile) } : pageTexture;
-        const inZone = span ? fan.map(([x, y, z]) => [x, y, z - span[0]] as Vec3) : fan;
+        const inZone = span ? fan.map((at) => inSpan(at, span, route)) : fan;
         filler.add(inZone.map((at, corner) => ({ at, colour: colourAt(fan[corner]) })), texture);
       }
     }

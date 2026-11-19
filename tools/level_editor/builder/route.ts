@@ -1,8 +1,8 @@
 // where crash starts, and the camera path that follows him along the route
-// (-z), in zone units relative to the zone
+// (-z, or +x for a side view), in zone units relative to the zone
 import { Cells } from "./collision";
 import { isSpawn } from "./faces";
-import type { Span } from "./fit";
+import { inSpan, ROUTE_BEHIND, ROUTE_SIDE, type Route, type Span } from "./fit";
 import type { Mesh } from "./obj";
 import { floorDivide, roundHalfToEven } from "./pyMath";
 import type { Vec3 } from "./vectors";
@@ -31,11 +31,46 @@ export function cameraOffsets({ distance, angle }: Camera): CameraOffsets {
 const USUAL_OFFSETS: CameraOffsets = { lead: CAM_LEAD, height: CAM_OFFSET[1] };
 const HEADROOM = 2;                    // empty cells crash needs above the ground to start on it
 
+// a side view turns the level three quarters further, so a route built along -z runs along +x
+const SIDE_TURN = 270;
+
+// the route a camera view's level runs along
+export function routeOf({ view }: Camera): Route {
+  if (view === "side") {
+    return ROUTE_SIDE;
+  }
+  return ROUTE_BEHIND;
+}
+
+// how far the level is turned (degrees, see readObj): level.cfg's turn, and a side view's on top
+export function levelTurn(turn: number, { view }: Camera): number {
+  if (view === "side") {
+    return turn + SIDE_TURN;
+  }
+  return turn;
+}
+
+// a column of cells (i, k) by its place across the route and along it
+function columnAt(across: number, along: number, route: Route): [number, number] {
+  if (route.axis === 0) {
+    return [along, across];
+  }
+  return [across, along];
+}
+
+// a column's place across the route and along it
+function placeOf(i: number, k: number, route: Route): { across: number; along: number } {
+  if (route.axis === 0) {
+    return { across: k, along: i };
+  }
+  return { across: i, along: k };
+}
+
 // the floors in each column of cells, to find the ground crash can stand on
 class Ground {
   private floorRows = new Map<string, number[]>(); // (i, k) to the rows (j) of its floor cells, lowest first
 
-  constructor(private cells: Cells, private cell: number) {
+  constructor(private cells: Cells, private cell: number, private route = ROUTE_BEHIND) {
     for (const { at: [i, j, k], kind } of cells) {
       if (kind === "floor") {
         const rows = this.floorRows.get(`${i},${k}`) ?? [];
@@ -45,15 +80,22 @@ class Ground {
     this.floorRows.forEach((rows) => rows.sort((first, second) => first - second));
   }
 
-  // the columns across (i) with floor in them
-  columnsAcross(): number[] {
-    return [...new Set([...this.floorRows.keys()].map((column) => Number(column.split(",")[0])))];
+  // each column with floor in it, by its place across the route and along it
+  private floorPlaces(): { across: number; along: number }[] {
+    return [...this.floorRows.keys()].map((column) => {
+      const [i, k] = column.split(",").map(Number);
+      return placeOf(i, k, this.route);
+    });
   }
 
-  // the rows along (k) with floor in column i
-  rowsAlong(i: number): number[] {
-    return [...this.floorRows.keys()].map((column) => column.split(",").map(Number))
-      .filter(([columnI]) => columnI === i).map(([, k]) => k);
+  // the lines across the route with floor in them
+  columnsAcross(): number[] {
+    return [...new Set(this.floorPlaces().map(({ across }) => across))];
+  }
+
+  // the places along the route with floor in line across
+  rowsAlong(across: number): number[] {
+    return this.floorPlaces().filter((place) => place.across === across).map(({ along }) => along);
   }
 
   // the tops of the floor cells in column (i, k) with headroom empty cells above them, lowest first
@@ -75,46 +117,48 @@ function firstBest<T>(values: T[], isBetter: (value: T, best: T) => boolean): T 
   return best;
 }
 
-// a place along a walk: a row (k) and the ground's top there
+// a place along a walk: how far along the route (a cell index on its axis) and the ground's top there
 interface Step {
-  k: number;
+  along: number;
   top: number;
 }
 
-const stepKey = ({ k, top }: Step) => `${k},${top}`;
+const stepKey = ({ along, top }: Step) => `${along},${top}`;
 
-// where the longest walk along the route (-z) down column i starts: from ground
-// to the next row's ground a cell up or down at most, so not over walls, gaps or
-// drops. the +z most of the longest, then on along it until the camera, CAM_LEAD
-// behind, is over it too
-function walkStart(ground: Ground, i: number, cell: number): Step | null {
-  const rows = ground.rowsAlong(i).sort((first, second) => first - second);
-  const tops = new Map(rows.map((k) => [k, ground.tops(i, k, HEADROOM)]));
-  const length = new Map<string, number>(); // cells walked from a step along -z, itself included
+// where the longest walk along the route down the line across starts: from
+// ground to the next place's ground a cell up or down at most, so not over walls,
+// gaps or drops. the one nearest the route's start of the longest, then on along
+// it until the camera, CAM_LEAD behind, is over it too
+function walkStart(ground: Ground, across: number, cell: number, route: Route): Step | null {
+  const { way } = route;
+  const places = ground.rowsAlong(across).sort((first, second) => (second - first) * way); // the route's end first
+  const tops = new Map(places.map((along) => [along, ground.tops(...columnAt(across, along, route), HEADROOM)]));
+  const length = new Map<string, number>(); // cells walked from a step along the route, itself included
   const lengthOf = (step: Step) => length.get(stepKey(step))!;
   const next = new Map<string, Step | null>();
   const steps: Step[] = [];
-  for (const k of rows) {
-    for (const top of tops.get(k)!) {
-      const reachable = (tops.get(k - 1) ?? [])
-        .filter((below) => Math.abs(below - top) <= cell)
-        .map((below) => ({ k: k - 1, top: below }));
+  for (const along of places) {
+    for (const top of tops.get(along)!) {
+      const reachable = (tops.get(along + way) ?? [])
+        .filter((onwardTop) => Math.abs(onwardTop - top) <= cell)
+        .map((onwardTop) => ({ along: along + way, top: onwardTop }));
       const onward = firstBest(reachable, (candidate, best) => lengthOf(candidate) > lengthOf(best));
-      const step = { k, top };
+      const step = { along, top };
       length.set(stepKey(step), 1 + (onward ? lengthOf(onward) : 0));
       next.set(stepKey(step), onward ?? null);
       steps.push(step);
     }
   }
-  // the longest walk, and of those, the one starting furthest along +z
+  // the longest walk, and of those, the one starting nearest the route's start
+  const backFromEnd = (step: Step) => -way * step.along;
   const isLongerOrFurther = (candidate: Step, best: Step) =>
-    lengthOf(candidate) > lengthOf(best) || (lengthOf(candidate) === lengthOf(best) && candidate.k > best.k);
+    lengthOf(candidate) > lengthOf(best) || (lengthOf(candidate) === lengthOf(best) && backFromEnd(candidate) > backFromEnd(best));
   let start = firstBest(steps, isLongerOrFurther);
   if (!start) {
     return null;
   }
-  const along = Math.min(-floorDivide(-CAM_LEAD, cell), floorDivide(lengthOf(start), 2));
-  for (let walked = 0; walked < along; walked++) {
+  const stepsOn = Math.min(-floorDivide(-CAM_LEAD, cell), floorDivide(lengthOf(start), 2));
+  for (let walked = 0; walked < stepsOn; walked++) {
     start = next.get(stepKey(start))!;
   }
   return start;
@@ -154,19 +198,20 @@ function columnsFromTheMiddle(ground: Ground, cell: number): number[] {
 }
 
 // where crash starts: on the ground below the middle of an object named
-// spawn..., or without one, where the longest walk along the route (-z)
-// starts, down the middle across, so not behind something he can't get past
-export function spawnPoint(mesh: Mesh, cells: Cells, cell: number): Vec3 {
-  const ground = new Ground(cells, cell);
+// spawn..., or without one, where the longest walk along the route starts,
+// down the middle across, so not behind something he can't get past
+export function spawnPoint(mesh: Mesh, cells: Cells, cell: number, route = ROUTE_BEHIND): Vec3 {
+  const ground = new Ground(cells, cell, route);
   const marked = spawnMarkerPoint(mesh, ground, cell);
   if (marked) {
     return marked;
   }
-  for (const i of columnsFromTheMiddle(ground, cell)) {
-    const start = walkStart(ground, i, cell);
+  for (const across of columnsFromTheMiddle(ground, cell)) {
+    const start = walkStart(ground, across, cell, route);
     if (start) {
       const middleOf = (index: number) => index * cell + floorDivide(cell, 2);
-      return [middleOf(i), start.top, middleOf(start.k)];
+      const [i, k] = columnAt(across, start.along, route);
+      return [middleOf(i), start.top, middleOf(k)];
     }
   }
   throw new Error("the map has no ground for crash to start on");
@@ -197,20 +242,22 @@ export function cameraPath(cells: Cells, size: Vec3, cell: number, start: Vec3, 
   return points;
 }
 
-// which zone span z is in (past either end of the map, the end one)
-export function zoneIndex(spans: Span[], z: number): number {
-  const clamped = Math.min(Math.max(z, spans[spans.length - 1][0]), spans[0][1] - 1);
-  return spans.findIndex(([z0, z1]) => z0 <= clamped && clamped < z1);
+// which zone span a place along the route's axis is in (past either end of the map, the end one)
+export function zoneIndex(spans: Span[], along: number): number {
+  const low = Math.min(...spans.map(([start]) => start));
+  const high = Math.max(...spans.map(([, end]) => end));
+  const clamped = Math.min(Math.max(along, low), high - 1);
+  return spans.findIndex(([start, end]) => start <= clamped && clamped < end);
 }
 
 // camera path points split into each zone span's path, by the zone crash is in
-// (lead ahead, along -z; CAM_LEAD as on n. sanity beach), with z relative to it;
+// (lead ahead along the route; CAM_LEAD as on n. sanity beach), relative to it;
 // zones before crash's start have none
-export function zonePaths(points: Vec3[], spans: Span[], lead = CAM_LEAD): Vec3[][] {
+export function zonePaths(points: Vec3[], spans: Span[], lead = CAM_LEAD, route = ROUTE_BEHIND): Vec3[][] {
   const paths: Vec3[][] = spans.map(() => []);
-  for (const [x, y, z] of points) {
-    const zone = zoneIndex(spans, z - lead);
-    paths[zone].push([x, y, z - spans[zone][0]]);
+  for (const point of points) {
+    const zone = zoneIndex(spans, point[route.axis] + route.way * lead);
+    paths[zone].push(inSpan(point, spans[zone], route));
   }
   return paths;
 }
