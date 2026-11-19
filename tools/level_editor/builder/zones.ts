@@ -20,8 +20,6 @@ export const ZONE_MIDI = ZONE_DISPLAY_FLAGS + 4 + 36;
 const ZONE_GFX = ZONE_DISPLAY_FLAGS + 4;
 const ZONE_SKY_SPLIT = ZONE_GFX;
 const ZONE_VISIBILITY_DEPTH = ZONE_GFX + 8;
-const ZONE_FLAGS = ZONE_GFX + 28;
-const ZONE_FLAG_SIDE_SCROLL = 0x4000; // a left/right zone: the camera looks ahead the way its path runs (src/cam.c)
 const ZONE_SKY_TOP = ZONE_GFX + 44;
 const ZONE_SKY_BOTTOM = ZONE_GFX + 48;
 const VISIBILITY_DEPTH = 6144000; // n. sanity beach's (jungle rollers' start zone has 0)
@@ -42,13 +40,6 @@ export function withSky(header: Buffer, sky: Sky): Buffer {
   copy.writeUInt32LE(VISIBILITY_DEPTH, ZONE_VISIBILITY_DEPTH);
   writeRgb(copy, sky.top, ZONE_SKY_TOP);
   writeRgb(copy, sky.bottom, ZONE_SKY_BOTTOM);
-  return copy;
-}
-
-// header marked as a left/right zone, for a side view's level
-export function withSideScroll(header: Buffer): Buffer {
-  const copy = Buffer.from(header);
-  copy.writeUInt32LE(copy.readUInt32LE(ZONE_FLAGS) | ZONE_FLAG_SIDE_SCROLL, ZONE_FLAGS);
   return copy;
 }
 
