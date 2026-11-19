@@ -39,8 +39,14 @@ describe("a level's scale, turn and sky", () => {
 
   test("level.cfg sets the camera's distance and angle", () => {
     // how far the camera is from crash (times its usual distance), and how far above him it looks down from (degrees)
-    expect(levelOptions(sourceFolder("camera_distance = 1.5\ncamera_angle = 30\n")).camera).toEqual({ distance: 1.5, angle: 30 });
-    expect(levelOptions(sourceFolder("camera_angle = 60\n")).camera).toEqual({ distance: 1, angle: 60 });
+    expect(levelOptions(sourceFolder("camera_distance = 1.5\ncamera_angle = 30\n")).camera).toEqual({ distance: 1.5, angle: 30, view: "behind" });
+    expect(levelOptions(sourceFolder("camera_angle = 60\n")).camera).toEqual({ distance: 1, angle: 60, view: "behind" });
+  });
+
+  test("level.cfg sets the camera's view: behind crash, or beside him for a side-on level", () => {
+    expect(levelOptions(sourceFolder("camera_view = side\n")).camera).toEqual({ ...DEFAULT_CAMERA, view: "side" });
+    expect(levelOptions(sourceFolder("camera_view = behind\n")).camera).toEqual({ ...DEFAULT_CAMERA, view: "behind" });
+    expect(levelOptions(sourceFolder()).camera.view).toBe("behind");
   });
 
   test("level.cfg sets the music, one of the game's soundtracks", () => {
@@ -104,6 +110,11 @@ describe("a bad level.cfg is an error naming it and its line", () => {
     expect(readError("camera_distance = far\n")).toThrow(/camera_distance has to be 0\.5 to 3, not far/);
     expect(readError("camera_angle = 90\n")).toThrow(/level\.cfg, line 1: camera_angle has to be 10 to 80, not 90/);
     expect(readError("camera_angle = 30.5\n")).toThrow(/camera_angle has to be a whole number, not 30\.5/);
+  });
+
+  test("a camera view that isn't behind or side", () => {
+    expect(readError("camera_view = above\n")).toThrow(/level\.cfg, line 1: camera_view has to be behind or side, not above/);
+    expect(readError("camera_view =\n")).toThrow(/camera_view has to be behind or side, not nothing/);
   });
 
   test("music that isn't one of the soundtracks, without listing them", () => {
