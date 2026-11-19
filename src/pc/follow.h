@@ -6,8 +6,8 @@
 /*
  * the follow camera (cam_mode 9, for custom levels): it moves along its
  * path as the follow crash camera (cam_mode 5) does, slides sideways from
- * the path's x towards crash's, so he stays in view off the path (not along a
- * side view's path, which runs along x itself), and
+ * the path's x towards crash's, so he stays in view off the path (along a
+ * side view's path, which runs along x, it's level with him at once), and
  * keeps a height above the floor he's on, so he stays in view on floors
  * higher or lower than the path's: the height the level's path keeps in its
  * first spare field (a custom level's camera settings), else FOLLOW_CAM_HEIGHT
