@@ -31,5 +31,9 @@ extern const pad_button_name pad_button_names[PAD_BUTTON_COUNT];
 
 int PadParseBinding(const char *name, const char *key, uint32_t *bits, SDL_Scancode *code);
 int PadParseBindingLine(const char *line, uint32_t *bits, SDL_Scancode *code);
+int PadFindButton(const char *name, uint32_t *bits);
+int IsGamepadValue(const char *value);
+int PadParseGamepadControl(const char *value);
+const char *GamepadControlName(int control);
 
 #endif /* _PC_CONTROLS_H_ */

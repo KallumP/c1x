@@ -75,19 +75,62 @@ const pad_button_name pad_button_names[PAD_BUTTON_COUNT] = {
 int PadParseBinding(const char *name, const char *key,
   uint32_t *bits, SDL_Scancode *code) {
   SDL_Scancode scancode;
-  int i, count;
 
   scancode = SDL_GetScancodeFromName(key);
   if (scancode == SDL_SCANCODE_UNKNOWN) { return -1; }
-  count = sizeof(pad_button_names)/sizeof(pad_button_names[0]);
-  for (i=0;i<count;i++) {
+  if (PadFindButton(name, bits) == -1) { return -1; }
+  *code = scancode;
+  return 1;
+}
+
+/* look up a button by its controls file name: returns 1 and sets bits, or -1 */
+int PadFindButton(const char *name, uint32_t *bits) {
+  int i;
+
+  for (i=0;i<PAD_BUTTON_COUNT;i++) {
     if (SDL_strcasecmp(name, pad_button_names[i].name) == 0) {
       *bits = pad_button_names[i].bits;
-      *code = scancode;
       return 1;
     }
   }
   return -1;
+}
+
+#define GAMEPAD_VALUE_PREFIX "pad:"
+
+/* whether a binding's value is a controller's ("pad:a") rather than a key's */
+int IsGamepadValue(const char *value) {
+  return SDL_strncasecmp(value, GAMEPAD_VALUE_PREFIX, SDL_strlen(GAMEPAD_VALUE_PREFIX)) == 0;
+}
+
+static int TriggerControl(SDL_GameControllerAxis axis) {
+  if (axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT) { return GAMEPAD_LEFT_TRIGGER; }
+  if (axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) { return GAMEPAD_RIGHT_TRIGGER; }
+  return -1;
+}
+
+/*
+ * the controller control a binding's value names: "pad:" and SDL's name for
+ * a button or trigger (e.g. "pad:a", "pad:dpup", "pad:lefttrigger").
+ * returns the control (see pc/gamepad.h), or -1 if it doesn't name one
+ */
+int PadParseGamepadControl(const char *value) {
+  SDL_GameControllerButton button;
+  const char *name;
+
+  if (!IsGamepadValue(value)) { return -1; }
+  name = value + SDL_strlen(GAMEPAD_VALUE_PREFIX);
+  if (!*name) { return -1; }
+  button = SDL_GameControllerGetButtonFromString(name);
+  if (button != SDL_CONTROLLER_BUTTON_INVALID) { return button; }
+  return TriggerControl(SDL_GameControllerGetAxisFromString(name));
+}
+
+/* a controller control's name, without "pad:" (e.g. "a", "lefttrigger") */
+const char *GamepadControlName(int control) {
+  if (control == GAMEPAD_LEFT_TRIGGER) { return SDL_GameControllerGetStringForAxis(SDL_CONTROLLER_AXIS_TRIGGERLEFT); }
+  if (control == GAMEPAD_RIGHT_TRIGGER) { return SDL_GameControllerGetStringForAxis(SDL_CONTROLLER_AXIS_TRIGGERRIGHT); }
+  return SDL_GameControllerGetStringForButton(control);
 }
 
 /*

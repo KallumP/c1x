@@ -99,8 +99,8 @@ static int load_controls(const char *text) {
 }
 
 UTEST(pad_gamepad, a_pad_line_replaces_the_buttons_default_controller_button) {
-  ASSERT_EQ(1, load_controls("cross = pad:b\n"));
-  EXPECT_EQ((uint32_t)PAD_CROSS, held_for_control(SDL_CONTROLLER_BUTTON_B));
+  ASSERT_EQ(1, load_controls("cross = pad:guide\n"));
+  EXPECT_EQ((uint32_t)PAD_CROSS, held_for_control(SDL_CONTROLLER_BUTTON_GUIDE));
   EXPECT_EQ(0u, held_for_control(SDL_CONTROLLER_BUTTON_A));
   GamepadReleaseAll();
 }
