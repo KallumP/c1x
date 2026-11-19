@@ -6,7 +6,8 @@
 /*
  * the follow camera (cam_mode 9, for custom levels): it moves along its
  * path as the follow crash camera (cam_mode 5) does, slides sideways from
- * the path's x towards crash's, so he stays in view off the path, and
+ * the path's x towards crash's, so he stays in view off the path (not along a
+ * side view's path, which runs along x itself), and
  * keeps a height above the floor he's on, so he stays in view on floors
  * higher or lower than the path's: the height the level's path keeps in its
  * first spare field (a custom level's camera settings), else FOLLOW_CAM_HEIGHT
@@ -23,6 +24,7 @@ extern int32_t follow_cam_y;
 extern int32_t follow_cam_ground_y;
 
 extern int32_t FollowCamOffset(int32_t offset, int32_t target);
+extern int32_t FollowCamSlide(int32_t offset, int32_t target, int16_t path_direction_x);
 extern int32_t FollowCamGroundY(int32_t ground, int32_t crash_y, int on_floor);
 extern int32_t FollowCamAbove(uint16_t path_height);
 extern int32_t FollowCamHeight(int32_t height, int32_t ground_y, int32_t path_y, int32_t above);
