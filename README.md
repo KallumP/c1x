@@ -12,7 +12,7 @@ This repository is a fork of [wurlyfox/c1](https://github.com/wurlyfox/c1), the 
 - [PS1 build](doc/psx-build.md): why building for the PS1 is no longer supported, and what bringing it back would take
 - [Running](doc/running.md): getting the game files from your disc or a disc image, and starting the game
 - [Launcher](doc/launcher.md): a window, built with the game, for starting it, changing its settings and controls, and opening the level editor
-- [Controls](doc/controls.md): the default keys, and changing them in the launcher
+- [Controls](doc/controls.md): the default keys and controller buttons, and changing them in the launcher
 - [Settings](doc/settings.md): what each game setting does, such as the loading screen, speed display and skipping the splash screens
 - [Custom levels](doc/custom_levels.md): turning a map modelled in Blender into a level, placing its objects in the level editor, and starting it from the title screen
 - [Contributing](doc/contributing.md): commit messages, pull requests and coding standards
