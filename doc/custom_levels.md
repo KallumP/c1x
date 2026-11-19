@@ -12,7 +12,7 @@ Each level gets its own folder in `level_src/`, such as `level_src/1_tide_ruins/
 
 **Model it:**
 
-- Make the route run towards +Y (away from you in Blender's front view). The camera follows Crash from behind, looking that way.
+- Make the route run towards +Y (away from you in Blender's front view). The camera follows Crash from behind, looking that way. For a side-on level (**view** set to **side**, see below), +Y is right in the game, and the camera watches from Blender's +X side.
 - Model at 1 m per Blender unit. Crash is about 1.7 m tall.
 - Make faces point to where Crash walks. Turn on the Face Orientation overlay: the side Crash sees should be blue.
 - Keep walls upright or leaning away from where Crash walks. A wall that hangs over a floor (leaning in, an overhang or an arch) is only solid up to where it starts to hang, so Crash can walk right through it.
@@ -71,7 +71,7 @@ The arrow on the spawn object shows which way the camera faces at the start. Wit
 - **Your own loading screen:** put a `loading.png` in the level's folder to show it instead of the sign. It's shown at 432 by 144, so a picture that shape fits best; another shape is cut at its edges to fill it. It goes with the level if you share it.
 - **turn** and **scale** line the map up with the game (see [If something looks wrong](#if-something-looks-wrong)).
 - **Sky** sets a top colour down to **split** and a bottom colour below it.
-- **Camera** sets how far the camera is from Crash (**distance**, times its usual distance) and how far above him it looks down from (**angle**, in degrees; 42 is usual).
+- **Camera** sets how far the camera is from Crash (**distance**, times its usual distance) and how far above him it looks down from (**angle**, in degrees; 42 is usual). **view** is **behind** Crash, or **side** for a side-on level: the camera stays level with him left and right and follows him up and down, but never moves in or out. In a side-on level the spawn's arrow, and enemies' paths you haven't set, turn with the camera; drag an enemy's nodes to send it where you want.
 - **Music** picks the song the level plays, from the game's own levels. A song starred has no aku aku song, so his invincibility keeps the level's song playing.
 - **Your own song:** put an `.mp3`, `.ogg`, `.flac` or `.wav` in the level's folder and pick it under **Music**. It plays on a loop, through aku aku's invincibility too, so a song that loops cleanly sounds best. It plays as loud as the game's own music, however loud the file is; turn it up or down with **volume** under the song. It goes with the level if you share it.
 
