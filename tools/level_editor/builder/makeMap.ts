@@ -47,13 +47,12 @@ import { roundHalfToEven } from "./pyMath";
 import {
   cameraOffsets,
   cameraPath,
-  levelTurn,
   routeOf,
   spawnPoint,
   zoneIndex,
   zonePaths,
 } from "./route";
-import { DEFAULT_CAMERA, type Camera } from "../src/camera";
+import { DEFAULT_CAMERA, levelTurn, type Camera } from "../src/camera";
 import { mossySlidePath } from "./mossySlide";
 import { levelEntity, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type StoneTrack, type Templates } from "./templates";
 import type { Vec3 } from "./vectors";
