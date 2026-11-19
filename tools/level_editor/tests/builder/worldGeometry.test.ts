@@ -72,11 +72,28 @@ describe("camera paths", () => {
     expect(fields.length).toBe(1); // the fields after the links are where they belong
   });
 
-  test("a path without neighbours keeps its sort list, mode and points", () => {
+  test("a path without neighbours keeps its sort list, mode, direction and points", () => {
     const points: PathPoint[] = [[10, 20, 30, 0, 0, 0], [40, 50, 60, 0, 0, 0]];
     const slst = stringToEid("Flr0S");
-    const path = pathBytes({ slst, points, camMode: 5, zoom: 1700, averageNodeDistance: 400 });
-    expect(readCameraPath(path)).toEqual({ slst, links: [], length: 2, camMode: 5, zoom: 1700, followHeight: 0, points });
+    const direction: [number, number, number] = [4096, 0, 0];
+    const path = pathBytes({
+      slst,
+      points,
+      camMode: 5,
+      zoom: 1700,
+      averageNodeDistance: 400,
+      direction,
+    });
+    expect(readCameraPath(path)).toEqual({
+      slst,
+      links: [],
+      length: 2,
+      camMode: 5,
+      zoom: 1700,
+      followHeight: 0,
+      direction,
+      points,
+    });
     expect(path.readUInt32LE(4)).toBe(0); // its second word, unused
     expect(path.length % 4).toBe(0);
   });

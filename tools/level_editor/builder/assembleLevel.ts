@@ -5,7 +5,8 @@ import { CORE_EXEC_SLOTS, cutLevel, packEntries } from "./cutLevel";
 import { withDonorObjects, type DonorObject } from "./donorObjects";
 import { entityType } from "./entities";
 import { stringToEid } from "./entryIds";
-import { CAM_LEAD, cameraOffsets } from "./route";
+import type { Route } from "./fit";
+import { CAM_LEAD, cameraOffsets, routeOf } from "./route";
 import { DEFAULT_CAMERA, type Camera } from "../src/camera";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, type Entry, type Level, type Page } from "./levelFiles";
 import type { BuiltWorld } from "./mapTextures";
@@ -24,7 +25,14 @@ export const LID_TEST = 0x1; // custom levels use the test level id (see src/com
 const CAMERA_ROTATION = [-181, 1, 0]; // the camera's rotation at each path point, as on n. sanity beach (its tilt first)
 const ANGLE_UNITS = 4096; // a whole turn, in the game's angles
 const CAMERA_ZOOM = 1700;
-const CAMERA_DIRECTION: [number, number, number] = [0, 0, -4096]; // along -z
+const DIRECTION_UNIT = 4096; // a path's direction is a unit vector with a 12 bit fraction
+
+// the way a camera path runs: along the route (-z behind crash, +x beside him)
+function pathDirection({ axis, way }: Route): Vec3 {
+  const direction: Vec3 = [0, 0, 0];
+  direction[axis] = way * DIRECTION_UNIT;
+  return direction;
+}
 
 // what goes in one zone: where its corner is from the first zone's, collision
 // blocks, world meshes (relative to the zone) and their headers' extra
@@ -123,7 +131,7 @@ function zonePath(assembly: Assembly, zoneIndex: number, neighbours: number[]): 
     camMode: FOLLOW_CAM_MODE,
     zoom: cameraZoom(camera),
     averageNodeDistance: step,
-    direction: CAMERA_DIRECTION,
+    direction: pathDirection(routeOf(camera)),
     links: pathLinks(zones, zoneIndex, neighbours),
     followHeight: cameraOffsets(camera).height,
   });

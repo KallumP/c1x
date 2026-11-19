@@ -27,7 +27,16 @@ import {
   BOX_HEIGHT, BOX_TYPE, donorEntityType, donorObstacleType, entityPath, ENTITY_INIT_FLAGS, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
   LEADER_BAT, OBSTACLE_ENTITIES, SLAMMING_WALL_LEFT, withNoRotationFromFlags, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
-import { fit, inSpan, zoneCells, zoneSpans, type Fit, type Route, type Span } from "./fit";
+import {
+  fit,
+  inSpan,
+  ROUTE_SIDE,
+  zoneCells,
+  zoneSpans,
+  type Fit,
+  type Route,
+  type Span,
+} from "./fit";
 import type { RgbImage } from "./images";
 import { ENTRY_SLST, type Level } from "./levelFiles";
 import { boxInitFlagB, boxSubtype, toZone } from "./levelObjects";
@@ -35,7 +44,15 @@ import { addMapPiece, TEXINFO_WORDS_MAX, textureWorlds } from "./mapTextures";
 import { readObj, type Mesh } from "./obj";
 import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
-import { cameraOffsets, cameraPath, levelTurn, routeOf, spawnPoint, zoneIndex, zonePaths } from "./route";
+import {
+  cameraOffsets,
+  cameraPath,
+  levelTurn,
+  routeOf,
+  spawnPoint,
+  zoneIndex,
+  zonePaths,
+} from "./route";
 import { DEFAULT_CAMERA, type Camera } from "../src/camera";
 import { mossySlidePath } from "./mossySlide";
 import { levelEntity, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type StoneTrack, type Templates } from "./templates";
@@ -43,7 +60,7 @@ import type { Vec3 } from "./vectors";
 import { readWorldHeader } from "./worldGeometry";
 import { WORLDS_MAX, worldMeshes, type WorldMesh } from "./worldMeshes";
 import { soundtrackMusic, withMusic, type LevelMusic } from "./music";
-import { withSky } from "./zones";
+import { withSideScroll, withSky } from "./zones";
 
 export { LID_TEST } from "./assembleLevel";
 
@@ -811,23 +828,42 @@ const boxCount = (boxes: LevelObject[]) => boxes.reduce((sum, box) => sum + box.
 // the boxes crash can break: all but the iron and switch boxes
 const breakableBoxes = (boxes: LevelObject[]) => boxCount(boxes.filter((box) => !UNBREAKABLE_BOXES.includes(boxSubtype(box))));
 
-// the header every zone's is made from: the base level's, with the level's sky, and its music if it isn't the base level's
-function zoneHeaderTemplate(header: Buffer, sky: Sky, music: LevelMusic | null): Buffer {
-  const withItsSky = withSky(header, sky);
+// the base level's zone header with the level's music, if it isn't the base level's
+function withLevelMusic(header: Buffer, music: LevelMusic | null): Buffer {
   if (!music) {
-    return withItsSky;
+    return header;
   }
-  return withMusic(withItsSky, music.eid);
+  return withMusic(header, music.eid);
+}
+
+// the base level's zone header marked left/right for a side view's level
+function withRouteFlags(header: Buffer, route: Route): Buffer {
+  if (route === ROUTE_SIDE) {
+    return withSideScroll(header);
+  }
+  return header;
+}
+
+// the header every zone's is made from: the base level's, with the level's sky,
+// its music if it isn't the base level's, and marked left/right for a side view
+function zoneHeaderTemplate(
+  header: Buffer,
+  sky: Sky,
+  music: LevelMusic | null,
+  route: Route,
+): Buffer {
+  return withRouteFlags(withLevelMusic(withSky(header, sky), music), route);
 }
 
 export function makeMap(level: Level, text: string, options: MapOptions = {}): Level {
   const { scale = MAP_SCALE, images = new Map(), objects = [], sky = DEFAULT_SKY, camera = DEFAULT_CAMERA, readOtherLevel } = options;
   const music = soundtrackMusic(options.music, readOtherLevel);
   const offsets = cameraOffsets(camera);
-  const base = readTemplates(level);
-  const templates = { ...base, header: zoneHeaderTemplate(base.header, sky, music) }; // every zone's header is made from this one
   const turn = levelTurn(options.turn ?? 0, camera);
   const route = routeOf(camera);
+  const base = readTemplates(level);
+  const header = zoneHeaderTemplate(base.header, sky, music, route);
+  const templates = { ...base, header }; // every zone's header is made from this one
   const map = fitMap(text, scale, turn, route);
   const { fitted, spans } = map;
   const spawn = objects.find((object) => object.kind === "spawn");
