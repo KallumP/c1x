@@ -222,24 +222,64 @@ function nearestTop(tops: number[], height: number): number {
   return tops.reduce((nearest, top) => (Math.abs(top - height) < Math.abs(nearest - height) ? top : nearest));
 }
 
-// camera path points, step apart along -z from behind crash's start to the far
-// end of the zone, offsets.height above the ground offsets.lead ahead of each
-// point (the ground nearest the last height, which is kept over gaps), along crash's start x
-export function cameraPath(cells: Cells, size: Vec3, cell: number, start: Vec3, step: number, offsets = USUAL_OFFSETS): Vec3[] {
-  const ground = new Ground(cells, cell);
-  const [x, startHeight, z] = start;
-  const i = floorDivide(x, cell);
+// the height of the ground crash walks on, column by column: the ground nearest
+// the last height, which is kept over gaps
+function groundFollower(ground: Ground, startHeight: number): (i: number, k: number) => number {
   let height = startHeight;
-  const points: Vec3[] = [];
-  for (let cameraZ = Math.min(z + offsets.lead, size[2] - CAM_EDGE); cameraZ > CAM_EDGE; cameraZ -= step) {
-    const k = floorDivide(cameraZ - offsets.lead, cell);
-    const tops = k >= 0 ? ground.tops(i, k) : [];
+  return (i, k) => {
+    const tops = i >= 0 && k >= 0 ? ground.tops(i, k) : [];
     if (tops.length) {
       height = nearestTop(tops, height);
     }
+    return height;
+  };
+}
+
+// points step apart along -z from behind crash's start to the far end of the
+// zone, offsets.height above the ground offsets.lead ahead of each, along crash's start x
+function pathBehind(ground: Ground, size: Vec3, cell: number, start: Vec3, step: number, offsets: CameraOffsets): Vec3[] {
+  const [x, startHeight, z] = start;
+  const i = floorDivide(x, cell);
+  const heightAt = groundFollower(ground, startHeight);
+  const points: Vec3[] = [];
+  for (let cameraZ = Math.min(z + offsets.lead, size[2] - CAM_EDGE); cameraZ > CAM_EDGE; cameraZ -= step) {
+    const height = heightAt(i, floorDivide(cameraZ - offsets.lead, cell));
     points.push([x + CAM_OFFSET[0], height + offsets.height, cameraZ]);
   }
   return points;
+}
+
+// points step apart along +x from beside crash's start to the far end of the
+// zone, offsets.lead out across from him (+z) and offsets.height above the
+// ground beside each, along crash's start z
+function pathBeside(ground: Ground, size: Vec3, cell: number, start: Vec3, step: number, offsets: CameraOffsets): Vec3[] {
+  const [x, startHeight, z] = start;
+  const k = floorDivide(z, cell);
+  const heightAt = groundFollower(ground, startHeight);
+  const points: Vec3[] = [];
+  for (let cameraX = Math.max(x, CAM_EDGE); cameraX < size[0] - CAM_EDGE; cameraX += step) {
+    const height = heightAt(floorDivide(cameraX, cell), k);
+    points.push([cameraX, height + offsets.height, z + offsets.lead]);
+  }
+  return points;
+}
+
+// the camera path that follows crash along the route from his start: behind
+// him, or beside him for a side view
+export function cameraPath(cells: Cells, size: Vec3, cell: number, start: Vec3, step: number, offsets = USUAL_OFFSETS, route = ROUTE_BEHIND): Vec3[] {
+  const ground = new Ground(cells, cell);
+  if (route === ROUTE_SIDE) {
+    return pathBeside(ground, size, cell, start, step, offsets);
+  }
+  return pathBehind(ground, size, cell, start, step, offsets);
+}
+
+// how far along the route crash is ahead of the camera: lead behind him, none beside him
+function crashAhead(route: Route, lead: number): number {
+  if (route === ROUTE_SIDE) {
+    return 0;
+  }
+  return route.way * lead;
 }
 
 // which zone span a place along the route's axis is in (past either end of the map, the end one)
@@ -251,12 +291,12 @@ export function zoneIndex(spans: Span[], along: number): number {
 }
 
 // camera path points split into each zone span's path, by the zone crash is in
-// (lead ahead along the route; CAM_LEAD as on n. sanity beach), relative to it;
-// zones before crash's start have none
+// (lead ahead along the route behind him, CAM_LEAD as on n. sanity beach; level
+// with the camera beside him), relative to it; zones before crash's start have none
 export function zonePaths(points: Vec3[], spans: Span[], lead = CAM_LEAD, route = ROUTE_BEHIND): Vec3[][] {
   const paths: Vec3[][] = spans.map(() => []);
   for (const point of points) {
-    const zone = zoneIndex(spans, point[route.axis] + route.way * lead);
+    const zone = zoneIndex(spans, point[route.axis] + crashAhead(route, lead));
     paths[zone].push(inSpan(point, spans[zone], route));
   }
   return paths;
