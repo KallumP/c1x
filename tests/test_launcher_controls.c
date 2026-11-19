@@ -1,6 +1,7 @@
 #include "utest.h"
 #include <SDL2/SDL.h>
 #include "launcher/controls_file.h"
+#include "pc/gamepad.h"
 #include "test_files.h"
 
 #define LAUNCHER_CONTROLS_PATH "build/test_launcher_controls.cfg"
@@ -164,5 +165,98 @@ UTEST(launcher_controls, save_keeps_the_controls_files_other_lines) {
   text = ReadWholeFile(LAUNCHER_CONTROLS_PATH);
   ASSERT_TRUE(text != 0);
   ASSERT_TRUE(strstr(text, "# mine\nstart = Return\n\n") == text);
+  SDL_free(text);
+}
+
+UTEST(launcher_controls, reset_gives_cross_the_controllers_bottom_button) {
+  launcher_controls c;
+
+  ResetControls(&c);
+  ASSERT_EQ(1, c.pad_count[FindPadButton("cross")]);
+  ASSERT_EQ(SDL_CONTROLLER_BUTTON_A, c.pads[FindPadButton("cross")][0]);
+  ASSERT_EQ(SDL_CONTROLLER_BUTTON_START, c.pads[FindPadButton("start")][0]);
+}
+
+UTEST(launcher_controls, a_pad_line_replaces_the_default_controller_button_but_not_the_keys) {
+  launcher_controls c;
+  int cross;
+
+  WriteWholeFile(LAUNCHER_CONTROLS_PATH, "cross = pad:b\ncross = pad:righttrigger\n");
+  ASSERT_EQ(1, ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c));
+  cross = FindPadButton("cross");
+  ASSERT_EQ(2, c.pad_count[cross]);
+  ASSERT_EQ(SDL_CONTROLLER_BUTTON_B, c.pads[cross][0]);
+  ASSERT_EQ(1, c.key_count[cross]);
+  ASSERT_EQ(SDL_SCANCODE_SPACE, c.keys[cross][0]);
+}
+
+UTEST(launcher_controls, controls_with_a_different_controller_button_arent_equal) {
+  launcher_controls a, b;
+
+  ResetControls(&a);
+  ResetControls(&b);
+  b.pads[FindPadButton("cross")][0] = SDL_CONTROLLER_BUTTON_B;
+  ASSERT_FALSE(AreControlsEqual(&a, &b));
+}
+
+UTEST(launcher_controls, setting_a_buttons_keys_keeps_its_pad_lines) {
+  SDL_Scancode keys[] = { SDL_SCANCODE_K };
+
+  ASSERT_TRUE(SetButtonGives("cross = Z\ncross = pad:a\ncross = X\n", "cross", keys, 1,
+    "cross = K\ncross = pad:a\n"));
+}
+
+/* SetButtonPadLines' result for text, compared with expected, then freed */
+static int SetPadsGives(const char *text, const char *name, const int *pads,
+  int count, const char *expected) {
+  char *result;
+  int same;
+
+  result = SetButtonPadLines(text, name, pads, count);
+  same = strcmp(result, expected) == 0;
+  if (!same) { printf("got:\n%s\nexpected:\n%s\n", result, expected); }
+  SDL_free(result);
+  return same;
+}
+
+UTEST(launcher_controls, setting_a_buttons_controller_buttons_keeps_its_keys) {
+  int pads[] = { SDL_CONTROLLER_BUTTON_B, GAMEPAD_LEFT_TRIGGER };
+
+  ASSERT_TRUE(SetPadsGives("cross = Z\ncross = pad:a\n", "cross", pads, 2,
+    "cross = Z\ncross = pad:b\ncross = pad:lefttrigger\n"));
+}
+
+UTEST(launcher_controls, setting_controller_buttons_adds_pad_lines_when_there_are_none) {
+  int pads[] = { SDL_CONTROLLER_BUTTON_X };
+
+  ASSERT_TRUE(SetPadsGives("cross = Z\n", "cross", pads, 1,
+    "cross = Z\ncross = pad:x\n"));
+}
+
+UTEST(launcher_controls, saved_controller_buttons_read_back_the_same) {
+  launcher_controls c, read;
+  int square;
+
+  remove(LAUNCHER_CONTROLS_PATH);
+  ResetControls(&c);
+  square = FindPadButton("square");
+  c.pads[square][0] = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;
+  c.pads[square][1] = GAMEPAD_RIGHT_TRIGGER;
+  c.pad_count[square] = 2;
+  ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, "no_such_example.cfg", &c));
+  ASSERT_EQ(1, ReadControlsFile(LAUNCHER_CONTROLS_PATH, &read));
+  ASSERT_TRUE(AreControlsEqual(&c, &read));
+}
+
+UTEST(launcher_controls, saving_the_defaults_adds_no_lines) {
+  launcher_controls c;
+  char *text;
+
+  WriteWholeFile(LAUNCHER_CONTROLS_PATH, "# mine\n");
+  ResetControls(&c);
+  ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, "no_such_example.cfg", &c));
+  text = ReadWholeFile(LAUNCHER_CONTROLS_PATH);
+  ASSERT_TRUE(text != 0);
+  ASSERT_STREQ("# mine\n", text);
   SDL_free(text);
 }

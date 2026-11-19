@@ -23,6 +23,7 @@
 #define PAD_SQUARE      0x80
 
 uint32_t SwPadRead(int idx);
+uint32_t PadGamepadHeld();
 int PadLoadBindings(const char *path);
 void PadResetBindings();
 

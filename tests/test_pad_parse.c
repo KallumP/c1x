@@ -1,6 +1,7 @@
 #include "utest.h"
 #include "pc/pad.h"
 #include "pc/controls.h"
+#include "pc/gamepad.h"
 
 /* parse line, returning the result and storing what was parsed */
 static int parse(const char *line, uint32_t *bits, SDL_Scancode *code) {
@@ -73,4 +74,31 @@ UTEST(pad_parse, unknown_button_is_invalid) {
 UTEST(pad_parse, unknown_key_is_invalid) {
   uint32_t bits; SDL_Scancode code;
   ASSERT_EQ(-1, parse("cross = Banana", &bits, &code));
+}
+
+UTEST(pad_parse, a_pad_value_names_a_controller_button) {
+  ASSERT_EQ(SDL_CONTROLLER_BUTTON_A, PadParseGamepadControl("pad:a"));
+  ASSERT_EQ(SDL_CONTROLLER_BUTTON_DPAD_UP, PadParseGamepadControl("pad:dpup"));
+  ASSERT_EQ(SDL_CONTROLLER_BUTTON_LEFTSHOULDER, PadParseGamepadControl("pad:LeftShoulder"));
+}
+
+UTEST(pad_parse, a_pad_value_names_a_trigger) {
+  ASSERT_EQ(GAMEPAD_LEFT_TRIGGER, PadParseGamepadControl("pad:lefttrigger"));
+  ASSERT_EQ(GAMEPAD_RIGHT_TRIGGER, PadParseGamepadControl("pad:righttrigger"));
+}
+
+UTEST(pad_parse, a_value_that_isnt_a_controller_control_is_minus_one) {
+  ASSERT_EQ(-1, PadParseGamepadControl("a"));
+  ASSERT_EQ(-1, PadParseGamepadControl("pad:"));
+  ASSERT_EQ(-1, PadParseGamepadControl("pad:banana"));
+}
+
+UTEST(pad_parse, every_controller_control_has_a_name_that_reads_back) {
+  int control;
+
+  for (control = 0; control < GAMEPAD_CONTROL_COUNT; control++) {
+    char value[64];
+    snprintf(value, sizeof(value), "pad:%s", GamepadControlName(control));
+    EXPECT_EQ(control, PadParseGamepadControl(value));
+  }
 }

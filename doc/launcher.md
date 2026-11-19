@@ -32,12 +32,12 @@ When something else changes `settings.cfg`, such as the level editor's **Build +
 
 ## Controls
 
-The Controls tab shows each PlayStation button's keys from `controls.cfg` (see [Controls](controls.md)), which it creates from `controls.example.cfg` if there isn't one. They're grouped by what they do: movement first, then jump, spin, start and select, then the other buttons.
+The Controls tab shows each PlayStation button's keys, on its **Keyboard** tab, and game controller buttons, on its **Controller** tab, from `controls.cfg` (see [Controls](controls.md)), which it creates from `controls.example.cfg` if there isn't one. They're grouped by what they do: movement first, then jump, spin, start and select, then the other buttons.
 
-- Click a key, then press the key you want instead. Esc cancels.
-- **+** gives a button another key, and **x** removes one. A button always keeps at least one.
-- **Reset to defaults** puts every button back to its default key.
-- **Save** writes `controls.cfg`, changing only the lines for buttons whose keys changed and keeping the rest of the file. **Play** saves too.
+- Click a key, then press the key you want instead; on the Controller tab, click a controller button and press the one you want on a plugged in controller. Esc cancels.
+- **+** gives a button another key or controller button, and **x** removes one. A button always keeps at least one.
+- **Reset to defaults** puts every button back to its default key and controller button.
+- **Save** writes `controls.cfg`, changing only the lines for buttons whose keys or controller buttons changed and keeping the rest of the file. **Play** saves too.
 
 ## Levels
 

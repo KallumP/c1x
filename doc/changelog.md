@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-19
+
+### Added
+
+- play with a game controller, and change its buttons on the launcher's **Controls** tab
+
 ## 2026-11-17
 
 ### Changed
