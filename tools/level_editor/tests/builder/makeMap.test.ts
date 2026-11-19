@@ -18,6 +18,7 @@ import { donorObject, OBJECT_DONORS, objectDonorObjects } from "../../builder/do
 import type { Vec3 } from "../../builder/vectors";
 import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
 import { FOLLOW_CAM_MODE } from "../../builder/paths";
+import { CAM_LEAD, CAM_OFFSET } from "../../builder/route";
 import { colour5551 } from "../../builder/tpage";
 import { levelEntity, STONE_TRACK_LIFT, stoneTrack } from "../../builder/templates";
 import { readWorldHeader, readWorldPolygon, readWorldVertex, TEXINFOS_AT } from "../../builder/worldGeometry";
@@ -2272,6 +2273,19 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       test("each zone lists itself, then the zones either side", () => {
         const [a, b, c] = zones.map(({ eid }) => eid);
         expect(zones.map((zone) => headerOf(zone).neighbours)).toEqual([[a, b], [b, a, c], [c, b]]);
+      });
+
+      test("each zone's camera path runs along +x beside crash, out across from him", () => {
+        const CRASH_LIFT = 100; // crash starts this far above where he's put
+        const [crashX, crashY, crashZ] = crashAt(zones[0]);
+        const paths = zones.map((zone) => cameraPathOf(zone).points);
+        expect(paths.every((points) => points.length > 0)).toBe(true);
+        expectNear(paths[0][0][0], crashX, 16);
+        for (const points of paths) {
+          expect(points.every(([x]) => x >= 0 && x < ZONE_LENGTH)).toBe(true);
+          expect(points.slice(1).every((point, index) => point[0] > points[index][0])).toBe(true);
+          expect(points.every(([, y, z]) => z === crashZ + CAM_LEAD && y === crashY - CRASH_LIFT + CAM_OFFSET[1])).toBe(true);
+        }
       });
 
       test("crash starts in the left-most zone", () => {

@@ -135,6 +135,12 @@ describe("zone paths", () => {
   test("zones before the start have no points", () => {
     expect(zonePaths([[1, 2, 20000], [1, 2, 1000]], SPANS)).toEqual([[], [[1, 2, 20000 - 16384]], [[1, 2, 1000]]]);
   });
+
+  test("side on, each point goes to the zone along x it's in, crash being beside the camera, not ahead", () => {
+    const SIDE_SPANS: Span[] = [[0, 16384], [16384, 32768]];
+    const points: Vec3[] = [[16000, 2, 3], [16384, 2, 3], [20000, 2, 3]];
+    expect(zonePaths(points, SIDE_SPANS, CAM_LEAD, ROUTE_SIDE)).toEqual([[[16000, 2, 3]], [[0, 2, 3], [20000 - 16384, 2, 3]]]);
+  });
 });
 
 describe("the camera path", () => {
@@ -183,5 +189,32 @@ describe("the camera path", () => {
   test("it picks the ground nearest the last height", () => {
     const upper = floorMesh(0, 0, 2048, 8192, 2048); // an upper floor over the whole route
     expect(heights(pathOver(merged(floorMesh(0, 0, 2048, 8192, 512), upper), [1024, 512, 5000]))).toEqual(new Set([512 + CAM_OFFSET[1]]));
+  });
+
+  describe("for a side view", () => {
+    const SIDE_SIZE: Vec3 = [8192, 4096, 2048];
+    const pathBeside = (mesh: Mesh, start: Vec3) => cameraPath(solidCells(mesh, SIDE_SIZE, 128), SIDE_SIZE, 128, start, 256, undefined, ROUTE_SIDE);
+
+    test("it follows crash from beside him (+z), along +x", () => {
+      const points = pathBeside(floorMesh(0, 0, 8192, 2048, 512), [3000, 512, 1024]);
+      expect(points[0]).toEqual([3000, 512 + CAM_OFFSET[1], 1024 + CAM_LEAD]);
+      expect(points.slice(1).map((point, index) => point[0] - points[index][0])).toEqual(Array(points.length - 1).fill(256));
+      expect(points.every(([, , z]) => z === 1024 + CAM_LEAD)).toBe(true);
+      expect(points[points.length - 1][0]).toBeLessThan(8192 - 200);
+      expect(points[points.length - 1][0]).toBeGreaterThanOrEqual(8192 - 200 - 256);
+    });
+
+    test("it starts inside the zone", () => {
+      expect(pathBeside(floorMesh(0, 0, 8192, 2048, 512), [100, 512, 1024])[0][0]).toBe(200);
+    });
+
+    test("its height follows the ground where crash is, across from the camera", () => {
+      const mesh = merged(floorMesh(0, 0, 4096, 2048, 512), floorMesh(4096, 0, 8192, 2048, 1024));
+      const points = pathBeside(mesh, [1000, 512, 1024]);
+      expect(points.some(([x]) => x >= 4096)).toBe(true); // on over the higher floor
+      for (const [x, y] of points) {
+        expect(y).toBe((x < 4096 ? 512 : 1024) + CAM_OFFSET[1]);
+      }
+    });
   });
 });
