@@ -2285,10 +2285,11 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
       test("each zone's camera path runs along +x beside crash, out across from him", () => {
         const CRASH_LIFT = 100; // crash starts this far above where he's put
-        const [crashX, crashY, crashZ] = crashAt(zones[0]);
+        const CAM_EDGE = 200; // the path runs from this far in from the map's start, whichever way crash goes
+        const [, crashY, crashZ] = crashAt(zones[0]);
         const paths = zones.map((zone) => cameraPathOf(zone).points);
         expect(paths.every((points) => points.length > 0)).toBe(true);
-        expectNear(paths[0][0][0], crashX, 16);
+        expect(paths[0][0][0]).toBe(CAM_EDGE);
         for (const points of paths) {
           expect(points.every(([x]) => x >= 0 && x < ZONE_LENGTH)).toBe(true);
           expect(points.slice(1).every((point, index) => point[0] > points[index][0])).toBe(true);
@@ -2296,11 +2297,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
         }
       });
 
-      test("its zones are left/right zones, and their camera paths run right (+x)", () => {
-        // ZONE_FLAG_SIDE_SCROLL in src/formats/zdat.h: src/cam.c looks ahead the way such a zone's path runs
+      test("its camera paths run right (+x), in zones that aren't left/right zones", () => {
+        // ZONE_FLAG_SIDE_SCROLL in src/formats/zdat.h: src/cam.c would look ahead the way
+        // such a zone's path runs, and the camera stays level with crash
         const ZONE_FLAG_SIDE_SCROLL = 0x4000;
         for (const zone of zones) {
-          expect(headerOf(zone).flags & ZONE_FLAG_SIDE_SCROLL).toBe(ZONE_FLAG_SIDE_SCROLL);
+          expect(headerOf(zone).flags & ZONE_FLAG_SIDE_SCROLL).toBe(0);
           expect(cameraPathOf(zone).direction).toEqual([4096, 0, 0]);
         }
       });

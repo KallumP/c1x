@@ -195,22 +195,21 @@ describe("the camera path", () => {
     const SIDE_SIZE: Vec3 = [8192, 4096, 2048];
     const pathBeside = (mesh: Mesh, start: Vec3) => cameraPath(solidCells(mesh, SIDE_SIZE, 128), SIDE_SIZE, 128, start, 256, undefined, ROUTE_SIDE);
 
-    test("it follows crash from beside him (+z), along +x", () => {
+    const CAM_EDGE = 200; // how far in from the zone's ends the camera path stays
+
+    test("it runs beside crash (+z), along +x, the whole zone either side of his start", () => {
+      // so the camera follows him whichever way he goes from the spawn
       const points = pathBeside(floorMesh(0, 0, 8192, 2048, 512), [3000, 512, 1024]);
-      expect(points[0]).toEqual([3000, 512 + CAM_OFFSET[1], 1024 + CAM_LEAD]);
+      expect(points[0]).toEqual([CAM_EDGE, 512 + CAM_OFFSET[1], 1024 + CAM_LEAD]);
       expect(points.slice(1).map((point, index) => point[0] - points[index][0])).toEqual(Array(points.length - 1).fill(256));
       expect(points.every(([, , z]) => z === 1024 + CAM_LEAD)).toBe(true);
-      expect(points[points.length - 1][0]).toBeLessThan(8192 - 200);
-      expect(points[points.length - 1][0]).toBeGreaterThanOrEqual(8192 - 200 - 256);
-    });
-
-    test("it starts inside the zone", () => {
-      expect(pathBeside(floorMesh(0, 0, 8192, 2048, 512), [100, 512, 1024])[0][0]).toBe(200);
+      expect(points[points.length - 1][0]).toBeLessThan(8192 - CAM_EDGE);
+      expect(points[points.length - 1][0]).toBeGreaterThanOrEqual(8192 - CAM_EDGE - 256);
     });
 
     test("its height follows the ground where crash is, across from the camera", () => {
       const mesh = merged(floorMesh(0, 0, 4096, 2048, 512), floorMesh(4096, 0, 8192, 2048, 1024));
-      const points = pathBeside(mesh, [1000, 512, 1024]);
+      const points = pathBeside(mesh, [3000, 512, 1024]);
       expect(points.some(([x]) => x >= 4096)).toBe(true); // on over the higher floor
       for (const [x, y] of points) {
         expect(y).toBe((x < 4096 ? 512 : 1024) + CAM_OFFSET[1]);
