@@ -50,3 +50,13 @@ UTEST(gamepad, unknown_controls_are_never_held) {
   ASSERT_FALSE(GamepadIsHeld(-1));
   ASSERT_FALSE(GamepadIsHeld(GAMEPAD_CONTROL_COUNT));
 }
+
+UTEST(gamepad, a_trigger_pulled_past_halfway_is_its_control) {
+  ASSERT_EQ(GAMEPAD_LEFT_TRIGGER, GamepadPulledTrigger(SDL_CONTROLLER_AXIS_TRIGGERLEFT, 30000));
+  ASSERT_EQ(GAMEPAD_RIGHT_TRIGGER, GamepadPulledTrigger(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 20000));
+}
+
+UTEST(gamepad, a_lightly_pulled_trigger_or_a_stick_is_no_control) {
+  ASSERT_EQ(-1, GamepadPulledTrigger(SDL_CONTROLLER_AXIS_TRIGGERLEFT, 4000));
+  ASSERT_EQ(-1, GamepadPulledTrigger(SDL_CONTROLLER_AXIS_LEFTX, 32767));
+}
