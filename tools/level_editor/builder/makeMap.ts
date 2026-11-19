@@ -27,7 +27,7 @@ import {
   BOX_HEIGHT, BOX_TYPE, donorEntityType, donorObstacleType, entityPath, ENTITY_INIT_FLAGS, ENEMY_ENTITIES, entityId, linkSwitches, newEntityIds, stoneStartFlag, UNBREAKABLE_BOXES, withInitFlagA, withInitFlagC,
   LEADER_BAT, OBSTACLE_ENTITIES, SLAMMING_WALL_LEFT, withNoRotationFromFlags, WARP_PAD, withEntityId, withEntityType, withInitFlagB, withPath, withPathFrom, withPosition, withSubtype, type PlacedBox,
 } from "./entities";
-import { fit, zoneCells, zoneSpans, type Fit, type Span } from "./fit";
+import { fit, inSpan, zoneCells, zoneSpans, type Fit, type Route, type Span } from "./fit";
 import type { RgbImage } from "./images";
 import { ENTRY_SLST, type Level } from "./levelFiles";
 import { boxInitFlagB, boxSubtype, toZone } from "./levelObjects";
@@ -35,7 +35,7 @@ import { addMapPiece, TEXINFO_WORDS_MAX, textureWorlds } from "./mapTextures";
 import { readObj, type Mesh } from "./obj";
 import { LEAF_FLOOR, LEAF_GROUND, LEAF_PIT, type Block } from "./octree";
 import { roundHalfToEven } from "./pyMath";
-import { cameraOffsets, cameraPath, spawnPoint, zoneIndex, zonePaths } from "./route";
+import { cameraOffsets, cameraPath, levelTurn, routeOf, spawnPoint, zoneIndex, zonePaths } from "./route";
 import { DEFAULT_CAMERA, type Camera } from "../src/camera";
 import { mossySlidePath } from "./mossySlide";
 import { levelEntity, pieceMesh, readTemplates, STONE_TRACK_LIFT, stoneTrack, warpPadBase, withLongerSkirts, type MapPiece, type StoneTrack, type Templates } from "./templates";
@@ -76,16 +76,17 @@ export function cellBlocks(cells: Cells, cell: number): Block[] {
   }));
 }
 
-// the map, fitted into zones, with its collision
+// the map, fitted into zones along its route
 interface FittedMap {
   fitted: Fit;
   spans: Span[];
+  route: Route;
 }
 
 // each zone's world meshes; with more than one zone, each lists the next's too,
 // so half as many. a zone with rolling stones (trackZones) ends with an empty
 // one, kept for their tracks, so they fit however full the map's meshes are
-function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, textured: Set<string>, trackZones: Set<number>): WorldMesh[][] {
+function zoneWorldMeshes({ fitted, spans, route }: FittedMap, templates: Templates, textured: Set<string>, trackZones: Set<number>): WorldMesh[][] {
   const texinfoWords = readWorldHeader(templates.world.items[0]).texinfoWords;
   const options = {
     piece: MAP_PIECE,
@@ -95,6 +96,7 @@ function zoneWorldMeshes({ fitted, spans }: FittedMap, templates: Templates, tex
     textured,
     regionsMax: Math.floor((TEXINFO_WORDS_MAX - texinfoWords) / 2),
     worldsMax: spans.length === 1 ? WORLDS_MAX : WORLDS_MAX / 2,
+    route,
   };
   return spans.map((span, zone) => {
     if (!trackZones.has(zone)) {
@@ -563,9 +565,10 @@ class ObjectPlacer {
   }
 
   // the zone a position is in, and the position relative to it
-  private inZone([x, y, z]: Vec3): { zone: number; at: Vec3 } {
-    const zone = zoneIndex(this.map.spans, z);
-    return { zone, at: [x, y, z - this.map.spans[zone][0]] };
+  private inZone(position: Vec3): { zone: number; at: Vec3 } {
+    const { spans, route } = this.map;
+    const zone = zoneIndex(spans, position[route.axis]);
+    return { zone, at: inSpan(position, spans[zone], route) };
   }
 
   placeCrash(start: Vec3): number {
@@ -735,7 +738,7 @@ class ObjectPlacer {
   trackPlace(stone: LevelObject, track: StoneTrack): { zone: number; at: Vec3 } {
     const { zone } = this.inZone(this.positionOf(stone));
     const start = this.trackStart(stone, track);
-    return { zone, at: [start[0], start[1], start[2] - this.map.spans[zone][0]] };
+    return { zone, at: inSpan(start, this.map.spans[zone], this.map.route) };
   }
 
   // the warp pad that ends the level; where it stands in its zone, and which zone
@@ -747,9 +750,23 @@ class ObjectPlacer {
   }
 }
 
-function fitMap(text: string, scale: number, turn: number): FittedMap {
-  const fitted = fit(readObj(text, scale, turn), MAP_CELL, MAP_HEADROOM, MAP_CELL, true);
-  return { fitted, spans: zoneSpans(fitted.size[2], MAP_CELL) };
+function fitMap(text: string, scale: number, turn: number, route: Route): FittedMap {
+  const fitted = fit(readObj(text, scale, turn), MAP_CELL, MAP_HEADROOM, MAP_CELL, route);
+  return { fitted, spans: zoneSpans(fitted.size[route.axis], MAP_CELL, route), route };
+}
+
+// where each zone's corner is from the first's: along the route's axis by its span's start
+function zoneOffset(span: Span, first: Span, route: Route): Vec3 {
+  const offset: Vec3 = [0, 0, 0];
+  offset[route.axis] = span[0] - first[0];
+  return offset;
+}
+
+// each zone's size: the fitted map's, but one span long along the route
+function zoneSize({ fitted, spans, route }: FittedMap): Vec3 {
+  const size = [...fitted.size] as Vec3;
+  size[route.axis] = spans[0][1] - spans[0][0];
+  return size;
 }
 
 const PAD_TOP = 32; // how far below the pad its base's top can be (the base reaches 16 above and 600 below)
@@ -804,12 +821,14 @@ function zoneHeaderTemplate(header: Buffer, sky: Sky, music: LevelMusic | null):
 }
 
 export function makeMap(level: Level, text: string, options: MapOptions = {}): Level {
-  const { scale = MAP_SCALE, turn = 0, images = new Map(), objects = [], sky = DEFAULT_SKY, camera = DEFAULT_CAMERA, readOtherLevel } = options;
+  const { scale = MAP_SCALE, images = new Map(), objects = [], sky = DEFAULT_SKY, camera = DEFAULT_CAMERA, readOtherLevel } = options;
   const music = soundtrackMusic(options.music, readOtherLevel);
   const offsets = cameraOffsets(camera);
   const base = readTemplates(level);
   const templates = { ...base, header: zoneHeaderTemplate(base.header, sky, music) }; // every zone's header is made from this one
-  const map = fitMap(text, scale, turn);
+  const turn = levelTurn(options.turn ?? 0, camera);
+  const route = routeOf(camera);
+  const map = fitMap(text, scale, turn, route);
   const { fitted, spans } = map;
   const spawn = objects.find((object) => object.kind === "spawn");
   const end = objects.find((object) => object.kind === "end");
@@ -828,7 +847,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   const template = templates.world.items[0];
   const { pages, ...textured } = textureWorlds(zoneWorlds.flat(), images, template);
 
-  const start = spawn ? placer.positionOf(spawn) : spawnPoint(fitted.mesh, cells, MAP_CELL);
+  const start = spawn ? placer.positionOf(spawn) : spawnPoint(fitted.mesh, cells, MAP_CELL, route);
   const spawnZone = placer.placeCrash(start);
   boxes.forEach((box) => placer.placeBoxStack(box));
   linkSwitches(placer.entities, placer.placedBoxes);
@@ -877,13 +896,13 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   }
 
   const zonePlans = (step: number): ZonePlan[] => {
-    const paths = zonePaths(cameraPath(cells, fitted.size, MAP_CELL, start, step, offsets), spans, offsets.lead);
+    const paths = zonePaths(cameraPath(cells, fitted.size, MAP_CELL, start, step, offsets), spans, offsets.lead, route);
     let first = 0;
     return spans.map((span, index) => {
       const count = zoneWorlds[index].length;
       const plan = {
-        zOffset: span[0] - spans[0][0],
-        blocks: cellBlocks(zoneCells(cells, span, MAP_CELL), MAP_CELL),
+        offset: zoneOffset(span, spans[0], route),
+        blocks: cellBlocks(zoneCells(cells, span, MAP_CELL, route), MAP_CELL),
         worlds: withBase.worlds.slice(first, first + count),
         texinfos: withBase.texinfos.slice(first, first + count),
         points: paths[index],
@@ -894,7 +913,7 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
     });
   };
 
-  const size: Vec3 = [fitted.size[0], fitted.size[1], spans[0][1] - spans[0][0]];
+  const size = zoneSize(map);
   const donors = objectDonorObjects(donorLevels);
   for (let step = MAP_PATH_STEP; ; step *= 2) {
     try {

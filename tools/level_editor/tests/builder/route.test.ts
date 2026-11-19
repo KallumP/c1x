@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { Cells, solidCells } from "../../builder/collision";
-import type { Span } from "../../builder/fit";
+import { ROUTE_SIDE, type Span } from "../../builder/fit";
 import type { Mesh } from "../../builder/obj";
 import { CAM_LEAD, CAM_OFFSET, cameraOffsets, cameraPath, spawnPoint, zoneIndex, zonePaths } from "../../builder/route";
 import { DEFAULT_CAMERA } from "../../src/camera";
@@ -65,6 +65,15 @@ describe("crash's spawn", () => {
     // starts about CAM_LEAD (12 cells) along it, as on a flat floor
     const walkStart = 4096 - 64;
     expect(spawnOn(staircase)[2]).toBe(walkStart - 12 * 128);
+  });
+
+  test("a side view's walk runs left to right, along +x", () => {
+    // the staircase turned to run along x: crash starts about CAM_LEAD along it from its -x end
+    const SIDE_SIZE: Vec3 = [4096, 2048, 2048];
+    const staircase = merged(...Array.from({ length: 8 }, (_, i) => floorMesh(i * 512, 0, i * 512 + 512, 2048, 256 + 128 * (i % 2))));
+    const [x, , z] = spawnPoint(staircase, solidCells(staircase, SIDE_SIZE, 128), 128, ROUTE_SIDE);
+    expect(x).toBe(64 + 12 * 128);
+    expect([960, 1088]).toContain(z); // the middle across
   });
 
   test("the middle across is the middle of the floors, not of the zone", () => {

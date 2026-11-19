@@ -10,7 +10,15 @@ export const SIDE_CELLS_MAX = 128; // the game's octree queries keep a cell's de
                                    // in src/level.h), so a side halves 7 times at most (as in the game's levels)
 const AXES = "xyz";
 const UP = 1;
-const ROUTE = 2; // z, which the route runs along
+
+// the axis the route runs along, and which way along it it goes
+export interface Route {
+  axis: 0 | 2;
+  way: 1 | -1;
+}
+
+export const ROUTE_BEHIND: Route = { axis: 2, way: -1 }; // along -z, the camera behind crash
+export const ROUTE_SIDE: Route = { axis: 0, way: 1 };    // along +x, left to right, the camera beside him
 
 // a map longer along axis than a zone side can be: extent zone units, fixed of
 // them margin or headroom, which don't scale
@@ -28,7 +36,7 @@ export interface Fit {
   offset: Vec3;
 }
 
-export type Span = [number, number]; // a zone's (z0, z1) along the route
+export type Span = [number, number]; // a zone's (low, high) along the route's axis
 
 const lowestAlong = (vertices: Vec3[], axis: number) => vertices.reduce((low, vertex) => Math.min(low, vertex[axis]), Infinity);
 const highestAlong = (vertices: Vec3[], axis: number) => vertices.reduce((high, vertex) => Math.max(high, vertex[axis]), -Infinity);
@@ -39,14 +47,14 @@ interface SideRoom {
   cell: number;
   headroom: number;
   margin: number;
-  longZ: boolean;
+  longRoute: Route | null;
 }
 
 // a zone's side along axis for a map extent long: a power of two cells with the
 // room it needs, or along a long route whole zones of SIDE_CELLS_MAX cells
-function zoneSide(axis: number, extent: number, { cell, headroom, margin, longZ }: SideRoom): number {
+function zoneSide(axis: number, extent: number, { cell, headroom, margin, longRoute }: SideRoom): number {
   const zoneMax = cell * SIDE_CELLS_MAX;
-  const isLongRoute = longZ && axis === ROUTE && extent + margin > zoneMax;
+  const isLongRoute = longRoute !== null && axis === longRoute.axis && extent + margin > zoneMax;
   if (extent > VERTEX_MAX && !isLongRoute) { // a long route's meshes are each relative to their zone
     throw new Error(`the map is ${extent} zone units along ${AXES[axis]}, more than ${VERTEX_MAX}; scale it down`);
   }
@@ -68,33 +76,41 @@ function zoneSide(axis: number, extent: number, { cell, headroom, margin, longZ 
 // mesh moved so its lowest corner is margin (zone units) in from the zone's,
 // with each side of the zone a power of two cells, margin to spare along x and
 // z, and headroom above it. a side is at most SIDE_CELLS_MAX cells (TooBig);
-// with longZ, z (the route) can run on for whole zones of that (zoneSpans)
-export function fit(mesh: Mesh, cell: number, headroom: number, margin = 0, longZ = false): Fit {
+// with longRoute, its axis can run on for whole zones of that (zoneSpans)
+export function fit(mesh: Mesh, cell: number, headroom: number, margin = 0, longRoute: Route | null = null): Fit {
   const offset = [0, 1, 2].map((axis) => lowestAlong(mesh.vertices, axis) - margin) as Vec3;
   const vertices = mesh.vertices.map((vertex) => vertex.map((coordinate, axis) => snapToVertexGrid(coordinate - offset[axis])) as Vec3);
-  const room = { cell, headroom, margin, longZ };
+  const room = { cell, headroom, margin, longRoute };
   const size = [0, 1, 2].map((axis) => zoneSide(axis, highestAlong(vertices, axis), room)) as Vec3;
   return { mesh: { ...mesh, vertices }, size, offset };
 }
 
-// the zones a fitted map depth long along z is split into, SIDE_CELLS_MAX cells
-// each, from the route's start (the +z end)
-export function zoneSpans(depth: number, cell: number): Span[] {
-  const zone = Math.min(depth, cell * SIDE_CELLS_MAX);
-  const spans: Span[] = [];
-  for (let z = depth - zone; z > -1; z -= zone) {
-    spans.push([z, z + zone]);
+// the zones a fitted map length long along the route's axis is split into,
+// SIDE_CELLS_MAX cells each, from the route's start (its +z end behind, its -x end side on)
+export function zoneSpans(length: number, cell: number, route = ROUTE_BEHIND): Span[] {
+  const zone = Math.min(length, cell * SIDE_CELLS_MAX);
+  const starts = Array.from({ length: Math.floor(length / zone) }, (_, index) => index * zone);
+  if (route.way < 0) {
+    starts.reverse();
   }
-  return spans;
+  return starts.map((start): Span => [start, start + zone]);
+}
+
+// at moved into a zone span: relative to the zone's corner along the route's axis
+export function inSpan(at: Vec3, span: Span, route: Route): Vec3 {
+  const moved = [...at] as Vec3;
+  moved[route.axis] -= span[0];
+  return moved;
 }
 
 // the cells in a zone span, relative to the zone
-export function zoneCells(cells: Cells, span: Span, cell: number): Cells {
-  const [first, end] = span.map((z) => floorDivide(z, cell));
+export function zoneCells(cells: Cells, span: Span, cell: number, route = ROUTE_BEHIND): Cells {
+  const cellSpan: Span = [floorDivide(span[0], cell), floorDivide(span[1], cell)];
   const inZone = new Cells();
-  for (const { at: [i, j, k], kind } of cells) {
-    if (k >= first && k < end) {
-      inZone.set([i, j, k - first], kind);
+  for (const { at, kind } of cells) {
+    const along = at[route.axis];
+    if (along >= cellSpan[0] && along < cellSpan[1]) {
+      inZone.set(inSpan(at, cellSpan, route), kind);
     }
   }
   return inZone;

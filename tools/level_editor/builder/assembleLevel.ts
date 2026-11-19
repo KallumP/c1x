@@ -26,12 +26,12 @@ const ANGLE_UNITS = 4096; // a whole turn, in the game's angles
 const CAMERA_ZOOM = 1700;
 const CAMERA_DIRECTION: [number, number, number] = [0, 0, -4096]; // along -z
 
-// what goes in one zone: its z offset from the first zone's corner, collision
+// what goes in one zone: where its corner is from the first zone's, collision
 // blocks, world meshes (relative to the zone) and their headers' extra
 // texinfos, camera path points relative to the zone (none for zones the camera
 // never reaches) and entities
 export interface ZonePlan {
-  zOffset: number;
+  offset: Vec3;
   blocks: Block[];
   worlds: BuiltWorld[];
   texinfos: Buffer[];
@@ -43,7 +43,7 @@ export interface Assembly {
   level: Level;            // the real level
   templates: Templates;
   size: Vec3;              // each zone's
-  zones: ZonePlan[];       // the first at the template zone's origin, the rest each along -z from the one before
+  zones: ZonePlan[];       // the first at the template zone's origin, the rest each along the route from the one before
   step: number;            // between camera path points
   spawnZone: number;       // the zone crash (its first entity) starts in
   pageEids: number[];      // texture pages for the meshes' texinfos
@@ -115,7 +115,7 @@ function zonePath(assembly: Assembly, zoneIndex: number, neighbours: number[]): 
   const next = zones[zoneIndex + 1];
   const listed = zone.worlds.map((world) => ({ ...world, zOffset: 0 }));
   if (next) {
-    listed.push(...next.worlds.map((world) => ({ ...world, zOffset: next.zOffset - zone.zOffset })));
+    listed.push(...next.worlds.map((world) => ({ ...world, zOffset: next.offset[2] - zone.offset[2] })));
   }
   const path = pathBytes({
     slst: sortListEid(zoneIndex),
@@ -168,8 +168,7 @@ function musicPages(music: LevelMusic | null | undefined): Page[] {
 
 export function assembleLevel(assembly: Assembly): Level {
   const { templates, zones, spawnZone, texturePages, donors } = assembly;
-  const [x0, y0, z0] = templates.origin;
-  const origins = zones.map((zone): Vec3 => [x0, y0, z0 + zone.zOffset]);
+  const origins = zones.map((zone) => templates.origin.map((value, axis) => value + zone.offset[axis]) as Vec3);
   const entries = [...worldEntries(assembly, origins), ...zones.flatMap((_, index) => zoneEntries(assembly, index, origins))];
   const out = withDonorObjects(cutLevel(assembly.level, keptEids(assembly)), donors);
   out.pages = [...packEntries(entries), ...out.pages, ...texturePages, ...musicPages(assembly.music)];

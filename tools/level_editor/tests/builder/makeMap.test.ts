@@ -2247,10 +2247,11 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
 
     test("crash starts as far along the route as he does behind, from the left end", () => {
-      const behind = build();
-      const side = build([], SIDE);
-      const fromStartBehind = readZoneRect(behind.zone.items[1]).depth - crashAt(behind.zone)[2]; // from the +z end
-      expectNear(crashAt(side.zone)[0], fromStartBehind, 16); // from the -x end
+      const FLOOR_IN = 128; // the floor's low corner is a cell in from the zone's
+      const FLOOR_LENGTH = 16 * 256;
+      const fromStartBehind = FLOOR_IN + FLOOR_LENGTH - crashAt(build().zone)[2]; // from the floor's +z end
+      const fromStartSide = crashAt(build([], SIDE).zone)[0] - FLOOR_IN; // from its -x end
+      expectNear(fromStartSide, fromStartBehind, 16);
     });
 
     describe("of a long map", () => {
