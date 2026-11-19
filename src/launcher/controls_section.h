@@ -6,6 +6,7 @@
 extern void LoadControlsSection(const char *repo);
 extern int SaveControlsSection(const char *repo);
 extern int TakeControlsKeyPress(SDL_Scancode code);
+extern int TakeControlsPadPress(int control);
 extern void DrawControlsSection(const char *repo);
 
 #endif /* _LAUNCHER_CONTROLS_SECTION_H_ */

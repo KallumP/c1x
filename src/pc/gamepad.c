@@ -39,6 +39,14 @@ static int IsTriggerPulled(int axis) {
   return axes[axis] >= TRIGGER_HELD_FROM;
 }
 
+/* the trigger control (GAMEPAD_LEFT/RIGHT_TRIGGER) an axis at value pulls, or -1 if it doesn't pull one */
+int GamepadPulledTrigger(int axis, int value) {
+  if (value < TRIGGER_HELD_FROM) { return -1; }
+  if (axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT) { return GAMEPAD_LEFT_TRIGGER; }
+  if (axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) { return GAMEPAD_RIGHT_TRIGGER; }
+  return -1;
+}
+
 /* is a control (an SDL button or GAMEPAD_LEFT/RIGHT_TRIGGER) held? */
 int GamepadIsHeld(int control) {
   if (IsButton(control)) { return buttons_held[control]; }

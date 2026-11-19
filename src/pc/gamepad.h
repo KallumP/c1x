@@ -16,5 +16,6 @@ void GamepadSetAxis(int axis, int value);
 void GamepadReleaseAll();
 int GamepadIsHeld(int control);
 int GamepadAxis(int axis);
+int GamepadPulledTrigger(int axis, int value);
 
 #endif /* _PC_GAMEPAD_H_ */

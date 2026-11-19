@@ -17,16 +17,17 @@
 #include "controls_section.h"
 #include "help_section.h"
 #include "ui.h"
+#include "pc/gamepad.h"
 
 #define WINDOW_WIDTH  720
-#define WINDOW_HEIGHT 880 /* the controls tab's 16 rows, and its group headings */
+#define WINDOW_HEIGHT 920 /* the controls tab's 16 rows, its group headings and its tabs */
 
 static SDL_Window *window;
 static SDL_GLContext gl_context;
 static char repo[PATH_MAX_LEN]; /* the repo folder, above the launcher's build folder */
 
 static int OpenLauncherWindow() {
-  if (SDL_Init(SDL_INIT_VIDEO) != 0) { return 0; }
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0) { return 0; }
   window = SDL_CreateWindow("c1x launcher",
     SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
     WINDOW_WIDTH, WINDOW_HEIGHT,
@@ -52,12 +53,38 @@ static void CloseLauncherWindow() {
   SDL_Quit();
 }
 
+/* open a plugged in controller (also sent for ones there at startup), and close an unplugged one */
+static void HandleControllerPlug(const SDL_Event *e) {
+  SDL_GameController *controller;
+
+  if (e->type == SDL_CONTROLLERDEVICEADDED && SDL_IsGameController(e->cdevice.which)) {
+    SDL_GameControllerOpen(e->cdevice.which);
+  }
+  if (e->type == SDL_CONTROLLERDEVICEREMOVED) {
+    controller = SDL_GameControllerFromInstanceID(e->cdevice.which);
+    if (controller) { SDL_GameControllerClose(controller); }
+  }
+}
+
+/* give a controller press to the controls tab; returns 1 if it took it */
+static int TakeControllerPress(const SDL_Event *e) {
+  int trigger;
+
+  if (e->type == SDL_CONTROLLERBUTTONDOWN) { return TakeControlsPadPress(e->cbutton.button); }
+  if (e->type != SDL_CONTROLLERAXISMOTION) { return 0; }
+  trigger = GamepadPulledTrigger(e->caxis.axis, e->caxis.value);
+  if (trigger == -1) { return 0; }
+  return TakeControlsPadPress(trigger);
+}
+
 /* handle the window's events; returns 0 once it has been closed */
 static int HandleEvents() {
   SDL_Event e;
 
   while (SDL_PollEvent(&e)) {
+    HandleControllerPlug(&e);
     if (e.type == SDL_KEYDOWN && TakeControlsKeyPress(e.key.keysym.scancode)) { continue; }
+    if (TakeControllerPress(&e)) { continue; }
     ImGui_ImplSDL2_ProcessEvent(&e);
     if (e.type == SDL_QUIT) { return 0; }
   }

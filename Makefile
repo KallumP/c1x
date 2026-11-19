@@ -129,6 +129,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/editor_section.c \
 	src/pc/settings.c \
 	src/pc/controls.c \
+	src/pc/gamepad.c \
 	src/pc/config.c
 
 OBJ = $(SRC:.c=.o)
