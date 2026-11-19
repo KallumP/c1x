@@ -284,8 +284,9 @@ static int NeedsButtonLines(const char *text, int is_default, int button, line_k
   return !is_default;
 }
 
-/* text (to SDL_free) with button's key lines set to its keys in c, if it needs them */
-static char *TextWithButtonKeys(char *text, const launcher_controls *c,
+/* replace button's key lines in text with its keys in c, if it needs them.
+   takes text over (freeing it) and returns the text to use from now on, to SDL_free */
+static char *ReplaceButtonKeyLines(char *text, const launcher_controls *c,
   const launcher_controls *defaults, int button) {
   char *changed;
 
@@ -298,8 +299,9 @@ static char *TextWithButtonKeys(char *text, const launcher_controls *c,
   return changed;
 }
 
-/* text (to SDL_free) with button's pad lines set to its controller buttons in c, if it needs them */
-static char *TextWithButtonPads(char *text, const launcher_controls *c,
+/* replace button's pad lines in text with its controller buttons in c, if it needs them.
+   takes text over (freeing it) and returns the text to use from now on, to SDL_free */
+static char *ReplaceButtonPadLines(char *text, const launcher_controls *c,
   const launcher_controls *defaults, int button) {
   char *changed;
 
@@ -319,8 +321,8 @@ static char *ControlsTextWith(char *text, const launcher_controls *c) {
 
   ResetControls(&defaults);
   for (button = 0; button < PAD_BUTTON_COUNT; button++) {
-    text = TextWithButtonKeys(text, c, &defaults, button);
-    text = TextWithButtonPads(text, c, &defaults, button);
+    text = ReplaceButtonKeyLines(text, c, &defaults, button);
+    text = ReplaceButtonPadLines(text, c, &defaults, button);
   }
   return text;
 }
