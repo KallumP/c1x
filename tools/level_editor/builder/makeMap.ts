@@ -896,7 +896,8 @@ export function makeMap(level: Level, text: string, options: MapOptions = {}): L
   }
 
   const zonePlans = (step: number): ZonePlan[] => {
-    const paths = zonePaths(cameraPath(cells, fitted.size, MAP_CELL, start, step, offsets), spans, offsets.lead, route);
+    const points = cameraPath(cells, fitted.size, MAP_CELL, start, step, offsets, route);
+    const paths = zonePaths(points, spans, offsets.lead, route);
     let first = 0;
     return spans.map((span, index) => {
       const count = zoneWorlds[index].length;
