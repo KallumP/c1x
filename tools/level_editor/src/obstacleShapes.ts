@@ -296,17 +296,20 @@ function steamVent(): ShapePart[] {
 
 const MOVING_PLATFORM = { across: 802, deep: 797, thick: 403, moss: 60 };
 
-// slippery climb's moving platform (PlPyG): a square stone slab 802 x 797
-// across, its mossy top at its spot, 403 thick, running from its spot out
-// towards the player (its model 0 to 797 along z)
-function movingPlatform(): ShapePart[] {
-  const { across, deep, thick, moss } = MOVING_PLATFORM;
+// slippery climb's platforms' square stone slab, 802 x 797 across, thick deep,
+// its mossy top at its spot, running from its spot out towards the player
+// (their models 0 to 797 along z)
+function platformSlab(thick: number): ShapePart[] {
+  const { across, deep, moss } = MOVING_PLATFORM;
   const stone = thick - moss;
   return [
     { kind: "box", size: [across, stone, deep], at: [0, -moss - stone / 2, deep / 2], colour: PILLAR_COLOURS.stone },
     { kind: "box", size: [across, moss, deep], at: [0, -moss / 2, deep / 2], colour: PILLAR_COLOURS.moss },
   ];
 }
+
+// slippery climb's moving platform (PlPyG): its slab, 403 thick
+const movingPlatform = () => platformSlab(MOVING_PLATFORM.thick);
 
 // sunset vista's dropping platform (Rw2wG): its rotating platform's slab
 const droppingPlatform = rotatingPlatform;
@@ -361,16 +364,9 @@ function rotatingPillar(): ShapePart[] {
   return [squareSlab(across * 0.85, height - cap, -height, PILLAR_COLOURS.stone), squareSlab(across, cap, -cap, PILLAR_COLOURS.moss)];
 }
 
-// slippery climb's lift platform (PlUyG): its moving platform's square slab, 338 thick
-function liftPlatform(): ShapePart[] {
-  const { across, deep, moss } = MOVING_PLATFORM;
-  const thick = 338;
-  const stone = thick - moss;
-  return [
-    { kind: "box", size: [across, stone, deep], at: [0, -moss - stone / 2, 0], colour: PILLAR_COLOURS.stone },
-    { kind: "box", size: [across, moss, deep], at: [0, -moss / 2, 0], colour: PILLAR_COLOURS.moss },
-  ];
-}
+// slippery climb's lift platform (PlUyG): its moving platform's slab, 338 thick
+const LIFT_PLATFORM_THICK = 338;
+const liftPlatform = () => platformSlab(LIFT_PLATFORM_THICK);
 
 const FLOOR_FIRE = { across: 600, grate: 40, flame: 1600 };
 const FIRE_COLOURS = { grate: "#2a2624", flame: "#ff7a1f" };
