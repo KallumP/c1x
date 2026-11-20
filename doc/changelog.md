@@ -14,6 +14,7 @@
 ### Fixed
 
 - the level editor's toolbar no longer gets squashed when an error shows
+- level build errors no longer list every allowed setting, song or type
 
 ## 2026-11-19
 
