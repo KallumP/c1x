@@ -417,7 +417,7 @@ describe("a rolling stone's direction", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "reverse": true}]', "object 1: a crab has no reverse (rolling stones and fish do; reverse a crab's path instead)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "reverse": true}]', "object 1: a crab has no reverse (rolling stones, fish and rotating obstacles do; reverse a crab's path instead)"],
     ['[{"kind": "enemy", "type": "lab_assistant", "at": [0, 0, 0], "reverse": true}]', "object 1: a lab_assistant has no reverse"],
     ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "reverse": "yes"}]', "object 1: reverse should be true or false"],
   ])("refuses %s", (text, message) => {
