@@ -122,4 +122,38 @@ describe("sort lists", () => {
     const items = zoneSlstItems([triangleMesh([[0, 2400, 3200], [800, 2400, 3200], [0, 2400, 3500]])], [[0, 1930, 3000]], 128, (54 * Math.PI) / 180);
     expect(slstWords(items[0]).words).toEqual([]);
   });
+
+  describe("a side view", () => {
+    // two triangles 2000 in front of a camera at x 0: one in front of it, one far to its right
+    const near = triangleMesh([[0, 0, 1000], [8, 0, 1000], [0, 0, 1008]]);
+    const farRight = triangleMesh([[20000, 0, 1000], [20008, 0, 1000], [20000, 0, 1008]]);
+    const camera: Vec3 = [0, 0, 3000];
+
+    test("leaves out polygons too far left or right of the camera to be on screen", () => {
+      expect(slstWords(zoneSlstItems([near, farRight], [camera], 200, 0, true)[0]).words).toEqual([polyId(0, 0)]);
+    });
+
+    test("lists them again as the camera comes alongside", () => {
+      const items = zoneSlstItems([near, farRight], [camera, [20000, 0, 3000]], 200, 0, true);
+      expect(slstWords(items[items.length - 1]).words).toEqual([polyId(1, 0)]);
+    });
+
+    test("places a neighbouring zone's meshes by their offset along x", () => {
+      const pulledIn = { ...farRight, xOffset: -20000 };
+      expect(slstWords(zoneSlstItems([pulledIn], [camera], 200, 0, true)[0]).words).toEqual([polyId(0, 0)]);
+    });
+
+    test("sees further either side the further away a polygon is", () => {
+      // 4000 to the right: off screen at 2000 in front, on it at 20000 in front
+      const close = triangleMesh([[4000, 0, 1000], [4008, 0, 1000], [4000, 0, 1008]]);
+      const distant = triangleMesh([[4000, 0, -17000], [4008, 0, -17000], [4000, 0, -16992]]);
+      expect(slstWords(zoneSlstItems([close, distant], [camera], 200, 0, true)[0]).words).toEqual([polyId(1, 0)]);
+    });
+  });
+
+  test("behind crash, a polygon far to the side is still listed", () => {
+    const near = triangleMesh([[0, 0, 1000], [8, 0, 1000], [0, 0, 1008]]);
+    const farRight = triangleMesh([[20000, 0, 1000], [20008, 0, 1000], [20000, 0, 1008]]);
+    expect(slstWords(zoneSlstItems([near, farRight], [[0, 0, 3000]], 200)[0]).words).toEqual([polyId(0, 0), polyId(1, 0)]);
+  });
 });

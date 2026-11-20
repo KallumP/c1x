@@ -2291,13 +2291,20 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
         zones.forEach((zone) => expect(headerOf(zone).worlds.length).toBeLessThanOrEqual(ZONE_WORLDS_MAX));
       });
 
-      test("a zone's sort list lists polygons of every mesh it draws", () => {
+      // the camera sees only a few metres either side of crash, so the game's
+      // limit of polygons drawn at once goes on what's on screen
+      test("a zone's sort lists leave out the zones too far left or right of the camera to see", () => {
         const middle = zones[1];
-        const sortList = built.entries.get(cameraPathOf(middle).slst)!;
-        const firstList = sortList.items[0];
-        const ids = Array.from({ length: firstList.readUInt16LE(0) }, (_, index) => firstList.readUInt16LE(4 + 2 * index));
-        const listedWorlds = new Set(ids.map((id) => (id >> 12) & 7));
-        expect(listedWorlds.size).toBe(headerOf(middle).worlds.length);
+        const items = built.entries.get(cameraPathOf(middle).slst)!.items;
+        const originXs = headerOf(middle).worlds.map(({ origin }) => origin[0]);
+        const listedOriginXs = (list: Buffer) => {
+          const ids = Array.from({ length: list.readUInt16LE(0) }, (_, index) => list.readUInt16LE(4 + 2 * index));
+          return new Set(ids.map((id) => originXs[(id >> 12) & 7]));
+        };
+        const leftX = Math.min(...originXs);
+        const rightX = Math.max(...originXs);
+        expect(listedOriginXs(items[0]).has(rightX)).toBe(false); // the camera at the zone's left end
+        expect(listedOriginXs(items[items.length - 1]).has(leftX)).toBe(false); // and at its right end
       });
 
       test("each zone's camera path runs along +x beside crash, out across from him", () => {

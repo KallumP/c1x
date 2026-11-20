@@ -20,6 +20,7 @@
 - the level editor's toolbar no longer gets squashed when an error shows
 - level build errors no longer list every allowed setting, song or type
 - a level build stopped by an outline without its switch now says which box
+- a detailed side-on level no longer loses its farthest walls
 
 ## 2026-11-19
 
