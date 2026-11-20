@@ -616,7 +616,7 @@ function readBoxType(fields: Record<string, unknown>, objectNumber: number): Pic
     return { box: fields.type as BoxType };
   }
   if (!isWhole(fields.subtype) || !BOX_SUBTYPES.includes(fields.subtype)) {
-    throw new Error(`object ${objectNumber}: a box's subtype should be one of ${BOX_SUBTYPES.join(", ")}`);
+    throw new Error(`object ${objectNumber}: unknown box subtype ${fields.subtype}`);
   }
   return { box: fields.subtype };
 }
