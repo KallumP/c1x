@@ -21,6 +21,13 @@
   min-height: 0;
 }
 
+/* the toolbar's buttons, level picker and build buttons keep their size, on one line */
+.toolbar > *,
+.level-actions > button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .toolbar button {
   padding: 4px 10px;
   background: #383a40;
