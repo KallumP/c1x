@@ -12,7 +12,7 @@
 - the level editor's rotating pegs are now **Pillars (rotating)**
 - a selected object's settings in the level editor start with its name
 - path warnings show only in a selected enemy's settings, not the level editor's top bar
-- an outline box without its switch is an error under the level editor's top bar; click it to select the box
+- an outline box without its switch shows a red note in its settings, not a count in the level editor's top bar
 
 ### Fixed
 

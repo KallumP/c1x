@@ -17,18 +17,6 @@
   overflow-wrap: anywhere;
 }
 
-/* a line in a strip that selects the object it's about */
-.strip-link {
-  padding: 0;
-  background: none;
-  border: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  text-decoration: underline dotted;
-  cursor: pointer;
-}
-
 /* a build's warnings, in the same place, in yellow */
 .warning-strip {
   grid-area: error;
