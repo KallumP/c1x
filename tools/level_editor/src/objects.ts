@@ -465,14 +465,6 @@ const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "d
 const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset", "platforms", "radius", "shake", "down", "delay"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
-// a word with "a" or "an" before it, as it sounds: "a box", "an enemy"
-const withArticle = (word: string) => {
-  if ("aeiou".includes(word.charAt(0))) {
-    return `an ${word}`;
-  }
-  return `a ${word}`;
-};
-
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 const isWhole = (value: unknown): value is number => isNumber(value) && Number.isInteger(value);
 const isPosition = (value: unknown): value is Vec3 => Array.isArray(value) && value.length === 3 && value.every(isNumber);
@@ -717,9 +709,7 @@ export function parseObjects(text: string): LevelObject[] {
     const allowedSettings = SETTINGS.concat(KIND_SETTINGS[kind as Kind] ?? []);
     const unknownSettings = Object.keys(fields).filter((setting) => !allowedSettings.includes(setting));
     if (unknownSettings.length) {
-      throw new Error(
-        `object ${objectNumber}: unknown setting ${unknownSettings[0]} (${withArticle(kind as Kind)} takes ${allowedSettings.join(", ")})`,
-      );
+      throw new Error(`object ${objectNumber}: unknown setting ${unknownSettings[0]}`);
     }
     if (ONCE.includes(kind as Kind) && objects.some((earlier) => earlier.kind === kind)) {
       throw new Error(`object ${objectNumber}: there's already a ${kind} (a level has one)`);
