@@ -5,6 +5,7 @@
 ### Added
 
 - rotating pots, platforms and pillars can go round the other way: **Reverse direction** in the level editor
+- copy and paste objects in the level editor with Ctrl+C and Ctrl+V
 
 ### Changed
 

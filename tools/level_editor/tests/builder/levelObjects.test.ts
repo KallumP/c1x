@@ -2,8 +2,9 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { boxInitFlagB, boxSubtype, readObjectsFile, toZone } from "../../builder/levelObjects";
+import { boxInitFlagB, boxSubtype, duplicateWarnings, readObjectsFile, toZone } from "../../builder/levelObjects";
 import type { LevelObject } from "../../src/objects";
+import { enemyObject } from "../helpers";
 
 // a temporary level source folder, holding objects.json with text (if given)
 function objectsFolder(text?: string): string {
@@ -13,6 +14,33 @@ function objectsFolder(text?: string): string {
   }
   return folder;
 }
+
+describe("duplicate objects", () => {
+  const box = (at: LevelObject["at"], more: Partial<LevelObject> = {}): LevelObject => ({ kind: "box", at, raise: 0, stack: 1, box: "basic", ...more });
+
+  test("an object the same as one before it, in the same spot, is warned about", () => {
+    expect(duplicateWarnings([box([1, 2, 3]), box([4, 5, 6]), box([1, 2, 3])])).toEqual([
+      "warning: object 3 (Basic box) is a duplicate of object 1, in the same spot",
+    ]);
+  });
+
+  test("each extra copy is warned about", () => {
+    expect(duplicateWarnings([box([0, 0, 0]), box([0, 0, 0]), box([0, 0, 0])])).toHaveLength(2);
+  });
+
+  test("a copied switch with its own number is still a duplicate", () => {
+    expect(duplicateWarnings([box([0, 0, 0], { box: "switch", switch: 1 }), box([0, 0, 0], { box: "switch", switch: 2 })])).toHaveLength(1);
+  });
+
+  test.each([
+    ["in another spot", box([1, 0, 0])],
+    ["raised", box([0, 0, 0], { raise: 1 })],
+    ["of another type", box([0, 0, 0], { box: "tnt" })],
+    ["another kind", enemyObject("crab", { at: [0, 0, 0] })],
+  ])("an object %s isn't a duplicate", (_, other) => {
+    expect(duplicateWarnings([box([0, 0, 0]), other])).toEqual([]);
+  });
+});
 
 describe("where an object is in the level", () => {
   test("blender's (x, y, z up) in metres is the zone's (x, z up, -y) scaled", () => {

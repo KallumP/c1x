@@ -8,7 +8,7 @@ interface EditorShortcutActions {
   buildAndBoot: () => void;
 }
 
-// the editor's keys: delete, escape, undo, redo, save, build, and build and boot
+// the editor's keys: delete, escape, copy, paste, undo, redo, save, build, and build and boot
 export function editorShortcuts(state: EditorState, dispatch: (action: EditorAction) => void, actions: EditorShortcutActions): Shortcuts {
   const removeSelected = () => {
     if (state.selected !== null) {
@@ -24,6 +24,8 @@ export function editorShortcuts(state: EditorState, dispatch: (action: EditorAct
       actions.stopPlacing();
       dispatch({ type: "select", index: null });
     },
+    "ctrl+c": () => dispatch({ type: "copy" }),
+    "ctrl+v": () => dispatch({ type: "paste" }),
     "ctrl+z": undo,
     "ctrl+y": redo,
     "ctrl+shift+z": redo,

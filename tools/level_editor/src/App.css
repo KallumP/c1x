@@ -17,6 +17,16 @@
   overflow-wrap: anywhere;
 }
 
+/* a build's warnings, in the same place, in yellow */
+.warning-strip {
+  grid-area: error;
+  padding: 6px 12px;
+  background: #3a3520;
+  color: #ffd54f;
+  border-bottom: 1px solid #111;
+  overflow-wrap: anywhere;
+}
+
 .toolbar {
   grid-area: toolbar;
   position: relative;

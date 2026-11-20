@@ -59,6 +59,7 @@ The level editor places Crash's spawn, the level's end, boxes, enemies and obsta
 
 Left-drag moves the camera, right-drag turns it, and the scroll wheel zooms. 
 Ctrl+Z undoes and Ctrl+Y redoes. 
+Ctrl+C copies the selected object, and Ctrl+V pastes a copy of it in the same spot, with the same settings, to drag where you want it. A copy left on top of its original is a warning when the level builds, but it still builds.
 
 A box outlined in red is stuck in a wall or another box (this doesn't stop the level from building), or is an outline whose switch isn't in the level (this does).
 

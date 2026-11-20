@@ -38,6 +38,7 @@ export interface EditorState {
   selectedNode: number | null; // a node of the selected crab's or turtle's path
   past: Objects[];   // what the objects were before each change, last change last
   future: Objects[]; // what undoing took back, last undone last
+  copied: LevelObject | null; // what ctrl+v pastes
 }
 
 export type EditorAction =
@@ -47,11 +48,13 @@ export type EditorAction =
   | { type: "remove"; index: number }
   | { type: "select"; index: number | null }
   | { type: "selectNode"; index: number; node: number } // an enemy, and a node of its path
+  | { type: "copy" } // the selected object
+  | { type: "paste" } // what's copied, where it was copied from
   | { type: "checkpoint" } // remember the objects now, as one change (a drag's start)
   | { type: "undo" }
   | { type: "redo" };
 
-export const emptyEditor: EditorState = { objects: [], selected: null, selectedNode: null, past: [], future: [] };
+export const emptyEditor: EditorState = { objects: [], selected: null, selectedNode: null, past: [], future: [], copied: null };
 
 const isEnemyType = (what: Placeable): what is EnemyType => (ENEMY_TYPES as readonly string[]).includes(what);
 
@@ -125,7 +128,7 @@ export function draggedBy(object: LevelObject, node: number | null, from: Vec3, 
 // a change to the objects, which undo takes back
 function change(state: EditorState, objects: Objects, selected: number | null): EditorState {
   const selectedNode = selected === state.selected ? nodeStillThere(state.selectedNode, selected, objects) : null;
-  return { objects, selected, selectedNode, past: [...state.past, state.objects], future: [] };
+  return { ...state, objects, selected, selectedNode, past: [...state.past, state.objects], future: [] };
 }
 
 // the lowest switch number (from 1) no switch among objects has
@@ -254,6 +257,28 @@ function remove(state: EditorState, index: number): EditorState {
   return change(state, objects, selected === index ? null : selected - 1);
 }
 
+// the selected object to copy: not the spawn or the end, as a level has one of
+// each, and without a switch's number, so its copy gets the next free one
+function selectedToCopy(state: EditorState): LevelObject | null {
+  if (state.selected === null) {
+    return null;
+  }
+  const object = state.objects[state.selected];
+  if (object.kind === "spawn" || object.kind === "end") {
+    return null;
+  }
+  const { switch: _number, ...copy } = object;
+  return copy;
+}
+
+// what's copied added where it was copied from, with all its settings
+function paste(state: EditorState): EditorState {
+  if (!state.copied) {
+    return state;
+  }
+  return add(state, state.copied);
+}
+
 // the selection, if there's still an object there
 const stillThere = (selected: number | null, objects: Objects) =>
   selected !== null && selected < objects.length ? selected : null;
@@ -265,7 +290,7 @@ function undo(state: EditorState): EditorState {
   }
   const selected = stillThere(state.selected, objects);
   const selectedNode = nodeStillThere(state.selectedNode, selected, objects);
-  return { objects, selected, selectedNode, past: state.past.slice(0, -1), future: [...state.future, state.objects] };
+  return { ...state, objects, selected, selectedNode, past: state.past.slice(0, -1), future: [...state.future, state.objects] };
 }
 
 function redo(state: EditorState): EditorState {
@@ -275,13 +300,13 @@ function redo(state: EditorState): EditorState {
   }
   const selected = stillThere(state.selected, objects);
   const selectedNode = nodeStillThere(state.selectedNode, selected, objects);
-  return { objects, selected, selectedNode, past: [...state.past, state.objects], future: state.future.slice(0, -1) };
+  return { ...state, objects, selected, selectedNode, past: [...state.past, state.objects], future: state.future.slice(0, -1) };
 }
 
 export function editorReducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
     case "load":
-      return { ...emptyEditor, objects: action.objects };
+      return { ...emptyEditor, objects: action.objects, copied: state.copied };
     case "add":
       return add(state, action.object);
     case "update":
@@ -292,6 +317,10 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       return { ...state, selected: action.index, selectedNode: null };
     case "selectNode":
       return { ...state, selected: action.index, selectedNode: action.node };
+    case "copy":
+      return { ...state, copied: selectedToCopy(state) };
+    case "paste":
+      return paste(state);
     case "checkpoint":
       return { ...state, past: [...state.past, state.objects], future: [] };
     case "undo":

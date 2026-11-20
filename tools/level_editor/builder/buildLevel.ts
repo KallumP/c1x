@@ -15,7 +15,7 @@ import { levelOptions, type LevelOptions } from "./levelCfg";
 import { setLoadingImage } from "./loadingImage";
 import { loadingImageFor } from "./loadingSign";
 import { readLevel } from "./levelFiles";
-import { readObjectsFile } from "./levelObjects";
+import { duplicateWarnings, readObjectsFile } from "./levelObjects";
 import { writeLevel } from "./levelWriting";
 import { makeMap } from "./makeMap";
 import { readMtl } from "./obj";
@@ -147,6 +147,7 @@ export function buildLevel(source: string, { streamsDir, levelsDir, log }: Build
     return false;
   }
   const { objPath, name, options, objects } = level;
+  duplicateWarnings(objects).forEach(log);
   try {
     const text = readFileSync(objPath, "utf8");
     writeGameTextures(dirname(objPath), streamsDir);

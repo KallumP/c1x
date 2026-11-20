@@ -3,7 +3,8 @@
 // editor's parseObjects (src/objects.ts), so the editor and the build agree
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BOX_TYPES, parseObjects, type LevelObject } from "../src/objects";
+import { objectName } from "../src/objectNames";
+import { BOX_TYPES, objectType, parseObjects, type LevelObject } from "../src/objects";
 import { IRON_OUTLINE, PLAIN_OUTLINE } from "./entities";
 import { turned } from "./obj";
 import type { Vec3 } from "./vectors";
@@ -51,6 +52,36 @@ export function boxInitFlagB(object: LevelObject): number {
     return 0;
   }
   return OUTLINE_INIT_FLAG_B;
+}
+
+// what makes two objects duplicates: the same kind and type, in the same
+// spot, raised the same (a copied switch's own number doesn't count)
+const duplicateKey = (object: LevelObject) =>
+  JSON.stringify([object.kind, object.box, objectType(object), object.at, object.raise]);
+
+// what an object is called in a warning: its palette name, with "box" after a box's type
+function warningName(object: LevelObject): string {
+  if (object.kind === "box") {
+    return `${objectName(object)} box`;
+  }
+  return objectName(object);
+}
+
+// a warning for each object that's a duplicate of one before it (numbered
+// from 1, as in objects.json), most likely pasted and not moved
+export function duplicateWarnings(objects: LevelObject[]): string[] {
+  const firstNumbers = new Map<string, number>();
+  const warnings: string[] = [];
+  objects.forEach((object, index) => {
+    const key = duplicateKey(object);
+    const first = firstNumbers.get(key);
+    if (first === undefined) {
+      firstNumbers.set(key, index + 1);
+      return;
+    }
+    warnings.push(`warning: object ${index + 1} (${warningName(object)}) is a duplicate of object ${first}, in the same spot`);
+  });
+  return warnings;
 }
 
 // the objects the objects.json in folder places (none without one); a bad one is an error naming it

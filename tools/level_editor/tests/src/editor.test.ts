@@ -328,3 +328,67 @@ describe("outlineChoices", () => {
     expect(outlineChoices([switchBox(1), switchBox(2, 1), switchBox(3)], 1)).toEqual([1, 3]);
   });
 });
+
+describe("copying", () => {
+  const copied = (state: EditorState) => editorReducer(state, { type: "copy" }).copied;
+
+  test("copies the selected object", () => {
+    const state = editorReducer(withObjects([box(1), enemyObject("crab", { at: [2, 0, 0] })]), { type: "select", index: 1 });
+    expect(copied(state)).toEqual(enemyObject("crab", { at: [2, 0, 0] }));
+  });
+
+  test("copies nothing with nothing selected", () => {
+    expect(copied(withObjects([box(1)]))).toBeNull();
+  });
+
+  test("doesn't copy the spawn or the end, as a level has one of each", () => {
+    const state = editorReducer(withObjects([newObject("spawn", [0, 0, 0])]), { type: "select", index: 0 });
+    expect(copied(state)).toBeNull();
+  });
+
+  test("a copied switch leaves its number behind, so its copy gets the next free one", () => {
+    const state = editorReducer(withObjects([{ ...newObject("switch", [0, 0, 0]), switch: 1 }]), { type: "select", index: 0 });
+    expect(copied(state)).not.toHaveProperty("switch");
+  });
+
+  test("what's copied stays copied when another level opens", () => {
+    const state = editorReducer(editorReducer(withObjects([box(1)]), { type: "select", index: 0 }), { type: "copy" });
+    expect(editorReducer(state, { type: "load", objects: [] }).copied).toEqual(box(1));
+  });
+});
+
+describe("pasting", () => {
+  const copying = (objects: LevelObject[], index: number) =>
+    editorReducer(editorReducer(withObjects(objects), { type: "select", index }), { type: "copy" });
+
+  test("pastes what's copied on top of where it was copied from, and selects it", () => {
+    const state = editorReducer(copying([box(1), box(2)], 0), { type: "paste" });
+    expect(state.objects).toEqual([box(1), box(2), box(1)]);
+    expect(state.selected).toBe(2);
+  });
+
+  test("a pasted switch gets the next free number", () => {
+    const state = editorReducer(copying([{ ...newObject("switch", [0, 0, 0]), switch: 1 }], 0), { type: "paste" });
+    expect(state.objects[1].switch).toBe(2);
+  });
+
+  test("a pasted object has all the settings of what was copied", () => {
+    const platform = obstacleObject("moving_platform", { at: [1, 0, 0], raise: 2, stack: 3, speed: 4, reverse: true, path: [[0, 0, 0], [5, 0, 0]] });
+    const outline = { ...box(2), raise: 1, stack: 2, outline: 1 };
+    const switchBox = { ...newObject("switch", [3, 0, 0]), switch: 1 };
+    const level = [switchBox, platform, outline];
+    const pastedFrom = (index: number) => editorReducer(copying(level, index), { type: "paste" }).objects.at(-1);
+    expect(pastedFrom(1)).toEqual(platform);
+    expect(pastedFrom(2)).toEqual(outline);
+  });
+
+  test("pastes nothing with nothing copied", () => {
+    const state = withObjects([box(1)]);
+    expect(editorReducer(state, { type: "paste" })).toBe(state);
+  });
+
+  test("pasting can be undone", () => {
+    const state = editorReducer(editorReducer(copying([box(1)], 0), { type: "paste" }), { type: "undo" });
+    expect(state.objects).toEqual([box(1)]);
+  });
+});

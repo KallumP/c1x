@@ -74,7 +74,12 @@ export default function App() {
   useUnsavedWarning(unsaved);
   const levelActions = useLevelActions(level, unsaved, save);
 
-  useEditorShortcuts(state, dispatch, { stopPlacing: () => setTool(SELECT), save, build: levelActions.build, buildAndBoot: levelActions.buildAndBoot });
+  useEditorShortcuts(state, dispatch, {
+    stopPlacing: () => setTool(SELECT),
+    save,
+    build: levelActions.build,
+    buildAndBoot: levelActions.buildAndBoot,
+  });
 
   const openLevel = (name: string) => {
     if (!confirmDiscard(unsaved)) {
@@ -168,6 +173,22 @@ export default function App() {
     );
   };
 
+  // a build's warnings, under the toolbar where an error would be
+  const renderBuildWarningStrip = () => {
+    const { warnings } = levelActions;
+    if (warnings.length === 0) {
+      return null;
+    }
+    return (
+      <div className="warning-strip" role="status">
+        {warnings.map((warning, index) => <div key={index}>Warning: {warning}</div>)}
+      </div>
+    );
+  };
+
+  // the error strip, or else a build's warnings
+  const renderMessageStrip = () => renderErrorStrip() ?? renderBuildWarningStrip();
+
   const renderHeader = () => (
     <header className="toolbar">
       <LevelPicker levels={levels} level={level} onOpen={openLevel} />
@@ -209,7 +230,7 @@ export default function App() {
   return (
     <div className="app">
       {renderHeader()}
-      {renderErrorStrip()}
+      {renderMessageStrip()}
       <Palette tool={tool} onTool={setTool} grid={grid} onGrid={setGrid} />
       {renderMain()}
       <PropertiesPanel

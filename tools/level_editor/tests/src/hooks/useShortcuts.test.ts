@@ -23,6 +23,12 @@ describe("shortcutToRun", () => {
     expect(shortcutToRun(shortcuts, press("s", { ctrl: true }), true)).toBe(save);
   });
 
+  test("leaves copying and pasting to a field being typed in", () => {
+    const copying = { "ctrl+c": () => {}, "ctrl+v": () => {} };
+    expect(shortcutToRun(copying, press("c", { ctrl: true }), true)).toBeUndefined();
+    expect(shortcutToRun(copying, press("v", { ctrl: true }), true)).toBeUndefined();
+  });
+
   test("runs function keys while typing", () => {
     // they type nothing, and F5 would reload the page
     expect(shortcutToRun(shortcuts, press("F5"), true)).toBe(buildAndBoot);
