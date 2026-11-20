@@ -1,7 +1,26 @@
 // a level's objects, each drawn where the game puts it, sized by the level's scale
 import { Edges, Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { batSwoop, blenderToView, labAssistantThrow, leaderBatsFlight, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, mossySlideEnd, rising, stackCentres, stonePath, stoneRolling, STONE_TRACK } from "../coords";
+import { Quaternion, Vector3 } from "three";
+import {
+  batSwoop,
+  blenderToView,
+  labAssistantThrow,
+  leaderBatsFlight,
+  boxSize,
+  cameraFacing,
+  circlePoint,
+  enemyTurn,
+  facingFrom,
+  fishLeap,
+  mossySlideEnd,
+  rising,
+  rotatingArrow,
+  stackCentres,
+  stonePath,
+  stoneRolling,
+  STONE_TRACK,
+} from "../coords";
 import { boxStyle, ENEMY_COLOURS, OBSTACLE_COLOURS, SELECTED_COLOUR, SPAWN_COLOUR, WARNING_COLOUR, type BoxStyle } from "../objectStyles";
 import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
@@ -529,23 +548,37 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // rotating pots, platforms or pegs: as many as go round, spread round the
-  // circle they go round (as far out as set), and the circle
+  // circle they go round (as far out as set), and the circle with an arrow the way they go round
   const renderRotating = (object: LevelObject, index: number) => {
     const type = object.obstacle as ModelledObstacle;
     const [x, y, z] = object.at;
     const middle: Vec3 = [x, y, z + object.raise];
     const radius = numberSetting(object, "radius");
-    const [across, up] = rotatingCircleAxes(object);
-    const pointAt = (angle: number) =>
-      middle.map((value, axis) => value + radius * (across[axis] * Math.cos(angle) + up[axis] * Math.sin(angle))) as Vec3;
+    const axes = rotatingCircleAxes(object);
+    const pointAt = (angle: number) => circlePoint(middle, radius, axes, angle);
     const count = rotatingCount(object);
     const angles = Array.from({ length: count }, (_, platform) => (2 * Math.PI * platform) / count);
     const circle = Array.from({ length: CIRCLE_POINTS + 1 }, (_, point) => blenderToView(pointAt((2 * Math.PI * point) / CIRCLE_POINTS)));
+    const colour = pathColour(index, OBSTACLE_COLOURS[type]);
+    const arrow = rotatingArrow(middle, radius, axes, count, object.reverse === true);
     return (
       <>
         {angles.map((angle, platform) => renderShapeModel(OBSTACLE_SHAPES[type], blenderToView(pointAt(angle)), index, platform))}
-        <Line points={circle} color={pathColour(index, OBSTACLE_COLOURS[type])} lineWidth={2} />
+        <Line points={circle} color={colour} lineWidth={2} />
+        {renderCircleArrow(arrow.at, arrow.pointing, colour)}
       </>
+    );
+  };
+
+  // an arrowhead at a point (blender), pointing along a direction (blender)
+  const renderCircleArrow = (at: Vec3, pointing: Vec3, colour: string) => {
+    const size = boxSize(scale);
+    const facing = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(...blenderToView(pointing)).normalize());
+    return (
+      <mesh position={blenderToView(at)} quaternion={facing}>
+        <coneGeometry args={[size * 0.25, size * 0.6, 12]} />
+        <meshBasicMaterial color={colour} />
+      </mesh>
     );
   };
 
