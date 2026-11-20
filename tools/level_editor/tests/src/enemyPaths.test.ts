@@ -1,6 +1,30 @@
 import { describe, expect, test } from "vitest";
-import { defaultPath, enemyPath, handleLifts, nodeCount, nodeHeading, pathLength, pathPositions, nodesUnderEnds, nodeTurnedRound, pointAlongShare, respaced, turnedRound, withNodeAt, withNodeCount } from "../../src/enemyPaths";
-import { batSwoopEnd, labAssistantThrow, LEAF_DRIFT, leafDrift, leaderBatsGap } from "../../src/coords";
+import {
+  defaultPath,
+  enemyPath,
+  handleLifts,
+  nodeCount,
+  nodeHeading,
+  pathLength,
+  pathObstacleTurn,
+  pathPositions,
+  nodesUnderEnds,
+  nodeTurnedRound,
+  pointAlongShare,
+  respaced,
+  turnedRound,
+  withNodeAt,
+  withNodeCount,
+} from "../../src/enemyPaths";
+import {
+  batSwoopEnd,
+  enemyTurn,
+  facingFrom,
+  labAssistantThrow,
+  LEAF_DRIFT,
+  leafDrift,
+  leaderBatsGap,
+} from "../../src/coords";
 import { LAB_ASSISTANT_REACH } from "../../src/labAssistantThrow";
 import { PATH_NODES_MAX, type LevelObject, type Vec3 } from "../../src/objects";
 import { enemyObject, expectCloseTo, noMinusZero, obstacleObject } from "../helpers";
@@ -311,5 +335,18 @@ describe("a floating leaf's path", () => {
     expect(moved.length).toBe(LEAF_DRIFT.length);
     expect(moved[12]).toEqual([4, 3, 0]);
     expectCloseTo(moved[1], enemyPath(leaf(), 0, 400)[1]);
+  });
+});
+
+describe("which way a path obstacle faces in the editor", () => {
+  const ACROSS: [Vec3, Vec3] = [[0, 0, 0], [3, 0, 0]];
+
+  test.each([0, 270])("a moving or lift platform faces the player, whichever way its path runs, as the game's (turn %i)", (turn) => {
+    expect(pathObstacleTurn("moving_platform", ...ACROSS, turn)).toBe(enemyTurn(turn));
+    expect(pathObstacleTurn("lift_platform", ...ACROSS, turn)).toBe(enemyTurn(turn));
+  });
+
+  test("a sliding pillar faces the way its path runs", () => {
+    expect(pathObstacleTurn("sliding_pillar", ...ACROSS, 0)).toBe(facingFrom(...ACROSS, 0));
   });
 });
