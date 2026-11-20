@@ -15,7 +15,7 @@ import { levelOptions, type LevelOptions } from "./levelCfg";
 import { setLoadingImage } from "./loadingImage";
 import { loadingImageFor } from "./loadingSign";
 import { readLevel } from "./levelFiles";
-import { duplicateWarnings, readObjectsFile } from "./levelObjects";
+import { checkOutlinesHaveSwitches, duplicateWarnings, readObjectsFile } from "./levelObjects";
 import { writeLevel } from "./levelWriting";
 import { makeMap } from "./makeMap";
 import { readMtl } from "./obj";
@@ -120,7 +120,9 @@ interface LevelSource {
 function readLevelSource(source: string): LevelSource {
   const { objPath, name } = levelSource(source);
   const folder = dirname(objPath);
-  return { objPath, name, options: levelOptions(folder), objects: readObjectsFile(folder) };
+  const objects = readObjectsFile(folder);
+  checkOutlinesHaveSwitches(objects);
+  return { objPath, name, options: levelOptions(folder), objects };
 }
 
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
