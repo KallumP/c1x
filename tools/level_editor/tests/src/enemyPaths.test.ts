@@ -6,6 +6,7 @@ import {
   nodeCount,
   nodeHeading,
   pathLength,
+  pathDrawnOffset,
   pathObstacleTurn,
   pathPositions,
   nodesUnderEnds,
@@ -348,5 +349,17 @@ describe("which way a path obstacle faces in the editor", () => {
 
   test("a sliding pillar faces the way its path runs", () => {
     expect(pathObstacleTurn("sliding_pillar", ...ACROSS, 0)).toBe(facingFrom(...ACROSS, 0));
+  });
+});
+
+describe("where a path obstacle's path is drawn in the editor", () => {
+  // slippery climb's platforms' slab runs 797 out towards the player from its spot (PlPyV)
+  test("a moving or lift platform's runs through its slab's middle, out towards the player", () => {
+    expectCloseTo(pathDrawnOffset("moving_platform", 0, 400), [0, -797 / 2 / 400, 0]);
+    expectCloseTo(pathDrawnOffset("lift_platform", 270, 400), [797 / 2 / 400, 0, 0]);
+  });
+
+  test("any other's runs through its nodes", () => {
+    expect(pathDrawnOffset("sliding_pillar", 0, 400)).toEqual([0, 0, 0]);
   });
 });
