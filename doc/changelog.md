@@ -11,11 +11,14 @@
 
 - the level editor's rotating pegs are now **Pillars (rotating)**
 - a selected object's settings in the level editor start with its name
+- path warnings show only in a selected enemy's settings, not the level editor's top bar
+- an outline box without its switch is an error under the level editor's top bar; click it to select the box
 
 ### Fixed
 
 - the level editor's toolbar no longer gets squashed when an error shows
 - level build errors no longer list every allowed setting, song or type
+- a level build stopped by an outline without its switch now says which box
 
 ## 2026-11-19
 
