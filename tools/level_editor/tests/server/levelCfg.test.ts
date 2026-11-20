@@ -138,7 +138,7 @@ describe("setLevelCfg", () => {
   });
 
   test("refuses music that isn't one of the soundtracks", () => {
-    expect(() => setLevelCfg("", cfg({ music: "sunset_vista" }))).toThrow("music has to be one of");
+    expect(() => setLevelCfg("", cfg({ music: "sunset_vista" }))).toThrow(/^music has to be one of the game's songs, or an audio file, not sunset_vista$/);
   });
 
   test("refuses a turn the build can't do", () => {

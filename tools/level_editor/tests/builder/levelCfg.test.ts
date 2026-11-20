@@ -106,16 +106,16 @@ describe("a bad level.cfg is an error naming it and its line", () => {
     expect(readError("camera_angle = 30.5\n")).toThrow(/camera_angle has to be a whole number, not 30\.5/);
   });
 
-  test("music that isn't one of the soundtracks, listing them", () => {
-    expect(readError("music = sunset_vista\n")).toThrow(/level\.cfg, line 1: music has to be one of n_sanity_beach, jungle_rollers, .*, not sunset_vista/);
+  test("music that isn't one of the soundtracks, without listing them", () => {
+    expect(readError("music = sunset_vista\n")).toThrow(/level\.cfg, line 1: music has to be one of the game's songs, or an audio file in the level's folder, not sunset_vista$/);
   });
 
   test("music naming an audio file the level's folder doesn't have", () => {
     expect(readError("music = missing.mp3\n")).toThrow(/level\.cfg, line 1: music is missing\.mp3, but the level's folder has no file called that/);
   });
 
-  test("music naming a file that isn't audio the game plays, listing the kinds it does", () => {
-    expect(readError("music = notes.txt\n")).toThrow(/music has to be one of n_sanity_beach, .*, or an audio file in the level's folder \(\.mp3, \.ogg, \.flac, \.wav\), not notes\.txt/);
+  test("music naming a file that isn't audio the game plays", () => {
+    expect(readError("music = notes.txt\n")).toThrow(/music has to be one of the game's songs, or an audio file in the level's folder, not notes\.txt$/);
   });
 
   test("a song volume out of its range, or not a whole percent", () => {
