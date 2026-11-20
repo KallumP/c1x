@@ -19,6 +19,7 @@ import { useLevels } from "./hooks/useLevels";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
 import { useOutlineWarnings, usePathWarnings, useTriangles, useWarnings } from "./hooks/useWarnings";
+import { switchlessOutlineErrors } from "./switchWarnings";
 import { clickedFloor, isClick } from "./three/clicks";
 import "./App.css";
 
@@ -105,15 +106,15 @@ export default function App() {
     }
   };
 
-  const renderOutlineWarningCount = () => {
-    if (outlineWarnings.size === 0) {
-      return null;
-    }
-    if (outlineWarnings.size === 1) {
-      return <span className="warning">1 outline's switch isn't in the level</span>;
-    }
-    return <span className="warning">{outlineWarnings.size} outlines' switches aren't in the level</span>;
-  };
+  // the outlines whose switch isn't in the level, each a line that selects its box
+  const renderOutlineErrors = () =>
+    switchlessOutlineErrors(state.objects).map(({ index, text }) => (
+      <div key={index}>
+        <button className="strip-link" onClick={() => dispatch({ type: "select", index })} title="Select this box">
+          {text}
+        </button>
+      </div>
+    ));
 
   const renderHistoryButtons = () => (
     <>
@@ -151,16 +152,17 @@ export default function App() {
     );
   };
 
-  // the level's error and a failed build's, in full under the toolbar
+  // the level's error, a failed build's, and outlines without their switch, in full under the toolbar
   const renderErrorStrip = () => {
     const failedAction = levelActions.status?.failed ? levelActions.status : null;
-    if (!error && !failedAction) {
+    if (!error && !failedAction && outlineWarnings.size === 0) {
       return null;
     }
     return (
       <div className="error error-strip" role="alert">
         {error && <div>{error}</div>}
         {failedAction && <div title={failedAction.detail}>{failedAction.text}</div>}
+        {renderOutlineErrors()}
       </div>
     );
   };
@@ -186,7 +188,6 @@ export default function App() {
       <LevelPicker levels={levels} level={level} onOpen={openLevel} />
       {renderHistoryButtons()}
       {renderSaveButton()}
-      {renderOutlineWarningCount()}
       {renderLevelActions()}
       {(isSaving || levelActions.isBusy) && <div className="progress" role="progressbar" aria-label="Working" />}
     </header>

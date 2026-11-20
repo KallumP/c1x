@@ -3,7 +3,7 @@
 // editor's parseObjects (src/objects.ts), so the editor and the build agree
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { objectName } from "../src/objectNames";
+import { messageName } from "../src/objectNames";
 import { switchlessOutlines } from "../src/switchWarnings";
 import { BOX_TYPES, objectType, parseObjects, type LevelObject } from "../src/objects";
 import { IRON_OUTLINE, PLAIN_OUTLINE } from "./entities";
@@ -59,14 +59,6 @@ export function boxInitFlagB(object: LevelObject): number {
 // spot, raised the same (a copied switch's own number doesn't count)
 const duplicateKey = (object: LevelObject) =>
   JSON.stringify([object.kind, object.box, objectType(object), object.at, object.raise]);
-
-// what an object is called in a warning or an error: its palette name, with "box" after a box's type
-function messageName(object: LevelObject): string {
-  if (object.kind === "box") {
-    return `${objectName(object)} box`;
-  }
-  return objectName(object);
-}
 
 // a warning for each object that's a duplicate of one before it (numbered
 // from 1, as in objects.json), most likely pasted and not moved
