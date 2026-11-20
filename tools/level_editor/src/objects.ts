@@ -479,24 +479,22 @@ const isPosition = (value: unknown): value is Vec3 => Array.isArray(value) && va
 
 // an enemy's type, from its fields in objects.json
 function readEnemy(fields: Record<string, unknown>, objectNumber: number): Pick<LevelObject, "enemy"> {
-  const enemyTypes = ENEMY_TYPES.join(", ");
   if (!("type" in fields)) {
-    throw new Error(`object ${objectNumber}: an enemy needs a type (${enemyTypes})`);
+    throw new Error(`object ${objectNumber}: an enemy needs a type`);
   }
   if (!ENEMY_TYPES.includes(fields.type as EnemyType)) {
-    throw new Error(`object ${objectNumber}: unknown enemy type ${fields.type} (it can be ${enemyTypes})`);
+    throw new Error(`object ${objectNumber}: unknown enemy type ${fields.type}`);
   }
   return { enemy: fields.type as EnemyType };
 }
 
 // an obstacle's type, from its fields in objects.json
 function readObstacle(fields: Record<string, unknown>, objectNumber: number): Pick<LevelObject, "obstacle"> {
-  const obstacleTypes = OBSTACLE_TYPES.join(", ");
   if (!("type" in fields)) {
-    throw new Error(`object ${objectNumber}: an obstacle needs a type (${obstacleTypes})`);
+    throw new Error(`object ${objectNumber}: an obstacle needs a type`);
   }
   if (!OBSTACLE_TYPES.includes(fields.type as ObstacleType)) {
-    throw new Error(`object ${objectNumber}: unknown obstacle type ${fields.type} (it can be ${obstacleTypes})`);
+    throw new Error(`object ${objectNumber}: unknown obstacle type ${fields.type}`);
   }
   return { obstacle: fields.type as ObstacleType };
 }
@@ -616,13 +614,12 @@ function readReverse(fields: Record<string, unknown>, type: ObjectType, objectNu
 
 // a box's type, from its fields in objects.json: its type name or its subtype number
 function readBoxType(fields: Record<string, unknown>, objectNumber: number): Pick<LevelObject, "box"> {
-  const boxTypes = Object.keys(BOX_TYPES).join(", ");
   if (("type" in fields) === ("subtype" in fields)) {
-    throw new Error(`object ${objectNumber}: a box needs a type (${boxTypes}) or a subtype number, not both`);
+    throw new Error(`object ${objectNumber}: a box needs a type or a subtype number, not both`);
   }
   if ("type" in fields) {
     if (!(typeof fields.type === "string" && fields.type in BOX_TYPES)) {
-      throw new Error(`object ${objectNumber}: unknown box type ${fields.type} (it can be ${boxTypes})`);
+      throw new Error(`object ${objectNumber}: unknown box type ${fields.type}`);
     }
     return { box: fields.type as BoxType };
   }
@@ -714,7 +711,7 @@ export function parseObjects(text: string): LevelObject[] {
       throw new Error(`object ${objectNumber} has no kind`);
     }
     if (!KINDS.includes(kind as Kind)) {
-      throw new Error(`object ${objectNumber}: unknown kind ${kind} (it can be ${KINDS.join(", ")})`);
+      throw new Error(`object ${objectNumber}: unknown kind ${kind}`);
     }
 
     const allowedSettings = SETTINGS.concat(KIND_SETTINGS[kind as Kind] ?? []);
