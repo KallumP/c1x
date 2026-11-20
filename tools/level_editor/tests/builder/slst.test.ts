@@ -144,9 +144,9 @@ describe("sort lists", () => {
     });
 
     test("sees further either side the further away a polygon is", () => {
-      // 2000 to the right: off screen at 2000 in front, on it at 20000 in front
-      const close = triangleMesh([[2000, 0, 1000], [2008, 0, 1000], [2000, 0, 1008]]);
-      const distant = triangleMesh([[2000, 0, -17000], [2008, 0, -17000], [2000, 0, -16992]]);
+      // 4000 to the right: off screen at 2000 in front, on it at 20000 in front
+      const close = triangleMesh([[4000, 0, 1000], [4008, 0, 1000], [4000, 0, 1008]]);
+      const distant = triangleMesh([[4000, 0, -17000], [4008, 0, -17000], [4000, 0, -16992]]);
       expect(slstWords(zoneSlstItems([close, distant], [camera], 200, 0, true)[0]).words).toEqual([polyId(1, 0)]);
     });
   });

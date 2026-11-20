@@ -82,16 +82,55 @@ export function slstChange(before: number[], after: number[]): Buffer {
   return slstItem(SLST_CHANGE, [split, swaps, ...removes, ...adds]);
 }
 
+// how far a side view sees either side of its camera: this much for each unit
+// in front of it (the game's view is about 0.8), and a margin
+const SIDE_VIEW_SLOPE = 1;
+const SIDE_VIEW_MARGIN = 512;
+
+// where a polygon is across a side view: its least and greatest x, and its
+// farthest place along the view
+export interface SideExtent {
+  xMin: number;
+  xMax: number;
+  far: number;
+}
+
+// a side view's camera on its way from x to the next point's x
+interface SideCamera {
+  x: number;
+  nextX: number;
+}
+
 interface ListedPolygon {
   zmax: number;
   zmid: number;
   id: number;
+  side?: SideExtent;
 }
 
-// the polygons in front of a camera at cameraZ for the whole step to the next
+// whether a side view sees a polygon from a camera at cameraZ anywhere on its
+// way along x; the further away the polygon, the more the view takes in either side
+function isAlongside({ xMin, xMax, far }: SideExtent, cameraZ: number, { x, nextX }: SideCamera): boolean {
+  const reach = (cameraZ - far) * SIDE_VIEW_SLOPE + SIDE_VIEW_MARGIN;
+  return xMax >= Math.min(x, nextX) - reach && xMin <= Math.max(x, nextX) + reach;
+}
+
+// whether a polygon is on screen: in front of the camera for the whole step to
+// the next point, and in a side view, near enough either side of it
+function isOnScreen(polygon: ListedPolygon, cameraZ: number, step: number, near: number, side?: SideCamera): boolean {
+  if (polygon.zmax >= cameraZ - step - near) {
+    return false;
+  }
+  if (!side || !polygon.side) {
+    return true;
+  }
+  return isAlongside(polygon.side, cameraZ, side);
+}
+
+// the polygons on screen from a camera at cameraZ for the whole step to the next
 // point, at most POLY_IDS_MAX (the nearest), farthest first by their middles
-function listAt(polygons: ListedPolygon[], cameraZ: number, step: number, near: number): number[] {
-  let front = polygons.filter(({ zmax }) => zmax < cameraZ - step - near);
+function listAt(polygons: ListedPolygon[], cameraZ: number, step: number, near: number, side?: SideCamera): number[] {
+  let front = polygons.filter((polygon) => isOnScreen(polygon, cameraZ, step, near, side));
   if (front.length > POLY_IDS_MAX) { // too many to list: leave out the farthest
     front = [...front].sort((first, second) => second.zmax - first.zmax).slice(0, POLY_IDS_MAX);
   }
@@ -112,19 +151,50 @@ function listAt(polygons: ListedPolygon[], cameraZ: number, step: number, near: 
 // change from point k-1's list to point k's. as every list is in the same
 // order, a change is only what comes into view and what leaves it, so a long
 // path stays small
-export function slstItems(worldZmax: number[][], cameraZs: number[], step: number, near: number, worldZmid = worldZmax): Buffer[] {
-  const polygons = worldZmax.flatMap((zmaxes, world) =>
-    zmaxes.map((zmax, index) => ({ zmax, zmid: worldZmid[world][index], id: polyId(world, index) })));
-  const lists = cameraZs.map((cameraZ) => listAt(polygons, cameraZ, step, near));
+//
+// a side view (sideView: each world's polygons' extents across it, and the
+// cameras' x) lists only the polygons near enough either side of the camera to see
+export function slstItems(
+  worldZmax: number[][],
+  cameraZs: number[],
+  step: number,
+  near: number,
+  worldZmid = worldZmax,
+  sideView?: SideView,
+): Buffer[] {
+  const polygons = worldZmax.flatMap((zmaxes, world) => zmaxes.map((zmax, index) => ({
+    zmax,
+    zmid: worldZmid[world][index],
+    id: polyId(world, index),
+    side: sideView?.extents[world][index],
+  })));
+  const lists = cameraZs.map((cameraZ, index) => listAt(polygons, cameraZ, step, near, sideCameraAt(sideView, index)));
   const changes = lists.slice(1).map((list, index) => slstChange(lists[index], list));
   return [slstFull(lists[0]), ...changes, slstFull(lists[lists.length - 1])];
 }
 
-// a world mesh a zone's sort list covers, with its z offset into the zone's frame
+// a side view's polygons' extents across it, by world, and its cameras' x
+export interface SideView {
+  extents: SideExtent[][];
+  cameraXs: number[];
+}
+
+// the side view's camera at a point, on its way to the next (staying put at the last)
+function sideCameraAt(sideView: SideView | undefined, index: number): SideCamera | undefined {
+  if (!sideView) {
+    return undefined;
+  }
+  const { cameraXs } = sideView;
+  return { x: cameraXs[index], nextX: cameraXs[index + 1] ?? cameraXs[index] };
+}
+
+// a world mesh a zone's sort list covers, with its offset into the zone's frame
+// along z, and along x (a side view's neighbouring zones)
 export interface ListedMesh {
   vertices: WorldVertex[];
   polygons: BuiltPolygon[];
   zOffset: number;
+  xOffset?: number;
 }
 
 // how far a point is along a camera's view, backwards: its z and height seen by
@@ -157,12 +227,33 @@ function polygonMiddles({ vertices, polygons, zOffset }: ListedMesh): number[] {
   });
 }
 
+// each mesh's polygons' extents across a side view: their corners' least and
+// greatest x (offset into the zone's frame) and farthest place along the view
+function polygonSideExtents({ vertices, polygons, zOffset, xOffset = 0 }: ListedMesh, lookDown: number): SideExtent[] {
+  return polygons.map(({ corners }) => {
+    const points = corners.map((index) => vertices[index].at);
+    const xs = points.map(([x]) => x + xOffset);
+    const places = points.map(([, height, z]) => backAlongView(z + zOffset, height, lookDown));
+    return { xMin: Math.min(...xs), xMax: Math.max(...xs), far: Math.min(...places) };
+  });
+}
+
+// a side view of the meshes from the cameras, or none for a view from behind
+function sideViewOf(listed: ListedMesh[], cameras: Vec3[], lookDown: number, isSideView: boolean): SideView | undefined {
+  if (!isSideView) {
+    return undefined;
+  }
+  return { extents: listed.map((mesh) => polygonSideExtents(mesh, lookDown)), cameraXs: cameras.map(([x]) => x) };
+}
+
 // slstItems for a zone's path (its cameras' points, looking lookDown below level)
-// over the meshes it lists: its own (offset 0) and the next zone's, further along
-// -z. a camera looking down sees the floor reaching back under it, so whether a
-// polygon is in front is taken along its view, not along z
-export function zoneSlstItems(listed: ListedMesh[], cameras: Vec3[], step: number, lookDown = 0): Buffer[] {
+// over the meshes it lists: its own (offset 0) and its neighbours'. a camera
+// looking down sees the floor reaching back under it, so whether a polygon is
+// in front is taken along its view, not along z. a side view lists only what's
+// near enough either side of the camera to see
+export function zoneSlstItems(listed: ListedMesh[], cameras: Vec3[], step: number, lookDown = 0, isSideView = false): Buffer[] {
   const worldPlaces = listed.map((mesh) => polygonPlaces(mesh, lookDown));
   const viewStep = step * Math.cos(lookDown);
-  return slstItems(worldPlaces, cameraPlaces(cameras, lookDown), viewStep, SLST_NEAR, listed.map(polygonMiddles));
+  const sideView = sideViewOf(listed, cameras, lookDown, isSideView);
+  return slstItems(worldPlaces, cameraPlaces(cameras, lookDown), viewStep, SLST_NEAR, listed.map(polygonMiddles), sideView);
 }

@@ -128,6 +128,7 @@ function zonePath(assembly: Assembly, zoneIndex: number, neighbours: number[]): 
   const listed = drawnZones(assembly, zoneIndex).flatMap((drawn) => zones[drawn].worlds.map((world) => ({
     ...world,
     zOffset: zones[drawn].offset[2] - zone.offset[2],
+    xOffset: zones[drawn].offset[0] - zone.offset[0],
   })));
   const path = pathBytes({
     slst: sortListEid(zoneIndex),
@@ -139,7 +140,9 @@ function zonePath(assembly: Assembly, zoneIndex: number, neighbours: number[]): 
     links: pathLinks(zones, zoneIndex, neighbours),
     followHeight: cameraOffsets(camera).height,
   });
-  const sortList = { eid: sortListEid(zoneIndex), type: ENTRY_SLST, items: zoneSlstItems(listed, zone.points, step, lookDown(rotation)) };
+  const isSideView = camera.view === "side";
+  const items = zoneSlstItems(listed, zone.points, step, lookDown(rotation), isSideView);
+  const sortList = { eid: sortListEid(zoneIndex), type: ENTRY_SLST, items };
   return { path, sortList };
 }
 
