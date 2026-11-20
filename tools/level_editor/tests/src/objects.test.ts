@@ -49,9 +49,9 @@ describe("parseObjects", () => {
     ['[{"kind": "spawn", "at": [0, 0, 0], "raise": "up"}]', "object 1: raise should be"],
     ['[{"kind": "box", "at": [0, 0, 0]}]', /^object 1: a box needs a type or a subtype number, not both$/],
     ['[{"kind": "box", "type": "nitro", "at": [0, 0, 0]}]', /^object 1: unknown box type nitro$/],
-    ['[{"kind": "box", "subtype": 1, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
-    ['[{"kind": "box", "subtype": 12, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
-    ['[{"kind": "box", "subtype": 13, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
+    ['[{"kind": "box", "subtype": 1, "at": [0, 0, 0]}]', /^object 1: unknown box subtype 1$/],
+    ['[{"kind": "box", "subtype": 12, "at": [0, 0, 0]}]', /^object 1: unknown box subtype 12$/],
+    ['[{"kind": "box", "subtype": 13, "at": [0, 0, 0]}]', /^object 1: unknown box subtype 13$/],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "stack": 0}]', "object 1: stack should be"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "stack": 1.5}]', "object 1: stack should be"],
   ])("refuses %s", (text, message) => {
