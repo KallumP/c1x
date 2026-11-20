@@ -25,5 +25,8 @@ controls.cfg
 settings.cfg
 !README.MD
 
-# claude code plans and project skills
-.claude/
+# claude code plans and project skills, except the todo list
+.claude/*
+!.claude/plans/
+.claude/plans/*
+!.claude/plans/TODO.md

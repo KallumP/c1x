@@ -9,7 +9,6 @@ Editor
 - shorter delays for platforms
 - invisible walls
 - death zones
-- rotating pots with the same locatino but differnt properties (radius, reverse) show up as dupes
 - draggable axis when selecting an object
 - camera settings should be under the level settings
 - reduce level settings labels. There is way too much clutter after each batch of settings options
