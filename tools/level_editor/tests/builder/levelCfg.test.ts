@@ -86,8 +86,8 @@ describe("a bad level.cfg is an error naming it and its line", () => {
     expect(readError("turn = 90\nscale = big\n")).toThrow(/level\.cfg, line 2: scale has to be a whole number, not big/);
   });
 
-  test("an unknown setting", () => {
-    expect(readError("tilt = 90\n")).toThrow(/level\.cfg, line 1: unknown setting tilt/);
+  test("an unknown setting, without listing the ones there are", () => {
+    expect(readError("tilt = 90\n")).toThrow(/level\.cfg, line 1: unknown setting tilt$/);
   });
 
   test("a sky colour that isn't three numbers from 0 to 255", () => {
