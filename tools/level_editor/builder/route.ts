@@ -290,3 +290,17 @@ export function zonePaths(points: Vec3[], spans: Span[], lead = CAM_LEAD, route 
   }
   return paths;
 }
+
+// the zones a zone draws: itself, then the next along the route, and in a side
+// view, where the camera sees either side of crash, the one before too
+export function zonesDrawn(zone: number, zoneCount: number, route: Route): number[] {
+  const before = route === ROUTE_SIDE && zone > 0 ? [zone - 1] : [];
+  const after = zone + 1 < zoneCount ? [zone + 1] : [];
+  return [zone, ...before, ...after];
+}
+
+// the most zones any zone draws, which share its world meshes
+export function zonesDrawnMax(zoneCount: number, route: Route): number {
+  const zones = Array.from({ length: zoneCount }, (_, zone) => zone);
+  return Math.max(...zones.map((zone) => zonesDrawn(zone, zoneCount, route).length));
+}
