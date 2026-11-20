@@ -61,6 +61,8 @@
   {"kind": "box", "type": "aku_aku", "at": [0.086, 66.331, 17.9]},
   {"kind": "box", "type": "basic", "at": [0, 79, 17.9]},
   {"kind": "box", "type": "question", "at": [0, 80, 17.9]},
+  {"kind": "box", "type": "basic", "at": [0, -39, 0], "stack": 2},
+  {"kind": "box", "type": "arrow", "at": [0, -40, 0]},
 
   {"kind": "enemy", "type": "lab_assistant", "at": [-1.317, -1.236, 18.8], "path": [[1.917, -8.764, -0.5]]},
   {"kind": "enemy", "type": "lab_assistant", "at": [1.583, -1.236, 18.8], "path": [[-2.183, -8.764, -0.5]]},
@@ -73,7 +75,7 @@
   {"kind": "obstacle", "type": "short_pushing_platform", "at": [-2.1, -31.5, 0], "raise": 7, "every": 2, "offset": 1},
   {"kind": "obstacle", "type": "fire_pit", "at": [-2.1, -27, 0], "raise": 7.5},
   {"kind": "obstacle", "type": "rotating_pots", "at": [-1, -20, -1], "raise": 1.5, "every": 4, "platforms": 2, "radius": 1.5, "reverse": true},
-  {"kind": "obstacle", "type": "rotating_pots", "at": [-1, -20, -1], "raise": 1.5, "every": 9, "platforms": 4, "radius": 5},
+  {"kind": "obstacle", "type": "rotating_pots", "at": [-1, -20, -1], "raise": 1.5, "every": 9, "platforms": 4, "radius": 5.5},
   {"kind": "obstacle", "type": "short_pushing_platform", "at": [-2.1, -29.5, 0], "raise": 7, "every": 2},
   {"kind": "obstacle", "type": "short_pushing_platform", "at": [-2.1, -31.5, 0], "raise": 12, "every": 2},
   {"kind": "obstacle", "type": "short_pushing_platform", "at": [-2.1, -29.5, 0], "raise": 12, "every": 2, "offset": 1},
