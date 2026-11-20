@@ -6,7 +6,6 @@ export interface ActionStatus {
   text: string;
   detail?: string; // the build's whole output, shown on hover
   failed?: boolean;
-  warnings?: string[]; // a build's warnings, shown under the toolbar
 }
 
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
@@ -16,7 +15,12 @@ const lastLine = (output: string) => output.trim().split(/\r?\n/).pop() ?? "";
 export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save: () => Promise<boolean>) {
   const [isBusy, setIsBusy] = useState(false);
   const [status, setStatus] = useState<ActionStatus | null>(null);
-  useEffect(() => setStatus(null), [level]);
+  // the last build's warnings, kept apart from the status so booting after it doesn't hide them
+  const [warnings, setWarnings] = useState<string[]>([]);
+  useEffect(() => {
+    setStatus(null);
+    setWarnings([]);
+  }, [level]);
 
   // saves first, as the build reads objects.json; whether it saved
   const saveFirst = async (): Promise<boolean> => {
@@ -42,10 +46,12 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
         return false;
       }
       setStatus({ text: `Building ${level.name}...` });
+      setWarnings([]);
       const result = await buildLevel(level.name);
       if (result.ok) {
-        const warnings = buildWarnings(result.output);
-        setStatus({ text: builtText(level.name, warnings), detail: result.output, warnings });
+        const builtWarnings = buildWarnings(result.output);
+        setWarnings(builtWarnings);
+        setStatus({ text: builtText(level.name, builtWarnings), detail: result.output });
       } else {
         setStatus({ text: `Build failed: ${lastLine(result.output)}`, detail: result.output, failed: true });
       }
@@ -82,5 +88,5 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
     }
   };
 
-  return { isBusy, status, build, buildAndBoot };
+  return { isBusy, status, warnings, build, buildAndBoot };
 }

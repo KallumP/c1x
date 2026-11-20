@@ -175,12 +175,12 @@ export default function App() {
 
   // a build's warnings, under the toolbar where an error would be
   const renderBuildWarningStrip = () => {
-    const warnings = levelActions.status?.warnings ?? [];
+    const { warnings } = levelActions;
     if (warnings.length === 0) {
       return null;
     }
     return (
-      <div className="warning warning-strip" role="status">
+      <div className="warning-strip" role="status">
         {warnings.map((warning, index) => <div key={index}>Warning: {warning}</div>)}
       </div>
     );
