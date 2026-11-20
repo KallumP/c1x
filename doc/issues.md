@@ -92,7 +92,7 @@
 ### Jaws of Darkness
 
 - spider or shadow rotation angle is incorrect
-- rotating pegs rotate way too fast
+- rotating pillars rotate way too fast
 
 ### Castle Machinery
 

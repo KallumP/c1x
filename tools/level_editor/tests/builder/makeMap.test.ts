@@ -369,14 +369,14 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
-  describe.skipIf(!hasTempleRuins)("rotating pegs, from temple ruins", () => {
-    // temple ruins' RuiOC subtype 0: a hub its pegs go round, moved with the slamming walls
-    test("rotating pegs are temple ruins' RuiOC subtype 0, in the slamming walls' slot (6), at their spot, with their peg (Ra1sG)", () => {
-      const { level, entries, zone } = build([obstacle("rotating_pegs")]);
-      expect(OBSTACLE_ENTITIES.rotating_pegs).toEqual([6, 0]);
+  describe.skipIf(!hasTempleRuins)("rotating pillars, from temple ruins", () => {
+    // temple ruins' RuiOC subtype 0: a hub its pillars go round, moved with the slamming walls
+    test("rotating pillars are temple ruins' RuiOC subtype 0, in the slamming walls' slot (6), at their spot, with their pillar (Ra1sG)", () => {
+      const { level, entries, zone } = build([obstacle("rotating_pillars")]);
+      expect(OBSTACLE_ENTITIES.rotating_pillars).toEqual([6, 0]);
       expect(level.nsd.ldat.execMap[6]).toBe(stringToEid("RuiWC"));
       expect(entries.has(stringToEid("Ra1sG"))).toBe(true);
-      const hub = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.rotating_pegs))!;
+      const hub = zoneEntities(zone).find((item) => isOfType(item, OBSTACLE_ENTITIES.rotating_pillars))!;
       expectNear(entityPath(hub)[0], SPOT_IN_ZONE, 16);
       expect(hub.readUInt16LE(4) & 1).toBe(1);
     });
@@ -389,12 +389,13 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       { more: { radius: 8, every: 10, reverse: true, platforms: 8 }, flags: [5, 36, 11] },
       { more: { platforms: 4 }, flags: [3, -18, 10] },
       { more: { platforms: 9, radius: 1 }, flags: [1, -18, 1] },
-    ])("rotating pegs ($more) have their radius, turn and count in their init flags", ({ more, flags }) => {
-      expect(initFlagsOf(build([obstacle("rotating_pegs", more as Partial<LevelObject>)]).zone, OBSTACLE_ENTITIES.rotating_pegs)).toEqual(flags);
+    ])("rotating pillars ($more) have their radius, turn and count in their init flags", ({ more, flags }) => {
+      const { zone } = build([obstacle("rotating_pillars", more as Partial<LevelObject>)]);
+      expect(initFlagsOf(zone, OBSTACLE_ENTITIES.rotating_pillars)).toEqual(flags);
     });
 
-    test("a level with rotating pegs and slamming walls shares their code", () => {
-      const { level } = build([obstacle("rotating_pegs"), obstacle("slamming_walls", { at: [1, 10, 0] })]);
+    test("a level with rotating pillars and slamming walls shares their code", () => {
+      const { level } = build([obstacle("rotating_pillars"), obstacle("slamming_walls", { at: [1, 10, 0] })]);
       expect(level.nsd.ldat.execMap[6]).toBe(stringToEid("RuiWC"));
     });
   });
@@ -787,7 +788,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
-  describe.skipIf(!hasGreatGate)("wooden pegs, from the great gate", () => {
+  describe.skipIf(!hasGreatGate)("wooden pillars, from the great gate", () => {
     test("a level with a wooden peg has the great gate's totem code (WalOC), and its models", () => {
       const { level, entries } = build([obstacle("wooden_peg")]);
       expect(level.nsd.ldat.execMap[OBSTACLE_ENTITIES.wooden_peg[0]]).toBe(stringToEid("WalOC"));
@@ -802,7 +803,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expectNear(path[0], SPOT_IN_ZONE, 16);
     });
 
-    test("a level with wooden pegs and natives reads the great gate once", () => {
+    test("a level with wooden pillars and natives reads the great gate once", () => {
       const reader = recordingReader();
       build([enemy("native"), obstacle("wooden_peg", { at: [1, 6, 0] })], { readOtherLevel: reader.readOtherLevel });
       expect(reader.read).toEqual([0x12]);

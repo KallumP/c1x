@@ -49,6 +49,35 @@ export function stoneRolling(turn: number): Vec3 {
   return ROLLINGS[((quarters % 4) + 4) % 4];
 }
 
+// which way a rotating obstacle goes round, as its angle from its circle's across
+// axis towards its up axis grows (1) or shrinks (-1): the game turns pots,
+// platforms and pillars from up towards across, and reversed the other way
+function rotatingWay(reverse: boolean): number {
+  if (reverse) {
+    return 1;
+  }
+  return -1;
+}
+
+// the point at angle round a circle (blender), from its across axis towards its up axis
+export function circlePoint(middle: Vec3, radius: number, [across, up]: [Vec3, Vec3], angle: number): Vec3 {
+  return middle.map((value, axis) => value + radius * (across[axis] * Math.cos(angle) + up[axis] * Math.sin(angle))) as Vec3;
+}
+
+// the arrow on a rotating obstacle's circle (blender): halfway between the first
+// two of the count going round (opposite the first if it's alone), pointing the
+// way they go round
+export function rotatingArrow(middle: Vec3, radius: number, axes: [Vec3, Vec3], count: number, reverse: boolean): { at: Vec3; pointing: Vec3 } {
+  const angle = Math.PI / count;
+  const [across, up] = axes;
+  const growing = across.map((value, axis) => up[axis] * Math.cos(angle) - value * Math.sin(angle));
+  const way = rotatingWay(reverse);
+  return {
+    at: circlePoint(middle, radius, axes, angle),
+    pointing: growing.map((value) => value * way) as Vec3,
+  };
+}
+
 // how far to turn an enemy's model about the viewport's y, so its front (+z) faces
 // the player, back along the camera's facing; its side (+x) is then across the map
 export function enemyTurn(turn: number): number {

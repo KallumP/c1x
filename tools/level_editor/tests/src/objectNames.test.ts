@@ -47,7 +47,7 @@ describe("the names the palette shows", () => {
     ["seesaw", "Seesaw"],
     ["timed_plank", "Plank (breaks after a moment)"],
     ["breaking_plank", "Plank (breaks at once)"],
-    ["rotating_pegs", "Pegs (rotating)"],
+    ["rotating_pillars", "Pillars (rotating)"],
     ["lift_platform", "Platform (lifts up and down)"],
     ["floor_fire", "Fire (bursts from the floor)"],
     ["steady_fire", "Fire (always burning)"],

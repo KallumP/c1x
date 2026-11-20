@@ -112,13 +112,46 @@ export type EnemyType = (typeof ENEMY_TYPES)[number];
 // and its plank that breaks as soon as crash stands on it:
 // - breaking_plank
 // temple ruins' stone columns, going round a level circle about their spot:
-// - rotating_pegs
+// - rotating_pillars
 // slippery climb's stone slab going up and down its path:
 // - lift_platform
 // sunset vista's fire bursting up out of the floor, every so often or the whole time:
 // - floor_fire
 // - steady_fire
-export const OBSTACLE_TYPES = ["lily_pad", "leaf", "wooden_peg", "rolling_stone", "mossy_slide", "rising_spiked_log", "falling_spiked_log", "fire_pit", "dropping_pillar", "sliding_pillar", "tall_thin_gate", "low_wide_gate", "pushing_block", "pushing_platform", "rotating_pots", "rotating_platforms", "slamming_walls", "rising_pillar", "carrying_platform", "bounce_pad", "steam_vent", "moving_platform", "dropping_platform", "falling_platform", "seesaw", "timed_plank", "breaking_plank", "rotating_pegs", "lift_platform", "floor_fire", "steady_fire", "short_pushing_platform"] as const;
+export const OBSTACLE_TYPES = [
+  "lily_pad",
+  "leaf",
+  "wooden_peg",
+  "rolling_stone",
+  "mossy_slide",
+  "rising_spiked_log",
+  "falling_spiked_log",
+  "fire_pit",
+  "dropping_pillar",
+  "sliding_pillar",
+  "tall_thin_gate",
+  "low_wide_gate",
+  "pushing_block",
+  "pushing_platform",
+  "rotating_pots",
+  "rotating_platforms",
+  "slamming_walls",
+  "rising_pillar",
+  "carrying_platform",
+  "bounce_pad",
+  "steam_vent",
+  "moving_platform",
+  "dropping_platform",
+  "falling_platform",
+  "seesaw",
+  "timed_plank",
+  "breaking_plank",
+  "rotating_pillars",
+  "lift_platform",
+  "floor_fire",
+  "steady_fire",
+  "short_pushing_platform",
+] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 // the obstacles whose path can be set: a leaf drifts along its nodes (by default its own level's drift)
@@ -218,7 +251,17 @@ export const GATES: ObstacleType[] = ["tall_thin_gate", "low_wide_gate"];
 // sunset vista's pushing blocks' 60 and near its platforms' 70 (2.5 s, a step of the slider) (at 30 a second); a
 // rising pillar's 4 s, near temple ruins' 127 frames, and castle machinery's
 // steam vents' 90
-const TIMED_EVERY: Partial<Record<ObjectType, number>> = { fire_pit: 4, pushing_block: 2, pushing_platform: 2.5, short_pushing_platform: 2.5, slamming_walls: 3, rising_pillar: 4, steam_vent: 3, rotating_pegs: 20, floor_fire: 2 };
+const TIMED_EVERY: Partial<Record<ObjectType, number>> = {
+  fire_pit: 4,
+  pushing_block: 2,
+  pushing_platform: 2.5,
+  short_pushing_platform: 2.5,
+  slamming_walls: 3,
+  rising_pillar: 4,
+  steam_vent: 3,
+  rotating_pillars: 20,
+  floor_fire: 2,
+};
 export const SPIKED_LOG_EVERY = 6;
 export const TIMED_EVERY_MIN = 2;
 export const TIMED_EVERY_MAX = 20;
@@ -230,23 +273,23 @@ export const TIMED_OBSTACLES: ObstacleType[] = [...SPIKED_LOGS, "fire_pit", "pus
 // vista's (3 pots or 2 platforms, mostly 350 out in 4s of game units) without them
 export const ROTATING_PLATFORMS_MAX = 7;
 export const ROTATING_RADIUS = 3.5;
-export const PEG_RADIUS = 4; // metres: temple ruins' first, 1600 units at scale 400
+export const PILLAR_RADIUS = 4; // metres: temple ruins' first, 1600 units at scale 400
 
-// how many rotating pegs can go round (temple ruins' code's presets), and how many without a platforms
-export const PEG_COUNTS = [4, 5, 8, 9];
-export const PEG_COUNT = 5;
+// how many rotating pillars can go round (temple ruins' code's presets), and how many without a platforms
+export const PILLAR_COUNTS = [4, 5, 8, 9];
+export const PILLAR_COUNT = 5;
 
-// how many of a rotating pegs' go round: its platforms, or the nearest the code has (the fewer of two as near)
-export function pegCount(pegs: LevelObject): number {
-  const asked = numberSetting(pegs, "platforms");
+// how many of a rotating pillars' go round: its platforms, or the nearest the code has (the fewer of two as near)
+export function pillarCount(pillars: LevelObject): number {
+  const asked = numberSetting(pillars, "platforms");
   const distance = (count: number) => Math.abs(count - asked);
-  return PEG_COUNTS.reduce((nearest, count) => (distance(count) < distance(nearest) ? count : nearest));
+  return PILLAR_COUNTS.reduce((nearest, count) => (distance(count) < distance(nearest) ? count : nearest));
 }
 
-// how far out rotating pots, platforms or pegs go round without a radius
+// how far out rotating pots, platforms or pillars go round without a radius
 function radiusFallback(type: ObjectType | undefined): number {
-  if (type === "rotating_pegs") {
-    return PEG_RADIUS;
+  if (type === "rotating_pillars") {
+    return PILLAR_RADIUS;
   }
   return ROTATING_RADIUS;
 }
@@ -267,8 +310,8 @@ function platformsFallback(type: ObjectType | undefined): number {
   if (type === "rotating_pots") {
     return 3;
   }
-  if (type === "rotating_pegs") {
-    return PEG_COUNT;
+  if (type === "rotating_pillars") {
+    return PILLAR_COUNT;
   }
   return 2;
 }
@@ -313,10 +356,35 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   length: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_LENGTH_MIN, max: SLIDE_LENGTH_MAX, whole: false, fallback: () => SLIDE_LENGTH, meaning: "how long it is, in metres" },
   angle: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_ANGLE_MIN, max: SLIDE_ANGLE_MAX, whole: false, fallback: () => SLIDE_ANGLE, meaning: "how steeply it slopes, in degrees" },
   rotation: { types: ["mossy_slide", ...GATES], typesNamed: "mossy slides and gates", min: 0, max: SLIDE_ROTATION_MAX, whole: false, fallback: () => 0, meaning: "which way it slides down, from across the map, or falls, from towards the camera: degrees anticlockwise seen from above" },
-  every: { types: [...TIMED_OBSTACLES, "slamming_walls", "rising_pillar", "rotating_pegs", "floor_fire"], typesNamed: "spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, slamming walls, rising pillars, steam vents, rotating pegs and floor fires", min: TIMED_EVERY_MIN, max: TIMED_EVERY_MAX, whole: false, fallback: everyFallback, meaning: "the seconds between its pushes or flames" },
+  every: {
+    types: [...TIMED_OBSTACLES, "slamming_walls", "rising_pillar", "rotating_pillars", "floor_fire"],
+    typesNamed: "spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, slamming walls, rising pillars, steam vents, rotating pillars and floor fires",
+    min: TIMED_EVERY_MIN,
+    max: TIMED_EVERY_MAX,
+    whole: false,
+    fallback: everyFallback,
+    meaning: "the seconds between its pushes or flames",
+  },
   offset: { types: [...TIMED_OBSTACLES, "slamming_walls", "rising_pillar", "floor_fire"], typesNamed: "spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, slamming walls, rising pillars, steam vents and floor fires", min: 0, max: TIMED_EVERY_MAX, whole: false, fallback: () => 0, meaning: "the seconds its pushes or flames are put off by" },
-  platforms: { types: [...ROTATING_OBSTACLES, "rotating_pegs"], typesNamed: "rotating pots, platforms and pegs", min: 1, max: ROTATING_PLATFORMS_MAX, whole: true, fallback: platformsFallback, meaning: "how many go round", maxFor: { rotating_pegs: PEG_COUNTS.at(-1)! } },
-  radius: { types: [...ROTATING_OBSTACLES, "rotating_pegs"], typesNamed: "rotating pots, platforms and pegs", min: ROTATING_RADIUS_MIN, max: ROTATING_RADIUS_MAX, whole: false, fallback: radiusFallback, meaning: "how far out they go round, in metres" },
+  platforms: {
+    types: [...ROTATING_OBSTACLES, "rotating_pillars"],
+    typesNamed: "rotating pots, platforms and pillars",
+    min: 1,
+    max: ROTATING_PLATFORMS_MAX,
+    whole: true,
+    fallback: platformsFallback,
+    meaning: "how many go round",
+    maxFor: { rotating_pillars: PILLAR_COUNTS.at(-1)! },
+  },
+  radius: {
+    types: [...ROTATING_OBSTACLES, "rotating_pillars"],
+    typesNamed: "rotating pots, platforms and pillars",
+    min: ROTATING_RADIUS_MIN,
+    max: ROTATING_RADIUS_MAX,
+    whole: false,
+    fallback: radiusFallback,
+    meaning: "how far out they go round, in metres",
+  },
   shake: { types: ["dropping_platform"], typesNamed: "dropping platforms", min: SHAKE_MIN, max: SHAKE_MAX, whole: false, fallback: () => SHAKE, meaning: "the seconds it shakes before it drops" },
   down: { types: ["dropping_platform"], typesNamed: "dropping platforms", min: DOWN_MIN, max: DOWN_MAX, whole: false, fallback: () => DOWN, meaning: "the seconds it stays dropped" },
   range: { types: ["gunman"], typesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },
@@ -510,17 +578,35 @@ function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetti
   return { [setting]: value };
 }
 
-// the enemies and obstacles that can be reversed: a rolling stone rolls back towards its first
-// end first, and a fish leaps the other way across the map
-const REVERSIBLE: ObjectType[] = ["rolling_stone", "fish", "rotating_pots", "rotating_platforms", "rotating_pegs"];
+// the enemies and obstacles that can be reversed, and what their Reverse direction
+// button says: a rolling stone rolls back towards its first end first, a fish leaps
+// the other way across the map, and a rotating obstacle goes round the other way
+const GOES_ROUND = "The arrow on its circle shows which way it goes round";
+const REVERSE_TITLES: Partial<Record<ObjectType, string>> = {
+  rolling_stone: "The arrow at the dot shows which way it rolls first",
+  fish: "It leaps from the solid fish to the faded one, and back",
+  rotating_pots: GOES_ROUND,
+  rotating_platforms: GOES_ROUND,
+  rotating_pillars: GOES_ROUND,
+};
+const REVERSIBLE = Object.keys(REVERSE_TITLES) as ObjectType[];
 
-// whether a rolling stone or fish is reversed, from its fields in objects.json
+// what an object's Reverse direction button says, if it has one
+export function reverseButtonTitle(object: LevelObject): string | undefined {
+  const type = objectType(object);
+  if (type === undefined) {
+    return undefined;
+  }
+  return REVERSE_TITLES[type];
+}
+
+// whether a rolling stone, fish or rotating obstacle is reversed, from its fields in objects.json
 function readReverse(fields: Record<string, unknown>, type: ObjectType, objectNumber: number): Pick<LevelObject, "reverse"> {
   if (!("reverse" in fields)) {
     return {};
   }
   if (!REVERSIBLE.includes(type)) {
-    throw new Error(`object ${objectNumber}: a ${type} has no reverse (rolling stones and fish do; reverse a ${type}'s path instead)`);
+    throw new Error(`object ${objectNumber}: a ${type} has no reverse (rolling stones, fish and rotating obstacles do; reverse a ${type}'s path instead)`);
   }
   if (typeof fields.reverse !== "boolean") {
     throw new Error(`object ${objectNumber}: reverse should be true or false`);

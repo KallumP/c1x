@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-20
+
+### Added
+
+- rotating pots, platforms and pillars can go round the other way: **Reverse direction** in the level editor
+
+### Changed
+
+- the level editor's rotating pegs are now **Pillars (rotating)**
+
 ## 2026-11-19
 
 ### Added

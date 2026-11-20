@@ -4,7 +4,19 @@
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { batSwoop, leafDriftShares, leaderBatsFlight, leapWay, pillarSlideShares } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep, pointAlongShare, spotAndNode } from "../src/enemyPaths";
-import { hasPath, LEADER_BATS_LEADERS, numberSetting, pegCount, GATES, ROTATING_OBSTACLES, TIMED_OBSTACLES, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
+import {
+  hasPath,
+  LEADER_BATS_LEADERS,
+  numberSetting,
+  pillarCount,
+  GATES,
+  ROTATING_OBSTACLES,
+  TIMED_OBSTACLES,
+  type EnemyType,
+  type LevelObject,
+  type PathEnemy,
+  type ObstacleType,
+} from "../src/objects";
 import { throwFlags } from "../src/labAssistantThrow";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";
@@ -335,23 +347,23 @@ function withBreakDelay(entity: Buffer, object: LevelObject): Buffer {
   return withInitFlagA(withNoRotationFromFlags(entity), Math.round(numberSetting(object, "delay") * FRAMES_A_SECOND));
 }
 
-// rotating pegs' init flags (temple ruins' code): A their radius in 400s of
+// rotating pillars' init flags (temple ruins' code): A their radius in 400s of
 // game units, B their turn in degrees a second (less than 0 the way temple
 // ruins' first goes), C its preset for how many go round
-const PEG_RADIUS_UNIT = 400;
-const PEG_PRESETS: Record<number, number> = { 4: 10, 5: 0, 8: 11, 9: 1 };
-function pegFlags(pegs: LevelObject, scale: number): [number, number, number] {
-  const radius = Math.max(1, Math.round((numberSetting(pegs, "radius") * scale) / PEG_RADIUS_UNIT));
-  const turn = Math.round(360 / numberSetting(pegs, "every"));
-  return [radius, pegs.reverse ? turn : -turn, PEG_PRESETS[pegCount(pegs)]];
+const PILLAR_RADIUS_UNIT = 400;
+const PILLAR_PRESETS: Record<number, number> = { 4: 10, 5: 0, 8: 11, 9: 1 };
+function pillarFlags(pillars: LevelObject, scale: number): [number, number, number] {
+  const radius = Math.max(1, Math.round((numberSetting(pillars, "radius") * scale) / PILLAR_RADIUS_UNIT));
+  const turn = Math.round(360 / numberSetting(pillars, "every"));
+  return [radius, pillars.reverse ? turn : -turn, PILLAR_PRESETS[pillarCount(pillars)]];
 }
 
-// entity with rotating pegs' flags, not turned by them; any other obstacle's as it is
-function withPegTurn(entity: Buffer, obstacle: LevelObject, scale: number): Buffer {
-  if (obstacle.obstacle !== "rotating_pegs") {
+// entity with rotating pillars' flags, not turned by them; any other obstacle's as it is
+function withPillarTurn(entity: Buffer, obstacle: LevelObject, scale: number): Buffer {
+  if (obstacle.obstacle !== "rotating_pillars") {
     return entity;
   }
-  const [radius, turn, preset] = pegFlags(obstacle, scale);
+  const [radius, turn, preset] = pillarFlags(obstacle, scale);
   return withInitFlagC(withInitFlagB(withInitFlagA(withNoRotationFromFlags(entity), radius), turn), preset);
 }
 
@@ -397,7 +409,7 @@ function withFireTiming(entity: Buffer, obstacle: LevelObject): Buffer {
 // an object placed from its own level's entity (see placeWithItsPath) with
 // its settings in its flags: each of these changes only its own kind of object
 type SettingsInFlags = (entity: Buffer, object: LevelObject, scale: number) => Buffer;
-const OWN_SETTINGS: SettingsInFlags[] = [withGateTurn, withRiseTiming, withDropTiming, withBreakDelay, withPegTurn, withFireTiming];
+const OWN_SETTINGS: SettingsInFlags[] = [withGateTurn, withRiseTiming, withDropTiming, withBreakDelay, withPillarTurn, withFireTiming];
 const withOwnSettings = (entity: Buffer, object: LevelObject, scale: number) =>
   OWN_SETTINGS.reduce((settled, withSettings) => withSettings(settled, object, scale), entity);
 

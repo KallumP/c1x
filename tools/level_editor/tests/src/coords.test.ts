@@ -1,6 +1,32 @@
 import { describe, expect, test } from "vitest";
 import type { Vec3 } from "../../src/objects";
-import { blenderToView, BOX_UNITS, boxSize, cameraFacing, enemyTurn, facingFrom, fishLeap, LEAF_DRIFT, leafDrift, leafDriftShares, mossySlideEnd, pillarSlideShares, labAssistantThrow, BAT_SWOOP, batSwoop, batSwoopEnd, LEADER_BATS_FLIGHT, leaderBatsFlight, leaderBatsGap, stackCentres, stonePath, stoneRolling, STONE_TRACK, viewToBlender } from "../../src/coords";
+import {
+  blenderToView,
+  BOX_UNITS,
+  boxSize,
+  cameraFacing,
+  enemyTurn,
+  facingFrom,
+  fishLeap,
+  LEAF_DRIFT,
+  leafDrift,
+  leafDriftShares,
+  mossySlideEnd,
+  pillarSlideShares,
+  labAssistantThrow,
+  BAT_SWOOP,
+  batSwoop,
+  batSwoopEnd,
+  LEADER_BATS_FLIGHT,
+  leaderBatsFlight,
+  leaderBatsGap,
+  rotatingArrow,
+  stackCentres,
+  stonePath,
+  stoneRolling,
+  STONE_TRACK,
+  viewToBlender,
+} from "../../src/coords";
 import { expectCloseTo, noMinusZero } from "../helpers";
 
 describe("blender and the viewport", () => {
@@ -255,5 +281,34 @@ describe("an enemy facing the way it walks", () => {
 
   test("faces the player when it isn't going anywhere", () => {
     expect(facingFrom([1, 1, 0], [1, 1, 0], 90)).toBe(enemyTurn(90));
+  });
+});
+
+// seen in the game (an unturned level): a rotating pot goes from the top of its
+// circle towards +x, clockwise from behind, and rotating pillars from the far side
+// towards +x, clockwise from above
+describe("a rotating obstacle's arrow", () => {
+  const POT_AXES: [Vec3, Vec3] = [[1, 0, 0], [0, 0, 1]];  // across the map, then up
+  const PILLAR_AXES: [Vec3, Vec3] = [[1, 0, 0], [0, 1, 0]];  // across the map, then along it
+
+  test("is halfway between the first two that go round, on the circle", () => {
+    expectCloseTo(rotatingArrow([0, 0, 2], 1, POT_AXES, 2, false).at, [0, 0, 3]);
+    expectCloseTo(rotatingArrow([0, 0, 0], 2, PILLAR_AXES, 4, false).at, [Math.SQRT2, Math.SQRT2, 0]);
+  });
+
+  test("opposite the first when one goes round", () => {
+    expectCloseTo(rotatingArrow([0, 0, 0], 1, POT_AXES, 1, false).at, [-1, 0, 0]);
+  });
+
+  test("points the way the game turns pots: from the top towards +x", () => {
+    expectCloseTo(rotatingArrow([0, 0, 0], 1, POT_AXES, 2, false).pointing, [1, 0, 0]);
+  });
+
+  test("points the way the game turns pillars: from the far side towards +x", () => {
+    expectCloseTo(rotatingArrow([0, 0, 0], 1, PILLAR_AXES, 2, false).pointing, [1, 0, 0]);
+  });
+
+  test("points the other way round when reversed", () => {
+    expectCloseTo(rotatingArrow([0, 0, 0], 1, POT_AXES, 2, true).pointing, [-1, 0, 0]);
   });
 });

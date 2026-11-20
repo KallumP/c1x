@@ -46,8 +46,8 @@ describe("obstacle shapes", () => {
     { obstacle: "timed_plank", bottom: -50, top: [-10, 30], across: [1160, 1240], long: [320, 380] },
     // and its plank BE1kG, the same size
     { obstacle: "breaking_plank", bottom: -50, top: [-10, 30], across: [1160, 1240], long: [320, 380] },
-    // temple ruins' rotating peg Ra1sG: a stone column 953 across, its top at its spot and 3203 down
-    { obstacle: "rotating_pegs", bottom: -3203, top: [-10, 30], across: [900, 1000], long: [900, 1000] },
+    // temple ruins' rotating pillar Ra1sG: a stone column 953 across, its top at its spot and 3203 down
+    { obstacle: "rotating_pillars", bottom: -3203, top: [-10, 30], across: [900, 1000], long: [900, 1000] },
     // slippery climb's lift platform PlUyG: a slab 802 x 797 across, its top at its spot, 338 thick
     { obstacle: "lift_platform", bottom: -338, top: [-10, 30], across: [760, 840], long: [760, 840] },
     // sunset vista's floor fire has no model (its hole is its level's): a dark grate 600 across on its spot, its flame 1600 up
