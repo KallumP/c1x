@@ -168,6 +168,18 @@ describe("building a level", () => {
     expect(output).toMatch(/warning: object 2 \(Basic box\) is a duplicate of object 1/);
   });
 
+  test.skipIf(!existsSync(join(STREAMS, "s0000009.nsd")))("each duplicate warning is logged on its own, as one line", () => {
+    const folder = newFolder("duplicates");
+    writeFileSync(join(folder, "duplicates.obj"), "o Floor\nv -4 0 -8\nv -4 0 8\nv 4 0 8\nv 4 0 -8\nf 1 2 3 4\n");
+    const basicBox = { kind: "box", type: "basic", at: [0, 0, 0] };
+    writeFileSync(join(folder, "objects.json"), JSON.stringify([basicBox, basicBox, basicBox]));
+    const logged: unknown[][] = [];
+    buildLevel(folder, { streamsDir: STREAMS, levelsDir: newFolder("levels"), log: (...said: unknown[]) => logged.push(said) });
+    const warnings = logged.filter(([line]) => String(line).startsWith("warning:"));
+    expect(warnings).toHaveLength(2);
+    warnings.forEach((said) => expect(said).toHaveLength(1));
+  });
+
   test.skipIf(!hasLoadingScreens)("a level's loading screen is the game's sign with its title, not jungle rollers'", () => {
     const folder = newFolder("2_tiny_ruins");
     writeFileSync(join(folder, "tiny.obj"), "o Floor\nv -4 0 -8\nv -4 0 8\nv 4 0 8\nv 4 0 -8\nf 1 2 3 4\n");
