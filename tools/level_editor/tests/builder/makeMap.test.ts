@@ -390,7 +390,8 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       { more: { platforms: 4 }, flags: [3, -18, 10] },
       { more: { platforms: 9, radius: 1 }, flags: [1, -18, 1] },
     ])("rotating pillars ($more) have their radius, turn and count in their init flags", ({ more, flags }) => {
-      expect(initFlagsOf(build([obstacle("rotating_pillars", more as Partial<LevelObject>)]).zone, OBSTACLE_ENTITIES.rotating_pillars)).toEqual(flags);
+      const { zone } = build([obstacle("rotating_pillars", more as Partial<LevelObject>)]);
+      expect(initFlagsOf(zone, OBSTACLE_ENTITIES.rotating_pillars)).toEqual(flags);
     });
 
     test("a level with rotating pillars and slamming walls shares their code", () => {

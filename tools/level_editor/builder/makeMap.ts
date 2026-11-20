@@ -4,7 +4,19 @@
 // textures. faces of materials with an image get it, the rest the base level's textures
 import { batSwoop, leafDriftShares, leaderBatsFlight, leapWay, pillarSlideShares } from "../src/coords";
 import { inEvenSteps, pathPositions, pathStep, pointAlongShare, spotAndNode } from "../src/enemyPaths";
-import { hasPath, LEADER_BATS_LEADERS, numberSetting, pillarCount, GATES, ROTATING_OBSTACLES, TIMED_OBSTACLES, type EnemyType, type LevelObject, type PathEnemy, type ObstacleType } from "../src/objects";
+import {
+  hasPath,
+  LEADER_BATS_LEADERS,
+  numberSetting,
+  pillarCount,
+  GATES,
+  ROTATING_OBSTACLES,
+  TIMED_OBSTACLES,
+  type EnemyType,
+  type LevelObject,
+  type PathEnemy,
+  type ObstacleType,
+} from "../src/objects";
 import { throwFlags } from "../src/labAssistantThrow";
 import { DEFAULT_SKY, type Sky } from "../src/sky";
 import { assembleLevel, MAP_CELL, type ZonePlan } from "./assembleLevel";

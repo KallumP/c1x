@@ -27,7 +27,20 @@ import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { OBSTACLE_SHAPES, type ModelledObstacle } from "../obstacleShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
-import { GATES, isPathEnemy, isPathObstacle, numberSetting, pillarCount, PATH_ENEMIES, PATH_OBSTACLES, ROTATING_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
+import {
+  GATES,
+  isPathEnemy,
+  isPathObstacle,
+  numberSetting,
+  pillarCount,
+  PATH_ENEMIES,
+  PATH_OBSTACLES,
+  ROTATING_OBSTACLES,
+  type LevelObject,
+  type PathEnemy,
+  type PathObstacle,
+  type Vec3,
+} from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 import { isLeftPress } from "../three/clicks";
 import { numberTexture } from "../three/numberTexture";
