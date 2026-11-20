@@ -138,6 +138,11 @@ describe("building a level", () => {
     { problem: "a bad level.cfg", files: { "x.obj": "", "level.cfg": "scale = big\n" }, message: /level\.cfg, line 1/ },
     { problem: "a bad objects.json", files: { "x.obj": "", "objects.json": '[{"kind": "crate", "at": [0, 0, 0]}]' }, message: /objects\.json/ },
     { problem: "a folder without a .obj", files: {}, message: /0 \.obj files/ },
+    {
+      problem: "an outline whose switch isn't in the level",
+      files: { "x.obj": "", "objects.json": '[{"kind": "box", "type": "basic", "at": [0, 0, 0], "outline": 2}]' },
+      message: /object 1 \(Basic box\) is an outline of switch 2, but the level has no switch 2/,
+    },
   ])("$problem stops the build with its message", ({ files, message }) => {
     const folder = newFolder("bad_source");
     Object.entries(files).forEach(([file, text]) => writeFileSync(join(folder, file), text));
