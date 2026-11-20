@@ -295,7 +295,7 @@ function steamVent(): ShapePart[] {
   ];
 }
 
-const MOVING_PLATFORM = { across: 802, deep: 797, thick: 403, moss: 60 };
+export const MOVING_PLATFORM = { across: 802, deep: 797, thick: 403, moss: 60 };
 
 // slippery climb's platforms' square stone slab, 802 x 797 across, thick deep,
 // its mossy top at its spot, running from its spot out towards the player

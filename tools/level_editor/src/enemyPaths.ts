@@ -31,6 +31,7 @@ import {
   TURTLE_WALK,
 } from "./coords";
 import { LAB_ASSISTANT_REACH } from "./labAssistantThrow";
+import { MOVING_PLATFORM } from "./obstacleShapes";
 import { hasOneNode, PATH_NODES_MAX, type LevelObject, type ObstacleType, type PathEnemy, type Vec3 } from "./objects";
 
 export const DEFAULT_PATH_NODES = 2;
@@ -303,4 +304,14 @@ export function pathObstacleTurn(obstacle: ObstacleType, from: Vec3, to: Vec3, t
     return enemyTurn(turn);
   }
   return facingFrom(from, to, turn);
+}
+
+// how far from its nodes the editor draws a path obstacle's path (in blender): a
+// moving or lift platform's through its slab's middle, which runs from its spot out
+// towards the player, so the line runs down the platform; its nodes are unchanged
+export function pathDrawnOffset(obstacle: ObstacleType, turn: number, scale: number): Vec3 {
+  if (!FACING_THE_PLAYER.includes(obstacle)) {
+    return [0, 0, 0];
+  }
+  return scaled(cameraFacing(turn), -MOVING_PLATFORM.deep / 2 / scale);
 }

@@ -28,6 +28,7 @@ import { OBSTACLE_SHAPES, type ModelledObstacle } from "../obstacleShapes";
 import {
   handleLifts,
   nodesUnderEnds,
+  pathDrawnOffset,
   pathObstacleTurn,
   pathPositions,
   pointAlongShare,
@@ -505,10 +506,13 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // a floating leaf, sliding pillar or platform: at its spot, where it sets off from,
-  // facing as the game's (pathObstacleTurn), with the line of its path, and faded where it turns back
+  // facing as the game's (pathObstacleTurn), with the line of its path (through a
+  // platform's middle, pathDrawnOffset), and faded where it turns back
   const renderPathObstacle = (object: LevelObject, index: number) => {
     const type = object.obstacle as PathObstacle;
     const nodes = pathPositions(object, turn, scale); // its own level's path, or its own
+    const offset = pathDrawnOffset(type, turn, scale);
+    const drawn = nodes.map((node) => node.map((value, axis) => value + offset[axis]) as Vec3);
     const last = nodes.length - 1;
     const colour = OBSTACLE_COLOURS[type];
     const startTurn = pathObstacleTurn(type, nodes[0], nodes[1], turn);
@@ -517,8 +521,8 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
       <>
         {renderShapeModel(OBSTACLE_SHAPES[type], blenderToView(nodes[0]), index, 0, startTurn)}
         {renderShapeModel(OBSTACLE_SHAPES[type], blenderToView(nodes[last]), index, 1, endTurn, FAR_END_OPACITY)}
-        <Line points={nodes.map(blenderToView)} color={pathColour(index, colour)} lineWidth={2} />
-        {index === selected && renderPathHandles(nodes, index, PATH_OBSTACLE_SIZES[type], colour)}
+        <Line points={drawn.map(blenderToView)} color={pathColour(index, colour)} lineWidth={2} />
+        {index === selected && renderPathHandles(drawn, index, PATH_OBSTACLE_SIZES[type], colour)}
       </>
     );
   };
