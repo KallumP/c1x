@@ -21,6 +21,7 @@
 - level build errors no longer list every allowed setting, song or type
 - a level build stopped by an outline without its switch now says which box
 - a detailed side-on level no longer loses its farthest walls
+- moving platforms, lift platforms and low wide gates in the level editor sit where the game has them
 
 ## 2026-11-19
 

@@ -107,6 +107,21 @@ describe("obstacle shapes", () => {
     expectWithin(max[2], [780, 820]);
   });
 
+  test.each([
+    { obstacle: "moving_platform", model: "PlPyV" },
+    { obstacle: "lift_platform", model: "PlUyV" },
+  ] as const)("a $obstacle runs out towards the player from its spot, as the game's ($model, 0 to 797 along z)", ({ obstacle }) => {
+    const { min, max } = shapeBounds(OBSTACLE_SHAPES[obstacle]);
+    expectWithin(min[2], [-10, 30]);
+    expectWithin(max[2], [780, 820]);
+  });
+
+  test("a low wide gate stands mostly back from its spot, as the game's (JB3eV, -234 to 51 along z)", () => {
+    const { min, max } = shapeBounds(OBSTACLE_SHAPES.low_wide_gate.filter((part) => part.name !== "arrow"));
+    expectWithin(min[2], [-250, -215]);
+    expectWithin(max[2], [35, 70]);
+  });
+
   test("every obstacle but the rolling stone and mossy slide (drawn as their track and slope) has a shape", () => {
     OBSTACLE_TYPES.filter((obstacle) => obstacle !== "rolling_stone" && obstacle !== "mossy_slide")
       .forEach((obstacle) => expect(OBSTACLE_SHAPES[obstacle].length).toBeGreaterThan(0));
