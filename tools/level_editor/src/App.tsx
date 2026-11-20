@@ -143,15 +143,27 @@ export default function App() {
     const { isBusy, status, build, buildAndBoot } = levelActions;
     return (
       <div className="level-actions">
-        {status && (
-          <span className={status.failed ? "status error" : "status"} title={status.detail}>{status.text}</span>
-        )}
+        {status && !status.failed && <span className="status" title={status.detail}>{status.text}</span>}
         <button disabled={!level || isBusy} onClick={build} title="Build this level, saving first (Ctrl+Shift+B)">
           Build
         </button>
         <button disabled={!level || isBusy} onClick={buildAndBoot} title="Build this level, then set it as the level CUSTOM LEVEL on the game's title screen starts (F5)">
           Build + boot
         </button>
+      </div>
+    );
+  };
+
+  // the level's error and a failed build's, in full under the toolbar
+  const renderErrorStrip = () => {
+    const failedAction = levelActions.status?.failed ? levelActions.status : null;
+    if (!error && !failedAction) {
+      return null;
+    }
+    return (
+      <div className="error error-strip" role="alert">
+        {error && <div>{error}</div>}
+        {failedAction && <div title={failedAction.detail}>{failedAction.text}</div>}
       </div>
     );
   };
@@ -163,7 +175,6 @@ export default function App() {
       {renderSaveButton()}
       {renderPathWarningCount()}
       {renderOutlineWarningCount()}
-      {error && <span className="error">{error}</span>}
       {renderLevelActions()}
       {(isSaving || levelActions.isBusy) && <div className="progress" role="progressbar" aria-label="Working" />}
     </header>
@@ -198,6 +209,7 @@ export default function App() {
   return (
     <div className="app">
       {renderHeader()}
+      {renderErrorStrip()}
       <Palette tool={tool} onTool={setTool} grid={grid} onGrid={setGrid} />
       {renderMain()}
       <PropertiesPanel

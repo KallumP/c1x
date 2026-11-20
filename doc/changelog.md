@@ -11,6 +11,10 @@
 - the level editor's rotating pegs are now **Pillars (rotating)**
 - a selected object's settings in the level editor start with its name
 
+### Fixed
+
+- the level editor's toolbar no longer gets squashed when an error shows
+
 ## 2026-11-19
 
 ### Added
