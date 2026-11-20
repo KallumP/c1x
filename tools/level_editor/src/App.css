@@ -97,10 +97,6 @@
   color: #aaa;
 }
 
-.level-actions .status.error {
-  color: #ff8a80;
-}
-
 .toolbar .save.unsaved {
   background: #2f6f3e;
   border-color: #3f9a55;
