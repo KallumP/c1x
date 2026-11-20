@@ -27,7 +27,7 @@ import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { OBSTACLE_SHAPES, type ModelledObstacle } from "../obstacleShapes";
 import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
-import { GATES, isPathEnemy, isPathObstacle, numberSetting, pegCount, PATH_ENEMIES, PATH_OBSTACLES, ROTATING_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
+import { GATES, isPathEnemy, isPathObstacle, numberSetting, pillarCount, PATH_ENEMIES, PATH_OBSTACLES, ROTATING_OBSTACLES, type LevelObject, type PathEnemy, type PathObstacle, type Vec3 } from "../objects";
 import { floorAbove, type Triangle } from "../overlaps";
 import { isLeftPress } from "../three/clicks";
 import { numberTexture } from "../three/numberTexture";
@@ -530,24 +530,24 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
   };
 
   // the circle a rotating obstacle goes round: across the map and up for pots
-  // and platforms, across it and along it (level) for pegs
+  // and platforms, across it and along it (level) for pillars
   const rotatingCircleAxes = (object: LevelObject): [Vec3, Vec3] => {
     const across = stoneRolling(turn);
-    if (object.obstacle === "rotating_pegs") {
+    if (object.obstacle === "rotating_pillars") {
       return [across, [-across[1], across[0], 0]];
     }
     return [across, rising()];
   };
 
-  // how many go round: pegs as many as the game's code can (see pegCount)
+  // how many go round: pillars as many as the game's code can (see pillarCount)
   const rotatingCount = (object: LevelObject) => {
-    if (object.obstacle === "rotating_pegs") {
-      return pegCount(object);
+    if (object.obstacle === "rotating_pillars") {
+      return pillarCount(object);
     }
     return numberSetting(object, "platforms");
   };
 
-  // rotating pots, platforms or pegs: as many as go round, spread round the
+  // rotating pots, platforms or pillars: as many as go round, spread round the
   // circle they go round (as far out as set), and the circle with an arrow the way they go round
   const renderRotating = (object: LevelObject, index: number) => {
     const type = object.obstacle as ModelledObstacle;
@@ -588,7 +588,7 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     if (isPathObstacle(object.obstacle)) {
       return renderPathObstacle(object, index);
     }
-    if (ROTATING_OBSTACLES.includes(object.obstacle!) || object.obstacle === "rotating_pegs") {
+    if (ROTATING_OBSTACLES.includes(object.obstacle!) || object.obstacle === "rotating_pillars") {
       return renderRotating(object, index);
     }
     if (object.obstacle === "rolling_stone") {

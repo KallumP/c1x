@@ -351,12 +351,12 @@ function breakingPlank(): ShapePart[] {
   return [plankBoard(half, -offset, PLANK_COLOURS.breaking), plankBoard(half, offset, PLANK_COLOURS.breaking)];
 }
 
-const PEG = { across: 953, height: 3203, cap: 120 };
+const ROTATING_PILLAR = { across: 953, height: 3203, cap: 120 };
 
-// temple ruins' rotating peg (Ra1sG): a square stone column 953 across, its
+// temple ruins' rotating pillar (Ra1sG): a square stone column 953 across, its
 // mossy top at its spot, 3203 down (the editor draws as many as go round)
-function rotatingPeg(): ShapePart[] {
-  const { across, height, cap } = PEG;
+function rotatingPillar(): ShapePart[] {
+  const { across, height, cap } = ROTATING_PILLAR;
   return [squareSlab(across * 0.85, height - cap, -height, PILLAR_COLOURS.stone), squareSlab(across, cap, -cap, PILLAR_COLOURS.moss)];
 }
 
@@ -388,4 +388,4 @@ export const OBSTACLE_SHAPES: Record<ModelledObstacle, ShapePart[]> = { lily_pad
   tall_thin_gate: [...tallThinGate(), ...fallArrow(TALL_GATE.deep)], low_wide_gate: [...lowWideGate(), ...fallArrow(LOW_GATE.deep)],
   pushing_block: pushingBlock(), pushing_platform: pushingPlatform(), short_pushing_platform: pushingPlatform(SHORT_PUSHING_PLATFORM_OUT),
   rotating_pots: rotatingPot(), rotating_platforms: rotatingPlatform(),
-  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw(), timed_plank: timedPlank(), breaking_plank: breakingPlank(), rotating_pegs: rotatingPeg(), lift_platform: liftPlatform(), floor_fire: floorFire(), steady_fire: floorFire() };
+  slamming_walls: slammingWalls(), rising_pillar: risingPillar(), carrying_platform: carryingPlatform(), bounce_pad: bouncePad(), steam_vent: steamVent(), moving_platform: movingPlatform(), dropping_platform: droppingPlatform(), falling_platform: fallingPlatform(), seesaw: seesaw(), timed_plank: timedPlank(), breaking_plank: breakingPlank(), rotating_pillars: rotatingPillar(), lift_platform: liftPlatform(), floor_fire: floorFire(), steady_fire: floorFire() };

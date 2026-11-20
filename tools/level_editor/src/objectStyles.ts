@@ -79,7 +79,7 @@ export const OBSTACLE_COLOURS: Record<ObstacleType, string> = {
   seesaw: "#6a5a50",
   timed_plank: "#8a6a40",
   breaking_plank: "#9a7048",
-  rotating_pegs: "#6a7458",
+  rotating_pillars: "#6a7458",
   lift_platform: "#5a6658",
   floor_fire: "#e8702a",
   steady_fire: "#f04a1a",

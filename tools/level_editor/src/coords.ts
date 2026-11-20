@@ -51,7 +51,7 @@ export function stoneRolling(turn: number): Vec3 {
 
 // which way a rotating obstacle goes round, as its angle from its circle's across
 // axis towards its up axis grows (1) or shrinks (-1): the game turns pots,
-// platforms and pegs from up towards across, and reversed the other way
+// platforms and pillars from up towards across, and reversed the other way
 function rotatingWay(reverse: boolean): number {
   if (reverse) {
     return 1;

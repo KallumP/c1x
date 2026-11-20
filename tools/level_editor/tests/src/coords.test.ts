@@ -285,15 +285,15 @@ describe("an enemy facing the way it walks", () => {
 });
 
 // seen in the game (an unturned level): a rotating pot goes from the top of its
-// circle towards +x, clockwise from behind, and rotating pegs from the far side
+// circle towards +x, clockwise from behind, and rotating pillars from the far side
 // towards +x, clockwise from above
 describe("a rotating obstacle's arrow", () => {
   const POT_AXES: [Vec3, Vec3] = [[1, 0, 0], [0, 0, 1]];  // across the map, then up
-  const PEG_AXES: [Vec3, Vec3] = [[1, 0, 0], [0, 1, 0]];  // across the map, then along it
+  const PILLAR_AXES: [Vec3, Vec3] = [[1, 0, 0], [0, 1, 0]];  // across the map, then along it
 
   test("is halfway between the first two that go round, on the circle", () => {
     expectCloseTo(rotatingArrow([0, 0, 2], 1, POT_AXES, 2, false).at, [0, 0, 3]);
-    expectCloseTo(rotatingArrow([0, 0, 0], 2, PEG_AXES, 4, false).at, [Math.SQRT2, Math.SQRT2, 0]);
+    expectCloseTo(rotatingArrow([0, 0, 0], 2, PILLAR_AXES, 4, false).at, [Math.SQRT2, Math.SQRT2, 0]);
   });
 
   test("opposite the first when one goes round", () => {
@@ -304,8 +304,8 @@ describe("a rotating obstacle's arrow", () => {
     expectCloseTo(rotatingArrow([0, 0, 0], 1, POT_AXES, 2, false).pointing, [1, 0, 0]);
   });
 
-  test("points the way the game turns pegs: from the far side towards +x", () => {
-    expectCloseTo(rotatingArrow([0, 0, 0], 1, PEG_AXES, 2, false).pointing, [1, 0, 0]);
+  test("points the way the game turns pillars: from the far side towards +x", () => {
+    expectCloseTo(rotatingArrow([0, 0, 0], 1, PILLAR_AXES, 2, false).pointing, [1, 0, 0]);
   });
 
   test("points the other way round when reversed", () => {
