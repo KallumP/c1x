@@ -328,3 +328,31 @@ describe("outlineChoices", () => {
     expect(outlineChoices([switchBox(1), switchBox(2, 1), switchBox(3)], 1)).toEqual([1, 3]);
   });
 });
+
+describe("copying", () => {
+  const copied = (state: EditorState) => editorReducer(state, { type: "copy" }).copied;
+
+  test("copies the selected object", () => {
+    const state = editorReducer(withObjects([box(1), enemyObject("crab", { at: [2, 0, 0] })]), { type: "select", index: 1 });
+    expect(copied(state)).toEqual(enemyObject("crab", { at: [2, 0, 0] }));
+  });
+
+  test("copies nothing with nothing selected", () => {
+    expect(copied(withObjects([box(1)]))).toBeNull();
+  });
+
+  test("doesn't copy the spawn or the end, as a level has one of each", () => {
+    const state = editorReducer(withObjects([newObject("spawn", [0, 0, 0])]), { type: "select", index: 0 });
+    expect(copied(state)).toBeNull();
+  });
+
+  test("a copied switch leaves its number behind, so its copy gets the next free one", () => {
+    const state = editorReducer(withObjects([{ ...newObject("switch", [0, 0, 0]), switch: 1 }]), { type: "select", index: 0 });
+    expect(copied(state)).not.toHaveProperty("switch");
+  });
+
+  test("what's copied stays copied when another level opens", () => {
+    const state = editorReducer(editorReducer(withObjects([box(1)]), { type: "select", index: 0 }), { type: "copy" });
+    expect(editorReducer(state, { type: "load", objects: [] }).copied).toEqual(box(1));
+  });
+});
