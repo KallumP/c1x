@@ -171,10 +171,6 @@ export type PathEnemy = (typeof PATH_ENEMIES)[number];
 export const isPathEnemy = (type: EnemyType | undefined): type is PathEnemy => PATH_ENEMIES.some((enemy) => enemy === type);
 export const PATH_NODES_MAX = 20;
 
-// the enemies with a path, for messages: "crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards and red lizards"
-const pluralName = (enemy: EnemyType) => `${enemy.replace("_", " ")}s`;
-const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map(pluralName).join(", ")} and ${pluralName(PATH_ENEMIES.at(-1)!)}`;
-
 // how many times the game's own pace a path enemy can walk at (seen working in the game with crabs and turtles)
 export const SPEED_MIN = 0.25;
 export const SPEED_MAX = 3;
@@ -580,7 +576,7 @@ function checkNodeCount(nodes: unknown, enemy: EnemyType, objectNumber: number):
     return;
   }
   if (!isPathEnemy(enemy)) {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no path (${PATH_ENEMIES_NAMED} do)`);
+    throw new Error(`object ${objectNumber}: a ${enemy} has no path`);
   }
   checkPathLength(nodes, objectNumber);
 }
@@ -616,7 +612,7 @@ function readObstaclePath(fields: Record<string, unknown>, obstacle: ObstacleTyp
     return {};
   }
   if (!isPathObstacle(obstacle)) {
-    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves, sliding pillars, carrying platforms, moving platforms and lift platforms do)`);
+    throw new Error(`object ${objectNumber}: a ${obstacle} has no path`);
   }
   checkPathLength(fields.path, objectNumber);
   return { path: pathNodes(fields.path, objectNumber) };
