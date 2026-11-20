@@ -107,6 +107,12 @@ describe("obstacle shapes", () => {
     expectWithin(max[2], [780, 820]);
   });
 
+  test("a moving platform runs out towards the player from its spot, as the game's (PlPyV, 0 to 797 along z)", () => {
+    const { min, max } = shapeBounds(OBSTACLE_SHAPES.moving_platform);
+    expectWithin(min[2], [-10, 30]);
+    expectWithin(max[2], [780, 820]);
+  });
+
   test("every obstacle but the rolling stone and mossy slide (drawn as their track and slope) has a shape", () => {
     OBSTACLE_TYPES.filter((obstacle) => obstacle !== "rolling_stone" && obstacle !== "mossy_slide")
       .forEach((obstacle) => expect(OBSTACLE_SHAPES[obstacle].length).toBeGreaterThan(0));
