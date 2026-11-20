@@ -297,13 +297,14 @@ function steamVent(): ShapePart[] {
 const MOVING_PLATFORM = { across: 802, deep: 797, thick: 403, moss: 60 };
 
 // slippery climb's moving platform (PlPyG): a square stone slab 802 x 797
-// across, its mossy top at its spot, 403 thick
+// across, its mossy top at its spot, 403 thick, running from its spot out
+// towards the player (its model 0 to 797 along z)
 function movingPlatform(): ShapePart[] {
   const { across, deep, thick, moss } = MOVING_PLATFORM;
   const stone = thick - moss;
   return [
-    { kind: "box", size: [across, stone, deep], at: [0, -moss - stone / 2, 0], colour: PILLAR_COLOURS.stone },
-    { kind: "box", size: [across, moss, deep], at: [0, -moss / 2, 0], colour: PILLAR_COLOURS.moss },
+    { kind: "box", size: [across, stone, deep], at: [0, -moss - stone / 2, deep / 2], colour: PILLAR_COLOURS.stone },
+    { kind: "box", size: [across, moss, deep], at: [0, -moss / 2, deep / 2], colour: PILLAR_COLOURS.moss },
   ];
 }
 
