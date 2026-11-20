@@ -43,12 +43,12 @@ describe("parseObjects", () => {
     ["{}", "should be a list of objects"],
     ["[1]", "object 1 should be"],
     ['[{"at": [0, 0, 0]}]', "object 1 has no kind"],
-    ['[{"kind": "tnt", "at": [0, 0, 0]}]', "object 1: unknown kind tnt"],
+    ['[{"kind": "tnt", "at": [0, 0, 0]}]', /^object 1: unknown kind tnt$/],
     ['[{"kind": "end", "at": [0, 0, 0]}, {"kind": "end", "at": [1, 0, 0]}]', "object 2: there's already a end"],
     ['[{"kind": "spawn", "at": [0, 0]}]', "object 1: at should be"],
     ['[{"kind": "spawn", "at": [0, 0, 0], "raise": "up"}]', "object 1: raise should be"],
-    ['[{"kind": "box", "at": [0, 0, 0]}]', "object 1: a box needs a type"],
-    ['[{"kind": "box", "type": "nitro", "at": [0, 0, 0]}]', "object 1: unknown box type nitro"],
+    ['[{"kind": "box", "at": [0, 0, 0]}]', /^object 1: a box needs a type or a subtype number, not both$/],
+    ['[{"kind": "box", "type": "nitro", "at": [0, 0, 0]}]', /^object 1: unknown box type nitro$/],
     ['[{"kind": "box", "subtype": 1, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
     ['[{"kind": "box", "subtype": 12, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
     ['[{"kind": "box", "subtype": 13, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
@@ -252,8 +252,8 @@ describe("enemies", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "at": [0, 0, 0]}]', "object 1: an enemy needs a type (plant, blue_river_plant, green_river_plant, spider, snake, gunman, fish, lab_assistant, crab, turtle, native, monkey, warthog, lizard, red_lizard, walking_lizard, robot_dog, barrel_roller, camera_robot, bird, electric_scientist, blob, flying_camera, badger, walking_spider, bat, leader_bats)"],
-    ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', "object 1: unknown enemy type dragon"],
+    ['[{"kind": "enemy", "at": [0, 0, 0]}]', /^object 1: an enemy needs a type$/],
+    ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', /^object 1: unknown enemy type dragon$/],
     ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras do)"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
@@ -588,8 +588,8 @@ describe("obstacles", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', "object 1: an obstacle needs a type (lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms, slamming_walls, rising_pillar, carrying_platform, bounce_pad, steam_vent, moving_platform, dropping_platform, falling_platform, seesaw, timed_plank, breaking_plank, rotating_pillars, lift_platform, floor_fire, steady_fire, short_pushing_platform)"],
-    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', "object 1: unknown obstacle type raft (it can be lily_pad, leaf, wooden_peg, rolling_stone, mossy_slide, rising_spiked_log, falling_spiked_log, fire_pit, dropping_pillar, sliding_pillar, tall_thin_gate, low_wide_gate, pushing_block, pushing_platform, rotating_pots, rotating_platforms, slamming_walls, rising_pillar, carrying_platform, bounce_pad, steam_vent, moving_platform, dropping_platform, falling_platform, seesaw, timed_plank, breaking_plank, rotating_pillars, lift_platform, floor_fire, steady_fire, short_pushing_platform)"],
+    ['[{"kind": "obstacle", "at": [0, 0, 0]}]', /^object 1: an obstacle needs a type$/],
+    ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', /^object 1: unknown obstacle type raft$/],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: a leaf has no speed"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count (an obstacle takes kind, at, raise, type, path, speed, start, reverse, length, angle, rotation, every, offset, platforms, radius, shake, down, delay)"],
   ])("refuses %s", (text, message) => {
