@@ -3,6 +3,7 @@
 // "bat"). a variant of a thing is named the thing, then which in brackets, so
 // variants sit together in the list: "Lizard (green)", "Lizard (red)"
 import type { Placeable } from "./editor";
+import { boxTypeName, objectType, type LevelObject } from "./objects";
 
 const NAMES: Partial<Record<Placeable, string>> = {
   // boxes
@@ -68,6 +69,19 @@ function idInWords(what: string): string {
 // the name a thing to place is shown by
 export function placeableName(what: Placeable): string {
   return NAMES[what] ?? idInWords(what);
+}
+
+// what a placed object is: its box type, its enemy or obstacle type, or the spawn or end
+function placedAs(object: LevelObject): Placeable {
+  if (object.box !== undefined) {
+    return boxTypeName(object.box);
+  }
+  return objectType(object) ?? (object.kind as "spawn" | "end");
+}
+
+// the name a placed object is shown by, the same as the palette's for it
+export function objectName(object: LevelObject): string {
+  return placeableName(placedAs(object));
 }
 
 // things to place in alphabetical order of their names

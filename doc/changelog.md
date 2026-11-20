@@ -9,6 +9,7 @@
 ### Changed
 
 - the level editor's rotating pegs are now **Pillars (rotating)**
+- a selected object's settings in the level editor start with its name
 
 ## 2026-11-19
 
