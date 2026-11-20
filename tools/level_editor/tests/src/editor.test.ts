@@ -356,3 +356,34 @@ describe("copying", () => {
     expect(editorReducer(state, { type: "load", objects: [] }).copied).toEqual(box(1));
   });
 });
+
+describe("pasting", () => {
+  const copying = (objects: LevelObject[], index: number) =>
+    editorReducer(editorReducer(withObjects(objects), { type: "select", index }), { type: "copy" });
+
+  test("pastes what's copied where it's put, and selects it", () => {
+    const state = editorReducer(copying([box(1)], 0), { type: "paste", at: [5, 6, 7] });
+    expect(state.objects).toEqual([box(1), newObject("basic", [5, 6, 7])]);
+    expect(state.selected).toBe(1);
+  });
+
+  test("pastes on top of what was copied, with nowhere to put it", () => {
+    const state = editorReducer(copying([box(1)], 0), { type: "paste", at: null });
+    expect(state.objects).toEqual([box(1), box(1)]);
+  });
+
+  test("a pasted switch gets the next free number", () => {
+    const state = editorReducer(copying([{ ...newObject("switch", [0, 0, 0]), switch: 1 }], 0), { type: "paste", at: null });
+    expect(state.objects[1].switch).toBe(2);
+  });
+
+  test("pastes nothing with nothing copied", () => {
+    const state = withObjects([box(1)]);
+    expect(editorReducer(state, { type: "paste", at: [5, 6, 7] })).toBe(state);
+  });
+
+  test("pasting can be undone", () => {
+    const state = editorReducer(editorReducer(copying([box(1)], 0), { type: "paste", at: null }), { type: "undo" });
+    expect(state.objects).toEqual([box(1)]);
+  });
+});
