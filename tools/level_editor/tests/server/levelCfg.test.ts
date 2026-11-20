@@ -31,9 +31,15 @@ describe("parseLevelCfg", () => {
   });
 
   test("reads the camera's distance and angle, the usual ones for what isn't set or can't be read", () => {
-    expect(parseLevelCfg("camera_distance = 1.5\ncamera_angle = 60\n").camera).toEqual({ distance: 1.5, angle: 60 });
+    expect(parseLevelCfg("camera_distance = 1.5\ncamera_angle = 60\n").camera).toEqual({ distance: 1.5, angle: 60, view: "behind" });
     expect(parseLevelCfg("camera_angle = 30\n").camera).toEqual({ ...DEFAULT_CAMERA, angle: 30 });
     expect(parseLevelCfg("camera_distance = 9\ncamera_angle = 5\n").camera).toEqual(DEFAULT_CAMERA);
+  });
+
+  test("reads the camera's view, behind crash for what isn't set or isn't behind or side", () => {
+    expect(parseLevelCfg("camera_view = side\n").camera).toEqual({ ...DEFAULT_CAMERA, view: "side" });
+    expect(parseLevelCfg("").camera.view).toBe("behind");
+    expect(parseLevelCfg("camera_view = above\n").camera.view).toBe("behind");
   });
 
   test("reads the music, jungle rollers' for what isn't set or isn't a soundtrack", () => {
@@ -89,8 +95,18 @@ describe("setLevelCfg", () => {
   });
 
   test("writes a camera that isn't the usual one", () => {
-    expect(setLevelCfg("", cfg({ camera: { distance: 1.5, angle: 60 } })))
+    expect(setLevelCfg("", cfg({ camera: { distance: 1.5, angle: 60, view: "behind" } })))
       .toBe("turn = 0\nscale = 400\ncamera_distance = 1.5\ncamera_angle = 60\n");
+  });
+
+  test("writes a side view, and changes a view line already there, even to behind", () => {
+    expect(setLevelCfg("", cfg({ camera: { ...DEFAULT_CAMERA, view: "side" } }))).toBe("turn = 0\nscale = 400\ncamera_view = side\n");
+    expect(setLevelCfg("camera_view = side\n", cfg())).toBe("camera_view = behind\nturn = 0\nscale = 400\n");
+  });
+
+  test("refuses a camera view that isn't behind or side", () => {
+    const above = { ...DEFAULT_CAMERA, view: "above" } as unknown as LevelCfg["camera"];
+    expect(() => setLevelCfg("", cfg({ camera: above }))).toThrow("camera_view has to be behind or side, not above");
   });
 
   test("changes a camera line already there, even to the usual camera", () => {
@@ -98,8 +114,8 @@ describe("setLevelCfg", () => {
   });
 
   test("refuses a camera the build can't take", () => {
-    expect(() => setLevelCfg("", cfg({ camera: { distance: 4, angle: 42 } }))).toThrow("camera_distance has to be 0.5 to 3");
-    expect(() => setLevelCfg("", cfg({ camera: { distance: 1, angle: 90 } }))).toThrow("camera_angle has to be 10 to 80");
+    expect(() => setLevelCfg("", cfg({ camera: { ...DEFAULT_CAMERA, distance: 4 } }))).toThrow("camera_distance has to be 0.5 to 3");
+    expect(() => setLevelCfg("", cfg({ camera: { ...DEFAULT_CAMERA, angle: 90 } }))).toThrow("camera_angle has to be 10 to 80");
   });
 
   test("writes music that isn't jungle rollers', and changes a music line already there", () => {

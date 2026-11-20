@@ -512,7 +512,10 @@ int CamUpdate() {
     cam_zoom = (int32_t)cur_path->cam_zoom << 8;
     CamFollow(crash, 0); /* along the path; LevelUpdate keeps the offsets on */
     path_x = cam_trans.x - follow_cam_offset;
-    follow_cam_offset = FollowCamOffset(follow_cam_offset, crash->trans.x - path_x);
+    follow_cam_offset = FollowCamSlide( /* level with him along a side view's path */
+      follow_cam_offset,
+      crash->trans.x - path_x,
+      cur_path->direction_x);
     cam_trans.x = path_x + follow_cam_offset;
     path_y = cam_trans.y; /* the path's until the camera has a height of its own */
     follow_cam_ground_y = FollowCamGroundY(follow_cam_ground_y, crash->trans.y,

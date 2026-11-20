@@ -5,7 +5,7 @@ import { DEFAULT_SCALE } from "../coords";
 import { DEFAULT_MUSIC, DEFAULT_MUSIC_VOLUME } from "../music";
 import { DEFAULT_SKY, isSameSky } from "../sky";
 
-const isSameCamera = (first: Camera, second: Camera) => first.distance === second.distance && first.angle === second.angle;
+const isSameCamera = (first: Camera, second: Camera) => first.distance === second.distance && first.angle === second.angle && first.view === second.view;
 
 const sameCfg = (first: LevelCfg, second: LevelCfg) =>
   first.turn === second.turn && first.scale === second.scale && isSameSky(first.sky, second.sky) && isSameCamera(first.camera, second.camera)

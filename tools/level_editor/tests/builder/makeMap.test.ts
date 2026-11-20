@@ -5,6 +5,7 @@ import { LAB_ASSISTANT_REACH, throwFlags } from "../../src/labAssistantThrow";
 import { BAT_SWOOP, FISH_LEAP, LEAF_DRIFT, leafDriftShares, LEADER_BATS_FLIGHT, leaderBatsGap, pillarSlideShares } from "../../src/coords";
 import type { EnemyType, LevelObject, ObstacleType } from "../../src/objects";
 import { DEFAULT_SKY, type Sky } from "../../src/sky";
+import { DEFAULT_CAMERA } from "../../src/camera";
 import { enemyObject, expectNear, obstacleObject } from "../helpers";
 import { readCameraPath, readZoneHeader, readZoneRect } from "./zoneReaders";
 import { BASE_LEVEL } from "../../builder/baseLevel";
@@ -17,6 +18,7 @@ import { donorObject, OBJECT_DONORS, objectDonorObjects } from "../../builder/do
 import type { Vec3 } from "../../builder/vectors";
 import { LID_TEST, makeMap, type MapOptions } from "../../builder/makeMap";
 import { FOLLOW_CAM_MODE } from "../../builder/paths";
+import { CAM_LEAD, CAM_OFFSET, SIDE_CAMERA_DROP } from "../../builder/route";
 import { colour5551 } from "../../builder/tpage";
 import { levelEntity, STONE_TRACK_LIFT, stoneTrack } from "../../builder/templates";
 import { readWorldHeader, readWorldPolygon, readWorldVertex, TEXINFOS_AT } from "../../builder/worldGeometry";
@@ -205,21 +207,21 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   test("a larger camera distance puts the camera further back and higher", () => {
     const usual = cameraPathFor();
-    const far = cameraPathFor({ distance: 2, angle: 42 });
+    const far = cameraPathFor({ distance: 2, angle: 42, view: "behind" });
     expect(far.followHeight).toBeGreaterThan(usual.followHeight);
     expect(far.points[0][1]).toBeGreaterThan(usual.points[0][1]); // higher above the floor
     expect(far.zoom).toBeGreaterThan(usual.zoom); // further behind crash along its path
   });
 
   test("a steeper camera angle keeps the camera nearer behind crash", () => {
-    expect(cameraPathFor({ distance: 1, angle: 70 }).zoom).toBeLessThan(cameraPathFor().zoom); // and higher up
+    expect(cameraPathFor({ distance: 1, angle: 70, view: "behind" }).zoom).toBeLessThan(cameraPathFor().zoom); // and higher up
   });
 
   test("a steeper camera angle tilts the camera further down", () => {
     const USUAL_ANGLE = 42;
     const USUAL_TILT = -181; // n. sanity beach's
     const ANGLE_UNITS = 4096; // a whole turn, in the game's angles
-    const tiltOf = (angle: number) => cameraPathFor({ distance: 1, angle }).points[0][3];
+    const tiltOf = (angle: number) => cameraPathFor({ distance: 1, angle, view: "behind" }).points[0][3];
     expect(tiltOf(USUAL_ANGLE)).toBe(USUAL_TILT);
     expect(tiltOf(USUAL_ANGLE + 18)).toBe(USUAL_TILT - Math.round((18 * ANGLE_UNITS) / 360));
   });
@@ -2182,6 +2184,14 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       expect(zones.map(neighbours)).toEqual([[a, b], [b, a, c], [c, b]]);
     });
 
+    test("its zones aren't left/right zones, and their camera paths run along -z", () => {
+      const ZONE_FLAG_SIDE_SCROLL = 0x4000;
+      for (const zone of zones) {
+        expect(headerOf(zone).flags & ZONE_FLAG_SIDE_SCROLL).toBe(0);
+        expect(cameraPathOf(zone).direction).toEqual([0, 0, -4096]);
+      }
+    });
+
     test("its paths lead on to the next zones and back", () => {
       // a link is (relation, the zone's index in the zone's neighbours, its path's index there, goal)
       const [BEFORE, AFTER] = [1, 2]; // the path before or after this one
@@ -2225,6 +2235,105 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       const [pad] = warpPads(withEnd);
       expect(pad.zone.eid).toBe(zonesOf(withEnd)[2].eid);
       expectNear(pad.at[2], 128 + 2000, 16);
+    });
+  });
+
+  describe("a side view", () => {
+    const SIDE = { camera: { ...DEFAULT_CAMERA, view: "side" as const } };
+    const ZONE_LENGTH = 16384; // along the route, the most a zone holds
+    const zoneX = (zone: Entry) => readZoneRect(zone.items[1]).at[0];
+    // the zones from the start of the route (-x) to its end (+x)
+    const zonesAlongX = ({ entries }: Built) => 
+        [...entries.values()]
+        .filter((entry) => entry.type === ENTRY_ZDAT)
+        .sort((first, second) => zoneX(first) - zoneX(second));
+
+    test("turns the map so its route runs left to right (along +x)", () => {
+      const vertices = worldVertices(build([], SIDE));
+      const extentAlong = (axis: number) => Math.max(...vertices.map((vertex) => vertex[axis])) - Math.min(...vertices.map((vertex) => vertex[axis]));
+      // the floor, 16 m along the route, is 16 m along x and 8 m across, along z
+      expect([0, 1, 2].map(extentAlong)).toEqual([16 * 256, 2 * 256, 8 * 256]);
+    });
+
+    test("crash starts as far along the route as he does behind, from the left end", () => {
+      const FLOOR_IN = 128; // the floor's low corner is a cell in from the zone's
+      const FLOOR_LENGTH = 16 * 256;
+      const fromStartBehind = FLOOR_IN + FLOOR_LENGTH - crashAt(build().zone)[2]; // from the floor's +z end
+      const fromStartSide = crashAt(build([], SIDE).zone)[0] - FLOOR_IN; // from its -x end
+      expectNear(fromStartSide, fromStartBehind, 16);
+    });
+
+    describe("of a long map", () => {
+      const built = hasBase ? make(LONG_OBJ, SIDE) : null!;
+      const zones = hasBase ? zonesAlongX(built) : [];
+
+      test("is a chain of zones along +x", () => {
+        expect(zones.length).toBe(3);
+        const rects = zones.map((zone) => readZoneRect(zone.items[1]));
+        rects.slice(1).forEach((next, index) => {
+          const { at: [x, y, z], width, height, depth } = rects[index];
+          expect(width).toBe(ZONE_LENGTH);
+          expect(next.at[0]).toBe(x + ZONE_LENGTH); // the next one along +x, touching
+          expect([next.at[1], next.at[2], next.height, next.depth]).toEqual([y, z, height, depth]);
+        });
+      });
+
+      test("each zone lists itself, then the zones either side", () => {
+        const [a, b, c] = zones.map(({ eid }) => eid);
+        expect(zones.map((zone) => headerOf(zone).neighbours)).toEqual([[a, b], [b, a, c], [c, b]]);
+      });
+
+      // the camera sees either side of crash, so a zone draws the zones either side of it too
+      test("a zone draws its own meshes and the meshes of the zones either side", () => {
+        const ZONE_WORLDS_MAX = 8; // the most world meshes a zone lists
+        const zoneOrigins = (zone: Entry) => new Set(headerOf(zone).worlds.map(({ origin }) => origin.join()));
+        expect(zones.map((zone) => zoneOrigins(zone).size)).toEqual([2, 3, 2]);
+        zones.forEach((zone) => expect(headerOf(zone).worlds.length).toBeLessThanOrEqual(ZONE_WORLDS_MAX));
+      });
+
+      test("a zone's sort list lists polygons of every mesh it draws", () => {
+        const middle = zones[1];
+        const sortList = built.entries.get(cameraPathOf(middle).slst)!;
+        const firstList = sortList.items[0];
+        const ids = Array.from({ length: firstList.readUInt16LE(0) }, (_, index) => firstList.readUInt16LE(4 + 2 * index));
+        const listedWorlds = new Set(ids.map((id) => (id >> 12) & 7));
+        expect(listedWorlds.size).toBe(headerOf(middle).worlds.length);
+      });
+
+      test("each zone's camera path runs along +x beside crash, out across from him", () => {
+        const CRASH_LIFT = 100; // crash starts this far above where he's put
+        const CAM_EDGE = 200; // the path runs from this far in from the map's start, whichever way crash goes
+        const [, crashY, crashZ] = crashAt(zones[0]);
+        const paths = zones.map((zone) => cameraPathOf(zone).points);
+        expect(paths.every((points) => points.length > 0)).toBe(true);
+        expect(paths[0][0][0]).toBe(CAM_EDGE);
+        for (const points of paths) {
+          expect(points.every(([x]) => x >= 0 && x < ZONE_LENGTH)).toBe(true);
+          expect(points.slice(1).every((point, index) => point[0] > points[index][0])).toBe(true);
+          expect(points.every(([, y, z]) => z === crashZ + CAM_LEAD && y === crashY - CRASH_LIFT + CAM_OFFSET[1] - SIDE_CAMERA_DROP)).toBe(true);
+        }
+      });
+
+      test("its camera paths run right (+x), in zones that aren't left/right zones", () => {
+        // ZONE_FLAG_SIDE_SCROLL in src/formats/zdat.h: src/cam.c would look ahead the way
+        // such a zone's path runs, and the camera stays level with crash
+        const ZONE_FLAG_SIDE_SCROLL = 0x4000;
+        for (const zone of zones) {
+          expect(headerOf(zone).flags & ZONE_FLAG_SIDE_SCROLL).toBe(0);
+          expect(cameraPathOf(zone).direction).toEqual([4096, 0, 0]);
+        }
+      });
+
+      test("crash starts in the left-most zone", () => {
+        expect(built.level.nsd.ldat.zoneSpawn).toBe(zones[0].eid);
+        expect(zones.map((zone) => headerOf(zone).entityCount)).toEqual([1, 0, 0]);
+      });
+
+      test("an end object far along it is in the right-most zone", () => {
+        const withEnd = make(LONG_OBJ, { ...SIDE, objects: [object("end", [0, 45, 0])] });
+        const [pad] = warpPads(withEnd);
+        expect(pad.zone.eid).toBe(zonesAlongX(withEnd)[2].eid);
+      });
     });
   });
 });

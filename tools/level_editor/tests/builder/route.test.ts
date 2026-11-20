@@ -2,9 +2,18 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { Cells, solidCells } from "../../builder/collision";
-import type { Span } from "../../builder/fit";
+import { ROUTE_SIDE, type Span } from "../../builder/fit";
 import type { Mesh } from "../../builder/obj";
-import { CAM_LEAD, CAM_OFFSET, cameraOffsets, cameraPath, spawnPoint, zoneIndex, zonePaths } from "../../builder/route";
+import {
+  CAM_LEAD,
+  CAM_OFFSET,
+  cameraOffsets,
+  cameraPath,
+  SIDE_CAMERA_DROP,
+  spawnPoint,
+  zoneIndex,
+  zonePaths,
+} from "../../builder/route";
 import { DEFAULT_CAMERA } from "../../src/camera";
 import type { Vec3 } from "../../builder/vectors";
 import { worldMeshes } from "../../builder/worldMeshes";
@@ -67,6 +76,15 @@ describe("crash's spawn", () => {
     expect(spawnOn(staircase)[2]).toBe(walkStart - 12 * 128);
   });
 
+  test("a side view's walk runs left to right, along +x", () => {
+    // the staircase turned to run along x: crash starts about CAM_LEAD along it from its -x end
+    const SIDE_SIZE: Vec3 = [4096, 2048, 2048];
+    const staircase = merged(...Array.from({ length: 8 }, (_, i) => floorMesh(i * 512, 0, i * 512 + 512, 2048, 256 + 128 * (i % 2))));
+    const [x, , z] = spawnPoint(staircase, solidCells(staircase, SIDE_SIZE, 128), 128, ROUTE_SIDE);
+    expect(x).toBe(64 + 12 * 128);
+    expect([960, 1088]).toContain(z); // the middle across
+  });
+
   test("the middle across is the middle of the floors, not of the zone", () => {
     expect([320, 448]).toContain(spawnOn(floorMesh(0, 0, 768, 2048, 256))[0]); // either column next to 384
   });
@@ -89,16 +107,24 @@ describe("where the camera is from crash", () => {
   });
 
   test("its distance scales both", () => {
-    expect(cameraOffsets({ distance: 2, angle: 42 })).toEqual({ lead: 2 * CAM_LEAD, height: 2 * CAM_OFFSET[1] });
+    expect(cameraOffsets({ distance: 2, angle: 42, view: "behind" })).toEqual({ lead: 2 * CAM_LEAD, height: 2 * CAM_OFFSET[1] });
   });
 
   test("its angle turns it about crash, keeping its distance", () => {
     // up or down, that many degrees from where it was
     const usual = Math.hypot(CAM_LEAD, CAM_OFFSET[1]);
     const degrees = (offsets: { lead: number; height: number }) => (Math.atan2(offsets.height, offsets.lead) * 180) / Math.PI;
-    const steep = cameraOffsets({ distance: 1, angle: 60 });
+    const steep = cameraOffsets({ distance: 1, angle: 60, view: "behind" });
     expect(Math.hypot(steep.lead, steep.height)).toBeCloseTo(usual, 0);
     expect(degrees(steep) - degrees(cameraOffsets(DEFAULT_CAMERA))).toBeCloseTo(18, 1);
+  });
+
+  // so crash is nearer the middle of the screen
+  test("a side view's is lower, by more the further away it is", () => {
+    const behind = cameraOffsets({ distance: 1.5, angle: 20, view: "behind" });
+    const side = cameraOffsets({ distance: 1.5, angle: 20, view: "side" });
+    expect(SIDE_CAMERA_DROP).toBeGreaterThan(0);
+    expect(side).toEqual({ lead: behind.lead, height: behind.height - Math.round(1.5 * SIDE_CAMERA_DROP) });
   });
 });
 
@@ -125,6 +151,12 @@ describe("zone paths", () => {
 
   test("zones before the start have no points", () => {
     expect(zonePaths([[1, 2, 20000], [1, 2, 1000]], SPANS)).toEqual([[], [[1, 2, 20000 - 16384]], [[1, 2, 1000]]]);
+  });
+
+  test("side on, each point goes to the zone along x it's in, crash being beside the camera, not ahead", () => {
+    const SIDE_SPANS: Span[] = [[0, 16384], [16384, 32768]];
+    const points: Vec3[] = [[16000, 2, 3], [16384, 2, 3], [20000, 2, 3]];
+    expect(zonePaths(points, SIDE_SPANS, CAM_LEAD, ROUTE_SIDE)).toEqual([[[16000, 2, 3]], [[0, 2, 3], [20000 - 16384, 2, 3]]]);
   });
 });
 
@@ -174,5 +206,31 @@ describe("the camera path", () => {
   test("it picks the ground nearest the last height", () => {
     const upper = floorMesh(0, 0, 2048, 8192, 2048); // an upper floor over the whole route
     expect(heights(pathOver(merged(floorMesh(0, 0, 2048, 8192, 512), upper), [1024, 512, 5000]))).toEqual(new Set([512 + CAM_OFFSET[1]]));
+  });
+
+  describe("for a side view", () => {
+    const SIDE_SIZE: Vec3 = [8192, 4096, 2048];
+    const pathBeside = (mesh: Mesh, start: Vec3) => cameraPath(solidCells(mesh, SIDE_SIZE, 128), SIDE_SIZE, 128, start, 256, undefined, ROUTE_SIDE);
+
+    const CAM_EDGE = 200; // how far in from the zone's ends the camera path stays
+
+    test("it runs beside crash (+z), along +x, the whole zone either side of his start", () => {
+      // so the camera follows him whichever way he goes from the spawn
+      const points = pathBeside(floorMesh(0, 0, 8192, 2048, 512), [3000, 512, 1024]);
+      expect(points[0]).toEqual([CAM_EDGE, 512 + CAM_OFFSET[1], 1024 + CAM_LEAD]);
+      expect(points.slice(1).map((point, index) => point[0] - points[index][0])).toEqual(Array(points.length - 1).fill(256));
+      expect(points.every(([, , z]) => z === 1024 + CAM_LEAD)).toBe(true);
+      expect(points[points.length - 1][0]).toBeLessThan(8192 - CAM_EDGE);
+      expect(points[points.length - 1][0]).toBeGreaterThanOrEqual(8192 - CAM_EDGE - 256);
+    });
+
+    test("its height follows the ground where crash is, across from the camera", () => {
+      const mesh = merged(floorMesh(0, 0, 4096, 2048, 512), floorMesh(4096, 0, 8192, 2048, 1024));
+      const points = pathBeside(mesh, [3000, 512, 1024]);
+      expect(points.some(([x]) => x >= 4096)).toBe(true); // on over the higher floor
+      for (const [x, y] of points) {
+        expect(y).toBe((x < 4096 ? 512 : 1024) + CAM_OFFSET[1]);
+      }
+    });
   });
 });

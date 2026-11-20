@@ -20,6 +20,19 @@ int32_t FollowCamOffset(int32_t offset, int32_t target) {
 }
 
 /*
+ * the follow camera's next offset along x from its path (path_direction_x is
+ * its path's direction_x), towards target (crash's x less the path's): along a
+ * path behind crash, eased (FollowCamOffset); along a side view's path, which
+ * runs along x, all the way at once, so the camera stays level with him left
+ * and right, never trailing or looking ahead of him
+ */
+int32_t FollowCamSlide(int32_t offset, int32_t target, int16_t path_direction_x) {
+  if (path_direction_x != 0)
+    return target;
+  return FollowCamOffset(offset, target);
+}
+
+/*
  * the height of the floor the follow camera keeps above: crash's height
  * while he's on the floor, else ground (the floor he was last on), unless
  * he's dropped below it. so it rises when he lands somewhere higher, but

@@ -27,7 +27,15 @@ import {
   objectType,
 } from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
-import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
+import {
+  CAMERA_ANGLE_MAX,
+  CAMERA_ANGLE_MIN,
+  CAMERA_DISTANCE_MAX,
+  CAMERA_DISTANCE_MIN,
+  CAMERA_VIEWS,
+  levelTurn,
+  type Camera,
+} from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
 import { isAudioSongName, MUSIC_VOLUME_MAX, MUSIC_VOLUME_MIN, songChoices, songLabel } from "../music";
 import { defaultLevelTitle, drawableTitle } from "../levelTitle";
@@ -228,9 +236,17 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
     </>
   );
 
+  // how far the level's objects are turned, as the build turns them (none until its level.cfg is read)
+  const objectTurn = () => {
+    if (!levelCfg) {
+      return 0;
+    }
+    return levelTurn(levelCfg.turn, levelCfg.camera);
+  };
+
   // the selected node of a path enemy's path, or leader bats' second leader: where it is in blender
   const renderNodeFields = (enemy: LevelObject, node: number) => {
-    const turn = levelCfg ? levelCfg.turn : 0;
+    const turn = objectTurn();
     const position = pathPositions(enemy, turn, scale)[node];
     const setAxis = (axis: number, value: number) => {
       const moved = position.map((current, axisIndex) => (axisIndex === axis ? value : current)) as Vec3;
@@ -251,7 +267,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   // as it was when the slider was grabbed, so sliding down and back keeps its
   // shape, and the whole slide is one change to undo
   const renderNodeSlider = (enemy: LevelObject) => {
-    const turn = levelCfg ? levelCfg.turn : 0;
+    const turn = objectTurn();
     const grab = () => {
       grabbedPath.current = enemyPath(enemy, turn, scale);
       dispatch({ type: "checkpoint" });
@@ -297,7 +313,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   // turns an enemy's path round, so it starts at the other end; a selected node stays selected
   const renderTurnRoundButton = (enemy: LevelObject) => {
     const turnRound = () => {
-      const turn = levelCfg ? levelCfg.turn : 0;
+      const turn = objectTurn();
       change({ path: turnedRound(enemy, turn, scale) });
       if (index !== null && state.selectedNode !== null) {
         dispatch({ type: "selectNode", index, node: nodeTurnedRound(state.selectedNode, nodeCount(enemy)) });
@@ -433,6 +449,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
     return (
       <>
         <h3>Camera</h3>
+        <ChoiceField label="view" value={camera.view} choices={CAMERA_VIEWS} onChange={(view) => changeCamera({ view })} />
         <SliderField
           label="distance Ã—"
           value={camera.distance}
@@ -451,8 +468,9 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
           onChange={(angle) => changeCamera({ angle })}
         />
         <p className="hint">
-          Distance is how far the camera is from Crash, times its usual distance. Angle is how far above him it looks
-          down from (42 is usual). Build the level to see it in the game.
+          View is behind Crash, or side to watch him from the side as he runs left to right. Distance is how far the
+          camera is from Crash, times its usual distance. Angle is how far above him it looks down from (42 is usual).
+          Build the level to see it in the game.
         </p>
       </>
     );

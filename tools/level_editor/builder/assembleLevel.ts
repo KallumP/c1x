@@ -5,7 +5,8 @@ import { CORE_EXEC_SLOTS, cutLevel, packEntries } from "./cutLevel";
 import { withDonorObjects, type DonorObject } from "./donorObjects";
 import { entityType } from "./entities";
 import { stringToEid } from "./entryIds";
-import { CAM_LEAD, cameraOffsets } from "./route";
+import type { Route } from "./fit";
+import { CAM_LEAD, cameraOffsets, routeOf, zonesDrawn } from "./route";
 import { DEFAULT_CAMERA, type Camera } from "../src/camera";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, type Entry, type Level, type Page } from "./levelFiles";
 import type { BuiltWorld } from "./mapTextures";
@@ -24,14 +25,21 @@ export const LID_TEST = 0x1; // custom levels use the test level id (see src/com
 const CAMERA_ROTATION = [-181, 1, 0]; // the camera's rotation at each path point, as on n. sanity beach (its tilt first)
 const ANGLE_UNITS = 4096; // a whole turn, in the game's angles
 const CAMERA_ZOOM = 1700;
-const CAMERA_DIRECTION: [number, number, number] = [0, 0, -4096]; // along -z
+const DIRECTION_UNIT = 4096; // a path's direction is a unit vector with a 12 bit fraction
 
-// what goes in one zone: its z offset from the first zone's corner, collision
+// the way a camera path runs: along the route (-z behind crash, +x beside him)
+function pathDirection({ axis, way }: Route): Vec3 {
+  const direction: Vec3 = [0, 0, 0];
+  direction[axis] = way * DIRECTION_UNIT;
+  return direction;
+}
+
+// what goes in one zone: where its corner is from the first zone's, collision
 // blocks, world meshes (relative to the zone) and their headers' extra
 // texinfos, camera path points relative to the zone (none for zones the camera
 // never reaches) and entities
 export interface ZonePlan {
-  zOffset: number;
+  offset: Vec3;
   blocks: Block[];
   worlds: BuiltWorld[];
   texinfos: Buffer[];
@@ -43,7 +51,7 @@ export interface Assembly {
   level: Level;            // the real level
   templates: Templates;
   size: Vec3;              // each zone's
-  zones: ZonePlan[];       // the first at the template zone's origin, the rest each along -z from the one before
+  zones: ZonePlan[];       // the first at the template zone's origin, the rest each along the route from the one before
   step: number;            // between camera path points
   spawnZone: number;       // the zone crash (its first entity) starts in
   pageEids: number[];      // texture pages for the meshes' texinfos
@@ -106,24 +114,28 @@ function pathLinks(zones: ZonePlan[], zoneIndex: number, neighbours: number[]): 
   return links;
 }
 
-// a zone's camera path and its sort list, which lists its own meshes and the
-// next zone's, as the camera looks on into it
+// the zones a zone draws (zonesDrawn), in the assembly's route
+function drawnZones({ zones, camera = DEFAULT_CAMERA }: Assembly, zoneIndex: number): number[] {
+  return zonesDrawn(zoneIndex, zones.length, routeOf(camera));
+}
+
+// a zone's camera path and its sort list, which lists the meshes of the zones
+// it draws, each by its z offset from the zone
 function zonePath(assembly: Assembly, zoneIndex: number, neighbours: number[]): { path: Buffer; sortList: Entry } {
   const { zones, step, camera = DEFAULT_CAMERA } = assembly;
   const zone = zones[zoneIndex];
   const rotation = cameraRotation(camera);
-  const next = zones[zoneIndex + 1];
-  const listed = zone.worlds.map((world) => ({ ...world, zOffset: 0 }));
-  if (next) {
-    listed.push(...next.worlds.map((world) => ({ ...world, zOffset: next.zOffset - zone.zOffset })));
-  }
+  const listed = drawnZones(assembly, zoneIndex).flatMap((drawn) => zones[drawn].worlds.map((world) => ({
+    ...world,
+    zOffset: zones[drawn].offset[2] - zone.offset[2],
+  })));
   const path = pathBytes({
     slst: sortListEid(zoneIndex),
     points: zone.points.map(([x, y, z]) => [x, y, z, rotation[0], rotation[1], rotation[2]]),
     camMode: FOLLOW_CAM_MODE,
     zoom: cameraZoom(camera),
     averageNodeDistance: step,
-    direction: CAMERA_DIRECTION,
+    direction: pathDirection(routeOf(camera)),
     links: pathLinks(zones, zoneIndex, neighbours),
     followHeight: cameraOffsets(camera).height,
   });
@@ -136,8 +148,10 @@ function zoneEntries(assembly: Assembly, zoneIndex: number, origins: Vec3[]): En
   const { templates, zones, size } = assembly;
   const zone = zones[zoneIndex];
   const neighbours = neighboursOf(zoneIndex, zones.length);
-  const listedZones = zones[zoneIndex + 1] ? [zoneIndex, zoneIndex + 1] : [zoneIndex];
-  const worlds: ZoneWorld[] = listedZones.flatMap((listed) => zones[listed].worlds.map((_, index) => ({ eid: worldEid(listed, index), origin: origins[listed] })));
+  const worlds: ZoneWorld[] = drawnZones(assembly, zoneIndex).flatMap((drawn) => zones[drawn].worlds.map((_, index) => ({
+    eid: worldEid(drawn, index),
+    origin: origins[drawn],
+  })));
   const pathAndList = zone.points.length ? zonePath(assembly, zoneIndex, neighbours) : null;
   const paths = pathAndList ? [pathAndList.path] : [];
   const header = zoneHeaderBytes(templates.header, zoneEid(zoneIndex), worlds, paths.length, zone.entities.length, neighbours);
@@ -168,8 +182,7 @@ function musicPages(music: LevelMusic | null | undefined): Page[] {
 
 export function assembleLevel(assembly: Assembly): Level {
   const { templates, zones, spawnZone, texturePages, donors } = assembly;
-  const [x0, y0, z0] = templates.origin;
-  const origins = zones.map((zone): Vec3 => [x0, y0, z0 + zone.zOffset]);
+  const origins = zones.map((zone) => templates.origin.map((value, axis) => value + zone.offset[axis]) as Vec3);
   const entries = [...worldEntries(assembly, origins), ...zones.flatMap((_, index) => zoneEntries(assembly, index, origins))];
   const out = withDonorObjects(cutLevel(assembly.level, keptEids(assembly)), donors);
   out.pages = [...packEntries(entries), ...out.pages, ...texturePages, ...musicPages(assembly.music)];
