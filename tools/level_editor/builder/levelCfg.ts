@@ -5,7 +5,15 @@ import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { DEFAULT_SCALE } from "../src/coords";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
-import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, DEFAULT_MUSIC_VOLUME, isAudioSongName, isMusicName, isMusicVolume, MUSIC_VOLUME_MAX, MUSIC_VOLUME_MIN, SOUNDTRACKS } from "../src/music";
+import {
+  DEFAULT_MUSIC,
+  DEFAULT_MUSIC_VOLUME,
+  isAudioSongName,
+  isMusicName,
+  isMusicVolume,
+  MUSIC_VOLUME_MAX,
+  MUSIC_VOLUME_MIN,
+} from "../src/music";
 import { defaultLevelTitle, levelTitleProblem } from "../src/levelTitle";
 import { DEFAULT_SKY, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 
@@ -87,8 +95,7 @@ function readMusic(value: string, where: string, folder: string): string {
     return value;
   }
   if (!isAudioSongName(value)) {
-    const names = SOUNDTRACKS.map(({ name }) => name).join(", ");
-    throw new Error(`${where}: music has to be one of ${names}, or an audio file in the level's folder (${AUDIO_SONG_EXTENSIONS.join(", ")}), not ${value || "nothing"}`);
+    throw new Error(`${where}: music has to be one of the game's songs, or an audio file in the level's folder, not ${value || "nothing"}`);
   }
   if (!existsSync(join(folder, value))) {
     throw new Error(`${where}: music is ${value}, but the level's folder has no file called that`);
