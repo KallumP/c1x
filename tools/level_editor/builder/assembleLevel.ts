@@ -6,7 +6,7 @@ import { withDonorObjects, type DonorObject } from "./donorObjects";
 import { entityType } from "./entities";
 import { stringToEid } from "./entryIds";
 import type { Route } from "./fit";
-import { CAM_LEAD, cameraOffsets, routeOf } from "./route";
+import { CAM_LEAD, cameraOffsets, routeOf, zonesDrawn } from "./route";
 import { DEFAULT_CAMERA, type Camera } from "../src/camera";
 import { ENTRY_SLST, ENTRY_WGEO, ENTRY_ZDAT, type Entry, type Level, type Page } from "./levelFiles";
 import type { BuiltWorld } from "./mapTextures";
@@ -114,17 +114,21 @@ function pathLinks(zones: ZonePlan[], zoneIndex: number, neighbours: number[]): 
   return links;
 }
 
-// a zone's camera path and its sort list, which lists its own meshes and the
-// next zone's, as the camera looks on into it
+// the zones a zone draws (zonesDrawn), in the assembly's route
+function drawnZones({ zones, camera = DEFAULT_CAMERA }: Assembly, zoneIndex: number): number[] {
+  return zonesDrawn(zoneIndex, zones.length, routeOf(camera));
+}
+
+// a zone's camera path and its sort list, which lists the meshes of the zones
+// it draws, each by its z offset from the zone
 function zonePath(assembly: Assembly, zoneIndex: number, neighbours: number[]): { path: Buffer; sortList: Entry } {
   const { zones, step, camera = DEFAULT_CAMERA } = assembly;
   const zone = zones[zoneIndex];
   const rotation = cameraRotation(camera);
-  const next = zones[zoneIndex + 1];
-  const listed = zone.worlds.map((world) => ({ ...world, zOffset: 0 }));
-  if (next) {
-    listed.push(...next.worlds.map((world) => ({ ...world, zOffset: next.offset[2] - zone.offset[2] })));
-  }
+  const listed = drawnZones(assembly, zoneIndex).flatMap((drawn) => zones[drawn].worlds.map((world) => ({
+    ...world,
+    zOffset: zones[drawn].offset[2] - zone.offset[2],
+  })));
   const path = pathBytes({
     slst: sortListEid(zoneIndex),
     points: zone.points.map(([x, y, z]) => [x, y, z, rotation[0], rotation[1], rotation[2]]),
@@ -144,8 +148,10 @@ function zoneEntries(assembly: Assembly, zoneIndex: number, origins: Vec3[]): En
   const { templates, zones, size } = assembly;
   const zone = zones[zoneIndex];
   const neighbours = neighboursOf(zoneIndex, zones.length);
-  const listedZones = zones[zoneIndex + 1] ? [zoneIndex, zoneIndex + 1] : [zoneIndex];
-  const worlds: ZoneWorld[] = listedZones.flatMap((listed) => zones[listed].worlds.map((_, index) => ({ eid: worldEid(listed, index), origin: origins[listed] })));
+  const worlds: ZoneWorld[] = drawnZones(assembly, zoneIndex).flatMap((drawn) => zones[drawn].worlds.map((_, index) => ({
+    eid: worldEid(drawn, index),
+    origin: origins[drawn],
+  })));
   const pathAndList = zone.points.length ? zonePath(assembly, zoneIndex, neighbours) : null;
   const paths = pathAndList ? [pathAndList.path] : [];
   const header = zoneHeaderBytes(templates.header, zoneEid(zoneIndex), worlds, paths.length, zone.entities.length, neighbours);

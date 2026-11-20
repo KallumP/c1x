@@ -50,6 +50,7 @@ import {
   spawnPoint,
   zoneIndex,
   zonePaths,
+  zonesDrawnMax,
 } from "./route";
 import { DEFAULT_CAMERA, levelTurn, type Camera } from "../src/camera";
 import { mossySlidePath } from "./mossySlide";
@@ -98,8 +99,8 @@ interface FittedMap {
   route: Route;
 }
 
-// each zone's world meshes; with more than one zone, each lists the next's too,
-// so half as many. a zone with rolling stones (trackZones) ends with an empty
+// each zone's world meshes; with more than one zone, each lists the next's too
+// (and in a side view the one before), so they share the zone's meshes. a zone with rolling stones (trackZones) ends with an empty
 // one, kept for their tracks, so they fit however full the map's meshes are
 function zoneWorldMeshes({ fitted, spans, route }: FittedMap, templates: Templates, textured: Set<string>, trackZones: Set<number>): WorldMesh[][] {
   const texinfoWords = readWorldHeader(templates.world.items[0]).texinfoWords;
@@ -110,7 +111,7 @@ function zoneWorldMeshes({ fitted, spans, route }: FittedMap, templates: Templat
     tile: MAP_TILE,
     textured,
     regionsMax: Math.floor((TEXINFO_WORDS_MAX - texinfoWords) / 2),
-    worldsMax: spans.length === 1 ? WORLDS_MAX : WORLDS_MAX / 2,
+    worldsMax: Math.floor(WORLDS_MAX / zonesDrawnMax(spans.length, route)),
     route,
   };
   return spans.map((span, zone) => {
