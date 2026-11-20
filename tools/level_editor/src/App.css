@@ -1,7 +1,20 @@
 .app {
   display: grid;
-  grid-template: "toolbar toolbar toolbar" auto "palette viewport panel" 1fr / 190px 1fr auto;
+  grid-template:
+    "toolbar toolbar toolbar" auto
+    "error error error" auto
+    "palette viewport panel" 1fr
+    / 190px 1fr auto;
   height: 100%;
+}
+
+/* an error, in full across the editor under the toolbar */
+.error-strip {
+  grid-area: error;
+  padding: 6px 12px;
+  background: #3a2426;
+  border-bottom: 1px solid #111;
+  overflow-wrap: anywhere;
 }
 
 .toolbar {
