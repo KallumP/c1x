@@ -84,6 +84,14 @@ export function objectName(object: LevelObject): string {
   return placeableName(placedAs(object));
 }
 
+// what an object is called in a warning or an error: its name, with "box" after a box's type
+export function messageName(object: LevelObject): string {
+  if (object.kind === "box") {
+    return `${objectName(object)} box`;
+  }
+  return objectName(object);
+}
+
 // things to place in alphabetical order of their names
 export function placeablesByName<T extends Placeable>(things: T[]): T[] {
   return [...things].sort((first, second) => placeableName(first).localeCompare(placeableName(second)));

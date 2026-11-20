@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { boxInitFlagB, boxSubtype, duplicateWarnings, readObjectsFile, toZone } from "../../builder/levelObjects";
+import { boxInitFlagB, boxSubtype, checkOutlinesHaveSwitches, duplicateWarnings, readObjectsFile, toZone } from "../../builder/levelObjects";
 import type { LevelObject } from "../../src/objects";
 import { enemyObject } from "../helpers";
 
@@ -39,6 +39,19 @@ describe("duplicate objects", () => {
     ["another kind", enemyObject("crab", { at: [0, 0, 0] })],
   ])("an object %s isn't a duplicate", (_, other) => {
     expect(duplicateWarnings([box([0, 0, 0]), other])).toEqual([]);
+  });
+});
+
+describe("outlines' switches", () => {
+  const box = (more: Partial<LevelObject>): LevelObject => ({ kind: "box", at: [0, 0, 0], raise: 0, stack: 1, box: "basic", ...more });
+
+  test("an outline whose switch isn't in the level is an error naming it", () => {
+    const objects = [box({ box: "switch", switch: 1 }), box({ outline: 1 }), box({ outline: 2 })];
+    expect(() => checkOutlinesHaveSwitches(objects)).toThrow("object 3 (Basic box) is an outline of switch 2, but the level has no switch 2");
+  });
+
+  test("outlines whose switches are in the level are fine", () => {
+    expect(() => checkOutlinesHaveSwitches([box({ outline: 1 }), box({ box: "switch", switch: 1 })])).not.toThrow();
   });
 });
 

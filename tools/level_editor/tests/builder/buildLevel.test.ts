@@ -138,6 +138,11 @@ describe("building a level", () => {
     { problem: "a bad level.cfg", files: { "x.obj": "", "level.cfg": "scale = big\n" }, message: /level\.cfg, line 1/ },
     { problem: "a bad objects.json", files: { "x.obj": "", "objects.json": '[{"kind": "crate", "at": [0, 0, 0]}]' }, message: /objects\.json/ },
     { problem: "a folder without a .obj", files: {}, message: /0 \.obj files/ },
+    {
+      problem: "an outline whose switch isn't in the level",
+      files: { "x.obj": "", "objects.json": '[{"kind": "box", "type": "basic", "at": [0, 0, 0], "outline": 2}]' },
+      message: /object 1 \(Basic box\) is an outline of switch 2, but the level has no switch 2/,
+    },
   ])("$problem stops the build with its message", ({ files, message }) => {
     const folder = newFolder("bad_source");
     Object.entries(files).forEach(([file, text]) => writeFileSync(join(folder, file), text));
@@ -166,6 +171,18 @@ describe("building a level", () => {
     const { ok, output } = quietBuild(folder, STREAMS);
     expect(ok).toBe(true);
     expect(output).toMatch(/warning: object 2 \(Basic box\) is a duplicate of object 1/);
+  });
+
+  test.skipIf(!existsSync(join(STREAMS, "s0000009.nsd")))("each duplicate warning is logged on its own, as one line", () => {
+    const folder = newFolder("duplicates");
+    writeFileSync(join(folder, "duplicates.obj"), "o Floor\nv -4 0 -8\nv -4 0 8\nv 4 0 8\nv 4 0 -8\nf 1 2 3 4\n");
+    const basicBox = { kind: "box", type: "basic", at: [0, 0, 0] };
+    writeFileSync(join(folder, "objects.json"), JSON.stringify([basicBox, basicBox, basicBox]));
+    const logged: unknown[][] = [];
+    buildLevel(folder, { streamsDir: STREAMS, levelsDir: newFolder("levels"), log: (...said: unknown[]) => logged.push(said) });
+    const warnings = logged.filter(([line]) => String(line).startsWith("warning:"));
+    expect(warnings).toHaveLength(2);
+    warnings.forEach((said) => expect(said).toHaveLength(1));
   });
 
   test.skipIf(!hasLoadingScreens)("a level's loading screen is the game's sign with its title, not jungle rollers'", () => {

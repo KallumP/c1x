@@ -510,7 +510,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
           {hasNodes(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
-          {outlineWarnings.has(index) && <p className="warning">There's no switch {object.outline} in the level: pick another, or the level won't build.</p>}
+          {outlineWarnings.has(index) && <p className="error">There's no switch {object.outline} in the level: pick another, or the level won't build.</p>}
           {pathWarnings.has(index) && <p className="warning">This path leaves the floor or runs through a wall.</p>}
           <button className="delete" onClick={() => dispatch({ type: "remove", index })}>Delete</button>
         </>

@@ -105,23 +105,6 @@ export default function App() {
     }
   };
 
-  const renderPathWarningCount = () => {
-    if (pathWarnings.size === 0) {
-      return null;
-    }
-    const paths = pathWarnings.size === 1 ? "path leaves" : "paths leave";
-    return <span className="warning">{pathWarnings.size} {paths} the floor or run{pathWarnings.size === 1 ? "s" : ""} through a wall</span>;
-  };
-
-  const renderOutlineWarningCount = () => {
-    if (outlineWarnings.size === 0) {
-      return null;
-    }
-    if (outlineWarnings.size === 1) {
-      return <span className="warning">1 outline's switch isn't in the level</span>;
-    }
-    return <span className="warning">{outlineWarnings.size} outlines' switches aren't in the level</span>;
-  };
 
   const renderHistoryButtons = () => (
     <>
@@ -194,8 +177,6 @@ export default function App() {
       <LevelPicker levels={levels} level={level} onOpen={openLevel} />
       {renderHistoryButtons()}
       {renderSaveButton()}
-      {renderPathWarningCount()}
-      {renderOutlineWarningCount()}
       {renderLevelActions()}
       {(isSaving || levelActions.isBusy) && <div className="progress" role="progressbar" aria-label="Working" />}
     </header>

@@ -3,7 +3,8 @@
 // editor's parseObjects (src/objects.ts), so the editor and the build agree
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { objectName } from "../src/objectNames";
+import { messageName } from "../src/objectNames";
+import { switchlessOutlines } from "../src/switchWarnings";
 import { BOX_TYPES, objectType, parseObjects, type LevelObject } from "../src/objects";
 import { IRON_OUTLINE, PLAIN_OUTLINE } from "./entities";
 import { turned } from "./obj";
@@ -59,14 +60,6 @@ export function boxInitFlagB(object: LevelObject): number {
 const duplicateKey = (object: LevelObject) =>
   JSON.stringify([object.kind, object.box, objectType(object), object.at, object.raise]);
 
-// what an object is called in a warning: its palette name, with "box" after a box's type
-function warningName(object: LevelObject): string {
-  if (object.kind === "box") {
-    return `${objectName(object)} box`;
-  }
-  return objectName(object);
-}
-
 // a warning for each object that's a duplicate of one before it (numbered
 // from 1, as in objects.json), most likely pasted and not moved
 export function duplicateWarnings(objects: LevelObject[]): string[] {
@@ -79,9 +72,21 @@ export function duplicateWarnings(objects: LevelObject[]): string[] {
       firstNumbers.set(key, index + 1);
       return;
     }
-    warnings.push(`warning: object ${index + 1} (${warningName(object)}) is a duplicate of object ${first}, in the same spot`);
+    warnings.push(`warning: object ${index + 1} (${messageName(object)}) is a duplicate of object ${first}, in the same spot`);
   });
   return warnings;
+}
+
+// an error naming the first outline (numbered from 1, as in objects.json)
+// whose switch isn't in the level, as its box could never be gotten
+export function checkOutlinesHaveSwitches(objects: LevelObject[]): void {
+  const [index] = switchlessOutlines(objects);
+  if (index === undefined) {
+    return;
+  }
+  const outline = objects[index];
+  const switchNumber = outline.outline;
+  throw new Error(`object ${index + 1} (${messageName(outline)}) is an outline of switch ${switchNumber}, but the level has no switch ${switchNumber}`);
 }
 
 // the objects the objects.json in folder places (none without one); a bad one is an error naming it
