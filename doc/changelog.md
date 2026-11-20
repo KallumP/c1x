@@ -7,6 +7,7 @@
 - rotating pots, platforms and pillars can go round the other way: **Reverse direction** in the level editor
 - copy and paste objects in the level editor with Ctrl+C and Ctrl+V
 - side-on custom levels: set the camera's **view** to **side** in the level editor
+- Grave Switchback, a spooky side-on level
 
 ### Changed
 
@@ -22,6 +23,7 @@
 - a level build stopped by an outline without its switch now says which box
 - a detailed side-on level no longer loses its farthest walls
 - moving platforms, lift platforms and low wide gates in the level editor sit where the game has them
+- in a busy side-on level, aku aku boxes give aku aku and the lives count shows its number again
 
 ## 2026-11-19
 

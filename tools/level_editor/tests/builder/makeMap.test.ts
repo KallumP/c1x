@@ -2240,7 +2240,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
 
   describe("a side view", () => {
     const SIDE = { camera: { ...DEFAULT_CAMERA, view: "side" as const } };
-    const ZONE_LENGTH = 16384; // along the route, the most a zone holds
+    const ZONE_LENGTH = 4096; // along the route: 32 cells, as the zones either side are live too
     const zoneX = (zone: Entry) => readZoneRect(zone.items[1]).at[0];
     // the zones from the start of the route (-x) to its end (+x)
     const zonesAlongX = ({ entries }: Built) => 
@@ -2264,7 +2264,8 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
 
     describe("of a long map", () => {
-      const built = hasBase ? make(LONG_OBJ, SIDE) : null!;
+      const SIDE_LONG_OBJ = "o Floor\nv -4 0 -12.5\nv -4 0 12.5\nv 4 0 12.5\nv 4 0 -12.5\nf 1 2 3 4\n"; // three zones long
+      const built = hasBase ? make(SIDE_LONG_OBJ, SIDE) : null!;
       const zones = hasBase ? zonesAlongX(built) : [];
 
       test("is a chain of zones along +x", () => {
@@ -2337,7 +2338,7 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
       });
 
       test("an end object far along it is in the right-most zone", () => {
-        const withEnd = make(LONG_OBJ, { ...SIDE, objects: [object("end", [0, 45, 0])] });
+        const withEnd = make(SIDE_LONG_OBJ, { ...SIDE, objects: [object("end", [0, 11, 0])] });
         const [pad] = warpPads(withEnd);
         expect(pad.zone.eid).toBe(zonesAlongX(withEnd)[2].eid);
       });

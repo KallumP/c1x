@@ -8,6 +8,7 @@ import type { Vec3 } from "./vectors";
 export const VERTEX_MAX = 32760;  // world mesh vertices are 13 bits of multiples of 8 (src/formats/wgeo.h)
 export const SIDE_CELLS_MAX = 128; // the game's octree queries keep a cell's depth in 3 bits (zone_query_result
                                    // in src/level.h), so a side halves 7 times at most (as in the game's levels)
+const SIDE_VIEW_ZONE_CELLS = 32;   // a side view's zones along its route (routeZoneLength)
 const AXES = "xyz";
 const UP = 1;
 
@@ -51,15 +52,16 @@ interface SideRoom {
 }
 
 // a zone's side along axis for a map extent long: a power of two cells with the
-// room it needs, or along a long route whole zones of SIDE_CELLS_MAX cells
+// room it needs, or along a route longer than a zone, whole zones (routeZoneLength)
 function zoneSide(axis: number, extent: number, { cell, headroom, margin, longRoute }: SideRoom): number {
   const zoneMax = cell * SIDE_CELLS_MAX;
-  const isLongRoute = longRoute !== null && axis === longRoute.axis && extent + margin > zoneMax;
+  const isLongRoute = longRoute !== null && axis === longRoute.axis && extent + margin > routeZoneLength(cell, longRoute);
   if (extent > VERTEX_MAX && !isLongRoute) { // a long route's meshes are each relative to their zone
     throw new Error(`the map is ${extent} zone units along ${AXES[axis]}, more than ${VERTEX_MAX}; scale it down`);
   }
   if (isLongRoute) {
-    return -floorDivide(-(extent + margin), zoneMax) * zoneMax;
+    const zoneLength = routeZoneLength(cell, longRoute!);
+    return -floorDivide(-(extent + margin), zoneLength) * zoneLength;
   }
   const room = extent + (axis === UP ? headroom : margin);
   let side = cell;
@@ -85,10 +87,20 @@ export function fit(mesh: Mesh, cell: number, headroom: number, margin = 0, long
   return { mesh: { ...mesh, vertices }, size, offset };
 }
 
+// how long a long route's zones are: SIDE_CELLS_MAX cells, or SIDE_VIEW_ZONE_CELLS
+// beside crash, where the zones either side of his are live too: a whole screen's
+// width each way at most, so they don't hold more objects than the game can (96)
+function routeZoneLength(cell: number, route: Route): number {
+  if (route.axis === ROUTE_SIDE.axis) {
+    return cell * SIDE_VIEW_ZONE_CELLS;
+  }
+  return cell * SIDE_CELLS_MAX;
+}
+
 // the zones a fitted map length long along the route's axis is split into,
-// SIDE_CELLS_MAX cells each, from the route's start (its +z end behind, its -x end side on)
+// routeZoneLength each, from the route's start (its +z end behind, its -x end side on)
 export function zoneSpans(length: number, cell: number, route = ROUTE_BEHIND): Span[] {
-  const zone = Math.min(length, cell * SIDE_CELLS_MAX);
+  const zone = Math.min(length, routeZoneLength(cell, route));
   const starts = Array.from({ length: Math.floor(length / zone) }, (_, index) => index * zone);
   if (route.way < 0) {
     starts.reverse();

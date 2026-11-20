@@ -1,0 +1,42 @@
+newmtl soil
+Kd 1.000000 1.000000 1.000000
+d 1.000000
+illum 1
+map_Kd soil.png
+
+newmtl crypt
+Kd 1.000000 1.000000 1.000000
+d 1.000000
+illum 1
+map_Kd crypt.png
+
+newmtl slab
+Kd 1.000000 1.000000 1.000000
+d 1.000000
+illum 1
+map_Kd slab.png
+
+newmtl backwall
+Kd 1.000000 1.000000 1.000000
+d 1.000000
+illum 1
+map_Kd backwall.png
+
+newmtl headstone
+Kd 1.000000 1.000000 1.000000
+d 1.000000
+illum 1
+map_Kd headstone.png
+
+newmtl deadwood
+Kd 1.000000 1.000000 1.000000
+d 1.000000
+illum 1
+map_Kd deadwood.png
+
+newmtl water
+Kd 1.000000 1.000000 1.000000
+d 1.000000
+illum 1
+map_Kd water.png
+
