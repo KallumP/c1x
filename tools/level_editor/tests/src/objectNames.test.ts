@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { placeableName, placeablesByName } from "../../src/objectNames";
-import { BOX_TYPES, ENEMY_TYPES, type BoxType } from "../../src/objects";
+import { objectName, placeableName, placeablesByName } from "../../src/objectNames";
+import { BOX_TYPES, ENEMY_TYPES, type BoxType, type LevelObject } from "../../src/objects";
 
 describe("the names the palette shows", () => {
   test.each([
@@ -78,6 +78,19 @@ describe("the names the palette shows", () => {
     ["tnt", "TNT"],
   ] as const)("the variant %s is named %s", (what, name) => {
     expect(placeableName(what)).toBe(name);
+  });
+
+  // a placed object, at the top of its settings when it's selected
+  test.each([
+    [{ kind: "spawn" }, "Spawn"],
+    [{ kind: "end" }, "End"],
+    [{ kind: "box", box: "question" }, "Question mark"],
+    [{ kind: "box", box: BOX_TYPES.tnt }, "TNT"],
+    [{ kind: "enemy", enemy: "snake" }, "Cobra"],
+    [{ kind: "obstacle", obstacle: "rotating_pillars" }, "Pillars (rotating)"],
+  ] as const)("a placed %o is named %s", (fields, name) => {
+    const object: LevelObject = { at: [0, 0, 0], raise: 0, stack: 1, ...fields };
+    expect(objectName(object)).toBe(name);
   });
 
   test("types are listed in alphabetical order of their names", () => {
