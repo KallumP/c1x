@@ -1,5 +1,15 @@
 import { describe, expect, test } from "vitest";
-import { numberSetting, settingMax, boxTypeName, formatObjects, hasNodes, hasPath, parseObjects, pegCount } from "../../src/objects";
+import {
+  numberSetting,
+  settingMax,
+  boxTypeName,
+  formatObjects,
+  hasNodes,
+  hasPath,
+  parseObjects,
+  pegCount,
+  reverseButtonTitle,
+} from "../../src/objects";
 import { enemyObject, obstacleObject } from "../helpers";
 
 describe("parseObjects", () => {
@@ -976,5 +986,26 @@ describe("mossy slides", () => {
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a mossy_slide has no path"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
+  });
+});
+
+describe("reverse direction buttons", () => {
+  test("rotating pots, platforms and pegs have one, as rolling stones and fish do", () => {
+    const reversible = [
+      obstacleObject("rotating_pots"),
+      obstacleObject("rotating_platforms"),
+      obstacleObject("rotating_pegs"),
+      obstacleObject("rolling_stone"),
+      enemyObject("fish"),
+    ];
+    reversible.forEach((object) => expect(reverseButtonTitle(object)).toBeTruthy());
+  });
+
+  test("a rotating obstacle's says its arrow shows which way it goes round", () => {
+    expect(reverseButtonTitle(obstacleObject("rotating_pots"))).toBe("The arrow on its circle shows which way it goes round");
+  });
+
+  test("an obstacle that can't be reversed has none", () => {
+    expect(reverseButtonTitle(obstacleObject("fire_pit"))).toBeUndefined();
   });
 });
