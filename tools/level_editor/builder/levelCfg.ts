@@ -122,7 +122,7 @@ function readSetting(line: string, where: string, folder: string): [keyof LevelC
   const key = line.slice(0, equals).trim();
   const value = line.slice(equals + 1).trim();
   if (!SETTINGS.includes(key)) {
-    throw new Error(`${where}: unknown setting ${key} (it takes ${SETTINGS.join(", ")})`);
+    throw new Error(`${where}: unknown setting ${key}`);
   }
   if (COLOURS.includes(key)) {
     return [key as keyof LevelCfgSettings, readColour(key, value, where)];
