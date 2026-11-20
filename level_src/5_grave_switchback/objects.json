@@ -14,7 +14,7 @@
   {"kind": "obstacle", "type": "short_pushing_platform", "at": [-1.8, -31.5, 0], "raise": 7, "every": 2, "offset": 1},
   {"kind": "obstacle", "type": "fire_pit", "at": [-0.5, -27.8, 0], "raise": 7.5},
   {"kind": "obstacle", "type": "rotating_pots", "at": [-1, -17.6, -1], "raise": 1.5, "every": 4, "platforms": 2, "radius": 1.5},
-  {"kind": "obstacle", "type": "rotating_pots", "at": [-1, -17.6, -1], "raise": 1.5, "every": 9, "platforms": 4},
+  {"kind": "obstacle", "type": "rotating_pots", "at": [-1, -17.6, -1], "raise": 1.5, "every": 9, "platforms": 4, "reverse": true},
 
   {"kind": "end", "at": [0.259, 5.998, 0], "raise": 0.32}
 ]
