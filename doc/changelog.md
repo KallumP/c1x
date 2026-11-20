@@ -7,6 +7,7 @@
 - rotating pots, platforms and pillars can go round the other way: **Reverse direction** in the level editor
 - copy and paste objects in the level editor with Ctrl+C and Ctrl+V
 - side-on custom levels: set the camera's **view** to **side** in the level editor
+- Grave Switchback, a spooky side-on level
 
 ### Changed
 
