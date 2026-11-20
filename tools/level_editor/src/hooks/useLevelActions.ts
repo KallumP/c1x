@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { bootLevel, buildLevel, type LevelInfo } from "../api";
+import { buildWarnings, builtText } from "../buildOutput";
 
 export interface ActionStatus {
   text: string;
   detail?: string; // the build's whole output, shown on hover
   failed?: boolean;
+  warnings?: string[]; // a build's warnings, shown under the toolbar
 }
 
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
@@ -42,7 +44,8 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
       setStatus({ text: `Building ${level.name}...` });
       const result = await buildLevel(level.name);
       if (result.ok) {
-        setStatus({ text: `Built ${level.name}`, detail: result.output });
+        const warnings = buildWarnings(result.output);
+        setStatus({ text: builtText(level.name, warnings), detail: result.output, warnings });
       } else {
         setStatus({ text: `Build failed: ${lastLine(result.output)}`, detail: result.output, failed: true });
       }
