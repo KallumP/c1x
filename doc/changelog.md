@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-20
+
+### Added
+
+- rotating pots, platforms and pegs can go round the other way: **Reverse direction** in the level editor
+
 ## 2026-11-19
 
 ### Added
