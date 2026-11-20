@@ -147,7 +147,7 @@ export function buildLevel(source: string, { streamsDir, levelsDir, log }: Build
     return false;
   }
   const { objPath, name, options, objects } = level;
-  duplicateWarnings(objects).forEach(log);
+  duplicateWarnings(objects).forEach((warning) => log(warning));
   try {
     const text = readFileSync(objPath, "utf8");
     writeGameTextures(dirname(objPath), streamsDir);
