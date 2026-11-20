@@ -8,7 +8,7 @@ import PropertiesPanel from "./components/PropertiesPanel";
 import Scene, { type Orbit } from "./components/Scene";
 import { draggedBy, newObject, type Tool } from "./editor";
 import { raisedEndPad, withEndPadRaise } from "./endPad";
-import type { LevelObject } from "./objects";
+import type { LevelObject, Vec3 } from "./objects";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
 import { useLevelActions } from "./hooks/useLevelActions";
@@ -74,7 +74,14 @@ export default function App() {
   useUnsavedWarning(unsaved);
   const levelActions = useLevelActions(level, unsaved, save);
 
-  useEditorShortcuts(state, dispatch, { stopPlacing: () => setTool(SELECT), save, build: levelActions.build, buildAndBoot: levelActions.buildAndBoot });
+  const pointerOnFloor = useRef<Vec3 | null>(null); // where ctrl+v pastes
+  useEditorShortcuts(state, dispatch, {
+    stopPlacing: () => setTool(SELECT),
+    save,
+    build: levelActions.build,
+    buildAndBoot: levelActions.buildAndBoot,
+    pointerOnFloor: () => pointerOnFloor.current,
+  });
 
   const openLevel = (name: string) => {
     if (!confirmDiscard(unsaved)) {
@@ -98,6 +105,12 @@ export default function App() {
     if (at) {
       dispatch({ type: "add", object: raisedEndPad(newObject(tool.what, at, scale), scale, triangles) });
     }
+  };
+
+  // the pointer moving over the map: remembers where it is on the floor, and drags
+  const moveOverLevel = (event: ThreeEvent<PointerEvent>) => {
+    pointerOnFloor.current = clickedFloor(event, grid);
+    drag.moveOverLevel(event);
   };
 
   const renderPathWarningCount = () => {
@@ -182,7 +195,12 @@ export default function App() {
 
   const renderLevel = () => (
     <>
-      {group && <LevelMesh group={group} onClick={clickLevel} onPointerMove={drag.moveOverLevel} />}
+      {group && <LevelMesh
+          group={group}
+          onClick={clickLevel}
+          onPointerMove={moveOverLevel}
+          onPointerOut={() => (pointerOnFloor.current = null)}
+        />}
       <ObjectMarkers
         objects={state.objects}
         scale={scale}

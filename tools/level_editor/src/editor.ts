@@ -49,6 +49,7 @@ export type EditorAction =
   | { type: "select"; index: number | null }
   | { type: "selectNode"; index: number; node: number } // an enemy, and a node of its path
   | { type: "copy" } // the selected object
+  | { type: "paste"; at: Vec3 | null } // what's copied, at a spot or (null) where it was copied from
   | { type: "checkpoint" } // remember the objects now, as one change (a drag's start)
   | { type: "undo" }
   | { type: "redo" };
@@ -270,6 +271,14 @@ function selectedToCopy(state: EditorState): LevelObject | null {
   return copy;
 }
 
+// what's copied added at a spot, or where it was copied from
+function paste(state: EditorState, at: Vec3 | null): EditorState {
+  if (!state.copied) {
+    return state;
+  }
+  return add(state, { ...state.copied, at: at ?? state.copied.at });
+}
+
 // the selection, if there's still an object there
 const stillThere = (selected: number | null, objects: Objects) =>
   selected !== null && selected < objects.length ? selected : null;
@@ -310,6 +319,8 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       return { ...state, selected: action.index, selectedNode: action.node };
     case "copy":
       return { ...state, copied: selectedToCopy(state) };
+    case "paste":
+      return paste(state, action.at);
     case "checkpoint":
       return { ...state, past: [...state.past, state.objects], future: [] };
     case "undo":
