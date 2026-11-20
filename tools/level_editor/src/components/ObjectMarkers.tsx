@@ -25,7 +25,14 @@ import { boxStyle, ENEMY_COLOURS, OBSTACLE_COLOURS, SELECTED_COLOUR, SPAWN_COLOU
 import { BARREL_SHAPE, ENEMY_SHAPES, partGeometry, shapeBounds, type ShapePart } from "../enemyShapes";
 import { CRASH_SHAPE, WARP_PAD_SHAPE } from "../markerShapes";
 import { OBSTACLE_SHAPES, type ModelledObstacle } from "../obstacleShapes";
-import { handleLifts, nodesUnderEnds, pathPositions, pointAlongShare, spotAndNode } from "../enemyPaths";
+import {
+  handleLifts,
+  nodesUnderEnds,
+  pathObstacleTurn,
+  pathPositions,
+  pointAlongShare,
+  spotAndNode,
+} from "../enemyPaths";
 import { vialArc } from "../labAssistantThrow";
 import {
   GATES,
@@ -497,17 +504,19 @@ export default function ObjectMarkers({ objects, scale, turn, selected, selected
     return renderLabAssistant(object, index); // the last enemy left
   };
 
-  // a floating leaf or sliding pillar: at its spot, where it sets off from,
-  // facing the way it goes, with the line of its path, and faded where it turns back
+  // a floating leaf, sliding pillar or platform: at its spot, where it sets off from,
+  // facing as the game's (pathObstacleTurn), with the line of its path, and faded where it turns back
   const renderPathObstacle = (object: LevelObject, index: number) => {
     const type = object.obstacle as PathObstacle;
     const nodes = pathPositions(object, turn, scale); // its own level's path, or its own
     const last = nodes.length - 1;
     const colour = OBSTACLE_COLOURS[type];
+    const startTurn = pathObstacleTurn(type, nodes[0], nodes[1], turn);
+    const endTurn = pathObstacleTurn(type, nodes[last - 1], nodes[last], turn);
     return (
       <>
-        {renderShapeModel(OBSTACLE_SHAPES[type], blenderToView(nodes[0]), index, 0, facingFrom(nodes[0], nodes[1], turn))}
-        {renderShapeModel(OBSTACLE_SHAPES[type], blenderToView(nodes[last]), index, 1, facingFrom(nodes[last - 1], nodes[last], turn), FAR_END_OPACITY)}
+        {renderShapeModel(OBSTACLE_SHAPES[type], blenderToView(nodes[0]), index, 0, startTurn)}
+        {renderShapeModel(OBSTACLE_SHAPES[type], blenderToView(nodes[last]), index, 1, endTurn, FAR_END_OPACITY)}
         <Line points={nodes.map(blenderToView)} color={pathColour(index, colour)} lineWidth={2} />
         {index === selected && renderPathHandles(nodes, index, PATH_OBSTACLE_SIZES[type], colour)}
       </>

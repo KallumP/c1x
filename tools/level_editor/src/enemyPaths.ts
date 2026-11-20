@@ -1,6 +1,35 @@
 // the paths crabs, turtles and natives walk back and forth along, and badgers run along: nodes, in metres
 // from where the enemy stands, set in the editor or their defaults (as their donor levels')
-import { BADGER_RUN, BARREL_ROLL, batSwoopEnd, BIRD_SWOOP, BLOB_HOP, CAMERA_ROBOT_RISE, cameraFacing, FLYING_CAMERA_RISE, labAssistantThrow, LEAF_DRIFT, leafDrift, leaderBatsGap, PILLAR_SLIDE, LIZARD_LEAPS, MONKEY_WALK, RED_LIZARD_HOPS, rising, ROBOT_DOG_WALK, SCIENTIST_WALK, WALKING_LIZARD_PACE, WALKING_SPIDER_RUN, WARTHOG_RUN, CRAB_WALK, NATIVE_WALK, stoneRolling, TURTLE_WALK } from "./coords";
+import {
+  BADGER_RUN,
+  BARREL_ROLL,
+  batSwoopEnd,
+  BIRD_SWOOP,
+  BLOB_HOP,
+  CAMERA_ROBOT_RISE,
+  cameraFacing,
+  enemyTurn,
+  facingFrom,
+  FLYING_CAMERA_RISE,
+  labAssistantThrow,
+  LEAF_DRIFT,
+  leafDrift,
+  leaderBatsGap,
+  PILLAR_SLIDE,
+  LIZARD_LEAPS,
+  MONKEY_WALK,
+  RED_LIZARD_HOPS,
+  rising,
+  ROBOT_DOG_WALK,
+  SCIENTIST_WALK,
+  WALKING_LIZARD_PACE,
+  WALKING_SPIDER_RUN,
+  WARTHOG_RUN,
+  CRAB_WALK,
+  NATIVE_WALK,
+  stoneRolling,
+  TURTLE_WALK,
+} from "./coords";
 import { LAB_ASSISTANT_REACH } from "./labAssistantThrow";
 import { hasOneNode, PATH_NODES_MAX, type LevelObject, type ObstacleType, type PathEnemy, type Vec3 } from "./objects";
 
@@ -261,4 +290,17 @@ export function inEvenSteps(nodes: Vec3[], step: number): Vec3[] {
 export function respaced(nodes: Vec3[], count: number): Vec3[] {
   const length = pathLength(nodes);
   return Array.from({ length: count }, (_, index) => pointAlong(nodes, (length * index) / (count - 1)));
+}
+
+// path obstacles whose model faces the player wherever their path runs: slippery
+// climb's platforms (the rest face the way they go, or look the same either way)
+const FACING_THE_PLAYER: ObstacleType[] = ["moving_platform", "lift_platform"];
+
+// how far to turn a path obstacle's model in the editor (as enemyTurn) at a node
+// of its path, from the node before it (from) to it (to)
+export function pathObstacleTurn(obstacle: ObstacleType, from: Vec3, to: Vec3, turn: number): number {
+  if (FACING_THE_PLAYER.includes(obstacle)) {
+    return enemyTurn(turn);
+  }
+  return facingFrom(from, to, turn);
 }
