@@ -4,7 +4,16 @@ import { describe, expect, test } from "vitest";
 import { Cells, solidCells } from "../../builder/collision";
 import { ROUTE_SIDE, type Span } from "../../builder/fit";
 import type { Mesh } from "../../builder/obj";
-import { CAM_LEAD, CAM_OFFSET, cameraOffsets, cameraPath, spawnPoint, zoneIndex, zonePaths } from "../../builder/route";
+import {
+  CAM_LEAD,
+  CAM_OFFSET,
+  cameraOffsets,
+  cameraPath,
+  SIDE_CAMERA_DROP,
+  spawnPoint,
+  zoneIndex,
+  zonePaths,
+} from "../../builder/route";
 import { DEFAULT_CAMERA } from "../../src/camera";
 import type { Vec3 } from "../../builder/vectors";
 import { worldMeshes } from "../../builder/worldMeshes";
@@ -108,6 +117,14 @@ describe("where the camera is from crash", () => {
     const steep = cameraOffsets({ distance: 1, angle: 60, view: "behind" });
     expect(Math.hypot(steep.lead, steep.height)).toBeCloseTo(usual, 0);
     expect(degrees(steep) - degrees(cameraOffsets(DEFAULT_CAMERA))).toBeCloseTo(18, 1);
+  });
+
+  // so crash is nearer the middle of the screen
+  test("a side view's is lower, by more the further away it is", () => {
+    const behind = cameraOffsets({ distance: 1.5, angle: 20, view: "behind" });
+    const side = cameraOffsets({ distance: 1.5, angle: 20, view: "side" });
+    expect(SIDE_CAMERA_DROP).toBeGreaterThan(0);
+    expect(side).toEqual({ lead: behind.lead, height: behind.height - Math.round(1.5 * SIDE_CAMERA_DROP) });
   });
 });
 
