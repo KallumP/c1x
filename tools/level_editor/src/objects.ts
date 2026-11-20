@@ -510,17 +510,35 @@ function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetti
   return { [setting]: value };
 }
 
-// the enemies and obstacles that can be reversed: a rolling stone rolls back towards its first
-// end first, and a fish leaps the other way across the map
-const REVERSIBLE: ObjectType[] = ["rolling_stone", "fish", "rotating_pots", "rotating_platforms", "rotating_pegs"];
+// the enemies and obstacles that can be reversed, and what their Reverse direction
+// button says: a rolling stone rolls back towards its first end first, a fish leaps
+// the other way across the map, and a rotating obstacle goes round the other way
+const GOES_ROUND = "The arrow on its circle shows which way it goes round";
+const REVERSE_TITLES: Partial<Record<ObjectType, string>> = {
+  rolling_stone: "The arrow at the dot shows which way it rolls first",
+  fish: "It leaps from the solid fish to the faded one, and back",
+  rotating_pots: GOES_ROUND,
+  rotating_platforms: GOES_ROUND,
+  rotating_pegs: GOES_ROUND,
+};
+const REVERSIBLE = Object.keys(REVERSE_TITLES) as ObjectType[];
 
-// whether a rolling stone or fish is reversed, from its fields in objects.json
+// what an object's Reverse direction button says, if it has one
+export function reverseButtonTitle(object: LevelObject): string | undefined {
+  const type = objectType(object);
+  if (type === undefined) {
+    return undefined;
+  }
+  return REVERSE_TITLES[type];
+}
+
+// whether a rolling stone, fish or rotating obstacle is reversed, from its fields in objects.json
 function readReverse(fields: Record<string, unknown>, type: ObjectType, objectNumber: number): Pick<LevelObject, "reverse"> {
   if (!("reverse" in fields)) {
     return {};
   }
   if (!REVERSIBLE.includes(type)) {
-    throw new Error(`object ${objectNumber}: a ${type} has no reverse (rolling stones and fish do; reverse a ${type}'s path instead)`);
+    throw new Error(`object ${objectNumber}: a ${type} has no reverse (rolling stones, fish and rotating obstacles do; reverse a ${type}'s path instead)`);
   }
   if (typeof fields.reverse !== "boolean") {
     throw new Error(`object ${objectNumber}: reverse should be true or false`);

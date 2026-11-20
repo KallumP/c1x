@@ -4,7 +4,28 @@ import type { LevelCfg } from "../api";
 import { outlineChoices, type EditorAction, type EditorState } from "../editor";
 import { useShiftHeld } from "../hooks/useShiftHeld";
 import { enemyPath, inNodes, nodeCount, nodeHeading, nodeTurnedRound, pathPositions, turnedRound, withNodeAt } from "../enemyPaths";
-import { BOX_TYPES, boxTypeName, hasNodes, hasOutlineModel, isSwitch, hasNumberSetting, hasPath, NUMBER_SETTING_RULES, NUMBER_SETTINGS, numberSetting, settingMax, PATH_NODES_MAX, ROTATING_OBSTACLES, type BoxType, type LevelObject, type NumberSetting, type ObjectType, type ObstacleType, type Vec3, objectType } from "../objects";
+import {
+  BOX_TYPES,
+  boxTypeName,
+  hasNodes,
+  hasOutlineModel,
+  isSwitch,
+  hasNumberSetting,
+  hasPath,
+  NUMBER_SETTING_RULES,
+  NUMBER_SETTINGS,
+  numberSetting,
+  settingMax,
+  PATH_NODES_MAX,
+  reverseButtonTitle,
+  ROTATING_OBSTACLES,
+  type BoxType,
+  type LevelObject,
+  type NumberSetting,
+  type ObstacleType,
+  type Vec3,
+  objectType,
+} from "../objects";
 import { dropToFloor, type Triangle } from "../overlaps";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, type Camera } from "../camera";
 import { SKY_ROWS, type Sky } from "../sky";
@@ -47,14 +68,14 @@ function numberSlider(object: LevelObject, setting: NumberSetting): { label: str
 }
 
 const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
-  speed: { label: "speed ×", step: 0.25 },
+  speed: { label: "speed Ã—", step: 0.25 },
   start: { label: "start", step: 0.05 },
   count: { label: "count", step: 1 },
   delay: { label: "delay s", step: 0.5 },
   range: { label: "range m", step: 1 },
   length: { label: "length m", step: 0.5 },
-  angle: { label: "angle °", step: 1 },
-  rotation: { label: "rotation °", step: 5 },
+  angle: { label: "angle Â°", step: 1 },
+  rotation: { label: "rotation Â°", step: 5 },
   every: { label: "every s", step: 0.5 },
   offset: { label: "offset s", step: 0.5 },
   platforms: { label: "platforms", step: 1 },
@@ -63,10 +84,6 @@ const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
   down: { label: "time dropped s", step: 0.5 },
 };
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
-// the enemies reversed across the map, and what their Reverse direction button does
-const ACROSS_REVERSE_TITLES: Partial<Record<ObjectType, string>> = {
-  fish: "It leaps from the solid fish to the faded one, and back",
-};
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
 
 export default function PropertiesPanel({ state, warnings, pathWarnings, outlineWarnings, scale, triangles, dispatch, levelCfg, levelName, songs, onLevelCfg }: {
@@ -292,23 +309,21 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
     );
   };
 
-  // which way a rolling stone rolls first from where it starts: on along its track, or back
-  const renderStoneReverseButton = (stone: LevelObject) => (
-    <button className="drop" onClick={() => change({ reverse: stone.reverse ? undefined : true })} title="The arrow at the dot shows which way it rolls first">
+  // which way a rolling stone rolls first, a fish leaps or a rotating obstacle
+  // goes round: the way the editor shows it, or the other way
+  const renderReverseButton = (selected: LevelObject, title: string) => (
+    <button className="drop" onClick={() => change({ reverse: selected.reverse ? undefined : true })} title={title}>
       Reverse direction
     </button>
   );
 
-  // which way a fish leaps or a lab assistant throws across the map: the way
-  // the editor shows it, or the other way
-  const renderAcrossReverseButton = (selected: LevelObject) => (
-    <button className="drop" onClick={() => change({ reverse: selected.reverse ? undefined : true })} title={ACROSS_REVERSE_TITLES[objectType(selected)!]}>
-      Reverse direction
-    </button>
-  );
-
-  const isStone = (selected: LevelObject) => selected.kind === "obstacle" && selected.obstacle === "rolling_stone";
-  const isReversedAcross = (selected: LevelObject) => objectType(selected) !== undefined && objectType(selected)! in ACROSS_REVERSE_TITLES;
+  const renderReverseButtonIfAny = (selected: LevelObject) => {
+    const title = reverseButtonTitle(selected);
+    if (title === undefined) {
+      return null;
+    }
+    return renderReverseButton(selected, title);
+  };
 
 
   // raise is its height above the floor, kept as it's dragged about
@@ -418,7 +433,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
       <>
         <h3>Camera</h3>
         <SliderField
-          label="distance ×"
+          label="distance Ã—"
           value={camera.distance}
           min={CAMERA_DISTANCE_MIN}
           max={CAMERA_DISTANCE_MAX}
@@ -427,7 +442,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
           onChange={(distance) => changeCamera({ distance })}
         />
         <SliderField
-          label="angle °"
+          label="angle Â°"
           value={camera.angle}
           min={CAMERA_ANGLE_MIN}
           max={CAMERA_ANGLE_MAX}
@@ -490,8 +505,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
           {hasPath(object) && renderNodeSlider(object)}
           {renderNumberSliders(object)}
           {hasPath(object) && renderTurnRoundButton(object)}
-          {isStone(object) && renderStoneReverseButton(object)}
-          {isReversedAcross(object) && renderAcrossReverseButton(object)}
+          {renderReverseButtonIfAny(object)}
           {hasNodes(object) && state.selectedNode !== null && renderNodeFields(object, state.selectedNode)}
           {object.kind === "box" && renderDropButton(object)}
           {warnings.has(index) && renderOverlapNote()}
