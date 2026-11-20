@@ -18,14 +18,25 @@ export interface CameraOffsets {
   height: number;
 }
 
+// how much lower a side view's camera is (times its distance), so crash is
+// nearer the middle of the screen
+export const SIDE_CAMERA_DROP = 320;
+
 // where a level's camera is from crash: CAM_LEAD behind and CAM_OFFSET's height
 // above, turned up or down about him by how far its angle is from the usual
-// one, and scaled by its distance
-export function cameraOffsets({ distance, angle }: Camera): CameraOffsets {
+// one, and scaled by its distance; a side view's lower by SIDE_CAMERA_DROP
+export function cameraOffsets({ distance, angle, view }: Camera): CameraOffsets {
   const turn = ((angle - DEFAULT_CAMERA.angle) * Math.PI) / 180;
   const lead = CAM_LEAD * Math.cos(turn) - CAM_OFFSET[1] * Math.sin(turn);
   const height = CAM_LEAD * Math.sin(turn) + CAM_OFFSET[1] * Math.cos(turn);
-  return { lead: Math.round(lead * distance), height: Math.round(height * distance) };
+  return { lead: Math.round(lead * distance), height: Math.round(height * distance) - sideDrop(view, distance) };
+}
+
+function sideDrop(view: Camera["view"], distance: number): number {
+  if (view === "side") {
+    return Math.round(SIDE_CAMERA_DROP * distance);
+  }
+  return 0;
 }
 
 const USUAL_OFFSETS: CameraOffsets = { lead: CAM_LEAD, height: CAM_OFFSET[1] };
