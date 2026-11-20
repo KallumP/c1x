@@ -1,5 +1,20 @@
 [
-  {"kind": "spawn", "at": [0, 1, 0]},
+  {"kind": "spawn", "at": [0.089, 0.606, 0]},
 
-  {"kind": "end", "at": [0, 6, 0], "raise": 0.25}
+  {"kind": "box", "type": "iron", "at": [-1.5, 3, 0], "stack": 4},
+  {"kind": "box", "type": "iron", "at": [-0.5, 3, 0], "stack": 4},
+  {"kind": "box", "type": "iron", "at": [0.5, 3, 0], "stack": 4},
+  {"kind": "box", "type": "iron", "at": [1.5, 3, 0], "stack": 4},
+  {"kind": "box", "type": "basic", "at": [0, -35, 0], "raise": 5},
+  {"kind": "box", "type": "iron", "at": [2.5, 3, 0], "stack": 4},
+  {"kind": "box", "type": "iron", "at": [3.5, 3, 0], "stack": 4},
+
+  {"kind": "obstacle", "type": "short_pushing_platform", "at": [-1.8, -42.134, 0], "raise": 2, "every": 2},
+  {"kind": "obstacle", "type": "short_pushing_platform", "at": [-1.8, -38.5, 0], "raise": 4, "every": 2, "offset": 1},
+  {"kind": "obstacle", "type": "short_pushing_platform", "at": [-1.8, -31.5, 0], "raise": 7, "every": 2, "offset": 1},
+  {"kind": "obstacle", "type": "fire_pit", "at": [-0.5, -27.8, 0], "raise": 7.5},
+  {"kind": "obstacle", "type": "rotating_pots", "at": [-1, -17.6, -1], "raise": 1.5, "every": 4, "platforms": 2, "radius": 1.5},
+  {"kind": "obstacle", "type": "rotating_pots", "at": [-1, -17.6, -1], "raise": 1.5, "every": 9, "platforms": 4},
+
+  {"kind": "end", "at": [0.259, 5.998, 0], "raise": 0.32}
 ]
