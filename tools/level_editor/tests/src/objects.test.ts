@@ -591,13 +591,9 @@ describe("obstacles", () => {
     ['[{"kind": "obstacle", "at": [0, 0, 0]}]', /^object 1: an obstacle needs a type$/],
     ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', /^object 1: unknown obstacle type raft$/],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: a leaf has no speed"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count (an obstacle takes kind, at, raise, type, path, speed, start, reverse, length, angle, rotation, every, offset, platforms, radius, shake, down, delay)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "count": 2}]', /^object 1: unknown setting count$/],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
-  });
-
-  test("an enemy's unknown setting says an enemy", () => {
-    expect(() => parseObjects('[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]')).toThrow("(an enemy takes");
   });
 });
 
