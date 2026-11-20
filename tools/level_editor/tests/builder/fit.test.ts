@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { Cells } from "../../builder/collision";
-import { fit, ROUTE_BEHIND, TooBig, zoneCells, zoneSpans } from "../../builder/fit";
+import { fit, ROUTE_BEHIND, ROUTE_SIDE, TooBig, zoneCells, zoneSpans } from "../../builder/fit";
 import { toZone } from "../../builder/levelObjects";
 import { readObj } from "../../builder/obj";
 import type { Vec3 } from "../../builder/vectors";
@@ -86,6 +86,15 @@ describe("zones along the route", () => {
   test("a long map is zones of 128 cells, from the route's start", () => {
     // the route runs along -z, so the first zone is the +z end
     expect(zoneSpans(49152, 128)).toEqual([[32768, 49152], [16384, 32768], [0, 16384]]);
+  });
+
+  test("a side view's long map is shorter zones, of 32 cells, from its left end", () => {
+    // all three zones round crash are live at once, so long ones would hold more objects than the game can
+    expect(zoneSpans(12288, 128, ROUTE_SIDE)).toEqual([[0, 4096], [4096, 8192], [8192, 12288]]);
+  });
+
+  test("a side view's long map is fitted to whole zones of 32 cells", () => {
+    expect(fit(boxMesh(0, 0, 0, 20000, 10, 1000), 128, 0, 128, ROUTE_SIDE).size[0]).toBe(5 * 4096);
   });
 
   test("a zone's cells are the ones in it, relative to it", () => {
