@@ -31,6 +31,7 @@ import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANC
 import { SKY_ROWS, type Sky } from "../sky";
 import { isAudioSongName, MUSIC_VOLUME_MAX, MUSIC_VOLUME_MIN, songChoices, songLabel } from "../music";
 import { defaultLevelTitle, drawableTitle } from "../levelTitle";
+import { objectName } from "../objectNames";
 import { CheckboxField, ChoiceField, ColourField, NumberField, SliderField, TextField } from "./Fields";
 import "./PropertiesPanel.css";
 
@@ -329,7 +330,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   // raise is its height above the floor, kept as it's dragged about
   const renderObjectFields = (selected: LevelObject) => (
     <>
-      <h3>{selected.kind}</h3>
+      <h3>{objectName(selected)}</h3>
       {selected.kind === "box" && renderBoxFields(selected)}
       {renderPositionFields(selected.at)}
       <NumberField label="raise" value={selected.raise} step={isShiftHeld ? 0.01 : 0.1} onChange={(raise) => change({ raise })} />
