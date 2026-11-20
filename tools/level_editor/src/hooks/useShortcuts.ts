@@ -9,6 +9,9 @@ const isTyping = (target: EventTarget | null) =>
 
 const isFunctionKey = (key: string) => /^F\d+$/.test(key);
 
+// keys a field being typed in keeps, ctrl or not: copying and pasting its text
+const FIELD_KEYS = new Set(["ctrl+c", "ctrl+v"]);
+
 // a key's name as the shortcuts are written: "Delete", "Escape", "F5", "ctrl+z", "ctrl+shift+z"
 function keyName(press: KeyPress): string {
   const key = press.key.length === 1 ? press.key.toLowerCase() : press.key;
@@ -17,14 +20,21 @@ function keyName(press: KeyPress): string {
   return `${ctrl}${shift}${key}`;
 }
 
-// the shortcut a key press runs, if any. while typing in a field, keys are left to it,
-// except with ctrl held or a function key (which types nothing)
+// whether a key press is left to a field being typed in: all but ctrl keys and
+// function keys (which type nothing), and copying and pasting with ctrl too
+function isLeftToField(press: KeyPress): boolean {
+  if (FIELD_KEYS.has(keyName(press))) {
+    return true;
+  }
+  return !press.ctrlKey && !press.metaKey && !isFunctionKey(press.key);
+}
+
+// the shortcut a key press runs, if any
 export function shortcutToRun(shortcuts: Shortcuts, press: KeyPress, typing: boolean): (() => void) | undefined {
-  const run = shortcuts[keyName(press)];
-  if (typing && !press.ctrlKey && !press.metaKey && !isFunctionKey(press.key)) {
+  if (typing && isLeftToField(press)) {
     return undefined;
   }
-  return run;
+  return shortcuts[keyName(press)];
 }
 
 // keyboard shortcuts, except while typing in a field
