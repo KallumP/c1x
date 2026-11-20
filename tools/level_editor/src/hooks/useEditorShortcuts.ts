@@ -1,5 +1,4 @@
 import type { EditorAction, EditorState } from "../editor";
-import type { Vec3 } from "../objects";
 import { useShortcuts, type Shortcuts } from "./useShortcuts";
 
 interface EditorShortcutActions {
@@ -7,7 +6,6 @@ interface EditorShortcutActions {
   save: () => void;
   build: () => void;
   buildAndBoot: () => void;
-  pointerOnFloor: () => Vec3 | null; // where the pointer is on the level's floor, if it's over it
 }
 
 // the editor's keys: delete, escape, copy, paste, undo, redo, save, build, and build and boot
@@ -27,7 +25,7 @@ export function editorShortcuts(state: EditorState, dispatch: (action: EditorAct
       dispatch({ type: "select", index: null });
     },
     "ctrl+c": () => dispatch({ type: "copy" }),
-    "ctrl+v": () => dispatch({ type: "paste", at: actions.pointerOnFloor() }),
+    "ctrl+v": () => dispatch({ type: "paste" }),
     "ctrl+z": undo,
     "ctrl+y": redo,
     "ctrl+shift+z": redo,
