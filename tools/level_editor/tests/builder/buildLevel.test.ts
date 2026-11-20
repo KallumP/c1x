@@ -158,6 +158,16 @@ describe("building a level", () => {
     expect(existsSync(join(levelsDir, "tiny.nsf"))).toBe(true);
   });
 
+  test.skipIf(!existsSync(join(STREAMS, "s0000009.nsd")))("a level with a duplicate object still builds, with a warning", () => {
+    const folder = newFolder("duplicate");
+    writeFileSync(join(folder, "duplicate.obj"), "o Floor\nv -4 0 -8\nv -4 0 8\nv 4 0 8\nv 4 0 -8\nf 1 2 3 4\n");
+    const basicBox = { kind: "box", type: "basic", at: [0, 0, 0] };
+    writeFileSync(join(folder, "objects.json"), JSON.stringify([basicBox, basicBox]));
+    const { ok, output } = quietBuild(folder, STREAMS);
+    expect(ok).toBe(true);
+    expect(output).toMatch(/warning: object 2 \(Basic box\) is a duplicate of object 1/);
+  });
+
   test.skipIf(!hasLoadingScreens)("a level's loading screen is the game's sign with its title, not jungle rollers'", () => {
     const folder = newFolder("2_tiny_ruins");
     writeFileSync(join(folder, "tiny.obj"), "o Floor\nv -4 0 -8\nv -4 0 8\nv 4 0 8\nv 4 0 -8\nf 1 2 3 4\n");
