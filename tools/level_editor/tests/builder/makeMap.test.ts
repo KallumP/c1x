@@ -2283,6 +2283,23 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
         expect(zones.map((zone) => headerOf(zone).neighbours)).toEqual([[a, b], [b, a, c], [c, b]]);
       });
 
+      // the camera sees either side of crash, so a zone draws the zones either side of it too
+      test("a zone draws its own meshes and the meshes of the zones either side", () => {
+        const ZONE_WORLDS_MAX = 8; // the most world meshes a zone lists
+        const zoneOrigins = (zone: Entry) => new Set(headerOf(zone).worlds.map(({ origin }) => origin.join()));
+        expect(zones.map((zone) => zoneOrigins(zone).size)).toEqual([2, 3, 2]);
+        zones.forEach((zone) => expect(headerOf(zone).worlds.length).toBeLessThanOrEqual(ZONE_WORLDS_MAX));
+      });
+
+      test("a zone's sort list lists polygons of every mesh it draws", () => {
+        const middle = zones[1];
+        const sortList = built.entries.get(cameraPathOf(middle).slst)!;
+        const firstList = sortList.items[0];
+        const ids = Array.from({ length: firstList.readUInt16LE(0) }, (_, index) => firstList.readUInt16LE(4 + 2 * index));
+        const listedWorlds = new Set(ids.map((id) => (id >> 12) & 7));
+        expect(listedWorlds.size).toBe(headerOf(middle).worlds.length);
+      });
+
       test("each zone's camera path runs along +x beside crash, out across from him", () => {
         const CRASH_LIFT = 100; // crash starts this far above where he's put
         const CAM_EDGE = 200; // the path runs from this far in from the map's start, whichever way crash goes
