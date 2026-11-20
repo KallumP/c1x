@@ -171,10 +171,6 @@ export type PathEnemy = (typeof PATH_ENEMIES)[number];
 export const isPathEnemy = (type: EnemyType | undefined): type is PathEnemy => PATH_ENEMIES.some((enemy) => enemy === type);
 export const PATH_NODES_MAX = 20;
 
-// the enemies with a path, for messages: "crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards and red lizards"
-const pluralName = (enemy: EnemyType) => `${enemy.replace("_", " ")}s`;
-const PATH_ENEMIES_NAMED = `${PATH_ENEMIES.slice(0, -1).map(pluralName).join(", ")} and ${pluralName(PATH_ENEMIES.at(-1)!)}`;
-
 // how many times the game's own pace a path enemy can walk at (seen working in the game with crabs and turtles)
 export const SPEED_MIN = 0.25;
 export const SPEED_MAX = 3;
@@ -339,7 +335,6 @@ export type NumberSetting = (typeof NUMBER_SETTINGS)[number];
 
 interface NumberSettingRule {
   types: readonly ObjectType[]; // the enemies or obstacles that have it
-  typesNamed: string;
   min: number;
   max: number;
   whole: boolean;
@@ -349,26 +344,86 @@ interface NumberSettingRule {
 }
 
 export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
-  speed: { types: [...PATH_ENEMIES, "sliding_pillar", "carrying_platform", "moving_platform", "lift_platform"], typesNamed: `${PATH_ENEMIES_NAMED}, sliding pillars, carrying platforms, moving platforms and lift platforms`, min: SPEED_MIN, max: SPEED_MAX, whole: false, fallback: speedFallback, meaning: "times the game's own pace, or a sliding pillar's, carrying platform's, moving platform's or lift platform's metres a second", maxFor: { sliding_pillar: SLIDING_PILLAR_SPEED_MAX, carrying_platform: CARRYING_PLATFORM_SPEED_MAX, moving_platform: MOVING_PLATFORM_SPEED_MAX, lift_platform: MOVING_PLATFORM_SPEED_MAX } },
-  start: { types: ["rolling_stone"], typesNamed: "rolling stones", min: 0, max: 1, whole: false, fallback: () => 0, meaning: "how far along its track it starts" },
-  count: { types: ["badger", "walking_spider", "bat", "leader_bats"], typesNamed: "badgers, walking spiders, bats and leader bats", min: BADGER_COUNT_MIN, max: BADGER_COUNT_MAX, whole: true, fallback: countFallback, meaning: "how many badgers come out at once" },
-  delay: { types: ["bat", "leader_bats", "timed_plank"], typesNamed: "bats, leader bats and timed planks", min: DELAY_MIN, max: DELAY_MAX, whole: false, fallback: delayFallback, meaning: "the seconds between its flocks, or before a timed plank breaks" },
-  length: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_LENGTH_MIN, max: SLIDE_LENGTH_MAX, whole: false, fallback: () => SLIDE_LENGTH, meaning: "how long it is, in metres" },
-  angle: { types: ["mossy_slide"], typesNamed: "mossy slides", min: SLIDE_ANGLE_MIN, max: SLIDE_ANGLE_MAX, whole: false, fallback: () => SLIDE_ANGLE, meaning: "how steeply it slopes, in degrees" },
-  rotation: { types: ["mossy_slide", ...GATES], typesNamed: "mossy slides and gates", min: 0, max: SLIDE_ROTATION_MAX, whole: false, fallback: () => 0, meaning: "which way it slides down, from across the map, or falls, from towards the camera: degrees anticlockwise seen from above" },
+  speed: {
+    types: [...PATH_ENEMIES, "sliding_pillar", "carrying_platform", "moving_platform", "lift_platform"],
+    min: SPEED_MIN,
+    max: SPEED_MAX,
+    whole: false,
+    fallback: speedFallback,
+    meaning: "times the game's own pace, or a sliding pillar's, carrying platform's, moving platform's or lift platform's metres a second",
+    maxFor: {
+      sliding_pillar: SLIDING_PILLAR_SPEED_MAX,
+      carrying_platform: CARRYING_PLATFORM_SPEED_MAX,
+      moving_platform: MOVING_PLATFORM_SPEED_MAX,
+      lift_platform: MOVING_PLATFORM_SPEED_MAX,
+    },
+  },
+  start: {
+    types: ["rolling_stone"],
+    min: 0,
+    max: 1,
+    whole: false,
+    fallback: () => 0,
+    meaning: "how far along its track it starts",
+  },
+  count: {
+    types: ["badger", "walking_spider", "bat", "leader_bats"],
+    min: BADGER_COUNT_MIN,
+    max: BADGER_COUNT_MAX,
+    whole: true,
+    fallback: countFallback,
+    meaning: "how many badgers come out at once",
+  },
+  delay: {
+    types: ["bat", "leader_bats", "timed_plank"],
+    min: DELAY_MIN,
+    max: DELAY_MAX,
+    whole: false,
+    fallback: delayFallback,
+    meaning: "the seconds between its flocks, or before a timed plank breaks",
+  },
+  length: {
+    types: ["mossy_slide"],
+    min: SLIDE_LENGTH_MIN,
+    max: SLIDE_LENGTH_MAX,
+    whole: false,
+    fallback: () => SLIDE_LENGTH,
+    meaning: "how long it is, in metres",
+  },
+  angle: {
+    types: ["mossy_slide"],
+    min: SLIDE_ANGLE_MIN,
+    max: SLIDE_ANGLE_MAX,
+    whole: false,
+    fallback: () => SLIDE_ANGLE,
+    meaning: "how steeply it slopes, in degrees",
+  },
+  rotation: {
+    types: ["mossy_slide", ...GATES],
+    min: 0,
+    max: SLIDE_ROTATION_MAX,
+    whole: false,
+    fallback: () => 0,
+    meaning: "which way it slides down, from across the map, or falls, from towards the camera: degrees anticlockwise seen from above",
+  },
   every: {
     types: [...TIMED_OBSTACLES, "slamming_walls", "rising_pillar", "rotating_pillars", "floor_fire"],
-    typesNamed: "spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, slamming walls, rising pillars, steam vents, rotating pillars and floor fires",
     min: TIMED_EVERY_MIN,
     max: TIMED_EVERY_MAX,
     whole: false,
     fallback: everyFallback,
     meaning: "the seconds between its pushes or flames",
   },
-  offset: { types: [...TIMED_OBSTACLES, "slamming_walls", "rising_pillar", "floor_fire"], typesNamed: "spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, slamming walls, rising pillars, steam vents and floor fires", min: 0, max: TIMED_EVERY_MAX, whole: false, fallback: () => 0, meaning: "the seconds its pushes or flames are put off by" },
+  offset: {
+    types: [...TIMED_OBSTACLES, "slamming_walls", "rising_pillar", "floor_fire"],
+    min: 0,
+    max: TIMED_EVERY_MAX,
+    whole: false,
+    fallback: () => 0,
+    meaning: "the seconds its pushes or flames are put off by",
+  },
   platforms: {
     types: [...ROTATING_OBSTACLES, "rotating_pillars"],
-    typesNamed: "rotating pots, platforms and pillars",
     min: 1,
     max: ROTATING_PLATFORMS_MAX,
     whole: true,
@@ -378,16 +433,36 @@ export const NUMBER_SETTING_RULES: Record<NumberSetting, NumberSettingRule> = {
   },
   radius: {
     types: [...ROTATING_OBSTACLES, "rotating_pillars"],
-    typesNamed: "rotating pots, platforms and pillars",
     min: ROTATING_RADIUS_MIN,
     max: ROTATING_RADIUS_MAX,
     whole: false,
     fallback: radiusFallback,
     meaning: "how far out they go round, in metres",
   },
-  shake: { types: ["dropping_platform"], typesNamed: "dropping platforms", min: SHAKE_MIN, max: SHAKE_MAX, whole: false, fallback: () => SHAKE, meaning: "the seconds it shakes before it drops" },
-  down: { types: ["dropping_platform"], typesNamed: "dropping platforms", min: DOWN_MIN, max: DOWN_MAX, whole: false, fallback: () => DOWN, meaning: "the seconds it stays dropped" },
-  range: { types: ["gunman"], typesNamed: "gunmen", min: RANGE_MIN, max: RANGE_MAX, whole: false, fallback: () => GUNMAN_RANGE, meaning: "how near crash comes, in metres, before he shoots" },
+  shake: {
+    types: ["dropping_platform"],
+    min: SHAKE_MIN,
+    max: SHAKE_MAX,
+    whole: false,
+    fallback: () => SHAKE,
+    meaning: "the seconds it shakes before it drops",
+  },
+  down: {
+    types: ["dropping_platform"],
+    min: DOWN_MIN,
+    max: DOWN_MAX,
+    whole: false,
+    fallback: () => DOWN,
+    meaning: "the seconds it stays dropped",
+  },
+  range: {
+    types: ["gunman"],
+    min: RANGE_MIN,
+    max: RANGE_MAX,
+    whole: false,
+    fallback: () => GUNMAN_RANGE,
+    meaning: "how near crash comes, in metres, before he shoots",
+  },
 };
 
 // whether an object is an enemy or obstacle with a number setting
@@ -465,14 +540,6 @@ const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "d
 const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset", "platforms", "radius", "shake", "down", "delay"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
 
-// a word with "a" or "an" before it, as it sounds: "a box", "an enemy"
-const withArticle = (word: string) => {
-  if ("aeiou".includes(word.charAt(0))) {
-    return `an ${word}`;
-  }
-  return `a ${word}`;
-};
-
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 const isWhole = (value: unknown): value is number => isNumber(value) && Number.isInteger(value);
 const isPosition = (value: unknown): value is Vec3 => Array.isArray(value) && value.length === 3 && value.every(isNumber);
@@ -509,7 +576,7 @@ function checkNodeCount(nodes: unknown, enemy: EnemyType, objectNumber: number):
     return;
   }
   if (!isPathEnemy(enemy)) {
-    throw new Error(`object ${objectNumber}: a ${enemy} has no path (${PATH_ENEMIES_NAMED} do)`);
+    throw new Error(`object ${objectNumber}: a ${enemy} has no path`);
   }
   checkPathLength(nodes, objectNumber);
 }
@@ -545,7 +612,7 @@ function readObstaclePath(fields: Record<string, unknown>, obstacle: ObstacleTyp
     return {};
   }
   if (!isPathObstacle(obstacle)) {
-    throw new Error(`object ${objectNumber}: a ${obstacle} has no path (leaves, sliding pillars, carrying platforms, moving platforms and lift platforms do)`);
+    throw new Error(`object ${objectNumber}: a ${obstacle} has no path`);
   }
   checkPathLength(fields.path, objectNumber);
   return { path: pathNodes(fields.path, objectNumber) };
@@ -566,7 +633,7 @@ function readNumberSetting(fields: Record<string, unknown>, setting: NumberSetti
   }
   const rule = NUMBER_SETTING_RULES[setting];
   if (!rule.types.includes(type)) {
-    throw new Error(`object ${objectNumber}: a ${type} has no ${setting} (${rule.typesNamed} do)`);
+    throw new Error(`object ${objectNumber}: a ${type} has no ${setting}`);
   }
   const value = fields[setting];
   const max = settingMax(setting, type);
@@ -624,7 +691,7 @@ function readBoxType(fields: Record<string, unknown>, objectNumber: number): Pic
     return { box: fields.type as BoxType };
   }
   if (!isWhole(fields.subtype) || !BOX_SUBTYPES.includes(fields.subtype)) {
-    throw new Error(`object ${objectNumber}: a box's subtype should be one of ${BOX_SUBTYPES.join(", ")}`);
+    throw new Error(`object ${objectNumber}: unknown box subtype ${fields.subtype}`);
   }
   return { box: fields.subtype };
 }
@@ -717,9 +784,7 @@ export function parseObjects(text: string): LevelObject[] {
     const allowedSettings = SETTINGS.concat(KIND_SETTINGS[kind as Kind] ?? []);
     const unknownSettings = Object.keys(fields).filter((setting) => !allowedSettings.includes(setting));
     if (unknownSettings.length) {
-      throw new Error(
-        `object ${objectNumber}: unknown setting ${unknownSettings[0]} (${withArticle(kind as Kind)} takes ${allowedSettings.join(", ")})`,
-      );
+      throw new Error(`object ${objectNumber}: unknown setting ${unknownSettings[0]}`);
     }
     if (ONCE.includes(kind as Kind) && objects.some((earlier) => earlier.kind === kind)) {
       throw new Error(`object ${objectNumber}: there's already a ${kind} (a level has one)`);

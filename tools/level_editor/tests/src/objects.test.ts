@@ -49,9 +49,9 @@ describe("parseObjects", () => {
     ['[{"kind": "spawn", "at": [0, 0, 0], "raise": "up"}]', "object 1: raise should be"],
     ['[{"kind": "box", "at": [0, 0, 0]}]', /^object 1: a box needs a type or a subtype number, not both$/],
     ['[{"kind": "box", "type": "nitro", "at": [0, 0, 0]}]', /^object 1: unknown box type nitro$/],
-    ['[{"kind": "box", "subtype": 1, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
-    ['[{"kind": "box", "subtype": 12, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
-    ['[{"kind": "box", "subtype": 13, "at": [0, 0, 0]}]', "object 1: a box's subtype should be"],
+    ['[{"kind": "box", "subtype": 1, "at": [0, 0, 0]}]', /^object 1: unknown box subtype 1$/],
+    ['[{"kind": "box", "subtype": 12, "at": [0, 0, 0]}]', /^object 1: unknown box subtype 12$/],
+    ['[{"kind": "box", "subtype": 13, "at": [0, 0, 0]}]', /^object 1: unknown box subtype 13$/],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "stack": 0}]', "object 1: stack should be"],
     ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "stack": 1.5}]', "object 1: stack should be"],
   ])("refuses %s", (text, message) => {
@@ -254,7 +254,7 @@ describe("enemies", () => {
   test.each([
     ['[{"kind": "enemy", "at": [0, 0, 0]}]', /^object 1: an enemy needs a type$/],
     ['[{"kind": "enemy", "type": "dragon", "at": [0, 0, 0]}]', /^object 1: unknown enemy type dragon$/],
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 1, 0]]}]', /^object 1: a plant has no path$/],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -341,7 +341,7 @@ describe("enemy paths", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a plant has no path (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', /^object 1: a plant has no path$/],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', "object 1: a path should be 2 to 20 nodes"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0]]}]', "object 1: a path's nodes should each be [x, y, z] in metres"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "path": "across"}]', "object 1: a path should be 2 to"],
@@ -382,7 +382,7 @@ describe("enemy speeds", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', "object 1: a plant has no speed (crabs, turtles, natives, badgers, warthogs, walking spiders, monkeys, lizards, red lizards, walking lizards, robot dogs, barrel rollers, camera robots, birds, electric scientists, blobs and flying cameras, sliding pillars, carrying platforms, moving platforms and lift platforms do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "speed": 2}]', /^object 1: a plant has no speed$/],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 4}]', "object 1: speed should be 0.25 to 3 (times the game's own pace, or a sliding pillar's, carrying platform's, moving platform's or lift platform's metres a second)"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": 0.1}]', "object 1: speed should be 0.25 to 3"],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "speed": "fast"}]', "object 1: speed should be 0.25 to 3"],
@@ -445,10 +445,10 @@ describe("a rolling stone's start", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "start": 0.5}]', "object 1: a turtle has no start (rolling stones do)"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "start": 0.5}]', "object 1: a leaf has no start (rolling stones do)"],
+    ['[{"kind": "enemy", "type": "turtle", "at": [0, 0, 0], "start": 0.5}]', /^object 1: a turtle has no start$/],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "start": 0.5}]', /^object 1: a leaf has no start$/],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "reverse": true}]', "object 1: a leaf has no reverse"],
-    ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a rolling_stone has no path (leaves, sliding pillars, carrying platforms, moving platforms and lift platforms do)"],
+    ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', /^object 1: a rolling_stone has no path$/],
     ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "start": 1.5}]', "object 1: start should be 0 to 1 (how far along its track it starts)"],
     ['[{"kind": "obstacle", "type": "rolling_stone", "at": [0, 0, 0], "start": "middle"}]', "object 1: start should be 0 to 1"],
   ])("refuses %s", (text, message) => {
@@ -505,7 +505,7 @@ describe("badger counts", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "count": 2}]', "object 1: a crab has no count (badgers, walking spiders, bats and leader bats do)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "count": 2}]', /^object 1: a crab has no count$/],
     ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 0}]', "object 1: count should be 1 to 6 (how many badgers come out at once)"],
     ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 7}]', "object 1: count should be 1 to 6"],
     ['[{"kind": "enemy", "type": "badger", "at": [0, 0, 0], "count": 2.5}]', "object 1: count should be 1 to 6"],
@@ -531,7 +531,7 @@ describe("gunmen's ranges", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "range": 20}]', "object 1: a plant has no range (gunmen do)"],
+    ['[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "range": 20}]', /^object 1: a plant has no range$/],
     ['[{"kind": "enemy", "type": "gunman", "at": [0, 0, 0], "range": 1}]', "object 1: range should be 2 to 40 (how near crash comes, in metres, before he shoots)"],
     ['[{"kind": "enemy", "type": "gunman", "at": [0, 0, 0], "range": 41}]', "object 1: range should be 2 to 40"],
   ])("refuses %s", (text, message) => {
@@ -557,7 +557,7 @@ describe("bat roosts' delays", () => {
   });
 
   test.each([
-    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "delay": 2}]', "object 1: a crab has no delay (bats, leader bats and timed planks do)"],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "delay": 2}]', /^object 1: a crab has no delay$/],
     ['[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "delay": 0.5}]', "object 1: delay should be 1 to 20 (the seconds between its flocks, or before a timed plank breaks)"],
     ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "delay": 21}]', "object 1: delay should be 1 to 20"],
   ])("refuses %s", (text, message) => {
@@ -591,13 +591,9 @@ describe("obstacles", () => {
     ['[{"kind": "obstacle", "at": [0, 0, 0]}]', /^object 1: an obstacle needs a type$/],
     ['[{"kind": "obstacle", "type": "raft", "at": [0, 0, 0]}]', /^object 1: unknown obstacle type raft$/],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: a leaf has no speed"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "count": 2}]', "object 1: unknown setting count (an obstacle takes kind, at, raise, type, path, speed, start, reverse, length, angle, rotation, every, offset, platforms, radius, shake, down, delay)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "count": 2}]', /^object 1: unknown setting count$/],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
-  });
-
-  test("an enemy's unknown setting says an enemy", () => {
-    expect(() => parseObjects('[{"kind": "enemy", "type": "plant", "at": [0, 0, 0], "stack": 2}]')).toThrow("(an enemy takes");
   });
 });
 
@@ -681,7 +677,7 @@ describe("rotating platforms", () => {
     ['[{"kind": "obstacle", "type": "rotating_pots", "at": [0, 0, 0], "platforms": 8}]', "object 1: platforms should be 1 to 7 (how many go round)"],
     ['[{"kind": "obstacle", "type": "rotating_pots", "at": [0, 0, 0], "platforms": 2.5}]', "object 1: platforms should be 1 to 7"],
     ['[{"kind": "obstacle", "type": "rotating_pots", "at": [0, 0, 0], "radius": 0.5}]', "object 1: radius should be 1 to 10 (how far out they go round, in metres)"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "radius": 2}]', "object 1: a leaf has no radius (rotating pots, platforms and pillars do)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "radius": 2}]', /^object 1: a leaf has no radius$/],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -758,7 +754,7 @@ describe("pillars", () => {
     expect(pillar.path).toEqual([[0, 0, 0], [0, 3, 0], [2, 3, 0]]);
     expect(parseObjects(formatObjects([pillar]))).toEqual([pillar]);
     expect(() => parseObjects('[{"kind": "obstacle", "type": "dropping_pillar", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]'))
-      .toThrow("a dropping_pillar has no path (leaves, sliding pillars, carrying platforms, moving platforms and lift platforms do)");
+      .toThrow(/a dropping_pillar has no path$/);
   });
 
   test("a carrying platform can have a path, read back as written", () => {
@@ -831,7 +827,7 @@ describe("dropping platforms", () => {
   test.each([
     ['[{"kind": "obstacle", "type": "dropping_platform", "at": [0, 0, 0], "shake": 0.1}]', "object 1: shake should be 0.25 to 5 (the seconds it shakes before it drops)"],
     ['[{"kind": "obstacle", "type": "dropping_platform", "at": [0, 0, 0], "down": 11}]', "object 1: down should be 0.5 to 10 (the seconds it stays dropped)"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "shake": 1}]', "object 1: a leaf has no shake (dropping platforms do)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "shake": 1}]', /^object 1: a leaf has no shake$/],
   ])("refuses %s", (json, message) => {
     expect(() => parseObjects(json)).toThrow(message);
   });
@@ -923,9 +919,9 @@ describe("spiked logs", () => {
   test.each([
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "every": 1.5}]', "object 1: every should be 2 to 20 (the seconds between its pushes or flames)"],
     ['[{"kind": "obstacle", "type": "falling_spiked_log", "at": [0, 0, 0], "every": 21}]', "object 1: every should be 2 to 20"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "every": 5}]', "object 1: a leaf has no every (spiked logs, fire pits, pushing blocks and platforms, rotating pots and platforms, slamming walls, rising pillars, steam vents, rotating pillars and floor fires do)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "every": 5}]', /^object 1: a leaf has no every$/],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "offset": 21}]', "object 1: offset should be 0 to 20 (the seconds its pushes or flames are put off by)"],
-    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "start": 0.5}]', "object 1: a rising_spiked_log has no start (rolling stones do)"],
+    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "start": 0.5}]', /^object 1: a rising_spiked_log has no start$/],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "reverse": true}]', "object 1: a rising_spiked_log has no reverse"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
@@ -951,7 +947,7 @@ describe("obstacle paths", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "type": "lily_pad", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a lily_pad has no path (leaves, sliding pillars, carrying platforms, moving platforms and lift platforms do)"],
+    ['[{"kind": "obstacle", "type": "lily_pad", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', /^object 1: a lily_pad has no path$/],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0, 0]]}]', "object 1: a path should be 2 to 20 nodes"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "path": [[0, 0], [1, 0, 0]]}]', "object 1: a path's nodes should each be [x, y, z]"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "speed": 2}]', "object 1: a leaf has no speed"],
@@ -977,12 +973,12 @@ describe("mossy slides", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "length": 5}]', "object 1: a leaf has no length (mossy slides do)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "length": 5}]', /^object 1: a leaf has no length$/],
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "angle": 5}]', "object 1: unknown setting angle"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "length": 1}]', "object 1: length should be 2 to 20 (how long it is, in metres)"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "angle": 40}]', "object 1: angle should be 5 to 30 (how steeply it slopes, in degrees)"],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "rotation": 360}]', "object 1: rotation should be 0 to 359 (which way it slides down, from across the map, or falls, from towards the camera: degrees anticlockwise seen from above)"],
-    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "rotation": 90}]', "object 1: a leaf has no rotation (mossy slides and gates do)"],
+    ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "rotation": 90}]', /^object 1: a leaf has no rotation$/],
     ['[{"kind": "obstacle", "type": "mossy_slide", "at": [0, 0, 0], "path": [[0, 0, 0], [1, 0, 0]]}]', "object 1: a mossy_slide has no path"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);

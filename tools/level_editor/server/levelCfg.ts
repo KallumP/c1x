@@ -5,7 +5,15 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CAMERA_ANGLE_MAX, CAMERA_ANGLE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_MIN, DEFAULT_CAMERA, isCameraAngle, isCameraDistance, type Camera } from "../src/camera";
 import { DEFAULT_SCALE } from "../src/coords";
-import { AUDIO_SONG_EXTENSIONS, DEFAULT_MUSIC, DEFAULT_MUSIC_VOLUME, isAudioSongName, isMusicName, isMusicVolume, MUSIC_VOLUME_MAX, MUSIC_VOLUME_MIN, SOUNDTRACKS } from "../src/music";
+import {
+  DEFAULT_MUSIC,
+  DEFAULT_MUSIC_VOLUME,
+  isAudioSongName,
+  isMusicName,
+  isMusicVolume,
+  MUSIC_VOLUME_MAX,
+  MUSIC_VOLUME_MIN,
+} from "../src/music";
 import { levelTitleProblem } from "../src/levelTitle";
 import { DEFAULT_SKY, formatRgb, isSkySplit, parseRgb, SKY_ROWS, type Rgb, type Sky } from "../src/sky";
 import { levelFolder } from "./levels";
@@ -124,8 +132,7 @@ function checkLevelCfg(cfg: LevelCfg): void {
     throw new Error(`camera_angle has to be ${CAMERA_ANGLE_MIN} to ${CAMERA_ANGLE_MAX}, not ${cfg.camera.angle}`);
   }
   if (!isSongName(cfg.music)) {
-    const names = SOUNDTRACKS.map(({ name }) => name).join(", ");
-    throw new Error(`music has to be one of ${names}, or an audio file (${AUDIO_SONG_EXTENSIONS.join(", ")}), not ${cfg.music}`);
+    throw new Error(`music has to be one of the game's songs, or an audio file, not ${cfg.music}`);
   }
   if (!isMusicVolume(cfg.musicVolume)) {
     throw new Error(`music_volume has to be ${MUSIC_VOLUME_MIN} to ${MUSIC_VOLUME_MAX}, not ${cfg.musicVolume}`);
