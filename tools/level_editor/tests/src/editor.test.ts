@@ -361,29 +361,34 @@ describe("pasting", () => {
   const copying = (objects: LevelObject[], index: number) =>
     editorReducer(editorReducer(withObjects(objects), { type: "select", index }), { type: "copy" });
 
-  test("pastes what's copied where it's put, and selects it", () => {
-    const state = editorReducer(copying([box(1)], 0), { type: "paste", at: [5, 6, 7] });
-    expect(state.objects).toEqual([box(1), newObject("basic", [5, 6, 7])]);
-    expect(state.selected).toBe(1);
-  });
-
-  test("pastes on top of what was copied, with nowhere to put it", () => {
-    const state = editorReducer(copying([box(1)], 0), { type: "paste", at: null });
-    expect(state.objects).toEqual([box(1), box(1)]);
+  test("pastes what's copied on top of where it was copied from, and selects it", () => {
+    const state = editorReducer(copying([box(1), box(2)], 0), { type: "paste" });
+    expect(state.objects).toEqual([box(1), box(2), box(1)]);
+    expect(state.selected).toBe(2);
   });
 
   test("a pasted switch gets the next free number", () => {
-    const state = editorReducer(copying([{ ...newObject("switch", [0, 0, 0]), switch: 1 }], 0), { type: "paste", at: null });
+    const state = editorReducer(copying([{ ...newObject("switch", [0, 0, 0]), switch: 1 }], 0), { type: "paste" });
     expect(state.objects[1].switch).toBe(2);
+  });
+
+  test("a pasted object has all the settings of what was copied", () => {
+    const platform = obstacleObject("moving_platform", { at: [1, 0, 0], raise: 2, stack: 3, speed: 4, reverse: true, path: [[0, 0, 0], [5, 0, 0]] });
+    const outline = { ...box(2), raise: 1, stack: 2, outline: 1 };
+    const switchBox = { ...newObject("switch", [3, 0, 0]), switch: 1 };
+    const level = [switchBox, platform, outline];
+    const pastedFrom = (index: number) => editorReducer(copying(level, index), { type: "paste" }).objects.at(-1);
+    expect(pastedFrom(1)).toEqual(platform);
+    expect(pastedFrom(2)).toEqual(outline);
   });
 
   test("pastes nothing with nothing copied", () => {
     const state = withObjects([box(1)]);
-    expect(editorReducer(state, { type: "paste", at: [5, 6, 7] })).toBe(state);
+    expect(editorReducer(state, { type: "paste" })).toBe(state);
   });
 
   test("pasting can be undone", () => {
-    const state = editorReducer(editorReducer(copying([box(1)], 0), { type: "paste", at: null }), { type: "undo" });
+    const state = editorReducer(editorReducer(copying([box(1)], 0), { type: "paste" }), { type: "undo" });
     expect(state.objects).toEqual([box(1)]);
   });
 });

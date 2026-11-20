@@ -5,7 +5,7 @@ import { shortcutToRun } from "../../../src/hooks/useShortcuts";
 import { press } from "./press";
 
 describe("the editor's shortcuts", () => {
-  const actions = { stopPlacing: () => {}, save: () => {}, build: () => {}, buildAndBoot: () => {}, pointerOnFloor: () => null };
+  const actions = { stopPlacing: () => {}, save: () => {}, build: () => {}, buildAndBoot: () => {} };
   const shortcuts = editorShortcuts(emptyEditor, () => {}, actions);
 
   test("ctrl+shift+b builds, ctrl+s saves, and f5 builds and boots", () => {
@@ -21,10 +21,10 @@ describe("the editor's shortcuts", () => {
     expect(dispatched).toEqual([{ type: "copy" }]);
   });
 
-  test("ctrl+v pastes under the pointer", () => {
+  test("ctrl+v pastes what's copied", () => {
     const dispatched: EditorAction[] = [];
-    const pasting = editorShortcuts(emptyEditor, (action) => dispatched.push(action), { ...actions, pointerOnFloor: () => [1, 2, 3] });
+    const pasting = editorShortcuts(emptyEditor, (action) => dispatched.push(action), actions);
     shortcutToRun(pasting, press("v", { ctrl: true }), false)?.();
-    expect(dispatched).toEqual([{ type: "paste", at: [1, 2, 3] }]);
+    expect(dispatched).toEqual([{ type: "paste" }]);
   });
 });
