@@ -8,6 +8,7 @@ import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
 import Scene, { type Orbit } from "./components/Scene";
 import { levelTurn } from "./camera";
+import { movedAlong, type Axis } from "./axisDrag";
 import { draggedBy, newObject, type Tool } from "./editor";
 import { raisedEndPad, withEndPadRaise } from "./endPad";
 import type { LevelObject } from "./objects";
@@ -60,6 +61,38 @@ export default function App() {
       dispatch({ type: "update", index, changes, record: false });
     },
   });
+  // the object being dragged by an axis arrow, as it was when grabbed, and whether it's moved yet
+  const axisDragged = useRef<{ index: number; object: LevelObject; hasMoved: boolean } | null>(null);
+  const setOrbiting = (isOn: boolean) => {
+    if (orbitRef.current) {
+      orbitRef.current.enabled = isOn;
+    }
+  };
+  const axisDrag = {
+    onGrab: () => {
+      if (state.selected === null) {
+        return;
+      }
+      setOrbiting(false);
+      axisDragged.current = { index: state.selected, object: state.objects[state.selected], hasMoved: false };
+    },
+    onMove: (axis: Axis, metres: number) => {
+      const dragging = axisDragged.current;
+      if (!dragging) {
+        return;
+      }
+      if (!dragging.hasMoved) {
+        dispatch({ type: "checkpoint" }); // the whole drag is one change to undo
+        dragging.hasMoved = true;
+      }
+      const changes = withEndPadRaise(dragging.object, movedAlong(dragging.object, axis, metres, grid), scale, triangles);
+      dispatch({ type: "update", index: dragging.index, changes, record: false });
+    },
+    onRelease: () => {
+      setOrbiting(true);
+      axisDragged.current = null;
+    },
+  };
   const [isSaving, setIsSaving] = useState(false);
   // saves the objects and level.cfg, whichever changed; whether they saved
   const save = async (): Promise<boolean> => {
@@ -191,7 +224,7 @@ export default function App() {
       return null;
     }
     const { at: [x, y, z], raise } = state.objects[state.selected];
-    return <AxisHandles at={[x, y, z + raise]} />;
+    return <AxisHandles at={[x, y, z + raise]} {...axisDrag} />;
   };
 
   const renderLevel = () => (
