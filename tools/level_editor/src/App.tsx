@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
+import AxisHandles from "./components/AxisHandles";
 import LevelMesh from "./components/LevelMesh";
 import LevelPicker from "./components/LevelPicker";
 import ObjectMarkers from "./components/ObjectMarkers";
@@ -184,6 +185,15 @@ export default function App() {
     </header>
   );
 
+  // the selected object's axis arrows, while selecting (not a node of its path)
+  const renderAxisHandles = () => {
+    if (tool.kind !== "select" || state.selected === null || state.selectedNode !== null) {
+      return null;
+    }
+    const { at: [x, y, z], raise } = state.objects[state.selected];
+    return <AxisHandles at={[x, y, z + raise]} />;
+  };
+
   const renderLevel = () => (
     <>
       {group && <LevelMesh group={group} onClick={clickLevel} onPointerMove={drag.moveOverLevel} />}
@@ -199,6 +209,7 @@ export default function App() {
         onSelect={drag.start}
         onSelectNode={drag.startNode}
       />
+      {renderAxisHandles()}
     </>
   );
 

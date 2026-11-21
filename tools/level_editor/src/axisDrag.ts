@@ -4,6 +4,13 @@ import type { LevelObject, Vec3 } from "./objects";
 
 export type Axis = "x" | "y" | "up";
 
+// each axis's way (in blender) and its arrow's colour, as blender colours them
+export const AXES: { axis: Axis; direction: Vec3; colour: string }[] = [
+  { axis: "x", direction: [1, 0, 0], colour: "#e5484d" },
+  { axis: "y", direction: [0, 1, 0], colour: "#46a758" },
+  { axis: "up", direction: [0, 0, 1], colour: "#3e8ed0" },
+];
+
 const PARALLEL = 1e-9; // a ray this near along the axis has no one closest point
 
 const dot = (a: Vec3, b: Vec3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
