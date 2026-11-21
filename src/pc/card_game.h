@@ -8,5 +8,6 @@
 extern int CardControl(int op, int part_idx);
 extern void CardGameUpdate(void);
 extern void CardGameForgetLast(void);
+extern void CardGameForgetScreen(void);
 
 #endif /* _PC_CARD_GAME_H_ */

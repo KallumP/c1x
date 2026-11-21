@@ -115,6 +115,15 @@ void CardGameUpdate(void) {
   ShowCard();
 }
 
+/*
+ * a card screen's texts are in its level's data, so they're forgotten when
+ * the level's freed: slot names aren't put in them after, until the next
+ * card screen gives the game its own
+ */
+void CardGameForgetScreen(void) {
+  card_str = 0;
+}
+
 /* the save last written is forgotten when the game's progress is reset, as the ps1 game did */
 void CardGameForgetLast(void) {
   the_card.last_file_name[0] = 0;
