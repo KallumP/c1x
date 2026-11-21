@@ -12,6 +12,7 @@ import { movedAlong, movedNodeAlong, type Axis } from "./axisDrag";
 import { draggedBy, newObject, type Tool } from "./editor";
 import { raisedEndPad, withEndPadRaise } from "./endPad";
 import { pathPositions } from "./enemyPaths";
+import { spawnView } from "./spawnView";
 import type { LevelObject } from "./objects";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
@@ -235,9 +236,23 @@ export default function App() {
     return <AxisHandles at={[x, y, z + raise]} {...axisDrag} />;
   };
 
+  // where the camera starts: behind the spawn, the way its arrow points, if the level has one
+  const startSpawnView = () => {
+    const spawn = state.objects.find((object) => object.kind === "spawn");
+    return spawn ? spawnView(spawn, turn, scale) : null;
+  };
+
   const renderLevel = () => (
     <>
-      {group && <LevelMesh group={group} onClick={clickLevel} onPointerMove={drag.moveOverLevel} />}
+      {group && (
+        <LevelMesh
+          group={group}
+          spawn={startSpawnView()}
+          isReady={editor.isLoaded && levelCfg.isLoaded}
+          onClick={clickLevel}
+          onPointerMove={drag.moveOverLevel}
+        />
+      )}
       <ObjectMarkers
         objects={state.objects}
         scale={scale}

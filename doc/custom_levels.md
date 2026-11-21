@@ -66,7 +66,7 @@ A box outlined in red is stuck in a wall or another box (this doesn't stop the l
 
 Each switch has a number, shown over it. Tick **outline** on a box and pick a switch under it to have that switch fill the box in. A switch can be an outline too: it appears when its switch is hit, and fills in its own outlines only when it's hit itself. A switch can fill in only one other switch. **Drop to floor** puts the selected box just above the floor, and **raise** sets how far off the floor an object should be.
 
-The arrow on the spawn object shows which way the camera faces at the start. With nothing selected, the right side shows the level's settings, saved to its `level.cfg`. Hover a setting's underlined name to see what it does.
+The arrow on the spawn object shows which way the camera faces at the start, and the editor opens a level from behind the spawn, looking that way. With nothing selected, the right side shows the level's settings, saved to its `level.cfg`. Hover a setting's underlined name to see what it does.
 
 - **title** is the name the level's loading screen shows under the game's "LOADING" sign, in the game's own letters, so it can have only letters, spaces and full stops, up to 20 characters. Left empty, it's the folder's name (`1_tide_ruins` shows "Tide Ruins").
 - **Your own loading screen:** put a `loading.png` in the level's folder to show it instead of the sign. It's shown at 432 by 144, so a picture that shape fits best; another shape is cut at its edges to fill it. It goes with the level if you share it.
