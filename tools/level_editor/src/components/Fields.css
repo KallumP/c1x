@@ -28,3 +28,9 @@
 .field input[type="checkbox"] {
   justify-self: start;
 }
+
+.field .hinted {
+  text-decoration: underline dotted #777;
+  text-underline-offset: 3px;
+  cursor: help;
+}
