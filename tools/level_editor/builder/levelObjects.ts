@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { messageName } from "../src/objectNames";
 import { switchlessOutlines } from "../src/switchWarnings";
-import { BOX_TYPES, parseObjects, type LevelObject } from "../src/objects";
+import { BOX_TYPES, parseObjects, type BoxDrop, type LevelObject } from "../src/objects";
 import { IRON_OUTLINE, PLAIN_OUTLINE } from "./entities";
 import { turned } from "./obj";
 import type { Vec3 } from "./vectors";
@@ -49,8 +49,9 @@ export function boxSubtype(object: LevelObject): number {
 
 // a box's first init flag, what the game's box hands what it drops (n. sanity beach's ? box with a life
 // has 97, seen in a replay): 0 for a ? box's wumpa, or any other box
-export function boxInitFlagA(_object: LevelObject): number {
-  return 0;
+const DROP_FLAGS: Record<BoxDrop, number> = { wumpa: 0, life: 97 };
+export function boxInitFlagA(object: LevelObject): number {
+  return DROP_FLAGS[object.drop ?? "wumpa"];
 }
 
 // a box's second init flag: OUTLINE_INIT_FLAG_B for an outline the game has no outline box of, else 0
