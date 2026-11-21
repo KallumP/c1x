@@ -92,6 +92,20 @@ describe("update", () => {
   });
 });
 
+describe("? boxes' drops", () => {
+  const question: LevelObject = { ...newObject("question", [0, 0, 0]), drop: "life" };
+
+  test("a ? box keeps its drop as its other settings change", () => {
+    const state = editorReducer(withObjects([question]), { type: "update", index: 0, changes: { stack: 2 } });
+    expect(state.objects[0].drop).toBe("life");
+  });
+
+  test("a box of any other type has no drop", () => {
+    const state = editorReducer(withObjects([question]), { type: "update", index: 0, changes: { box: "basic" } });
+    expect(state.objects[0]).not.toHaveProperty("drop");
+  });
+});
+
 describe("switch numbers", () => {
   const switchBox = (x: number, number?: number): LevelObject => ({ ...newObject("switch", [x, 0, 0]), switch: number });
   const added = (objects: LevelObject[], object: LevelObject) => editorReducer(withObjects(objects), { type: "add", object }).objects.at(-1)!;
