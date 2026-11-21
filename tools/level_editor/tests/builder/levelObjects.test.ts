@@ -40,6 +40,21 @@ describe("duplicate objects", () => {
   ])("an object %s isn't a duplicate", (_, other) => {
     expect(duplicateWarnings([box([0, 0, 0]), other])).toEqual([]);
   });
+
+  const pots = (more: Partial<LevelObject> = {}): LevelObject =>
+    ({ kind: "obstacle", at: [0, 0, 0], raise: 0, stack: 1, obstacle: "rotating_pots", ...more } as LevelObject);
+
+  test.each([
+    ["another radius", pots({ radius: 3 })],
+    ["going the other way round", pots({ reverse: true })],
+    ["with more pots", pots({ platforms: 4 })],
+  ])("rotating pots in the same spot %s aren't a duplicate", (_, other) => {
+    expect(duplicateWarnings([pots(), other])).toEqual([]);
+  });
+
+  test("rotating pots with the same settings, in the same spot, are a duplicate", () => {
+    expect(duplicateWarnings([pots({ radius: 3 }), pots({ radius: 3 })])).toHaveLength(1);
+  });
 });
 
 describe("outlines' switches", () => {

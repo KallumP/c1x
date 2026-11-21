@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { messageName } from "../src/objectNames";
 import { switchlessOutlines } from "../src/switchWarnings";
-import { BOX_TYPES, objectType, parseObjects, type LevelObject } from "../src/objects";
+import { BOX_TYPES, parseObjects, type LevelObject } from "../src/objects";
 import { IRON_OUTLINE, PLAIN_OUTLINE } from "./entities";
 import { turned } from "./obj";
 import type { Vec3 } from "./vectors";
@@ -55,10 +55,11 @@ export function boxInitFlagB(object: LevelObject): number {
   return OUTLINE_INIT_FLAG_B;
 }
 
-// what makes two objects duplicates: the same kind and type, in the same
-// spot, raised the same (a copied switch's own number doesn't count)
+// what makes two objects duplicates: everything about them the same, such as
+// their kind, type, spot and settings (a rotating obstacle's radius or way
+// round), except a copied switch's own number, which changes when it's pasted
 const duplicateKey = (object: LevelObject) =>
-  JSON.stringify([object.kind, object.box, objectType(object), object.at, object.raise]);
+  JSON.stringify(Object.entries(object).filter(([key]) => key !== "switch").sort(([a], [b]) => a.localeCompare(b)));
 
 // a warning for each object that's a duplicate of one before it (numbered
 // from 1, as in objects.json), most likely pasted and not moved
