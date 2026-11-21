@@ -43,3 +43,10 @@ export function movedAlong(object: LevelObject, axis: Axis, metres: number, grid
   const at = object.at.map((value, axisIndex) => (axisIndex === index ? moved(value) : value)) as Vec3;
   return { at };
 }
+
+// the change moving node of object's path (object as it was when the drag
+// began) metres along axis makes: the node moves, up included, and the rest of
+// its path stays; snapped to grid (0: none)
+export function movedNodeAlong(_object: LevelObject, _node: number, _axis: Axis, _metres: number, _grid: number, _turn: number, _scale: number): Partial<LevelObject> {
+  return {};
+}
