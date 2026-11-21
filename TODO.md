@@ -9,7 +9,6 @@ Editor
 - invisible walls
 - death zones
 
-- Option to change what drops when breaking crates
 - the text about the game booting should go away once any changes are detected.
 - prisoner hands
 - different textuers for moving platforms? Some are the same code, but select what level the textures come from 
@@ -23,6 +22,7 @@ speed run mode
 
 Generic
 - memory card support
+- mute-able start
 - europe support
 - going back to a level shows a white artefact near the middle of the screen, this might be beacuse i rotated the island in the map using circle and square and then entered the level
 - outlines dont always show as outlines, there is some weird behaviour in the editor
