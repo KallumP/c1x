@@ -544,7 +544,7 @@ export function boxTypeName(box: NonNullable<LevelObject["box"]>): BoxType {
 }
 
 const SETTINGS = ["kind", "at", "raise"];
-const BOX_SETTINGS = ["type", "subtype", "switch", "stack", "outline"];
+const BOX_SETTINGS = ["type", "subtype", "switch", "stack", "outline", "drop"];
 const ENEMY_SETTINGS = ["type", "path", "speed", "start", "reverse", "count", "delay", "range"];
 const OBSTACLE_SETTINGS = ["type", "path", "speed", "start", "reverse", "length", "angle", "rotation", "every", "offset", "platforms", "radius", "shake", "down", "delay"];
 const KIND_SETTINGS: Partial<Record<Kind, string[]>> = { box: BOX_SETTINGS, enemy: ENEMY_SETTINGS, obstacle: OBSTACLE_SETTINGS };
@@ -756,10 +756,24 @@ function readOutline(fields: Record<string, unknown>, box: LevelObject, objectNu
   return { outline: fields.outline };
 }
 
+// what a ? box drops, from its fields in objects.json; no other box has a drop
+function readDrop(fields: Record<string, unknown>, box: LevelObject, objectNumber: number): Pick<LevelObject, "drop"> {
+  if (!("drop" in fields)) {
+    return {};
+  }
+  if (boxTypeName(box.box!) !== "question") {
+    throw new Error(`object ${objectNumber}: only a ? box has a drop`);
+  }
+  if (!BOX_DROPS.includes(fields.drop as BoxDrop)) {
+    throw new Error(`object ${objectNumber}: drop should be ${BOX_DROPS.join(" or ")}`);
+  }
+  return { drop: fields.drop as BoxDrop };
+}
+
 // a box's settings, from its fields in objects.json, after the objects before it
 function readBox(fields: Record<string, unknown>, objectNumber: number, earlier: LevelObject[]): Partial<LevelObject> {
   const box: LevelObject = { kind: "box", at: [0, 0, 0], raise: 0, stack: 1, ...readBoxType(fields, objectNumber) };
-  return { box: box.box, ...readStack(fields, objectNumber), ...readSwitchNumber(fields, box, objectNumber, earlier), ...readOutline(fields, box, objectNumber) };
+  return { box: box.box, ...readStack(fields, objectNumber), ...readSwitchNumber(fields, box, objectNumber, earlier), ...readOutline(fields, box, objectNumber), ...readDrop(fields, box, objectNumber) };
 }
 
 // the objects in the text of an objects.json; anything else is an Error saying which object (from 1)
@@ -856,6 +870,9 @@ function formatObject(object: LevelObject): string {
   }
   if (object.outline !== undefined) {
     parts.push(`"outline": ${object.outline}`);
+  }
+  if (object.drop !== undefined && object.drop !== "wumpa") {
+    parts.push(`"drop": ${JSON.stringify(object.drop)}`);
   }
   if (object.path) {
     const nodes = object.path.map((node) => `[${node.map(roundToMillimetre).join(", ")}]`);
