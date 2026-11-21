@@ -9,9 +9,6 @@ Editor
 - shorter delays for platforms
 - invisible walls
 - death zones
-- camera settings should be under the level settings
-- reduce level settings labels. There is way too much clutter after each batch of settings options
-- camera distance setting shows an accented A for some reason
 - the level should always start looking at the spawn and the direction of the spawn
 
 - Option to change what drops when breaking crates
