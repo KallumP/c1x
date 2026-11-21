@@ -19,7 +19,7 @@
 #include "pc/custommenu.h"
 #include "pc/jumpgrace.h"
 #include "pc/settings.h"
-int CardControl(int op, int part_idx) { return 1; }
+#include "pc/card_game.h" /* pc: CardControl, the memory card as save files */
 
 /* forward declarations for unexported funcs */
 int GoolObjectChangeState(gool_object*,uint32_t,int,uint32_t*);

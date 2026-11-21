@@ -3,6 +3,9 @@
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
 #include "card.h"
 
 #define CHECKSUM_SEED 0x12345678 /* the ps1 game's */
