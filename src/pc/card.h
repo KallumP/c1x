@@ -55,6 +55,7 @@ extern int CardFileRead(const char *dir, const char *file_name, card_save *save,
 extern int CardListFiles(const char *dir, char file_names[CARD_SLOT_MAX][CARD_FILE_NAME_SIZE]);
 extern void CardNextFileName(char *file_name, const char *last_file_name, uint32_t save_id);
 extern int CardDeleteFiles(const char *dir);
+extern int CardCopyFiles(const char *from_dir, const char *to_dir);
 
 /* the card's flags, which the game's screens watch (card_flags_ro) */
 #define CARD_FLAG_PENDING_IO   1    /* it's busy with what was asked */

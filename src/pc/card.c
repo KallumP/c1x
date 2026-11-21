@@ -253,6 +253,45 @@ int CardDeleteFiles(const char *dir) {
   return count;
 }
 
+/* copies the save file_name from one folder to another, as it is; whether it was */
+static int CopySaveFile(const char *from_dir, const char *to_dir, const char *file_name) {
+  uint8_t blocks[CARD_FILE_BLOCKS][CARD_BLOCK_SIZE];
+  char path[PATH_SIZE];
+  FILE *file;
+  size_t size;
+
+  FilePath(path, from_dir, file_name);
+  file = fopen(path, "rb");
+  if (!file) { return 0; }
+  size = fread(blocks, 1, sizeof(blocks), file);
+  fclose(file);
+  FilePath(path, to_dir, file_name);
+  file = fopen(path, "wb");
+  if (!file) { return 0; }
+  fwrite(blocks, 1, size, file);
+  fclose(file);
+  return 1;
+}
+
+/*
+ * puts a copy of the saves in from_dir in to_dir, in place of its own (to_dir
+ * is made only if there are saves to copy); how many were copied
+ */
+int CardCopyFiles(const char *from_dir, const char *to_dir) {
+  char (*names)[CARD_FILE_NAME_SIZE];
+  int i, count, copied;
+
+  CardDeleteFiles(to_dir);
+  count = ListAllFiles(from_dir, &names);
+  if (count)
+    MakeDir(to_dir);
+  copied = 0;
+  for (i=0;i<count;i++)
+    copied += CopySaveFile(from_dir, to_dir, names[i]);
+  free(names);
+  return copied;
+}
+
 /* the card's states, numbered as the ps1 game's card code has them */
 
 #define STATE_SCAN_START 1 /* about to list its saves */
