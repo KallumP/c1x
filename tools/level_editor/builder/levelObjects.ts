@@ -47,6 +47,12 @@ export function boxSubtype(object: LevelObject): number {
   return OUTLINE_SUBTYPES.get(own) ?? own;
 }
 
+// a box's first init flag, what the game's box hands what it drops (n. sanity beach's ? box with a life
+// has 97, seen in a replay): 0 for a ? box's wumpa, or any other box
+export function boxInitFlagA(_object: LevelObject): number {
+  return 0;
+}
+
 // a box's second init flag: OUTLINE_INIT_FLAG_B for an outline the game has no outline box of, else 0
 export function boxInitFlagB(object: LevelObject): number {
   if (object.outline === undefined || hasOutlineSubtype(object)) {

@@ -2078,6 +2078,12 @@ describe.skipIf(!hasBase)("making a level from a map", () => {
     });
   });
 
+  test("a ? box's first init flag is what it drops: 97 for a life, 0 for wumpa", () => {
+    const { zone } = build([box([1, 2, 0.5], 10, { drop: "life", stack: 2 }), box([-1, 2, 0.5], 10)]);
+    const flagsA = zoneEntities(zone).filter((item) => entityType(item)[0] === BOX_TYPE).map((item) => item.readInt16LE(ENTITY_INIT_FLAGS));
+    expect(flagsA).toEqual([97, 97, 0]);
+  });
+
   test("every object has its own id", () => {
     const { zone } = build([box([1, 2, 0.5], 2, { stack: 2 }), box([-1, 2, 0.5], 9), object("end", [-2, 4, 0.5])]);
     const ids = zoneEntities(zone).map(entityId);
