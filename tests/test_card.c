@@ -224,6 +224,54 @@ UTEST(card_files, a_save_written_reads_back_the_same_with_its_slot_name) {
   ASSERT_STREQ("CRASH (12%)", slot_name);
 }
 
+/* an icon with something different in every colour and every frame's pixels */
+static card_save_icon SomeIcon(void) {
+  card_save_icon icon;
+  int i, j;
+
+  for (i=0;i<CARD_ICON_COLOURS;i++)
+    icon.palette[i] = 0x8000 | (i * 0x421);
+  for (i=0;i<CARD_ICON_FRAMES;i++) {
+    for (j=0;j<CARD_ICON_FRAME_SIZE;j++)
+      icon.frames[i][j] = (uint8_t)(i * 64 + j);
+  }
+  return icon;
+}
+
+UTEST(card_files, a_save_written_with_an_icon_reads_its_icon_back) {
+  card_save save, read;
+  card_save_icon written, got;
+  char slot_name[CARD_SLOT_NAME_SIZE];
+
+  FreshCard();
+  save = SomeSave();
+  CardSaveSeal(&save);
+  written = SomeIcon();
+  ASSERT_EQ(1, CardFileWriteWithIcon(CARD_DIR, "BASCUS-9490000123456", &save, 12, &written));
+  ASSERT_EQ(1, CardFileReadIcon(CARD_DIR, "BASCUS-9490000123456", &got));
+  ASSERT_EQ(0, memcmp(&written, &got, sizeof(got)));
+  ASSERT_EQ(1, CardFileRead(CARD_DIR, "BASCUS-9490000123456", &read, slot_name, sizeof(slot_name)));
+  ASSERT_EQ(0, memcmp(&save, &read, sizeof(read)));
+  ASSERT_STREQ("CRASH (12%)", slot_name);
+}
+
+UTEST(card_files, a_save_written_without_an_icon_has_a_blank_one) {
+  card_save_icon got, blank;
+
+  FreshCard();
+  WriteSave("BASCUS-9490000123456", 7, 12);
+  memset(&blank, 0, sizeof(blank));
+  ASSERT_EQ(1, CardFileReadIcon(CARD_DIR, "BASCUS-9490000123456", &got));
+  ASSERT_EQ(0, memcmp(&blank, &got, sizeof(got)));
+}
+
+UTEST(card_files, the_icon_of_a_save_that_isnt_there_isnt_read) {
+  card_save_icon got;
+
+  FreshCard();
+  ASSERT_EQ(0, CardFileReadIcon(CARD_DIR, "BASCUS-9490000123456", &got));
+}
+
 UTEST(card_files, a_save_file_is_a_header_three_icons_and_five_copies_long) {
   FreshCard();
   WriteSave("BASCUS-9490000123456", 7, 12);

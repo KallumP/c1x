@@ -151,6 +151,15 @@ int CardFileWrite(const char *dir, const char *file_name, const card_save *save,
   return written == sizeof(blocks);
 }
 
+int CardFileWriteWithIcon(const char *dir, const char *file_name, const card_save *save, int percent,
+  const card_save_icon *icon) {
+  return CardFileWrite(dir, file_name, save, percent);
+}
+
+int CardFileReadIcon(const char *dir, const char *file_name, card_save_icon *icon) {
+  return 0;
+}
+
 /* a save's name from its header block, in capitals as the game's screens show it */
 static void SlotNameOf(const uint8_t *header, char *slot_name, int size) {
   int i;
