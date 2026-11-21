@@ -316,6 +316,18 @@ int16_t mcos(uint32_t a) {
     return sin_table[a-0xC00];
 }
 
+#define ATAN_TABLE_LAST 1023 /* atan_table's last entry: a ratio of 1, an eighth turn */
+
+/*
+ * the angle whose tangent is idx/1024. a ratio of exactly 1 (an exact
+ * diagonal) gives 1024, one past the table's end, so it reads the last entry
+ */
+static int32_t AtanOfRatio(int idx) {
+  if (idx > ATAN_TABLE_LAST)
+    idx = ATAN_TABLE_LAST;
+  return atan_table[idx];
+}
+
 int32_t matan2(int32_t y, int32_t x) {
   int ny, nx, idx;
   int32_t res;
@@ -326,11 +338,11 @@ int32_t matan2(int32_t y, int32_t x) {
   if (!(y|x)) { return 0; }
   if (y >= x) {
     idx = (x>>21)?x/(y>>10):(x<<10)/y;
-    res = 0x400 - atan_table[idx];
+    res = 0x400 - AtanOfRatio(idx);
   }
   else {
     idx = (y>>21)?y/(x>>10):(y<<10)/x;
-    res = atan_table[idx];
+    res = AtanOfRatio(idx);
   }
   if (nx) { res = 0x800 - res; }
   if (ny) { res = -res; }
