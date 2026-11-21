@@ -376,6 +376,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   const renderTitleField = (title: string) => (
     <TextField
       label="title"
+      hint={'The name the loading screen shows under "LOADING" (the folder\'s name if empty), in the game\'s letters: only letters, spaces and full stops. A loading.png in the level\'s folder shows instead.'}
       value={title}
       placeholder={defaultLevelTitle(levelName)}
       onChange={(typed) => onLevelCfg({ title: drawableTitle(typed) })}
@@ -391,22 +392,19 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
         {renderTitleField(cfg.title)}
         <ChoiceField
           label="turn"
+          hint="Turns the level in the game, so its route runs the way Crash faces."
           value={TURNS.includes(turn) ? turn : "0"}
           choices={TURNS}
           onChange={(degrees) => onLevelCfg({ turn: Number(degrees) })}
         />
         <NumberField
           label="scale"
+          hint="The game's units a metre (400 is normal). A bigger scale makes the map bigger in the game, so boxes look smaller on it."
           value={cfg.scale}
           step={50}
           min={1}
           onChange={(units) => onLevelCfg({ scale: Math.max(1, Math.round(units)) })}
         />
-        <p className="hint">
-          Title is the name its loading screen shows under the game's "LOADING" sign (its folder's name if it's empty), in
-          the game's letters, so only letters, spaces and full stops; a loading.png in the level's folder shows instead. Turn turns the level in the game, so its route runs the way Crash faces. Scale is the game's units a metre (400 is
-          normal): a bigger scale makes the map bigger in the game, so boxes look smaller on it.
-        </p>
       </>
     );
   };
@@ -426,19 +424,16 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
       <>
         <h3>Sky</h3>
         {renderSkyPreview(sky)}
-        <ColourField label="top" value={sky.top} onChange={(top) => changeSky({ top })} />
-        <ColourField label="bottom" value={sky.bottom} onChange={(bottom) => changeSky({ bottom })} />
+        <ColourField label="top" hint="Fills the game's screen down to split." value={sky.top} onChange={(top) => changeSky({ top })} />
+        <ColourField label="bottom" hint="Fills the rest of the screen, under split." value={sky.bottom} onChange={(bottom) => changeSky({ bottom })} />
         <NumberField
           label="split"
+          hint={`How many of the screen's ${SKY_ROWS} rows the top colour fills.`}
           value={sky.split}
           step={4}
           min={0}
           onChange={(rows) => changeSky({ split: Math.min(SKY_ROWS, Math.max(0, Math.round(rows))) })}
         />
-        <p className="hint">
-          The top colour fills the game's screen down to split (of its {SKY_ROWS} rows), and the bottom colour the rest.
-          Build the level to see it in the game.
-        </p>
       </>
     );
   };
@@ -449,9 +444,10 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
     return (
       <>
         <h3>Camera</h3>
-        <ChoiceField label="view" value={camera.view} choices={CAMERA_VIEWS} onChange={(view) => changeCamera({ view })} />
+        <ChoiceField label="view" hint="Behind Crash, or side to watch him from the side as he runs left to right." value={camera.view} choices={CAMERA_VIEWS} onChange={(view) => changeCamera({ view })} />
         <SliderField
           label="distance ×"
+          hint="How far the camera is from Crash, times its usual distance."
           value={camera.distance}
           min={CAMERA_DISTANCE_MIN}
           max={CAMERA_DISTANCE_MAX}
@@ -461,17 +457,13 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
         />
         <SliderField
           label="angle °"
+          hint="How far above Crash it looks down from (42 is usual)."
           value={camera.angle}
           min={CAMERA_ANGLE_MIN}
           max={CAMERA_ANGLE_MAX}
           onGrab={() => {}}
           onChange={(angle) => changeCamera({ angle })}
         />
-        <p className="hint">
-          View is behind Crash, or side to watch him from the side as he runs left to right. Distance is how far the
-          camera is from Crash, times its usual distance. Angle is how far above him it looks down from (42 is usual).
-          Build the level to see it in the game.
-        </p>
       </>
     );
   };
@@ -479,7 +471,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   // what the Music section says about the song picked
   const musicHint = (music: string) => {
     if (isAudioSongName(music)) {
-      return `${music}, in the level's folder, plays on a loop, through aku aku's invincibility too. At 100% it's as loud as the game's music.`;
+      return `${music}, in the level's folder, plays on a loop, through aku aku's invincibility too.`;
     }
     return "The song of the game's levels named. A song starred has no aku aku song, so his invincibility keeps the level's playing.";
   };
@@ -488,6 +480,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   const renderMusicVolumeField = (musicVolume: number) => (
     <SliderField
       label="volume %"
+      hint="At 100% it's as loud as the game's music."
       value={musicVolume}
       min={MUSIC_VOLUME_MIN}
       max={MUSIC_VOLUME_MAX}
@@ -501,18 +494,15 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   const renderMusicFields = (music: string, musicVolume: number) => (
     <>
       <h3>Music</h3>
-      <ChoiceField label="song" value={music} choices={songChoices(songs, music)} labelOf={songLabel} onChange={(name) => onLevelCfg({ music: name })} />
+      <ChoiceField label="song" hint={`${musicHint(music)} Put an .mp3, .ogg, .flac or .wav in the level's folder to pick it here.`} value={music} choices={songChoices(songs, music)} labelOf={songLabel} onChange={(name) => onLevelCfg({ music: name })} />
       {isAudioSongName(music) && renderMusicVolumeField(musicVolume)}
-      <p className="hint">
-        {musicHint(music)} Put an .mp3, .ogg, .flac or .wav in the level's folder to pick it here.
-        Build the level to hear it in the game.
-      </p>
     </>
   );
 
   const renderHint = () => (
     <p className="hint">
       Click an object to select it, then drag it across the floor. Pick something under Place and click the floor to add one.
+      Hover a setting's underlined name to see what it does, and build the level to see and hear them in the game.
     </p>
   );
 
