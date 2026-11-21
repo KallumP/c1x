@@ -376,7 +376,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
   const renderTitleField = (title: string) => (
     <TextField
       label="title"
-      hint={'The name the loading screen shows under "LOADING" (the folder\'s name if empty), in the game\'s letters: only letters, spaces and full stops. A loading.png in the level\'s folder shows instead.'}
+      hint={'The name the loading screen shows under "LOADING" (the folder\'s name if empty), in the game\'s letters: only letters, spaces and full stops. To get a custom loading screen instead, put a loading.png (432 by 144) in the level\'s folder.'}
       value={title}
       placeholder={defaultLevelTitle(levelName)}
       onChange={(typed) => onLevelCfg({ title: drawableTitle(typed) })}
