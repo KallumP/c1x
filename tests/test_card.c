@@ -669,6 +669,20 @@ UTEST(card_states, the_last_save_can_be_saved_over_once_one_is_written) {
   ASSERT_EQ(0, CardRequest(&c, CARD_OP_HAS_LAST, 0));
 }
 
+/* the game puts the card in afresh each level, keeping the save last written, and asks before the card's checked */
+UTEST(card_states, a_card_put_in_as_one_saved_to_still_has_its_last_save_to_update) {
+  card c;
+  char last_file_name[CARD_FILE_NAME_SIZE];
+
+  ReadyCard(&c, 9, 30);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  strcpy(last_file_name, c.last_file_name);
+  CardReset(&c, CARD_DIR, 0);
+  strcpy(c.last_file_name, last_file_name);
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_HAS_LAST, 0));
+}
+
 UTEST(card_states, theres_always_a_card) {
   card c;
 
