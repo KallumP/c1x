@@ -65,9 +65,9 @@ UTEST(card, progress_has_the_level_count_low_then_gems_then_keys) {
 }
 
 /* a slot's info as the game's screens read it: bit 0 it's been read, bits 1-2 its 3 icons,
-   bit 3 it's a crash save, its progress from bit 5, and bit 17 it isn't damaged */
+   bit 3 it's a crash save, its progress from bit 5; bit 17 (it's damaged) is clear */
 UTEST(card, a_slots_info_says_its_a_crash_save_with_its_progress) {
-  ASSERT_EQ(0x20000u | (7u << 5) | 8u | (3u << 1) | 1u, CardSlotInfo(7));
+  ASSERT_EQ((7u << 5) | 8u | (3u << 1) | 1u, CardSlotInfo(7));
 }
 
 UTEST(card, a_slots_name_is_crash_and_its_percent_in_capitals) {
@@ -222,6 +222,54 @@ UTEST(card_files, a_save_written_reads_back_the_same_with_its_slot_name) {
   ASSERT_EQ(1, CardFileRead(CARD_DIR, "BASCUS-9490000123456", &read, slot_name, sizeof(slot_name)));
   ASSERT_EQ(0, memcmp(&written, &read, sizeof(read)));
   ASSERT_STREQ("CRASH (12%)", slot_name);
+}
+
+/* an icon with something different in every colour and every frame's pixels */
+static card_save_icon SomeIcon(void) {
+  card_save_icon icon;
+  int i, j;
+
+  for (i=0;i<CARD_ICON_COLOURS;i++)
+    icon.palette[i] = 0x8000 | (i * 0x421);
+  for (i=0;i<CARD_ICON_FRAMES;i++) {
+    for (j=0;j<CARD_ICON_FRAME_SIZE;j++)
+      icon.frames[i][j] = (uint8_t)(i * 64 + j);
+  }
+  return icon;
+}
+
+UTEST(card_files, a_save_written_with_an_icon_reads_its_icon_back) {
+  card_save save, read;
+  card_save_icon written, got;
+  char slot_name[CARD_SLOT_NAME_SIZE];
+
+  FreshCard();
+  save = SomeSave();
+  CardSaveSeal(&save);
+  written = SomeIcon();
+  ASSERT_EQ(1, CardFileWriteWithIcon(CARD_DIR, "BASCUS-9490000123456", &save, 12, &written));
+  ASSERT_EQ(1, CardFileReadIcon(CARD_DIR, "BASCUS-9490000123456", &got));
+  ASSERT_EQ(0, memcmp(&written, &got, sizeof(got)));
+  ASSERT_EQ(1, CardFileRead(CARD_DIR, "BASCUS-9490000123456", &read, slot_name, sizeof(slot_name)));
+  ASSERT_EQ(0, memcmp(&save, &read, sizeof(read)));
+  ASSERT_STREQ("CRASH (12%)", slot_name);
+}
+
+UTEST(card_files, a_save_written_without_an_icon_has_a_blank_one) {
+  card_save_icon got, blank;
+
+  FreshCard();
+  WriteSave("BASCUS-9490000123456", 7, 12);
+  memset(&blank, 0, sizeof(blank));
+  ASSERT_EQ(1, CardFileReadIcon(CARD_DIR, "BASCUS-9490000123456", &got));
+  ASSERT_EQ(0, memcmp(&blank, &got, sizeof(got)));
+}
+
+UTEST(card_files, the_icon_of_a_save_that_isnt_there_isnt_read) {
+  card_save_icon got;
+
+  FreshCard();
+  ASSERT_EQ(0, CardFileReadIcon(CARD_DIR, "BASCUS-9490000123456", &got));
 }
 
 UTEST(card_files, a_save_file_is_a_header_three_icons_and_five_copies_long) {
@@ -426,7 +474,29 @@ static uint32_t NewSaveId(void) {
   return 424242;
 }
 
-static const card_game test_game = { CaptureGame, ApplyToGame, NewSaveId };
+static card_save_icon game_icon;              /* the game's icon, as the card takes it */
+static card_save_icon shown_icons[CARD_SLOT_MAX]; /* and each slot's, as the card shows them */
+static int icons_shown;
+
+static void TakeIcon(card_save_icon *icon) {
+  *icon = game_icon;
+}
+
+static void ShowIcon(int slot_idx, const card_save_icon *icon) {
+  shown_icons[slot_idx] = *icon;
+  icons_shown++;
+}
+
+static const card_game test_game = { CaptureGame, ApplyToGame, NewSaveId, TakeIcon, ShowIcon };
+
+/* an icon told apart by its first pixels */
+static card_save_icon IconNumbered(uint8_t number) {
+  card_save_icon icon;
+
+  icon = SomeIcon();
+  icon.frames[0][0] = number;
+  return icon;
+}
 
 /* steps the card until it's ready, as the game's screens wait for it; whether it got there */
 static int Settle(card *c) {
@@ -559,6 +629,38 @@ UTEST(card_states, a_card_saved_to_is_no_longer_a_new_one) {
   ASSERT_FALSE(c.flags & CARD_FLAG_NEW_DEVICE);
 }
 
+UTEST(card_states, saving_writes_the_games_icon_with_the_save) {
+  card c;
+  card_save_icon read;
+
+  ReadyCard(&c, 9, 30);
+  game_icon = IconNumbered(7);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  ASSERT_EQ(1, CardFileReadIcon(CARD_DIR, c.slots[0].file_name, &read));
+  ASSERT_EQ(0, memcmp(&game_icon, &read, sizeof(read)));
+}
+
+UTEST(card_states, reading_a_cards_saves_shows_each_slots_icon) {
+  card c;
+  card_save save;
+  card_save_icon icon_one, icon_two;
+
+  FreshCard();
+  save = SomeSave();
+  CardSaveSeal(&save);
+  icon_one = IconNumbered(1);
+  icon_two = IconNumbered(2);
+  CardFileWriteWithIcon(CARD_DIR, "BASCUS-9490000111111", &save, 5, &icon_one);
+  CardFileWriteWithIcon(CARD_DIR, "BASCUS-9490001222222", &save, 5, &icon_two);
+  icons_shown = 0;
+  CardReset(&c, CARD_DIR, 1);
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_EQ(2, icons_shown);
+  ASSERT_EQ(0, memcmp(&icon_one, &shown_icons[0], sizeof(icon_one)));
+  ASSERT_EQ(0, memcmp(&icon_two, &shown_icons[1], sizeof(icon_two)));
+}
+
 UTEST(card_states, loading_a_slot_puts_the_game_as_its_save_has_it) {
   card c;
 
@@ -594,6 +696,22 @@ UTEST(card_states, loading_a_spoiled_save_is_an_error_and_leaves_the_game) {
   ASSERT_TRUE(Settle(&c));
   ASSERT_TRUE(c.flags & CARD_FLAG_ERROR);
   ASSERT_EQ(0, game_loads);
+}
+
+/* a save with every copy spoiled is a damaged slot: read, one icon, and bit 17, which shows the damaged-slot picture */
+UTEST(card_states, a_spoiled_save_is_a_damaged_slot) {
+  card c;
+  int i;
+
+  ReadyCard(&c, 9, 30);
+  WriteSave("BASCUS-9490000123456", 7, 12);
+  for (i=CARD_FILE_BLOCKS-CARD_SAVE_COPIES;i<CARD_FILE_BLOCKS;i++)
+    SpoilBlock(CARD_DIR "/BASCUS-9490000123456", i);
+  CardRequest(&c, CARD_OP_CHECK, 0);
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_EQ(1, c.slot_count);
+  ASSERT_STREQ("DAMAGED SLOT", c.slots[0].name);
+  ASSERT_EQ(0x20000u | (1u << 1) | 1u, c.slots[0].info);
 }
 
 UTEST(card_states, a_card_that_needs_checking_refuses_saving_and_loading) {
@@ -666,6 +784,20 @@ UTEST(card_states, the_last_save_can_be_saved_over_once_one_is_written) {
   ASSERT_EQ(1, CardRequest(&c, CARD_OP_HAS_LAST, 0));
   CardRequest(&c, CARD_OP_SAVE, 0);
   Settle(&c);
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_HAS_LAST, 0));
+}
+
+/* the game puts the card in afresh each level, keeping the save last written, and asks before the card's checked */
+UTEST(card_states, a_card_put_in_as_one_saved_to_still_has_its_last_save_to_update) {
+  card c;
+  char last_file_name[CARD_FILE_NAME_SIZE];
+
+  ReadyCard(&c, 9, 30);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  strcpy(last_file_name, c.last_file_name);
+  CardReset(&c, CARD_DIR, 0);
+  strcpy(c.last_file_name, last_file_name);
   ASSERT_EQ(0, CardRequest(&c, CARD_OP_HAS_LAST, 0));
 }
 

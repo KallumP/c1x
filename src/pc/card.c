@@ -16,7 +16,7 @@
 #define SLOT_ICON_COUNT    3
 #define SLOT_IS_CRASH      8       /* a crash save, with its progress read */
 #define SLOT_PROGRESS_SHIFT 5      /* its progress, from this bit */
-#define SLOT_NOT_DAMAGED   0x20000
+#define SLOT_DAMAGED       0x20000 /* its save can't be read: the screens show the damaged-slot picture, not its icon */
 
 /* each byte added, then the sum turned 3 bits round, so where a byte is counts */
 uint32_t CardChecksum(const uint8_t *buf, int len) {
@@ -57,7 +57,7 @@ uint32_t CardProgress(int keys, int gems, int levels) {
 
 /* the info of a slot holding a crash save with progress */
 uint32_t CardSlotInfo(uint32_t progress) {
-  return SLOT_NOT_DAMAGED | (progress << SLOT_PROGRESS_SHIFT) | SLOT_IS_CRASH
+  return (progress << SLOT_PROGRESS_SHIFT) | SLOT_IS_CRASH
     | (SLOT_ICON_COUNT << SLOT_ICONS_SHIFT) | SLOT_READ;
 }
 
@@ -130,25 +130,82 @@ static void FillHeader(uint8_t *header, int percent) {
   snprintf((char*)header + HEADER_NAME_AT, CARD_SLOT_NAME_SIZE, "Crash (%d%%)", percent);
 }
 
-/* writes save to file_name in dir (made if it isn't there) as percent done; whether it was written */
-int CardFileWrite(const char *dir, const char *file_name, const card_save *save, int percent) {
-  uint8_t blocks[CARD_FILE_BLOCKS][CARD_BLOCK_SIZE];
+#define HEADER_PALETTE_AT 96 /* a save's icon palette, at the end of its header block */
+#define ICON_FRAMES_AT    1  /* its icon's frames, a block each, after the header */
+#define FILE_SIZE         (CARD_FILE_BLOCKS * CARD_BLOCK_SIZE)
+
+/* the icon's palette into the header block, and its frames into theirs */
+static void PutIcon(uint8_t blocks[][CARD_BLOCK_SIZE], const card_save_icon *icon) {
+  int i;
+
+  memcpy(blocks[0] + HEADER_PALETTE_AT, icon->palette, sizeof(icon->palette));
+  for (i=0;i<CARD_ICON_FRAMES;i++)
+    memcpy(blocks[ICON_FRAMES_AT+i], icon->frames[i], CARD_ICON_FRAME_SIZE);
+}
+
+static void GetIcon(uint8_t blocks[][CARD_BLOCK_SIZE], card_save_icon *icon) {
+  int i;
+
+  memcpy(icon->palette, blocks[0] + HEADER_PALETTE_AT, sizeof(icon->palette));
+  for (i=0;i<CARD_ICON_FRAMES;i++)
+    memcpy(icon->frames[i], blocks[ICON_FRAMES_AT+i], CARD_ICON_FRAME_SIZE);
+}
+
+/* writes a save file's blocks to file_name in dir (made if it isn't there); whether they were written */
+static int WriteBlocks(const char *dir, const char *file_name, uint8_t blocks[][CARD_BLOCK_SIZE]) {
   char path[PATH_SIZE];
   FILE *file;
   size_t written;
-  int i;
 
-  memset(blocks, 0, sizeof(blocks));
-  FillHeader(blocks[0], percent);
-  for (i=CARD_FILE_BLOCKS-CARD_SAVE_COPIES;i<CARD_FILE_BLOCKS;i++)
-    memcpy(blocks[i], save, CARD_BLOCK_SIZE);
   MakeDir(dir);
   FilePath(path, dir, file_name);
   file = fopen(path, "wb");
   if (!file) { return 0; }
-  written = fwrite(blocks, 1, sizeof(blocks), file);
+  written = fwrite(blocks, 1, FILE_SIZE, file);
   fclose(file);
-  return written == sizeof(blocks);
+  return written == FILE_SIZE;
+}
+
+/* reads a save file's blocks; whether it's there and is a save */
+static int ReadBlocks(const char *dir, const char *file_name, uint8_t blocks[][CARD_BLOCK_SIZE]) {
+  char path[PATH_SIZE];
+  FILE *file;
+  size_t read;
+
+  FilePath(path, dir, file_name);
+  file = fopen(path, "rb");
+  if (!file) { return 0; }
+  read = fread(blocks, 1, FILE_SIZE, file);
+  fclose(file);
+  return read == FILE_SIZE && blocks[0][0] == 'S' && blocks[0][1] == 'C';
+}
+
+/* writes save to file_name in dir as percent done, with its icon (or a blank one with none); whether it was written */
+int CardFileWriteWithIcon(const char *dir, const char *file_name, const card_save *save, int percent,
+  const card_save_icon *icon) {
+  uint8_t blocks[CARD_FILE_BLOCKS][CARD_BLOCK_SIZE];
+  int i;
+
+  memset(blocks, 0, sizeof(blocks));
+  FillHeader(blocks[0], percent);
+  if (icon)
+    PutIcon(blocks, icon);
+  for (i=CARD_FILE_BLOCKS-CARD_SAVE_COPIES;i<CARD_FILE_BLOCKS;i++)
+    memcpy(blocks[i], save, CARD_BLOCK_SIZE);
+  return WriteBlocks(dir, file_name, blocks);
+}
+
+int CardFileWrite(const char *dir, const char *file_name, const card_save *save, int percent) {
+  return CardFileWriteWithIcon(dir, file_name, save, percent, 0);
+}
+
+/* reads the icon of the save file_name in dir; whether there was a save */
+int CardFileReadIcon(const char *dir, const char *file_name, card_save_icon *icon) {
+  uint8_t blocks[CARD_FILE_BLOCKS][CARD_BLOCK_SIZE];
+
+  if (!ReadBlocks(dir, file_name, blocks)) { return 0; }
+  GetIcon(blocks, icon);
+  return 1;
 }
 
 /* a save's name from its header block, in capitals as the game's screens show it */
@@ -165,17 +222,9 @@ static void SlotNameOf(const uint8_t *header, char *slot_name, int size) {
 /* reads file_name in dir: its first copy of the save that's valid, and its slot name; whether one was */
 int CardFileRead(const char *dir, const char *file_name, card_save *save, char *slot_name, int size) {
   uint8_t blocks[CARD_FILE_BLOCKS][CARD_BLOCK_SIZE];
-  char path[PATH_SIZE];
-  FILE *file;
-  size_t read;
   int i;
 
-  FilePath(path, dir, file_name);
-  file = fopen(path, "rb");
-  if (!file) { return 0; }
-  read = fread(blocks, 1, sizeof(blocks), file);
-  fclose(file);
-  if (read != sizeof(blocks) || blocks[0][0] != 'S' || blocks[0][1] != 'C') { return 0; }
+  if (!ReadBlocks(dir, file_name, blocks)) { return 0; }
   SlotNameOf(blocks[0], slot_name, size);
   for (i=CARD_FILE_BLOCKS-CARD_SAVE_COPIES;i<CARD_FILE_BLOCKS;i++) {
     memcpy(save, blocks[i], CARD_BLOCK_SIZE);
@@ -303,7 +352,7 @@ int CardCopyFiles(const char *from_dir, const char *to_dir) {
 
 /* a slot whose save can't be read */
 #define SLOT_DAMAGED_NAME "DAMAGED SLOT"
-#define SLOT_DAMAGED_INFO (SLOT_READ | (1 << SLOT_ICONS_SHIFT))
+#define SLOT_DAMAGED_INFO (SLOT_DAMAGED | (1 << SLOT_ICONS_SHIFT) | SLOT_READ)
 
 /* it's busy with a state, until it's idle again */
 static void SetState(card *c, int state) {
@@ -359,20 +408,32 @@ static void StepScanStart(card *c) {
   SetState(c, STATE_SCAN);
 }
 
+/* the slot's icon to the game, if it shows them and the save has one */
+static void ShowSlotIcon(const card *c, const card_game *game, int slot_idx) {
+  card_save_icon icon;
+
+  if (!game->show_icon) { return; }
+  if (!CardFileReadIcon(c->dir, c->slots[slot_idx].file_name, &icon)) { return; }
+  game->show_icon(slot_idx, &icon);
+}
+
 /* reads the next save into the next slot, or is done with them all read */
-static void StepScan(card *c) {
+static void StepScan(card *c, const card_game *game) {
   card_slot *slot;
   card_save save;
+  int slot_idx;
 
   if (c->file_idx >= c->file_count) {
     c->flags &= ~CARD_FLAG_ERROR;
     SetState(c, CARD_STATE_IDLE);
     return;
   }
-  slot = &c->slots[c->slot_count++];
+  slot_idx = c->slot_count++;
+  slot = &c->slots[slot_idx];
   strcpy(slot->file_name, c->file_names[c->file_idx++]);
   if (CardFileRead(c->dir, slot->file_name, &save, slot->name, sizeof(slot->name))) {
     slot->info = CardSlotInfo(save.progress);
+    ShowSlotIcon(c, game, slot_idx);
     return;
   }
   snprintf(slot->name, sizeof(slot->name), "%s", SLOT_DAMAGED_NAME);
@@ -391,6 +452,16 @@ static void SaveFileName(const card *c, const card_game *game, char *file_name) 
   CardNextFileName(file_name, last, game->new_id());
 }
 
+/* writes the save to file_name with the game's icon, if it has one; whether it was written */
+static int WriteSaveWithGamesIcon(const card *c, const card_game *game, const char *file_name,
+  const card_save *save, int percent) {
+  card_save_icon icon;
+
+  if (!game->take_icon) { return CardFileWriteWithIcon(c->dir, file_name, save, percent, 0); }
+  game->take_icon(&icon);
+  return CardFileWriteWithIcon(c->dir, file_name, save, percent, &icon);
+}
+
 /* saves the game as it is, then reads the card's saves again */
 static void StepSave(card *c, const card_game *game) {
   char file_name[CARD_FILE_NAME_SIZE];
@@ -401,7 +472,7 @@ static void StepSave(card *c, const card_game *game) {
   CardSaveSeal(&save);
   SaveFileName(c, game, file_name);
   SetState(c, CARD_STATE_IDLE);
-  if (!CardFileWrite(c->dir, file_name, &save, percent)) {
+  if (!WriteSaveWithGamesIcon(c, game, file_name, &save, percent)) {
     c->flags |= CARD_FLAG_ERROR;
     return;
   }
@@ -459,7 +530,7 @@ void CardStep(card *c, const card_game *game) {
   case STATE_LOAD:       StepLoad(c, game);  break;
   case STATE_FORMAT:     StepFormat(c);      break;
   case STATE_CHECK:      StepCheck(c);       break;
-  case STATE_SCAN:       StepScan(c);        break;
+  case STATE_SCAN:       StepScan(c, game);  break;
   case STATE_SAVE:       StepSave(c, game);  break;
   }
 }
@@ -504,9 +575,12 @@ static int RequestSaveAgain(card *c) {
   return RequestSlot(c, STATE_SAVE, idx);
 }
 
-/* 0 if there's a save last written to save over, on a card put in since the game began */
+/*
+ * 0 if there's a save last written to save over. the ps1 game also wanted its
+ * card checked, which it did while answering; here the game asks before the
+ * card's first step, so only the save last written counts
+ */
 static int RequestHasLast(const card *c) {
-  if (!(c->flags & CARD_FLAG_NEW_DEVICE) && !c->new_device) { return 1; }
   return !c->last_file_name[0];
 }
 

@@ -28,8 +28,6 @@ Generic
 - other demo showings dont work, the second one (that shows jungle rollers) opens but no gameplay shows
 - the save menu's own text no longer shows up
 - the last bonus token you get still rubber bands across the top of the screen
-- when a save slot is already selected, it should show a different screen (see C:\Users\kallu\Documents\_code\c1x\.claude\save slot already chosen when entering save screen.png)
-- different save icon in the save screen showing up (see C:\Users\kallu\Documents\_code\c1x\.claude\correct save icon to show in memory card screen.png for the correct icon to save as its a blinking crash animation)
 
 side scroll level
 - make background extend upwards a bit more

@@ -52,6 +52,23 @@ extern void CardPutText(char *texts, int idx, const char *src, int len);
 
 extern int CardFileWrite(const char *dir, const char *file_name, const card_save *save, int percent);
 extern int CardFileRead(const char *dir, const char *file_name, card_save *save, char *slot_name, int size);
+
+/*
+ * a save's icon, as the ps1 game's card screens show one blinking: a 16 colour
+ * palette (in the save's header block) and three 16x16 frames at 4 bits a
+ * pixel (a block each, after the header)
+ */
+#define CARD_ICON_COLOURS    16
+#define CARD_ICON_FRAMES     3
+#define CARD_ICON_FRAME_SIZE 128 /* 16x16 pixels, 2 a byte */
+typedef struct {
+  uint16_t palette[CARD_ICON_COLOURS];
+  uint8_t frames[CARD_ICON_FRAMES][CARD_ICON_FRAME_SIZE];
+} card_save_icon;
+
+extern int CardFileWriteWithIcon(const char *dir, const char *file_name, const card_save *save, int percent,
+  const card_save_icon *icon);
+extern int CardFileReadIcon(const char *dir, const char *file_name, card_save_icon *icon);
 extern int CardListFiles(const char *dir, char file_names[CARD_SLOT_MAX][CARD_FILE_NAME_SIZE]);
 extern void CardNextFileName(char *file_name, const char *last_file_name, uint32_t save_id);
 extern int CardDeleteFiles(const char *dir);
@@ -91,6 +108,8 @@ typedef struct {
   void (*capture)(card_save *save, int *percent); /* the game as it is, to save (not yet sealed) */
   void (*apply)(const card_save *save);           /* the game put as a save has it */
   uint32_t (*new_id)(void);                       /* an id for a new save's name */
+  void (*take_icon)(card_save_icon *icon);        /* the game's icon, saved with a save (0: a blank one) */
+  void (*show_icon)(int slot_idx, const card_save_icon *icon); /* a slot's icon, as its save is read (0: not shown) */
 } card_game;
 
 typedef struct {
