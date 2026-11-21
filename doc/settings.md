@@ -29,12 +29,24 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 |---|---|---|
 | `boot_level` | none | The custom level, built to `build/levels/`, that **CUSTOM LEVEL** on the title screen starts; without one, the title screen has no **CUSTOM LEVEL** (see [Custom levels](custom_levels.md)). |
 
+### Saving
+
+| Setting | Default | What it does |
+|---|---|---|
+| `memory_card` | `off` | Let the game's own save and load screens save your progress, as a PS1 memory card does (see below). `off` leaves them without a card, as they were. |
+
 ### Replays
 
 | Setting | Default | What it does |
 |---|---|---|
 | `replay_inputs` | `off` | Play back the newest recording (see below) instead of recording this run. |
 | `replay_speed` | `1` | How fast a replay plays: this many times normal speed (up to `16`), or `0` for as fast as possible. |
+
+## Memory card
+
+With `memory_card` on, the game's own screens save and load your progress: **LOAD GAME** on the title screen, and the save screen after a bonus round or a gem. The saves are files in `memory_card/`, next to `settings.cfg`, one for each slot the game shows (up to 15), named as the PS1 game names its saves, such as `BASCUS-9490000123456`. To back a save up or move it to another PC, copy its file; to delete one, delete its file. Formatting the card on the game's screen deletes them all.
+
+A save keeps what the PS1 game's does: the levels reached, gems and keys, lives and the sound settings. The slots' icons aren't drawn.
 
 ## Recorded inputs
 
