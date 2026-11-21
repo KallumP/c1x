@@ -205,12 +205,16 @@ function countFallback(enemy: ObjectType | undefined): number {
   return BADGER_COUNT;
 }
 
+// the shortest anything on a cycle can be set to, in seconds (a timed obstacle's every, a bat roost's or
+// timed plank's delay, a dropping platform's shake and down): 8 of the game's frames, so it's never 0
+export const CYCLE_MIN = 0.25;
+
 // how many seconds between a bat roost's flocks: temple ruins' roosts' (their
 // code's default, 300 frames), and sunset vista's first leader bats' (135 frames)
 export const BAT_DELAY = 10;
 export const TIMED_PLANK_DELAY = 3; // seconds: near road to nowhere's random 57 to 146 frames
 export const LEADER_BATS_DELAY = 4.5;
-export const DELAY_MIN = 1;
+export const DELAY_MIN = CYCLE_MIN;
 export const DELAY_MAX = 20;
 
 // the seconds between flocks for a bat roost without a delay, or before a timed plank breaks
@@ -259,7 +263,7 @@ const TIMED_EVERY: Partial<Record<ObjectType, number>> = {
   floor_fire: 2,
 };
 export const SPIKED_LOG_EVERY = 6;
-export const TIMED_EVERY_MIN = 2;
+export const TIMED_EVERY_MIN = CYCLE_MIN;
 export const TIMED_EVERY_MAX = 20;
 export const SPIKED_LOGS: ObstacleType[] = ["rising_spiked_log", "falling_spiked_log"];
 export const ROTATING_OBSTACLES: ObstacleType[] = ["rotating_pots", "rotating_platforms"];
@@ -295,10 +299,10 @@ export const ROTATING_RADIUS_MAX = 10;
 // the seconds a dropping platform shakes before it drops, and stays dropped:
 // without, sunset vista's code's own 20 and 60 frames
 export const SHAKE = 0.75; // near the game's 20 frames, a step of its slider
-export const SHAKE_MIN = 0.25;
+export const SHAKE_MIN = CYCLE_MIN;
 export const SHAKE_MAX = 5;
 export const DOWN = 2;
-export const DOWN_MIN = 0.5;
+export const DOWN_MIN = CYCLE_MIN;
 export const DOWN_MAX = 10;
 
 // how many go round a rotating obstacle without a platforms

@@ -558,8 +558,8 @@ describe("bat roosts' delays", () => {
 
   test.each([
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "delay": 2}]', /^object 1: a crab has no delay$/],
-    ['[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "delay": 0.5}]', "object 1: delay should be 1 to 20 (the seconds between its flocks, or before a timed plank breaks)"],
-    ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "delay": 21}]', "object 1: delay should be 1 to 20"],
+    ['[{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "delay": 0.2}]', "object 1: delay should be 0.25 to 20 (the seconds between its flocks, or before a timed plank breaks)"],
+    ['[{"kind": "enemy", "type": "leader_bats", "at": [0, 0, 0], "delay": 21}]', "object 1: delay should be 0.25 to 20"],
   ])("refuses %s", (text, message) => {
     expect(() => parseObjects(text)).toThrow(message);
   });
@@ -826,7 +826,8 @@ describe("dropping platforms", () => {
 
   test.each([
     ['[{"kind": "obstacle", "type": "dropping_platform", "at": [0, 0, 0], "shake": 0.1}]', "object 1: shake should be 0.25 to 5 (the seconds it shakes before it drops)"],
-    ['[{"kind": "obstacle", "type": "dropping_platform", "at": [0, 0, 0], "down": 11}]', "object 1: down should be 0.5 to 10 (the seconds it stays dropped)"],
+    ['[{"kind": "obstacle", "type": "dropping_platform", "at": [0, 0, 0], "down": 11}]', "object 1: down should be 0.25 to 10 (the seconds it stays dropped)"],
+    ['[{"kind": "obstacle", "type": "dropping_platform", "at": [0, 0, 0], "down": 0.2}]', "object 1: down should be 0.25 to 10"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "shake": 1}]', /^object 1: a leaf has no shake$/],
   ])("refuses %s", (json, message) => {
     expect(() => parseObjects(json)).toThrow(message);
@@ -917,8 +918,8 @@ describe("spiked logs", () => {
   });
 
   test.each([
-    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "every": 1.5}]', "object 1: every should be 2 to 20 (the seconds between its pushes or flames)"],
-    ['[{"kind": "obstacle", "type": "falling_spiked_log", "at": [0, 0, 0], "every": 21}]', "object 1: every should be 2 to 20"],
+    ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "every": 0.2}]', "object 1: every should be 0.25 to 20 (the seconds between its pushes or flames)"],
+    ['[{"kind": "obstacle", "type": "falling_spiked_log", "at": [0, 0, 0], "every": 21}]', "object 1: every should be 0.25 to 20"],
     ['[{"kind": "obstacle", "type": "leaf", "at": [0, 0, 0], "every": 5}]', /^object 1: a leaf has no every$/],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "offset": 21}]', "object 1: offset should be 0 to 20 (the seconds its pushes or flames are put off by)"],
     ['[{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "start": 0.5}]', /^object 1: a rising_spiked_log has no start$/],
@@ -1003,5 +1004,19 @@ describe("reverse direction buttons", () => {
 
   test("an obstacle that can't be reversed has none", () => {
     expect(reverseButtonTitle(obstacleObject("fire_pit"))).toBeUndefined();
+  });
+});
+
+describe("cycles", () => {
+  test.each([
+    ['{"kind": "obstacle", "type": "rising_spiked_log", "at": [0, 0, 0], "every": 0.25}', "every"],
+    ['{"kind": "obstacle", "type": "fire_pit", "at": [0, 0, 0], "every": 0.25}', "every"],
+    ['{"kind": "obstacle", "type": "rotating_pillars", "at": [0, 0, 0], "every": 0.25}', "every"],
+    ['{"kind": "enemy", "type": "bat", "at": [0, 0, 0], "delay": 0.25}', "delay"],
+    ['{"kind": "obstacle", "type": "timed_plank", "at": [0, 0, 0], "delay": 0.25}', "delay"],
+    ['{"kind": "obstacle", "type": "dropping_platform", "at": [0, 0, 0], "shake": 0.25}', "shake"],
+    ['{"kind": "obstacle", "type": "dropping_platform", "at": [0, 0, 0], "down": 0.25}', "down"],
+  ] as const)("anything on a cycle can go as short as a quarter of a second: %s", (json, setting) => {
+    expect(parseObjects(`[${json}]`)[0][setting]).toBe(0.25);
   });
 });
