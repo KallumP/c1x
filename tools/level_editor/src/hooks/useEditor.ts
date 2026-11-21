@@ -4,10 +4,12 @@ import { editorReducer, emptyEditor } from "../editor";
 import { formatObjects, parseObjects } from "../objects";
 
 // the open level's objects as they're edited: read from its objects.json when it
-// opens, and written back on save. unsaved is whether they differ from the file
+// opens, and written back on save. unsaved is whether they differ from the file, and isLoaded whether
+// the open level's have been read (or failed to be)
 export function useEditor(level: LevelInfo | null, onError: (message: string) => void) {
   const [state, dispatch] = useReducer(editorReducer, emptyEditor);
   const [savedText, setSavedText] = useState(formatObjects([]));
+  const [loadedLevel, setLoadedLevel] = useState<LevelInfo | null>(null); // the level whose objects.json has been read
   const text = formatObjects(state.objects);
 
   useEffect(() => {
@@ -24,10 +26,12 @@ export function useEditor(level: LevelInfo | null, onError: (message: string) =>
         if (isLatestLoad) {
           dispatch({ type: "load", objects: parsedObjects });
           setSavedText(formatObjects(parsedObjects));
+          setLoadedLevel(level);
         }
       } catch (error) {
         if (isLatestLoad) {
           onError(`objects.json ${error instanceof Error ? error.message : error}`);
+          setLoadedLevel(level); // loaded as far as it can be
         }
       }
     };
@@ -52,5 +56,5 @@ export function useEditor(level: LevelInfo | null, onError: (message: string) =>
     }
   };
 
-  return { state, dispatch, unsaved: text !== savedText, save };
+  return { state, dispatch, unsaved: text !== savedText, save, isLoaded: level !== null && loadedLevel === level };
 }

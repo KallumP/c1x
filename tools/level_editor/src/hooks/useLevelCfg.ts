@@ -15,10 +15,12 @@ const sameCfg = (first: LevelCfg, second: LevelCfg) =>
 const listedCfg = (level: LevelInfo | null): LevelCfg => ({ turn: 0, scale: level ? level.scale : DEFAULT_SCALE, sky: DEFAULT_SKY, camera: DEFAULT_CAMERA, music: DEFAULT_MUSIC, musicVolume: DEFAULT_MUSIC_VOLUME, title: "" });
 
 // the open level's turn, scale, sky, camera, music and title as they're edited: read from its level.cfg when it
-// opens, and written back on save. unsaved is whether they differ from the file
+// opens, and written back on save. unsaved is whether they differ from the file, and isLoaded whether
+// the open level's has been read (or failed to be)
 export function useLevelCfg(level: LevelInfo | null, onError: (message: string) => void) {
   const [cfg, setCfg] = useState<LevelCfg>(listedCfg(level));
   const [savedCfg, setSavedCfg] = useState<LevelCfg>(listedCfg(level));
+  const [loadedLevel, setLoadedLevel] = useState<LevelInfo | null>(null); // the level whose level.cfg has been read
 
   useEffect(() => {
     setCfg(listedCfg(level));
@@ -33,10 +35,12 @@ export function useLevelCfg(level: LevelInfo | null, onError: (message: string) 
         if (isLatestLoad) {
           setCfg(fetchedCfg);
           setSavedCfg(fetchedCfg);
+          setLoadedLevel(level);
         }
       } catch (error) {
         if (isLatestLoad) {
           onError(`level.cfg ${error instanceof Error ? error.message : error}`);
+          setLoadedLevel(level); // loaded as far as it can be
         }
       }
     };
@@ -63,5 +67,5 @@ export function useLevelCfg(level: LevelInfo | null, onError: (message: string) 
     }
   };
 
-  return { cfg, change, unsaved: !sameCfg(cfg, savedCfg), save };
+  return { cfg, change, unsaved: !sameCfg(cfg, savedCfg), save, isLoaded: level !== null && loadedLevel === level };
 }
