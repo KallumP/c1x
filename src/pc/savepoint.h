@@ -14,5 +14,6 @@
 #define SAVE_POINT_SUBTYPE  34         /* its SAVE POINT text, with its picture and text children */
 
 extern int SavePointTextGoes(gool_object *obj, int card_screen_up);
+extern void SavePointClearForCardScreen(); /* savepoint_game.c */
 
 #endif /* _PC_SAVEPOINT_H_ */

@@ -20,6 +20,7 @@ static PFNGLBLENDEQUATIONPROC pglBlendEquation;
 #include "pc/gfx/gldepth.h"
 #include "pc/settings.h"
 #include "pc/card_game.h"
+#include "pc/savepoint.h"
 #include "pc/time.h"
 #include "pc/replay.h"
 #include "pc/pace.h"
@@ -877,8 +878,10 @@ void GLUpdate() {
   ImGui_ImplOpenGL2_NewFrame();
 #endif
   cur_display_flags = next_display_flags;  /* copy display/animate flags */
-  if (cur_display_flags & CARD_DISPLAY_FLAG)
+  if (cur_display_flags & CARD_DISPLAY_FLAG) {
     CardGameUpdate(); /* memory card i/o, as the ps1 game did it each frame a card screen was up */
+    SavePointClearForCardScreen(); /* pc: a bonus round's SAVE POINT text goes with the save screen up */
+  }
   vram_fill_color = next_vram_fill_color;
   if (!paused && (cur_display_flags & 0x1000))
     draw_count++;
