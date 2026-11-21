@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { alongAxis } from "../../src/axisDrag";
+import { alongAxis, movedAlong } from "../../src/axisDrag";
+import type { LevelObject } from "../../src/objects";
 
 describe("alongAxis", () => {
   test("a ray straight down onto the axis comes closest right under it", () => {
@@ -20,5 +21,30 @@ describe("alongAxis", () => {
 
   test("a ray along the axis has no closest point", () => {
     expect(alongAxis([0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 0, 0])).toBeNull();
+  });
+});
+
+describe("movedAlong", () => {
+  const box = (more: Partial<LevelObject> = {}): LevelObject => ({ kind: "box", at: [1, 2, 3], raise: 0.5, stack: 1, box: "basic", ...more });
+
+  test("along x moves its spot's x", () => {
+    expect(movedAlong(box(), "x", 1.5, 0)).toEqual({ at: [2.5, 2, 3] });
+  });
+
+  test("along y moves its spot's y", () => {
+    expect(movedAlong(box(), "y", -3, 0)).toEqual({ at: [1, -1, 3] });
+  });
+
+  test("up raises it, leaving its spot on the floor", () => {
+    expect(movedAlong(box(), "up", 2, 0)).toEqual({ raise: 2.5 });
+  });
+
+  test("with a grid, it snaps to it", () => {
+    expect(movedAlong(box(), "x", 1.3, 0.5)).toEqual({ at: [2.5, 2, 3] });
+    expect(movedAlong(box(), "up", 0.8, 0.5)).toEqual({ raise: 1.5 });
+  });
+
+  test("it's rounded to the millimetre", () => {
+    expect(movedAlong(box(), "x", 0.12345, 0)).toEqual({ at: [1.123, 2, 3] });
   });
 });

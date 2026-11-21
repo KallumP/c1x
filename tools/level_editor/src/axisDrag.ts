@@ -1,6 +1,8 @@
 // dragging the selected object along one of its axis arrows: x, y (across the
 // floor) or up, in blender
-import type { Vec3 } from "./objects";
+import type { LevelObject, Vec3 } from "./objects";
+
+export type Axis = "x" | "y" | "up";
 
 const PARALLEL = 1e-9; // a ray this near along the axis has no one closest point
 
@@ -19,4 +21,10 @@ export function alongAxis(origin: Vec3, axis: Vec3, rayOrigin: Vec3, rayDirectio
     return null;
   }
   return (across * dot(rayDirection, between) - rayLength * dot(axis, between)) / square;
+}
+
+// the change moving object (as it was when the drag began) metres along axis
+// makes: x and y move its spot, up raises it; snapped to grid (0: none)
+export function movedAlong(_object: LevelObject, _axis: Axis, _metres: number, _grid: number): Partial<LevelObject> {
+  return {};
 }
