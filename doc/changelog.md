@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-11-21
+
+### Added
+
+- a selected object in the level editor has arrows to drag it along x, y or up, and so does a selected path node
+
+### Changed
+
+- timed obstacles, bat roosts, timed planks and dropping platforms can be set as short as a quarter of a second
+- Grave Switchback's upper pushing platforms push twice as often, and its fire pit bursts every 5 seconds
+- the level editor's camera settings sit straight under the level settings
+- the level editor's level settings explain themselves when you hover their underlined names, not in paragraphs
+
+### Fixed
+
+- rotating pots or platforms in the same spot with different settings are no longer warned about as duplicates
+- the level editor's speed, distance, angle and rotation labels show × and ° properly
+
 ## 2026-11-20
 
 ### Added
