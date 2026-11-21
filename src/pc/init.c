@@ -16,6 +16,8 @@
 #include "pc/time.h"
 #include "pc/settings.h"
 #include "pc/replay.h"
+#include "pc/card.h"
+#include "pc/card_game.h"
 #include "pc/fps.h"
 #include "pc/fullscreen.h"
 
@@ -225,6 +227,26 @@ static void InitCustomLevel() {
   AudioSongFind(level, &custom_level_audio_song);
 }
 
+/* a recording keeps a copy of the memory card's saves as they were when it started */
+static void KeepCardWithRecording(const char *recording_path) {
+  char dir[1024];
+
+  ReplayCardDir(dir, sizeof(dir), recording_path);
+  CardCopyFiles(CARD_GAME_DIR, dir);
+}
+
+/*
+ * a replay plays on a copy of the saves its recording started with, so it
+ * plays out the same and leaves the player's saves alone
+ */
+static void UseRecordingsCard(const char *recording_path) {
+  char dir[1024];
+
+  ReplayCardDir(dir, sizeof(dir), recording_path);
+  CardCopyFiles(dir, CARD_GAME_REPLAY_DIR);
+  CardGameUseFolder(CARD_GAME_REPLAY_DIR);
+}
+
 /*
  * replay the newest recording if replay_inputs is on, otherwise record this
  * run to a new file in recorded_inputs (next to the executable), named by
@@ -243,6 +265,7 @@ static void InitReplay() {
     else if (ReplayStart(path, REPLAY_PLAY, boot_lid, seed_a)) {
       fprintf(stderr, "replaying %s\n", path);
       TimeSetSpeed(game_settings.replay_speed);
+      UseRecordingsCard(path);
     }
     else
       fprintf(stderr, "could not replay %s\n", path);
@@ -254,8 +277,11 @@ static void InitReplay() {
   }
   now = time(0);
   ReplayFileName(path, sizeof(path), dir, localtime(&now));
-  if (!ReplayStart(path, REPLAY_RECORD, boot_lid, seed_a))
+  if (!ReplayStart(path, REPLAY_RECORD, boot_lid, seed_a)) {
     fprintf(stderr, "could not open %s to record inputs\n", path);
+    return;
+  }
+  KeepCardWithRecording(path);
 }
 
 int init() {

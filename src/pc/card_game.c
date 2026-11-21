@@ -12,13 +12,13 @@
 #include "level.h"
 #include "pc/settings.h"
 
-#define CARD_DIR       "memory_card" /* next to settings.cfg */
-#define TEXTS_AT       12            /* the game's texts start this far into card_str */
+#define TEXTS_AT      12            /* the game's texts start this far into card_str */
 #define SAVE_ID_RANGE  1000000
 
 extern ns_struct ns;
 
 static card the_card;
+static const char *card_dir = CARD_GAME_DIR;
 static int card_lid = -1;   /* the level the card was last reset in */
 static int new_device = 1;  /* whether the card hasn't been saved to since the game began */
 
@@ -70,7 +70,7 @@ static void ResetCardInNewLevel(void) {
   if (card_lid != -1)
     new_device = (the_card.flags & CARD_FLAG_NEW_DEVICE) != 0;
   SDL_strlcpy(last_file_name, the_card.last_file_name, sizeof(last_file_name));
-  CardReset(&the_card, CARD_DIR, new_device);
+  CardReset(&the_card, card_dir, new_device);
   if (!new_device)
     SDL_strlcpy(the_card.last_file_name, last_file_name, sizeof(the_card.last_file_name));
   card_lid = ns.ldat->lid;
@@ -113,6 +113,11 @@ void CardGameUpdate(void) {
   ResetCardInNewLevel();
   CardStep(&the_card, &game);
   ShowCard();
+}
+
+/* the card's saves are in dir from now on, in place of memory_card/ (for a replay's) */
+void CardGameUseFolder(const char *dir) {
+  card_dir = dir;
 }
 
 /*

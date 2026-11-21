@@ -24,6 +24,7 @@ imgui.ini
 controls.cfg
 settings.cfg
 memory_card/
+memory_card_replay/
 !README.MD
 
 # claude code plans and project skills
