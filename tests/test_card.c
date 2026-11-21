@@ -65,9 +65,9 @@ UTEST(card, progress_has_the_level_count_low_then_gems_then_keys) {
 }
 
 /* a slot's info as the game's screens read it: bit 0 it's been read, bits 1-2 its 3 icons,
-   bit 3 it's a crash save, its progress from bit 5, and bit 17 it isn't damaged */
+   bit 3 it's a crash save, its progress from bit 5; bit 17 (it's damaged) is clear */
 UTEST(card, a_slots_info_says_its_a_crash_save_with_its_progress) {
-  ASSERT_EQ(0x20000u | (7u << 5) | 8u | (3u << 1) | 1u, CardSlotInfo(7));
+  ASSERT_EQ((7u << 5) | 8u | (3u << 1) | 1u, CardSlotInfo(7));
 }
 
 UTEST(card, a_slots_name_is_crash_and_its_percent_in_capitals) {
@@ -696,6 +696,22 @@ UTEST(card_states, loading_a_spoiled_save_is_an_error_and_leaves_the_game) {
   ASSERT_TRUE(Settle(&c));
   ASSERT_TRUE(c.flags & CARD_FLAG_ERROR);
   ASSERT_EQ(0, game_loads);
+}
+
+/* a save with every copy spoiled is a damaged slot: read, one icon, and bit 17, which shows the damaged-slot picture */
+UTEST(card_states, a_spoiled_save_is_a_damaged_slot) {
+  card c;
+  int i;
+
+  ReadyCard(&c, 9, 30);
+  WriteSave("BASCUS-9490000123456", 7, 12);
+  for (i=CARD_FILE_BLOCKS-CARD_SAVE_COPIES;i<CARD_FILE_BLOCKS;i++)
+    SpoilBlock(CARD_DIR "/BASCUS-9490000123456", i);
+  CardRequest(&c, CARD_OP_CHECK, 0);
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_EQ(1, c.slot_count);
+  ASSERT_STREQ("DAMAGED SLOT", c.slots[0].name);
+  ASSERT_EQ(0x20000u | (1u << 1) | 1u, c.slots[0].info);
 }
 
 UTEST(card_states, a_card_that_needs_checking_refuses_saving_and_loading) {
