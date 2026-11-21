@@ -30,11 +30,28 @@ typedef struct {
   uint32_t checksum;        /* of the block with this 0: see CardSaveSeal */
 } card_save;
 
+/*
+ * a save is a file in the card's folder, named as the ps1 game names its saves
+ * and laid out as it writes them, a block each: a header with its name, three
+ * icons (left empty here), then five copies of what it keeps
+ */
+#define CARD_SLOT_MAX       15 /* saves a card holds */
+#define CARD_FILE_NAME_SIZE 24 /* BASCUS-94900, a 2 digit count and a 6 digit id */
+#define CARD_SLOT_NAME_SIZE 32
+#define CARD_SAVE_COPIES    5
+#define CARD_FILE_BLOCKS    (1 + 3 + CARD_SAVE_COPIES)
+
 extern uint32_t CardChecksum(const uint8_t *buf, int len);
 extern void CardSaveSeal(card_save *save);
 extern int CardSaveIsValid(const card_save *save);
 extern uint32_t CardProgress(int key_count, int gem_count, int level_count);
 extern uint32_t CardSlotInfo(uint32_t progress);
 extern void CardSlotName(char *name, int size, int percent);
+
+extern int CardFileWrite(const char *dir, const char *file_name, const card_save *save, int percent);
+extern int CardFileRead(const char *dir, const char *file_name, card_save *save, char *slot_name, int size);
+extern int CardListFiles(const char *dir, char file_names[CARD_SLOT_MAX][CARD_FILE_NAME_SIZE]);
+extern void CardNextFileName(char *file_name, const char *last_file_name, uint32_t save_id);
+extern int CardDeleteFiles(const char *dir);
 
 #endif /* _PC_CARD_H_ */

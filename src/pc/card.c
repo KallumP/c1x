@@ -59,3 +59,23 @@ uint32_t CardSlotInfo(uint32_t progress) {
 void CardSlotName(char *name, int size, int percent) {
   snprintf(name, size, "CRASH (%d%%)", percent);
 }
+
+int CardFileWrite(const char *dir, const char *file_name, const card_save *save, int percent) {
+  return 0;
+}
+
+int CardFileRead(const char *dir, const char *file_name, card_save *save, char *slot_name, int size) {
+  return 0;
+}
+
+int CardListFiles(const char *dir, char file_names[CARD_SLOT_MAX][CARD_FILE_NAME_SIZE]) {
+  return 0;
+}
+
+void CardNextFileName(char *file_name, const char *last_file_name, uint32_t save_id) {
+  file_name[0] = 0;
+}
+
+int CardDeleteFiles(const char *dir) {
+  return 0;
+}
