@@ -16,7 +16,7 @@
 #define SLOT_ICON_COUNT    3
 #define SLOT_IS_CRASH      8       /* a crash save, with its progress read */
 #define SLOT_PROGRESS_SHIFT 5      /* its progress, from this bit */
-#define SLOT_NOT_DAMAGED   0x20000
+#define SLOT_DAMAGED       0x20000 /* its save can't be read: the screens show the damaged-slot picture, not its icon */
 
 /* each byte added, then the sum turned 3 bits round, so where a byte is counts */
 uint32_t CardChecksum(const uint8_t *buf, int len) {
@@ -57,7 +57,7 @@ uint32_t CardProgress(int keys, int gems, int levels) {
 
 /* the info of a slot holding a crash save with progress */
 uint32_t CardSlotInfo(uint32_t progress) {
-  return SLOT_NOT_DAMAGED | (progress << SLOT_PROGRESS_SHIFT) | SLOT_IS_CRASH
+  return (progress << SLOT_PROGRESS_SHIFT) | SLOT_IS_CRASH
     | (SLOT_ICON_COUNT << SLOT_ICONS_SHIFT) | SLOT_READ;
 }
 
@@ -352,7 +352,7 @@ int CardCopyFiles(const char *from_dir, const char *to_dir) {
 
 /* a slot whose save can't be read */
 #define SLOT_DAMAGED_NAME "DAMAGED SLOT"
-#define SLOT_DAMAGED_INFO (SLOT_READ | (1 << SLOT_ICONS_SHIFT))
+#define SLOT_DAMAGED_INFO (SLOT_DAMAGED | (1 << SLOT_ICONS_SHIFT) | SLOT_READ)
 
 /* it's busy with a state, until it's idle again */
 static void SetState(card *c, int state) {
