@@ -1,6 +1,8 @@
 #include <string.h>
 #include "utest.h"
 #include <stdio.h>
+#include <dirent.h>
+#include <unistd.h>
 #include "pc/card.h"
 #include "test_files.h"
 
@@ -334,6 +336,73 @@ UTEST(card_files, deleting_a_cards_saves_leaves_its_other_files) {
   CardDeleteFiles(CARD_DIR);
   ASSERT_EQ(0, CardListFiles(CARD_DIR, file_names));
   ASSERT_EQ(10, FileLength(CARD_DIR "/notes.txt"));
+}
+
+#define COPY_DIR "build/test_card_copy"
+
+/* an empty folder to copy a card to */
+static void FreshCopy(void) {
+  MakeFolder(COPY_DIR);
+  CardDeleteFiles(COPY_DIR);
+}
+
+UTEST(card_files, copying_a_card_copies_each_save) {
+  card_save written, read;
+  char slot_name[CARD_SLOT_NAME_SIZE];
+
+  FreshCard();
+  FreshCopy();
+  written = WriteSave("BASCUS-9490000111111", 2, 5);
+  WriteSave("BASCUS-9490001222222", 3, 10);
+  ASSERT_EQ(2, CardCopyFiles(CARD_DIR, COPY_DIR));
+  ASSERT_EQ(1, CardFileRead(COPY_DIR, "BASCUS-9490000111111", &read, slot_name, sizeof(slot_name)));
+  ASSERT_EQ(0, memcmp(&written, &read, sizeof(read)));
+  ASSERT_STREQ("CRASH (5%)", slot_name);
+  ASSERT_EQ(1, CardFileRead(COPY_DIR, "BASCUS-9490001222222", &read, slot_name, sizeof(slot_name)));
+}
+
+UTEST(card_files, copying_a_card_replaces_the_saves_already_there) {
+  char file_names[CARD_SLOT_MAX][CARD_FILE_NAME_SIZE];
+  card_save save;
+
+  FreshCard();
+  FreshCopy();
+  save = SomeSave();
+  CardSaveSeal(&save);
+  CardFileWrite(COPY_DIR, "BASCUS-9490009999999", &save, 50);
+  WriteSave("BASCUS-9490000111111", 2, 5);
+  CardCopyFiles(CARD_DIR, COPY_DIR);
+  ASSERT_EQ(1, CardListFiles(COPY_DIR, file_names));
+  ASSERT_STREQ("BASCUS-9490000111111", file_names[0]);
+}
+
+UTEST(card_files, copying_a_card_that_isnt_there_leaves_no_saves) {
+  char file_names[CARD_SLOT_MAX][CARD_FILE_NAME_SIZE];
+  card_save save;
+
+  FreshCopy();
+  save = SomeSave();
+  CardSaveSeal(&save);
+  CardFileWrite(COPY_DIR, "BASCUS-9490009999999", &save, 50);
+  ASSERT_EQ(0, CardCopyFiles("build/no_such_card", COPY_DIR));
+  ASSERT_EQ(0, CardListFiles(COPY_DIR, file_names));
+}
+
+static int FolderExists(const char *path) {
+  DIR *folder;
+
+  folder = opendir(path);
+  if (!folder) { return 0; }
+  closedir(folder);
+  return 1;
+}
+
+/* so a recording made with nothing on the card doesn't get a folder */
+UTEST(card_files, copying_a_card_with_no_saves_makes_no_folder) {
+  FreshCard();
+  rmdir(COPY_DIR "/new");
+  ASSERT_EQ(0, CardCopyFiles(CARD_DIR, COPY_DIR "/new"));
+  ASSERT_FALSE(FolderExists(COPY_DIR "/new"));
 }
 
 /* the card's states */
