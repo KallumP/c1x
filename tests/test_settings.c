@@ -19,6 +19,7 @@ static const struct {
   { "spin_ledge_jump",      offsetof(pc_settings, spin_ledge_jump) },
   { "replay_inputs",        offsetof(pc_settings, replay_inputs) },
   { "fullscreen",           offsetof(pc_settings, fullscreen) },
+  { "memory_card",          offsetof(pc_settings, memory_card) },
 };
 
 #define ON_OFF_SETTING_COUNT (int)(sizeof(on_off_settings)/sizeof(on_off_settings[0]))
@@ -220,4 +221,12 @@ UTEST(settings, replay_speed_takes_0_to_16) {
   ASSERT_EQ(-1, SettingsParseLine("replay_speed = 17", &s));
   ASSERT_EQ(-1, SettingsParseLine("replay_speed = fast", &s));
   ASSERT_EQ(16u, s.replay_speed);
+}
+
+UTEST(settings, the_memory_card_is_off_unless_its_turned_on) {
+  pc_settings s;
+
+  s.memory_card = 1;
+  SettingsReset(&s);
+  ASSERT_EQ(0, s.memory_card);
 }
