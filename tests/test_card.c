@@ -474,7 +474,29 @@ static uint32_t NewSaveId(void) {
   return 424242;
 }
 
-static const card_game test_game = { CaptureGame, ApplyToGame, NewSaveId };
+static card_save_icon game_icon;              /* the game's icon, as the card takes it */
+static card_save_icon shown_icons[CARD_SLOT_MAX]; /* and each slot's, as the card shows them */
+static int icons_shown;
+
+static void TakeIcon(card_save_icon *icon) {
+  *icon = game_icon;
+}
+
+static void ShowIcon(int slot_idx, const card_save_icon *icon) {
+  shown_icons[slot_idx] = *icon;
+  icons_shown++;
+}
+
+static const card_game test_game = { CaptureGame, ApplyToGame, NewSaveId, TakeIcon, ShowIcon };
+
+/* an icon told apart by its first pixels */
+static card_save_icon IconNumbered(uint8_t number) {
+  card_save_icon icon;
+
+  icon = SomeIcon();
+  icon.frames[0][0] = number;
+  return icon;
+}
 
 /* steps the card until it's ready, as the game's screens wait for it; whether it got there */
 static int Settle(card *c) {
@@ -605,6 +627,38 @@ UTEST(card_states, a_card_saved_to_is_no_longer_a_new_one) {
   CardRequest(&c, CARD_OP_SAVE, 0);
   Settle(&c);
   ASSERT_FALSE(c.flags & CARD_FLAG_NEW_DEVICE);
+}
+
+UTEST(card_states, saving_writes_the_games_icon_with_the_save) {
+  card c;
+  card_save_icon read;
+
+  ReadyCard(&c, 9, 30);
+  game_icon = IconNumbered(7);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  ASSERT_EQ(1, CardFileReadIcon(CARD_DIR, c.slots[0].file_name, &read));
+  ASSERT_EQ(0, memcmp(&game_icon, &read, sizeof(read)));
+}
+
+UTEST(card_states, reading_a_cards_saves_shows_each_slots_icon) {
+  card c;
+  card_save save;
+  card_save_icon icon_one, icon_two;
+
+  FreshCard();
+  save = SomeSave();
+  CardSaveSeal(&save);
+  icon_one = IconNumbered(1);
+  icon_two = IconNumbered(2);
+  CardFileWriteWithIcon(CARD_DIR, "BASCUS-9490000111111", &save, 5, &icon_one);
+  CardFileWriteWithIcon(CARD_DIR, "BASCUS-9490001222222", &save, 5, &icon_two);
+  icons_shown = 0;
+  CardReset(&c, CARD_DIR, 1);
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_EQ(2, icons_shown);
+  ASSERT_EQ(0, memcmp(&icon_one, &shown_icons[0], sizeof(icon_one)));
+  ASSERT_EQ(0, memcmp(&icon_two, &shown_icons[1], sizeof(icon_two)));
 }
 
 UTEST(card_states, loading_a_slot_puts_the_game_as_its_save_has_it) {
