@@ -55,6 +55,7 @@ The level editor places Crash's spawn, the level's end, boxes, enemies and obsta
 1. Pick your level at the top left.
 1. Pick `spawn`, `end`, `box`, `enemy` or `obstacle` on the left bar, then click the floor to place it. Box, enemy and obstacle place the type you last picked of them, and list their types underneath to pick another. A level needs at least a spawn and an end to be played.
 1. Click **Select** (or press Esc), then click an object to select it. Drag it to move it, or change its properties on the right. **Delete** (or Del) removes it.
+   The selected object also shows three arrows: red along x, green along y and blue up, as in Blender. Drag an arrow to move the object along that one direction only; the blue one changes its **raise**. With a grid size picked, it snaps to the grid.
 1. Click **Save** (or press Ctrl+S), then **Build + boot** at the top right (or press F5), which builds the level and sets it as the one **CUSTOM LEVEL** on the game's title screen starts. [Step 3](#3-build-the-level-and-play-it) has more on building.
 
 Left-drag moves the camera, right-drag turns it, and the scroll wheel zooms. 
