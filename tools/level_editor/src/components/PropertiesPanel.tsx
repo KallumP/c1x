@@ -77,14 +77,14 @@ function numberSlider(object: LevelObject, setting: NumberSetting): { label: str
 }
 
 const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
-  speed: { label: "speed Ã—", step: 0.25 },
+  speed: { label: "speed ×", step: 0.25 },
   start: { label: "start", step: 0.05 },
   count: { label: "count", step: 1 },
   delay: { label: "delay s", step: 0.5 },
   range: { label: "range m", step: 1 },
   length: { label: "length m", step: 0.5 },
-  angle: { label: "angle Â°", step: 1 },
-  rotation: { label: "rotation Â°", step: 5 },
+  angle: { label: "angle °", step: 1 },
+  rotation: { label: "rotation °", step: 5 },
   every: { label: "every s", step: 0.5 },
   offset: { label: "offset s", step: 0.5 },
   platforms: { label: "platforms", step: 1 },
@@ -451,7 +451,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
         <h3>Camera</h3>
         <ChoiceField label="view" value={camera.view} choices={CAMERA_VIEWS} onChange={(view) => changeCamera({ view })} />
         <SliderField
-          label="distance Ã—"
+          label="distance ×"
           value={camera.distance}
           min={CAMERA_DISTANCE_MIN}
           max={CAMERA_DISTANCE_MAX}
@@ -460,7 +460,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
           onChange={(distance) => changeCamera({ distance })}
         />
         <SliderField
-          label="angle Â°"
+          label="angle °"
           value={camera.angle}
           min={CAMERA_ANGLE_MIN}
           max={CAMERA_ANGLE_MAX}
