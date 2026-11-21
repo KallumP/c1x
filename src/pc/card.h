@@ -45,9 +45,10 @@ typedef struct {
 extern uint32_t CardChecksum(const uint8_t *buf, int len);
 extern void CardSaveSeal(card_save *save);
 extern int CardSaveIsValid(const card_save *save);
-extern uint32_t CardProgress(int key_count, int gem_count, int level_count);
+extern uint32_t CardProgress(int keys, int gems, int levels);
 extern uint32_t CardSlotInfo(uint32_t progress);
 extern void CardSlotName(char *name, int size, int percent);
+extern void CardPutText(char *texts, int idx, const char *src, int len);
 
 extern int CardFileWrite(const char *dir, const char *file_name, const card_save *save, int percent);
 extern int CardFileRead(const char *dir, const char *file_name, card_save *save, char *slot_name, int size);

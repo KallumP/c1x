@@ -84,6 +84,34 @@ UTEST(card, a_slots_name_is_cut_to_fit) {
   ASSERT_STREQ("CRASH (", name);
 }
 
+/* the game's texts: one after another, each ended by a 0 */
+UTEST(card, a_text_is_put_over_the_one_at_its_index_padded_with_spaces) {
+  char texts[] = "aaaaaaaa\0bbbbbbbb\0cccccccc";
+
+  CardPutText(texts, 1, "HI", 8);
+  ASSERT_STREQ("aaaaaaaa", texts);
+  ASSERT_STREQ("HI      ", texts + 9);
+  ASSERT_STREQ("cccccccc", texts + 18);
+}
+
+UTEST(card, a_text_longer_than_its_length_is_cut) {
+  char texts[] = "aaaa\0bbbb";
+
+  CardPutText(texts, 0, "LONGER", 4);
+  ASSERT_STREQ("LONG", texts);
+  ASSERT_STREQ("bbbb", texts + 5);
+}
+
+/* the game's letters have ( ) at { }, and its { } are drawn as ~ % */
+UTEST(card, a_texts_brackets_and_percent_are_put_as_the_games_letters_have_them) {
+  char texts[] = "aaaaaaaaaaa";
+
+  CardPutText(texts, 0, "CRASH (12%)", 11);
+  ASSERT_STREQ("CRASH (12})", texts);
+  CardPutText(texts, 0, "{~}", 11);
+  ASSERT_STREQ("({)        ", texts);
+}
+
 /* save files */
 
 #define CARD_DIR "build/test_card"

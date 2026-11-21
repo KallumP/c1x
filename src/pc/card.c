@@ -48,8 +48,8 @@ int CardSaveIsValid(const card_save *save) {
 }
 
 /* how far a save is, as the game's screens show it */
-uint32_t CardProgress(int key_count, int gem_count, int level_count) {
-  return ((uint32_t)key_count << 10) | ((uint32_t)gem_count << 5) | (uint32_t)level_count;
+uint32_t CardProgress(int keys, int gems, int levels) {
+  return ((uint32_t)keys << 10) | ((uint32_t)gems << 5) | (uint32_t)levels;
 }
 
 /* the info of a slot holding a crash save with progress */
@@ -61,6 +61,9 @@ uint32_t CardSlotInfo(uint32_t progress) {
 /* a slot's name on the game's screens: the ps1 game shows its saves' names in capitals */
 void CardSlotName(char *name, int size, int percent) {
   snprintf(name, size, "CRASH (%d%%)", percent);
+}
+
+void CardPutText(char *texts, int idx, const char *src, int len) {
 }
 
 /* save files */
