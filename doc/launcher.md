@@ -6,7 +6,7 @@ It's a second program in C, built from SDL 2, OpenGL and cimgui, which the game 
 
 ## Building and running it
 
-`make` builds the launcher along with the game (see [Building](building.md)). To build only the launcher, run `make launcher`. On Windows, `rebuild.bat` builds both.
+`make` builds the launcher along with the game (see [Building](building.md)). To build only the launcher, run `make launcher`. On Windows, `rebuild.bat` builds both, and on Linux, `rebuild.sh` does.
 
 Run `c1x_launcher.exe`, by double-clicking it or from any folder. It works on its own folder, the project folder, wherever it's started from, and finds the game and the rest in `build/` from there. On Windows it has SDL2 and the GCC runtime built in, so it needs no DLLs beside it.
 
