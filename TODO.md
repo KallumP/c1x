@@ -9,7 +9,6 @@ Editor
 - shorter delays for platforms
 - invisible walls
 - death zones
-- draggable axis when selecting an object
 - camera settings should be under the level settings
 - reduce level settings labels. There is way too much clutter after each batch of settings options
 - camera distance setting shows an accented A for some reason

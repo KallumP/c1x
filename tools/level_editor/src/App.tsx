@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
+import AxisHandles from "./components/AxisHandles";
 import LevelMesh from "./components/LevelMesh";
 import LevelPicker from "./components/LevelPicker";
 import ObjectMarkers from "./components/ObjectMarkers";
@@ -7,8 +8,10 @@ import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
 import Scene, { type Orbit } from "./components/Scene";
 import { levelTurn } from "./camera";
+import { movedAlong, movedNodeAlong, type Axis } from "./axisDrag";
 import { draggedBy, newObject, type Tool } from "./editor";
 import { raisedEndPad, withEndPadRaise } from "./endPad";
+import { pathPositions } from "./enemyPaths";
 import type { LevelObject } from "./objects";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
@@ -59,6 +62,41 @@ export default function App() {
       dispatch({ type: "update", index, changes, record: false });
     },
   });
+  // the object being dragged by an axis arrow (or the node of its path that is), as it was when grabbed, and whether it's moved yet
+  const axisDragged = useRef<{ index: number; node: number | null; object: LevelObject; hasMoved: boolean } | null>(null);
+  const setOrbiting = (isOn: boolean) => {
+    if (orbitRef.current) {
+      orbitRef.current.enabled = isOn;
+    }
+  };
+  const axisDrag = {
+    onGrab: () => {
+      if (state.selected === null) {
+        return;
+      }
+      setOrbiting(false);
+      axisDragged.current = { index: state.selected, node: state.selectedNode, object: state.objects[state.selected], hasMoved: false };
+    },
+    onMove: (axis: Axis, metres: number) => {
+      const dragging = axisDragged.current;
+      if (!dragging) {
+        return;
+      }
+      if (!dragging.hasMoved) {
+        dispatch({ type: "checkpoint" }); // the whole drag is one change to undo
+        dragging.hasMoved = true;
+      }
+      const { object, node } = dragging;
+      const changes = node === null
+        ? withEndPadRaise(object, movedAlong(object, axis, metres, grid), scale, triangles)
+        : movedNodeAlong(object, node, axis, metres, grid, turn, scale);
+      dispatch({ type: "update", index: dragging.index, changes, record: false });
+    },
+    onRelease: () => {
+      setOrbiting(true);
+      axisDragged.current = null;
+    },
+  };
   const [isSaving, setIsSaving] = useState(false);
   // saves the objects and level.cfg, whichever changed; whether they saved
   const save = async (): Promise<boolean> => {
@@ -184,6 +222,19 @@ export default function App() {
     </header>
   );
 
+  // the selected object's axis arrows, or its selected path node's, while selecting
+  const renderAxisHandles = () => {
+    if (tool.kind !== "select" || state.selected === null) {
+      return null;
+    }
+    const object = state.objects[state.selected];
+    if (state.selectedNode !== null) {
+      return <AxisHandles at={pathPositions(object, turn, scale)[state.selectedNode]} {...axisDrag} />;
+    }
+    const { at: [x, y, z], raise } = object;
+    return <AxisHandles at={[x, y, z + raise]} {...axisDrag} />;
+  };
+
   const renderLevel = () => (
     <>
       {group && <LevelMesh group={group} onClick={clickLevel} onPointerMove={drag.moveOverLevel} />}
@@ -199,6 +250,7 @@ export default function App() {
         onSelect={drag.start}
         onSelectNode={drag.startNode}
       />
+      {renderAxisHandles()}
     </>
   );
 

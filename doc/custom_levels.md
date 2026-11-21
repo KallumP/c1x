@@ -55,6 +55,7 @@ The level editor places Crash's spawn, the level's end, boxes, enemies and obsta
 1. Pick your level at the top left.
 1. Pick `spawn`, `end`, `box`, `enemy` or `obstacle` on the left bar, then click the floor to place it. Box, enemy and obstacle place the type you last picked of them, and list their types underneath to pick another. A level needs at least a spawn and an end to be played.
 1. Click **Select** (or press Esc), then click an object to select it. Drag it to move it, or change its properties on the right. **Delete** (or Del) removes it.
+   The selected object also shows three arrows: red along x, green along y and blue up, as in Blender. Drag an arrow to move the object along that one direction only; the blue one changes its **raise**. With a grid size picked, it snaps to the grid.
 1. Click **Save** (or press Ctrl+S), then **Build + boot** at the top right (or press F5), which builds the level and sets it as the one **CUSTOM LEVEL** on the game's title screen starts. [Step 3](#3-build-the-level-and-play-it) has more on building.
 
 Left-drag moves the camera, right-drag turns it, and the scroll wheel zooms. 
@@ -75,7 +76,7 @@ The arrow on the spawn object shows which way the camera faces at the start. Wit
 - **Music** picks the song the level plays, from the game's own levels. A song starred has no aku aku song, so his invincibility keeps the level's song playing.
 - **Your own song:** put an `.mp3`, `.ogg`, `.flac` or `.wav` in the level's folder and pick it under **Music**. It plays on a loop, through aku aku's invincibility too, so a song that loops cleanly sounds best. It plays as loud as the game's own music, however loud the file is; turn it up or down with **volume** under the song. It goes with the level if you share it.
 
-**Paths:** an enemy or obstacle that moves along a path is drawn with it, solid where it starts and faded where it ends or turns back. Select it to drag its nodes (or set their x, y and z on the right); **nodes** sets how many there are and **Reverse direction** which way it goes first. A path drawn red runs through a wall or off the floor. A few have one handle instead of a path to drag: a bat roost's swoop, leader bats' second leader, and where a lab assistant's vials land.
+**Paths:** an enemy or obstacle that moves along a path is drawn with it, solid where it starts and faded where it ends or turns back. Select it to drag its nodes (or set their x, y and z on the right); a selected node has the same three arrows as an object, to move it along one direction, the blue one lifting it; **nodes** sets how many there are and **Reverse direction** which way it goes first. A path drawn red runs through a wall or off the floor. A few have one handle instead of a path to drag: a bat roost's swoop, leader bats' second leader, and where a lab assistant's vials land.
 
 **Settings:** select anything to see its settings on the right, such as an enemy's **speed** or **count**, or **every** and **offset** to time an obstacle that repeats, so a row can go one after another. **raise** lifts an object over a gap. A slippery slope is drawn as the slope it slides Crash down, for you to model in Blender to match.
 

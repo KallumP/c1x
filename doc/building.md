@@ -32,6 +32,8 @@ Fedora (64-bit): `sudo dnf install make gcc gcc-c++ glibc-devel.i686 libstdc++-d
 
 On Linux, `make` builds the game to `build/c1x` and the launcher to `c1x_launcher`. Run `./c1x_launcher` and click **Play** (see [Launcher](launcher.md)).
 
+Alternatively, run `./rebuild.sh` from the project directory (`./rebuild.sh clean` for a full rebuild, `./rebuild.sh test` for the tests), which runs `make` for the game, the launcher and the tools. Making `c1x_tools` copies the `node` it runs with, so it needs node as one whole program. Some distributions' node, such as Fedora's, is a small program that loads node from `libnode.so`, and with it `make` fails with *"Could not find the sentinel NODE_SEA_FUSE_..."*. `rebuild.sh` checks for this, and if so downloads node from nodejs.org (`NODE_VERSION`, `v22.23.1` by default), checks it against nodejs.org's published checksums, keeps it in `~/.cache/c1x/` and builds the tools with it. It also removes a `build/c1x_tools` left behind by a failed build, which `make` would otherwise take as up to date.
+
 Windows (MSYS2):
 
 1. Install [MSYS2](https://www.msys2.org/) (e.g. `winget install MSYS2.MSYS2`).

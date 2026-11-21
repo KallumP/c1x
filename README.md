@@ -32,6 +32,7 @@ Further documentation, such as the [changelog](doc/changelog.md), known [issues]
 - `res/`: the game's and the launcher's icons
 - `doc/`: the documentation
 - `rebuild.bat` and `release.bat`: building on Windows, and making the release zip
+- `rebuild.sh`: building on Linux
 
 ## Licence
 
