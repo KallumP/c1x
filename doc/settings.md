@@ -46,7 +46,7 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 
 With `memory_card` on, the game's own screens save and load your progress: **LOAD GAME** on the title screen, and the save screen after a bonus round or a gem. The saves are files in `memory_card/`, next to `settings.cfg`, one for each slot the game shows (up to 15), named as the PS1 game names its saves, such as `BASCUS-9490000123456`. To back a save up or move it to another PC, copy its file; to delete one, delete its file. Formatting the card on the game's screen deletes them all.
 
-A save keeps what the PS1 game's does: the levels reached, gems and keys, lives and the sound settings. The slots' icons aren't drawn.
+A save keeps what the PS1 game's does: the levels reached, gems and keys, lives and the sound settings. A slot shows the same icon whatever its save, not one of the PS1 save's own.
 
 ## Recorded inputs
 
