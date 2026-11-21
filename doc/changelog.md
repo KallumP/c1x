@@ -22,6 +22,8 @@
 - the level editor's speed, distance, angle and rotation labels show × and ° properly
 - a bonus token no longer sometimes rubber bands across the top of the screen and stops the next one counting
 - a bonus round's "SAVE POINT" text no longer stays on the save screen
+- a save point after you've saved this session opens on the update saved game screen, not the slot board
+- a save on the save and load screens shows the blinking Crash face icon, not the damaged-slot picture
 
 ## 2026-11-20
 
