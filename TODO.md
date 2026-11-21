@@ -8,7 +8,6 @@ Editor
 - zone size chooser? Should show error if a zone has too many objects
 - invisible walls
 - death zones
-- the level should always start looking at the spawn and the direction of the spawn
 
 - Option to change what drops when breaking crates
 - the text about the game booting should go away once any changes are detected.
