@@ -78,7 +78,7 @@ The arrow on the spawn object shows which way the camera faces at the start, and
 
 **Paths:** an enemy or obstacle that moves along a path is drawn with it, solid where it starts and faded where it ends or turns back. Select it to drag its nodes (or set their x, y and z on the right); a selected node has the same three arrows as an object, to move it along one direction, the blue one lifting it; **nodes** sets how many there are and **Reverse direction** which way it goes first. A path drawn red runs through a wall or off the floor. A few have one handle instead of a path to drag: a bat roost's swoop, leader bats' second leader, and where a lab assistant's vials land.
 
-**Settings:** select anything to see its settings on the right, such as an enemy's **speed** or **count**, or **every** and **offset** to time an obstacle that repeats, so a row can go one after another. **raise** lifts an object over a gap. A slippery slope is drawn as the slope it slides Crash down, for you to model in Blender to match.
+**Settings:** select anything to see its settings on the right, such as an enemy's **speed** or **count**, or **every** and **offset** to time an obstacle that repeats, so a row can go one after another. **raise** lifts an object over a gap, and a ? box's **drop** makes it give an extra life instead of wumpa. A slippery slope is drawn as the slope it slides Crash down, for you to model in Blender to match.
 
 See [Objects](../level_src/README.md#objects) for how each box, enemy and obstacle behaves.
 
