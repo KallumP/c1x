@@ -20,6 +20,10 @@ export const BOX_TYPES = {
   iron: 5, iron_arrow: 15,
 } as const;
 export type BoxType = keyof typeof BOX_TYPES;
+
+// what a ? box can drop when broken: wumpa as usual, or a life (as n. sanity beach's one)
+export const BOX_DROPS = ["wumpa", "life"] as const;
+export type BoxDrop = (typeof BOX_DROPS)[number];
 export const BOX_SUBTYPES: number[] = Object.values(BOX_TYPES);
 
 // the enemies custom levels can have, by name (the palette lists them by their
@@ -488,6 +492,7 @@ export interface LevelObject {
   box?: BoxType | number; // a box's type, or its subtype number
   switch?: number;      // a switch's number, which its outlines name (1 or more, one of a kind in the level)
   outline?: number;     // the number of the switch a box is an outline of, which fills it in
+  drop?: BoxDrop;       // what a ? box drops when broken (wumpa without one)
   enemy?: EnemyType;    // an enemy's type
   obstacle?: ObstacleType; // an obstacle's type
   path?: Vec3[];        // a path enemy's path: its nodes, in metres from where it stands (at, raised); leader bats' second leader, from their first

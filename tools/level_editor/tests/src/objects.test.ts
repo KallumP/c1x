@@ -1020,3 +1020,39 @@ describe("cycles", () => {
     expect(parseObjects(`[${json}]`)[0][setting]).toBe(0.25);
   });
 });
+
+describe("? boxes' drops", () => {
+  const question = (more = "") => `[{"kind": "box", "type": "question", "at": [0, 0, 0]${more}}]`;
+
+  test("a ? box's drop is read as written", () => {
+    expect(parseObjects(question(', "drop": "life"'))[0].drop).toBe("life");
+    expect(parseObjects(question(', "drop": "wumpa"'))[0].drop).toBe("wumpa");
+  });
+
+  test("a ? box given by its subtype can have a drop", () => {
+    expect(parseObjects('[{"kind": "box", "subtype": 10, "at": [0, 0, 0], "drop": "life"}]')[0].drop).toBe("life");
+  });
+
+  test("a ? box without a drop has none", () => {
+    expect(parseObjects(question())[0].drop).toBeUndefined();
+  });
+
+  test("a life drop is written, and read back the same", () => {
+    const [box] = parseObjects(question(', "drop": "life"'));
+    expect(formatObjects([box])).toContain('"drop": "life"');
+    expect(parseObjects(formatObjects([box]))).toEqual([box]);
+  });
+
+  test("a wumpa drop is left out, as a ? box drops wumpa without one", () => {
+    const [box] = parseObjects(question(', "drop": "wumpa"'));
+    expect(formatObjects([box])).not.toContain("drop");
+  });
+
+  test.each([
+    ['[{"kind": "box", "type": "basic", "at": [0, 0, 0], "drop": "life"}]', /^object 1: only a \? box has a drop$/],
+    [question(', "drop": "gem"'), /^object 1: drop should be wumpa or life$/],
+    ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "drop": "life"}]', "object 1"],
+  ])("refuses %s", (json, message) => {
+    expect(() => parseObjects(json)).toThrow(message);
+  });
+});
