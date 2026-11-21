@@ -1,8 +1,12 @@
 // dragging the selected object along one of its axis arrows: x, y (across the
 // floor) or up, in blender
+import { pathPositions, withNodeAt } from "./enemyPaths";
 import type { LevelObject, Vec3 } from "./objects";
 
 export type Axis = "x" | "y" | "up";
+
+// which of a blender position's x, y and z each axis moves
+const AXIS_INDEXES: Record<Axis, number> = { x: 0, y: 1, up: 2 };
 
 // each axis's way (in blender) and its arrow's colour, as blender colours them
 export const AXES: { axis: Axis; direction: Vec3; colour: string }[] = [
@@ -47,6 +51,10 @@ export function movedAlong(object: LevelObject, axis: Axis, metres: number, grid
 // the change moving node of object's path (object as it was when the drag
 // began) metres along axis makes: the node moves, up included, and the rest of
 // its path stays; snapped to grid (0: none)
-export function movedNodeAlong(_object: LevelObject, _node: number, _axis: Axis, _metres: number, _grid: number, _turn: number, _scale: number): Partial<LevelObject> {
-  return {};
+export function movedNodeAlong(object: LevelObject, node: number, axis: Axis, metres: number, grid: number, turn: number, scale: number): Partial<LevelObject> {
+  const index = AXIS_INDEXES[axis];
+  const position = pathPositions(object, turn, scale)[node];
+  const moved = position.map((value, axisIndex) => (axisIndex === index ? snap(value + metres, grid) : value)) as Vec3;
+  const path = withNodeAt(object, node, moved, turn, scale);
+  return { path: path.map((offset, nodeIndex) => (nodeIndex === node ? (offset.map(roundToMillimetre) as Vec3) : offset)) };
 }
