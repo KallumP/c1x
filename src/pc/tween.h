@@ -80,8 +80,8 @@ typedef struct {
   vec scale;
 } tween_pose;
 
-#define TWEEN_SLOTS       128 /* poses kept, one per object (GOOL_OBJECT_COUNT, plus the player) ... */
-#define TWEEN_CAMERA_SLOT 127 /* ... and the camera's */
+#define TWEEN_SLOTS       192 /* poses kept, one per object (GOOL_OBJECT_COUNT, plus the player) ... */
+#define TWEEN_CAMERA_SLOT 191 /* ... and the camera's */
 
 extern void TweenForgetAll();
 extern void TweenForget(int slot);
