@@ -408,20 +408,32 @@ static void StepScanStart(card *c) {
   SetState(c, STATE_SCAN);
 }
 
+/* the slot's icon to the game, if it shows them and the save has one */
+static void ShowSlotIcon(const card *c, const card_game *game, int slot_idx) {
+  card_save_icon icon;
+
+  if (!game->show_icon) { return; }
+  if (!CardFileReadIcon(c->dir, c->slots[slot_idx].file_name, &icon)) { return; }
+  game->show_icon(slot_idx, &icon);
+}
+
 /* reads the next save into the next slot, or is done with them all read */
-static void StepScan(card *c) {
+static void StepScan(card *c, const card_game *game) {
   card_slot *slot;
   card_save save;
+  int slot_idx;
 
   if (c->file_idx >= c->file_count) {
     c->flags &= ~CARD_FLAG_ERROR;
     SetState(c, CARD_STATE_IDLE);
     return;
   }
-  slot = &c->slots[c->slot_count++];
+  slot_idx = c->slot_count++;
+  slot = &c->slots[slot_idx];
   strcpy(slot->file_name, c->file_names[c->file_idx++]);
   if (CardFileRead(c->dir, slot->file_name, &save, slot->name, sizeof(slot->name))) {
     slot->info = CardSlotInfo(save.progress);
+    ShowSlotIcon(c, game, slot_idx);
     return;
   }
   snprintf(slot->name, sizeof(slot->name), "%s", SLOT_DAMAGED_NAME);
@@ -440,6 +452,16 @@ static void SaveFileName(const card *c, const card_game *game, char *file_name) 
   CardNextFileName(file_name, last, game->new_id());
 }
 
+/* writes the save to file_name with the game's icon, if it has one; whether it was written */
+static int WriteSaveWithGamesIcon(const card *c, const card_game *game, const char *file_name,
+  const card_save *save, int percent) {
+  card_save_icon icon;
+
+  if (!game->take_icon) { return CardFileWriteWithIcon(c->dir, file_name, save, percent, 0); }
+  game->take_icon(&icon);
+  return CardFileWriteWithIcon(c->dir, file_name, save, percent, &icon);
+}
+
 /* saves the game as it is, then reads the card's saves again */
 static void StepSave(card *c, const card_game *game) {
   char file_name[CARD_FILE_NAME_SIZE];
@@ -450,7 +472,7 @@ static void StepSave(card *c, const card_game *game) {
   CardSaveSeal(&save);
   SaveFileName(c, game, file_name);
   SetState(c, CARD_STATE_IDLE);
-  if (!CardFileWrite(c->dir, file_name, &save, percent)) {
+  if (!WriteSaveWithGamesIcon(c, game, file_name, &save, percent)) {
     c->flags |= CARD_FLAG_ERROR;
     return;
   }
@@ -508,7 +530,7 @@ void CardStep(card *c, const card_game *game) {
   case STATE_LOAD:       StepLoad(c, game);  break;
   case STATE_FORMAT:     StepFormat(c);      break;
   case STATE_CHECK:      StepCheck(c);       break;
-  case STATE_SCAN:       StepScan(c);        break;
+  case STATE_SCAN:       StepScan(c, game);  break;
   case STATE_SAVE:       StepSave(c, game);  break;
   }
 }
