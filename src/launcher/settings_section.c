@@ -226,6 +226,13 @@ static void DrawGameAdjustmentFields(void) {
     "Show how many spins Crash has left in the top right corner.");
 }
 
+/* the game's own save and load screens */
+static void DrawSavingFields(void) {
+  DrawFieldGroupTitle("Saving");
+  DrawOnOff("Memory card", &settings.memory_card,
+    "Lets the game's own save and load screens save your progress, to files in the memory_card folder.");
+}
+
 static void DrawReplayFields(void) {
   DrawFieldGroupTitle("Replays");
   DrawOnOff("Replay inputs", &settings.replay_inputs,
@@ -239,6 +246,7 @@ static void DrawFields(const char *repo) {
   DrawBootLevel(repo);
   DrawDisplayFields();
   DrawGameAdjustmentFields();
+  DrawSavingFields();
   DrawReplayFields();
   EndFieldRows();
 }

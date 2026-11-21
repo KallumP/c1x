@@ -23,6 +23,8 @@ level_src/4_acid_cave/rtn_*.png
 imgui.ini
 controls.cfg
 settings.cfg
+memory_card/
+memory_card_replay/
 !README.MD
 
 # claude code plans and project skills

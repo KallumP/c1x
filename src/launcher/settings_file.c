@@ -130,6 +130,7 @@ static char *SettingsTextWith(char *text, const pc_settings *s) {
   text = ReplaceNumberLine(text, "replay_speed", s->replay_speed);
   text = ReplaceNumberLine(text, "frame_rate", s->frame_rate);
   text = ReplaceOnOffLine(text, "fullscreen", s->fullscreen);
+  text = ReplaceOnOffLine(text, "memory_card", s->memory_card);
   if (s->boot_level[0]) {
     text = ReplaceSettingLine(text, "boot_level", s->boot_level);
   }
@@ -172,5 +173,6 @@ int AreSettingsEqual(const pc_settings *a, const pc_settings *b) {
     && a->replay_speed == b->replay_speed
     && a->frame_rate == b->frame_rate
     && a->fullscreen == b->fullscreen
+    && a->memory_card == b->memory_card
     && SDL_strcmp(a->boot_level, b->boot_level) == 0;
 }

@@ -38,6 +38,8 @@ SRC =	src/ns.c \
 	src/pc/enhancedtitle.c \
 	src/pc/custommenu.c \
 	src/pc/boxtotals.c \
+	src/pc/card.c \
+	src/pc/card_game.c \
 	src/pc/slash.c \
 	src/pc/screen_fit.c \
 	src/pc/fullscreen.c \
@@ -78,6 +80,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/enhancedtitle.c \
 	src/pc/custommenu.c \
 	src/pc/boxtotals.c \
+	src/pc/card.c \
 	src/pc/slash.c \
 	src/pc/screen_fit.c \
 	src/pc/fullscreen.c \
@@ -148,7 +151,7 @@ INCLUDE = -I./src/
 DEFS = -DCFLAGS_GFX_SW_PERSP -DCFLAGS_DRAW_EXTENSIONS -DCFLAGS_GUI
 CFLAGS = -g -fplan9-extensions -m32 -std=gnu17 -Wno-error=incompatible-pointer-types
 TEST_CFLAGS = -g -fplan9-extensions -m32 -std=gnu17
-TEST_LDLIBS = -lSDL2 -lsndfile -lstdc++
+TEST_LDLIBS = -lSDL2 -lsndfile -lm -lstdc++
 ifeq ($(OS),Windows_NT)
 LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lsndfile -lm -lstdc++
 OUT = build/c1x.exe

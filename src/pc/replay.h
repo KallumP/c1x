@@ -36,6 +36,7 @@ extern void ReplayRecordStop(replay_recorder *r);
 extern void ReplayFileName(char *name, size_t size, const char *dir,
   struct tm *start);
 extern int ReplayNewestFile(const char *dir, char *path, size_t size);
+extern void ReplayCardDir(char *dir, size_t size, const char *recording_path);
 extern int ReplayMakeDir(const char *dir);
 
 /* game side */

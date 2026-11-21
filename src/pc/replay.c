@@ -44,6 +44,23 @@ void ReplayFileName(char *name, size_t size, const char *dir,
   snprintf(name, size, "%s/%s.inputs", dir, stamp);
 }
 
+#define RECORDING_EXTENSION      ".inputs"
+#define RECORDING_EXTENSION_SIZE 7
+#define CARD_DIR_EXTENSION       ".card"
+
+/*
+ * the folder a recording keeps the memory card's saves in, as they were when
+ * it started: its path with .card in place of .inputs
+ */
+void ReplayCardDir(char *dir, size_t size, const char *recording_path) {
+  size_t len;
+
+  len = strlen(recording_path);
+  if (len >= RECORDING_EXTENSION_SIZE && strcmp(&recording_path[len-RECORDING_EXTENSION_SIZE], RECORDING_EXTENSION) == 0)
+    len -= RECORDING_EXTENSION_SIZE;
+  snprintf(dir, size, "%.*s%s", (int)len, recording_path, CARD_DIR_EXTENSION);
+}
+
 /* find the newest recording in dir; returns 0 if there are none */
 int ReplayNewestFile(const char *dir, char *path, size_t size) {
   DIR *d;

@@ -121,6 +121,7 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
   s.spin_display = 1;
   s.box_display = 1;
   s.fullscreen = 1;
+  s.memory_card = 1;
   s.spin_ledge_jump = 0;
   strcpy(s.boot_level, "tide_ruins");
   ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
@@ -131,6 +132,7 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
   ASSERT_EQ(1, read.spin_display);
   ASSERT_EQ(1, read.box_display);
   ASSERT_EQ(1, read.fullscreen);
+  ASSERT_EQ(1, read.memory_card);
   ASSERT_EQ(0, read.spin_ledge_jump);
 }
 
@@ -254,4 +256,13 @@ UTEST(launcher_settings, equal_settings_ignore_whats_after_boot_levels_end) {
   strcpy(a.boot_level, "tide");
   strcpy(b.boot_level, "tide");
   ASSERT_TRUE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, settings_that_differ_only_in_the_memory_card_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  b.memory_card = 1;
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
 }

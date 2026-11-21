@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <sndfile.h>
 #include "utest.h"
+#include "test_files.h"
 #include "pc/sound/stream.h"
 
 #define SONG_DIR "build/test_stream_song"
@@ -19,8 +20,8 @@ static int write_song(const char *path, int format, int rate, int channels, int 
   short *samples;
   int i, c;
 
-  mkdir("build");
-  mkdir(SONG_DIR);
+  MakeFolder("build");
+  MakeFolder(SONG_DIR);
   info.samplerate = rate;
   info.channels = channels;
   info.format = format;

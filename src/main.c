@@ -18,6 +18,7 @@
 #include "pc/time.h"
 #include "pc/tween.h"
 #include "pc/boxhud.h"
+#include "pc/card_game.h"
 #include "pc/gfx/gl.h"
 #include "pc/gfx/soft.h" // for ext only
 
@@ -251,6 +252,7 @@ void CoreLoop(lid_t lid) {
       }
       NSInit(&ns, lid);
       TweenForgetAll(); /* pc: nothing in the new level is tweened from the old one */
+      CardGameForgetScreen(); /* pc: the old level's card screen texts were freed with it */
       CoreObjectsCreate();
       if (bonus_return2) {
         next_lid = -2;

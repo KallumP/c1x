@@ -21,13 +21,14 @@ speed run mode
 
 
 Generic
-- memory card support
 - mute-able start
 - europe support
 - going back to a level shows a white artefact near the middle of the screen, this might be beacuse i rotated the island in the map using circle and square and then entered the level
 - outlines dont always show as outlines, there is some weird behaviour in the editor
 - other demo showings dont work, the second one (that shows jungle rollers) opens but no gameplay shows
-- memory card support
+- the "save point / % complete" text at the end of a bonus round no longer shows up
+- the save menu's own text no longer shows up
+- the last bonus token you get still rubber bands across the top of the screen
 
 
 

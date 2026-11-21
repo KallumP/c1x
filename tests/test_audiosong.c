@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include "utest.h"
+#include "test_files.h"
 #include "pc/audiosong.h"
 
 #define SONG_DIR "build/test_audiosong"
@@ -15,8 +16,8 @@ static void touch(const char *path) {
 
 /* a fresh level, with none of the song files from another test */
 static void fresh_level() {
-  mkdir("build");
-  mkdir(SONG_DIR);
+  MakeFolder("build");
+  MakeFolder(SONG_DIR);
   remove(SONG_DIR "/level.mp3");
   remove(SONG_DIR "/level.ogg");
   remove(SONG_DIR "/level.flac");
