@@ -535,8 +535,8 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
       ) : (
         <>
           {levelCfg && renderLevelFields(levelCfg)}
-          {levelCfg && renderSkyFields(levelCfg.sky)}
           {levelCfg && renderCameraFields(levelCfg.camera)}
+          {levelCfg && renderSkyFields(levelCfg.sky)}
           {levelCfg && renderMusicFields(levelCfg.music, levelCfg.musicVolume)}
           {renderHint()}
         </>
