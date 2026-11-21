@@ -194,6 +194,20 @@ UTEST(replay, file_name_starts_with_the_start_time) {
   ASSERT_STREQ("recorded_inputs/2026-10-30_14-05-09.inputs", name);
 }
 
+UTEST(replay, a_recordings_card_folder_is_named_after_it) {
+  char dir[64];
+
+  ReplayCardDir(dir, sizeof(dir), "recorded_inputs/2026-10-30_14-05-09.inputs");
+  ASSERT_STREQ("recorded_inputs/2026-10-30_14-05-09.card", dir);
+}
+
+UTEST(replay, the_card_folder_of_a_file_thats_not_a_recording_is_named_after_all_of_it) {
+  char dir[64];
+
+  ReplayCardDir(dir, sizeof(dir), "recorded_inputs/notes");
+  ASSERT_STREQ("recorded_inputs/notes.card", dir);
+}
+
 UTEST(replay, newest_file_is_the_latest_start_time) {
   char path[256];
 
