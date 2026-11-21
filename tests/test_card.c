@@ -112,6 +112,56 @@ UTEST(card, a_texts_brackets_and_percent_are_put_as_the_games_letters_have_them)
   ASSERT_STREQ("({)        ", texts);
 }
 
+/* a save screen's slot texts as the game has them: each CARD_TEXT_LENGTH x's, ended by a 0 */
+#define SCREEN_TEXT_STEP (CARD_TEXT_LENGTH + 1)
+
+static void FillScreenTexts(char texts[CARD_SLOT_MAX * SCREEN_TEXT_STEP]) {
+  int i;
+
+  memset(texts, 'x', CARD_SLOT_MAX * SCREEN_TEXT_STEP);
+  for (i = 0; i < CARD_SLOT_MAX; i++)
+    texts[i * SCREEN_TEXT_STEP + CARD_TEXT_LENGTH] = 0;
+}
+
+/* a card with a slot named name */
+static void CardWithOneSlot(card *c, const char *name) {
+  memset(c, 0, sizeof(*c));
+  c->slot_count = 1;
+  snprintf(c->slots[0].name, sizeof(c->slots[0].name), "%s", name);
+}
+
+UTEST(card, while_a_card_screen_is_up_its_texts_show_each_slots_name_or_empty) {
+  char texts[CARD_SLOT_MAX * SCREEN_TEXT_STEP];
+  card c;
+
+  FillScreenTexts(texts);
+  CardWithOneSlot(&c, "CRASH (5%)");
+  CardShowSlotNames(&c, texts, 1);
+  ASSERT_EQ(0, strncmp("CRASH (5})  ", texts, 12));
+  ASSERT_EQ(0, strncmp("EMPTY  ", texts + SCREEN_TEXT_STEP, 7));
+  ASSERT_EQ(0, strncmp("EMPTY  ", texts + (CARD_SLOT_MAX - 1) * SCREEN_TEXT_STEP, 7));
+}
+
+/* the texts are the screen's, in its level's data: with no screen up they may be another's */
+UTEST(card, with_no_card_screen_up_its_texts_are_left_alone) {
+  char texts[CARD_SLOT_MAX * SCREEN_TEXT_STEP], before[CARD_SLOT_MAX * SCREEN_TEXT_STEP];
+  card c;
+
+  FillScreenTexts(texts);
+  memcpy(before, texts, sizeof(texts));
+  CardWithOneSlot(&c, "CRASH (5%)");
+  CardShowSlotNames(&c, texts, 0);
+  ASSERT_EQ(0, memcmp(before, texts, sizeof(texts)));
+}
+
+UTEST(card, with_no_texts_no_slot_names_are_shown) {
+  card c;
+
+  CardWithOneSlot(&c, "CRASH (5%)");
+  CardShowSlotNames(&c, 0, 1);
+  ASSERT_EQ(1, c.slot_count);
+}
+
 /* save files */
 
 #define CARD_DIR "build/test_card"
