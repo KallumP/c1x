@@ -24,4 +24,8 @@ extern void CardIconFrameFromPage(const uint8_t *page, const texinfo2 *info, uin
 extern void CardIconPaletteToPage(uint8_t *page, const texinfo2 *info, const uint16_t *palette);
 extern void CardIconPaletteFromPage(const uint8_t *page, const texinfo2 *info, uint16_t *palette);
 
+/* cardicon_game.c */
+extern void CardIconGameTake(card_save_icon *icon);
+extern void CardIconGameShow(int slot_idx, const card_save_icon *icon);
+
 #endif /* _PC_CARDICON_H_ */

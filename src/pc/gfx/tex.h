@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "geom.h"
+#include "ns.h"
 #include "pcgfx.h"
 
 typedef int (*tex_create_callback_t)(dim2, uint8_t*);
@@ -15,6 +16,7 @@ extern void TexturesKill();
 extern void TexturesUpdate();
 extern int TextureId();
 extern int TextureLoad(texinfo *texinfo, fvec(*uvs)[4]);
+extern void TexturePageChanged(eid_t eid);
 // extern int TexturePageGlobal(tpage *tpage);
 extern void TextureCopy(uint8_t *src, uint8_t *dst, dim2 *sdim, dim2 *ddim,
   rect2 *srect, pnt2 *dloc,

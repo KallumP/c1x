@@ -49,6 +49,7 @@ SRC =	src/ns.c \
 	src/pc/enhancedtitle_game.c \
 	src/pc/custommenu_game.c \
 	src/pc/savepoint_game.c \
+	src/pc/cardicon_game.c \
 	src/pc/gfx/tex.c \
 	src/pc/gfx/soft.c \
 	src/pc/gfx/gl.c \

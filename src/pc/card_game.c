@@ -11,6 +11,7 @@
 #include "ns.h"
 #include "level.h"
 #include "pc/settings.h"
+#include "pc/cardicon.h"
 
 #define TEXTS_AT      12            /* the game's texts start this far into card_str */
 #define SAVE_ID_RANGE  1000000
@@ -56,7 +57,7 @@ static uint32_t NewSaveId(void) {
   return (uint32_t)(SDL_GetPerformanceCounter() % SAVE_ID_RANGE);
 }
 
-static const card_game game = { CaptureGame, ApplyToGame, NewSaveId };
+static const card_game game = { CaptureGame, ApplyToGame, NewSaveId, CardIconGameTake, CardIconGameShow };
 
 /*
  * the card is put in afresh in each level, as the ps1 game sets it up again
