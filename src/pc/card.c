@@ -504,9 +504,12 @@ static int RequestSaveAgain(card *c) {
   return RequestSlot(c, STATE_SAVE, idx);
 }
 
-/* 0 if there's a save last written to save over, on a card put in since the game began */
+/*
+ * 0 if there's a save last written to save over. the ps1 game also wanted its
+ * card checked, which it did while answering; here the game asks before the
+ * card's first step, so only the save last written counts
+ */
 static int RequestHasLast(const card *c) {
-  if (!(c->flags & CARD_FLAG_NEW_DEVICE) && !c->new_device) { return 1; }
   return !c->last_file_name[0];
 }
 
