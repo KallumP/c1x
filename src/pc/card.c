@@ -130,34 +130,82 @@ static void FillHeader(uint8_t *header, int percent) {
   snprintf((char*)header + HEADER_NAME_AT, CARD_SLOT_NAME_SIZE, "Crash (%d%%)", percent);
 }
 
-/* writes save to file_name in dir (made if it isn't there) as percent done; whether it was written */
-int CardFileWrite(const char *dir, const char *file_name, const card_save *save, int percent) {
-  uint8_t blocks[CARD_FILE_BLOCKS][CARD_BLOCK_SIZE];
+#define HEADER_PALETTE_AT 96 /* a save's icon palette, at the end of its header block */
+#define ICON_FRAMES_AT    1  /* its icon's frames, a block each, after the header */
+#define FILE_SIZE         (CARD_FILE_BLOCKS * CARD_BLOCK_SIZE)
+
+/* the icon's palette into the header block, and its frames into theirs */
+static void PutIcon(uint8_t blocks[][CARD_BLOCK_SIZE], const card_save_icon *icon) {
+  int i;
+
+  memcpy(blocks[0] + HEADER_PALETTE_AT, icon->palette, sizeof(icon->palette));
+  for (i=0;i<CARD_ICON_FRAMES;i++)
+    memcpy(blocks[ICON_FRAMES_AT+i], icon->frames[i], CARD_ICON_FRAME_SIZE);
+}
+
+static void GetIcon(uint8_t blocks[][CARD_BLOCK_SIZE], card_save_icon *icon) {
+  int i;
+
+  memcpy(icon->palette, blocks[0] + HEADER_PALETTE_AT, sizeof(icon->palette));
+  for (i=0;i<CARD_ICON_FRAMES;i++)
+    memcpy(icon->frames[i], blocks[ICON_FRAMES_AT+i], CARD_ICON_FRAME_SIZE);
+}
+
+/* writes a save file's blocks to file_name in dir (made if it isn't there); whether they were written */
+static int WriteBlocks(const char *dir, const char *file_name, uint8_t blocks[][CARD_BLOCK_SIZE]) {
   char path[PATH_SIZE];
   FILE *file;
   size_t written;
-  int i;
 
-  memset(blocks, 0, sizeof(blocks));
-  FillHeader(blocks[0], percent);
-  for (i=CARD_FILE_BLOCKS-CARD_SAVE_COPIES;i<CARD_FILE_BLOCKS;i++)
-    memcpy(blocks[i], save, CARD_BLOCK_SIZE);
   MakeDir(dir);
   FilePath(path, dir, file_name);
   file = fopen(path, "wb");
   if (!file) { return 0; }
-  written = fwrite(blocks, 1, sizeof(blocks), file);
+  written = fwrite(blocks, 1, FILE_SIZE, file);
   fclose(file);
-  return written == sizeof(blocks);
+  return written == FILE_SIZE;
 }
 
+/* reads a save file's blocks; whether it's there and is a save */
+static int ReadBlocks(const char *dir, const char *file_name, uint8_t blocks[][CARD_BLOCK_SIZE]) {
+  char path[PATH_SIZE];
+  FILE *file;
+  size_t read;
+
+  FilePath(path, dir, file_name);
+  file = fopen(path, "rb");
+  if (!file) { return 0; }
+  read = fread(blocks, 1, FILE_SIZE, file);
+  fclose(file);
+  return read == FILE_SIZE && blocks[0][0] == 'S' && blocks[0][1] == 'C';
+}
+
+/* writes save to file_name in dir as percent done, with its icon (or a blank one with none); whether it was written */
 int CardFileWriteWithIcon(const char *dir, const char *file_name, const card_save *save, int percent,
   const card_save_icon *icon) {
-  return CardFileWrite(dir, file_name, save, percent);
+  uint8_t blocks[CARD_FILE_BLOCKS][CARD_BLOCK_SIZE];
+  int i;
+
+  memset(blocks, 0, sizeof(blocks));
+  FillHeader(blocks[0], percent);
+  if (icon)
+    PutIcon(blocks, icon);
+  for (i=CARD_FILE_BLOCKS-CARD_SAVE_COPIES;i<CARD_FILE_BLOCKS;i++)
+    memcpy(blocks[i], save, CARD_BLOCK_SIZE);
+  return WriteBlocks(dir, file_name, blocks);
 }
 
+int CardFileWrite(const char *dir, const char *file_name, const card_save *save, int percent) {
+  return CardFileWriteWithIcon(dir, file_name, save, percent, 0);
+}
+
+/* reads the icon of the save file_name in dir; whether there was a save */
 int CardFileReadIcon(const char *dir, const char *file_name, card_save_icon *icon) {
-  return 0;
+  uint8_t blocks[CARD_FILE_BLOCKS][CARD_BLOCK_SIZE];
+
+  if (!ReadBlocks(dir, file_name, blocks)) { return 0; }
+  GetIcon(blocks, icon);
+  return 1;
 }
 
 /* a save's name from its header block, in capitals as the game's screens show it */
@@ -174,17 +222,9 @@ static void SlotNameOf(const uint8_t *header, char *slot_name, int size) {
 /* reads file_name in dir: its first copy of the save that's valid, and its slot name; whether one was */
 int CardFileRead(const char *dir, const char *file_name, card_save *save, char *slot_name, int size) {
   uint8_t blocks[CARD_FILE_BLOCKS][CARD_BLOCK_SIZE];
-  char path[PATH_SIZE];
-  FILE *file;
-  size_t read;
   int i;
 
-  FilePath(path, dir, file_name);
-  file = fopen(path, "rb");
-  if (!file) { return 0; }
-  read = fread(blocks, 1, sizeof(blocks), file);
-  fclose(file);
-  if (read != sizeof(blocks) || blocks[0][0] != 'S' || blocks[0][1] != 'C') { return 0; }
+  if (!ReadBlocks(dir, file_name, blocks)) { return 0; }
   SlotNameOf(blocks[0], slot_name, size);
   for (i=CARD_FILE_BLOCKS-CARD_SAVE_COPIES;i<CARD_FILE_BLOCKS;i++) {
     memcpy(save, blocks[i], CARD_BLOCK_SIZE);
