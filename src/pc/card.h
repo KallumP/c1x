@@ -54,4 +54,58 @@ extern int CardListFiles(const char *dir, char file_names[CARD_SLOT_MAX][CARD_FI
 extern void CardNextFileName(char *file_name, const char *last_file_name, uint32_t save_id);
 extern int CardDeleteFiles(const char *dir);
 
+/* the card's flags, which the game's screens watch (card_flags_ro) */
+#define CARD_FLAG_PENDING_IO   1    /* it's busy with what was asked */
+#define CARD_FLAG_ERROR        2    /* what was asked couldn't be done */
+#define CARD_FLAG_CHECK_NEEDED 4    /* it hasn't been looked at yet */
+#define CARD_FLAG_CHECKING     8    /* it's being looked at */
+#define CARD_FLAG_NEW_DEVICE   0x10 /* it's a card not saved to yet */
+#define CARD_FLAG_6            0x20 /* set when it's checked, until the game clears it */
+#define CARD_FLAGS_UNREADY     (CARD_FLAG_PENDING_IO | CARD_FLAG_CHECK_NEEDED | CARD_FLAG_CHECKING)
+
+/* what the game asks of the card (CardRequest), as its code numbers them */
+#define CARD_OP_CLEAR_FLAG_6 2
+#define CARD_OP_SAVE         3  /* to a slot, or a new one past the last */
+#define CARD_OP_LOAD         4  /* from a slot */
+#define CARD_OP_FORMAT       5
+#define CARD_OP_SAVE_AGAIN   6  /* over the save last written */
+#define CARD_OP_HAS_LAST     7  /* 0 if the save last written can be saved over */
+#define CARD_OP_IS_THERE     8  /* 0 if there's a card */
+#define CARD_OP_FORGET_LAST  9
+#define CARD_OP_CHECK        10 /* look at the card again */
+
+#define CARD_STATE_IDLE 0
+
+/* a slot: a save on the card, as the game's screens show it */
+typedef struct {
+  char file_name[CARD_FILE_NAME_SIZE];
+  char name[CARD_SLOT_NAME_SIZE];
+  uint32_t info; /* see CardSlotInfo */
+} card_slot;
+
+/* what the card needs of the game */
+typedef struct {
+  void (*capture)(card_save *save, int *percent); /* the game as it is, to save (not yet sealed) */
+  void (*apply)(const card_save *save);           /* the game put as a save has it */
+  uint32_t (*new_id)(void);                       /* an id for a new save's name */
+} card_game;
+
+typedef struct {
+  const char *dir;  /* its folder of saves */
+  int state;
+  uint32_t flags;
+  int idx;          /* the slot asked for */
+  int new_device;   /* whether it was a card not saved to yet when it was reset */
+  int slot_count;
+  card_slot slots[CARD_SLOT_MAX];
+  int file_count;   /* the saves being read into slots, and how many have been */
+  int file_idx;
+  char file_names[CARD_SLOT_MAX][CARD_FILE_NAME_SIZE];
+  char last_file_name[CARD_FILE_NAME_SIZE]; /* the save last written, or "" */
+} card;
+
+extern void CardReset(card *c, const char *dir, int new_device);
+extern void CardStep(card *c, const card_game *game);
+extern int CardRequest(card *c, int op, int slot_idx);
+
 #endif /* _PC_CARD_H_ */

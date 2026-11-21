@@ -257,3 +257,300 @@ UTEST(card_files, deleting_a_cards_saves_leaves_its_other_files) {
   ASSERT_EQ(0, CardListFiles(CARD_DIR, file_names));
   ASSERT_EQ(10, FileLength(CARD_DIR "/notes.txt"));
 }
+
+/* the card's states */
+
+static card_save game_now;      /* the game, as the card captures it */
+static int game_percent;
+static card_save game_loaded;   /* and as a save last put it */
+static int game_loads;
+
+static void CaptureGame(card_save *save, int *percent) {
+  *save = game_now;
+  *percent = game_percent;
+}
+
+static void ApplyToGame(const card_save *save) {
+  game_loaded = *save;
+  game_loads++;
+}
+
+static uint32_t NewSaveId(void) {
+  return 424242;
+}
+
+static const card_game test_game = { CaptureGame, ApplyToGame, NewSaveId };
+
+/* steps the card until it's ready, as the game's screens wait for it; whether it got there */
+static int Settle(card *c) {
+  int i;
+
+  for (i = 0; i < 100; i++) {
+    if (c->state == CARD_STATE_IDLE && !(c->flags & CARD_FLAGS_UNREADY)) { return 1; }
+    CardStep(c, &test_game);
+  }
+  return 0;
+}
+
+/* an empty card folder with the game at a level count, as percent done, and the card on it ready */
+static void ReadyCard(card *c, int level_count, int percent) {
+  FreshCard();
+  game_now = SomeSave();
+  game_now.level_count = level_count;
+  game_now.progress = CardProgress(0, 0, level_count);
+  game_percent = percent;
+  game_loads = 0;
+  CardReset(c, CARD_DIR, 1);
+  Settle(c);
+}
+
+UTEST(card_states, a_card_just_reset_needs_checking) {
+  card c;
+
+  FreshCard();
+  CardReset(&c, CARD_DIR, 1);
+  ASSERT_TRUE(c.flags & CARD_FLAG_CHECK_NEEDED);
+  ASSERT_EQ(0, c.slot_count);
+}
+
+UTEST(card_states, a_card_is_busy_while_its_checked_and_its_saves_are_read) {
+  card c;
+
+  FreshCard();
+  WriteSave("BASCUS-9490000111111", 2, 5);
+  CardReset(&c, CARD_DIR, 1);
+  CardStep(&c, &test_game);
+  ASSERT_TRUE(c.flags & CARD_FLAGS_UNREADY);
+}
+
+UTEST(card_states, a_card_settles_ready_with_no_error) {
+  card c;
+
+  FreshCard();
+  CardReset(&c, CARD_DIR, 1);
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_FALSE(c.flags & CARD_FLAG_ERROR);
+  ASSERT_TRUE(c.flags & CARD_FLAG_6);
+}
+
+UTEST(card_states, an_empty_card_has_no_slots) {
+  card c;
+
+  ReadyCard(&c, 2, 5);
+  ASSERT_EQ(0, c.slot_count);
+}
+
+UTEST(card_states, a_cards_saves_are_its_slots_with_their_names_and_infos) {
+  card c;
+  card_save first;
+
+  FreshCard();
+  first = WriteSave("BASCUS-9490000111111", 2, 5);
+  WriteSave("BASCUS-9490001222222", 3, 10);
+  CardReset(&c, CARD_DIR, 1);
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_EQ(2, c.slot_count);
+  ASSERT_STREQ("CRASH (5%)", c.slots[0].name);
+  ASSERT_STREQ("CRASH (10%)", c.slots[1].name);
+  ASSERT_EQ(CardSlotInfo(first.progress), c.slots[0].info);
+}
+
+UTEST(card_states, saving_past_the_last_slot_makes_a_new_save_of_the_game) {
+  card c;
+  card_save read;
+  char slot_name[CARD_SLOT_NAME_SIZE];
+
+  ReadyCard(&c, 9, 30);
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_SAVE, 0));
+  ASSERT_TRUE(c.flags & CARD_FLAG_PENDING_IO);
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_FALSE(c.flags & CARD_FLAG_ERROR);
+  ASSERT_EQ(1, c.slot_count);
+  ASSERT_STREQ("BASCUS-9490000424242", c.slots[0].file_name);
+  ASSERT_STREQ("CRASH (30%)", c.slots[0].name);
+  ASSERT_EQ(1, CardFileRead(CARD_DIR, "BASCUS-9490000424242", &read, slot_name, sizeof(slot_name)));
+  ASSERT_EQ(9, read.level_count);
+}
+
+UTEST(card_states, a_second_new_save_is_numbered_after_the_first) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  CardRequest(&c, CARD_OP_SAVE, 1);
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_EQ(2, c.slot_count);
+  ASSERT_STREQ("BASCUS-9490001424242", c.slots[1].file_name);
+}
+
+UTEST(card_states, saving_to_a_slot_saves_over_it) {
+  card c;
+  card_save read;
+  char slot_name[CARD_SLOT_NAME_SIZE];
+
+  ReadyCard(&c, 9, 30);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  game_now.level_count = 12;
+  game_percent = 40;
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_SAVE, 0));
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_EQ(1, c.slot_count);
+  ASSERT_STREQ("CRASH (40%)", c.slots[0].name);
+  CardFileRead(CARD_DIR, c.slots[0].file_name, &read, slot_name, sizeof(slot_name));
+  ASSERT_EQ(12, read.level_count);
+}
+
+UTEST(card_states, a_card_saved_to_is_no_longer_a_new_one) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  ASSERT_TRUE(c.flags & CARD_FLAG_NEW_DEVICE);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  ASSERT_FALSE(c.flags & CARD_FLAG_NEW_DEVICE);
+}
+
+UTEST(card_states, loading_a_slot_puts_the_game_as_its_save_has_it) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_LOAD, 0));
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_FALSE(c.flags & CARD_FLAG_ERROR);
+  ASSERT_EQ(1, game_loads);
+  ASSERT_EQ(9, game_loaded.level_count);
+}
+
+UTEST(card_states, loading_a_slot_that_isnt_there_is_an_error_and_leaves_the_game) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  CardRequest(&c, CARD_OP_LOAD, 3);
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_TRUE(c.flags & CARD_FLAG_ERROR);
+  ASSERT_EQ(0, game_loads);
+}
+
+UTEST(card_states, loading_a_spoiled_save_is_an_error_and_leaves_the_game) {
+  card c;
+  int i;
+
+  ReadyCard(&c, 9, 30);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  for (i = 4; i < CARD_FILE_BLOCKS; i++) { SpoilBlock(CARD_DIR "/BASCUS-9490000424242", i); }
+  CardRequest(&c, CARD_OP_LOAD, 0);
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_TRUE(c.flags & CARD_FLAG_ERROR);
+  ASSERT_EQ(0, game_loads);
+}
+
+UTEST(card_states, a_card_that_needs_checking_refuses_saving_and_loading) {
+  card c;
+
+  FreshCard();
+  CardReset(&c, CARD_DIR, 1);
+  ASSERT_EQ(1, CardRequest(&c, CARD_OP_SAVE, 0));
+  ASSERT_TRUE(c.flags & CARD_FLAG_ERROR);
+  ASSERT_EQ(1, CardRequest(&c, CARD_OP_LOAD, 0));
+}
+
+UTEST(card_states, formatting_deletes_the_cards_saves) {
+  card c;
+  char file_names[CARD_SLOT_MAX][CARD_FILE_NAME_SIZE];
+
+  ReadyCard(&c, 9, 30);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_FORMAT, 0));
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_EQ(0, c.slot_count);
+  ASSERT_EQ(0, CardListFiles(CARD_DIR, file_names));
+}
+
+UTEST(card_states, a_busy_card_refuses_formatting) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  ASSERT_EQ(1, CardRequest(&c, CARD_OP_FORMAT, 0));
+  ASSERT_TRUE(c.flags & CARD_FLAG_ERROR);
+}
+
+UTEST(card_states, saving_again_saves_over_the_save_last_written) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  game_percent = 55;
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_SAVE_AGAIN, 0));
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_EQ(1, c.slot_count);
+  ASSERT_STREQ("CRASH (55%)", c.slots[0].name);
+}
+
+UTEST(card_states, saving_again_is_refused_with_no_save_written) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  ASSERT_EQ(1, CardRequest(&c, CARD_OP_SAVE_AGAIN, 0));
+  ASSERT_TRUE(c.flags & CARD_FLAG_ERROR);
+}
+
+UTEST(card_states, saving_again_is_refused_once_the_last_save_is_forgotten) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_FORGET_LAST, 0));
+  ASSERT_EQ(1, CardRequest(&c, CARD_OP_SAVE_AGAIN, 0));
+}
+
+UTEST(card_states, the_last_save_can_be_saved_over_once_one_is_written) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  ASSERT_EQ(1, CardRequest(&c, CARD_OP_HAS_LAST, 0));
+  CardRequest(&c, CARD_OP_SAVE, 0);
+  Settle(&c);
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_HAS_LAST, 0));
+}
+
+UTEST(card_states, theres_always_a_card) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_IS_THERE, 0));
+}
+
+UTEST(card_states, the_game_can_clear_flag_6) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_CLEAR_FLAG_6, 0));
+  ASSERT_FALSE(c.flags & CARD_FLAG_6);
+}
+
+UTEST(card_states, checking_again_reads_saves_put_there_since) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  WriteSave("BASCUS-9490000111111", 2, 5);
+  ASSERT_EQ(0, CardRequest(&c, CARD_OP_CHECK, 0));
+  ASSERT_TRUE(c.flags & CARD_FLAG_CHECK_NEEDED);
+  ASSERT_TRUE(Settle(&c));
+  ASSERT_EQ(1, c.slot_count);
+}
+
+UTEST(card_states, an_op_the_card_doesnt_know_is_refused) {
+  card c;
+
+  ReadyCard(&c, 9, 30);
+  ASSERT_EQ(1, CardRequest(&c, 99, 0));
+}

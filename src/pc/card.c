@@ -221,3 +221,15 @@ int CardDeleteFiles(const char *dir) {
   free(names);
   return count;
 }
+
+void CardReset(card *c, const char *dir, int new_device) {
+  memset(c, 0, sizeof(*c));
+  c->dir = dir;
+}
+
+void CardStep(card *c, const card_game *game) {
+}
+
+int CardRequest(card *c, int op, int slot_idx) {
+  return 0;
+}
