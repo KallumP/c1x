@@ -39,6 +39,7 @@ SRC =	src/ns.c \
 	src/pc/custommenu.c \
 	src/pc/boxtotals.c \
 	src/pc/card.c \
+	src/pc/cardicon.c \
 	src/pc/card_game.c \
 	src/pc/savepoint.c \
 	src/pc/slash.c \
@@ -83,6 +84,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/custommenu.c \
 	src/pc/boxtotals.c \
 	src/pc/card.c \
+	src/pc/cardicon.c \
 	src/pc/savepoint.c \
 	src/pc/slash.c \
 	src/pc/screen_fit.c \
