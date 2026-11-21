@@ -63,7 +63,32 @@ void CardSlotName(char *name, int size, int percent) {
   snprintf(name, size, "CRASH (%d%%)", percent);
 }
 
+/* a character as the game's letters have it: ( ) are at { }, and its { } are drawn as ~ % */
+static char GameLetter(char c) {
+  c &= 0x7F;
+  if (c < ' ')  { return ' '; }
+  if (c == '{') { return '('; }
+  if (c == '}') { return ')'; }
+  if (c == '~') { return '{'; }
+  if (c == '%') { return '}'; }
+  return c;
+}
+
+/*
+ * puts src over the text at idx in texts (the game's: one after another, each
+ * ended by a 0), len characters of it, padded with spaces
+ */
 void CardPutText(char *texts, int idx, const char *src, int len) {
+  char *text;
+  int i;
+
+  text = texts;
+  for (i=0;i<idx;i++)
+    text += strlen(text) + 1;
+  for (i=0;i<len && src[i];i++)
+    text[i] = GameLetter(src[i]);
+  for (;i<len;i++)
+    text[i] = ' ';
 }
 
 /* save files */
