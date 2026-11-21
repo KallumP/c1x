@@ -222,14 +222,227 @@ int CardDeleteFiles(const char *dir) {
   return count;
 }
 
+/* the card's states, numbered as the ps1 game's card code has them */
+
+#define STATE_SCAN_START 1 /* about to list its saves */
+#define STATE_LOAD       2
+#define STATE_FORMAT     3
+#define STATE_CHECK      4 /* being looked at */
+#define STATE_SCAN       5 /* its saves being read into slots, one a step */
+#define STATE_SAVE       6
+
+/* a slot whose save can't be read */
+#define SLOT_DAMAGED_NAME "DAMAGED SLOT"
+#define SLOT_DAMAGED_INFO (SLOT_READ | (1 << SLOT_ICONS_SHIFT))
+
+/* it's busy with a state, until it's idle again */
+static void SetState(card *c, int state) {
+  c->state = state;
+  if (state == CARD_STATE_IDLE)
+    c->flags &= ~CARD_FLAG_PENDING_IO;
+  else
+    c->flags |= CARD_FLAG_PENDING_IO;
+}
+
+static void ClearSlots(card *c) {
+  c->slot_count = 0;
+  memset(c->slots, 0, sizeof(c->slots));
+}
+
+/* a card as it's put in: not looked at yet. new_device is whether it's one not saved to yet */
 void CardReset(card *c, const char *dir, int new_device) {
   memset(c, 0, sizeof(*c));
   c->dir = dir;
+  c->new_device = new_device;
+  c->flags = CARD_FLAG_CHECK_NEEDED;
+  if (new_device)
+    c->flags |= CARD_FLAG_NEW_DEVICE;
 }
 
+/* its saves are read again, unless it's busy or needs checking first */
+static void ScanIfReady(card *c) {
+  if (c->flags & CARD_FLAGS_UNREADY) { return; }
+  SetState(c, STATE_SCAN_START);
+}
+
+/* idle: a card that needs checking starts being checked */
+static void StepIdle(card *c) {
+  if (!(c->flags & CARD_FLAG_CHECK_NEEDED)) { return; }
+  ClearSlots(c);
+  c->flags &= ~(CARD_FLAG_ERROR | CARD_FLAG_CHECK_NEEDED);
+  c->flags |= CARD_FLAG_CHECKING | CARD_FLAG_NEW_DEVICE | CARD_FLAG_6;
+  SetState(c, STATE_CHECK);
+}
+
+/* a card in a folder is always there and readable, so its check passes */
+static void StepCheck(card *c) {
+  c->flags &= ~(CARD_FLAG_ERROR | CARD_FLAG_CHECKING);
+  SetState(c, CARD_STATE_IDLE);
+  ScanIfReady(c);
+}
+
+static void StepScanStart(card *c) {
+  c->file_count = CardListFiles(c->dir, c->file_names);
+  c->file_idx = 0;
+  c->flags &= ~CARD_FLAG_ERROR;
+  ClearSlots(c);
+  SetState(c, STATE_SCAN);
+}
+
+/* reads the next save into the next slot, or is done with them all read */
+static void StepScan(card *c) {
+  card_slot *slot;
+  card_save save;
+
+  if (c->file_idx >= c->file_count) {
+    c->flags &= ~CARD_FLAG_ERROR;
+    SetState(c, CARD_STATE_IDLE);
+    return;
+  }
+  slot = &c->slots[c->slot_count++];
+  strcpy(slot->file_name, c->file_names[c->file_idx++]);
+  if (CardFileRead(c->dir, slot->file_name, &save, slot->name, sizeof(slot->name))) {
+    slot->info = CardSlotInfo(save.progress);
+    return;
+  }
+  snprintf(slot->name, sizeof(slot->name), "%s", SLOT_DAMAGED_NAME);
+  slot->info = SLOT_DAMAGED_INFO;
+}
+
+/* the file a save to the slot asked for goes in: the slot's, or a new one past the last slot */
+static void SaveFileName(const card *c, const card_game *game, char *file_name) {
+  const char *last;
+
+  if (c->idx >= 0 && c->idx < c->slot_count) {
+    strcpy(file_name, c->slots[c->idx].file_name);
+    return;
+  }
+  last = c->slot_count ? c->slots[c->slot_count-1].file_name : 0;
+  CardNextFileName(file_name, last, game->new_id());
+}
+
+/* saves the game as it is, then reads the card's saves again */
+static void StepSave(card *c, const card_game *game) {
+  char file_name[CARD_FILE_NAME_SIZE];
+  card_save save;
+  int percent;
+
+  game->capture(&save, &percent);
+  CardSaveSeal(&save);
+  SaveFileName(c, game, file_name);
+  SetState(c, CARD_STATE_IDLE);
+  if (!CardFileWrite(c->dir, file_name, &save, percent)) {
+    c->flags |= CARD_FLAG_ERROR;
+    return;
+  }
+  c->flags &= ~(CARD_FLAG_ERROR | CARD_FLAG_NEW_DEVICE);
+  strcpy(c->last_file_name, file_name);
+  ScanIfReady(c);
+}
+
+/* puts the game as the slot asked for has it; an error if it has no save that reads */
+static void StepLoad(card *c, const card_game *game) {
+  char name[CARD_SLOT_NAME_SIZE];
+  card_save save;
+
+  SetState(c, CARD_STATE_IDLE);
+  if (c->idx < 0 || c->idx >= c->slot_count
+    || !CardFileRead(c->dir, c->slots[c->idx].file_name, &save, name, sizeof(name))) {
+    c->flags |= CARD_FLAG_ERROR;
+    return;
+  }
+  game->apply(&save);
+}
+
+/* deletes its saves; it's then looked at again, as a formatted ps1 card is */
+static void StepFormat(card *c) {
+  CardDeleteFiles(c->dir);
+  c->flags &= ~CARD_FLAG_ERROR;
+  c->flags |= CARD_FLAG_CHECK_NEEDED;
+  SetState(c, CARD_STATE_IDLE);
+}
+
+/* a frame's work on what the card's busy with */
 void CardStep(card *c, const card_game *game) {
+  switch (c->state) {
+  case CARD_STATE_IDLE:  StepIdle(c);        break;
+  case STATE_SCAN_START: StepScanStart(c);   break;
+  case STATE_LOAD:       StepLoad(c, game);  break;
+  case STATE_FORMAT:     StepFormat(c);      break;
+  case STATE_CHECK:      StepCheck(c);       break;
+  case STATE_SCAN:       StepScan(c);        break;
+  case STATE_SAVE:       StepSave(c, game);  break;
+  }
 }
 
-int CardRequest(card *c, int op, int slot_idx) {
+/* an error, for a request the card refuses */
+static int Refuse(card *c) {
+  c->flags |= CARD_FLAG_ERROR;
+  return 1;
+}
+
+/* starts on a slot, unless the card's busy or needs checking */
+static int RequestSlot(card *c, int state, int slot_idx) {
+  if (c->flags & CARD_FLAGS_UNREADY) { return Refuse(c); }
+  c->idx = slot_idx;
+  SetState(c, state);
   return 0;
+}
+
+static int RequestFormat(card *c) {
+  if (c->state != CARD_STATE_IDLE) { return Refuse(c); }
+  SetState(c, STATE_FORMAT);
+  return 0;
+}
+
+/* the slot of the save last written, or -1 */
+static int LastSaveSlot(const card *c) {
+  int i;
+
+  if (!c->last_file_name[0]) { return -1; }
+  for (i=0;i<c->slot_count;i++) {
+    if (strcmp(c->slots[i].file_name, c->last_file_name) == 0) { return i; }
+  }
+  return -1;
+}
+
+static int RequestSaveAgain(card *c) {
+  int idx;
+
+  if (c->flags & CARD_FLAGS_UNREADY) { return Refuse(c); }
+  idx = LastSaveSlot(c);
+  if (idx < 0) { return Refuse(c); }
+  return RequestSlot(c, STATE_SAVE, idx);
+}
+
+/* 0 if there's a save last written to save over, on a card put in since the game began */
+static int RequestHasLast(const card *c) {
+  if (!(c->flags & CARD_FLAG_NEW_DEVICE) && !c->new_device) { return 1; }
+  return !c->last_file_name[0];
+}
+
+static int RequestCheck(card *c) {
+  ClearSlots(c);
+  SetState(c, CARD_STATE_IDLE);
+  c->flags = (c->flags & CARD_FLAG_NEW_DEVICE) | CARD_FLAG_CHECK_NEEDED;
+  return 0;
+}
+
+/*
+ * what the game asks of the card (a CARD_OP), which CardStep then does a
+ * step at a time; 0 if it's started or done, 1 if it's refused
+ */
+int CardRequest(card *c, int op, int slot_idx) {
+  switch (op) {
+  case CARD_OP_CLEAR_FLAG_6: c->flags &= ~CARD_FLAG_6; return 0;
+  case CARD_OP_SAVE:         return RequestSlot(c, STATE_SAVE, slot_idx);
+  case CARD_OP_LOAD:         return RequestSlot(c, STATE_LOAD, slot_idx);
+  case CARD_OP_FORMAT:       return RequestFormat(c);
+  case CARD_OP_SAVE_AGAIN:   return RequestSaveAgain(c);
+  case CARD_OP_HAS_LAST:     return RequestHasLast(c);
+  case CARD_OP_IS_THERE:     return 0;
+  case CARD_OP_FORGET_LAST:  c->last_file_name[0] = 0; return 0;
+  case CARD_OP_CHECK:        return RequestCheck(c);
+  }
+  return 1;
 }
