@@ -66,13 +66,13 @@ A box outlined in red is stuck in a wall or another box (this doesn't stop the l
 
 Each switch has a number, shown over it. Tick **outline** on a box and pick a switch under it to have that switch fill the box in. A switch can be an outline too: it appears when its switch is hit, and fills in its own outlines only when it's hit itself. A switch can fill in only one other switch. **Drop to floor** puts the selected box just above the floor, and **raise** sets how far off the floor an object should be.
 
-The arrow on the spawn object shows which way the camera faces at the start. With nothing selected, the right side shows the level's settings, saved to its `level.cfg`:
+The arrow on the spawn object shows which way the camera faces at the start. With nothing selected, the right side shows the level's settings, saved to its `level.cfg`. Hover a setting's underlined name to see what it does.
 
 - **title** is the name the level's loading screen shows under the game's "LOADING" sign, in the game's own letters, so it can have only letters, spaces and full stops, up to 20 characters. Left empty, it's the folder's name (`1_tide_ruins` shows "Tide Ruins").
 - **Your own loading screen:** put a `loading.png` in the level's folder to show it instead of the sign. It's shown at 432 by 144, so a picture that shape fits best; another shape is cut at its edges to fill it. It goes with the level if you share it.
 - **turn** and **scale** line the map up with the game (see [If something looks wrong](#if-something-looks-wrong)).
-- **Sky** sets a top colour down to **split** and a bottom colour below it.
 - **Camera** sets how far the camera is from Crash (**distance**, times its usual distance) and how far above him it looks down from (**angle**, in degrees; 42 is usual). **view** is **behind** Crash, or **side** for a side-on level: the camera stays level with him left and right and follows him up and down, but never moves in or out. In a side-on level the spawn's arrow, and enemies' paths you haven't set, turn with the camera; drag an enemy's nodes to send it where you want.
+- **Sky** sets a top colour down to **split** and a bottom colour below it.
 - **Music** picks the song the level plays, from the game's own levels. A song starred has no aku aku song, so his invincibility keeps the level's song playing.
 - **Your own song:** put an `.mp3`, `.ogg`, `.flac` or `.wav` in the level's folder and pick it under **Music**. It plays on a loop, through aku aku's invincibility too, so a song that loops cleanly sounds best. It plays as loud as the game's own music, however loud the file is; turn it up or down with **volume** under the song. It goes with the level if you share it.
 
