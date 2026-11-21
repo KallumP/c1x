@@ -10,6 +10,7 @@
 
 - timed obstacles, bat roosts, timed planks and dropping platforms can be set as short as a quarter of a second
 - Grave Switchback's upper pushing platforms push twice as often, and its fire pit bursts every 5 seconds
+- the level editor opens a level from behind its spawn, looking the way its arrow points
 - the level editor's camera settings sit straight under the level settings
 - the level editor's level settings explain themselves when you hover their underlined names, not in paragraphs
 
