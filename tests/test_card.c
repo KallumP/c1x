@@ -10,12 +10,12 @@ static card_save SomeSave(void) {
 
   memset(&save, 0, sizeof(save));
   save.progress = CardProgress(1, 2, 7);
-  save.level_count = 7;
-  save.init_life_count = 4 << 8;
-  save.sfx_vol = 255;
-  save.mus_vol = 200;
-  save.item_pool1 = 0x12345678;
-  save.item_pool2 = 0x9abcdef0;
+  save._level_count = 7;
+  save._init_life_count = 4 << 8;
+  save._sfx_vol = 255;
+  save._mus_vol = 200;
+  save._item_pool1 = 0x12345678;
+  save._item_pool2 = 0x9abcdef0;
   return save;
 }
 
@@ -36,7 +36,7 @@ UTEST(card, a_save_changed_after_its_sealed_isnt_valid) {
 
   save = SomeSave();
   CardSaveSeal(&save);
-  save.level_count = 30;
+  save._level_count = 30;
   ASSERT_FALSE(CardSaveIsValid(&save));
 }
 
@@ -52,7 +52,7 @@ UTEST(card, saves_that_differ_have_different_checksums) {
 
   one = SomeSave();
   other = SomeSave();
-  other.item_pool1 ^= 1;
+  other._item_pool1 ^= 1;
   ASSERT_NE(CardChecksum((const uint8_t*)&one, sizeof(one)), CardChecksum((const uint8_t*)&other, sizeof(other)));
 }
 
@@ -101,7 +101,7 @@ static card_save WriteSave(const char *file_name, int level_count, int percent) 
   card_save save;
 
   save = SomeSave();
-  save.level_count = level_count;
+  save._level_count = level_count;
   CardSaveSeal(&save);
   CardFileWrite(CARD_DIR, file_name, &save, percent);
   return save;
@@ -296,7 +296,7 @@ static int Settle(card *c) {
 static void ReadyCard(card *c, int level_count, int percent) {
   FreshCard();
   game_now = SomeSave();
-  game_now.level_count = level_count;
+  game_now._level_count = level_count;
   game_now.progress = CardProgress(0, 0, level_count);
   game_percent = percent;
   game_loads = 0;
@@ -369,7 +369,7 @@ UTEST(card_states, saving_past_the_last_slot_makes_a_new_save_of_the_game) {
   ASSERT_STREQ("BASCUS-9490000424242", c.slots[0].file_name);
   ASSERT_STREQ("CRASH (30%)", c.slots[0].name);
   ASSERT_EQ(1, CardFileRead(CARD_DIR, "BASCUS-9490000424242", &read, slot_name, sizeof(slot_name)));
-  ASSERT_EQ(9, read.level_count);
+  ASSERT_EQ(9, read._level_count);
 }
 
 UTEST(card_states, a_second_new_save_is_numbered_after_the_first) {
@@ -392,14 +392,14 @@ UTEST(card_states, saving_to_a_slot_saves_over_it) {
   ReadyCard(&c, 9, 30);
   CardRequest(&c, CARD_OP_SAVE, 0);
   Settle(&c);
-  game_now.level_count = 12;
+  game_now._level_count = 12;
   game_percent = 40;
   ASSERT_EQ(0, CardRequest(&c, CARD_OP_SAVE, 0));
   ASSERT_TRUE(Settle(&c));
   ASSERT_EQ(1, c.slot_count);
   ASSERT_STREQ("CRASH (40%)", c.slots[0].name);
   CardFileRead(CARD_DIR, c.slots[0].file_name, &read, slot_name, sizeof(slot_name));
-  ASSERT_EQ(12, read.level_count);
+  ASSERT_EQ(12, read._level_count);
 }
 
 UTEST(card_states, a_card_saved_to_is_no_longer_a_new_one) {
@@ -422,7 +422,7 @@ UTEST(card_states, loading_a_slot_puts_the_game_as_its_save_has_it) {
   ASSERT_TRUE(Settle(&c));
   ASSERT_FALSE(c.flags & CARD_FLAG_ERROR);
   ASSERT_EQ(1, game_loads);
-  ASSERT_EQ(9, game_loaded.level_count);
+  ASSERT_EQ(9, game_loaded._level_count);
 }
 
 UTEST(card_states, loading_a_slot_that_isnt_there_is_an_error_and_leaves_the_game) {

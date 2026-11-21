@@ -14,17 +14,18 @@
 
 #define CARD_BLOCK_SIZE 128 /* the ps1 reads and writes a card 128 bytes at a time */
 
-/* what a save keeps of the game: one block, as the ps1 game laid it out */
+/* what a save keeps of the game: one block, as the ps1 game laid it out. the game's own
+   values go by these names without the _ (src/globals.h) */
 typedef struct {
   uint32_t progress;        /* keys, gems and levels: see CardProgress */
-  int32_t level_count;
-  int32_t init_life_count;
-  uint32_t dword_8006190C;
-  int32_t mono;
-  uint32_t sfx_vol;
-  uint32_t mus_vol;
-  uint32_t item_pool1;
-  uint32_t item_pool2;
+  int32_t _level_count;
+  int32_t _init_life_count;
+  uint32_t _dword_8006190C;
+  int32_t _mono;
+  uint32_t _sfx_vol;
+  uint32_t _mus_vol;
+  uint32_t _item_pool1;
+  uint32_t _item_pool2;
   uint32_t unk;
   uint32_t unused[21];
   uint32_t checksum;        /* of the block with this 0: see CardSaveSeal */
