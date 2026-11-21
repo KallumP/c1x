@@ -104,7 +104,7 @@ typedef enum {
   chanPressure   = 13,
   pitchWheel     = 14,
   pitchWheelSens = 16,
-  link           = 127
+  linkCtrl       = 127 /* the sf2 spec's "link"; not named that, as unistd.h has a link() */
 } __attribute__((packed)) SFCtrlPalette;
 
 typedef enum {

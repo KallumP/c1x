@@ -148,7 +148,7 @@ INCLUDE = -I./src/
 DEFS = -DCFLAGS_GFX_SW_PERSP -DCFLAGS_DRAW_EXTENSIONS -DCFLAGS_GUI
 CFLAGS = -g -fplan9-extensions -m32 -std=gnu17 -Wno-error=incompatible-pointer-types
 TEST_CFLAGS = -g -fplan9-extensions -m32 -std=gnu17
-TEST_LDLIBS = -lSDL2 -lsndfile -lstdc++
+TEST_LDLIBS = -lSDL2 -lsndfile -lm -lstdc++
 ifeq ($(OS),Windows_NT)
 LDLIBS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lfluidsynth-3 -lsndfile -lm -lstdc++
 OUT = build/c1x.exe
