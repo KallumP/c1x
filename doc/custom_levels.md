@@ -17,6 +17,7 @@ Each level gets its own folder in `level_src/`, such as `level_src/1_tide_ruins/
 - Make faces point to where Crash walks. Turn on the Face Orientation overlay: the side Crash sees should be blue.
 - Keep walls upright or leaning away from where Crash walks. A wall that hangs over a floor (leaning in, an overhang or an arch) is only solid up to where it starts to hang, so Crash can walk right through it.
 - To make a floor kill Crash (such as water), put it in an object whose name starts with `pit`, such as `pit.001`.
+- To stop Crash with an invisible wall (such as along the edge of ground he could walk off), put it in an object whose name starts with `collision`, such as `collision.001`: it's solid but never drawn. Keep it upright, from below the floor to above Crash's reach.
 - Keep the map under about 40 m wide and 40 m tall. It can be as long as you like.
 
 **Texture it (optional):**
