@@ -3,7 +3,7 @@
 import { nodeCount, pathPositions, withNodeAt } from "./enemyPaths";
 import { BAT_ROOST_HEIGHT, DEFAULT_SCALE, LEADER_BAT_HEIGHT } from "./coords";
 import { END_PAD_LIFT } from "./endPad";
-import { BOX_TYPES, ENEMY_TYPES, isSwitch, OBSTACLE_TYPES, type BoxType, type EnemyType, type LevelObject, type ObstacleType, type Vec3 } from "./objects";
+import { BOX_TYPES, boxTypeName, ENEMY_TYPES, isSwitch, OBSTACLE_TYPES, type BoxType, type EnemyType, type LevelObject, type ObstacleType, type Vec3 } from "./objects";
 
 export type Placeable = "spawn" | "end" | BoxType | EnemyType | ObstacleType;
 
@@ -158,6 +158,15 @@ function withSwitchSettings(object: LevelObject, others: Objects): LevelObject {
   return withOutline({ ...rest, switch: ownNumber }, outline);
 }
 
+// a box with a drop only if it's a ? box, the one box that has one
+function withDropSetting(object: LevelObject): LevelObject {
+  if (object.drop === undefined || (object.kind === "box" && boxTypeName(object.box!) === "question")) {
+    return object;
+  }
+  const { drop: _drop, ...rest } = object;
+  return rest;
+}
+
 // a box, an outline of switch outline if it's given one
 function withOutline(box: LevelObject, outline: number | undefined): LevelObject {
   if (outline === undefined) {
@@ -238,7 +247,7 @@ function update(state: EditorState, index: number, changes: Partial<LevelObject>
   if (takesTakenNumber(changes, others)) {
     return state;
   }
-  const changed = (object: LevelObject) => withSwitchSettings({ ...object, ...changes }, others);
+  const changed = (object: LevelObject) => withDropSetting(withSwitchSettings({ ...object, ...changes }, others));
   const updated = state.objects.map((object, objectIndex) => (objectIndex === index ? changed(object) : object));
   const objects = withOutlinesRenumbered(updated, state.objects[index].switch, updated[index].switch);
   if (record) {

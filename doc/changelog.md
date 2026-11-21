@@ -4,6 +4,7 @@
 
 ### Added
 
+- a ? box can drop an extra life instead of wumpa: **drop** in its settings in the level editor
 - a selected object in the level editor has arrows to drag it along x, y or up, and so does a selected path node
 
 ### Changed

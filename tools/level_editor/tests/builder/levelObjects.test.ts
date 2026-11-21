@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { boxInitFlagB, boxSubtype, checkOutlinesHaveSwitches, duplicateWarnings, readObjectsFile, toZone } from "../../builder/levelObjects";
+import { boxInitFlagA, boxInitFlagB, boxSubtype, checkOutlinesHaveSwitches, duplicateWarnings, readObjectsFile, toZone } from "../../builder/levelObjects";
 import type { LevelObject } from "../../src/objects";
 import { enemyObject } from "../helpers";
 
@@ -126,5 +126,23 @@ describe("objects.json", () => {
 
   test("a bad one is an error naming the file", () => {
     expect(() => readObjectsFile(objectsFolder('[{"kind": "crate", "at": [0, 0, 0]}]'))).toThrow(/objects\.json.*crate/);
+  });
+});
+
+describe("a box's first init flag", () => {
+  const box = (type: LevelObject["box"], more: Partial<LevelObject> = {}): LevelObject => ({ kind: "box", at: [0, 0, 0], raise: 0, stack: 1, box: type, ...more });
+
+  test("is 97 for a ? box that drops a life, as n. sanity beach's", () => {
+    expect(boxInitFlagA(box("question", { drop: "life" }))).toBe(97);
+    expect(boxInitFlagA(box(10, { drop: "life" }))).toBe(97);
+  });
+
+  test("is 0 for a ? box that drops wumpa, or has no drop", () => {
+    expect(boxInitFlagA(box("question", { drop: "wumpa" }))).toBe(0);
+    expect(boxInitFlagA(box("question"))).toBe(0);
+  });
+
+  test("is 0 for any other box", () => {
+    expect(boxInitFlagA(box("basic"))).toBe(0);
   });
 });

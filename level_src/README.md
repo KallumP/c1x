@@ -38,7 +38,7 @@ What each enemy and obstacle takes is listed in its entry below; this is what th
 ### Boxes
 
 - `basic`
-- `question`
+- `question`: `"drop"` is what it drops when broken, `"wumpa"` (as without one) or `"life"`
 - `life`
 - `aku_aku`
 - `checkpoint`

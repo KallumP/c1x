@@ -12,6 +12,7 @@ import {
   isSwitch,
   hasNumberSetting,
   hasPath,
+  BOX_DROPS,
   CYCLE_MIN,
   NUMBER_SETTING_RULES,
   NUMBER_SETTINGS,
@@ -218,6 +219,17 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
     </>
   );
 
+  // what a ? box drops when broken
+  const renderDropField = (box: LevelObject) => (
+    <ChoiceField
+      label="drop"
+      hint="What it drops when broken: wumpa, or an extra life."
+      value={box.drop ?? "wumpa"}
+      choices={BOX_DROPS}
+      onChange={(drop) => change({ drop })}
+    />
+  );
+
   const renderBoxFields = (box: LevelObject) => (
     <>
       <ChoiceField
@@ -227,6 +239,7 @@ export default function PropertiesPanel({ state, warnings, pathWarnings, outline
         onChange={(boxType) => change({ box: boxType })}
       />
       {renderSwitchFields(box)}
+      {boxTypeName(box.box!) === "question" && renderDropField(box)}
       <NumberField
         label="stack"
         value={box.stack}
