@@ -123,7 +123,7 @@
 #define GOOL_FLAG_RETURN_EVENT      0x20
 
 /* constants */
-#define GOOL_OBJECT_COUNT           96
+#define GOOL_OBJECT_COUNT           160 /* orig 96; pc: a warp pad's sparkles filled it at a bonus round's end, so the save screen's slot name and cursor couldn't be made */
 #define GOOL_BOUND_COUNT            (GOOL_OBJECT_COUNT+1) /* orig 28; one per object and the player */
 #define GOOL_LEVEL_SPAWN_COUNT      3592
 #define GOOL_SPAWN_COUNT            304
