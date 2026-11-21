@@ -12,6 +12,7 @@ import {
   isSwitch,
   hasNumberSetting,
   hasPath,
+  CYCLE_MIN,
   NUMBER_SETTING_RULES,
   NUMBER_SETTINGS,
   numberSetting,
@@ -59,16 +60,16 @@ function numberSlider(object: LevelObject, setting: NumberSetting): { label: str
     return { label: "speed m/s", step: 0.05 };
   }
   if (setting === "delay" && object.obstacle === "timed_plank") {
-    return { label: "break delay s", step: 0.5 };
+    return { label: "break delay s", step: CYCLE_MIN };
   }
   if (setting === "every" && ROTATING_OBSTACLES.includes(object.obstacle!)) {
-    return { label: "turn time s", step: 0.5 };
+    return { label: "turn time s", step: CYCLE_MIN };
   }
   if (setting === "offset" && ROTATING_OBSTACLES.includes(object.obstacle!)) {
     return { label: "rotation start offset s", step: 0.5 };
   }
   if (setting === "every" && object.obstacle === "rising_pillar") {
-    return { label: "rise and fall time s", step: 0.5 };
+    return { label: "rise and fall time s", step: CYCLE_MIN };
   }
   if (setting === "offset" && object.obstacle === "rising_pillar") {
     return { label: "rise start offset s", step: 0.5 };
@@ -80,17 +81,17 @@ const NUMBER_SLIDERS: Record<NumberSetting, { label: string; step: number }> = {
   speed: { label: "speed ×", step: 0.25 },
   start: { label: "start", step: 0.05 },
   count: { label: "count", step: 1 },
-  delay: { label: "delay s", step: 0.5 },
+  delay: { label: "delay s", step: CYCLE_MIN },
   range: { label: "range m", step: 1 },
   length: { label: "length m", step: 0.5 },
   angle: { label: "angle °", step: 1 },
   rotation: { label: "rotation °", step: 5 },
-  every: { label: "every s", step: 0.5 },
+  every: { label: "every s", step: CYCLE_MIN },
   offset: { label: "offset s", step: 0.5 },
   platforms: { label: "platforms", step: 1 },
   radius: { label: "radius m", step: 0.5 },
-  shake: { label: "shake before dropping s", step: 0.25 },
-  down: { label: "time dropped s", step: 0.5 },
+  shake: { label: "shake before dropping s", step: CYCLE_MIN },
+  down: { label: "time dropped s", step: CYCLE_MIN },
 };
 const NODE_AXES = ["x", "y", "z"] as const; // a path node can go anywhere, up and down too // z is the floor's height under the object, set by placing, dragging and Drop to floor
 const TURNS = ["0", "90", "180", "270"] as const; // degrees, the turns the build does
