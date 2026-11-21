@@ -14,8 +14,6 @@
 
 #define CARD_DIR       "memory_card" /* next to settings.cfg */
 #define TEXTS_AT       12            /* the game's texts start this far into card_str */
-#define TEXT_LENGTH    40            /* a slot's text on the game's screens */
-#define EMPTY_TEXT     "EMPTY"
 #define SAVE_ID_RANGE  1000000
 
 extern ns_struct ns;
@@ -78,16 +76,10 @@ static void ResetCardInNewLevel(void) {
   card_lid = ns.ldat->lid;
 }
 
-/* each slot's name, or EMPTY, into the game's texts, once it has them */
+/* each slot's name, or EMPTY, into the card screen's texts, while one's up */
 static void ShowSlotNames(void) {
-  const char *name;
-  int i;
-
   if (!card_str) { return; }
-  for (i=0;i<CARD_SLOT_MAX;i++) {
-    name = i < the_card.slot_count ? the_card.slots[i].name : EMPTY_TEXT;
-    CardPutText(card_str + TEXTS_AT, i, name, TEXT_LENGTH);
-  }
+  CardShowSlotNames(&the_card, card_str + TEXTS_AT, (cur_display_flags & CARD_DISPLAY_FLAG) != 0);
 }
 
 /* what the game's screens watch of the card */

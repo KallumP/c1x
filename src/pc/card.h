@@ -106,6 +106,9 @@ typedef struct {
   char last_file_name[CARD_FILE_NAME_SIZE]; /* the save last written, or "" */
 } card;
 
+#define CARD_TEXT_LENGTH 40 /* a slot's text on the game's card screens */
+
+extern void CardShowSlotNames(const card *c, char *texts, int screen_up);
 extern void CardReset(card *c, const char *dir, int new_device);
 extern void CardStep(card *c, const card_game *game);
 extern int CardRequest(card *c, int op, int slot_idx);

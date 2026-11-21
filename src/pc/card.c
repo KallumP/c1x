@@ -393,6 +393,25 @@ static void StepFormat(card *c) {
   SetState(c, CARD_STATE_IDLE);
 }
 
+#define SLOT_EMPTY_NAME "EMPTY"
+
+/*
+ * each slot's name, or EMPTY, into a card screen's texts. only while the screen
+ * is up: the texts are in its level's data, which is freed with the level
+ */
+void CardShowSlotNames(const card *c, char *texts, int screen_up) {
+  const char *name;
+  int i;
+
+  if (!texts || !screen_up) { return; }
+  for (i=0;i<CARD_SLOT_MAX;i++) {
+    name = SLOT_EMPTY_NAME;
+    if (i < c->slot_count)
+      name = c->slots[i].name;
+    CardPutText(texts, i, name, CARD_TEXT_LENGTH);
+  }
+}
+
 /* a frame's work on what the card's busy with */
 void CardStep(card *c, const card_game *game) {
   switch (c->state) {
