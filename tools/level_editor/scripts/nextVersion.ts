@@ -15,7 +15,7 @@ function isReleaseTag(tag: string): boolean {
 function latestReleaseTag(tags: string[]): string | undefined {
   let latest: string | undefined;
   for (const tag of tags.filter(isReleaseTag)) {
-    if (!latest || isNewer(latest, tag)) {
+    if (!latest || isNewer(tag, latest)) {
       latest = tag;
     }
   }
