@@ -41,10 +41,10 @@ Update check (launcher version + newer release link)
 
 Generic
 - auto increment the last version in release.bat
+- maps should store what version it was built on
 - mute-able start
 - europe support
 - going back to a level shows a white artefact near the middle of the screen, this might be beacuse i rotated the island in the map using circle and square and then entered the level
 - other demo showings dont work, the second one (that shows jungle rollers) opens but no gameplay shows
 - the save menu's own text no longer shows up
 - the last bonus token you get still rubber bands across the top of the screen
-
