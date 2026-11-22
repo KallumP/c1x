@@ -185,23 +185,15 @@ static const char *PressPrompt(void) {
   return "Press a key";
 }
 
-/* how wide a button showing text is */
-static float ButtonWidthFor(const char *text) {
-  ImVec2 text_size;
-
-  igCalcTextSize(&text_size, text, 0, false, -1);
-  return text_size.x + 2 * igGetStyle()->FramePadding.x;
-}
-
 /* the widest of the tab's bindings and its press prompt, and at least KEY_MIN_WIDTH */
 static float WidestBindingWidth(void) {
   float widest;
   int button, index;
 
-  widest = SDL_max(KEY_MIN_WIDTH, ButtonWidthFor(PressPrompt()));
+  widest = SDL_max(KEY_MIN_WIDTH, ButtonWidth(PressPrompt()));
   for (button = 0; button < PAD_BUTTON_COUNT; button++) {
     for (index = 0; index < *BindingCount(shown_kind, button); index++) {
-      widest = SDL_max(widest, ButtonWidthFor(BindingLabel(shown_kind, BindingAt(shown_kind, button, index))));
+      widest = SDL_max(widest, ButtonWidth(BindingLabel(shown_kind, BindingAt(shown_kind, button, index))));
     }
   }
   return widest;

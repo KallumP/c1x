@@ -1,6 +1,7 @@
 /*
- * the launcher: sets up settings.cfg, checks the game's files, and starts
- * the game, the level editor and the level builder (see doc/launcher.md)
+ * the launcher: sets up settings.cfg, checks the game's files, starts the
+ * game, the level editor and the level builder, and says when a newer release
+ * is out (see doc/launcher.md)
  */
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
@@ -123,7 +124,7 @@ static void DrawLauncher() {
     | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove
     | ImGuiWindowFlags_NoSavedSettings; /* a scroll bar if it doesn't fit */
   igBegin("launcher", 0, flags);
-  DrawVersionCorner(); /* beside the game section's heading */
+  DrawVersionCorner(); /* first: it draws on the right of the line the game section's heading starts */
   DrawGameSection(repo);
   igSpacing();
   igSpacing();
@@ -151,13 +152,15 @@ static void DrawFrame() {
   SDL_GL_SwapWindow(window);
 }
 
-/* c1x_launcher --version: says the version it was built as, which the release
-   script checks (an empty line for a build that isn't a release) */
 static int IsVersionAsked(int argc, char *argv[]) {
   return argc == 2 && SDL_strcmp(argv[1], "--version") == 0;
 }
 
 int main(int argc, char *argv[]) {
+  /* c1x_launcher --version prints the version it was built as, and an empty
+     line for a build that isn't a release. the release script reads it; on
+     windows it only shows when read by a program or piped (| more), as the
+     launcher has no console */
   if (IsVersionAsked(argc, argv)) {
     printf("%s\n", LauncherVersion());
     return 0;
@@ -169,11 +172,11 @@ int main(int argc, char *argv[]) {
   LoadSettingsSection(repo);
   LoadControlsSection(repo);
   LoadLevelsSection(repo);
-  StartReleaseCheck(repo);
   if (!OpenLauncherWindow()) {
     fprintf(stderr, "could not open the launcher's window: %s\n", SDL_GetError());
     return 1;
   }
+  StartReleaseCheck(repo);
   while (HandleEvents()) {
     DrawFrame();
   }

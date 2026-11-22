@@ -11,6 +11,7 @@ extern void LoadLauncherFonts(void);
 extern void SetLauncherStyle(void);
 extern void DrawHeading(const char *text);
 extern int DrawBigButton(const char *label);
+extern float ButtonWidth(const char *text);
 extern void DrawTooltip(const char *text);
 extern int BeginFieldRows(const char *id);
 extern void DrawFieldGroupTitle(const char *title);
