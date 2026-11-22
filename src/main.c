@@ -20,7 +20,6 @@
 #include "pc/boxhud.h"
 #include "pc/card_game.h"
 #include "pc/gfx/gl.h"
-#include "pc/gfx/soft.h" // for ext only
 
 /* .data */
 const ns_subsystem subsys[21] = {
@@ -64,16 +63,6 @@ extern eid_t crash_eid;
 extern gool_handle handles[8];
 extern int bonus_return;
 extern level_state savestate;
-
-#ifdef CFLAGS_DRAW_EXTENSIONS
-extern zone_query cur_zone_query;
-extern uint32_t *wall_bitmap;
-extern gool_bound object_bounds[GOOL_BOUND_COUNT];
-extern int object_bound_count;
-int draw_octrees = 0;
-int draw_wallmap = 0;
-int draw_objbounds = 0;
-#endif
 
 extern gl_context context;
 
@@ -280,20 +269,6 @@ void CoreLoop(lid_t lid) {
     CoreDrawWorlds(ot);
     GoolUpdateObjects(!paused);
     BoxHudUpdate(); /* pc */
-#if defined(CFLAGS_DRAW_EXTENSIONS)
-    if (pads[0].tapped & 4)
-      draw_octrees = !draw_octrees;
-    if (draw_octrees)
-      SwTransformZoneQuery(&cur_zone_query, ot, GLGetPrimsTail());
-    if (pads[0].tapped & 8)
-      draw_wallmap = !draw_wallmap;
-    if (draw_wallmap)
-      SwDrawWallMap(wall_bitmap, ot, GLGetPrimsTail());
-    if (pads[0].tapped & 1)
-      draw_objbounds = !draw_objbounds;
-    if (draw_objbounds)
-      SwTransformObjectBounds(object_bounds, object_bound_count, ot, GLGetPrimsTail());
-#endif
     GLClear();
     if (ns.ldat->lid == LID_TITLE)
       TitleUpdate(ot);
