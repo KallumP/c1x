@@ -8,7 +8,6 @@ import { nextVersion, repositoryTags } from "../../scripts/nextVersion";
 // who the test repository's commit is by, as git won't commit without one
 const TEST_AUTHOR = ["-c", "user.name=test", "-c", "user.email=test@example.com"];
 
-// a git repository of its own, with one commit and the tags given
 function repoTagged(tags: string[]): string {
   const repo = mkdtempSync(join(tmpdir(), "next-version-"));
   const git = (...args: string[]) => {

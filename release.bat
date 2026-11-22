@@ -53,9 +53,7 @@ rem keep the window open when started by double-clicking
 echo %cmdcmdline% | find /i "%~0" >nul && pause
 exit /b %RESULT%
 
-rem asks for the version, suggesting the next one: one more than the latest
-rem release tag's (npm run next-version in tools/level_editor). Enter takes
-rem the suggestion. Without one (say Node isn't installed) it just asks
+rem without npm there's no suggestion, so it asks as before
 :ask_version
 set "NEXT="
 for /f "delims=" %%v in ('npm --prefix "%~dp0tools\level_editor" run -s next-version 2^>nul') do set "NEXT=%%v"
