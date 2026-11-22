@@ -1,64 +1,34 @@
-// c1x_tools check-update <version>: whether GitHub's releases page has a release
-// newer than version, the one the launcher was built as (see doc/releasing.md)
+// c1x_tools check-update <version>: whether GitHub has a release of c1x newer
+// than version, the one the launcher was built as (see doc/releasing.md)
 
-export type Release = { tag: string }; // its tag on GitHub, such as v1.4
+// GitHub's latest release by its tag, such as v1.4, or why it can't be told
+export type LatestRelease = { tag: string } | { problem: string };
+// fetch, or a test's stand-in for it
+type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 
-const RELEASES_PAGE = "https://github.com/KallumP/c1x/releases";
-const LATEST_RELEASE = "https://api.github.com/repos/KallumP/c1x/releases/latest";
-const TIMEOUT_MS = 10000;
-
-// what the launcher looks for in the output, before the version and its page
-const NEWER_RELEASE = "newer release:";
+// what's said before a newer release's version, which the launcher looks for
+export const NEWER_RELEASE_PREFIX = "newer release: ";
 
 // a version's two numbers, from 1.4 or a tag such as v1.4; none if it isn't one
-export function versionNumbers(version: string): [number, number] | undefined {
-  const match = /^v?(\d+)\.(\d+)$/.exec(version);
-  return match ? [Number(match[1]), Number(match[2])] : undefined;
+export function versionNumbers(_version: string): [number, number] | undefined {
+  return undefined;
 }
 
-// whether a release tagged tag is newer than version; not if either isn't a version
-export function isNewer(tag: string, version: string): boolean {
-  const latest = versionNumbers(tag);
-  const current = versionNumbers(version);
-  if (!latest || !current) {
-    return false;
-  }
-  return latest[0] > current[0] || (latest[0] === current[0] && latest[1] > current[1]);
+// whether the release tagged latestTag is newer than version; not if either isn't a version
+export function isNewer(_version: string, _latestTag: string): boolean {
+  return false;
 }
 
-// what's said of a release newer than version, with its page: "" if latest isn't one
-export function newerReleaseLine(version: string, latest: Release | undefined): string {
-  if (!latest || !isNewer(latest.tag, version)) {
-    return "";
-  }
-  return `${NEWER_RELEASE} ${latest.tag.replace(/^v/, "")} ${RELEASES_PAGE}/tag/${latest.tag}`;
+// c1x's latest release on GitHub (not a draft or a pre-release)
+export async function latestRelease(_fetchUrl: Fetch = fetch): Promise<LatestRelease> {
+  return { problem: "" };
 }
 
-// the newest release on GitHub (not a draft or a pre-release); none if it can't be asked
-export async function latestRelease(): Promise<Release | undefined> {
-  try {
-    const response = await fetch(LATEST_RELEASE, {
-      headers: { Accept: "application/vnd.github+json", "User-Agent": "c1x-launcher" },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    if (!response.ok) {
-      return undefined;
-    }
-    const { tag_name: tag } = (await response.json()) as { tag_name?: unknown };
-    return typeof tag === "string" ? { tag } : undefined;
-  } catch {
-    return undefined; // offline, or GitHub didn't answer
-  }
-}
-
-// says if there's a release newer than version, and nothing if there isn't or it can't tell
+// says whether there's a release newer than version; returns the exit code
 export async function checkUpdate(
-  version: string,
-  log: (line: string) => void,
-  latest: () => Promise<Release | undefined> = latestRelease,
-): Promise<void> {
-  const line = newerReleaseLine(version, await latest());
-  if (line) {
-    log(line);
-  }
+  _version: string,
+  _say: (line: string) => void,
+  _askLatest: () => Promise<LatestRelease> = latestRelease,
+): Promise<number> {
+  return 0;
 }
