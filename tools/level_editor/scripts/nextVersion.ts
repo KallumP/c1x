@@ -5,8 +5,8 @@ import { isNewer, versionNumbers } from "./updateCheck";
 
 const FIRST_VERSION = "1.0";
 
-// the tags of the repository at repo, the releases' among them (git pull
-// brings a release's tag along with its commit)
+// every tag of the repository at repo: the release tags (v1.4 and so on,
+// which git pull brings in with their commits) and any others
 export function releaseTags(repo: string): string[] {
   return execFileSync("git", ["tag", "--list"], { cwd: repo, encoding: "utf8" }).split(/\r?\n/).filter(Boolean);
 }
