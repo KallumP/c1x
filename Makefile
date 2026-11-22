@@ -299,6 +299,7 @@ $(LAUNCHER_OUT): $(LAUNCHER_OBJ) $(LAUNCHER_ICON_OBJ)
 .PHONY: test
 test: $(TEST_OUT)
 	./$(TEST_OUT)
+	sh tests/version_stamp.sh
 
 $(TEST_OUT): $(TEST_SRC) tests/utest.h
 	@mkdir -p $(dir $(TEST_OUT))
