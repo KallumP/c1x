@@ -48,8 +48,16 @@ describe("the next release's version", () => {
     expect(nextVersion(["v1.9", "v2.0"])).toBe("2.1");
   });
 
-  test("ignores tags that aren't two numbers after a v", () => {
-    expect(nextVersion(["v1.2.0", "v1.4", "nightly", "1.6"])).toBe("1.5");
+  test("ignores a tag of three numbers", () => {
+    expect(nextVersion(["v1.4", "v1.5.0"])).toBe("1.5");
+  });
+
+  test("ignores a tag that isn't a version", () => {
+    expect(nextVersion(["v1.4", "nightly"])).toBe("1.5");
+  });
+
+  test("ignores a version tag without a v", () => {
+    expect(nextVersion(["v1.4", "1.6"])).toBe("1.5");
   });
 
   test("is 1.0 without a release", () => {
