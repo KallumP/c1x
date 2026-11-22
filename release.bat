@@ -64,5 +64,5 @@ if "%NEXT%"=="" (
   exit /b
 )
 set "VERSION=%NEXT%"
-set /p "VERSION=Version [%NEXT%]: "
+set /p "VERSION=Version (enter nothing for %NEXT%): "
 exit /b
