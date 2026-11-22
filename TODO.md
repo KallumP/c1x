@@ -32,7 +32,6 @@ Update check (launcher version + newer release link)
 - test on windows: the release script gets the version back from c1x_launcher.exe --version
 - test on windows: a released launcher shows its version, and the link when a newer release is out
 - look at the corner in the launcher: position, wording, the label sits on the heading's line in a smaller font
-- a setting to turn the check off?
 - the check starts the 85 MB tools exe on every launcher open: cache the answer for a day?
 - tests for --version and the Makefile's version stamp, only tested by hand so far
 - split the tests that check several outcomes in one (e.g. anything_else_isnt_a_version)
