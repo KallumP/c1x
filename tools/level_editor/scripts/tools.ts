@@ -1,15 +1,22 @@
 // c1x's tools for players, packed with node as build/c1x_tools.exe (toolsExe.ts)
-// so they need nothing installed: the level build and the level editor
+// so they need nothing installed: the level build, the level editor, and the
+// launcher's check for a newer release
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { buildLevel, levelSourcePath } from "../builder/buildLevel";
 import { repoFolders } from "../builder/repoFolders";
 import { addressLine, startEditorServer } from "../server/editorServer";
+import { checkUpdate } from "./updateCheck";
 
-export type ToolsCommand = { kind: "build-level"; level: string } | { kind: "editor" } | { kind: "usage" };
+export type ToolsCommand =
+  | { kind: "build-level"; level: string }
+  | { kind: "editor" }
+  | { kind: "check-update"; version: string }
+  | { kind: "usage" };
 
 export const USAGE = `usage: c1x_tools build-level <level>
        c1x_tools editor
+       c1x_tools check-update <version>
        (from tools/level_editor: npm run build-level -- <level>, npm run editor)
 
   build-level  builds a level source into build/levels: its name, such as
@@ -17,7 +24,9 @@ export const USAGE = `usage: c1x_tools build-level <level>
                source's folder or .obj; its level.cfg and objects.json, which
                the level editor sets, scale, turn and place things in it
   editor       starts the level editor (its page built into build/editor by
-               make, or npm run build), and says where it is`;
+               make, or npm run build), and says where it is
+  check-update asks GitHub for c1x's latest release, and says if it's newer
+               than version (two numbers, like 1.3), with its page`;
 
 const EDITOR_PORT = 5173; // vite's, as npm run dev has it
 
@@ -29,6 +38,9 @@ export function toolsCommand(args: string[]): ToolsCommand {
   }
   if (command === "editor" && rest.length === 0) {
     return { kind: "editor" };
+  }
+  if (command === "check-update" && rest.length === 1) {
+    return { kind: "check-update", version: rest[0] };
   }
   return { kind: "usage" };
 }
@@ -60,6 +72,10 @@ export async function runTools(repo: string, args: string[]): Promise<number> {
   }
   if (command.kind === "editor") {
     return Number(!(await runEditor(repo)));
+  }
+  if (command.kind === "check-update") {
+    await checkUpdate(command.version, console.log);
+    return 0;
   }
   console.log(USAGE);
   return 1;
