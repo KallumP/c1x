@@ -200,7 +200,7 @@ LAUNCHER_OBJ = $(CIMGUI_OBJ) $(LAUNCHER_SRC:.c=.o)
 
 # the tools' sources: the level build, the editor's server, and the editor's code they share
 EDITOR_PATH = tools/level_editor
-TOOLS_SRC = $(wildcard $(EDITOR_PATH)/builder/*.ts $(EDITOR_PATH)/src/*.ts $(EDITOR_PATH)/server/*.ts $(EDITOR_PATH)/scripts/tools*.ts) \
+TOOLS_SRC = $(wildcard $(EDITOR_PATH)/builder/*.ts $(EDITOR_PATH)/src/*.ts $(EDITOR_PATH)/server/*.ts $(EDITOR_PATH)/scripts/*.ts) \
 	$(EDITOR_PATH)/package.json
 # the level editor's page, built by vite into build/editor for the tools to serve, and its sources
 EDITOR_PAGE = build/editor/index.html
@@ -227,17 +227,24 @@ $(CIMGUI_OBJ):
 .c.o:
 	$(CC) $(INCLUDE) -c $< -o $@ $(CFLAGS)
 
-# the launcher's version, for a release: make C1X_VERSION=1.3, as release.bat does
-# (see doc/releasing.md); without it the launcher has none. the stamp holds the
-# version last built, and is only written when it changes, so version.c is built
-# again for another version and left alone otherwise
-VERSION_STAMP = build/launcher_version
+# the launcher's version, for a release (see doc/releasing.md). C1X_VERSION comes
+# from the environment, which make reads as its own variables: release.bat sets
+# it before it runs rebuild.bat. Or give it to make: make C1X_VERSION=1.3.
+# Without it the launcher has no version.
+#
+# the stamp is a file holding the version last built. FORCE has no recipe and
+# isn't a file, so the stamp's recipe runs on every make; it only writes the
+# stamp when the version isn't the one in it, so the stamp's time only changes
+# with the version, and version.c is only built again then
+VERSION_STAMP = build/launcher_version.stamp
 .PHONY: FORCE
 FORCE:
 $(VERSION_STAMP): FORCE
 	@mkdir -p $(dir $@)
-	@echo '$(C1X_VERSION)' | cmp -s - $@ || echo '$(C1X_VERSION)' > $@
+	@{ [ -f $@ ] && [ "$$(cat $@)" = '$(C1X_VERSION)' ]; } || echo '$(C1X_VERSION)' > $@
 
+# instead of the .c.o rule above, for this one file: the same, with the version
+# given as a C string
 src/launcher/version.o: src/launcher/version.c $(VERSION_STAMP)
 	$(CC) $(INCLUDE) -c $< -o $@ $(CFLAGS) -DC1X_VERSION='"$(C1X_VERSION)"'
 
