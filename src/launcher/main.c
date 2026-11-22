@@ -17,6 +17,7 @@
 #include "controls_section.h"
 #include "help_section.h"
 #include "ui.h"
+#include "version.h"
 #include "pc/gamepad.h"
 
 #define WINDOW_WIDTH  720
@@ -147,7 +148,17 @@ static void DrawFrame() {
   SDL_GL_SwapWindow(window);
 }
 
+/* c1x_launcher --version: says the version it was built as, which the release
+   script checks (an empty line for a build that isn't a release) */
+static int IsVersionAsked(int argc, char *argv[]) {
+  return argc == 2 && SDL_strcmp(argv[1], "--version") == 0;
+}
+
 int main(int argc, char *argv[]) {
+  if (IsVersionAsked(argc, argv)) {
+    printf("%s\n", LauncherVersion());
+    return 0;
+  }
   if (!FindRepoFolder(repo, sizeof(repo))) {
     SDL_strlcpy(repo, ".", sizeof(repo)); /* assume it's run from its own folder, the project's */
   }

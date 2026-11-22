@@ -112,6 +112,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 
 # the launcher (see doc/launcher.md), plus the game sources it uses
 LAUNCHER_SRC = src/launcher/main.c \
+	src/launcher/version.c \
 	src/launcher/process.c \
 	src/launcher/paths.c \
 	src/launcher/game.c \
@@ -222,6 +223,20 @@ $(CIMGUI_OBJ):
 
 .c.o:
 	$(CC) $(INCLUDE) -c $< -o $@ $(CFLAGS)
+
+# the launcher's version, for a release: make C1X_VERSION=1.3, as release.bat does
+# (see doc/releasing.md); without it the launcher has none. the stamp holds the
+# version last built, and is only written when it changes, so version.c is built
+# again for another version and left alone otherwise
+VERSION_STAMP = build/launcher_version
+.PHONY: FORCE
+FORCE:
+$(VERSION_STAMP): FORCE
+	@mkdir -p $(dir $@)
+	@echo '$(C1X_VERSION)' | cmp -s - $@ || echo '$(C1X_VERSION)' > $@
+
+src/launcher/version.o: src/launcher/version.c $(VERSION_STAMP)
+	$(CC) $(INCLUDE) -c $< -o $@ $(CFLAGS) -DC1X_VERSION='"$(C1X_VERSION)"'
 
 res/%_icon.o: res/%.rc res/%.ico
 	windres -F pe-i386 --include-dir res $< -o $@
