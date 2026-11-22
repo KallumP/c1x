@@ -1,7 +1,7 @@
 @echo off
 rem Make the player release zip, release\c1x-<version>.zip beside this script (see doc/releasing.md):
-rem build everything with rebuild.bat, the launcher as that version, then zip the release with the level editor's
-rem release script (npm run release).
+rem build everything with rebuild.bat (the launcher is built as that version),
+rem then zip the release with the level editor's release script (npm run release).
 rem
 rem   release.bat 1.3      make the 1.3 release
 rem   release.bat          ask for the version
@@ -17,8 +17,17 @@ if "%VERSION%"=="" (
   goto done
 )
 
-rem make builds the launcher as this version (C1X_VERSION in the Makefile), so it
-rem can tell when a newer release is out
+rem two numbers with a dot between, checked before anything is built
+echo %VERSION%| findstr /r /x /c:"[0-9][0-9]*\.[0-9][0-9]*" >nul
+if errorlevel 1 (
+  echo The version has to be two numbers, like 1.3, not "%VERSION%".
+  set "RESULT=1"
+  goto done
+)
+
+rem rebuild.bat's make reads C1X_VERSION from the environment and compiles it
+rem into the launcher (see the Makefile), which is how a released launcher
+rem knows its version and can tell when a newer release is out
 set "C1X_VERSION=%VERSION%"
 call "%~dp0rebuild.bat"
 if errorlevel 1 (
