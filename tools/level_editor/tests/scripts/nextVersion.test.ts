@@ -3,7 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { nextVersion, releaseTags } from "../../scripts/nextVersion";
+import { nextVersion, repositoryTags } from "../../scripts/nextVersion";
 
 // a git repository of its own, with one commit and the tags given
 function repoTagged(tags: string[]): string {
@@ -15,13 +15,13 @@ function repoTagged(tags: string[]): string {
   return repo;
 }
 
-describe("the releases' tags", () => {
-  test("are the repository's tags", () => {
-    expect(releaseTags(repoTagged(["v1.4", "v1.2.0"])).sort()).toEqual(["v1.2.0", "v1.4"]);
+describe("the repository's tags", () => {
+  test("are every tag, release or not", () => {
+    expect(repositoryTags(repoTagged(["v1.4", "v1.2.0"])).sort()).toEqual(["v1.2.0", "v1.4"]);
   });
 
   test("are none in a repository without tags", () => {
-    expect(releaseTags(repoTagged([]))).toEqual([]);
+    expect(repositoryTags(repoTagged([]))).toEqual([]);
   });
 });
 
