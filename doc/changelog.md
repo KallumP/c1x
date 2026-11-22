@@ -18,6 +18,7 @@
 
 ### Fixed
 
+- Grave Switchback's water no longer has a gap either side of the sunken graves
 - rotating pots or platforms in the same spot with different settings are no longer warned about as duplicates
 - the level editor's speed, distance, angle and rotation labels show × and ° properly
 - a bonus token no longer sometimes rubber bands across the top of the screen and stops the next one counting
