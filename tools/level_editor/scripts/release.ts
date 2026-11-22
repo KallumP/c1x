@@ -191,7 +191,7 @@ function launcherVersion(repo: string): string {
 }
 
 // makes release/c1x-<version>/ and its zip, from a launcher built as version; returns the zip's path
-export function makeRelease(repo: string, version: string): string {
+export function makeRelease(repo: string, version: string, _askLauncher?: (repo: string) => string): string {
   const folder = releaseFolder(repo, version);
   checkLauncherVersion(launcherVersion(repo), version);
   copyReleaseFiles(repo, releaseFiles(gitFilesIn(repo), buildFilesIn(repo), filesUnder(join(repo, EDITOR_PAGE_DIR))), folder);

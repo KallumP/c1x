@@ -3,7 +3,16 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { checkLauncherVersion, copyReleaseFiles, releasedLink, releaseFiles, releaseFolder, zipCommand, zipFolder } from "../../scripts/release";
+import {
+  checkLauncherVersion,
+  copyReleaseFiles,
+  makeRelease,
+  releasedLink,
+  releaseFiles,
+  releaseFolder,
+  zipCommand,
+  zipFolder,
+} from "../../scripts/release";
 
 // a repo with a few files in it, and an empty folder to release into
 function repoAndRelease() {
@@ -148,16 +157,34 @@ describe("the release folder", () => {
 });
 
 describe("the launcher's version, for a release", () => {
+  const BUILD_IT = "build it with release.bat 1.3";
+
   test("is fine when it's the release's", () => {
     expect(() => checkLauncherVersion("1.3\r\n", "1.3")).not.toThrow();
   });
 
   test("can't be another release's", () => {
-    expect(() => checkLauncherVersion("1.2\n", "1.3")).toThrow("c1x_launcher.exe is built as version 1.2, not 1.3: build it with release.bat 1.3");
+    expect(() => checkLauncherVersion("1.2\n", "1.3")).toThrow(
+      `c1x_launcher.exe is built as version 1.2, not 1.3: ${BUILD_IT}`,
+    );
   });
 
   test("can't be missing, as a build that isn't a release's is", () => {
-    expect(() => checkLauncherVersion("\n", "1.3")).toThrow("c1x_launcher.exe isn't built as version 1.3: build it with release.bat 1.3");
+    ["\n", ""].forEach((said) =>
+      expect(() => checkLauncherVersion(said, "1.3")).toThrow(`c1x_launcher.exe isn't built as version 1.3: ${BUILD_IT}`));
+  });
+});
+
+describe("making a release", () => {
+  test("asks the launcher its version, and copies nothing when it's another's", () => {
+    const { repo } = repoAndRelease();
+    expect(() => makeRelease(repo, "1.3", () => "1.2\n")).toThrow("c1x_launcher.exe is built as version 1.2, not 1.3");
+    expect(existsSync(releaseFolder(repo, "1.3"))).toBe(false);
+  });
+
+  test("says the launcher isn't built when it isn't there", () => {
+    const repo = mkdtempSync(join(tmpdir(), "release-repo-"));
+    expect(() => makeRelease(repo, "1.3")).toThrow("c1x_launcher.exe isn't built: run make first");
   });
 });
 
