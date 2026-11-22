@@ -23,35 +23,35 @@ describe("a version's numbers", () => {
 
 describe("a release is newer than a version", () => {
   test("with a higher second number, compared as a number", () => {
-    expect(isNewer("1.9", "v1.10")).toBe(true);
+    expect(isNewer("v1.10", "1.9")).toBe(true);
   });
 
   test("with a higher first number, compared as a number", () => {
-    expect(isNewer("9.9", "v10.0")).toBe(true);
+    expect(isNewer("v10.0", "9.9")).toBe(true);
   });
 
   test("not when it's the same version", () => {
-    expect(isNewer("1.4", "v1.4")).toBe(false);
+    expect(isNewer("v1.4", "1.4")).toBe(false);
   });
 
   test("not with a lower second number", () => {
-    expect(isNewer("1.4", "v1.3")).toBe(false);
+    expect(isNewer("v1.3", "1.4")).toBe(false);
   });
 
   test("not with a lower first number", () => {
-    expect(isNewer("2.0", "v1.9")).toBe(false);
+    expect(isNewer("v1.9", "2.0")).toBe(false);
   });
 
   test("not with a lower first number, compared as a number", () => {
-    expect(isNewer("10.0", "v9.9")).toBe(false);
+    expect(isNewer("v9.9", "10.0")).toBe(false);
   });
 
   test("not when its tag isn't a version", () => {
-    expect(isNewer("1.4", "nightly")).toBe(false);
+    expect(isNewer("nightly", "1.4")).toBe(false);
   });
 
   test("not when the version isn't one", () => {
-    expect(isNewer("", "v1.5")).toBe(false);
+    expect(isNewer("v1.5", "")).toBe(false);
   });
 });
 
