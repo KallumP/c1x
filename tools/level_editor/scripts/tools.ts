@@ -26,7 +26,7 @@ export const USAGE = `usage: c1x_tools build-level <level>
   editor       starts the level editor (its page built into build/editor by
                make, or npm run build), and says where it is
   check-update asks GitHub for c1x's latest release, and says if it's newer
-               than version (two numbers, like 1.3), with its page`;
+               than version (two numbers, like 1.3), or why it can't tell`;
 
 const EDITOR_PORT = 5173; // vite's, as npm run dev has it
 
@@ -74,8 +74,7 @@ export async function runTools(repo: string, args: string[]): Promise<number> {
     return Number(!(await runEditor(repo)));
   }
   if (command.kind === "check-update") {
-    await checkUpdate(command.version, console.log);
-    return 0;
+    return checkUpdate(command.version, console.log);
   }
   console.log(USAGE);
   return 1;
