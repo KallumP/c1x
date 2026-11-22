@@ -12,18 +12,24 @@ A release is a zip players download from the repository's GitHub **Releases** pa
    release.bat 1.3
    ```
 
-   It builds everything first with `rebuild.bat` (see [Building](building.md)), so the launcher, the game, `c1x_tools.exe` and the level editor's page match `master`; it needs MSYS2 and Node.js (players don't). Then it copies the release's files into `release/c1x-1.3/` (in the project folder, beside `release.bat`) and zips that folder to `release/c1x-1.3.zip`. If the build fails, or something the release needs isn't there, it says so and makes no zip.
+   It builds everything first with `rebuild.bat` (see [Building](building.md)), so the launcher, the game, `c1x_tools.exe` and the level editor's page match `master`; it needs MSYS2 and Node.js (players don't). The launcher is built as that version (see [The launcher's version](#the-launchers-version)). Then it copies the release's files into `release/c1x-1.3/` (in the project folder, beside `release.bat`) and zips that folder to `release/c1x-1.3.zip`. If the build fails, or something the release needs isn't there, it says so and makes no zip.
 
-   To make the zip without building, run `npm run release -- 1.3` in `tools/level_editor`.
+   To make the zip without building, run `npm run release -- 1.3` in `tools/level_editor`. It makes no zip unless the launcher there was built as 1.3.
 4. Try the zip as a player would: unzip it into an empty folder (on a PC without MSYS2, if you can), open `c1x_launcher.exe`, extract a disc image, play, and build one of the custom levels.
 5. On GitHub, open **Releases**, then **Draft a new release**:
-   - **Choose a tag**: type `1.3` and choose to create it, on `master`.
-   - **Release title**: `c1x 1.3`.
+   - **Choose a tag**: type `v1.3` and choose to create it, on `master`. The tag has to be the version with a `v` before it: it's what launchers compare their own version with.
+   - **Release title**: `Crash 1 Enhanced v1.3`.
    - **Description**: what's changed since the last release, from the [changelog](changelog.md).
    - Attach `release/c1x-1.3.zip`.
-   - **Publish release**.
+   - **Publish release**, as the latest release and not a pre-release: launchers only ask for the latest.
 
-   With the [GitHub CLI](https://cli.github.com/) instead: `gh release create 1.3 release/c1x-1.3.zip --title "c1x 1.3" --notes-file notes.md`.
+   With the [GitHub CLI](https://cli.github.com/) instead: `gh release create v1.3 release/c1x-1.3.zip --title "Crash 1 Enhanced v1.3" --notes-file notes.md`.
+
+## The launcher's version
+
+`release.bat` sets `C1X_VERSION` to the version for the build, and `make` compiles it into the launcher (`src/launcher/version.c`, built again whenever the version isn't the one it was last built with). `c1x_launcher.exe --version` prints it, which is how the release script checks the launcher it's about to zip. A build made any other way has no version.
+
+When a released launcher opens, it runs `c1x_tools check-update <version>`, which asks GitHub for the repository's latest release and compares that release's tag with the version, as numbers (so 1.10 is newer than 1.9). If the tag is newer, the launcher shows a link to the release's page beside its version (see [Launcher](launcher.md#version)). So players hear of a release once it's published on GitHub with its `v1.3` tag, and not before.
 
 ## What's in the zip
 

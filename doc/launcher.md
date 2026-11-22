@@ -12,6 +12,12 @@ Run `c1x_launcher.exe`, by double-clicking it or from any folder. It works on it
 
 **Play** is at the top, with a tab each for Settings, Controls, Levels, the Level editor and Help below it.
 
+## Version
+
+The launcher's version is in the top right corner of its window, such as `v1.3`. When it opens, it asks GitHub once whether c1x has a newer release. If it does, **Version 1.4 is out** appears beside the version: click it to open that release's page in your browser, and download it from there. Nothing is downloaded or changed for you.
+
+If you're offline, or GitHub doesn't answer, it says nothing. A launcher you built yourself says `dev build` and doesn't check (see [Releasing](releasing.md#the-launchers-version)).
+
 ## Game
 
 **Play** saves the settings and controls (see below), then starts `build/c1x.exe` (`build/c1x` on Linux) from the project folder, so the game finds `streams/`, `settings.cfg` and `controls.cfg` there. It starts the game without a console window, so the game's messages (such as "replaying ...") only show when you run `build/c1x.exe` yourself from a terminal. The launcher stays open, and the game keeps running if you close it. While a level is building, **Play** is greyed out until it's built.
