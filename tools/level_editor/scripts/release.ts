@@ -14,6 +14,7 @@ const ONLINE_DOCS = "https://github.com/KallumP/c1x/blob/master";
 // at the top of the release, as they are in the repo
 const LICENSE = "LICENSE";
 const LAUNCHER = "c1x_launcher.exe";
+const LAUNCHER_TIMEOUT_MS = 10000; // how long it has to say its version
 const TOP_FILES = [LAUNCHER, LICENSE, "settings.example.cfg", "controls.example.cfg", "streams/README.md"];
 const PLAYER_README = "doc/release/README.md";
 // the docs for players; the rest are for building and working on c1x
@@ -172,28 +173,44 @@ function filesUnder(folder: string): string[] {
     .map((path) => path.split(sep).join("/"));
 }
 
-// throws unless built, the version the launcher says it was built as, is version
-export function checkLauncherVersion(built: string, version: string): void {
-  const builtAs = built.trim();
-  if (builtAs === version) {
+// throws unless said, what the launcher printed for --version, is the version being released
+export function checkLauncherVersion(said: string, releasing: string): void {
+  const builtAs = said.trim();
+  if (builtAs === releasing) {
     return;
   }
-  const fix = `build it with release.bat ${version}`;
+  const fix = `build it with release.bat ${releasing}`;
   if (!builtAs) {
-    throw new Error(`${LAUNCHER} isn't built as version ${version}: ${fix}`);
+    throw new Error(`${LAUNCHER} isn't built as version ${releasing}: ${fix}`);
   }
-  throw new Error(`${LAUNCHER} is built as version ${builtAs}, not ${version}: ${fix}`);
+  throw new Error(`${LAUNCHER} is built as version ${builtAs}, not ${releasing}: ${fix}`);
 }
 
-// the version repo's launcher says it was built as (c1x_launcher --version)
-function launcherVersion(repo: string): string {
-  return execFileSync(join(repo, LAUNCHER), ["--version"], { encoding: "utf8" });
+// what repo's launcher prints for --version: the version it was built as, and
+// nothing for a build that isn't a release's. a launcher from before it took
+// --version opens its window instead, so it's only waited for so long
+function askLauncherVersion(repo: string): string {
+  const launcher = join(repo, LAUNCHER);
+  if (!existsSync(launcher)) {
+    throw new Error(`${LAUNCHER} isn't built: run make first`);
+  }
+  try {
+    return execFileSync(launcher, ["--version"], { encoding: "utf8", timeout: LAUNCHER_TIMEOUT_MS });
+  } catch {
+    throw new Error(`${LAUNCHER} didn't say its version: build it again with release.bat`);
+  }
 }
 
-// makes release/c1x-<version>/ and its zip, from a launcher built as version; returns the zip's path
-export function makeRelease(repo: string, version: string, _askLauncher?: (repo: string) => string): string {
+// makes release/c1x-<version>/ and its zip, from a launcher built as version;
+// returns the zip's path. askLauncher is a test's stand-in for running the launcher
+export function makeRelease(
+  repo: string,
+  version: string,
+  askLauncher: (repo: string) => string = askLauncherVersion,
+): string {
   const folder = releaseFolder(repo, version);
-  checkLauncherVersion(launcherVersion(repo), version);
-  copyReleaseFiles(repo, releaseFiles(gitFilesIn(repo), buildFilesIn(repo), filesUnder(join(repo, EDITOR_PAGE_DIR))), folder);
+  checkLauncherVersion(askLauncher(repo), version);
+  const files = releaseFiles(gitFilesIn(repo), buildFilesIn(repo), filesUnder(join(repo, EDITOR_PAGE_DIR)));
+  copyReleaseFiles(repo, files, folder);
   return zipFolder(folder);
 }
