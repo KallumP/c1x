@@ -108,6 +108,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/launcher/level_editor.c \
 	src/launcher/tools.c \
 	src/launcher/level_build.c \
+	src/launcher/update.c \
 	src/launcher/help.c
 
 # the launcher (see doc/launcher.md), plus the game sources it uses
