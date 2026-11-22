@@ -26,13 +26,9 @@ if not "%~1"=="" if not defined TARGET (
   goto done
 )
 
-rem a running launcher, game or tools would stop make replacing their exes,
-rem so they're closed first (the tests replace none of them)
-if not "%TARGET%"=="test" (
-  call :close_running c1x_launcher.exe
-  call :close_running c1x.exe
-  call :close_running c1x_tools.exe
-)
+rem a running launcher, game or tools from this folder would stop make replacing
+rem their exes, so they're closed first (the tests replace none of them)
+if not "%TARGET%"=="test" call :close_running_from_this_folder
 
 rem run make in a MINGW32 login shell, from this script's directory. it keeps
 rem the Windows PATH after its own, so make finds Node.js for c1x_tools.exe and
@@ -61,9 +57,10 @@ rem keep the window open when started by double-clicking
 echo %cmdcmdline% | find /i "%~0" >nul && pause
 exit /b %RESULT%
 
-rem closes the program %1 if it's running, and says so
-:close_running
-tasklist /fi "imagename eq %1" | find /i "%1" >nul || exit /b
-echo Closing %1, which was running.
-taskkill /f /im %1 >nul
+:close_running_from_this_folder
+set "RUNNING=Get-Process c1x, c1x_launcher, c1x_tools -ErrorAction SilentlyContinue"
+set "FROM_THIS_FOLDER=Where-Object Path -like '%~dp0*'"
+set "SAY=Write-Output ('Closing {0}, which was running.' -f $_.Name)"
+set "CLOSE=ForEach-Object { Stop-Process $_ -Force; %SAY% }"
+powershell -NoProfile -Command "%RUNNING% | %FROM_THIS_FOLDER% | %CLOSE%"
 exit /b
