@@ -27,7 +27,6 @@ speed run mode
 
 
 Update check (launcher version + newer release link)
-- the check starts the 85 MB tools exe on every launcher open: cache the answer for a day?
 - tests for --version and the Makefile's version stamp, only tested by hand so far
 - split the tests that check several outcomes in one (e.g. anything_else_isnt_a_version)
 
