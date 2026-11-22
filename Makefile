@@ -233,18 +233,10 @@ $(CIMGUI_OBJ):
 # the launcher's version, for a release (see doc/releasing.md). C1X_VERSION comes
 # from the environment, which make reads as its own variables: release.bat sets
 # it before it runs rebuild.bat. Or give it to make: make C1X_VERSION=1.3.
-# Without it the launcher has no version.
-#
-# the stamp is a file holding the version last built. FORCE has no recipe and
-# isn't a file, so the stamp's recipe runs on every make; it only writes the
-# stamp when the version isn't the one in it, so the stamp's time only changes
-# with the version, and version.c is only built again then
+# Without it the launcher has no version. the stamp holds the version last
+# built, so version.c is only built again when the version changes
 VERSION_STAMP = build/launcher_version.stamp
-.PHONY: FORCE
-FORCE:
-$(VERSION_STAMP): FORCE
-	@mkdir -p $(dir $@)
-	@{ [ -f $@ ] && [ "$$(cat $@)" = '$(C1X_VERSION)' ]; } || echo '$(C1X_VERSION)' > $@
+include version_stamp.mk
 
 # instead of the .c.o rule above, for this one file: the same, with the version
 # given as a C string
