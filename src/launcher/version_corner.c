@@ -14,11 +14,10 @@
 #include "newer_release.h"
 #include "version.h"
 
-#define VERSION_LABEL_MAX 32
 #define LINK_LABEL_MAX 64
 
 static background_command check; /* c1x_tools check-update */
-static newer_release newer;      /* its version is "" until the check finds one */
+static char newer_version[RELEASE_VERSION_MAX]; /* "" until the check finds one */
 
 void StartReleaseCheck(const char *repo) {
   char command[PATH_MAX_LEN + 64];
@@ -29,23 +28,13 @@ void StartReleaseCheck(const char *repo) {
 }
 
 void FollowReleaseCheck(void) {
-  newer_release found;
-
   UpdateBackgroundCommand(&check);
-  if (newer.version[0] || !FindNewerRelease(check.output, &found)) { return; }
-  newer = found;
+  if (newer_version[0]) { return; } /* found already */
+  FindNewerRelease(check.output, newer_version, sizeof(newer_version));
 }
 
 void StopReleaseCheck(void) {
   StopBackgroundCommand(&check);
-}
-
-static void VersionLabel(char *label, size_t size) {
-  if (!LauncherVersion()[0]) {
-    SDL_strlcpy(label, "dev build", size);
-    return;
-  }
-  SDL_snprintf(label, size, "v%s", LauncherVersion());
 }
 
 static float TextWidth(const char *text) {
@@ -68,15 +57,15 @@ void DrawVersionCorner(void) {
   ImVec2 start, space;
   float width;
 
-  VersionLabel(version, sizeof(version));
-  SDL_snprintf(link, sizeof(link), "Version %s is out", newer.version);
+  VersionLabel(LauncherVersion(), version, sizeof(version));
+  SDL_snprintf(link, sizeof(link), "Version %s is out", newer_version);
   igGetCursorPos(&start);
   igGetContentRegionAvail(&space);
-  width = TextWidth(version) + (newer.version[0] ? LinkWidth(link) : 0);
+  width = TextWidth(version) + (newer_version[0] ? LinkWidth(link) : 0);
   igSetCursorPosX(start.x + space.x - width);
-  if (newer.version[0]) {
-    if (igSmallButton(link)) { SDL_OpenURL(newer.address); }
-    if (igIsItemHovered(0)) { igSetTooltip("Open its page on GitHub, to download it:\n%s", newer.address); }
+  if (newer_version[0]) {
+    if (igSmallButton(link)) { SDL_OpenURL(LATEST_RELEASE_PAGE); }
+    if (igIsItemHovered(0)) { igSetTooltip("Open its page on GitHub, to download it:\n%s", LATEST_RELEASE_PAGE); }
     igSameLine(0, -1);
   }
   igTextDisabled("%s", version);

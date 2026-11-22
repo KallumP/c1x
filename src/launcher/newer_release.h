@@ -7,22 +7,29 @@
  */
 #include <stddef.h>
 
-#define RELEASE_VERSION_MAX 16
-#define RELEASE_ADDRESS_MAX 128
+#define RELEASE_VERSION_MAX 16 /* a version's text with its end, such as "1.4" */
+#define VERSION_LABEL_MAX 32
 
-typedef struct {
-  char version[RELEASE_VERSION_MAX]; /* such as "1.4" */
-  char address[RELEASE_ADDRESS_MAX]; /* its page on github */
-} newer_release;
+/* github's page for c1x's newest release, whichever that is */
+#define LATEST_RELEASE_PAGE "https://github.com/KallumP/c1x/releases/latest"
 
-/* the command checking for a release newer than version (run in repo); 0 for
-   a version that isn't a release's ("", a build's that isn't one), or a path
-   that can't be quoted */
+/* whether version is a release's: two numbers with a dot between, like "1.3" */
+extern int IsReleaseVersion(const char *version);
+
+/* the command checking for a release newer than version (run in repo).
+   returns 0 if version isn't a release's (a dev build's is ""), or if the
+   tools' path can't be quoted */
 extern int NewerReleaseCommand(const char *repo, const char *version, char *command,
   size_t size);
 
-/* the newer release in the check's output, if it says there's one; returns 0
-   if it doesn't, or its page isn't one of c1x's releases on github */
-extern int FindNewerRelease(const char *output, newer_release *release);
+/* the newer release's version, from the check's output, which has this line
+   in it when there's one:
+     newer release: 1.5
+   returns 0, leaving version as it was, if the line isn't there, isn't all
+   there yet (the output is read while the check runs), or isn't a version */
+extern int FindNewerRelease(const char *output, char *version, size_t size);
+
+/* what the launcher shows as its version: "v1.3", or "dev build" for "" */
+extern void VersionLabel(const char *version, char *label, size_t size);
 
 #endif /* _LAUNCHER_NEWER_RELEASE_H_ */
