@@ -8,7 +8,8 @@ const FIRST_VERSION = "1.0";
 // every tag of the repository at repo, release tags among them (git pull
 // brings those in with their commits)
 export function repositoryTags(repo: string): string[] {
-  return execFileSync("git", ["tag", "--list"], { cwd: repo, encoding: "utf8" }).split(/\r?\n/).filter(Boolean);
+  const tagList = execFileSync("git", ["tag", "--list"], { cwd: repo, encoding: "utf8" });
+  return tagList.split(/\r?\n/).filter(Boolean);
 }
 
 // whether tag is a release's: a version after a v, as the launcher's check compares them

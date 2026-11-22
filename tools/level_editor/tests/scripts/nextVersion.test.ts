@@ -5,19 +5,25 @@ import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { nextVersion, repositoryTags } from "../../scripts/nextVersion";
 
+// who the test repository's commit is by, as git won't commit without one
+const TEST_AUTHOR = ["-c", "user.name=test", "-c", "user.email=test@example.com"];
+
 // a git repository of its own, with one commit and the tags given
 function repoTagged(tags: string[]): string {
   const repo = mkdtempSync(join(tmpdir(), "next-version-"));
-  const git = (...args: string[]) => execFileSync("git", args, { cwd: repo, stdio: "pipe" });
+  const git = (...args: string[]) => {
+    execFileSync("git", args, { cwd: repo, stdio: "pipe" });
+  };
   git("init", "-q");
-  git("-c", "user.name=test", "-c", "user.email=test@example.com", "commit", "-q", "--allow-empty", "-m", "first");
+  git(...TEST_AUTHOR, "commit", "-q", "--allow-empty", "-m", "first");
   tags.forEach((tag) => git("tag", tag));
   return repo;
 }
 
 describe("the repository's tags", () => {
   test("are every tag, release or not", () => {
-    expect(repositoryTags(repoTagged(["v1.4", "v1.2.0"])).sort()).toEqual(["v1.2.0", "v1.4"]);
+    const tags = repositoryTags(repoTagged(["v1.4", "v1.2.0"]));
+    expect(tags.sort()).toEqual(["v1.2.0", "v1.4"]);
   });
 
   test("are none in a repository without tags", () => {
