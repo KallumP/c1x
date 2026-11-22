@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-22
+
+### Added
+
+- the launcher shows its version in the top right corner, and a link to the newest release's page when a newer one is out
+
 ## 2026-11-21
 
 ### Added
