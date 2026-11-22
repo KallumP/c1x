@@ -13,10 +13,12 @@ describe("a version's numbers", () => {
     expect(versionNumbers("v10.12")).toEqual([10, 12]);
   });
 
-  test("aren't there for anything else", () => {
-    ["", "1", "1.4.2", "v1.4-beta", "latest", "1.4\n", " 1.4"].forEach((version) =>
-      expect(versionNumbers(version)).toBeUndefined());
-  });
+  test.each(["", "1", "1.4.2", "v1.4-beta", "latest", "1.4\n", " 1.4"])(
+    "aren't there for anything else: %j",
+    (version) => {
+      expect(versionNumbers(version)).toBeUndefined();
+    },
+  );
 });
 
 describe("a release is newer than a version", () => {
@@ -32,14 +34,23 @@ describe("a release is newer than a version", () => {
     expect(isNewer("1.4", "v1.4")).toBe(false);
   });
 
-  test("not when it's older", () => {
+  test("not with a lower second number", () => {
     expect(isNewer("1.4", "v1.3")).toBe(false);
+  });
+
+  test("not with a lower first number", () => {
     expect(isNewer("2.0", "v1.9")).toBe(false);
+  });
+
+  test("not with a lower first number, compared as a number", () => {
     expect(isNewer("10.0", "v9.9")).toBe(false);
   });
 
-  test("not when its tag or the version isn't a version", () => {
+  test("not when its tag isn't a version", () => {
     expect(isNewer("1.4", "nightly")).toBe(false);
+  });
+
+  test("not when the version isn't one", () => {
     expect(isNewer("", "v1.5")).toBe(false);
   });
 });
@@ -124,11 +135,12 @@ describe("GitHub's latest release", () => {
     expect(await latestRelease(answering(404, { message: "Not Found" }))).toEqual({ problem: "GitHub answered 404" });
   });
 
-  test("can't be told from an answer without a tag", async () => {
-    expect(await latestRelease(answering(200, { name: "v1.5" }))).toEqual({ problem: "GitHub's answer has no tag" });
-    expect(await latestRelease(answering(200, { tag_name: 15 }))).toEqual({ problem: "GitHub's answer has no tag" });
-    expect(await latestRelease(answering(200, null))).toEqual({ problem: "GitHub's answer has no tag" });
-  });
+  test.each([{ name: "v1.5" }, { tag_name: 15 }, null])(
+    "can't be told from an answer without a tag: %j",
+    async (answer) => {
+      expect(await latestRelease(answering(200, answer))).toEqual({ problem: "GitHub's answer has no tag" });
+    },
+  );
 
   test("can't be told when GitHub can't be reached", async () => {
     const offline = async (): Promise<Response> => {
