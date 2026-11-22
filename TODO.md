@@ -26,12 +26,6 @@ speed run mode
 
 
 
-Update check (launcher version + newer release link)
-- tests for --version and the Makefile's version stamp, only tested by hand so far
-- split the tests that check several outcomes in one (e.g. anything_else_isnt_a_version)
-
-
-
 Generic
 - auto increment the last version in release.bat
 - maps should store what version it was built on
