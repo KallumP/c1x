@@ -152,10 +152,6 @@ static void DrawFrame() {
   SDL_GL_SwapWindow(window);
 }
 
-static int IsVersionAsked(int argc, char *argv[]) {
-  return argc == 2 && SDL_strcmp(argv[1], "--version") == 0;
-}
-
 int main(int argc, char *argv[]) {
   /* c1x_launcher --version prints the version it was built as, and an empty
      line for a build that isn't a release. the release script reads it; on
