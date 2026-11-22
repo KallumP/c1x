@@ -4,13 +4,13 @@ rem build everything with rebuild.bat (the launcher is built as that version),
 rem then zip the release with the level editor's release script (npm run release).
 rem
 rem   release.bat 1.3      make the 1.3 release
-rem   release.bat          ask for the version
+rem   release.bat          ask for the version, suggesting the next one
 rem
 rem Needs MSYS2 (as rebuild.bat does) and Node.js.
 
 setlocal
 set "VERSION=%~1"
-if "%VERSION%"=="" set /p "VERSION=Version (like 1.3): "
+if "%VERSION%"=="" call :ask_version
 if "%VERSION%"=="" (
   echo No version given. Use: release.bat 1.3
   set "RESULT=1"
@@ -52,3 +52,17 @@ if "%RESULT%"=="0" (
 rem keep the window open when started by double-clicking
 echo %cmdcmdline% | find /i "%~0" >nul && pause
 exit /b %RESULT%
+
+rem asks for the version, suggesting the next one: one more than the latest
+rem release tag's (npm run next-version in tools/level_editor). Enter takes
+rem the suggestion. Without one (say Node isn't installed) it just asks
+:ask_version
+set "NEXT="
+for /f "delims=" %%v in ('npm --prefix "%~dp0tools\level_editor" run -s next-version 2^>nul') do set "NEXT=%%v"
+if "%NEXT%"=="" (
+  set /p "VERSION=Version (like 1.3): "
+  exit /b
+)
+set "VERSION=%NEXT%"
+set /p "VERSION=Version [%NEXT%]: "
+exit /b
