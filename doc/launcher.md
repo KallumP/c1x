@@ -14,7 +14,7 @@ Run `c1x_launcher.exe`, by double-clicking it or from any folder. It works on it
 
 ## Version
 
-The launcher's version is in the top right corner of its window, such as `v1.3`. When it opens, it asks GitHub once whether c1x has a newer release. If it does, **Version 1.4 is out** appears beside the version: click it to open that release's page in your browser, and download it from there. Nothing is downloaded or changed for you.
+The launcher's version is in the top right corner of its window, for example `v1.3`. When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**: click it to open that release's page in your browser, and download it from there. Nothing is downloaded or changed for you.
 
 If you're offline, or GitHub doesn't answer, it says nothing. A launcher you built yourself says `dev build` and doesn't check (see [Releasing](releasing.md#the-launchers-version)).
 
