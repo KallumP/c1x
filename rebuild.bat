@@ -26,6 +26,14 @@ if not "%~1"=="" if not defined TARGET (
   goto done
 )
 
+rem a running launcher, game or tools would stop make replacing their exes,
+rem so they're closed first (the tests replace none of them)
+if not "%TARGET%"=="test" (
+  call :close_running c1x_launcher.exe
+  call :close_running c1x.exe
+  call :close_running c1x_tools.exe
+)
+
 rem run make in a MINGW32 login shell, from this script's directory. it keeps
 rem the Windows PATH after its own, so make finds Node.js for c1x_tools.exe and
 rem the level editor's page
@@ -52,3 +60,10 @@ if "%RESULT%"=="0" (
 rem keep the window open when started by double-clicking
 echo %cmdcmdline% | find /i "%~0" >nul && pause
 exit /b %RESULT%
+
+rem closes the program %1 if it's running, and says so
+:close_running
+tasklist /fi "imagename eq %1" | find /i "%1" >nul || exit /b
+echo Closing %1, which was running.
+taskkill /f /im %1 >nul
+exit /b

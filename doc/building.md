@@ -64,7 +64,7 @@ Windows (MSYS2):
 
 1. Install [MSYS2](https://www.msys2.org/) (e.g. `winget install MSYS2.MSYS2`).
 2. From an MSYS2 shell: `pacman -S --needed make mingw-w64-i686-gcc mingw-w64-i686-SDL2 mingw-w64-i686-fluidsynth`
-3. Run `rebuild.bat` from the project directory, which runs `make` in the MINGW32 environment for you (`rebuild.bat clean` for a full rebuild, `rebuild.bat test` for the tests).
+3. Run `rebuild.bat` from the project directory, which runs `make` in the MINGW32 environment for you (`rebuild.bat clean` for a full rebuild, `rebuild.bat test` for the tests). If the launcher, the game or `c1x_tools.exe` is running, it closes them first, as Windows won't let `make` replace a running program.
 
    This builds the game into `build/`, copying the DLLs it needs next to it (see below), and the launcher to `c1x_launcher.exe` in the project directory, which needs no DLLs.
 
