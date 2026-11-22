@@ -3,7 +3,7 @@
  * (c1x_tools check-update), and the newer release they say there is
  */
 #include <SDL2/SDL.h>
-#include "update.h"
+#include "newer_release.h"
 #include "tools.h"
 
 #define CHECK_ARGS_MAX 64
@@ -26,7 +26,7 @@ static int IsReleaseVersion(const char *version) {
   return SkipNumber(&version) && !*version;
 }
 
-int UpdateCheckCommand(const char *repo, const char *version, char *command,
+int NewerReleaseCommand(const char *repo, const char *version, char *command,
   size_t size) {
   char args[CHECK_ARGS_MAX];
 

@@ -16,7 +16,7 @@
 #include "levels_section.h"
 #include "controls_section.h"
 #include "help_section.h"
-#include "update_section.h"
+#include "version_corner.h"
 #include "ui.h"
 #include "version.h"
 #include "pc/gamepad.h"
@@ -123,7 +123,7 @@ static void DrawLauncher() {
     | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove
     | ImGuiWindowFlags_NoSavedSettings; /* a scroll bar if it doesn't fit */
   igBegin("launcher", 0, flags);
-  DrawUpdateSection(); /* beside the game section's heading */
+  DrawVersionCorner(); /* beside the game section's heading */
   DrawGameSection(repo);
   igSpacing();
   igSpacing();
@@ -140,7 +140,7 @@ static void DrawFrame() {
   UpdateSettingsSection(repo);
   UpdateEditorSection();
   UpdateLevelsSection(repo);
-  UpdateUpdateSection();
+  FollowReleaseCheck();
   DrawLauncher();
   igRender();
   io = igGetIO();
@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
   LoadSettingsSection(repo);
   LoadControlsSection(repo);
   LoadLevelsSection(repo);
-  LoadUpdateSection(repo);
+  StartReleaseCheck(repo);
   if (!OpenLauncherWindow()) {
     fprintf(stderr, "could not open the launcher's window: %s\n", SDL_GetError());
     return 1;
@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
     DrawFrame();
   }
   CloseEditorSection();
-  CloseUpdateSection();
+  StopReleaseCheck();
   CloseLauncherWindow();
   return 0;
 }

@@ -7,11 +7,11 @@
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
-#include "update_section.h"
+#include "version_corner.h"
 #include "command.h"
 #include "paths.h"
 #include "tools.h"
-#include "update.h"
+#include "newer_release.h"
 #include "version.h"
 
 #define VERSION_LABEL_MAX 32
@@ -20,15 +20,15 @@
 static background_command check; /* c1x_tools check-update */
 static newer_release newer;      /* its version is "" until the check finds one */
 
-void LoadUpdateSection(const char *repo) {
+void StartReleaseCheck(const char *repo) {
   char command[PATH_MAX_LEN + 64];
 
   if (!AreToolsBuilt(repo)) { return; }
-  if (!UpdateCheckCommand(repo, LauncherVersion(), command, sizeof(command))) { return; }
+  if (!NewerReleaseCommand(repo, LauncherVersion(), command, sizeof(command))) { return; }
   StartBackgroundCommand(&check, repo, command);
 }
 
-void UpdateUpdateSection(void) {
+void FollowReleaseCheck(void) {
   newer_release found;
 
   UpdateBackgroundCommand(&check);
@@ -36,7 +36,7 @@ void UpdateUpdateSection(void) {
   newer = found;
 }
 
-void CloseUpdateSection(void) {
+void StopReleaseCheck(void) {
   StopBackgroundCommand(&check);
 }
 
@@ -63,7 +63,7 @@ static float LinkWidth(const char *label) {
 }
 
 /* drawn over the right of the line the cursor is on, which is left where it was */
-void DrawUpdateSection(void) {
+void DrawVersionCorner(void) {
   char version[VERSION_LABEL_MAX], link[LINK_LABEL_MAX];
   ImVec2 start, space;
   float width;
