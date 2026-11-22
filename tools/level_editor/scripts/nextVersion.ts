@@ -30,10 +30,11 @@ function latestReleaseTag(tags: string[]): string | undefined {
 // the next release's version: the latest's with one more second number, or
 // 1.0 for the first release
 export function nextVersion(tags: string[]): string {
-  const latest = versionNumbers(latestReleaseTag(tags) ?? "");
-  if (!latest) {
+  const latestTag = latestReleaseTag(tags);
+  if (!latestTag) {
     return FIRST_VERSION;
   }
-  const [major, minor] = latest;
+  // isReleaseTag only lets through tags that are versions
+  const [major, minor] = versionNumbers(latestTag) as [number, number];
   return `${major}.${minor + 1}`;
 }
