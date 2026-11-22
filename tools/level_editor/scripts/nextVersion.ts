@@ -1,5 +1,6 @@
 // the version the next release gets, from the releases' tags (v1.4 and so on,
 // see doc/releasing.md): one more than the latest. release.bat suggests it
+import { execFileSync } from "node:child_process";
 import { versionNumbers } from "./updateCheck";
 
 type Version = [number, number];
@@ -36,6 +37,12 @@ function latestVersion(tags: string[]): Version | undefined {
     }
   }
   return latest;
+}
+
+// the tags of the repository at repo, the releases' among them (git pull
+// brings a release's tag along with its commit)
+export function releaseTags(repo: string): string[] {
+  return execFileSync("git", ["tag", "--list"], { cwd: repo, encoding: "utf8" }).split(/\r?\n/).filter(Boolean);
 }
 
 // the next release's version: the latest's with one more second number, or
