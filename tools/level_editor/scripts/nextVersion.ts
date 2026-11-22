@@ -1,23 +1,17 @@
-// the version the next release gets, from the releases' tags (v1.4 and so on,
-// see doc/releasing.md): one more than the latest. release.bat suggests it
 import { execFileSync } from "node:child_process";
 import { isNewer, versionNumbers } from "./updateCheck";
 
 const FIRST_VERSION = "1.0";
 
-// every tag of the repository at repo, release tags among them (git pull
-// brings those in with their commits)
 export function repositoryTags(repo: string): string[] {
   const tagList = execFileSync("git", ["tag", "--list"], { cwd: repo, encoding: "utf8" });
   return tagList.split(/\r?\n/).filter(Boolean);
 }
 
-// whether tag is a release's: a version after a v, as the launcher's check compares them
 function isReleaseTag(tag: string): boolean {
   return tag.startsWith("v") && versionNumbers(tag) !== undefined;
 }
 
-// the latest release's tag, or none without a release
 function latestReleaseTag(tags: string[]): string | undefined {
   let latest: string | undefined;
   for (const tag of tags.filter(isReleaseTag)) {
@@ -28,14 +22,19 @@ function latestReleaseTag(tags: string[]): string | undefined {
   return latest;
 }
 
-// the next release's version: the latest's with one more second number, or
-// 1.0 for the first release
-export function nextVersion(tags: string[]): string {
+function latestReleaseVersion(tags: string[]): [number, number] | undefined {
   const latestTag = latestReleaseTag(tags);
   if (!latestTag) {
+    return undefined;
+  }
+  return versionNumbers(latestTag);
+}
+
+export function nextVersion(tags: string[]): string {
+  const latest = latestReleaseVersion(tags);
+  if (!latest) {
     return FIRST_VERSION;
   }
-  // isReleaseTag only lets through tags that are versions
-  const [major, minor] = versionNumbers(latestTag) as [number, number];
+  const [major, minor] = latest;
   return `${major}.${minor + 1}`;
 }
