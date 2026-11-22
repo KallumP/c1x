@@ -25,7 +25,7 @@ A new release unzips to its own folder. To carry on where you were, copy these a
 - `memory_card/`, if you save to the memory card
 - any levels of your own in `level_src/`
 
-The launcher shows no button when it can't tell:
+There's no **Version ... is out** button when the launcher can't tell whether there's a newer release:
 
 - you're offline, or GitHub doesn't answer
 - `build/c1x_tools.exe` isn't there, as the check runs from it
