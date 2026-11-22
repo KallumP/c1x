@@ -5,8 +5,8 @@ A release is a zip players download from the repository's GitHub **Releases** pa
 ## Making a release
 
 1. On `master`, pulled, with nothing uncommitted.
-2. Pick the version, two numbers like `1.3`: the first number for big changes, the second for everything else.
-3. On Windows, run `release.bat` from the project folder with the version, or double-click it and type the version when it asks:
+2. Pick the version, two numbers like `1.3`: the first number for big changes, the second for everything else. `release.bat` suggests the next one, one more than the latest release's tag, so after `v1.4` it suggests `1.5` (the pull in step 1 brings the tag along).
+3. On Windows, run `release.bat` from the project folder with the version, or double-click it and press Enter to take the version it suggests, or type another:
 
    ```
    release.bat 1.3
