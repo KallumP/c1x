@@ -171,6 +171,9 @@ function filesUnder(folder: string): string[] {
     .map((path) => path.split(sep).join("/"));
 }
 
+// throws unless built, the version the launcher says it was built as, is version
+export function checkLauncherVersion(_built: string, _version: string): void {}
+
 // makes release/c1x-<version>/ and its zip; returns the zip's path
 export function makeRelease(repo: string, version: string): string {
   const folder = releaseFolder(repo, version);

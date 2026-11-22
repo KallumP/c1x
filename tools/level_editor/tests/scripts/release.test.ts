@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { copyReleaseFiles, releasedLink, releaseFiles, releaseFolder, zipCommand, zipFolder } from "../../scripts/release";
+import { checkLauncherVersion, copyReleaseFiles, releasedLink, releaseFiles, releaseFolder, zipCommand, zipFolder } from "../../scripts/release";
 
 // a repo with a few files in it, and an empty folder to release into
 function repoAndRelease() {
@@ -144,6 +144,20 @@ describe("the release folder", () => {
   test("a file that isn't there is an error", () => {
     const { repo, release } = repoAndRelease();
     expect(() => copyReleaseFiles(repo, [{ from: "LICENSE", to: "LICENSE" }], release)).toThrow("LICENSE isn't there, so it can't go in the release");
+  });
+});
+
+describe("the launcher's version, for a release", () => {
+  test("is fine when it's the release's", () => {
+    expect(() => checkLauncherVersion("1.3\r\n", "1.3")).not.toThrow();
+  });
+
+  test("can't be another release's", () => {
+    expect(() => checkLauncherVersion("1.2\n", "1.3")).toThrow("c1x_launcher.exe is built as version 1.2, not 1.3: build it with release.bat 1.3");
+  });
+
+  test("can't be missing, as a build that isn't a release's is", () => {
+    expect(() => checkLauncherVersion("\n", "1.3")).toThrow("c1x_launcher.exe isn't built as version 1.3: build it with release.bat 1.3");
   });
 });
 
