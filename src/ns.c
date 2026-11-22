@@ -939,7 +939,6 @@ void NSInit(ns_struct *nss, uint32_t lid) {
   /* set page map */
   for (i=0;i<page_count;i++)
     nss->page_map[i] = &nss->physical_pages[i];
-  printf("Inited and Allocated %d pages\n", physical_page_count);
   NSInitTexturePages(nss, lid);
   NSInitAudioPages(nss, lid);
 

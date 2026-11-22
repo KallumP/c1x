@@ -6,6 +6,10 @@
 
 - the launcher shows its version in the top right corner, and a link to the newest release's page when a newer one is out
 
+### Fixed
+
+- pressing R1 no longer puts a white square in the middle of the screen
+
 ## 2026-11-21
 
 ### Added

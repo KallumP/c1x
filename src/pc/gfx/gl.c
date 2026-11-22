@@ -52,11 +52,11 @@ int GLCreateTexture(dim2 dim, uint8_t *buf) {
   return texid;
 }
 
-void GLDeleteTexture(int texid) {
+static void GLDeleteTexture(int texid) {
   glDeleteTextures(1, &texid);
 }
 
-void GLUpdateTexture(int texid, rect2 rect, uint8_t *buf) {
+static void GLUpdateTexture(int texid, rect2 rect, uint8_t *buf) {
   glBindTexture(GL_TEXTURE_2D, texid);
   glTexSubImage2D(GL_TEXTURE_2D, 0, rect.x, rect.y, rect.w, rect.h,
     GL_RGBA, GL_UNSIGNED_BYTE, buf);
