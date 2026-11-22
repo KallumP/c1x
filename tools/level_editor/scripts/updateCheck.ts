@@ -19,19 +19,18 @@ export function versionNumbers(version: string): [number, number] | undefined {
   return match ? [Number(match[1]), Number(match[2])] : undefined;
 }
 
-// whether the release tagged latestTag is newer than version; not if either isn't a version
-export function isNewer(version: string, latestTag: string): boolean {
-  const current = versionNumbers(version);
-  const latest = versionNumbers(latestTag);
-  if (!current || !latest) {
+export function isNewer(release: string, than: string): boolean {
+  const releaseNumbers = versionNumbers(release);
+  const thanNumbers = versionNumbers(than);
+  if (!releaseNumbers || !thanNumbers) {
     return false;
   }
-  const [currentMajor, currentMinor] = current;
-  const [latestMajor, latestMinor] = latest;
-  if (latestMajor !== currentMajor) {
-    return latestMajor > currentMajor;
+  const [releaseMajor, releaseMinor] = releaseNumbers;
+  const [thanMajor, thanMinor] = thanNumbers;
+  if (releaseMajor !== thanMajor) {
+    return releaseMajor > thanMajor;
   }
-  return latestMinor > currentMinor;
+  return releaseMinor > thanMinor;
 }
 
 // the tag in GitHub's answer about a release, if it has one
@@ -80,7 +79,7 @@ export async function checkUpdate(
     say(`couldn't tell the latest release: its tag "${latest.tag}" isn't a version`);
     return 1;
   }
-  if (!isNewer(version, latest.tag)) {
+  if (!isNewer(latest.tag, version)) {
     say(`no release is newer than ${version}`);
     return 0;
   }

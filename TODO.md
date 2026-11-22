@@ -27,7 +27,6 @@ speed run mode
 
 
 Generic
-- auto increment the last version in release.bat
 - maps should store what version it was built on
 - mute-able start
 - europe support
