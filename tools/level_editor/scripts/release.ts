@@ -13,7 +13,8 @@ type Command = { program: string; args: string[] };
 const ONLINE_DOCS = "https://github.com/KallumP/c1x/blob/master";
 // at the top of the release, as they are in the repo
 const LICENSE = "LICENSE";
-const TOP_FILES = ["c1x_launcher.exe", LICENSE, "settings.example.cfg", "controls.example.cfg", "streams/README.md"];
+const LAUNCHER = "c1x_launcher.exe";
+const TOP_FILES = [LAUNCHER, LICENSE, "settings.example.cfg", "controls.example.cfg", "streams/README.md"];
 const PLAYER_README = "doc/release/README.md";
 // the docs for players; the rest are for building and working on c1x
 const PLAYER_DOCS = ["running", "launcher", "controls", "settings", "custom_levels", "changelog"].map((name) => `doc/${name}.md`);
@@ -172,11 +173,27 @@ function filesUnder(folder: string): string[] {
 }
 
 // throws unless built, the version the launcher says it was built as, is version
-export function checkLauncherVersion(_built: string, _version: string): void {}
+export function checkLauncherVersion(built: string, version: string): void {
+  const builtAs = built.trim();
+  if (builtAs === version) {
+    return;
+  }
+  const fix = `build it with release.bat ${version}`;
+  if (!builtAs) {
+    throw new Error(`${LAUNCHER} isn't built as version ${version}: ${fix}`);
+  }
+  throw new Error(`${LAUNCHER} is built as version ${builtAs}, not ${version}: ${fix}`);
+}
 
-// makes release/c1x-<version>/ and its zip; returns the zip's path
+// the version repo's launcher says it was built as (c1x_launcher --version)
+function launcherVersion(repo: string): string {
+  return execFileSync(join(repo, LAUNCHER), ["--version"], { encoding: "utf8" });
+}
+
+// makes release/c1x-<version>/ and its zip, from a launcher built as version; returns the zip's path
 export function makeRelease(repo: string, version: string): string {
   const folder = releaseFolder(repo, version);
+  checkLauncherVersion(launcherVersion(repo), version);
   copyReleaseFiles(repo, releaseFiles(gitFilesIn(repo), buildFilesIn(repo), filesUnder(join(repo, EDITOR_PAGE_DIR))), folder);
   return zipFolder(folder);
 }
