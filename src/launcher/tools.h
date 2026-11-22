@@ -2,8 +2,9 @@
 #define _LAUNCHER_TOOLS_H_
 
 /*
- * c1x's tools (build/c1x_tools.exe, made by make): the level build and the
- * level editor with node built in, so players don't need node
+ * c1x's tools (build/c1x_tools.exe, made by make): the level build, the level
+ * editor and the check for a newer release, with node built in, so players
+ * don't need node
  */
 #include <stddef.h>
 

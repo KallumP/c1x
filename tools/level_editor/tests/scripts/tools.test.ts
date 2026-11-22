@@ -10,8 +10,12 @@ describe("the tools exe's commands", () => {
     expect(toolsCommand(["editor"])).toEqual({ kind: "editor" });
   });
 
+  test("check-update <version> looks for a newer release", () => {
+    expect(toolsCommand(["check-update", "1.4"])).toEqual({ kind: "check-update", version: "1.4" });
+  });
+
   test("anything else says how to use it", () => {
-    [[], ["build-level"], ["build-level", "a", "b"], ["editor", "now"], ["play"]].forEach((args) =>
+    [[], ["build-level"], ["build-level", "a", "b"], ["editor", "now"], ["check-update"], ["check-update", "1.4", "1.5"], ["play"]].forEach((args) =>
       expect(toolsCommand(args)).toEqual({ kind: "usage" }));
   });
 });

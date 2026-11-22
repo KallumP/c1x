@@ -108,10 +108,13 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/launcher/level_editor.c \
 	src/launcher/tools.c \
 	src/launcher/level_build.c \
+	src/launcher/newer_release.c \
+	src/launcher/version.c \
 	src/launcher/help.c
 
 # the launcher (see doc/launcher.md), plus the game sources it uses
 LAUNCHER_SRC = src/launcher/main.c \
+	src/launcher/version.c \
 	src/launcher/process.c \
 	src/launcher/paths.c \
 	src/launcher/game.c \
@@ -137,6 +140,8 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/level_build.c \
 	src/launcher/levels_section.c \
 	src/launcher/editor_section.c \
+	src/launcher/newer_release.c \
+	src/launcher/version_corner.c \
 	src/pc/settings.c \
 	src/pc/controls.c \
 	src/pc/gamepad.c \
@@ -147,7 +152,8 @@ OUT = build/c1x
 TEST_OUT = build/tests
 # the launcher, in the top folder: the first thing a player opens
 LAUNCHER_OUT = c1x_launcher
-# the level build and the level editor with node built in, for the launcher (see doc/building.md)
+# c1x's tools with node built in, for the launcher: the level build, the level
+# editor and the check for a newer release (see doc/building.md)
 TOOLS_OUT = build/c1x_tools
 
 # include dirs.
@@ -194,9 +200,10 @@ OBJ = $(CIMGUI_OBJ)
 OBJ += $(SRC:.c=.o)
 LAUNCHER_OBJ = $(CIMGUI_OBJ) $(LAUNCHER_SRC:.c=.o)
 
-# the tools' sources: the level build, the editor's server, and the editor's code they share
+# the tools' sources: the level build, the editor's server, the editor's code
+# they share, and the scripts (the check for a newer release among them)
 EDITOR_PATH = tools/level_editor
-TOOLS_SRC = $(wildcard $(EDITOR_PATH)/builder/*.ts $(EDITOR_PATH)/src/*.ts $(EDITOR_PATH)/server/*.ts $(EDITOR_PATH)/scripts/tools*.ts) \
+TOOLS_SRC = $(wildcard $(EDITOR_PATH)/builder/*.ts $(EDITOR_PATH)/src/*.ts $(EDITOR_PATH)/server/*.ts $(EDITOR_PATH)/scripts/*.ts) \
 	$(EDITOR_PATH)/package.json
 # the level editor's page, built by vite into build/editor for the tools to serve, and its sources
 EDITOR_PAGE = build/editor/index.html
@@ -222,6 +229,19 @@ $(CIMGUI_OBJ):
 
 .c.o:
 	$(CC) $(INCLUDE) -c $< -o $@ $(CFLAGS)
+
+# the launcher's version, for a release (see doc/releasing.md). C1X_VERSION comes
+# from the environment, which make reads as its own variables: release.bat sets
+# it before it runs rebuild.bat. Or give it to make: make C1X_VERSION=1.3.
+# Without it the launcher has no version. the stamp holds the version last
+# built, so version.c is only built again when the version changes
+VERSION_STAMP = build/launcher_version.stamp
+include version_stamp.mk
+
+# instead of the .c.o rule above, for this one file: the same, with the version
+# given as a C string
+src/launcher/version.o: src/launcher/version.c $(VERSION_STAMP)
+	$(CC) $(INCLUDE) -c $< -o $@ $(CFLAGS) -DC1X_VERSION='"$(C1X_VERSION)"'
 
 res/%_icon.o: res/%.rc res/%.ico
 	windres -F pe-i386 --include-dir res $< -o $@
@@ -271,6 +291,7 @@ $(LAUNCHER_OUT): $(LAUNCHER_OBJ) $(LAUNCHER_ICON_OBJ)
 .PHONY: test
 test: $(TEST_OUT)
 	./$(TEST_OUT)
+	sh tests/version_stamp.sh
 
 $(TEST_OUT): $(TEST_SRC) tests/utest.h
 	@mkdir -p $(dir $(TEST_OUT))

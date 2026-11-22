@@ -12,6 +12,27 @@ Run `c1x_launcher.exe`, by double-clicking it or from any folder. It works on it
 
 **Play** is at the top, with a tab each for Settings, Controls, Levels, the Level editor and Help below it.
 
+## Version
+
+The launcher's version is in the top right corner of its window, for example `v1.3`.
+
+When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to open the newest release's page in your browser, and download it from there. Nothing is downloaded or changed for you.
+
+A new release unzips to its own folder. To carry on where you were, copy these across from the old folder:
+
+- `streams/`, the game's files
+- `settings.cfg` and `controls.cfg`
+- `memory_card/`, if you save to the memory card
+- any levels of your own in `level_src/`
+
+If the launcher shows no button for a newer release, it couldn't check. That happens when:
+
+- **You're offline**, or GitHub doesn't answer. It checks again the next time it opens.
+- **`build/c1x_tools.exe` is missing.** The check runs from it. A release comes with it, and in a project folder `make` builds it (see [Building](building.md#the-level-build-and-editor-without-node)).
+- **It's a launcher you built yourself.** That says `dev build` instead of a version, so there's nothing to compare. Only a released launcher checks (see [Releasing](releasing.md#the-launchers-version)).
+
+This check is the only time the launcher uses the internet.
+
 ## Game
 
 **Play** saves the settings and controls (see below), then starts `build/c1x.exe` (`build/c1x` on Linux) from the project folder, so the game finds `streams/`, `settings.cfg` and `controls.cfg` there. It starts the game without a console window, so the game's messages (such as "replaying ...") only show when you run `build/c1x.exe` yourself from a terminal. The launcher stays open, and the game keeps running if you close it. While a level is building, **Play** is greyed out until it's built.

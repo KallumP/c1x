@@ -3,7 +3,16 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { copyReleaseFiles, releasedLink, releaseFiles, releaseFolder, zipCommand, zipFolder } from "../../scripts/release";
+import {
+  checkLauncherVersion,
+  copyReleaseFiles,
+  makeRelease,
+  releasedLink,
+  releaseFiles,
+  releaseFolder,
+  zipCommand,
+  zipFolder,
+} from "../../scripts/release";
 
 // a repo with a few files in it, and an empty folder to release into
 function repoAndRelease() {
@@ -111,10 +120,12 @@ describe("the release folder", () => {
     expect(releaseFolder("c1x", "1.3")).toBe(join("c1x", "release", "c1x-1.3"));
   });
 
-  test("a version that isn't two numbers, like 1.3, is an error", () => {
-    ["1.0.0", "v1.3", "1", "", "1.3-beta"].forEach((version) =>
-      expect(() => releaseFolder("c1x", version)).toThrow(`the version has to be two numbers, like 1.3, not "${version}"`));
-  });
+  test.each(["1.0.0", "v1.3", "1", "", "1.3-beta"])(
+    "a version that isn't two numbers, like 1.3, is an error: %j",
+    (version) => {
+      expect(() => releaseFolder("c1x", version)).toThrow(`the version has to be two numbers, like 1.3, not "${version}"`);
+    },
+  );
 
   test("has each file copied to its place in it", () => {
     const { repo, release } = repoAndRelease();
@@ -144,6 +155,40 @@ describe("the release folder", () => {
   test("a file that isn't there is an error", () => {
     const { repo, release } = repoAndRelease();
     expect(() => copyReleaseFiles(repo, [{ from: "LICENSE", to: "LICENSE" }], release)).toThrow("LICENSE isn't there, so it can't go in the release");
+  });
+});
+
+describe("the launcher's version, for a release", () => {
+  const BUILD_IT = "build it with release.bat 1.3";
+
+  test("is fine when it's the release's", () => {
+    expect(() => checkLauncherVersion("1.3\r\n", "1.3")).not.toThrow();
+  });
+
+  test("can't be another release's", () => {
+    expect(() => checkLauncherVersion("1.2\n", "1.3")).toThrow(
+      `c1x_launcher.exe is built as version 1.2, not 1.3: ${BUILD_IT}`,
+    );
+  });
+
+  test.each(["\n", ""])(
+    "can't be missing, as a build that isn't a release's is: %j",
+    (said) => {
+      expect(() => checkLauncherVersion(said, "1.3")).toThrow(`c1x_launcher.exe isn't built as version 1.3: ${BUILD_IT}`);
+    },
+  );
+});
+
+describe("making a release", () => {
+  test("asks the launcher its version, and copies nothing when it's another's", () => {
+    const { repo } = repoAndRelease();
+    expect(() => makeRelease(repo, "1.3", () => "1.2\n")).toThrow("c1x_launcher.exe is built as version 1.2, not 1.3");
+    expect(existsSync(releaseFolder(repo, "1.3"))).toBe(false);
+  });
+
+  test("says the launcher isn't built when it isn't there", () => {
+    const repo = mkdtempSync(join(tmpdir(), "release-repo-"));
+    expect(() => makeRelease(repo, "1.3")).toThrow("c1x_launcher.exe isn't built: run make first");
   });
 });
 

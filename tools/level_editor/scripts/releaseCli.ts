@@ -1,5 +1,6 @@
 // npm run release -- <version>: makes the player release zip, release/c1x-<version>.zip
-// (see doc/releasing.md); make the game, the launcher and build-level.exe first
+// (see doc/releasing.md); make the game, the tools and the launcher first, the
+// launcher as that version (release.bat does all of it)
 import { fileURLToPath } from "node:url";
 import { makeRelease } from "./release";
 

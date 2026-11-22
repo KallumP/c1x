@@ -79,6 +79,14 @@ int DrawBigButton(const char *label) {
   return pressed;
 }
 
+/* how wide a button showing text is */
+float ButtonWidth(const char *text) {
+  ImVec2 text_size;
+
+  igCalcTextSize(&text_size, text, 0, false, -1);
+  return text_size.x + 2 * igGetStyle()->FramePadding.x;
+}
+
 /* a tooltip for the last item, wrapped so a long one stays in the window */
 void DrawTooltip(const char *text) {
   if (!igIsItemHovered(0)) { return; }
