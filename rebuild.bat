@@ -54,7 +54,7 @@ if "%RESULT%"=="0" (
 
 :done
 rem keep the window open when started by double-clicking
-echo %cmdcmdline% | "%SystemRoot%\System32ind.exe" /i "%~0" >nul && pause
+echo %cmdcmdline% | find /i "%~0" >nul && pause
 exit /b %RESULT%
 
 :close_running_from_this_folder
