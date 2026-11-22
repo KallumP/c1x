@@ -8,7 +8,7 @@
 
 ### Fixed
 
-- a white square no longer appears in the middle of the screen
+- pressing R1 no longer puts a white square in the middle of the screen
 
 ## 2026-11-21
 
