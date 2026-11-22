@@ -27,9 +27,9 @@ A new release unzips to its own folder. To carry on where you were, copy these a
 
 There's no **Version ... is out** button when the launcher can't tell whether there's a newer release:
 
-- you're offline, or GitHub doesn't answer
-- `build/c1x_tools.exe` isn't there, as the check runs from it
-- it's a launcher you built yourself, which says `dev build` and doesn't check (see [Releasing](releasing.md#the-launchers-version))
+- You're offline, or GitHub doesn't answer. The launcher asks again the next time it opens.
+- `build/c1x_tools.exe` isn't there. The check runs from it, so without it there's no check. A release comes with it; in a project folder, `make` builds it (see [Building](building.md#the-level-build-and-editor-without-node)).
+- It's a launcher you built yourself. That says `dev build` in the corner instead of a version, and has no version to compare, so it doesn't check. Only a released launcher does (see [Releasing](releasing.md#the-launchers-version)).
 
 This check is the only time the launcher uses the internet.
 
