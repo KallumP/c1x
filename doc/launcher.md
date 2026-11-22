@@ -25,11 +25,11 @@ A new release unzips to its own folder. To carry on where you were, copy these a
 - `memory_card/`, if you save to the memory card
 - any levels of your own in `level_src/`
 
-There's no **Version ... is out** button when the launcher can't tell whether there's a newer release:
+If the launcher shows no button for a newer release, it couldn't check. That happens when:
 
-- You're offline, or GitHub doesn't answer. The launcher asks again the next time it opens.
-- `build/c1x_tools.exe` isn't there. The check runs from it, so without it there's no check. A release comes with it; in a project folder, `make` builds it (see [Building](building.md#the-level-build-and-editor-without-node)).
-- It's a launcher you built yourself. That says `dev build` in the corner instead of a version, and has no version to compare, so it doesn't check. Only a released launcher does (see [Releasing](releasing.md#the-launchers-version)).
+- **You're offline**, or GitHub doesn't answer. It checks again the next time it opens.
+- **`build/c1x_tools.exe` is missing.** The check runs from it. A release comes with it, and in a project folder `make` builds it (see [Building](building.md#the-level-build-and-editor-without-node)).
+- **It's a launcher you built yourself.** That says `dev build` instead of a version, so there's nothing to compare. Only a released launcher checks (see [Releasing](releasing.md#the-launchers-version)).
 
 This check is the only time the launcher uses the internet.
 
