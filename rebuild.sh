@@ -6,7 +6,8 @@
 #   ./rebuild.sh clean    remove all build output first, then build everything
 #   ./rebuild.sh test     build and run the unit tests
 #
-# The tools are a copy of node with the level build and editor put in it, which
+# The tools are a copy of node with c1x's scripts put in it (the level build, the
+# level editor and the check for a newer release), which
 # needs node as one whole program. Some distributions' node (Fedora's, for one)
 # is a small program that loads node from libnode.so, which can't be used. With
 # one of those, this downloads node from nodejs.org (NODE_VERSION, checked

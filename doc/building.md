@@ -4,7 +4,7 @@ Compilation has only been tested on Fedora Linux and on Windows (MSYS2 MinGW32).
 
 Note that only 32-bit target executables are currently supported. If you are not already running a 32-bit OS, you will need multilib versions of gcc and g++ and 32-bit versions of the dependencies.
 
-To compile c1x, install the dependencies listed below, then run `rebuild.bat` on Windows or `./rebuild.sh` on Linux, from the main project directory. The rebuild script runs `make` for you (see [Dependencies](#dependencies) for what else they do). This builds:
+To compile c1x, install the dependencies listed below, then run `rebuild.bat` on Windows or `./rebuild.sh` on Linux, from the main project directory. The rebuild script runs `make` for you (see [Dependencies](#dependencies) for what else each one does). This builds:
 
 - the game, in `build/`
 - the [launcher](launcher.md), a window for starting the game and adjusting all the settings: `c1x_launcher.exe` in the project directory (`c1x_launcher` on Linux)
@@ -14,7 +14,9 @@ To compile c1x, install the dependencies listed below, then run `rebuild.bat` on
 
 ## The level build and editor without Node
 
-`c1x_tools.exe` is the level build (`tools/level_editor/builder/`) and the level editor's server (`server/`) bundled into one file with Node.js built in (a [single executable application](https://nodejs.org/api/single-executable-applications.html)). So players with the final build can make [custom levels](custom_levels.md) and use the level editor from the launcher without installing anything extra.
+`c1x_tools.exe` is c1x's tools bundled into one file with Node.js built in (a [single executable application](https://nodejs.org/api/single-executable-applications.html)): the level build (`tools/level_editor/builder/`), the level editor's server (`server/`) and the check for a newer release (`scripts/updateCheck.ts`).
+
+So players with the final build can make [custom levels](custom_levels.md) and use the level editor from the launcher without installing anything extra.
 
 Its commands:
 
@@ -44,13 +46,13 @@ To work on the editor itself:
 
 Fedora (64-bit): `sudo dnf install make gcc gcc-c++ glibc-devel.i686 libstdc++-devel.i686 mesa-libGL-devel.i686 sdl2-compat-devel.i686 fluidsynth-devel.i686`
 
-On Linux, `make` builds the game to `build/c1x` and the launcher to `c1x_launcher`. Run `./c1x_launcher` and click **Play** (see [Launcher](launcher.md)).
-
-Alternatively, run `./rebuild.sh` from the project directory, which runs `make` for the game, the launcher and the tools:
+On Linux, run `./rebuild.sh` from the project directory, which runs `make` for the game (`build/c1x`), the launcher (`c1x_launcher`) and the tools:
 
 - `./rebuild.sh` builds whatever changed
 - `./rebuild.sh clean` does a full rebuild
 - `./rebuild.sh test` builds and runs the tests
+
+Then run `./c1x_launcher` and click **Play** (see [Launcher](launcher.md)).
 
 Making `c1x_tools` copies the `node` it runs with, so it needs node as one whole program. Some distributions' node, such as Fedora's, is a small program that loads node from `libnode.so`, and with it `make` fails with *"Could not find the sentinel NODE_SEA_FUSE_..."*.
 
@@ -62,9 +64,11 @@ Windows (MSYS2):
 
 1. Install [MSYS2](https://www.msys2.org/) (e.g. `winget install MSYS2.MSYS2`).
 2. From an MSYS2 shell: `pacman -S --needed make mingw-w64-i686-gcc mingw-w64-i686-SDL2 mingw-w64-i686-fluidsynth`
-3. Open the **MSYS2 MINGW32** shell, `cd` into the project directory and run `make`. This builds the game into `build/`, copying the DLLs it needs next to it (see below), and the launcher to `c1x_launcher.exe` in the project directory, which needs no DLLs.
+3. Run `rebuild.bat` from the project directory, which runs `make` in the MINGW32 environment for you (`rebuild.bat clean` for a full rebuild, `rebuild.bat test` for the tests).
 
-   Alternatively, run `rebuild.bat` from the project directory, which runs `make` in the MINGW32 environment for you (`rebuild.bat clean` for a full rebuild, `rebuild.bat test` for the tests).
+   This builds the game into `build/`, copying the DLLs it needs next to it (see below), and the launcher to `c1x_launcher.exe` in the project directory, which needs no DLLs.
+
+   To run `make` yourself instead, open the **MSYS2 MINGW32** shell and `cd` into the project directory first.
 
    `release.bat` builds the same way, then makes the zip players download (see [Releasing](releasing.md)).
 4. Open `c1x_launcher.exe` and click **Play** (see [Launcher](launcher.md)).

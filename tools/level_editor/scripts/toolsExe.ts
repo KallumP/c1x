@@ -1,5 +1,5 @@
-// making build/c1x_tools.exe: the tools (tools.ts: the level build and the level
-// editor) bundled into one script (npm run bundle-tools) and put in a copy of
+// making build/c1x_tools.exe: the tools (tools.ts: the level build, the level
+// editor and the check for a newer release) bundled into one script (npm run bundle-tools) and put in a copy of
 // node, as a single executable application, so players need nothing installed
 import { execFileSync } from "node:child_process";
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";

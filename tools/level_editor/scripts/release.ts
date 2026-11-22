@@ -19,7 +19,7 @@ const TOP_FILES = [LAUNCHER, LICENSE, "settings.example.cfg", "controls.example.
 const PLAYER_README = "doc/release/README.md";
 // the docs for players; the rest are for building and working on c1x
 const PLAYER_DOCS = ["running", "launcher", "controls", "settings", "custom_levels", "changelog"].map((name) => `doc/${name}.md`);
-// built by make, and needed in the release: the game, and the tools (the level build and editor)
+// built by make, and needed in the release: the game, and the tools (tools.ts)
 const BUILT_FILES = ["c1x.exe", "c1x_tools.exe"];
 // the level editor's page, built by make, which the tools serve
 const EDITOR_PAGE_DIR = "build/editor";

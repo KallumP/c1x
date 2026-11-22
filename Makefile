@@ -151,7 +151,8 @@ OUT = build/c1x
 TEST_OUT = build/tests
 # the launcher, in the top folder: the first thing a player opens
 LAUNCHER_OUT = c1x_launcher
-# the level build and the level editor with node built in, for the launcher (see doc/building.md)
+# c1x's tools with node built in, for the launcher: the level build, the level
+# editor and the check for a newer release (see doc/building.md)
 TOOLS_OUT = build/c1x_tools
 
 # include dirs.
@@ -198,7 +199,8 @@ OBJ = $(CIMGUI_OBJ)
 OBJ += $(SRC:.c=.o)
 LAUNCHER_OBJ = $(CIMGUI_OBJ) $(LAUNCHER_SRC:.c=.o)
 
-# the tools' sources: the level build, the editor's server, and the editor's code they share
+# the tools' sources: the level build, the editor's server, the editor's code
+# they share, and the scripts (the check for a newer release among them)
 EDITOR_PATH = tools/level_editor
 TOOLS_SRC = $(wildcard $(EDITOR_PATH)/builder/*.ts $(EDITOR_PATH)/src/*.ts $(EDITOR_PATH)/server/*.ts $(EDITOR_PATH)/scripts/*.ts) \
 	$(EDITOR_PATH)/package.json
