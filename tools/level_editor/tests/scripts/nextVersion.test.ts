@@ -8,7 +8,7 @@ import { nextVersion, repositoryTags } from "../../scripts/nextVersion";
 // who the test repository's commit is by, as git won't commit without one
 const TEST_AUTHOR = ["-c", "user.name=test", "-c", "user.email=test@example.com"];
 
-function repoTagged(tags: string[]): string {
+function gitRepositoryWithTags(tags: string[]): string {
   const repo = mkdtempSync(join(tmpdir(), "next-version-"));
   const git = (...args: string[]) => {
     execFileSync("git", args, { cwd: repo, stdio: "pipe" });
@@ -21,12 +21,12 @@ function repoTagged(tags: string[]): string {
 
 describe("the repository's tags", () => {
   test("are every tag, release or not", () => {
-    const tags = repositoryTags(repoTagged(["v1.4", "v1.2.0"]));
+    const tags = repositoryTags(gitRepositoryWithTags(["v1.4", "v1.2.0"]));
     expect(tags.sort()).toEqual(["v1.2.0", "v1.4"]);
   });
 
   test("are none in a repository without tags", () => {
-    expect(repositoryTags(repoTagged([]))).toEqual([]);
+    expect(repositoryTags(gitRepositoryWithTags([]))).toEqual([]);
   });
 });
 

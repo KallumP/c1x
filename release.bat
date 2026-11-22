@@ -10,7 +10,7 @@ rem Needs MSYS2 (as rebuild.bat does) and Node.js.
 
 setlocal
 set "VERSION=%~1"
-if "%VERSION%"=="" call :ask_version
+if "%VERSION%"=="" call :ask_version_suggesting_next
 if "%VERSION%"=="" (
   echo No version given. Use: release.bat 1.3
   set "RESULT=1"
@@ -54,7 +54,7 @@ echo %cmdcmdline% | find /i "%~0" >nul && pause
 exit /b %RESULT%
 
 rem without npm there's no suggestion, so it asks as before
-:ask_version
+:ask_version_suggesting_next
 set "NEXT="
 for /f "delims=" %%v in ('npm --prefix "%~dp0tools\level_editor" run -s next-version 2^>nul') do set "NEXT=%%v"
 if "%NEXT%"=="" (
