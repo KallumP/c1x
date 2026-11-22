@@ -48,7 +48,5 @@ extern void GLSetTweenDraw(void (*draw)(int32_t alpha));
 extern int GLCreateTexture(dim2 dim, uint8_t *buf);
 extern int GLCreatePictureTexture(dim2 dim, uint8_t *buf);
 extern void GLDrawPicture(int texid, rect2 *at);
-extern void GLDeleteTexture(int texid);
-extern void GLUpdateTexture(int texid, rect2 rect, uint8_t *buf);
 
 #endif /* _GL_H_ */
