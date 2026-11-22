@@ -1,6 +1,6 @@
 # Building
 
-Compilation has only been tested on Fedora and on Windows (MSYS2 MinGW32). It hasn't been tested on Ubuntu/Debian, but the game should build on any system with a working 32-bit GNU toolchain and the other dependencies listed below.
+Compilation has only been tested on Fedora Linux and on Windows (MSYS2 MinGW32). It hasn't been tested on Ubuntu/Debian, but the game should build on any system with a working 32-bit GNU toolchain and the other dependencies listed below.
 
 Note that only 32-bit target executables are currently supported. If you are not already running a 32-bit OS, you will need multilib versions of gcc and g++ and 32-bit versions of the dependencies.
 
