@@ -61,8 +61,8 @@ exit /b %RESULT%
 set "C1X_FOLDER=%~dp0"
 powershell -NoProfile -Command ^
   "Get-Process c1x, c1x_launcher, c1x_tools -ErrorAction SilentlyContinue" ^
-  "| Where-Object Path" ^
-  "| Where-Object { $_.Path.StartsWith($env:C1X_FOLDER, 'OrdinalIgnoreCase') }" ^
+  "| Where-Object { $_.Path -and" ^
+  "$_.Path.StartsWith($env:C1X_FOLDER, 'OrdinalIgnoreCase') }" ^
   "| ForEach-Object { 'Closing {0}, which was running.' -f $_.Name;" ^
   "Stop-Process $_ -Force }"
 exit /b
