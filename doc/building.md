@@ -4,7 +4,7 @@ Compilation has only been tested on Fedora Linux and on Windows (MSYS2 MinGW32).
 
 Note that only 32-bit target executables are currently supported. If you are not already running a 32-bit OS, you will need multilib versions of gcc and g++ and 32-bit versions of the dependencies.
 
-To compile c1x, install the dependencies listed below, `cd` into the main project directory, and run `make`. This builds:
+To compile c1x, install the dependencies listed below, then run `rebuild.bat` on Windows or `./rebuild.sh` on Linux, from the main project directory. Each runs `make` for you (see [Dependencies](#dependencies) for what else they do), and you can run `make` yourself there instead. This builds:
 
 - the game, in `build/`
 - the [launcher](launcher.md), a window for starting the game: `c1x_launcher.exe` in the project directory (`c1x_launcher` on Linux)
