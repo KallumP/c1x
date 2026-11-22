@@ -1,6 +1,6 @@
 # Building
 
-As of currently, compilation has only been tested on Ubuntu/Debian and on Windows (MSYS2 MinGW32). However, the game should build on any system with a working 32-bit GNU toolchain and other dependencies listed below.
+Compilation has only been tested on Fedora and on Windows (MSYS2 MinGW32). It hasn't been tested on Ubuntu/Debian, but the game should build on any system with a working 32-bit GNU toolchain and the other dependencies listed below.
 
 Note that only 32-bit target executables are currently supported. If you are not already running a 32-bit OS, you will need multilib versions of gcc and g++ and 32-bit versions of the dependencies.
 
@@ -42,7 +42,7 @@ To work on the editor itself:
 - Dear ImGui / cimgui (embedded in project)
 - g++ / libstdc++ (for ImGui compilation)
 
-Ubuntu/Debian:
+Ubuntu/Debian (not tested):
 
 - 64-bit: `sudo apt install build-essential gcc-multilib g++-multilib libstdc++6:i386 libgl1-mesa-dev:i386 libsdl2-dev:i386 libfluidsynth-dev:i386`
 - 32-bit: `sudo apt install build-essential libstdc++6 libgl1-mesa-dev libsdl2-dev libfluidsynth-dev`
