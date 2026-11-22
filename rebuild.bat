@@ -28,7 +28,7 @@ if not "%~1"=="" if not defined TARGET (
 
 rem a running launcher, game or tools from this folder would stop make replacing
 rem their exes, so they're closed first (the tests replace none of them)
-if not "%TARGET%"=="test" call :close_running_game_launcher_and_tools
+if not "%TARGET%"=="test" call :close_this_folders_game_launcher_and_tools
 
 rem run make in a MINGW32 login shell, from this script's directory. it keeps
 rem the Windows PATH after its own, so make finds Node.js for c1x_tools.exe and
@@ -57,7 +57,7 @@ rem keep the window open when started by double-clicking
 echo %cmdcmdline% | find /i "%~0" >nul && pause
 exit /b %RESULT%
 
-:close_running_game_launcher_and_tools
+:close_this_folders_game_launcher_and_tools
 set "C1X_FOLDER=%~dp0"
 powershell -NoProfile -Command ^
   "Get-Process c1x, c1x_launcher, c1x_tools -ErrorAction SilentlyContinue" ^
