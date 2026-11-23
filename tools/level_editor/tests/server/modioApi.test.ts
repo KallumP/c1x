@@ -126,6 +126,13 @@ describe("a level on mod.io", () => {
     expect(sent.uploads[0].details.name).toBe("Sunken Steps");
   });
 
+  test("POST /levels/<name>/upload without a logo keeps its picture", async () => {
+    signIn();
+    const { calls, sent } = standInCalls();
+    await request("POST", "/levels/1_tide_ruins/upload", { summary: "", logo: null }, calls);
+    expect(sent.uploads[0].details.logo).toBeNull();
+  });
+
   test("POST /levels/<name>/upload is the uploaded mod", async () => {
     signIn();
     const response = await request("POST", "/levels/1_tide_ruins/upload", { summary: "A beach.", logo: "AQID" });
