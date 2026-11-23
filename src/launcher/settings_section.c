@@ -144,6 +144,12 @@ static void DrawUnbuiltLevelChoice(const char *repo, const char *label, const ch
   igEndDisabled();
 }
 
+/* the start of the section of the dropdown listing levels of kind */
+static void DrawLevelKindHeading(level_kind kind) {
+  igSeparator();
+  igTextDisabled("%s", LevelKindTitle(kind));
+}
+
 static void DrawCustomLevelChoice(const char *repo, int index) {
   char label[SETTINGS_BOOT_LEVEL_MAX + 16];
 
@@ -183,7 +189,10 @@ static void DrawBootLevel(const char *repo) {
   igSetNextItemWidth(BOOT_LEVEL_WIDTH);
   if (igBeginCombo("##boot_level", preview, 0)) {
     DrawBootLevelChoice(NO_BOOT_LEVEL, "");
-    for (i=0;i<levels.count;i++) { DrawCustomLevelChoice(repo, i); }
+    for (i = 0; i < levels.count; i++) {
+      if (StartsLevelKind(&levels, i)) { DrawLevelKindHeading(levels.kinds[i]); }
+      DrawCustomLevelChoice(repo, i);
+    }
     igEndCombo();
   }
   DrawTooltip(BOOT_LEVEL_TOOLTIP);

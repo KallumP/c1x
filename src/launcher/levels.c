@@ -121,6 +121,10 @@ const char *LevelKindTitle(level_kind kind) {
   return LEVEL_KIND_TITLES[kind];
 }
 
+int StartsLevelKind(const custom_levels *levels, int index) {
+  return index == 0 || levels->kinds[index - 1] != levels->kinds[index];
+}
+
 /* by kind, those that come with c1x in their order, then each kind by title */
 static int CompareLevels(const void *a, const void *b) {
   const custom_level *first, *second;
@@ -178,7 +182,8 @@ static void LevelToSort(const custom_levels *levels, int index, const char *incl
 static void PutSortedLevel(custom_levels *levels, int index, const custom_level *level) {
   SDL_strlcpy(levels->names[index], level->name, sizeof(levels->names[0]));
   SDL_strlcpy(levels->titles[index], level->title, sizeof(levels->titles[0]));
-  SDL_strlcpy(levels->modio_pages[index], level->modio_page, sizeof(levels->modio_pages[0]));
+  SDL_strlcpy(levels->modio_pages[index], level->modio_page,
+    sizeof(levels->modio_pages[0]));
   levels->built[index] = level->built;
   levels->kinds[index] = level->kind;
 }

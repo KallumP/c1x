@@ -38,6 +38,9 @@ extern int FindCustomLevel(const custom_levels *levels, const char *name);
 /* the title of the section the launcher lists levels of kind under */
 extern const char *LevelKindTitle(level_kind kind);
 
+/* whether the level at index is the first of its kind, so starts its section */
+extern int StartsLevelKind(const custom_levels *levels, int index);
+
 /* "built", "not built" or "out of date", for the levels tab */
 extern const char *CustomLevelStatus(const custom_levels *levels, int index);
 

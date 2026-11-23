@@ -100,7 +100,12 @@ static void DrawLevelTable(const char *repo, int can_build) {
   igTableSetupColumn("status", ImGuiTableColumnFlags_WidthFixed, STATUS_WIDTH, 0);
   igTableSetupColumn("page", ImGuiTableColumnFlags_WidthFixed, page_width, 0);
   igTableSetupColumn("build", ImGuiTableColumnFlags_WidthFixed, BUTTON_WIDTH, 0);
-  for (i = 0; i < levels.count; i++) { DrawLevelRow(repo, i, can_build); }
+  for (i = 0; i < levels.count; i++) {
+    if (StartsLevelKind(&levels, i)) {
+      DrawFieldGroupTitle(LevelKindTitle(levels.kinds[i]));
+    }
+    DrawLevelRow(repo, i, can_build);
+  }
   igEndTable();
 }
 
