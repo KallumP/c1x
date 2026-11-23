@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { strToU8, zipSync } from "fflate";
@@ -62,6 +62,12 @@ describe("downloading a level", () => {
     const { calls, asked } = standInCalls();
     await download(calls);
     expect([asked.ids, asked.urls]).toEqual([[17302], [TIDE_RUINS.fileUrl]]);
+  });
+
+  test("notes its page on mod.io with it", async () => {
+    await download(standInCalls().calls);
+    const note = readFileSync(join(root, "1_tide_ruins", ".modio.json"), "utf8");
+    expect(JSON.parse(note)).toEqual({ modId: 17302, page: TIDE_RUINS.page });
   });
 
   test("builds it, saying so", async () => {
