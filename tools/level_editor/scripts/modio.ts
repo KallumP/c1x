@@ -255,10 +255,10 @@ function onlineLevelOf(mod: OnlineModAnswer): OnlineLevel | null {
 const publicUrl = (path: string, query: Record<string, string> = {}) =>
   `${gameUrl(path)}?${new URLSearchParams({ api_key: MODIO_GAME.apiKey, ...query })}`;
 
-// online_levels.h has the same number, for the launcher to say, and a test checks
-// the two are the same
+// online_levels.h has the same numbers, TOP_LEVELS for the launcher to say and
+// ONLINE_LEVELS_MAX for as many as it keeps, and a test checks they're the same
 export const TOP_LEVELS = 10;
-const LEVELS_WITH_NAME = 100; // as many as the launcher lists
+export const LEVELS_WITH_NAME = 100;
 
 function levelListQuery(name: string): Record<string, string> {
   const sort = { _sort: "-downloads_total" };
