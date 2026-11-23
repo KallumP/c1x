@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { LevelInfo } from "../api";
 import { imageLogo, viewLogo } from "../levelLogo";
 import {
-  firstPictureChoice,
+  pictureChoices,
   pictureProblem,
   summaryProblem,
   type PictureChoice,
@@ -33,7 +33,8 @@ function usePicture(online: LevelMod | null | undefined) {
   const [imagePicture, setImagePicture] = useState<string | null>(null);
 
   useEffect(() => setViewPicture(takeViewPicture()), []);
-  useEffect(() => setChoice(firstPictureChoice(Boolean(online))), [online]);
+  // the first choice: keep its picture once it's online, else the view
+  useEffect(() => setChoice(pictureChoices(Boolean(online))[0]), [online]);
 
   // the picture to send: a base64 png, or null to keep the one it has
   const chosen = (): string | null => {

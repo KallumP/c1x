@@ -65,10 +65,6 @@ export function pictureChoices(isOnline: boolean): PictureChoice[] {
   return ["view", "image"];
 }
 
-export function firstPictureChoice(isOnline: boolean): PictureChoice {
-  return pictureChoices(isOnline)[0];
-}
-
 export function pictureProblem(choice: PictureChoice, hasImage: boolean): string | null {
   if (choice === "image" && !hasImage) {
     return "Choose an image for its picture first.";
