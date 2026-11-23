@@ -1,11 +1,10 @@
 // c1x_tools check-update <version>: whether GitHub has a release of c1x newer
 // than version, the one the launcher was built as (see doc/releasing.md)
 import { errorMessage } from "../src/errorMessage";
+import type { Fetch } from "./fetch";
 
 // GitHub's latest release by its tag, such as v1.4, or why it can't be told
 export type LatestRelease = { tag: string } | { problem: string };
-// fetch, or a test's stand-in for it
-type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 
 const LATEST_RELEASE_API_URL = "https://api.github.com/repos/KallumP/c1x/releases/latest";
 const TIMEOUT_MS = 10000;

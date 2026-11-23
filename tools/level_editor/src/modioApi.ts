@@ -1,14 +1,9 @@
 // the editor server's mod.io api (server/modioApi.ts)
 
-export interface LevelMod {
-  id: number;
-  page: string; // its page on mod.io
-}
+import type { Uploaded } from "../scripts/levelUpload";
+import type { LevelMod } from "../scripts/modio";
 
-export interface Uploaded {
-  mod: LevelMod;
-  isNew: boolean; // whether its mod was added, rather than updated
-}
+export type { LevelMod, Uploaded };
 
 const levelUrl = (name: string) => `/api/modio/levels/${encodeURIComponent(name)}`;
 

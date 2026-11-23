@@ -8,6 +8,7 @@
 //                                    the picture it has }), as an Uploaded
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { levelOptions } from "../builder/levelCfg";
 import { uploadLevel } from "../scripts/levelUpload";
 import {
   findOwnLevelMod,
@@ -16,9 +17,7 @@ import {
   signInWithCode,
   type SignIn,
 } from "../scripts/modio";
-import { defaultLevelTitle } from "../src/levelTitle";
 import type { ApiResponse } from "./api";
-import { readLevelCfg } from "./levelCfg";
 import { listLevels } from "./levels";
 import { errorMessage } from "../src/errorMessage";
 
@@ -103,15 +102,6 @@ async function accountResponse(
   return NOT_FOUND;
 }
 
-// the title players see: its level.cfg's, or its folder's name in words
-function levelTitle(root: string, name: string): string {
-  const { title } = readLevelCfg(root, name);
-  if (title) {
-    return title;
-  }
-  return defaultLevelTitle(name);
-}
-
 // a base64 logo's bytes, or null for none: keep the picture the level has
 function logoBytes(logo: unknown): Uint8Array | null {
   if (typeof logo !== "string" || logo === "") {
@@ -129,7 +119,7 @@ async function uploadWithBody(
 ): Promise<ApiResponse> {
   const { summary, logo } = JSON.parse(await readBody());
   const details = {
-    name: levelTitle(root, name),
+    name: levelOptions(join(root, name)).title,
     summary: String(summary),
     logo: logoBytes(logo),
   };

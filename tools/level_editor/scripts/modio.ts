@@ -1,9 +1,8 @@
 // mod.io's api, where custom levels are shared (see doc/custom_levels.md): each
 // level is a mod of c1x's game there, its file a zip of the level's source folder
 import { errorMessage } from "../src/errorMessage";
+import type { Fetch } from "./fetch";
 
-// fetch, or a test's stand-in for it
-export type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 // what mod.io answered, or why there's no answer
 export type Answer<T> = T | { problem: string };
 
