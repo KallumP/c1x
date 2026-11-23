@@ -1,6 +1,6 @@
 /*
  * downloading a newer release with c1x's tools (c1x_tools download-release),
- * and where they say they saved it
+ * and where they say they put its folder
  */
 #include <SDL2/SDL.h>
 #include "release_download.h"
@@ -10,9 +10,9 @@
 
 #define DOWNLOAD_COMMAND "download-release "
 #define DOWNLOAD_ARGS_MAX (sizeof(DOWNLOAD_COMMAND) + RELEASE_VERSION_MAX)
-/* what the tools say before where they saved the release. releaseDownload.ts
+/* what the tools say before the new version's folder. releaseDownload.ts
    has the same text, and one of its tests checks the two are the same */
-#define RELEASE_SAVED "saved release: "
+#define RELEASE_INSTALLED "installed release: "
 
 int DownloadReleaseCommand(const char *repo, const char *version, char *command,
   size_t size) {
@@ -28,9 +28,9 @@ int FindSavedRelease(const char *output, char *path, size_t size) {
   const char *line;
   size_t length;
 
-  line = SDL_strstr(output, RELEASE_SAVED);
+  line = SDL_strstr(output, RELEASE_INSTALLED);
   if (!line) { return 0; }
-  line += SDL_strlen(RELEASE_SAVED);
+  line += SDL_strlen(RELEASE_INSTALLED);
   length = LineLength(line);
   if (!line[length]) { return 0; } /* no line end yet: more of it may be to come */
   if (length >= size) { return 0; }

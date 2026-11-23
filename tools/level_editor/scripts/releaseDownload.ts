@@ -1,55 +1,49 @@
 // downloading a release of c1x for the launcher's new version button: its zip
-// from GitHub, saved into the player's Downloads folder for them to unzip
+// from GitHub, unzipped beside the player's c1x folder with their things copied in
 
-import { mkdirSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, resolve } from "node:path";
 import { errorMessage } from "../src/errorMessage";
 import { downloadFile } from "./download";
-import { isProblem } from "./modio";
+import { type Answer, isProblem } from "./modio";
+import { copyPlayersThings } from "./playersThings";
+import { releaseName, unzipRelease } from "./releaseUnzip";
 import { versionNumbers } from "./updateCheck";
 
 const RELEASES_URL = "https://github.com/KallumP/c1x/releases";
-
-// a release's folder, and its zip's name without .zip, as the release script makes it
-export const releaseName = (version: string) => `c1x-${version}`;
 
 // where GitHub keeps a release's zip: each release is tagged with a v before its version
 export const releaseZipUrl = (version: string) =>
   `${RELEASES_URL}/download/v${version}/${releaseName(version)}.zip`;
 
-// the player's Downloads folder: the one in their home folder (Windows' own, and
-// most Linux desktops'). home is a test's stand-in
-export const downloadsFolder = (home: string = homedir()) => join(home, "Downloads");
-
-// what's said before where the release was saved, which the launcher looks for.
+// what's said before the new version's folder, which the launcher looks for.
 // release_download.c has the same text, and a test checks the two are the same
-export const RELEASE_SAVED_PREFIX = "saved release: ";
+export const RELEASE_INSTALLED_PREFIX = "installed release: ";
 
-// the download and the folder it's saved in, or a test's stand-ins
-export interface ReleaseDownload {
-  downloadFile: typeof downloadFile;
-  downloads: string;
+// unzips zip beside the player's folder current, and copies their things into it
+function installRelease(
+  zip: Uint8Array,
+  current: string,
+  version: string,
+): Answer<{ folder: string }> {
+  try {
+    const unzipped = unzipRelease(zip, dirname(current), version);
+    if (!isProblem(unzipped)) {
+      copyPlayersThings(current, unzipped.folder);
+    }
+    return unzipped;
+  } catch (error) {
+    return { problem: errorMessage(error) };
+  }
 }
 
-// the real download, into the player's own Downloads folder
-const PLAYERS_DOWNLOAD: ReleaseDownload = { downloadFile, downloads: downloadsFolder() };
-
-// saves zip as version's in the downloads folder, making it if it isn't there; its path
-function saveReleaseZip(downloads: string, version: string, zip: Uint8Array): string {
-  const path = join(downloads, `${releaseName(version)}.zip`);
-  mkdirSync(downloads, { recursive: true });
-  writeFileSync(path, zip);
-  return path;
-}
-
-// c1x_tools download-release <version>: downloads that release's zip into the
-// player's Downloads folder, saying where (the line the launcher reads), or why
-// it couldn't; returns the exit code, 1 if it couldn't
+// c1x_tools download-release <version>: downloads that release, unzipped beside
+// repo (the player's c1x folder) with their things copied in, saying where (the
+// line the launcher reads), or why it couldn't; returns the exit code, 1 if it couldn't
 export async function downloadReleaseCommand(
   version: string,
+  repo: string,
   say: (line: string) => void,
-  { downloadFile: download, downloads }: ReleaseDownload = PLAYERS_DOWNLOAD,
+  download: typeof downloadFile = downloadFile,
 ): Promise<number> {
   if (!versionNumbers(version)) {
     say(`"${version}" isn't a version: it has to be two numbers, like 1.5`);
@@ -60,11 +54,11 @@ export async function downloadReleaseCommand(
     say(`couldn't download c1x ${version}: ${zip.problem}`);
     return 1;
   }
-  try {
-    say(`${RELEASE_SAVED_PREFIX}${saveReleaseZip(downloads, version, zip)}`);
-    return 0;
-  } catch (error) {
-    say(`couldn't save c1x ${version} in ${downloads}: ${errorMessage(error)}`);
+  const installed = installRelease(zip, resolve(repo), version);
+  if (isProblem(installed)) {
+    say(`couldn't install c1x ${version}: ${installed.problem}`);
     return 1;
   }
+  say(`${RELEASE_INSTALLED_PREFIX}${installed.folder}`);
+  return 0;
 }

@@ -45,8 +45,9 @@ export const USAGE = `usage: c1x_tools build-level <level>
                downloads the level with that id from mod.io into level_src,
                then builds it
   download-release
-               downloads that release of c1x (two numbers, like 1.5) into the
-               player's Downloads folder, and says where`;
+               downloads that release of c1x (two numbers, like 1.5), unzips
+               it beside this c1x's folder with the player's things copied in,
+               and says where`;
 
 const MOD_ID = /^[1-9]\d*$/; // a mod's id on mod.io
 const EDITOR_PORT = 5173; // vite's, as npm run dev has it
@@ -120,7 +121,7 @@ export async function runTools(repo: string, args: string[]): Promise<number> {
     return listOnlineLevelsCommand(console.log);
   }
   if (command.kind === "download-release") {
-    return downloadReleaseCommand(command.version, console.log);
+    return downloadReleaseCommand(command.version, repo, console.log);
   }
   if (command.kind === "download-level") {
     return runDownloadLevel(repo, command.modId);

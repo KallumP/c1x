@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, posix, sep } from "node:path";
 import { docLink, htmlDocPage } from "./htmlDocs";
-import { releaseName } from "./releaseDownload";
+import { releaseName } from "./releaseUnzip";
 
 export type ReleaseFile = { from: string; to: string; asPage?: boolean }; // asPage: a doc, written as its html page
 type Command = { program: string; args: string[] };

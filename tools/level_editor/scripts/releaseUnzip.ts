@@ -3,8 +3,10 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { Answer } from "./modio";
-import { releaseName } from "./releaseDownload";
 import { isPlainName, tryUnzip, zippedFiles } from "./zipEntries";
+
+// a release's folder, and its zip's name without .zip, as the release script makes it
+export const releaseName = (version: string) => `c1x-${version}`;
 
 // whether every file is inside top's folder, by names that stay where they're put
 const isIn = (top: string, parts: string[]) =>
