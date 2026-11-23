@@ -31,34 +31,17 @@ function write(folder: string, path: string, text: string): void {
 const read = (folder: string, path: string) => readFileSync(join(folder, path), "utf8");
 
 describe("copying the player's things into the new version", () => {
-  test("copies their settings and controls", () => {
-    write(current, "settings.cfg", "mine");
-    write(current, "controls.cfg", "my keys");
+  test.each([
+    "settings.cfg",
+    "controls.cfg",
+    "imgui.ini", // the launcher's window layout
+    "modio_token.json", // the level editor's mod.io sign-in
+    "streams/s0000003.nsd", // the game's files from their disc
+    "memory_card/BASCUS-94900/save",
+  ])("copies %s", (path) => {
+    write(current, path, "mine");
     copyPlayersThings(current, newer);
-    expect([read(newer, "settings.cfg"), read(newer, "controls.cfg")]).toEqual([
-      "mine",
-      "my keys",
-    ]);
-  });
-
-  test("copies the window layout and the level editor's mod.io sign-in", () => {
-    write(current, "imgui.ini", "layout");
-    write(current, "modio_token.json", "token");
-    copyPlayersThings(current, newer);
-    expect([read(newer, "imgui.ini"), read(newer, "modio_token.json")]).toEqual([
-      "layout",
-      "token",
-    ]);
-  });
-
-  test("copies the game's files from their disc, and their memory card", () => {
-    write(current, "streams/s0000003.nsd", "stream");
-    write(current, "memory_card/BASCUS-94900/save", "save");
-    copyPlayersThings(current, newer);
-    expect([
-      read(newer, "streams/s0000003.nsd"),
-      read(newer, "memory_card/BASCUS-94900/save"),
-    ]).toEqual(["stream", "save"]);
+    expect(read(newer, path)).toBe("mine");
   });
 
   test("keeps the new version's own file where the player has one by its name", () => {
