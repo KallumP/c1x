@@ -20,6 +20,7 @@ static const struct {
   { "replay_inputs",        offsetof(pc_settings, replay_inputs) },
   { "fullscreen",           offsetof(pc_settings, fullscreen) },
   { "memory_card",          offsetof(pc_settings, memory_card) },
+  { "mute",                 offsetof(pc_settings, mute) },
 };
 
 #define ON_OFF_SETTING_COUNT (int)(sizeof(on_off_settings)/sizeof(on_off_settings[0]))
@@ -229,4 +230,12 @@ UTEST(settings, the_memory_card_is_off_unless_its_turned_on) {
   s.memory_card = 1;
   SettingsReset(&s);
   ASSERT_EQ(0, s.memory_card);
+}
+
+UTEST(settings, mute_is_off_unless_its_turned_on) {
+  pc_settings s;
+
+  s.mute = 1;
+  SettingsReset(&s);
+  ASSERT_EQ(0, s.mute);
 }

@@ -27,8 +27,6 @@ speed run mode
 
 
 Generic
-- search function for levels. Search by username or level name, or level id? Should be able to select which search type is being used.
-- mute-able start
 - europe support
 - other demo showings dont work, the second one (that shows jungle rollers) opens but no gameplay shows
 - the last bonus token you get still rubber bands across the top of the screen

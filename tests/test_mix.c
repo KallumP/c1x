@@ -22,3 +22,11 @@ UTEST(mix, a_mix_louder_than_full_scale_is_clipped) {
 UTEST(mix, a_mix_quieter_than_negative_full_scale_is_clipped) {
   ASSERT_EQ(INT16_MIN, SwMixToSample(INT16_MIN * MANY_VOICES));
 }
+
+UTEST(mix, a_muted_mix_is_silent) {
+  ASSERT_EQ(0, SwMixToSampleOrSilence(3000, 1));
+}
+
+UTEST(mix, an_unmuted_mix_is_the_mixed_sample) {
+  ASSERT_EQ(SwMixToSample(3000), SwMixToSampleOrSilence(3000, 0));
+}

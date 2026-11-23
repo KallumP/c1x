@@ -198,9 +198,9 @@ static void DrawBootLevel(const char *repo) {
   DrawLevelBuildStatus();
 }
 
-/* the window and what's shown over the game */
-static void DrawDisplayFields(void) {
-  DrawFieldGroupTitle("Display");
+/* the window, sound and what's shown over the game */
+static void DrawGeneralFields(void) {
+  DrawFieldGroupTitle("General");
   DrawOnOff("Fullscreen", &settings.fullscreen,
     "Alt+Enter or F11 switches while playing.");
   DrawOnOff("FPS display", &settings.fps_display,
@@ -208,13 +208,14 @@ static void DrawDisplayFields(void) {
   DrawSliderBeside("frame_rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
     SETTINGS_FRAME_RATE_MAX,
     "Target frame rate: frames drawn a second. The game logic still runs at 30 fps, so it plays the same.");
-  DrawOnOff("Box counter", &settings.box_display,
-    "Show the level's boxes count (eg 12/49) in the in-game hud");
+  DrawOnOff("Mute", &settings.mute, "Start the game with no sound.");
 }
 
 /* changes to how the original game plays or looks */
 static void DrawGameAdjustmentFields(void) {
   DrawFieldGroupTitle("Game adjustments");
+  DrawOnOff("Box counter", &settings.box_display,
+    "Show the level's boxes count (eg 12/49) in the in-game hud");
   DrawOnOff("Skip splash screens", &settings.skip_splash_screens,
     "Go straight to the main menu when the game starts.");
   DrawOnOff("Skip loading screen", &settings.skip_loading_screen,
@@ -250,7 +251,7 @@ static void DrawReplayFields(void) {
 static void DrawFields(const char *repo) {
   if (!BeginFieldRows("settings_fields")) { return; }
   DrawBootLevel(repo);
-  DrawDisplayFields();
+  DrawGeneralFields();
   DrawGameAdjustmentFields();
   DrawSavingFields();
   DrawReplayFields();

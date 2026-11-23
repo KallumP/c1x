@@ -9,5 +9,6 @@
 #define MIX_HEADROOM 3
 
 extern int16_t SwMixToSample(int32_t mixed);
+extern int16_t SwMixToSampleOrSilence(int32_t mixed, int muted);
 
 #endif /* _PC_MIX_H_ */
