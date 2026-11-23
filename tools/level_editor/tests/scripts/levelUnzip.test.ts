@@ -52,6 +52,7 @@ describe("unzipping a level", () => {
     (path) => {
       unzipLevel(root, zipOf([...TIDE_RUINS, path]), 17302);
       expect(filesIn("1_tide_ruins")).toEqual([".modio.json", "level.cfg", "tide_ruins.obj"]);
+      expect(readdirSync(root)).toEqual(["1_tide_ruins"]);
     },
   );
 
