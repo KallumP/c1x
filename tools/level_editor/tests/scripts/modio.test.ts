@@ -278,13 +278,14 @@ describe("finding the player's own mod for a level", () => {
     expect(await findOwnLevelMod("token", "1_tide_ruins", fetchUrl)).toBeNull();
   });
 
-  test("is mod.io's reason when it refuses", async () => {
+  test("is mod.io's reason, signed out, when it refuses the player's token", async () => {
     const { fetchUrl } = standInFetch(
       { error: { code: 401, message: "Your access token has expired." } },
       401,
     );
     expect(await findOwnLevelMod("token", "1_tide_ruins", fetchUrl)).toEqual({
       problem: "Your access token has expired.",
+      signedOut: true,
     });
   });
 });

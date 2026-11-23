@@ -33,7 +33,9 @@ const signIn = (expires = LATER) => writeFileSync(
 );
 
 // stand-ins for mod.io, answering as given, and what they were sent
-function standInCalls(answers: Partial<{ problem: string; own: LevelMod | null }> = {}) {
+type StandInAnswers = Partial<{ problem: string; signedOut: true; own: LevelMod | null }>;
+
+function standInCalls(answers: StandInAnswers = {}) {
   const sent = {
     emails: [] as string[],
     codes: [] as string[],
@@ -41,7 +43,7 @@ function standInCalls(answers: Partial<{ problem: string; own: LevelMod | null }
   };
   const answer = <T>(value: T) => {
     if (answers.problem) {
-      return { problem: answers.problem };
+      return { problem: answers.problem, signedOut: answers.signedOut };
     }
     return value;
   };
@@ -242,12 +244,23 @@ describe("a level on mod.io", () => {
 
   test("GET /levels/<name> is mod.io's refusal, a 400 saying why", async () => {
     signIn();
-    const { calls } = standInCalls({ problem: "Your access token has expired." });
+    const { calls } = standInCalls({ problem: "Too many requests." });
     const response = await request("GET", "/levels/1_tide_ruins", {}, calls);
-    expect([response.status, response.body.toString()]).toEqual([
-      400,
-      "Your access token has expired.",
-    ]);
+    expect([response.status, response.body.toString()]).toEqual([400, "Too many requests."]);
+  });
+
+  test("mod.io refusing the player's token signs them out", async () => {
+    signIn();
+    const { calls } = standInCalls({ problem: "Your access token has expired.", signedOut: true });
+    const response = await request("GET", "/levels/1_tide_ruins", {}, calls);
+    expect([response.status, response.body.toString()]).toEqual([401, "Sign in to mod.io first."]);
+  });
+
+  test("mod.io refusing the player's token forgets it", async () => {
+    signIn();
+    const { calls } = standInCalls({ problem: "Your access token has expired.", signedOut: true });
+    await request("POST", "/levels/1_tide_ruins/upload", { summary: "A beach.", logo: "AQID" }, calls);
+    expect(existsSync(tokenPath())).toBe(false);
   });
 
   test("a level that isn't in level_src is not found", async () => {
