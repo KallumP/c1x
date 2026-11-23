@@ -13,7 +13,6 @@ interface ModioNote {
   page: string;
 }
 
-
 // the one folder all the files are in, or null if they aren't in one
 function levelFolderName(files: [string[], Uint8Array][]): string | null {
   const folders = new Set(files.map(([parts]) => parts[0]));
