@@ -16,33 +16,32 @@ UTEST(launcher_release_download, isnt_run_for_what_isnt_a_version) {
   ASSERT_FALSE(DownloadReleaseCommand(REPO, "1.5 & calc", command, sizeof(command)));
 }
 
-UTEST(launcher_release_download, finds_where_the_zip_was_saved) {
-  char path[256];
+UTEST(launcher_release_download, finds_the_new_versions_folder) {
+  char folder[256];
 
-  ASSERT_TRUE(FindSavedRelease("saved release: C:\\Users\\me\\Downloads\\c1x-1.5.zip\r\n",
-    path, sizeof(path)));
-  ASSERT_STREQ("C:\\Users\\me\\Downloads\\c1x-1.5.zip", path);
+  ASSERT_TRUE(FindInstalledRelease("installed release: C:\\Games\\c1x-1.5\r\n",
+    folder, sizeof(folder)));
+  ASSERT_STREQ("C:\\Games\\c1x-1.5", folder);
 }
 
 UTEST(launcher_release_download, finds_nothing_before_it_says_where) {
-  char path[256];
+  char folder[256];
 
-  ASSERT_FALSE(FindSavedRelease("couldn't download c1x 1.5: the download answered 404\n",
-    path, sizeof(path)));
+  ASSERT_FALSE(FindInstalledRelease("couldn't download c1x 1.5: the download answered 404\n",
+    folder, sizeof(folder)));
 }
 
 UTEST(launcher_release_download, finds_nothing_while_the_line_isnt_all_there) {
-  char path[256];
-
+  char folder[256];
   const char *output;
 
-  output = "saved release: C:\\Users\\me\\Down";
-  ASSERT_FALSE(FindSavedRelease(output, path, sizeof(path)));
+  output = "installed release: C:\\Gam";
+  ASSERT_FALSE(FindInstalledRelease(output, folder, sizeof(folder)));
 }
 
-UTEST(launcher_release_download, finds_nothing_when_the_path_is_too_long_to_keep) {
-  char path[8];
+UTEST(launcher_release_download, finds_nothing_when_the_folder_is_too_long_to_keep) {
+  char folder[8];
 
-  ASSERT_FALSE(FindSavedRelease("saved release: C:\\Users\\me\\Downloads\\c1x-1.5.zip\n",
-    path, sizeof(path)));
+  ASSERT_FALSE(FindInstalledRelease("installed release: C:\\Games\\c1x-1.5\n",
+    folder, sizeof(folder)));
 }
