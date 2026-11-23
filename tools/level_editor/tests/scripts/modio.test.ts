@@ -271,11 +271,11 @@ describe("listing the levels on mod.io", () => {
     );
   });
 
-  test("asks for the 20 most downloaded, with the game's api key", async () => {
+  test("asks for the 10 most downloaded, with the game's api key", async () => {
     expect(Object.fromEntries((await listUrl("")).searchParams)).toEqual({
       api_key: MODIO_GAME.apiKey,
       _sort: "-downloads_total",
-      _limit: "20",
+      _limit: "10",
     });
   });
 
