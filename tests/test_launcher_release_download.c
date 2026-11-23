@@ -39,6 +39,17 @@ UTEST(launcher_release_download, finds_nothing_while_the_line_isnt_all_there) {
   ASSERT_FALSE(FindInstalledRelease(output, folder, sizeof(folder)));
 }
 
+UTEST(launcher_release_download, starts_the_launcher_at_the_top_of_the_new_folder) {
+  char path[256];
+
+  InstalledLauncherPath("C:/Games/c1x-1.5", path, sizeof(path));
+#ifdef _WIN32
+  ASSERT_STREQ("C:/Games/c1x-1.5/c1x_launcher.exe", path);
+#else
+  ASSERT_STREQ("C:/Games/c1x-1.5/c1x_launcher", path);
+#endif
+}
+
 UTEST(launcher_release_download, finds_nothing_when_the_folder_is_too_long_to_keep) {
   char folder[8];
 
