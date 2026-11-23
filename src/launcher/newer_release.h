@@ -16,6 +16,12 @@
 /* whether version is a release's: two numbers with a dot between, like "1.3" */
 extern int IsReleaseVersion(const char *version);
 
+/* the tools' command (run in repo) to do subcommand with the release version,
+   as "c1x_tools <subcommand> <version>". returns 0 if version isn't a release's,
+   or if the tools' path can't be quoted */
+extern int ReleaseToolsCommand(const char *repo, const char *subcommand,
+  const char *version, char *command, size_t size);
+
 /* the command checking for a release newer than version (run in repo).
    returns 0 if version isn't a release's (a dev build's is ""), or if the
    tools' path can't be quoted */

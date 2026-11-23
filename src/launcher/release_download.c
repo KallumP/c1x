@@ -16,20 +16,13 @@
 #define LAUNCHER_FILE_NAME "c1x_launcher"
 #endif
 
-#define DOWNLOAD_COMMAND "download-release "
-#define DOWNLOAD_ARGS_MAX (sizeof(DOWNLOAD_COMMAND) + RELEASE_VERSION_MAX)
 /* what the tools say before the new version's folder. releaseDownload.ts
    has the same text, and one of its tests checks the two are the same */
 #define RELEASE_INSTALLED "installed release: "
 
 int DownloadReleaseCommand(const char *repo, const char *version, char *command,
   size_t size) {
-  char args[DOWNLOAD_ARGS_MAX];
-
-  if (!IsReleaseVersion(version)) { return 0; }
-  if (SDL_strlen(version) >= RELEASE_VERSION_MAX) { return 0; }
-  SDL_snprintf(args, sizeof(args), DOWNLOAD_COMMAND "%s", version);
-  return ToolsCommand(repo, args, command, size);
+  return ReleaseToolsCommand(repo, "download-release", version, command, size);
 }
 
 int FindInstalledRelease(const char *output, char *folder, size_t size) {
