@@ -167,3 +167,77 @@ export async function addLevelFile(
   }
   return {};
 }
+
+// a level players can download
+export interface OnlineLevel {
+  id: number;
+  name: string;
+  author: string;
+  folder: string;  // its folder in level_src/, as its uploader had it
+  fileUrl: string; // its newest zip
+}
+
+type OnlineModAnswer = {
+  id: number;
+  name: string;
+  metadata_blob: string | null; // null for a level uploaded by hand
+  submitted_by: { username: string };
+  modfile: { download: { binary_url: string } } | null;
+};
+
+// the level a mod is, or null if it has no file to download yet
+function onlineLevelOf(mod: OnlineModAnswer): OnlineLevel | null {
+  if (!mod.modfile) {
+    return null;
+  }
+  return {
+    id: mod.id,
+    name: mod.name,
+    author: mod.submitted_by.username,
+    folder: mod.metadata_blob ?? "",
+    fileUrl: mod.modfile.download.binary_url,
+  };
+}
+
+const JSON_ACCEPTED = { Accept: "application/json" };
+
+const publicUrl = (path: string, query: Record<string, string> = {}) =>
+  `${gameUrl(path)}?${new URLSearchParams({ api_key: MODIO_GAME.apiKey, ...query })}`;
+
+// the game's levels with a file to download: all its mods, as a level
+// uploaded by hand may not be tagged
+export async function listOnlineLevels(fetchUrl: Fetch = fetch): Promise<Answer<OnlineLevel[]>> {
+  const answer = await askModio(fetchUrl, publicUrl("/mods"), { headers: JSON_ACCEPTED });
+  if (isProblem(answer)) {
+    return answer;
+  }
+  const mods = (answer as { data: OnlineModAnswer[] }).data;
+  return mods.map(onlineLevelOf).filter((level): level is OnlineLevel => level !== null);
+}
+
+// the level mod modId is
+export async function onlineLevel(modId: number, fetchUrl: Fetch = fetch): Promise<Answer<OnlineLevel>> {
+  const answer = await askModio(fetchUrl, publicUrl(`/mods/${modId}`), { headers: JSON_ACCEPTED });
+  if (isProblem(answer)) {
+    return answer;
+  }
+  const mod = answer as OnlineModAnswer;
+  const level = onlineLevelOf(mod);
+  if (!level) {
+    return { problem: `${mod.name} has no file on mod.io yet.` };
+  }
+  return level;
+}
+
+// the zip at a level's file url
+export async function downloadLevelZip(fileUrl: string, fetchUrl: Fetch = fetch): Promise<Answer<Uint8Array>> {
+  try {
+    const response = await fetchUrl(fileUrl, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    if (!response.ok) {
+      return { problem: `the download answered ${response.status}` };
+    }
+    return new Uint8Array(await response.arrayBuffer());
+  } catch (error) {
+    return { problem: `the download failed (${errorMessage(error)})` };
+  }
+}
