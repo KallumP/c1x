@@ -12,6 +12,7 @@ const TIDE_RUINS: OnlineLevel = {
   id: 17302,
   name: "Tide Ruins",
   author: "kallum",
+  page: "https://mod.io/g/crash-1-n-hanced/m/tide-ruins",
   fileUrl: "",
 };
 
