@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import type { LevelInfo } from "../api";
 import { imageLogo, viewLogo } from "../levelLogo";
 import { firstPictureChoice, pictureProblem, summaryProblem, type PictureChoice } from "../levelSharing";
-import { fetchOnlineLevel, uploadLevel, type LevelMod, type Uploaded } from "../modioApi";
+import {
+  fetchOwnLevelMod,
+  isSignedOutError,
+  uploadLevel,
+  type LevelMod,
+  type Uploaded,
+} from "../modioApi";
 import { errorMessage } from "../errorMessage";
 
 // the editor's view, as a picture for the level, or null if there's no view
@@ -48,6 +54,7 @@ export function useLevelUpload(
   level: LevelInfo | null,
   signedIn: boolean | null,
   save: () => Promise<boolean>,
+  onSignedOut: () => void, // the player's sign-in was refused, so they have to sign in again
 ) {
   const [online, setOnline] = useState<LevelMod | null | undefined>(undefined); // undefined until mod.io says
   const [summary, setSummary] = useState("");
@@ -56,6 +63,15 @@ export function useLevelUpload(
   const [uploaded, setUploaded] = useState<Uploaded | null>(null);
   const picture = usePicture(online);
 
+  // why a request failed, or back to signing in if it was the sign-in that failed
+  const showFailure = (error: unknown) => {
+    if (isSignedOutError(error)) {
+      onSignedOut();
+      return;
+    }
+    setProblem(errorMessage(error));
+  };
+
   useEffect(() => {
     setOnline(undefined);
     setUploaded(null);
@@ -63,7 +79,7 @@ export function useLevelUpload(
     if (!level || !signedIn) {
       return;
     }
-    fetchOnlineLevel(level.name).then(setOnline, (error) => setProblem(errorMessage(error)));
+    fetchOwnLevelMod(level.name).then(setOnline, showFailure);
   }, [level, signedIn]);
 
   // a new level needs a summary; a new version keeps its mod's. either needs its picture
@@ -98,7 +114,7 @@ export function useLevelUpload(
     try {
       await sendUpload(level.name);
     } catch (error) {
-      setProblem(errorMessage(error));
+      showFailure(error);
     } finally {
       setIsBusy(false);
     }

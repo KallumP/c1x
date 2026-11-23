@@ -56,15 +56,17 @@ export function useModioAccount() {
     setProblem(null);
   };
 
-  const signOut = async () => {
-    if (await runStep(null, signOutOfModio)) {
-      setSignedIn(false);
-      startAgain();
-    }
+  // back to the email step: the player signed out, or their sign-in ran out or was refused
+  const signedOut = () => {
+    setSignedIn(false);
+    startAgain();
   };
 
-  // the token ran out or was refused: sign in again
-  const signedOut = () => setSignedIn(false);
+  const signOut = async () => {
+    if (await runStep(null, signOutOfModio)) {
+      signedOut();
+    }
+  };
 
   return {
     signedIn,

@@ -21,7 +21,7 @@ export default function ShareDialog({ level, save, onClose }: {
   onClose: () => void;
 }) {
   const modio = useModioAccount();
-  const levelUpload = useLevelUpload(level, modio.signedIn, save);
+  const levelUpload = useLevelUpload(level, modio.signedIn, save, modio.signedOut);
 
   // the email to send a sign-in code to
   const renderEmailStep = () => (
