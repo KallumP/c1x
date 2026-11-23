@@ -284,7 +284,9 @@ function readDonorLevel(type: ObjectType, donor: DonorLevel, readOtherLevel?: (l
   try {
     return readOtherLevel(donor.lid);
   } catch (error) {
-    throw new Error(`${what} couldn't be read, and the level's ${objectName(type)}s come from it: ${errorMessage(error)}`);
+    const things = `${objectName(type)}s`;
+    const reason = errorMessage(error);
+    throw new Error(`${what} couldn't be read, and the level's ${things} come from it: ${reason}`);
   }
 }
 

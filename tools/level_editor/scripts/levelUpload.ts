@@ -5,7 +5,7 @@ import * as modio from "./modio";
 import { isProblem, type Answer, type LevelMod } from "./modio";
 
 // mod.io's calls the upload makes, or a test's stand-ins for them
-export interface LevelModio {
+export interface UploadCalls {
   findOwnLevelMod: typeof modio.findOwnLevelMod;
   addLevelMod: typeof modio.addLevelMod;
   addLevelFile: typeof modio.addLevelFile;
@@ -32,7 +32,7 @@ async function updateExistingMod(
   token: string,
   mod: LevelMod,
   logo: Uint8Array | null,
-  calls: LevelModio,
+  calls: UploadCalls,
 ): Promise<Answer<Uploaded>> {
   if (logo) {
     const set = await calls.setLevelLogo(token, mod.id, logo);
@@ -48,7 +48,7 @@ async function findOrAddLevelMod(
   token: string,
   name: string,
   details: LevelDetails,
-  calls: LevelModio,
+  calls: UploadCalls,
 ): Promise<Answer<Uploaded>> {
   const own = await calls.findOwnLevelMod(token, name);
   if (isProblem(own)) {
@@ -75,7 +75,7 @@ export async function uploadLevel(
   root: string,
   name: string,
   details: LevelDetails,
-  calls: LevelModio = modio,
+  calls: UploadCalls = modio,
 ): Promise<Answer<Uploaded>> {
   const uploaded = await findOrAddLevelMod(token, name, details, calls);
   if (isProblem(uploaded)) {

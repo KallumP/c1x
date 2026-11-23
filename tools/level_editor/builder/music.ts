@@ -58,7 +58,8 @@ export function soundtrackMusic(name: string | undefined, readOtherLevel?: (lid:
   try {
     return levelMusic(readOtherLevel(lid));
   } catch (error) {
-    throw new Error(`${what} couldn't be read, and the level's music comes from it: ${errorMessage(error)}`);
+    const reason = errorMessage(error);
+    throw new Error(`${what} couldn't be read, and the level's music comes from it: ${reason}`);
   }
 }
 

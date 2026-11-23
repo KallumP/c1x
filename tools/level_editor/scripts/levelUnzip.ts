@@ -12,11 +12,10 @@ const MAC_FOLDER = "__MACOSX/"; // what a mac adds to a zip it makes
 // a file name that stays in its folder on any system: no slashes either way, or a
 // drive's colon
 const PLAIN_NAME = /^[^\\/:*?"<>|]+$/;
-const NOT_ONE_FOLDER = { problem: "The zip doesn't hold one level's folder." };
 
 // the zip's files, by their paths split at each /, without folders or a mac's extras
-function zippedFiles(zip: Unzipped): [string[], Uint8Array][] {
-  return Object.entries(zip)
+function zippedFiles(unzipped: Unzipped): [string[], Uint8Array][] {
+  return Object.entries(unzipped)
     .filter(([path]) => !path.endsWith("/") && !path.startsWith(MAC_FOLDER))
     .map(([path, data]) => [path.split("/"), data]);
 }
@@ -97,7 +96,7 @@ function writeLevel(folder: string, files: Map<string, Uint8Array>, modId: numbe
   writeFileSync(join(folder, MODIO_NOTE), JSON.stringify({ modId }));
 }
 
-function unzipped(zip: Uint8Array): Unzipped | null {
+function tryUnzip(zip: Uint8Array): Unzipped | null {
   try {
     return unzipSync(zip);
   } catch {
@@ -112,14 +111,14 @@ export function unzipLevel(
   zip: Uint8Array,
   modId: number,
 ): Answer<{ name: string }> {
-  const zipped = unzipped(zip);
-  if (!zipped) {
+  const unzippedFiles = tryUnzip(zip);
+  if (!unzippedFiles) {
     return { problem: "The download isn't a zip." };
   }
-  const entries = zippedFiles(zipped);
+  const entries = zippedFiles(unzippedFiles);
   const name = levelFolderName(entries);
   if (name === null) {
-    return NOT_ONE_FOLDER;
+    return { problem: "The zip doesn't hold one level's folder." };
   }
   const files = levelFiles(entries);
   const problem = unzipProblem(root, name, files, modId);
