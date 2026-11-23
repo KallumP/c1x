@@ -353,3 +353,59 @@ UTEST(launcher_levels, a_built_level_without_a_source_is_titled_by_its_name) {
   MakeEmptyFile(TEST_TITLES_REPO "/build/levels", "old_cave.nsf");
   ASSERT_STREQ("Old Cave", TitleListed(&levels, "old_cave"));
 }
+
+/* repo, kept apart from the other tests', with a level source for each of names
+   (ending with 0), titled by its level.cfg as titles says (0 for none), and
+   included_levels.txt saying included, if there's one (included isn't 0) */
+static void MakeOrderedLevels(const char *repo, const char **names, const char **titles,
+  const char *included) {
+  char folder[256], cfg[64];
+  int i;
+
+  MakeFolder(repo);
+  snprintf(folder, sizeof(folder), "%s/level_src", repo);
+  MakeFolder(folder);
+  for (i = 0; names[i]; i++) {
+    snprintf(folder, sizeof(folder), "%s/level_src/%s", repo, names[i]);
+    MakeFolder(folder);
+    MakeEmptyFile(folder, "map.obj");
+    if (titles && titles[i]) {
+      snprintf(cfg, sizeof(cfg), "title = %s\n", titles[i]);
+      MakeFileSaying(folder, "level.cfg", cfg);
+    }
+  }
+  snprintf(folder, sizeof(folder), "%s/level_src", repo);
+  if (included) { MakeFileSaying(folder, "included_levels.txt", included); }
+}
+
+UTEST(launcher_levels, included_levels_come_first_in_their_order) {
+  static custom_levels levels;
+  const char *names[] = { "aardvark", "1_tide_ruins", "2_mossy_creek", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_included", names, 0,
+    "# comes with c1x\n2_mossy_creek\n1_tide_ruins\n");
+  ListCustomLevels("build/test_launcher_levels_included", &levels);
+  ASSERT_STREQ("2_mossy_creek", levels.names[0]);
+  ASSERT_STREQ("1_tide_ruins", levels.names[1]);
+  ASSERT_STREQ("aardvark", levels.names[2]);
+}
+
+UTEST(launcher_levels, levels_not_included_are_in_order_of_their_titles) {
+  static custom_levels levels;
+  const char *names[] = { "beta", "zeta_cave", 0 };
+  const char *titles[] = { 0, "Alpha", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_by_title", names, titles, 0);
+  ListCustomLevels("build/test_launcher_levels_by_title", &levels);
+  ASSERT_STREQ("zeta_cave", levels.names[0]);
+  ASSERT_STREQ("beta", levels.names[1]);
+}
+
+UTEST(launcher_levels, an_included_level_that_isnt_there_is_left_out) {
+  static custom_levels levels;
+  const char *names[] = { "aardvark", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_missing", names, 0, "1_tide_ruins\n");
+  ListCustomLevels("build/test_launcher_levels_missing", &levels);
+  ASSERT_EQ(1, levels.count);
+}
