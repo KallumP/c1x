@@ -17,20 +17,21 @@ UTEST(launcher_online_levels, a_download_runs_from_the_tools_with_the_levels_id)
   ASSERT_STREQ(TOOLS " download-level 17302", command);
 }
 
-UTEST(launcher_online_levels, a_line_is_a_levels_id_author_and_name) {
+UTEST(launcher_online_levels, a_line_is_a_levels_id_author_name_and_page) {
   online_levels levels;
 
-  FindOnlineLevels("online level: 17302\tkallum\tTide Ruins\n", &levels);
+  FindOnlineLevels("online level: 17302\tkallum\tTide Ruins\thttps://mod.io/m/tide\n", &levels);
   ASSERT_EQ(1, levels.count);
   ASSERT_EQ(17302, levels.ids[0]);
   ASSERT_STREQ("kallum", levels.authors[0]);
   ASSERT_STREQ("Tide Ruins", levels.names[0]);
+  ASSERT_STREQ("https://mod.io/m/tide", levels.pages[0]);
 }
 
 UTEST(launcher_online_levels, each_line_is_a_level_in_order) {
   online_levels levels;
 
-  FindOnlineLevels("online level: 1\ta\tOne\r\nonline level: 2\tb\tTwo\r\n", &levels);
+  FindOnlineLevels("online level: 1\ta\tOne\tp1\r\nonline level: 2\tb\tTwo\tp2\r\n", &levels);
   ASSERT_EQ(2, levels.count);
   ASSERT_STREQ("One", levels.names[0]);
   ASSERT_STREQ("Two", levels.names[1]);
@@ -46,7 +47,7 @@ UTEST(launcher_online_levels, other_lines_arent_levels) {
 UTEST(launcher_online_levels, a_line_not_all_there_yet_isnt_a_level) {
   online_levels levels;
 
-  FindOnlineLevels("online level: 1\ta\tOne\nonline level: 2\tb\tTw", &levels);
+  FindOnlineLevels("online level: 1\ta\tOne\tp1\nonline level: 2\tb\tTwo\thttps://mo", &levels);
   ASSERT_EQ(1, levels.count);
 }
 
@@ -57,10 +58,17 @@ UTEST(launcher_online_levels, a_line_without_an_author_and_name_isnt_a_level) {
   ASSERT_EQ(0, levels.count);
 }
 
+UTEST(launcher_online_levels, a_line_without_a_page_isnt_a_level) {
+  online_levels levels;
+
+  FindOnlineLevels("online level: 1\ta\tOne\n", &levels);
+  ASSERT_EQ(0, levels.count);
+}
+
 UTEST(launcher_online_levels, a_line_without_a_number_for_an_id_isnt_a_level) {
   online_levels levels;
 
-  FindOnlineLevels("online level: x\ta\tOne\n", &levels);
+  FindOnlineLevels("online level: x\ta\tOne\tp\n", &levels);
   ASSERT_EQ(0, levels.count);
 }
 
@@ -68,7 +76,7 @@ UTEST(launcher_online_levels, a_long_name_is_cut_short) {
   online_levels levels;
   char line[512];
 
-  snprintf(line, sizeof(line), "online level: 1\ta\t%0300d\n", 0);
+  snprintf(line, sizeof(line), "online level: 1\ta\t%0300d\tp\n", 0);
   FindOnlineLevels(line, &levels);
   ASSERT_EQ(1, levels.count);
   ASSERT_EQ(ONLINE_LEVEL_TEXT_MAX - 1, (int)strlen(levels.names[0]));
@@ -77,12 +85,13 @@ UTEST(launcher_online_levels, a_long_name_is_cut_short) {
 UTEST(launcher_online_levels, no_more_levels_are_kept_than_fit) {
   online_levels levels;
   static char output[ONLINE_LEVELS_MAX * 40 + 100];
+  size_t used;
   int i;
 
   output[0] = 0;
   for (i = 0; i < ONLINE_LEVELS_MAX + 2; i++) {
-    size_t used = strlen(output);
-    snprintf(output + used, sizeof(output) - used, "online level: %d\ta\tL\n", i + 1);
+    used = strlen(output);
+    snprintf(output + used, sizeof(output) - used, "online level: %d\ta\tL\tp\n", i + 1);
   }
   FindOnlineLevels(output, &levels);
   ASSERT_EQ(ONLINE_LEVELS_MAX, levels.count);
@@ -91,13 +100,13 @@ UTEST(launcher_online_levels, no_more_levels_are_kept_than_fit) {
 UTEST(launcher_online_levels, an_id_of_0_isnt_a_level) {
   online_levels levels;
 
-  FindOnlineLevels("online level: 0\ta\tOne\n", &levels);
+  FindOnlineLevels("online level: 0\ta\tOne\tp\n", &levels);
   ASSERT_EQ(0, levels.count);
 }
 
 UTEST(launcher_online_levels, an_id_too_long_for_an_int_isnt_a_level) {
   online_levels levels;
 
-  FindOnlineLevels("online level: 1234567890\ta\tOne\n", &levels);
+  FindOnlineLevels("online level: 1234567890\ta\tOne\tp\n", &levels);
   ASSERT_EQ(0, levels.count);
 }
