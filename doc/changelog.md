@@ -4,13 +4,13 @@
 
 ### Added
 
-- share custom levels on mod.io: **Share** in the level editor uploads one, and the launcher's Levels tab finds and downloads them
-- an **Open levels folder** button in the launcher's Levels tab
+- share custom levels on mod.io: Share in the level editor uploads one, and the launcher's Levels tab finds and downloads them
+- an Open levels folder button in the launcher's Levels tab
 - the launcher lists custom levels by their titles, under the ones that come with c1x, the ones downloaded from mod.io and your own
 - the launcher's new version button installs the release beside your c1x folder, with your settings, saves and levels, and opens it
-- a level's mod.io page opens from the launcher's Levels tab: **View level** in the mod.io list, and beside a level you downloaded
+- a level's mod.io page opens from the launcher's Levels tab: View level in the mod.io list, and beside a level you downloaded
 - the launcher's Levels tab lists mod.io's 10 most downloaded levels, and searches them by name
-- a **Mute** setting starts the game with no sound
+- a Mute setting starts the game with no sound
 
 ## 2026-11-22
 
@@ -26,8 +26,8 @@
 
 ### Added
 
-- a memory card: with **Memory card** on in the launcher's settings, the game's own save and load screens save your progress to files in `memory_card/`
-- a ? box can drop an extra life instead of wumpa: **drop** in its settings in the level editor
+- a memory card: with Memory card on in the launcher's settings, the game's own save and load screens save your progress to files in `memory_card/`
+- a ? box can drop an extra life instead of wumpa: drop in its settings in the level editor
 - a selected object in the level editor has arrows to drag it along x, y or up, and so does a selected path node
 
 ### Changed
@@ -51,14 +51,14 @@
 
 ### Added
 
-- rotating pots, platforms and pillars can go round the other way: **Reverse direction** in the level editor
+- rotating pots, platforms and pillars can go round the other way: Reverse direction in the level editor
 - copy and paste objects in the level editor with Ctrl+C and Ctrl+V
-- side-on custom levels: set the camera's **view** to **side** in the level editor
+- side-on custom levels: set the camera's view to side in the level editor
 - Grave Switchback, a spooky side-on level
 
 ### Changed
 
-- the level editor's rotating pegs are now **Pillars (rotating)**
+- the level editor's rotating pegs are now Pillars (rotating)
 - a selected object's settings in the level editor start with its name
 - path warnings show only in a selected enemy's settings, not the level editor's top bar
 - an outline box without its switch shows a red note in its settings, not a count in the level editor's top bar
@@ -76,7 +76,7 @@
 
 ### Added
 
-- play with a game controller, and change its buttons on the launcher's **Controls** tab
+- play with a game controller, and change its buttons on the launcher's Controls tab
 
 ### Fixed
 
@@ -86,8 +86,8 @@
 
 ### Changed
 
-- the launcher's **Boot level** setting is now **Custom level**, at the top of the settings
-- the launcher's **Play** is greyed out while a level is building
+- the launcher's Boot level setting is now Custom level, at the top of the settings
+- the launcher's Play is greyed out while a level is building
 
 ### Fixed
 
@@ -102,20 +102,20 @@
 
 ### Changed
 
-- the loading screen setting is now **Skip loading screen**, ticked to skip like **Skip splash screens** (`skip_loading_screen` in `settings.cfg`)
+- the loading screen setting is now Skip loading screen, ticked to skip like Skip splash screens (`skip_loading_screen` in `settings.cfg`)
 - the launcher's settings are grouped into display, game adjustments, start and replays, with the frame rate, loading screen time and replay speed beside the setting they go with
-- the launcher's **Controls** tab lists triangle as **HUD (Triangle)**, under spin
-- with a boot level set, the game starts at the title screen, where **CUSTOM LEVEL** (under **LOAD GAME**) starts it; it's back at the title screen when the level ends
+- the launcher's Controls tab lists triangle as HUD (Triangle), under spin
+- with a boot level set, the game starts at the title screen, where CUSTOM LEVEL (under LOAD GAME) starts it; it's back at the title screen when the level ends
 
 ## 2026-11-15
 
 ### Added
 
-- a custom level's loading screen shows its own title under the game's "LOADING" sign (set under **Level** in the editor), or a `loading.png` from its folder
+- a custom level's loading screen shows its own title under the game's "LOADING" sign (set under Level in the editor), or a `loading.png` from its folder
 
 ### Changed
 
-- the launcher's **Controls** tab lists movement, jump and spin first
+- the launcher's Controls tab lists movement, jump and spin first
 - the in-game debug menu is gone, so Esc and Tab do nothing in the game, and Tab can be bound to a button
 - F11 switches fullscreen on and off too, like Alt+Enter
 - new default settings: the FPS and box counters on, the splash screens skipped, models drawn in depth order and a shorter loading screen; your own settings stay until you change them
@@ -131,19 +131,19 @@
 
 ### Added
 
-- a volume slider for a custom level's own song, under **Music** in the level editor
+- a volume slider for a custom level's own song, under Music in the level editor
 - the game and the launcher have their own icons
 - custom levels can use the game's own textures, made from your copy of the game when they're built (`game_textures.json`); the acid cave's are now made this way
-- the launcher's **Help** tab opens c1x's guide in your browser, and a release's docs are web pages
+- the launcher's Help tab opens c1x's guide in your browser, and a release's docs are web pages
 
 ### Changed
 
 - the launcher is now `c1x_launcher.exe` in the top folder, and needs no DLLs beside it
 - the game is now `build/c1x.exe`
 - the level editor needs nothing installed: no Node.js and no Install, as it runs from `build/c1x_tools.exe`, which builds levels in place of `build-level.exe`
-- the launcher's **Play** no longer opens a console window beside the game
+- the launcher's Play no longer opens a console window beside the game
 - mossy creek and sunset canyon no longer come with their own songs, and play the game's music
-- the default controls are WASD to move, Space to jump and K to spin; your own controls stay until you **Reset to defaults**
+- the default controls are WASD to move, Space to jump and K to spin; your own controls stay until you Reset to defaults
 
 ### Fixed
 
@@ -155,8 +155,8 @@
 ### Added
 
 - custom levels' switches each fill in their own outlines, and any box, even a switch, can be an outline
-- a custom level's music: any of the game's songs, picked under **Music** in the level editor
-- a custom level's own song: an mp3 (or ogg, flac or wav) in its folder, picked under **Music**
+- a custom level's music: any of the game's songs, picked under Music in the level editor
+- a custom level's own song: an mp3 (or ogg, flac or wav) in its folder, picked under Music
 - the launcher's Levels tab says when a level is out of date: its sources were saved after it was built
 
 ### Changed
