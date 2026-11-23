@@ -93,7 +93,11 @@ function unzipProblem(
     ?? existingFolderProblem(root, name, modId);
 }
 
-function writeLevel(folder: string, files: Map<string, Uint8Array>, note: ModioNote): void {
+function writeLevel(
+  folder: string,
+  files: Map<string, Uint8Array>,
+  note: ModioNote,
+): void {
   rmSync(folder, { recursive: true, force: true });
   mkdirSync(folder, { recursive: true });
   for (const [file, data] of files) {
