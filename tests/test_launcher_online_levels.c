@@ -45,6 +45,10 @@ UTEST(launcher_online_levels, a_search_has_letters_numbers_spaces_dashes_undersc
   }
 }
 
+UTEST(launcher_online_levels, a_search_has_nothing_past_ascii) {
+  ASSERT_FALSE(IsSearchCharacter(0x4E2D)); /* a chinese character, which can be typed in the box */
+}
+
 UTEST(launcher_online_levels, a_search_has_nothing_a_shell_or_mod_io_reads) {
   const char *refused;
 
