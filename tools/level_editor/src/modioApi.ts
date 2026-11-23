@@ -1,6 +1,7 @@
 // the editor server's mod.io api (server/modioApi.ts)
 
 import type { Uploaded } from "../scripts/levelUpload";
+import type { Fetch } from "../scripts/fetch";
 import type { LevelMod } from "../scripts/modio";
 
 export type { LevelMod, Uploaded };
@@ -28,29 +29,35 @@ async function answer<T>(response: Response): Promise<T> {
   return response.json();
 }
 
-const post = (url: string, body: unknown = {}) =>
-  fetch(url, { method: "POST", body: JSON.stringify(body) });
+const post = (fetchUrl: Fetch, url: string, body: unknown = {}) =>
+  fetchUrl(url, { method: "POST", body: JSON.stringify(body) });
 
-export async function fetchSignedIn(): Promise<boolean> {
-  const account = await answer<{ signedIn: boolean }>(await fetch("/api/modio/account"));
+// each takes fetch, or a test's stand-in for it
+
+export async function fetchSignedIn(fetchUrl: Fetch = fetch): Promise<boolean> {
+  const account = await answer<{ signedIn: boolean }>(await fetchUrl("/api/modio/account"));
   return account.signedIn;
 }
 
-export async function sendSignInEmail(email: string): Promise<void> {
-  await answer(await post("/api/modio/email", { email }));
+export async function sendSignInEmail(email: string, fetchUrl: Fetch = fetch): Promise<void> {
+  await answer(await post(fetchUrl, "/api/modio/email", { email }));
 }
 
-export async function submitSignInCode(code: string): Promise<void> {
-  await answer(await post("/api/modio/code", { code }));
+export async function submitSignInCode(code: string, fetchUrl: Fetch = fetch): Promise<void> {
+  await answer(await post(fetchUrl, "/api/modio/code", { code }));
 }
 
-export async function signOutOfModio(): Promise<void> {
-  await answer(await post("/api/modio/sign-out"));
+export async function signOutOfModio(fetchUrl: Fetch = fetch): Promise<void> {
+  await answer(await post(fetchUrl, "/api/modio/sign-out"));
 }
 
 // the player's mod for the level, or null if it isn't online
-export async function fetchOwnLevelMod(name: string): Promise<LevelMod | null> {
-  return (await answer<{ online: LevelMod | null }>(await fetch(levelUrl(name)))).online;
+export async function fetchOwnLevelMod(
+  name: string,
+  fetchUrl: Fetch = fetch,
+): Promise<LevelMod | null> {
+  const own = await answer<{ online: LevelMod | null }>(await fetchUrl(levelUrl(name)));
+  return own.online;
 }
 
 // logo is a base64 png, or null to keep the picture it has
@@ -58,6 +65,7 @@ export async function uploadLevel(
   name: string,
   summary: string,
   logo: string | null,
+  fetchUrl: Fetch = fetch,
 ): Promise<Uploaded> {
-  return answer(await post(`${levelUrl(name)}/upload`, { summary, logo }));
+  return answer(await post(fetchUrl, `${levelUrl(name)}/upload`, { summary, logo }));
 }
