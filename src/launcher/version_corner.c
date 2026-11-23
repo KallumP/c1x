@@ -54,7 +54,7 @@ void FollowReleaseCheck(void) {
   }
   UpdateBackgroundCommand(&release_download);
   if (!saved_path[0]) {
-    FindSavedRelease(release_download.output, saved_path, sizeof(saved_path));
+    FindInstalledRelease(release_download.output, saved_path, sizeof(saved_path));
   }
 }
 

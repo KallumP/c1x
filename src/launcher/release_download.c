@@ -24,7 +24,7 @@ int DownloadReleaseCommand(const char *repo, const char *version, char *command,
   return ToolsCommand(repo, args, command, size);
 }
 
-int FindSavedRelease(const char *output, char *path, size_t size) {
+int FindInstalledRelease(const char *output, char *folder, size_t size) {
   const char *line;
   size_t length;
 
@@ -34,5 +34,5 @@ int FindSavedRelease(const char *output, char *path, size_t size) {
   length = LineLength(line);
   if (!line[length]) { return 0; } /* no line end yet: more of it may be to come */
   if (length >= size) { return 0; }
-  return CopyWhole(path, size, line, length);
+  return CopyWhole(folder, size, line, length);
 }
