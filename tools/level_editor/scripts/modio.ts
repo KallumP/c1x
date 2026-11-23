@@ -2,8 +2,7 @@
 // level is a mod of c1x's game there, its file a zip of the level's source folder
 import { errorMessage } from "../src/errorMessage";
 import { isProblem, type Answer, type Problem } from "./answer";
-import { fetchWithTimeout } from "./download";
-import type { Fetch } from "./fetch";
+import { fetchWithTimeout, type Fetch } from "./fetch";
 
 // c1x's game on mod.io (https://mod.io/g/crash-1-n-hanced). the api key only
 // reads what's public, so it ships with the game, as mod.io means it to
