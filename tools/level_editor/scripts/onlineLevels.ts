@@ -1,7 +1,8 @@
 // c1x_tools list-online-levels: the levels players have shared on mod.io, one
 // line each for the launcher's Levels tab to read
 
-import { isProblem, listOnlineLevels, type Answer, type OnlineLevel } from "./modio";
+import { isProblem, type Answer } from "./answer";
+import { listOnlineLevels, type OnlineLevel } from "./modio";
 
 // what's said before each level's line, which the launcher looks for.
 // online_levels.c has the same text, and a test checks the two are the same

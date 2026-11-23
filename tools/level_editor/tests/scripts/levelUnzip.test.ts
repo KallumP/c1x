@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
-  existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -49,21 +48,6 @@ describe("unzipping a level", () => {
     unzipLevel(root, zipOf(TIDE_RUINS), TIDE_RUINS_MOD);
     const note = readFileSync(join(root, "1_tide_ruins", ".modio.json"), "utf8");
     expect(JSON.parse(note)).toEqual(TIDE_RUINS_MOD);
-  });
-
-  test("skips the folder entries windows puts in a zip", () => {
-    unzipLevel(root, zipOf(TIDE_RUINS, ["1_tide_ruins/"]), TIDE_RUINS_MOD);
-    expect(filesIn("1_tide_ruins")).toEqual([
-      ".modio.json",
-      "level.cfg",
-      "tide_ruins.obj",
-    ]);
-  });
-
-  test("skips the __MACOSX folder a mac puts in a zip", () => {
-    const zip = zipOf([...TIDE_RUINS, "__MACOSX/1_tide_ruins/._level.cfg"]);
-    expect(unzipLevel(root, zip, TIDE_RUINS_MOD)).toEqual({ name: "1_tide_ruins" });
-    expect(existsSync(join(root, "__MACOSX"))).toBe(false);
   });
 
   test("skips folders inside the level's folder", () => {

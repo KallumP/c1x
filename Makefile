@@ -110,6 +110,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/launcher/tools.c \
 	src/launcher/level_build.c \
 	src/launcher/newer_release.c \
+	src/launcher/release_download.c \
 	src/launcher/online_levels.c \
 	src/launcher/tool_output.c \
 	src/launcher/version.c \
@@ -146,6 +147,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/online_levels_section.c \
 	src/launcher/editor_section.c \
 	src/launcher/newer_release.c \
+	src/launcher/release_download.c \
 	src/launcher/online_levels.c \
 	src/launcher/tool_output.c \
 	src/launcher/version_corner.c \

@@ -16,9 +16,13 @@ Run `c1x_launcher.exe`, by double-clicking it or from any folder. It works on it
 
 The launcher's version is in the top right corner of its window, for example `v1.3`.
 
-When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to open the newest release's page in your browser, and download it from there. Nothing is downloaded or changed for you.
+When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to install that release next to your c1x folder, as `c1x-1.4` beside `c1x-1.3`, then **Open v1.4** to switch to it.
 
-A new release unzips to its own folder. To carry on where you were, copy these across from the old folder:
+- Your settings, controls, game files, memory card and custom levels are copied in. Custom levels build again when you choose them.
+- Your old folder isn't changed: delete it once you're happy with the new one.
+- If it can't install, the button opens the release's page on GitHub instead.
+
+If you download a release yourself, copy these across from the old folder:
 
 - `streams/`, the game's files
 - `settings.cfg` and `controls.cfg`
@@ -31,7 +35,7 @@ If the launcher shows no button for a newer release, it couldn't check. That hap
 - **`build/c1x_tools.exe` is missing.** The check runs from it. A release comes with it, and in a project folder `make` builds it (see [Building](building.md#the-level-build-and-editor-without-node)).
 - **It's a launcher you built yourself.** That says `dev build` instead of a version, so there's nothing to compare. Only a released launcher checks (see [Releasing](releasing.md#the-launchers-version)).
 
-This check is the only time the launcher uses the internet.
+Besides this check, the launcher only goes online when you ask it to: installing a release, or finding and downloading levels on mod.io.
 
 ## Game
 

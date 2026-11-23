@@ -7,6 +7,7 @@
  * folder without them
  */
 #include <stddef.h>
+#include "paths.h"
 
 #define HELP_ONLINE_DOCS "https://github.com/KallumP/c1x/blob/master/"
 #define HELP_PAGE_COUNT 5
@@ -23,6 +24,8 @@ extern const help_page help_pages[HELP_PAGE_COUNT];
 /* path as a file:/// address, its backslashes as slashes and anything unsafe in an
    address escaped */
 extern void FileUrl(const char *path, char *url, size_t size);
+/* long enough for FileUrl of any path: each character may be escaped as 3 */
+#define FILE_URL_MAX (PATH_MAX_LEN * 3 + 16)
 
 /* where page is for repo: its own page, or the doc on github */
 extern void HelpPageAddress(const char *repo, const help_page *page, char *url, size_t size);

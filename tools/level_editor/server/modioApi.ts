@@ -14,12 +14,11 @@ import { join } from "node:path";
 import { levelOptions } from "../builder/levelCfg";
 import { repoFolders } from "../builder/repoFolders";
 import { uploadLevel } from "../scripts/levelUpload";
+import { isProblem, type Answer } from "../scripts/answer";
 import {
   emailSignInCode,
   findOwnLevelMod,
-  isProblem,
   signInWithCode,
-  type Answer,
   type SignIn,
 } from "../scripts/modio";
 import { json, NOT_FOUND, refused, type ApiResponse, type ReadBody } from "./api";

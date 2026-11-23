@@ -2,27 +2,15 @@
 // level's folder (doc/custom_levels.md), which keeps a note of the mod it's from
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { unzipSync, type Unzipped } from "fflate";
 import { isBootableName } from "../server/settings";
-import type { Answer } from "./modio";
+import type { Answer } from "./answer";
+import { isPlainName, tryUnzip, zippedFiles } from "./zipEntries";
 
 // the file in a downloaded level's folder noting the mod.io level it's from
 const MODIO_NOTE = ".modio.json";
 interface ModioNote {
   modId: number;
   page: string;
-}
-
-const MAC_FOLDER = "__MACOSX/"; // what a mac adds to a zip it makes
-// a file name that stays in its folder on any system: no slashes either way, or a
-// drive's colon
-const PLAIN_NAME = /^[^\\/:*?"<>|]+$/;
-
-// the zip's files, by their paths split at each /, without folders or a mac's extras
-function zippedFiles(unzipped: Unzipped): [string[], Uint8Array][] {
-  return Object.entries(unzipped)
-    .filter(([path]) => !path.endsWith("/") && !path.startsWith(MAC_FOLDER))
-    .map(([path, data]) => [path.split("/"), data]);
 }
 
 // the one folder all the files are in, or null if they aren't in one
@@ -33,9 +21,6 @@ function levelFolderName(files: [string[], Uint8Array][]): string | null {
   }
   return [...folders][0];
 }
-
-const isPlainName = (name: string) =>
-  PLAIN_NAME.test(name) && name !== "." && name !== "..";
 
 // the files right inside the level's folder, by name; deeper folders are skipped
 function levelFiles(files: [string[], Uint8Array][]): Map<string, Uint8Array> {
@@ -103,14 +88,6 @@ function writeLevel(
     writeFileSync(join(folder, file), data);
   }
   writeFileSync(join(folder, MODIO_NOTE), JSON.stringify(note));
-}
-
-function tryUnzip(zip: Uint8Array): Unzipped | null {
-  try {
-    return unzipSync(zip);
-  } catch {
-    return null;
-  }
 }
 
 // unzips zip, downloaded from the mod.io level from, into level_src/ (root),
