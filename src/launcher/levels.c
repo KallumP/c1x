@@ -9,6 +9,7 @@
 #include "levels.h"
 #include "help.h"
 #include "paths.h"
+#include "text_file.h"
 
 /* whether name is one boot_level takes, by the game's own rules */
 static int IsBootableName(const char *name) {
@@ -170,6 +171,58 @@ static void MarkOutOfDateLevels(const char *repo, custom_levels *levels) {
   }
 }
 
+#define PAGE_KEY "\"page\":\"" /* before the page in a .modio.json: "page":" */
+
+/* whether the first length characters of text have a \ in them */
+static int HasBackslash(const char *text, size_t length) {
+  size_t i;
+
+  for (i = 0; i < length; i++) {
+    if (text[i] == '\\') { return 1; }
+  }
+  return 0;
+}
+
+/* the page a downloaded level's .modio.json (its text, note) gives into page, or
+   "" if it has none. the tools write it with JSON.stringify, which leaves a url
+   as it is: one with a \ in it is taken to have none */
+static void PageInModioNote(const char *note, char *page, size_t size) {
+  const char *start, *end;
+  size_t length;
+
+  page[0] = 0;
+  start = SDL_strstr(note, PAGE_KEY);
+  if (!start) { return; }
+  start += SDL_strlen(PAGE_KEY);
+  end = SDL_strchr(start, '"');
+  if (!end) { return; }
+  length = (size_t)(end - start);
+  if (HasBackslash(start, length)) { return; }
+  SDL_strlcpy(page, start, SDL_min(length + 1, size));
+}
+
+/* the mod.io page of the level source called name, or "" if it wasn't downloaded */
+static void ReadModioPage(const char *repo, const char *name, char *page, size_t size) {
+  char path[PATH_MAX_LEN], file[SETTINGS_BOOT_LEVEL_MAX+32];
+  char *note;
+
+  page[0] = 0;
+  SDL_snprintf(file, sizeof(file), "level_src/%s/.modio.json", name);
+  JoinPath(path, sizeof(path), repo, file);
+  note = ReadWholeFile(path);
+  if (!note) { return; }
+  PageInModioNote(note, page, size);
+  SDL_free(note);
+}
+
+static void FindModioPages(const char *repo, custom_levels *levels) {
+  int i;
+
+  for (i = 0; i < levels->count; i++) {
+    ReadModioPage(repo, levels->names[i], levels->modio_pages[i], ONLINE_LEVEL_PAGE_MAX);
+  }
+}
+
 void ListCustomLevels(const char *repo, custom_levels *levels) {
   char folder[PATH_MAX_LEN];
 
@@ -180,6 +233,7 @@ void ListCustomLevels(const char *repo, custom_levels *levels) {
   AddLevelSources(folder, levels);
   SortLevels(levels);
   MarkOutOfDateLevels(repo, levels);
+  FindModioPages(repo, levels);
 }
 
 /* the index of the level called name, or -1 if there's none */
