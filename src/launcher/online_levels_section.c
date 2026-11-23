@@ -1,7 +1,8 @@
 /*
  * the levels tab's levels shared on mod.io: listed by c1x's tools when asked,
- * each with a Download button that downloads it into level_src/ and builds it
- * (c1x_tools list-online-levels and download-level, in the background)
+ * each with a View button opening its page there, and a Download button that
+ * downloads it into level_src/ and builds it (c1x_tools list-online-levels and
+ * download-level, in the background)
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS

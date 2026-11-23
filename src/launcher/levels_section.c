@@ -1,7 +1,8 @@
 /*
  * the launcher's levels tab: every custom level, built or not, each with a
  * Build button running build-level in the background, so a level source
- * dropped into level_src/ builds without node or the level editor
+ * dropped into level_src/ builds without node or the level editor, and a
+ * mod.io button opening the page of one downloaded from there
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS

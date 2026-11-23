@@ -5,6 +5,7 @@
  */
 #include <SDL2/SDL.h>
 #include <dirent.h>
+#include <string.h>
 #include <sys/stat.h>
 #include "levels.h"
 #include "help.h"
@@ -172,33 +173,23 @@ static void MarkOutOfDateLevels(const char *repo, custom_levels *levels) {
   }
 }
 
-#define PAGE_KEY "\"page\":\"" /* before the page in a .modio.json: "page":" */
+#define MODIO_NOTE_PAGE_KEY "\"page\":\""
 
-/* whether the first length characters of text have a \ in them */
-static int HasBackslash(const char *text, size_t length) {
-  size_t i;
-
-  for (i = 0; i < length; i++) {
-    if (text[i] == '\\') { return 1; }
-  }
-  return 0;
-}
-
-/* the page a downloaded level's .modio.json (its text, note) gives into page, or
-   "" if it has none. the tools write it with JSON.stringify, which leaves a url
-   as it is: one with a \ in it is taken to have none */
+/* the page in a downloaded level's .modio.json, whose text is note, into page;
+   "" if it has none. the tools write the note with JSON.stringify, which leaves a
+   url as it is, so a page with a \ in it is taken to be none rather than unescaped */
 static void PageInModioNote(const char *note, char *page, size_t size) {
   const char *start, *end;
   size_t length;
 
   page[0] = 0;
-  start = SDL_strstr(note, PAGE_KEY);
+  start = SDL_strstr(note, MODIO_NOTE_PAGE_KEY);
   if (!start) { return; }
-  start += SDL_strlen(PAGE_KEY);
+  start += SDL_strlen(MODIO_NOTE_PAGE_KEY);
   end = SDL_strchr(start, '"');
   if (!end) { return; }
   length = (size_t)(end - start);
-  if (HasBackslash(start, length)) { return; }
+  if (memchr(start, '\\', length)) { return; }
   CopyWhole(page, size, start, length);
 }
 
