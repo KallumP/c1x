@@ -36,7 +36,7 @@ function standInCalls(answers: Partial<{ problem: string; own: LevelMod | null }
     return value;
   };
   const calls: ModioCalls = {
-    sendSignInCode: async (email) => { sent.emails.push(email); return answer({}); },
+    emailSignInCode: async (email) => { sent.emails.push(email); return answer({}); },
     signInWithCode: async (code) => { sent.codes.push(code); return answer({ token: "new token", expires: LATER }); },
     findOwnLevelMod: async () => answer(answers.own ?? null),
     uploadLevel: async (token, _root, name, details) => {

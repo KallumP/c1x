@@ -8,7 +8,7 @@ import {
   onlineLevel,
   setLevelLogo,
   MODIO_GAME,
-  sendSignInCode,
+  emailSignInCode,
   signInWithCode,
 } from "../../scripts/modio";
 
@@ -115,25 +115,25 @@ const formFields = (init?: RequestInit) => Object.fromEntries(new URLSearchParam
 describe("sending a sign-in code", () => {
   test("posts the email and the game's api key to mod.io's email request", async () => {
     const { fetchUrl, requests } = standInFetch({ code: 200 });
-    await sendSignInCode("me@example.com", fetchUrl);
+    await emailSignInCode("me@example.com", fetchUrl);
     expect(requests[0].url).toBe(`${MODIO_GAME.apiUrl}/oauth/emailrequest`);
     expect(formFields(requests[0].init)).toEqual({ api_key: MODIO_GAME.apiKey, email: "me@example.com" });
   });
 
   test("sends them as a form", async () => {
     const { fetchUrl, requests } = standInFetch({ code: 200 });
-    await sendSignInCode("me@example.com", fetchUrl);
+    await emailSignInCode("me@example.com", fetchUrl);
     expect(new Headers(requests[0].init?.headers).get("Content-Type")).toBe("application/x-www-form-urlencoded");
   });
 
   test("is nothing wrong once it's sent", async () => {
     const { fetchUrl } = standInFetch({ code: 200 });
-    expect(await sendSignInCode("me@example.com", fetchUrl)).toEqual({});
+    expect(await emailSignInCode("me@example.com", fetchUrl)).toEqual({});
   });
 
   test("is mod.io's reason when it refuses", async () => {
     const { fetchUrl } = standInFetch({ error: { code: 422, message: "Invalid email." } }, 422);
-    expect(await sendSignInCode("nope", fetchUrl)).toEqual({ problem: "Invalid email." });
+    expect(await emailSignInCode("nope", fetchUrl)).toEqual({ problem: "Invalid email." });
   });
 });
 
