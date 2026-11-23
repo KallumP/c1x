@@ -23,7 +23,13 @@ import { useLevelSongs } from "./hooks/useLevelSongs";
 import { useLevels } from "./hooks/useLevels";
 import { useLevelUpload } from "./hooks/useLevelUpload";
 import { useModioAccount } from "./hooks/useModioAccount";
-import { SUMMARY_MAX, uploadButtonText, uploadedText } from "./levelSharing";
+import {
+  PICTURE_LABELS,
+  pictureChoices,
+  SUMMARY_MAX,
+  uploadButtonText,
+  uploadedText,
+} from "./levelSharing";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
 import { useOutlineWarnings, usePathWarnings, useTriangles, useWarnings } from "./hooks/useWarnings";
@@ -117,7 +123,7 @@ export default function App() {
 
   const modio = useModioAccount();
   const [isSharing, setIsSharing] = useState(false);
-  const levelUpload = useLevelUpload(level, modio.signedIn, save);
+  const levelUpload = useLevelUpload(level, modio.signedIn, save, isSharing);
 
   useUnsavedWarning(unsaved);
   const levelActions = useLevelActions(level, unsaved, save);
@@ -228,7 +234,7 @@ export default function App() {
       return <p>Checking whether it's online...</p>;
     }
     if (online === null) {
-      return <p>It isn't on mod.io yet. Its logo is the view as it is now, so line it up first.</p>;
+      return <p>It isn't on mod.io yet.</p>;
     }
     return (
       <p>
@@ -250,6 +256,64 @@ export default function App() {
         value={levelUpload.summary}
         onChange={(event) => levelUpload.setSummary(event.target.value)}
       />
+    );
+  };
+
+  // the picture the choice sends, or none to keep its own
+  const pictureToPreview = () => {
+    const { choice, viewPicture, imagePicture } = levelUpload.picture;
+    if (choice === "view") {
+      return viewPicture;
+    }
+    if (choice === "image") {
+      return imagePicture;
+    }
+    return null;
+  };
+
+  const renderPicturePreview = () => {
+    const shown = pictureToPreview();
+    if (!shown) {
+      return null;
+    }
+    return <img className="share-picture" src={`data:image/png;base64,${shown}`} alt="Its picture on mod.io" />;
+  };
+
+  const renderImagePicker = () => (
+    <input
+      type="file"
+      accept="image/png, image/jpeg, image/gif, image/webp"
+      onChange={(event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+          levelUpload.chooseImage(file);
+        }
+      }}
+    />
+  );
+
+  // where its picture on mod.io comes from, and what it'll be (cropped to 16:9)
+  const renderPictureChoice = () => {
+    const { online, picture } = levelUpload;
+    if (online === undefined) {
+      return null;
+    }
+    return (
+      <fieldset className="share-picture-choice">
+        <legend>Picture</legend>
+        {pictureChoices(Boolean(online)).map((choice) => (
+          <label key={choice}>
+            <input
+              type="radio"
+              checked={picture.choice === choice}
+              onChange={() => picture.setChoice(choice)}
+            />
+            {PICTURE_LABELS[choice]}
+          </label>
+        ))}
+        {picture.choice === "image" && renderImagePicker()}
+        {renderPicturePreview()}
+      </fieldset>
     );
   };
 
@@ -280,6 +344,7 @@ export default function App() {
       </p>
       {renderOnlineLine()}
       {renderSummary()}
+      {renderPictureChoice()}
       {renderUploadButton()}
       {renderUploaded()}
       {levelUpload.problem && <p className="error">{levelUpload.problem}</p>}

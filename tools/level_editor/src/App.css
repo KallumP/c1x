@@ -180,3 +180,26 @@
 .share-dialog a {
   color: #8ab4f8;
 }
+
+/* where a level's picture comes from, and a preview of it */
+.share-picture-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #555;
+  border-radius: 4px;
+}
+
+.share-picture-choice label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.share-picture {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+}

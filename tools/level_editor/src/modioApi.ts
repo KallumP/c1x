@@ -43,6 +43,7 @@ export async function fetchOnlineLevel(name: string): Promise<LevelMod | null> {
   return (await answer<{ online: LevelMod | null }>(await fetch(levelUrl(name)))).online;
 }
 
-export async function uploadLevel(name: string, summary: string, logo: string): Promise<Uploaded> {
+// logo is a base64 png, or null to keep the picture it has
+export async function uploadLevel(name: string, summary: string, logo: string | null): Promise<Uploaded> {
   return answer(await post(`${levelUrl(name)}/upload`, { summary, logo }));
 }

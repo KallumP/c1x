@@ -26,3 +26,31 @@ export function uploadedText({ isNew }: Uploaded): string {
   }
   return "Its new version is on mod.io.";
 }
+
+// where a level's picture on mod.io comes from: the one it has, the view, or an image file
+export type PictureChoice = "keep" | "view" | "image";
+
+export const PICTURE_LABELS: Record<PictureChoice, string> = {
+  keep: "Keep its picture",
+  view: "The view as it is",
+  image: "An image",
+};
+
+// a new level needs a picture; one already online can keep its own
+export function pictureChoices(isOnline: boolean): PictureChoice[] {
+  if (isOnline) {
+    return ["keep", "view", "image"];
+  }
+  return ["view", "image"];
+}
+
+export function firstPictureChoice(isOnline: boolean): PictureChoice {
+  return pictureChoices(isOnline)[0];
+}
+
+export function pictureProblem(choice: PictureChoice, hasImage: boolean): string | null {
+  if (choice === "image" && !hasImage) {
+    return "Choose an image for its picture first.";
+  }
+  return null;
+}
