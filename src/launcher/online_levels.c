@@ -8,13 +8,33 @@
 #include "tools.h"
 
 #define DOWNLOAD_ARGS_MAX 48
+#define LIST_COMMAND "list-online-levels"
 #define ID_DIGITS_MAX 9 /* the most an id has: any more could be too big for an int */
 /* what the tools say before each level's line. onlineLevels.ts has the same
    text, and one of its tests checks the two are the same */
 #define ONLINE_LEVEL "online level: "
 
-int ListOnlineLevelsCommand(const char *repo, char *command, size_t size) {
-  return ToolsCommand(repo, "list-online-levels", command, size);
+int IsSearchCharacter(int c) {
+  return SDL_isalnum(c) || c == ' ' || c == '-' || c == '_';
+}
+
+static int IsSearch(const char *name) {
+  size_t i;
+
+  for (i = 0; name[i]; i++) {
+    if (!IsSearchCharacter((unsigned char)name[i])) { return 0; }
+  }
+  return i < ONLINE_SEARCH_MAX;
+}
+
+int ListOnlineLevelsCommand(const char *repo, const char *name, char *command,
+  size_t size) {
+  char args[sizeof(LIST_COMMAND) + ONLINE_SEARCH_MAX];
+
+  if (!IsSearch(name)) { return 0; }
+  if (!name[0]) { return ToolsCommand(repo, LIST_COMMAND, command, size); }
+  SDL_snprintf(args, sizeof(args), LIST_COMMAND " %s", name);
+  return ToolsCommand(repo, args, command, size);
 }
 
 int DownloadLevelCommand(const char *repo, int id, char *command, size_t size) {

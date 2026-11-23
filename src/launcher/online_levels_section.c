@@ -34,7 +34,7 @@ static void StartLevelList(const char *repo) {
   char command[COMMAND_MAX];
   int has_command;
 
-  has_command = ListOnlineLevelsCommand(repo, command, sizeof(command));
+  has_command = ListOnlineLevelsCommand(repo, "", command, sizeof(command));
   if (StartToolsCommand(&level_list, repo, has_command, command, problem,
     sizeof(problem))) {
     found.count = 0;
