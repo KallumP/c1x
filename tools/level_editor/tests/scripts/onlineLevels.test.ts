@@ -12,7 +12,6 @@ const TIDE_RUINS: OnlineLevel = {
   id: 17302,
   name: "Tide Ruins",
   author: "kallum",
-  folder: "1_tide_ruins",
   fileUrl: "",
 };
 

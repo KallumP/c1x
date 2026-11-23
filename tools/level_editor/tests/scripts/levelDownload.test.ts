@@ -15,7 +15,6 @@ const TIDE_RUINS: OnlineLevel = {
   id: 17302,
   name: "Tide Ruins",
   author: "kallum",
-  folder: "1_tide_ruins",
   fileUrl: "https://mod.io/files/tide.zip",
 };
 const ZIP = zipSync({ "1_tide_ruins/tide_ruins.obj": strToU8("o Floor\n") });
