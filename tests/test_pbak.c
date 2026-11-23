@@ -16,8 +16,13 @@ pbak_frame *cur_pbak_frame;
 extern pad pads[2];
 extern uint8_t keys[512]; /* test_pad.c's */
 
+static gool_object *event_recipient; /* the last event GoolSendEvent sent, and to whom */
+static uint32_t event_sent;
+
 int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event,
   int argc, uint32_t *argv) {
+  event_recipient = recipient;
+  event_sent = event;
   return 0;
 }
 
@@ -48,4 +53,16 @@ UTEST(pbak, a_playing_demo_holds_its_recorded_buttons) {
   StartDemoHoldingCross();
   PadUpdate();
   ASSERT_EQ((uint32_t)PAD_CROSS, pads[0].held);
+}
+
+#define DEMO_OVER_EVENT 0xE00 /* the caption (PRESS START) takes the game back to the title */
+
+UTEST(pbak, a_demo_that_runs_out_tells_its_caption) {
+  static gool_object caption;
+
+  StartDemoHoldingCross();
+  caption_obj = &caption;
+  event_recipient = 0;
+  PadUpdate();
+  ASSERT_TRUE(event_recipient == &caption && event_sent == DEMO_OVER_EVENT);
 }
