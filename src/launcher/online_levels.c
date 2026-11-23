@@ -18,6 +18,19 @@ int IsSearchCharacter(int c) {
   return SDL_isalnum(c) || c == ' ' || c == '-' || c == '_';
 }
 
+void TidySearch(const char *search, char *tidy, size_t size) {
+  size_t length;
+  const char *c;
+
+  length = 0;
+  for (c = search; *c && length + 1 < size; c++) {
+    if (*c == ' ' && (length == 0 || tidy[length - 1] == ' ')) { continue; }
+    tidy[length++] = *c;
+  }
+  if (length > 0 && tidy[length - 1] == ' ') { length--; }
+  tidy[length] = 0;
+}
+
 static int CanSearchFor(const char *name) {
   size_t i;
 

@@ -37,14 +37,15 @@ static int IsListingOrDownloading(void) {
 
 /* lists the levels with name in theirs, or the top levels for "" */
 static void StartLevelList(const char *repo, const char *name) {
-  char command[COMMAND_MAX];
+  char command[COMMAND_MAX], tidy[ONLINE_SEARCH_MAX];
   int has_command;
 
-  has_command = ListOnlineLevelsCommand(repo, name, command, sizeof(command));
+  TidySearch(name, tidy, sizeof(tidy));
+  has_command = ListOnlineLevelsCommand(repo, tidy, command, sizeof(command));
   if (StartToolsCommand(&level_list, repo, has_command, command, problem,
     sizeof(problem))) {
     found.count = 0;
-    SDL_strlcpy(searched, name, sizeof(searched));
+    SDL_strlcpy(searched, tidy, sizeof(searched));
   }
 }
 

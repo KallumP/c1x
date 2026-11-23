@@ -30,6 +30,10 @@ typedef struct {
    on the tools' command line as it is, so nothing a shell would read can be */
 extern int IsSearchCharacter(int c);
 
+/* search, trimmed and with one space between its words, into tidy (size long),
+   as the tools read it, each word an argument of their command; only spaces is "" */
+extern void TidySearch(const char *search, char *tidy, size_t size);
+
 /* the command listing the top online levels for name "", or those with name in
    theirs (run in repo); 0 if name has a character a search can't, or is too long,
    or the tools' path can't be quoted */
