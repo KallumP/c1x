@@ -5,7 +5,6 @@
 
 pad pads[2];
 int pad_count;
-int pad_lock;
 
 extern pbak_header *cur_pbak_header;
 extern pbak_frame *cur_pbak_frame;
@@ -33,7 +32,7 @@ static inline void PadUpdatePbak(pad *pad) {
   uint32_t held, arg;
   int count;
 
-  if (pad_lock == 2) {
+  if (pbak_state == 2) {
     if (cur_pbak_frame == &cur_pbak_header->frames[0]) {
       context.ticks_per_frame = cur_pbak_header->ticks_per_frame;
     }
@@ -45,13 +44,13 @@ static inline void PadUpdatePbak(pad *pad) {
       if (island_cam_rot_x) {
         arg = 0;
         GoolSendEvent(0, caption_obj, 0xE00, 1, &arg);
-        pad_lock = 3;
+        pbak_state = 3;
       }
       else
-        pad_lock = 0;
+        pbak_state = 0;
     }
   }
-  else if (pad_lock == 3)
+  else if (pbak_state == 3)
     pad->held = 0;
 }
 
