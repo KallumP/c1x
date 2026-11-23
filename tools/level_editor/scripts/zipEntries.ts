@@ -6,7 +6,6 @@ const MAC_FOLDER = "__MACOSX/"; // what a mac adds to a zip it makes
 // drive's colon
 const PLAIN_NAME = /^[^\\/:*?"<>|]+$/;
 
-// a zip's files, or null if it isn't a zip
 export function tryUnzip(zip: Uint8Array): Unzipped | null {
   try {
     return unzipSync(zip);

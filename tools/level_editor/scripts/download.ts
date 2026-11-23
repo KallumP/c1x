@@ -7,7 +7,6 @@ import { fetchWithTimeout, type Fetch } from "./fetch";
 // give up some time, rather than leave the launcher saying it's downloading
 const DOWNLOAD_TIMEOUT_MS = 10 * 60 * 1000;
 
-// the bytes at url, or why they couldn't be downloaded
 export async function downloadFile(
   url: string,
   fetchUrl: Fetch = fetch,
