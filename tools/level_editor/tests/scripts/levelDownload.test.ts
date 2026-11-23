@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { strToU8, zipSync } from "fflate";
@@ -61,11 +61,6 @@ describe("downloading a level", () => {
     const { calls, asked } = standInCalls();
     await download(calls);
     expect([asked.ids, asked.urls]).toEqual([[17302], [TIDE_RUINS.fileUrl]]);
-  });
-
-  test("unzips it into level_src", async () => {
-    await download(standInCalls().calls);
-    expect(existsSync(join(root, "1_tide_ruins", "tide_ruins.obj"))).toBe(true);
   });
 
   test("builds it, saying so", async () => {

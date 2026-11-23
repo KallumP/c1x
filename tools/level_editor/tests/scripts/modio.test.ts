@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import type { Fetch } from "../../scripts/fetch";
 import {
   addLevelFile,
   addLevelMod,
@@ -44,12 +45,6 @@ describe("adding a level's mod", () => {
     await addLevelMod("token", NEW_LEVEL, fetchUrl);
     expect(requests[0].url).toBe(`${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}/mods`);
     expect(requests[0].init?.method).toBe("POST");
-  });
-
-  test("signs in with the player's token", async () => {
-    const { fetchUrl, requests } = standInFetch(MOD_ANSWER);
-    await addLevelMod("token", NEW_LEVEL, fetchUrl);
-    expect(sentHeader(requests[0].init, "Authorization")).toBe("Bearer token");
   });
 
   test("sends its name, summary and Level tag", async () => {
@@ -135,12 +130,6 @@ describe("adding a level's file", () => {
       ZIP,
     ]);
   });
-
-  test("signs in with the player's token", async () => {
-    const { fetchUrl, requests } = standInFetch({ id: 1 });
-    await addLevelFile("token", 17302, ZIP, fetchUrl);
-    expect(sentHeader(requests[0].init, "Authorization")).toBe("Bearer token");
-  });
 });
 
 const formFields = (init?: RequestInit) => Object.fromEntries(
@@ -225,12 +214,6 @@ describe("finding the player's own mod for a level", () => {
       game_id: String(MODIO_GAME.gameId),
       metadata_blob: "1_tide_ruins",
     });
-  });
-
-  test("signs in with the player's token", async () => {
-    const { fetchUrl, requests } = standInFetch(OWN_MODS);
-    await findOwnLevelMod("token", "1_tide_ruins", fetchUrl);
-    expect(sentHeader(requests[0].init, "Authorization")).toBe("Bearer token");
   });
 
   test("is the mod's id and page", async () => {
@@ -368,5 +351,26 @@ describe("setting an online level's picture", () => {
     const { fetchUrl, requests } = standInFetch({ code: 201 });
     await setLevelLogo("token", 17302, LOGO, fetchUrl);
     expect(formOf(requests[0].init).has("logo")).toBe(true);
+  });
+});
+
+describe("a request signed in as the player", () => {
+  test.each([
+    [
+      "adding a level's mod",
+      (fetchUrl: Fetch) => addLevelMod("token", NEW_LEVEL, fetchUrl),
+    ],
+    [
+      "adding a level's file",
+      (fetchUrl: Fetch) => addLevelFile("token", 17302, ZIP, fetchUrl),
+    ],
+    [
+      "finding the player's own mod",
+      (fetchUrl: Fetch) => findOwnLevelMod("token", "1_tide_ruins", fetchUrl),
+    ],
+  ])("sends the player's token: %s", async (_request, send) => {
+    const { fetchUrl, requests } = standInFetch({ ...MOD_ANSWER, data: [] });
+    await send(fetchUrl);
+    expect(sentHeader(requests[0].init, "Authorization")).toBe("Bearer token");
   });
 });

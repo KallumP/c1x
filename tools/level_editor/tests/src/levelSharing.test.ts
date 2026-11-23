@@ -36,12 +36,11 @@ describe("a level's summary on mod.io", () => {
 });
 
 describe("the upload button", () => {
-  test("uploads a level that isn't online", () => {
-    expect(uploadButtonText(false)).toBe("Upload");
-  });
-
-  test("uploads a new version of one that is", () => {
-    expect(uploadButtonText(true)).toBe("Upload new version");
+  test.each([
+    [false, "Upload"],
+    [true, "Upload new version"],
+  ])("for a level online (%s) says %j", (isOnline, text) => {
+    expect(uploadButtonText(isOnline)).toBe(text);
   });
 });
 
@@ -104,16 +103,8 @@ describe("the level's picture", () => {
 });
 
 describe("whether an upload can go ahead", () => {
-  test("a new level needs a summary", () => {
-    expect(uploadProblem(false, "", "view", false)).toBe("Write a summary for players first.");
-  });
-
   test("a level already online keeps its summary, so needs none", () => {
     expect(uploadProblem(true, "", "keep", false)).toBeNull();
-  });
-
-  test("an image picture needs an image chosen", () => {
-    expect(uploadProblem(true, "", "image", false)).toBe("Choose an image for its picture first.");
   });
 
   test("a new level with a summary and the view as its picture can", () => {

@@ -25,7 +25,9 @@ describe("the tools exe's commands", () => {
     });
   });
 
-  test.each(["", "abc", "1.5", "-3", "0"])("download-level needs a mod's id: %j", (id) => {
+  const NOT_IDS = ["", "abc", "1.5", "-3", "0"];
+
+  test.each(NOT_IDS)("download-level needs a mod's id: %j", (id) => {
     expect(toolsCommand(["download-level", id])).toEqual({ kind: "usage" });
   });
 
