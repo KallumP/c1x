@@ -5,7 +5,7 @@ import {
   signOutOfModio,
   submitSignInCode,
 } from "../modioApi";
-import { emailProblem, signInCode, signInCodeProblem } from "../modioSignIn";
+import { emailProblem, signInCodeProblem, typedSignInCode } from "../modioSignIn";
 import { errorMessage } from "../errorMessage";
 
 type SignInStep = "email" | "code";
@@ -52,7 +52,7 @@ export function useModioAccount() {
   };
 
   const sendCode = async () => {
-    const typed = signInCode(code);
+    const typed = typedSignInCode(code);
     if (await runStep(signInCodeProblem(typed), () => submitSignInCode(typed))) {
       setSignedIn(true);
     }
@@ -67,14 +67,14 @@ export function useModioAccount() {
 
   // back to the email step: the player signed out, or their sign-in ran out or was
   // refused
-  const signedOut = () => {
+  const returnToSignIn = () => {
     setSignedIn(false);
     startAgain();
   };
 
   const signOut = async () => {
     if (await runStep(null, signOutOfModio)) {
-      signedOut();
+      returnToSignIn();
     }
   };
 
@@ -91,6 +91,6 @@ export function useModioAccount() {
     sendCode,
     startAgain,
     signOut,
-    signedOut,
+    returnToSignIn,
   };
 }

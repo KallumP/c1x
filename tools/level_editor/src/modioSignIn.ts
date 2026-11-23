@@ -12,7 +12,7 @@ export function emailProblem(email: string): string | null {
 }
 
 // the code as mod.io takes it, from what was typed
-export const signInCode = (typed: string) => typed.trim().toUpperCase();
+export const typedSignInCode = (typed: string) => typed.trim().toUpperCase();
 
 export function signInCodeProblem(code: string): string | null {
   if (!CODE.test(code)) {

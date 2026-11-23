@@ -119,7 +119,7 @@ export function useLevelUpload(
 
   const chooseImage = (file: File) =>
     picture.chooseImage(file).catch((error) => setProblem(errorMessage(error)));
-  const { choice, setChoice, imagePicture, chosen } = picture;
+  const { choice, setChoice, chosen } = picture;
 
   return {
     online,
@@ -129,7 +129,7 @@ export function useLevelUpload(
     isBusy,
     uploaded,
     upload,
-    picture: { choice, setChoice, imagePicture, chosen },
+    picture: { choice, setChoice, chosen },
     chooseImage,
   };
 }

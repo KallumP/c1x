@@ -22,9 +22,8 @@ export default function ShareDialog({ level, save, onClose }: {
   onClose: () => void;
 }) {
   const modio = useModioAccount();
-  const levelUpload = useLevelUpload(level, modio.signedIn, save, modio.signedOut);
+  const levelUpload = useLevelUpload(level, modio.signedIn, save, modio.returnToSignIn);
 
-  // the email to send a sign-in code to
   const renderEmailStep = () => (
     <form onSubmit={(event) => { event.preventDefault(); modio.sendEmail(); }}>
       <p>Sign in to mod.io to share levels. It emails you a code to sign in with.</p>
@@ -39,7 +38,6 @@ export default function ShareDialog({ level, save, onClose }: {
     </form>
   );
 
-  // the code mod.io emailed
   const renderCodeStep = () => (
     <form onSubmit={(event) => { event.preventDefault(); modio.sendCode(); }}>
       <p>mod.io emailed a code to {modio.email}.</p>
@@ -64,7 +62,7 @@ export default function ShareDialog({ level, save, onClose }: {
   };
 
   // text with a link to page in it, if it has one
-  const renderLinkedText = ({ before, link, after }: LinkedText, page: string) => (
+  const renderLinkedText = ({ before, link, after }: LinkedText, page = "") => (
     <>
       {before} {link && <a href={page} target="_blank" rel="noreferrer">{link}</a>}{after}
     </>
@@ -77,7 +75,7 @@ export default function ShareDialog({ level, save, onClose }: {
       return <p>Checking whether it's online...</p>;
     }
     if (online === null) {
-      return <p>{renderLinkedText(onlineText(false), "")}</p>;
+      return <p>{renderLinkedText(onlineText(false))}</p>;
     }
     return <p>{renderLinkedText(onlineText(true), online.page)}</p>;
   };
@@ -153,7 +151,7 @@ export default function ShareDialog({ level, save, onClose }: {
     ));
   };
 
-  // how the upload went: where to see it, or why it didn't
+  // why the last request failed, or where to see the upload
   const renderUploadResult = () => {
     const { uploaded, problem } = levelUpload;
     if (problem) {
