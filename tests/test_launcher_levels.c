@@ -291,10 +291,10 @@ UTEST(launcher_levels, a_mod_io_page_with_no_end_is_none) {
 
 UTEST(launcher_levels, a_mod_io_page_too_long_to_keep_is_none) {
   static custom_levels levels;
-  static char note[ONLINE_LEVEL_PAGE_MAX + 64];
+  static char note[MODIO_PAGE_MAX + 64];
 
   snprintf(note, sizeof(note), "{\"modId\":1,\"page\":\"https://mod.io/%0*d\"}",
-    ONLINE_LEVEL_PAGE_MAX, 0);
+    MODIO_PAGE_MAX, 0);
   MakeDownloadedLevel("long_page", note);
   ASSERT_STREQ("", ModioPageOf(&levels, "long_page"));
 }
