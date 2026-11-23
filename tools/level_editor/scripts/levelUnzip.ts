@@ -8,8 +8,7 @@ import type { Answer } from "./modio";
 
 // the file in a downloaded level's folder noting the mod.io level it's from
 const MODIO_NOTE = ".modio.json";
-// what that file notes: the mod's id, and its page on mod.io
-export interface ModioNote {
+interface ModioNote {
   modId: number;
   page: string;
 }
@@ -52,7 +51,7 @@ function downloadedFrom(folder: string): number | null {
     return null;
   }
   try {
-    return (JSON.parse(readFileSync(note, "utf8")) as { modId: number }).modId;
+    return (JSON.parse(readFileSync(note, "utf8")) as Partial<ModioNote>).modId ?? null;
   } catch {
     return null;
   }
@@ -114,13 +113,13 @@ function tryUnzip(zip: Uint8Array): Unzipped | null {
   }
 }
 
-// unzips the zip of the mod.io level note is about into level_src/ (root),
-// noting where it's from there and replacing it if it was downloaded before; its
-// folder's name
+// unzips zip, downloaded from the mod.io level from, into level_src/ (root),
+// noting where it's from, and replacing it if it was downloaded from there before;
+// its folder's name
 export function unzipLevel(
   root: string,
   zip: Uint8Array,
-  note: ModioNote,
+  from: ModioNote,
 ): Answer<{ name: string }> {
   const unzippedFiles = tryUnzip(zip);
   if (!unzippedFiles) {
@@ -132,10 +131,10 @@ export function unzipLevel(
     return { problem: "The zip doesn't hold one level's folder." };
   }
   const files = levelFiles(entries);
-  const problem = unzipProblem(root, name, files, note.modId);
+  const problem = unzipProblem(root, name, files, from.modId);
   if (problem) {
     return { problem };
   }
-  writeLevel(join(root, name), files, note);
+  writeLevel(join(root, name), files, from);
   return { name };
 }
