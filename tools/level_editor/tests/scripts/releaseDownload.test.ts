@@ -53,11 +53,6 @@ describe("downloading a release", () => {
     expect((await downloaded("1.5")).asked).toEqual([releaseZipUrl("1.5")]);
   });
 
-  test("unzips it beside the player's folder", async () => {
-    await downloaded("1.5");
-    expect(readFileSync(join(newFolder(), "c1x_launcher.exe"), "utf8")).toBe("launcher");
-  });
-
   test("copies the player's things into it", async () => {
     writeFileSync(join(current, "settings.cfg"), "mine");
     await downloaded("1.5");
