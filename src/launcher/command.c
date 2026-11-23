@@ -39,3 +39,17 @@ void StopBackgroundCommand(background_command *c) {
   ProcessFree(c->process);
   c->process = 0;
 }
+
+int StartToolsCommand(background_command *run, const char *folder, int has_command,
+  const char *command, char *problem, size_t size) {
+  problem[0] = 0;
+  if (!has_command) {
+    SDL_strlcpy(problem, UNQUOTABLE_FOLDER, size);
+    return 0;
+  }
+  if (!StartBackgroundCommand(run, folder, command)) {
+    SDL_snprintf(problem, size, "Couldn't run %s.", command);
+    return 0;
+  }
+  return 1;
+}

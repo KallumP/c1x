@@ -31,8 +31,9 @@ static void CopyPart(char *to, const char *text, size_t length) {
 
 /* the id at the start of a level's line, then the tab after it; 0 if there isn't one */
 static int ReadId(const char *line, size_t *length) {
-  size_t digits = DigitCount(line);
+  size_t digits;
 
+  digits = DigitCount(line);
   if (digits == 0 || digits > ID_DIGITS_MAX || line[digits] != '\t') { return 0; }
   *length = digits + 1;
   return SDL_atoi(line);
@@ -60,8 +61,9 @@ static void ReadLevelLine(const char *line, online_levels *levels) {
 }
 
 void FindOnlineLevels(const char *output, online_levels *levels) {
-  const char *line = output;
+  const char *line;
 
+  line = output;
   levels->count = 0;
   while (levels->count < ONLINE_LEVELS_MAX && (line = SDL_strstr(line, ONLINE_LEVEL))) {
     line += SDL_strlen(ONLINE_LEVEL);

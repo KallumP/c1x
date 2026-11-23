@@ -17,7 +17,6 @@
 
 #define AUTHOR_WIDTH 140.0f
 #define COMMAND_MAX (PATH_MAX_LEN + 64)
-#define UNQUOTABLE_FOLDER "The project's folder has a quote in its path."
 
 static background_command level_list;     /* c1x_tools list-online-levels */
 static background_command level_download; /* c1x_tools download-level */
@@ -30,35 +29,24 @@ static int IsListingOrDownloading(void) {
     || IsBackgroundCommandRunning(&level_download);
 }
 
-/* runs command (if there is one: has_command) in the background as c, saying
-   why if it can't. returns whether it started */
-static int StartToolsCommand(background_command *c, const char *repo, int has_command,
-  const char *command) {
-  problem[0] = 0;
-  if (!has_command) {
-    SDL_strlcpy(problem, UNQUOTABLE_FOLDER, sizeof(problem));
-    return 0;
-  }
-  if (!StartBackgroundCommand(c, repo, command)) {
-    SDL_snprintf(problem, sizeof(problem), "Couldn't run %s.", command);
-    return 0;
-  }
-  return 1;
-}
-
 static void StartLevelList(const char *repo) {
   char command[COMMAND_MAX];
-  int has_command = ListOnlineLevelsCommand(repo, command, sizeof(command));
+  int has_command;
 
-  if (StartToolsCommand(&level_list, repo, has_command, command)) { found.count = 0; }
+  has_command = ListOnlineLevelsCommand(repo, command, sizeof(command));
+  if (StartToolsCommand(&level_list, repo, has_command, command, problem,
+    sizeof(problem))) {
+    found.count = 0;
+  }
 }
 
 static void StartLevelDownload(const char *repo, int index) {
   char command[COMMAND_MAX];
-  int id = found.ids[index];
-  int has_command = DownloadLevelCommand(repo, id, command, sizeof(command));
+  int has_command;
 
-  if (StartToolsCommand(&level_download, repo, has_command, command)) {
+  has_command = DownloadLevelCommand(repo, found.ids[index], command, sizeof(command));
+  if (StartToolsCommand(&level_download, repo, has_command, command, problem,
+    sizeof(problem))) {
     SDL_strlcpy(download_name, found.names[index], sizeof(download_name));
   }
 }
@@ -66,8 +54,9 @@ static void StartLevelDownload(const char *repo, int index) {
 /* the levels the list has found so far; once a download finishes, the level
    it made is listed with the others, and for boot_level */
 void UpdateOnlineLevelsSection(const char *repo) {
-  int was_listing = IsBackgroundCommandRunning(&level_list);
+  int was_listing;
 
+  was_listing = IsBackgroundCommandRunning(&level_list);
   UpdateBackgroundCommand(&level_list);
   if (was_listing) {
     FindOnlineLevels(level_list.output, &found);
@@ -101,10 +90,11 @@ static void DrawOnlineLevelRow(const char *repo, int index, int can_download) {
 }
 
 static void DrawOnlineLevelTable(const char *repo) {
-  int can_download = !IsListingOrDownloading() && CanBuildLevels(repo);
-  ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit;
-  int i;
+  ImGuiTableFlags flags;
+  int can_download, i;
 
+  can_download = !IsListingOrDownloading() && CanBuildLevels(repo);
+  flags = ImGuiTableFlags_SizingFixedFit;
   if (!igBeginTable("online_levels", 3, flags, (ImVec2){0, 0}, 0)) { return; }
   igTableSetupColumn("name", ImGuiTableColumnFlags_WidthStretch, 0, 0);
   igTableSetupColumn("author", ImGuiTableColumnFlags_WidthFixed, AUTHOR_WIDTH, 0);

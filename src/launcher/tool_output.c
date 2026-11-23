@@ -9,22 +9,25 @@ static int IsLineEnd(char c) {
 }
 
 size_t DigitCount(const char *text) {
-  size_t count = 0;
+  size_t count;
 
+  count = 0;
   while (SDL_isdigit(text[count])) { count++; }
   return count;
 }
 
 size_t LineLength(const char *text) {
-  size_t length = 0;
+  size_t length;
 
+  length = 0;
   while (!IsLineEnd(text[length])) { length++; }
   return length;
 }
 
 size_t FieldLength(const char *text) {
-  size_t length = 0;
+  size_t length;
 
+  length = 0;
   while (!IsLineEnd(text[length]) && text[length] != '\t') { length++; }
   return length;
 }
