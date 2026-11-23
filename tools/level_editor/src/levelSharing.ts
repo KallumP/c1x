@@ -20,12 +20,12 @@ export function uploadButtonText(isOnline: boolean): string {
   return "Upload";
 }
 
-// what an upload says, before its link to the level on mod.io
-export function uploadedText({ isNew }: Uploaded): string {
+// what an upload says, around its link to the level on mod.io
+export function uploadedText({ isNew }: Uploaded): LinkedText {
   if (isNew) {
-    return "Upload successful, see it on";
+    return { before: "Upload successful, view it", link: "here", after: "." };
   }
-  return "Upload successful, see the new version on";
+  return { before: "Upload successful, view the new version", link: "here", after: "." };
 }
 
 // a line of text with a link in it: the link's text, or null for none

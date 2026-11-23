@@ -11,6 +11,7 @@ import {
   SUMMARY_MAX,
   uploadButtonText,
   uploadedText,
+  type LinkedText,
 } from "../levelSharing";
 import "./ShareDialog.css";
 
@@ -59,7 +60,12 @@ export default function ShareDialog({ level, save, onClose }: {
     return renderEmailStep();
   };
 
-  const renderModioLink = (page: string) => <a href={page} target="_blank" rel="noreferrer">mod.io</a>;
+  // text with a link to page in it, if it has one
+  const renderLinkedText = ({ before, link, after }: LinkedText, page: string) => (
+    <>
+      {before} {link && <a href={page} target="_blank" rel="noreferrer">{link}</a>}{after}
+    </>
+  );
 
   // whether the map's online already, with a link to it
   const renderOnlineLine = () => {
@@ -70,12 +76,7 @@ export default function ShareDialog({ level, save, onClose }: {
     if (online === null) {
       return <p>{onlineText(false).before}</p>;
     }
-    const { before, link, after } = onlineText(true);
-    return (
-      <p>
-        {before} <a href={online.page} target="_blank" rel="noreferrer">{link}</a>{after}
-      </p>
-    );
+    return <p>{renderLinkedText(onlineText(true), online.page)}</p>;
   };
 
   // a new map's summary; a new version keeps its own
@@ -165,7 +166,7 @@ export default function ShareDialog({ level, save, onClose }: {
     if (!uploaded) {
       return null;
     }
-    return <p className="share-success">{uploadedText(uploaded)} {renderModioLink(uploaded.mod.page)}</p>;
+    return <p className="share-success">{renderLinkedText(uploadedText(uploaded), uploaded.mod.page)}</p>;
   };
 
   const renderUploadButton = () => {
