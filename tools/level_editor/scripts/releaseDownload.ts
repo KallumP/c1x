@@ -19,16 +19,15 @@ export const releaseZipUrl = (version: string) =>
 // release_download.c has the same text, and a test checks the two are the same
 export const RELEASE_INSTALLED_PREFIX = "installed release: ";
 
-// unzips zip beside the player's folder current, and copies their things into it
 function installRelease(
   zip: Uint8Array,
-  current: string,
+  playersFolder: string,
   version: string,
 ): Answer<{ folder: string }> {
   try {
-    const unzipped = unzipRelease(zip, dirname(current), version);
+    const unzipped = unzipRelease(zip, dirname(playersFolder), version);
     if (!isProblem(unzipped)) {
-      copyPlayersThings(current, unzipped.folder);
+      copyPlayersThings(playersFolder, unzipped.folder);
     }
     return unzipped;
   } catch (error) {
