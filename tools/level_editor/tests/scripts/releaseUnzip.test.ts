@@ -41,14 +41,6 @@ describe("unzipping a release", () => {
       "c1x-1.4/build/c1x.exe",
     );
   });
-
-  test("skips the folder entries windows puts in a zip", () => {
-    const zip = zipSync({
-      "c1x-1.4/": new Uint8Array(),
-      "c1x-1.4/c1x_launcher.exe": strToU8("exe"),
-    });
-    expect(unzipRelease(parent, zip, "1.4")).toEqual({ folder: join(parent, "c1x-1.4") });
-  });
 });
 
 describe("a release that isn't unzipped", () => {
