@@ -266,3 +266,23 @@ UTEST(launcher_settings, settings_that_differ_only_in_the_memory_card_arent_equa
   b.memory_card = 1;
   ASSERT_FALSE(AreSettingsEqual(&a, &b));
 }
+
+UTEST(launcher_settings, settings_that_differ_only_in_mute_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  b.mute = 1;
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, mute_is_saved_and_read_back) {
+  pc_settings s, read;
+
+  remove(LAUNCHER_SETTINGS_PATH);
+  SettingsReset(&s);
+  s.mute = 1;
+  ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
+  ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &read));
+  ASSERT_EQ(1, read.mute);
+}
