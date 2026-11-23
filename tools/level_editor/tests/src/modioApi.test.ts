@@ -1,11 +1,9 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 import { fetchOwnLevelMod, isSignedOutError } from "../../src/modioApi";
 
-afterEach(() => { vi.unstubAllGlobals(); });
-
-// the editor server answering every request with status and text
-const serverAnswers = (status: number, text: string) =>
-  vi.stubGlobal("fetch", async () => new Response(text, { status }));
+// a stand-in for fetch, the editor server answering every request with status and text
+const serverAnswering = (status: number, text: string) =>
+  async () => new Response(text, { status });
 
 // what a request to the editor server threw
 async function thrownBy(request: Promise<unknown>): Promise<unknown> {
@@ -19,21 +17,21 @@ async function thrownBy(request: Promise<unknown>): Promise<unknown> {
 
 describe("a request the editor server refuses", () => {
   test("throws its text", async () => {
-    serverAnswers(400, "Your access token has expired.");
-    await expect(fetchOwnLevelMod("1_tide_ruins")).rejects.toThrow(
+    const fetchUrl = serverAnswering(400, "Your access token has expired.");
+    await expect(fetchOwnLevelMod("1_tide_ruins", fetchUrl)).rejects.toThrow(
       "Your access token has expired.",
     );
   });
 
   test("signs the player out when it's a 401", async () => {
-    serverAnswers(401, "Sign in to mod.io first.");
-    const thrown = await thrownBy(fetchOwnLevelMod("1_tide_ruins"));
+    const fetchUrl = serverAnswering(401, "Sign in to mod.io first.");
+    const thrown = await thrownBy(fetchOwnLevelMod("1_tide_ruins", fetchUrl));
     expect(isSignedOutError(thrown)).toBe(true);
   });
 
   test("doesn't sign the player out when it's anything else", async () => {
-    serverAnswers(400, "Validation failed.");
-    const thrown = await thrownBy(fetchOwnLevelMod("1_tide_ruins"));
+    const fetchUrl = serverAnswering(400, "Validation failed.");
+    const thrown = await thrownBy(fetchOwnLevelMod("1_tide_ruins", fetchUrl));
     expect(isSignedOutError(thrown)).toBe(false);
   });
 
