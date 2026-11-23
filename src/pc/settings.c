@@ -23,6 +23,7 @@ void SettingsReset(pc_settings *s) {
   s->frame_rate = 60;
   s->fullscreen = 0;
   s->memory_card = 0;
+  s->mute = 0;
   s->boot_level[0] = 0;
 }
 
@@ -72,6 +73,12 @@ static int SettingsParseNumberFrom(const char *value, uint32_t min, uint32_t max
   return 1;
 }
 
+/* SettingsApply's result for a value that parsed, or didn't */
+static int AppliedOrInvalid(int parsed) {
+  if (parsed) { return 1; }
+  return -1;
+}
+
 /* apply one setting; returns 1, or -1 if the name or value is invalid */
 static int SettingsApply(const char *name, const char *value, pc_settings *s) {
   if (SDL_strcasecmp(name, "skip_loading_screen") == 0)
@@ -105,6 +112,8 @@ static int SettingsApply(const char *name, const char *value, pc_settings *s) {
     return SettingsParseOnOff(value, &s->fullscreen) ? 1 : -1;
   if (SDL_strcasecmp(name, "memory_card") == 0)
     return SettingsParseOnOff(value, &s->memory_card) ? 1 : -1;
+  if (SDL_strcasecmp(name, "mute") == 0)
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->mute));
   if (SDL_strcasecmp(name, "boot_level") == 0)
     return SettingsParseLevelName(value, s->boot_level) ? 1 : -1;
   return -1;
