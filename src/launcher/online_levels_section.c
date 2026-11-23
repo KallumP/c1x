@@ -187,7 +187,9 @@ static void DrawSearch(const char *repo) {
     FilterSearchCharacter, 0);
   DrawTooltip("Leave it empty for the most downloaded levels.");
   igSameLine(0, -1);
-  if (igButton("Find levels", (ImVec2){0, 0}) || entered) { StartLevelList(repo, search); }
+  if (igButton("Find levels", (ImVec2){0, 0}) || entered) {
+    StartLevelList(repo, search);
+  }
   DrawTooltip("List the levels on mod.io with this in their name.");
   igEndDisabled();
 }
