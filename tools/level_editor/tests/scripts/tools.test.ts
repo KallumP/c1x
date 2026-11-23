@@ -14,8 +14,18 @@ describe("the tools exe's commands", () => {
     expect(toolsCommand(["check-update", "1.4"])).toEqual({ kind: "check-update", version: "1.4" });
   });
 
-  test("list-online-levels lists the levels on mod.io", () => {
-    expect(toolsCommand(["list-online-levels"])).toEqual({ kind: "list-online-levels" });
+  test("list-online-levels lists the top levels on mod.io", () => {
+    expect(toolsCommand(["list-online-levels"])).toEqual({
+      kind: "list-online-levels",
+      name: "",
+    });
+  });
+
+  test("list-online-levels <name> lists the levels with that in their name", () => {
+    expect(toolsCommand(["list-online-levels", "tide", "ruins"])).toEqual({
+      kind: "list-online-levels",
+      name: "tide ruins",
+    });
   });
 
   test("download-level <id> downloads a level from mod.io", () => {
@@ -45,7 +55,6 @@ describe("the tools exe's commands", () => {
     [["editor", "now"]],
     [["check-update"]],
     [["check-update", "1.4", "1.5"]],
-    [["list-online-levels", "now"]],
     [["download-release"]],
     [["play"]],
   ])("anything else says how to use it: %j", (args) => {

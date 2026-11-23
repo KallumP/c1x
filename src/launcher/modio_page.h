@@ -6,6 +6,6 @@
 #define MODIO_PAGE_MAX 256
 
 /* the label of a button opening a level's page on mod.io, wherever it's listed */
-#define VIEW_LEVEL_PAGE "View level page"
+#define VIEW_LEVEL_PAGE "View level"
 
 #endif /* _LAUNCHER_MODIO_PAGE_H_ */

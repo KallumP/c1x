@@ -1,8 +1,9 @@
 /*
- * the levels tab's levels shared on mod.io: listed by c1x's tools when asked,
- * each with a View level page button opening its page there, and a Download button that
- * downloads it into level_src/ and builds it (c1x_tools list-online-levels and
- * download-level, in the background)
+ * the levels tab's levels shared on mod.io: the most downloaded, listed by c1x's
+ * tools when the tab first opens, or those with the search box's name in theirs
+ * when asked, each with a View level button opening its page there, and a
+ * Download button that downloads it into level_src/ and builds it (c1x_tools
+ * list-online-levels and download-level, in the background)
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -17,11 +18,15 @@
 #include "ui.h"
 
 #define AUTHOR_WIDTH 140.0f
+#define SEARCH_WIDTH 200.0f
 #define COMMAND_MAX (PATH_MAX_LEN + 64)
 
 static background_command level_list;     /* c1x_tools list-online-levels */
 static background_command level_download; /* c1x_tools download-level */
 static online_levels found;
+static char search[ONLINE_SEARCH_MAX];   /* what's typed in the search box */
+static char searched[ONLINE_SEARCH_MAX]; /* the search the list was for */
+static int has_listed_top_levels;
 static char download_name[ONLINE_LEVEL_TEXT_MAX];
 static char problem[COMMAND_MAX + 32]; /* why a list or download couldn't start, or "" */
 
@@ -30,14 +35,17 @@ static int IsListingOrDownloading(void) {
     || IsBackgroundCommandRunning(&level_download);
 }
 
-static void StartLevelList(const char *repo) {
-  char command[COMMAND_MAX];
+/* lists the levels with name in theirs, or the top levels for "" */
+static void StartLevelList(const char *repo, const char *name) {
+  char command[COMMAND_MAX], tidy[ONLINE_SEARCH_MAX];
   int has_command;
 
-  has_command = ListOnlineLevelsCommand(repo, command, sizeof(command));
+  TidySearch(name, tidy, sizeof(tidy));
+  has_command = ListOnlineLevelsCommand(repo, tidy, command, sizeof(command));
   if (StartToolsCommand(&level_list, repo, has_command, command, problem,
     sizeof(problem))) {
     found.count = 0;
+    SDL_strlcpy(searched, tidy, sizeof(searched));
   }
 }
 
@@ -86,7 +94,7 @@ static void DrawOnlineLevelRow(const char *repo, int index, int can_download) {
     if (igButton(VIEW_LEVEL_PAGE, (ImVec2){ButtonWidth(VIEW_LEVEL_PAGE), 0})) {
       SDL_OpenURL(found.pages[index]);
     }
-    DrawTooltip("Open its page on mod.io.");
+    DrawTooltip("Open its page in your browser.");
   }
   igTableNextColumn();
   igBeginDisabled(!can_download);
@@ -95,6 +103,19 @@ static void DrawOnlineLevelRow(const char *repo, int index, int can_download) {
   }
   igEndDisabled();
   igPopID();
+}
+
+/* what the list is of, as the level list's groups are titled: the top levels, or
+   those with the search in their name */
+static void DrawListedLevelsTitle(void) {
+  char title[ONLINE_SEARCH_MAX + 32];
+
+  if (searched[0]) {
+    SDL_snprintf(title, sizeof(title), "Levels with \"%s\" in their name", searched);
+  } else {
+    SDL_snprintf(title, sizeof(title), "Top %d most downloaded", TOP_LEVELS);
+  }
+  DrawFieldGroupTitle(title);
 }
 
 static void DrawOnlineLevelTable(const char *repo) {
@@ -110,6 +131,7 @@ static void DrawOnlineLevelTable(const char *repo) {
   igTableSetupColumn("author", ImGuiTableColumnFlags_WidthFixed, AUTHOR_WIDTH, 0);
   igTableSetupColumn("page", ImGuiTableColumnFlags_WidthFixed, page_width, 0);
   igTableSetupColumn("download", ImGuiTableColumnFlags_WidthFixed, BUTTON_WIDTH, 0);
+  if (found.count > 0) { DrawListedLevelsTitle(); }
   for (i = 0; i < found.count; i++) { DrawOnlineLevelRow(repo, i, can_download); }
   igEndTable();
 }
@@ -117,12 +139,14 @@ static void DrawOnlineLevelTable(const char *repo) {
 /* how the list went, in a line, with its output if it failed */
 static void DrawLevelListStatus(void) {
   if (IsBackgroundCommandRunning(&level_list)) {
-    igText("Looking on mod.io...");
+    igText("Looking for levels...");
   } else if (level_list.output[0] && level_list.exit_code != 0) {
-    igTextColored(PROBLEM_COLOUR, "Couldn't look on mod.io:");
+    igTextColored(PROBLEM_COLOUR, "Couldn't look for levels:");
     DrawCommandOutput("list_output", &level_list);
+  } else if (level_list.output[0] && found.count == 0 && searched[0]) {
+    igText("No levels match \"%s\".", searched);
   } else if (level_list.output[0] && found.count == 0) {
-    igText("No levels are on mod.io yet.");
+    igText("No levels are online yet.");
   }
 }
 
@@ -146,14 +170,41 @@ static void DrawLevelDownloadStatus(void) {
   DrawCommandOutput("download_output", &level_download);
 }
 
+/* imgui drops a typed character when this returns nonzero */
+static int FilterSearchCharacter(ImGuiInputTextCallbackData *data) {
+  return !IsSearchCharacter(data->EventChar);
+}
+
+static void DrawSearch(const char *repo) {
+  ImGuiInputTextFlags flags;
+  int entered;
+
+  igBeginDisabled(IsListingOrDownloading() || !AreToolsBuilt(repo));
+  flags = ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_EnterReturnsTrue;
+  igSetNextItemWidth(SEARCH_WIDTH);
+  entered = igInputTextWithHint("##search", "Level name", search, sizeof(search), flags,
+    FilterSearchCharacter, 0);
+  DrawTooltip("Leave it empty for the most downloaded levels.");
+  igSameLine(0, -1);
+  if (igButton("Find levels", (ImVec2){0, 0}) || entered) {
+    StartLevelList(repo, search);
+  }
+  DrawTooltip("List the online levels with this in their name.");
+  igEndDisabled();
+}
+
+static void ListTopLevelsOnce(const char *repo) {
+  if (has_listed_top_levels || !AreToolsBuilt(repo)) { return; }
+  has_listed_top_levels = 1;
+  StartLevelList(repo, "");
+}
+
 void DrawOnlineLevelsSection(const char *repo) {
-  DrawHeading("Levels on mod.io");
+  ListTopLevelsOnce(repo);
+  DrawHeading("Online levels");
   igTextWrapped("Levels other players have shared. "
     "Downloading one puts it in level_src/ and builds it.");
-  igBeginDisabled(IsListingOrDownloading() || !AreToolsBuilt(repo));
-  if (igButton("Find levels", (ImVec2){0, 0})) { StartLevelList(repo); }
-  igEndDisabled();
-  DrawTooltip("List the levels on mod.io.");
+  DrawSearch(repo);
   if (problem[0]) { igTextColored(PROBLEM_COLOUR, "%s", problem); }
   DrawLevelListStatus();
   DrawOnlineLevelTable(repo);

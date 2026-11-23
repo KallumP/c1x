@@ -1,5 +1,6 @@
-// c1x_tools list-online-levels: the levels players have shared on mod.io, one
-// line each for the launcher's Levels tab to read
+// c1x_tools list-online-levels [name]: the top levels players have shared on
+// mod.io, or those with name in theirs, one line each for the launcher's Levels
+// tab to read
 
 import { isProblem, type Answer } from "./answer";
 import { listOnlineLevels, type OnlineLevel } from "./modio";
@@ -17,19 +18,28 @@ export function onlineLevelLine({ id, author, name, page }: OnlineLevel): string
   return `${ONLINE_LEVEL_PREFIX}${fields.join("\t")}`;
 }
 
-// says each online level's line, or that there are none, or why it can't tell;
-// returns the exit code, 1 when it can't tell. list is a test's stand-in
+function noLevelsLine(name: string): string {
+  if (!name) {
+    return "no levels are on mod.io yet";
+  }
+  return `no levels on mod.io have "${name}" in their name`;
+}
+
+// says the line of each top level on mod.io, or each with name in theirs, or that
+// there are none, or why it can't tell; returns the exit code, 1 when it can't
+// tell. list is a test's stand-in
 export async function listOnlineLevelsCommand(
+  name: string,
   say: (line: string) => void,
-  list: () => Promise<Answer<OnlineLevel[]>> = listOnlineLevels,
+  list: (name: string) => Promise<Answer<OnlineLevel[]>> = listOnlineLevels,
 ): Promise<number> {
-  const levels = await list();
+  const levels = await list(name);
   if (isProblem(levels)) {
     say(`couldn't list the levels on mod.io: ${levels.problem}`);
     return 1;
   }
   if (levels.length === 0) {
-    say("no levels are on mod.io yet");
+    say(noLevelsLine(name));
   }
   levels.forEach((level) => say(onlineLevelLine(level)));
   return 0;

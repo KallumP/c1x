@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import type { Fetch } from "../../scripts/fetch";
 import {
@@ -8,6 +10,8 @@ import {
   fetchOnlineLevel,
   setLevelLogo,
   MODIO_GAME,
+  LEVELS_WITH_NAME,
+  TOP_LEVELS,
   emailSignInCode,
   signInWithCode,
 } from "../../scripts/modio";
@@ -257,19 +261,40 @@ const LEVEL_ANSWER = {
 };
 
 describe("listing the levels on mod.io", () => {
-  test("asks for all the game's mods, with the game's api key (each is a level, tagged or not)", async () => {
+  // the url listOnlineLevels asked for, given name
+  async function listUrl(name: string): Promise<URL> {
     const { fetchUrl, requests } = standInFetch({ data: [LEVEL_ANSWER] });
-    await listOnlineLevels(fetchUrl);
-    const url = new URL(requests[0].url);
+    await listOnlineLevels(name, fetchUrl);
+    return new URL(requests[0].url);
+  }
+
+  test("asks for the game's mods (each is a level, tagged or not)", async () => {
+    const url = await listUrl("");
     expect(`${url.origin}${url.pathname}`).toBe(
       `${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}/mods`,
     );
-    expect(Object.fromEntries(url.searchParams)).toEqual({ api_key: MODIO_GAME.apiKey });
+  });
+
+  test("asks for the 10 most downloaded, with the game's api key", async () => {
+    expect(Object.fromEntries((await listUrl("")).searchParams)).toEqual({
+      api_key: MODIO_GAME.apiKey,
+      _sort: "-downloads_total",
+      _limit: "10",
+    });
+  });
+
+  test("with a name, asks for the 100 most downloaded with it in theirs", async () => {
+    expect(Object.fromEntries((await listUrl("tide ruins")).searchParams)).toEqual({
+      api_key: MODIO_GAME.apiKey,
+      _sort: "-downloads_total",
+      _limit: "100",
+      "name-lk": "*tide ruins*",
+    });
   });
 
   test("is each level's id, name and author", async () => {
     const { fetchUrl } = standInFetch({ data: [LEVEL_ANSWER] });
-    expect(await listOnlineLevels(fetchUrl)).toEqual([
+    expect(await listOnlineLevels("", fetchUrl)).toEqual([
       {
         id: 17302,
         name: "Tide Ruins",
@@ -282,7 +307,7 @@ describe("listing the levels on mod.io", () => {
 
   test("leaves out a level with no file yet", async () => {
     const { fetchUrl } = standInFetch({ data: [{ ...LEVEL_ANSWER, modfile: null }] });
-    expect(await listOnlineLevels(fetchUrl)).toEqual([]);
+    expect(await listOnlineLevels("", fetchUrl)).toEqual([]);
   });
 });
 
@@ -351,5 +376,22 @@ describe("a request signed in as the player", () => {
     const { fetchUrl, requests } = standInFetch({ ...MOD_ANSWER, data: [] });
     await send(fetchUrl);
     expect(sentHeader(requests[0].init, "Authorization")).toBe("Bearer token");
+  });
+});
+
+// the number online_levels.h defines as name
+function launchersNumber(name: string): number {
+  const codeUrl = new URL("../../../../src/launcher/online_levels.h", import.meta.url);
+  const launcherCode = readFileSync(fileURLToPath(codeUrl), "utf8");
+  return Number(new RegExp(`#define ${name} (\\d+)`).exec(launcherCode)?.[1]);
+}
+
+describe("how many levels a list has", () => {
+  test("without a search, is as many as the launcher says there are", () => {
+    expect(launchersNumber("TOP_LEVELS")).toBe(TOP_LEVELS);
+  });
+
+  test("with a search, is as many as the launcher keeps", () => {
+    expect(launchersNumber("ONLINE_LEVELS_MAX")).toBe(LEVELS_WITH_NAME);
   });
 });

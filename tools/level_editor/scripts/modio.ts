@@ -252,15 +252,29 @@ function onlineLevelOf(mod: OnlineModAnswer): OnlineLevel | null {
   };
 }
 
-const publicUrl = (path: string) =>
-  `${gameUrl(path)}?${new URLSearchParams({ api_key: MODIO_GAME.apiKey })}`;
+const publicUrl = (path: string, query: Record<string, string> = {}) =>
+  `${gameUrl(path)}?${new URLSearchParams({ api_key: MODIO_GAME.apiKey, ...query })}`;
 
-// the game's levels with a file to download: all its mods, as a level
-// uploaded by hand may not be tagged
+// online_levels.h has the same numbers, TOP_LEVELS for the launcher to say and
+// ONLINE_LEVELS_MAX for as many as it keeps, and a test checks they're the same
+export const TOP_LEVELS = 10;
+export const LEVELS_WITH_NAME = 100;
+
+function levelListQuery(name: string): Record<string, string> {
+  const sort = { _sort: "-downloads_total" };
+  if (!name) {
+    return { ...sort, _limit: String(TOP_LEVELS) };
+  }
+  return { ...sort, _limit: String(LEVELS_WITH_NAME), "name-lk": `*${name}*` };
+}
+
+// the levels with a file to download, the top ones or those with name in theirs:
+// of all the game's mods, as a level uploaded by hand may not be tagged
 export async function listOnlineLevels(
+  name: string,
   fetchUrl: Fetch = fetch,
 ): Promise<Answer<OnlineLevel[]>> {
-  const url = publicUrl("/mods");
+  const url = publicUrl("/mods", levelListQuery(name));
   const answer = await askModio<{ data: OnlineModAnswer[] }>(fetchUrl, url, {
     headers: JSON_ACCEPTED,
   });
