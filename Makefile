@@ -140,6 +140,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/tools.c \
 	src/launcher/level_build.c \
 	src/launcher/levels_section.c \
+	src/launcher/online_levels_section.c \
 	src/launcher/editor_section.c \
 	src/launcher/newer_release.c \
 	src/launcher/online_levels.c \

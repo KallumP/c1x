@@ -10,6 +10,7 @@
 #include "level_build.h"
 #include "tools.h"
 #include "levels.h"
+#include "online_levels_section.h"
 #include "command.h"
 #include "paths.h"
 #include "settings_section.h"
@@ -51,6 +52,7 @@ int CanBuildLevels(const char *repo) {
 /* once a build finishes, the levels it made are listed here and for
    boot_level, and a level that built is the one the title screen's CUSTOM LEVEL starts */
 void UpdateLevelsSection(const char *repo) {
+  UpdateOnlineLevelsSection(repo);
   if (!UpdateBackgroundCommand(&build)) { return; }
   LoadLevelsSection(repo);
   ListSettingsLevels(repo);
@@ -130,4 +132,6 @@ void DrawLevelsSection(const char *repo) {
   igSpacing();
   DrawLevelBuildStatus();
   DrawCommandOutput("build_output", &build);
+  igSpacing();
+  DrawOnlineLevelsSection(repo);
 }
