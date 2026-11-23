@@ -45,7 +45,7 @@ describe("downloading a release", () => {
       return answer;
     };
     const say = (line: string) => said.push(line);
-    const exitCode = await downloadReleaseCommand(version, current, say, downloadFile);
+    const exitCode = await downloadReleaseCommand(current, version, say, downloadFile);
     return { exitCode, said, asked };
   }
 

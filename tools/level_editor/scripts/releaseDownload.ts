@@ -20,12 +20,12 @@ export const releaseZipUrl = (version: string) =>
 export const RELEASE_INSTALLED_PREFIX = "installed release: ";
 
 function installRelease(
-  zip: Uint8Array,
   playersFolder: string,
+  zip: Uint8Array,
   version: string,
 ): Answer<{ folder: string }> {
   try {
-    const unzipped = unzipRelease(zip, dirname(playersFolder), version);
+    const unzipped = unzipRelease(dirname(playersFolder), zip, version);
     if (!isProblem(unzipped)) {
       copyPlayersThings(playersFolder, unzipped.folder);
     }
@@ -39,8 +39,8 @@ function installRelease(
 // repo (the player's c1x folder) with their things copied in, saying where (the
 // line the launcher reads), or why it couldn't; returns the exit code, 1 if it couldn't
 export async function downloadReleaseCommand(
-  version: string,
   repo: string,
+  version: string,
   say: (line: string) => void,
   download: typeof downloadFile = downloadFile,
 ): Promise<number> {
@@ -53,7 +53,7 @@ export async function downloadReleaseCommand(
     say(`couldn't download c1x ${version}: ${zip.problem}`);
     return 1;
   }
-  const installed = installRelease(zip, resolve(repo), version);
+  const installed = installRelease(resolve(repo), zip, version);
   if (isProblem(installed)) {
     say(`couldn't install c1x ${version}: ${installed.problem}`);
     return 1;

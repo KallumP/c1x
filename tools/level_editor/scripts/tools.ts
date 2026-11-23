@@ -121,7 +121,7 @@ export async function runTools(repo: string, args: string[]): Promise<number> {
     return listOnlineLevelsCommand(console.log);
   }
   if (command.kind === "download-release") {
-    return downloadReleaseCommand(command.version, repo, console.log);
+    return downloadReleaseCommand(repo, command.version, console.log);
   }
   if (command.kind === "download-level") {
     return runDownloadLevel(repo, command.modId);

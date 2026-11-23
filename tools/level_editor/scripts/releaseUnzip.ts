@@ -22,8 +22,8 @@ function writeFiles(parent: string, files: [string[], Uint8Array][]): void {
 // unzips version's zip into parent as its own folder, leaving one already there
 // alone; the new folder's path
 export function unzipRelease(
-  zip: Uint8Array,
   parent: string,
+  zip: Uint8Array,
   version: string,
 ): Answer<{ folder: string }> {
   const unzipped = tryUnzip(zip);
