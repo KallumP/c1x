@@ -16,7 +16,7 @@ Run `c1x_launcher.exe`, by double-clicking it or from any folder. It works on it
 
 The launcher's version is in the top right corner of its window, for example `v1.3`.
 
-When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to open the newest release's page in your browser, and download it from there. Nothing is downloaded or changed for you.
+When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to download that release's zip into your Downloads folder: it says **Downloading 1.4...**, then **Saved c1x-1.4.zip to Downloads**, with an **Open folder** button to find it and unzip it. Your copy of c1x isn't changed. If the download fails, the button opens the release's page on GitHub instead, to download it from there.
 
 A new release unzips to its own folder. To carry on where you were, copy these across from the old folder:
 
@@ -31,7 +31,7 @@ If the launcher shows no button for a newer release, it couldn't check. That hap
 - **`build/c1x_tools.exe` is missing.** The check runs from it. A release comes with it, and in a project folder `make` builds it (see [Building](building.md#the-level-build-and-editor-without-node)).
 - **It's a launcher you built yourself.** That says `dev build` instead of a version, so there's nothing to compare. Only a released launcher checks (see [Releasing](releasing.md#the-launchers-version)).
 
-This check is the only time the launcher uses the internet.
+Besides this check, the launcher only goes online when you ask it to: downloading a release, or finding and downloading levels on mod.io.
 
 ## Game
 
