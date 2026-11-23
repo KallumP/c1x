@@ -7,7 +7,7 @@ import { buildLevel, levelSourcePath } from "../builder/buildLevel";
 import { repoFolders } from "../builder/repoFolders";
 import { addressLine, startEditorServer } from "../server/editorServer";
 import { downloadLevelCommand } from "./levelDownload";
-import { downloadLevelZip, onlineLevel } from "./modio";
+import { downloadLevelZip, fetchOnlineLevel } from "./modio";
 import { listOnlineLevelsCommand } from "./onlineLevels";
 import { checkUpdate } from "./updateCheck";
 
@@ -74,7 +74,7 @@ function runBuildLevel(repo: string, level: string): boolean {
 // downloads a level from mod.io into level_src and builds it; its exit code
 function runDownloadLevel(repo: string, modId: number): Promise<number> {
   const calls = {
-    onlineLevel,
+    fetchOnlineLevel,
     downloadLevelZip,
     buildLevel: (name: string) => runBuildLevel(repo, name),
   };
