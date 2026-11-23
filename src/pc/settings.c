@@ -73,7 +73,6 @@ static int SettingsParseNumberFrom(const char *value, uint32_t min, uint32_t max
   return 1;
 }
 
-/* SettingsApply's result for a value that parsed, or didn't */
 static int AppliedOrInvalid(int parsed) {
   if (parsed) { return 1; }
   return -1;
@@ -82,40 +81,40 @@ static int AppliedOrInvalid(int parsed) {
 /* apply one setting; returns 1, or -1 if the name or value is invalid */
 static int SettingsApply(const char *name, const char *value, pc_settings *s) {
   if (SDL_strcasecmp(name, "skip_loading_screen") == 0)
-    return SettingsParseOnOff(value, &s->skip_loading_screen) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->skip_loading_screen));
   if (SDL_strcasecmp(name, "loading_screen_min_ms") == 0)
-    return SettingsParseNumber(value, SETTINGS_LOADING_SCREEN_MAX_MS,
-      &s->loading_screen_min_ms) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseNumber(value, SETTINGS_LOADING_SCREEN_MAX_MS,
+      &s->loading_screen_min_ms));
   if (SDL_strcasecmp(name, "speed_display") == 0)
-    return SettingsParseOnOff(value, &s->speed_display) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->speed_display));
   if (SDL_strcasecmp(name, "fps_display") == 0)
-    return SettingsParseOnOff(value, &s->fps_display) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->fps_display));
   if (SDL_strcasecmp(name, "spin_display") == 0)
-    return SettingsParseOnOff(value, &s->spin_display) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->spin_display));
   if (SDL_strcasecmp(name, "box_display") == 0)
-    return SettingsParseOnOff(value, &s->box_display) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->box_display));
   if (SDL_strcasecmp(name, "skip_splash_screens") == 0)
-    return SettingsParseOnOff(value, &s->skip_splash_screens) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->skip_splash_screens));
   if (SDL_strcasecmp(name, "fix_model_draw_order") == 0)
-    return SettingsParseOnOff(value, &s->fix_model_draw_order) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->fix_model_draw_order));
   if (SDL_strcasecmp(name, "spin_ledge_jump") == 0)
-    return SettingsParseOnOff(value, &s->spin_ledge_jump) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->spin_ledge_jump));
   if (SDL_strcasecmp(name, "replay_inputs") == 0)
-    return SettingsParseOnOff(value, &s->replay_inputs) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->replay_inputs));
   if (SDL_strcasecmp(name, "replay_speed") == 0)
-    return SettingsParseNumber(value, SETTINGS_REPLAY_SPEED_MAX,
-      &s->replay_speed) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseNumber(value, SETTINGS_REPLAY_SPEED_MAX,
+      &s->replay_speed));
   if (SDL_strcasecmp(name, "frame_rate") == 0)
-    return SettingsParseNumberFrom(value, SETTINGS_FRAME_RATE_MIN,
-      SETTINGS_FRAME_RATE_MAX, &s->frame_rate) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseNumberFrom(value, SETTINGS_FRAME_RATE_MIN,
+      SETTINGS_FRAME_RATE_MAX, &s->frame_rate));
   if (SDL_strcasecmp(name, "fullscreen") == 0)
-    return SettingsParseOnOff(value, &s->fullscreen) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->fullscreen));
   if (SDL_strcasecmp(name, "memory_card") == 0)
-    return SettingsParseOnOff(value, &s->memory_card) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->memory_card));
   if (SDL_strcasecmp(name, "mute") == 0)
     return AppliedOrInvalid(SettingsParseOnOff(value, &s->mute));
   if (SDL_strcasecmp(name, "boot_level") == 0)
-    return SettingsParseLevelName(value, s->boot_level) ? 1 : -1;
+    return AppliedOrInvalid(SettingsParseLevelName(value, s->boot_level));
   return -1;
 }
 
