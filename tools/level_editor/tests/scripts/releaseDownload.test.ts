@@ -82,6 +82,11 @@ describe("downloading a release", () => {
     });
   });
 
+  test("says why it couldn't copy the player's things in, and fails", async () => {
+    writeFileSync(join(current, "level_src"), "a file, where a folder should be");
+    expect(await downloaded("1.5")).toMatchObject({ exitCode: 1 });
+  });
+
   test("says why it couldn't unzip it, and fails", async () => {
     mkdirSync(newFolder());
     expect(await downloaded("1.5")).toMatchObject({

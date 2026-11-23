@@ -67,6 +67,12 @@ describe("a release that isn't unzipped", () => {
     expect(existsSync(join(parent, "escape.exe"))).toBe(false);
   });
 
+  test("is one with no files", () => {
+    expect(unzipRelease(parent, zipSync({}), "1.4")).toEqual({
+      problem: "The download isn't c1x 1.4.",
+    });
+  });
+
   test("is one that isn't a zip", () => {
     expect(unzipRelease(parent, new Uint8Array([1, 2, 3]), "1.4")).toEqual({
       problem: "The download isn't a zip.",
