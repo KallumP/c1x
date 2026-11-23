@@ -23,7 +23,16 @@ export interface ApiResponse {
   body: string | Buffer;
 }
 
-type ReadBody = () => Promise<string>;
+export type ReadBody = () => Promise<string>;
+
+// an api: what it answers a request with, by its method, its path after the api's
+// own, and its body when it's needed
+export type Api = (
+  repo: string,
+  method: string,
+  path: string,
+  readBody: ReadBody,
+) => Promise<ApiResponse>;
 
 const FILE_TYPES: Record<string, string> = {
   ".obj": "text/plain", ".mtl": "text/plain", ".json": "application/json",
@@ -31,7 +40,7 @@ const FILE_TYPES: Record<string, string> = {
   ".gif": "image/gif", ".tif": "image/tiff", ".tiff": "image/tiff",
 };
 
-const json = (value: unknown): ApiResponse => ({ status: 200, type: "application/json", body: JSON.stringify(value) });
+export const json = (value: unknown): ApiResponse => ({ status: 200, type: "application/json", body: JSON.stringify(value) });
 const NOT_FOUND: ApiResponse = { status: 404, type: "text/plain", body: "not found" };
 const SAVED = json({});
 

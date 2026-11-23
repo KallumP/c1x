@@ -21,11 +21,10 @@ import {
   type Answer,
   type SignIn,
 } from "../scripts/modio";
-import type { ApiResponse } from "./api";
+import { json, type ApiResponse, type ReadBody } from "./api";
 import { listLevels } from "./levels";
 import { errorMessage } from "../src/errorMessage";
 
-type ReadBody = () => Promise<string>;
 
 // mod.io's calls and the clock, or a test's stand-ins for them
 export interface ModioCalls {
@@ -51,11 +50,6 @@ const NOT_SIGNED_IN: ApiResponse = {
   type: "text/plain",
   body: "Sign in to mod.io first.",
 };
-const json = (value: unknown): ApiResponse => ({
-  status: 200,
-  type: "application/json",
-  body: JSON.stringify(value),
-});
 const refused = (problem: string): ApiResponse => ({
   status: 400,
   type: "text/plain",

@@ -1,10 +1,9 @@
 // the level editor without vite or node installed: its built page (vite build)
-// and its api (api.ts), served by node's own http server, in the tools exe
+// and its apis (apis.ts), served by node's own http server, in the tools exe
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { extname, relative, resolve, sep } from "node:path";
-import { levelsApi, type ApiResponse } from "./api";
-import { modioApi } from "./modioApi";
+import { APIS } from "./apis";
 import { requestBody, sendApiResponse } from "./http";
 
 export interface EditorServerOptions {
@@ -13,18 +12,6 @@ export interface EditorServerOptions {
   firstPort: number; // the port it tries first; then the next, and so on
 }
 
-type Api = (
-  repo: string,
-  method: string,
-  path: string,
-  readBody: () => Promise<string>,
-) => Promise<ApiResponse>;
-
-// each api, by the path it's under
-const APIS: [string, Api][] = [
-  ["/api/levels", levelsApi],
-  ["/api/modio", modioApi],
-];
 const PORTS_TRIED = 20;
 const PAGE_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json",
