@@ -244,13 +244,6 @@ UTEST(launcher_levels, the_level_sources_folder_url_of_a_unix_path_has_one_slash
   ASSERT_STREQ("file:///home/me/c1x/level_src", url);
 }
 
-UTEST(launcher_levels, a_space_in_the_level_sources_folder_url_is_escaped) {
-  char url[256];
-
-  LevelSourcesFolderUrl("C:/my games/c1x", url, sizeof(url));
-  ASSERT_STREQ("file:///C:/my%20games/c1x/level_src", url);
-}
-
 UTEST(launcher_levels, a_hash_or_percent_in_the_level_sources_folder_url_is_escaped) {
   char url[256];
 

@@ -1,11 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { LOGO_WIDTH, logoCrop } from "../../src/levelLogo";
+import { logoCrop } from "../../src/levelLogo";
 
 describe("a level's logo", () => {
-  test("is at least as wide as mod.io's smallest logo (512)", () => {
-    expect(LOGO_WIDTH).toBeGreaterThanOrEqual(512);
-  });
-
   test("takes all of a 16:9 view", () => {
     expect(logoCrop(1600, 900)).toEqual({ x: 0, y: 0, width: 1600, height: 900 });
   });

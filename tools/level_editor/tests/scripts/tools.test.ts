@@ -29,17 +29,16 @@ describe("the tools exe's commands", () => {
     expect(toolsCommand(["download-level", id])).toEqual({ kind: "usage" });
   });
 
-  test("anything else says how to use it", () => {
-    const unusable = [
-      [],
-      ["build-level"],
-      ["build-level", "a", "b"],
-      ["editor", "now"],
-      ["check-update"],
-      ["check-update", "1.4", "1.5"],
-      ["list-online-levels", "now"],
-      ["play"],
-    ];
-    unusable.forEach((args) => expect(toolsCommand(args)).toEqual({ kind: "usage" }));
+  test.each([
+    [[]],
+    [["build-level"]],
+    [["build-level", "a", "b"]],
+    [["editor", "now"]],
+    [["check-update"]],
+    [["check-update", "1.4", "1.5"]],
+    [["list-online-levels", "now"]],
+    [["play"]],
+  ])("anything else says how to use it: %j", (args) => {
+    expect(toolsCommand(args)).toEqual({ kind: "usage" });
   });
 });

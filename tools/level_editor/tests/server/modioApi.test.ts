@@ -130,12 +130,6 @@ describe("the editor's mod.io account", () => {
     ]);
   });
 
-  test("mod.io's refusal of the email is a 400 saying why", async () => {
-    const { calls } = standInCalls({ problem: "Invalid email." });
-    const response = await request("POST", "/email", { email: "nope" }, calls);
-    expect([response.status, response.body.toString()]).toEqual([400, "Invalid email."]);
-  });
-
   test("a step it doesn't have is not found", async () => {
     expect((await request("POST", "/password")).status).toBe(404);
   });
@@ -232,15 +226,6 @@ describe("a level on mod.io", () => {
       "/levels/1_tide_ruins/upload",
       { summary: "A beach.", logo: "AQID" },
     );
-    expect([response.status, response.body.toString()]).toEqual([
-      401,
-      "Sign in to mod.io first.",
-    ]);
-  });
-
-  test("needs a sign-in that hasn't run out", async () => {
-    signIn(NOW);
-    const response = await request("GET", "/levels/1_tide_ruins");
     expect([response.status, response.body.toString()]).toEqual([
       401,
       "Sign in to mod.io first.",

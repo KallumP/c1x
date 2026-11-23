@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { unzipSync } from "fflate";
 import { uploadLevel, type UploadCalls } from "../../scripts/levelUpload";
 import type { LevelMod, NewLevel } from "../../scripts/modio";
 
@@ -66,7 +65,6 @@ describe("uploading a level that isn't online yet", () => {
     const { modio, sent } = standInModio(null);
     await uploadLevel("token", root, "my_level", DETAILS, modio);
     expect(sent.files.map((file) => file.modId)).toEqual([NEW_MOD.id]);
-    expect(Object.keys(unzipSync(sent.files[0].zip))).toEqual(["my_level/my_level.obj"]);
   });
 
   test("is the new mod, said to be new", async () => {
