@@ -65,6 +65,39 @@ async function askModio(fetchUrl: Fetch, url: string, init: RequestInit): Promis
 export const isProblem = <T>(answer: Answer<T>): answer is { problem: string } =>
   typeof answer === "object" && answer !== null && "problem" in answer;
 
+export interface SignIn {
+  token: string;   // signs requests in as the player
+  expires: number; // when it runs out, in seconds since 1970
+}
+
+// posts fields as a form, with the game's api key, to one of mod.io's sign-in steps
+function askSignIn(step: string, fields: Record<string, string>, fetchUrl: Fetch): Promise<Answer<unknown>> {
+  return askModio(fetchUrl, `${MODIO_GAME.apiUrl}/oauth/${step}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+    body: new URLSearchParams({ api_key: MODIO_GAME.apiKey, ...fields }).toString(),
+  });
+}
+
+// has mod.io email the player a code to sign in with
+export async function sendSignInCode(email: string, fetchUrl: Fetch = fetch): Promise<Answer<object>> {
+  const answer = await askSignIn("emailrequest", { email }, fetchUrl);
+  if (isProblem(answer)) {
+    return answer;
+  }
+  return {};
+}
+
+// signs the player in with the code mod.io emailed them
+export async function signInWithCode(code: string, fetchUrl: Fetch = fetch): Promise<Answer<SignIn>> {
+  const answer = await askSignIn("emailexchange", { security_code: code }, fetchUrl);
+  if (isProblem(answer)) {
+    return answer;
+  }
+  const { access_token, date_expires } = answer as { access_token: string; date_expires: number };
+  return { token: access_token, expires: date_expires };
+}
+
 function newLevelForm({ name, summary, folder, logo }: NewLevel): FormData {
   const form = new FormData();
   form.append("name", name);
