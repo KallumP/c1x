@@ -115,11 +115,11 @@ static void ReleaseLabel(release_state state, char *label, size_t size) {
   if (state == RELEASE_OFFERED) {
     SDL_snprintf(label, size, "Version %s is out", newer_version);
   } else if (state == RELEASE_DOWNLOADING) {
-    SDL_snprintf(label, size, "Downloading %s...", newer_version);
+    SDL_snprintf(label, size, "Downloading v%s...", newer_version);
   } else if (state == RELEASE_SAVED) {
     SDL_snprintf(label, size, "Saved %s to Downloads", SavedFileName());
   } else if (state == RELEASE_FAILED) {
-    SDL_snprintf(label, size, "Couldn't download %s: open its page", newer_version);
+    SDL_snprintf(label, size, "Couldn't download v%s: open its page", newer_version);
   }
 }
 

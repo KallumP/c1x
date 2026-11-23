@@ -16,7 +16,7 @@ Run `c1x_launcher.exe`, by double-clicking it or from any folder. It works on it
 
 The launcher's version is in the top right corner of its window, for example `v1.3`.
 
-When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to download that release's zip into your Downloads folder: it says **Downloading 1.4...**, then **Saved c1x-1.4.zip to Downloads**, with an **Open folder** button to find it and unzip it. Your copy of c1x isn't changed. If the download fails, the button opens the release's page on GitHub instead, to download it from there.
+When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to download that release's zip into your Downloads folder: it says **Downloading v1.4...**, then **Saved c1x-1.4.zip to Downloads**, with an **Open folder** button to find it and unzip it. Your copy of c1x isn't changed. If the download fails, the button opens the release's page on GitHub instead, to download it from there.
 
 A new release unzips to its own folder. To carry on where you were, copy these across from the old folder:
 
