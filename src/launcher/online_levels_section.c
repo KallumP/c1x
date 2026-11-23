@@ -103,6 +103,19 @@ static void DrawOnlineLevelRow(const char *repo, int index, int can_download) {
   igPopID();
 }
 
+/* what the list is of, as the level list's groups are titled: the top levels, or
+   those with the search in their name */
+static void DrawListedLevelsTitle(void) {
+  char title[ONLINE_SEARCH_MAX + 32];
+
+  if (searched[0]) {
+    SDL_snprintf(title, sizeof(title), "Levels with \"%s\" in their name", searched);
+  } else {
+    SDL_snprintf(title, sizeof(title), "Top %d most downloaded", TOP_LEVELS);
+  }
+  DrawFieldGroupTitle(title);
+}
+
 static void DrawOnlineLevelTable(const char *repo) {
   ImGuiTableFlags flags;
   float page_width;
@@ -116,17 +129,9 @@ static void DrawOnlineLevelTable(const char *repo) {
   igTableSetupColumn("author", ImGuiTableColumnFlags_WidthFixed, AUTHOR_WIDTH, 0);
   igTableSetupColumn("page", ImGuiTableColumnFlags_WidthFixed, page_width, 0);
   igTableSetupColumn("download", ImGuiTableColumnFlags_WidthFixed, BUTTON_WIDTH, 0);
+  if (found.count > 0) { DrawListedLevelsTitle(); }
   for (i = 0; i < found.count; i++) { DrawOnlineLevelRow(repo, i, can_download); }
   igEndTable();
-}
-
-/* what the list is of: the top levels, or those with the search in their name */
-static void DrawListedLevelsHeading(void) {
-  if (searched[0]) {
-    igText("Levels with \"%s\" in their name:", searched);
-  } else {
-    igText("Top %d most downloaded:", TOP_LEVELS);
-  }
 }
 
 /* how the list went, in a line, with its output if it failed */
@@ -140,8 +145,6 @@ static void DrawLevelListStatus(void) {
     igText("No levels match \"%s\".", searched);
   } else if (level_list.output[0] && found.count == 0) {
     igText("No levels are on mod.io yet.");
-  } else if (found.count > 0) {
-    DrawListedLevelsHeading();
   }
 }
 
