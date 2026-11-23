@@ -26,16 +26,12 @@ int DownloadReleaseCommand(const char *repo, const char *version, char *command,
 }
 
 int FindInstalledRelease(const char *output, char *folder, size_t size) {
-  const char *line;
+  const char *rest;
   size_t length;
 
-  line = SDL_strstr(output, RELEASE_INSTALLED);
-  if (!line) { return 0; }
-  line += SDL_strlen(RELEASE_INSTALLED);
-  length = LineLength(line);
-  if (!line[length]) { return 0; } /* no line end yet: more of it may be to come */
-  if (length >= size) { return 0; }
-  return CopyWhole(folder, size, line, length);
+  rest = CompleteLineAfter(output, RELEASE_INSTALLED, &length);
+  if (!rest || length >= size) { return 0; }
+  return CopyWhole(folder, size, rest, length);
 }
 
 void InstalledLauncherPath(const char *folder, char *path, size_t size) {

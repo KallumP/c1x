@@ -39,14 +39,11 @@ int NewerReleaseCommand(const char *repo, const char *version, char *command,
 
 int FindNewerRelease(const char *output, char *version, size_t size) {
   char found[RELEASE_VERSION_MAX];
-  const char *line, *rest;
+  const char *rest;
   size_t length;
 
-  line = SDL_strstr(output, NEWER_RELEASE);
-  if (!line) { return 0; }
-  rest = line + SDL_strlen(NEWER_RELEASE); /* the version, to the line's end */
-  length = LineLength(rest);
-  if (!rest[length]) { return 0; } /* no line end yet: more of it may be to come */
+  rest = CompleteLineAfter(output, NEWER_RELEASE, &length);
+  if (!rest) { return 0; }
   if (length >= sizeof(found) || length >= size) { return 0; }
   SDL_strlcpy(found, rest, length + 1);
   if (!IsReleaseVersion(found)) { return 0; }

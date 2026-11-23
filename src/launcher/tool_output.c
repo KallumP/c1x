@@ -24,6 +24,18 @@ size_t LineLength(const char *text) {
   return length;
 }
 
+const char *CompleteLineAfter(const char *output, const char *prefix,
+  size_t *length) {
+  const char *rest;
+
+  rest = SDL_strstr(output, prefix);
+  if (!rest) { return 0; }
+  rest += SDL_strlen(prefix);
+  *length = LineLength(rest);
+  if (!rest[*length]) { return 0; }
+  return rest;
+}
+
 size_t FieldLength(const char *text) {
   size_t length;
 

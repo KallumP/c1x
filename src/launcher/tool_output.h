@@ -13,6 +13,12 @@ extern size_t DigitCount(const char *text);
 /* how many characters text has before its line ends, or it does */
 extern size_t LineLength(const char *text);
 
+/* what's after prefix in output, to its line's end (length long); 0 if prefix
+   isn't there, or its line hasn't ended yet (the output is read while the tools
+   run, so more of it may be to come) */
+extern const char *CompleteLineAfter(const char *output, const char *prefix,
+  size_t *length);
+
 /* how many characters text has before a tab, or its line's end */
 extern size_t FieldLength(const char *text);
 
