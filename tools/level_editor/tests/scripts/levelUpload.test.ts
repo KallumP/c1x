@@ -28,6 +28,7 @@ function standInModio(own: LevelMod | null, answers: Refusals = {}) {
   const sent = {
     newLevels: [] as NewLevel[],
     files: [] as { modId: number; zip: Uint8Array }[],
+    logos: [] as { modId: number; logo: Uint8Array }[],
     tokens: [] as string[],
   };
   const modio: LevelModio = {
@@ -44,6 +45,11 @@ function standInModio(own: LevelMod | null, answers: Refusals = {}) {
       sent.tokens.push(token);
       sent.files.push({ modId, zip });
       return answers.addLevelFile ?? {};
+    },
+    setLevelLogo: async (token, modId, logo) => {
+      sent.tokens.push(token);
+      sent.logos.push({ modId, logo });
+      return answers.setLevelLogo ?? {};
     },
   };
   return { modio, sent };
@@ -110,5 +116,41 @@ describe("uploading a level mod.io refuses", () => {
   test("is why mod.io didn't add its file", async () => {
     const { modio } = standInModio(ONLINE, { addLevelFile: { problem: "zip too big" } });
     expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({ problem: "zip too big" });
+  });
+});
+
+describe("a level's picture", () => {
+  const KEEP_LOGO = { ...DETAILS, logo: null };
+
+  test("is set on a level already online when there's a new one", async () => {
+    const { modio, sent } = standInModio(ONLINE);
+    await uploadLevel("token", root, "my_level", DETAILS, modio);
+    expect(sent.logos).toEqual([{ modId: ONLINE.id, logo: LOGO }]);
+  });
+
+  test("is kept on a level already online when there's no new one", async () => {
+    const { modio, sent } = standInModio(ONLINE);
+    await uploadLevel("token", root, "my_level", KEEP_LOGO, modio);
+    expect(sent.logos).toEqual([]);
+    expect(sent.files.map((file) => file.modId)).toEqual([ONLINE.id]);
+  });
+
+  test("is only sent with a new level's mod, not set again", async () => {
+    const { modio, sent } = standInModio(null);
+    await uploadLevel("token", root, "my_level", DETAILS, modio);
+    expect(sent.logos).toEqual([]);
+  });
+
+  test("is needed for a new level", async () => {
+    const { modio, sent } = standInModio(null);
+    expect(await uploadLevel("token", root, "my_level", KEEP_LOGO, modio)).toEqual({
+      problem: "A level needs a picture the first time it's uploaded.",
+    });
+    expect([sent.newLevels, sent.files]).toEqual([[], []]);
+  });
+
+  test("is why mod.io didn't set it", async () => {
+    const { modio } = standInModio(ONLINE, { setLevelLogo: { problem: "The logo is too small." } });
+    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({ problem: "The logo is too small." });
   });
 });
