@@ -9,7 +9,7 @@ const PLAYERS_FILES = ["settings.cfg", "controls.cfg", "imgui.ini", "modio_token
 const PLAYERS_FOLDERS = ["streams", "memory_card"];
 const LEVELS = "level_src";
 
-function copyKeepingNewer(from: string, to: string): void {
+function copyWithoutOverwriting(from: string, to: string): void {
   if (!existsSync(from)) {
     return;
   }
@@ -35,7 +35,7 @@ function copyMissingLevels(from: string, to: string): void {
 
 export function copyPlayersThings(current: string, newer: string): void {
   for (const name of [...PLAYERS_FILES, ...PLAYERS_FOLDERS]) {
-    copyKeepingNewer(join(current, name), join(newer, name));
+    copyWithoutOverwriting(join(current, name), join(newer, name));
   }
   copyMissingLevels(join(current, LEVELS), join(newer, LEVELS));
 }
