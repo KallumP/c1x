@@ -1,9 +1,9 @@
 /*
- * the levels tab's levels shared on mod.io: the most downloaded, or those with
- * the search box's name in theirs, listed by c1x's tools when asked, each with
- * a View level page button opening its page there, and a Download button that
- * downloads it into level_src/ and builds it (c1x_tools list-online-levels and
- * download-level, in the background)
+ * the levels tab's levels shared on mod.io: the most downloaded, listed by c1x's
+ * tools when the tab first opens, or those with the search box's name in theirs
+ * when asked, each with a View level page button opening its page there, and a
+ * Download button that downloads it into level_src/ and builds it (c1x_tools
+ * list-online-levels and download-level, in the background)
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -26,6 +26,7 @@ static background_command level_download; /* c1x_tools download-level */
 static online_levels found;
 static char search[ONLINE_SEARCH_MAX];   /* what's typed in the search box */
 static char searched[ONLINE_SEARCH_MAX]; /* the search the list was for */
+static int has_listed_top_levels;
 static char download_name[ONLINE_LEVEL_TEXT_MAX];
 static char problem[COMMAND_MAX + 32]; /* why a list or download couldn't start, or "" */
 
@@ -175,7 +176,14 @@ static void DrawSearch(const char *repo) {
   igEndDisabled();
 }
 
+static void ListTopLevelsOnce(const char *repo) {
+  if (has_listed_top_levels || !AreToolsBuilt(repo)) { return; }
+  has_listed_top_levels = 1;
+  StartLevelList(repo);
+}
+
 void DrawOnlineLevelsSection(const char *repo) {
+  ListTopLevelsOnce(repo);
   DrawHeading("Levels on mod.io");
   igTextWrapped("Levels other players have shared. "
     "Downloading one puts it in level_src/ and builds it.");
