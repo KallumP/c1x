@@ -18,6 +18,14 @@ describe("the tools exe's commands", () => {
     expect(toolsCommand(["list-online-levels"])).toEqual({ kind: "list-online-levels" });
   });
 
+  test("download-level <id> downloads a level from mod.io", () => {
+    expect(toolsCommand(["download-level", "17302"])).toEqual({ kind: "download-level", modId: 17302 });
+  });
+
+  test.each(["", "abc", "1.5", "-3", "0"])("download-level needs a mod's id: %j", (id) => {
+    expect(toolsCommand(["download-level", id])).toEqual({ kind: "usage" });
+  });
+
   test("anything else says how to use it", () => {
     [[], ["build-level"], ["build-level", "a", "b"], ["editor", "now"], ["check-update"], ["check-update", "1.4", "1.5"], ["list-online-levels", "now"], ["play"]].forEach((args) =>
       expect(toolsCommand(args)).toEqual({ kind: "usage" }));

@@ -1,0 +1,93 @@
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { strToU8, zipSync } from "fflate";
+import { downloadLevelCommand, type DownloadCalls } from "../../scripts/levelDownload";
+import type { OnlineLevel } from "../../scripts/modio";
+
+let root: string; // a stand-in for level_src/
+
+beforeEach(() => { root = mkdtempSync(join(tmpdir(), "level_src-")); });
+afterEach(() => { rmSync(root, { recursive: true, force: true }); });
+
+const TIDE_RUINS: OnlineLevel = {
+  id: 17302,
+  name: "Tide Ruins",
+  author: "kallum",
+  folder: "1_tide_ruins",
+  fileUrl: "https://mod.io/files/tide.zip",
+};
+const ZIP = zipSync({ "1_tide_ruins/tide_ruins.obj": strToU8("o Floor\n") });
+
+// stand-ins for mod.io and the build, answering as given, and what they were asked
+function standInCalls(answers: Partial<{ level: { problem: string }; zip: { problem: string }; builds: boolean }> = {}) {
+  const asked = { ids: [] as number[], urls: [] as string[], built: [] as string[] };
+  const calls: DownloadCalls = {
+    onlineLevel: async (id) => {
+      asked.ids.push(id);
+      return answers.level ?? TIDE_RUINS;
+    },
+    downloadLevelZip: async (url) => {
+      asked.urls.push(url);
+      return answers.zip ?? ZIP;
+    },
+    buildLevel: (name) => {
+      asked.built.push(name);
+      return answers.builds ?? true;
+    },
+  };
+  return { calls, asked };
+}
+
+async function download(calls: DownloadCalls) {
+  const said: string[] = [];
+  const exitCode = await downloadLevelCommand(root, 17302, (line) => said.push(line), calls);
+  return { exitCode, said };
+}
+
+describe("downloading a level", () => {
+  test("downloads the mod's newest file", async () => {
+    const { calls, asked } = standInCalls();
+    await download(calls);
+    expect([asked.ids, asked.urls]).toEqual([[17302], [TIDE_RUINS.fileUrl]]);
+  });
+
+  test("unzips it into level_src", async () => {
+    await download(standInCalls().calls);
+    expect(existsSync(join(root, "1_tide_ruins", "tide_ruins.obj"))).toBe(true);
+  });
+
+  test("builds it, saying so", async () => {
+    const { calls, asked } = standInCalls();
+    expect(await download(calls)).toEqual({ exitCode: 0, said: ["downloaded Tide Ruins into level_src/1_tide_ruins"] });
+    expect(asked.built).toEqual(["1_tide_ruins"]);
+  });
+
+  test("fails when it doesn't build", async () => {
+    expect((await download(standInCalls({ builds: false }).calls)).exitCode).toBe(1);
+  });
+});
+
+describe("a level that can't be downloaded", () => {
+  test("says why mod.io wouldn't give it", async () => {
+    expect(await download(standInCalls({ level: { problem: "Not found." } }).calls)).toEqual({
+      exitCode: 1,
+      said: ["couldn't download level 17302: Not found."],
+    });
+  });
+
+  test("says why its file didn't download", async () => {
+    expect(await download(standInCalls({ zip: { problem: "the download answered 404" } }).calls)).toEqual({
+      exitCode: 1,
+      said: ["couldn't download level 17302: the download answered 404"],
+    });
+  });
+
+  test("says why it couldn't be unzipped, building nothing", async () => {
+    const { calls, asked } = standInCalls({ zip: undefined });
+    calls.downloadLevelZip = async () => new Uint8Array([1, 2, 3]);
+    expect(await download(calls)).toEqual({ exitCode: 1, said: ["couldn't download level 17302: The download isn't a zip."] });
+    expect(asked.built).toEqual([]);
+  });
+});
