@@ -10,6 +10,7 @@ import {
   fetchOnlineLevel,
   setLevelLogo,
   MODIO_GAME,
+  LEVELS_WITH_NAME,
   TOP_LEVELS,
   emailSignInCode,
   signInWithCode,
@@ -378,11 +379,19 @@ describe("a request signed in as the player", () => {
   });
 });
 
-describe("how many top levels there are", () => {
-  test("is as many as the launcher says there are", () => {
-    const codeUrl = new URL("../../../../src/launcher/online_levels.h", import.meta.url);
-    const launcherCode = readFileSync(fileURLToPath(codeUrl), "utf8");
-    const launchersCount = /#define TOP_LEVELS (\d+)/.exec(launcherCode)?.[1];
-    expect(Number(launchersCount)).toBe(TOP_LEVELS);
+// the number online_levels.h defines as name
+function launchersNumber(name: string): number {
+  const codeUrl = new URL("../../../../src/launcher/online_levels.h", import.meta.url);
+  const launcherCode = readFileSync(fileURLToPath(codeUrl), "utf8");
+  return Number(new RegExp(`#define ${name} (\\d+)`).exec(launcherCode)?.[1]);
+}
+
+describe("how many levels a list has", () => {
+  test("without a search, is as many as the launcher says there are", () => {
+    expect(launchersNumber("TOP_LEVELS")).toBe(TOP_LEVELS);
+  });
+
+  test("with a search, is as many as the launcher keeps", () => {
+    expect(launchersNumber("ONLINE_LEVELS_MAX")).toBe(LEVELS_WITH_NAME);
   });
 });
