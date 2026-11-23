@@ -94,10 +94,9 @@ describe("downloading a release", () => {
 
 describe("what the launcher reads", () => {
   test("starts as the launcher's code says it does", () => {
-    const launcherCode = readFileSync(
-      fileURLToPath(new URL("../../../../src/launcher/release_download.c", import.meta.url)),
-      "utf8",
-    );
-    expect(/#define RELEASE_SAVED "(.*)"/.exec(launcherCode)?.[1]).toBe(RELEASE_SAVED_PREFIX);
+    const codeUrl = new URL("../../../../src/launcher/release_download.c", import.meta.url);
+    const launcherCode = readFileSync(fileURLToPath(codeUrl), "utf8");
+    const launchersPrefix = /#define RELEASE_SAVED "(.*)"/.exec(launcherCode)?.[1];
+    expect(launchersPrefix).toBe(RELEASE_SAVED_PREFIX);
   });
 });

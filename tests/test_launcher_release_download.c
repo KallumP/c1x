@@ -34,7 +34,10 @@ UTEST(launcher_release_download, finds_nothing_before_it_says_where) {
 UTEST(launcher_release_download, finds_nothing_while_the_line_isnt_all_there) {
   char path[256];
 
-  ASSERT_FALSE(FindSavedRelease("saved release: C:\\Users\\me\\Down", path, sizeof(path)));
+  const char *output;
+
+  output = "saved release: C:\\Users\\me\\Down";
+  ASSERT_FALSE(FindSavedRelease(output, path, sizeof(path)));
 }
 
 UTEST(launcher_release_download, finds_nothing_when_the_path_is_too_long_to_keep) {
