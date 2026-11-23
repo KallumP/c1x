@@ -409,3 +409,59 @@ UTEST(launcher_levels, an_included_level_that_isnt_there_is_left_out) {
   ListCustomLevels("build/test_launcher_levels_missing", &levels);
   ASSERT_EQ(1, levels.count);
 }
+
+/* repo's level source called name, downloaded from mod.io: it notes its page */
+static void NoteDownloaded(const char *repo, const char *name) {
+  char folder[256];
+
+  snprintf(folder, sizeof(folder), "%s/level_src/%s", repo, name);
+  MakeFileSaying(folder, ".modio.json", "{\"modId\":1,\"page\":\"https://mod.io/m/x\"}");
+}
+
+#define TEST_KINDS_REPO "build/test_launcher_levels_kinds"
+
+/* the levels in TEST_KINDS_REPO: 1_tide_ruins comes with c1x, zz_download was
+   downloaded from mod.io, and aardvark is the player's own */
+static void ListLevelsOfEachKind(custom_levels *levels) {
+  const char *names[] = { "aardvark", "zz_download", "1_tide_ruins", 0 };
+
+  MakeOrderedLevels(TEST_KINDS_REPO, names, 0, "1_tide_ruins\n");
+  NoteDownloaded(TEST_KINDS_REPO, "zz_download");
+  ListCustomLevels(TEST_KINDS_REPO, levels);
+}
+
+UTEST(launcher_levels, an_included_level_comes_with_c1x) {
+  static custom_levels levels;
+
+  ListLevelsOfEachKind(&levels);
+  ASSERT_EQ(LEVEL_COMES_WITH_C1X, levels.kinds[FindCustomLevel(&levels, "1_tide_ruins")]);
+}
+
+UTEST(launcher_levels, a_level_with_a_mod_io_page_was_downloaded) {
+  static custom_levels levels;
+
+  ListLevelsOfEachKind(&levels);
+  ASSERT_EQ(LEVEL_DOWNLOADED, levels.kinds[FindCustomLevel(&levels, "zz_download")]);
+}
+
+UTEST(launcher_levels, any_other_level_is_the_players_own) {
+  static custom_levels levels;
+
+  ListLevelsOfEachKind(&levels);
+  ASSERT_EQ(LEVEL_OWN, levels.kinds[FindCustomLevel(&levels, "aardvark")]);
+}
+
+UTEST(launcher_levels, downloaded_levels_come_after_those_with_c1x_and_before_your_own) {
+  static custom_levels levels;
+
+  ListLevelsOfEachKind(&levels);
+  ASSERT_STREQ("1_tide_ruins", levels.names[0]);
+  ASSERT_STREQ("zz_download", levels.names[1]);
+  ASSERT_STREQ("aardvark", levels.names[2]);
+}
+
+UTEST(launcher_levels, each_kind_of_level_has_a_section_title) {
+  ASSERT_STREQ("Comes with c1x", LevelKindTitle(LEVEL_COMES_WITH_C1X));
+  ASSERT_STREQ("Downloaded from mod.io", LevelKindTitle(LEVEL_DOWNLOADED));
+  ASSERT_STREQ("Your own", LevelKindTitle(LEVEL_OWN));
+}
