@@ -55,7 +55,8 @@ static void StartLevelList(const char *repo) {
 
 static void StartLevelDownload(const char *repo, int index) {
   char command[COMMAND_MAX];
-  int has_command = DownloadLevelCommand(repo, found.ids[index], command, sizeof(command));
+  int id = found.ids[index];
+  int has_command = DownloadLevelCommand(repo, id, command, sizeof(command));
 
   if (StartToolsCommand(&level_download, repo, has_command, command)) {
     SDL_strlcpy(download_name, found.names[index], sizeof(download_name));
