@@ -22,16 +22,12 @@ function takeViewPicture(): string | null {
 
 // the open level's picture on mod.io: the one it has, the view as it was when
 // the Share dialog opened, or an image file the player chose
-function usePicture(isOpen: boolean, online: LevelMod | null | undefined) {
+function usePicture(online: LevelMod | null | undefined) {
   const [choice, setChoice] = useState<PictureChoice>("view");
   const [viewPicture, setViewPicture] = useState<string | null>(null);
   const [imagePicture, setImagePicture] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      setViewPicture(takeViewPicture());
-    }
-  }, [isOpen]);
+  useEffect(() => setViewPicture(takeViewPicture()), []);
   useEffect(() => setChoice(firstPictureChoice(Boolean(online))), [online]);
 
   // the picture to send: a base64 png, or null to keep the one it has
@@ -58,14 +54,13 @@ export function useLevelUpload(
   level: LevelInfo | null,
   signedIn: boolean | null,
   save: () => Promise<boolean>,
-  isOpen: boolean,
 ) {
   const [online, setOnline] = useState<LevelMod | null | undefined>(undefined); // undefined until mod.io says
   const [summary, setSummary] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [uploaded, setUploaded] = useState<Uploaded | null>(null);
-  const picture = usePicture(isOpen, online);
+  const picture = usePicture(online);
 
   useEffect(() => {
     setOnline(undefined);

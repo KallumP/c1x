@@ -6,6 +6,7 @@ import LevelPicker from "./components/LevelPicker";
 import ObjectMarkers from "./components/ObjectMarkers";
 import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
+import ShareDialog from "./components/ShareDialog";
 import Scene, { type Orbit } from "./components/Scene";
 import { levelTurn } from "./camera";
 import { movedAlong, movedNodeAlong, type Axis } from "./axisDrag";
@@ -21,15 +22,6 @@ import { useLevelCfg } from "./hooks/useLevelCfg";
 import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevelSongs } from "./hooks/useLevelSongs";
 import { useLevels } from "./hooks/useLevels";
-import { useLevelUpload } from "./hooks/useLevelUpload";
-import { useModioAccount } from "./hooks/useModioAccount";
-import {
-  PICTURE_LABELS,
-  pictureChoices,
-  SUMMARY_MAX,
-  uploadButtonText,
-  uploadedText,
-} from "./levelSharing";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
 import { useOutlineWarnings, usePathWarnings, useTriangles, useWarnings } from "./hooks/useWarnings";
@@ -121,9 +113,7 @@ export default function App() {
     }
   };
 
-  const modio = useModioAccount();
   const [isSharing, setIsSharing] = useState(false);
-  const levelUpload = useLevelUpload(level, modio.signedIn, save, isSharing);
 
   useUnsavedWarning(unsaved);
   const levelActions = useLevelActions(level, unsaved, save);
@@ -189,199 +179,6 @@ export default function App() {
       Share
     </button>
   );
-
-  // the email to send a sign-in code to
-  const renderEmailStep = () => (
-    <form onSubmit={(event) => { event.preventDefault(); modio.sendEmail(); }}>
-      <p>Sign in to mod.io to share levels. It emails you a code to sign in with.</p>
-      <input
-        type="email"
-        placeholder="Email"
-        value={modio.email}
-        onChange={(event) => modio.setEmail(event.target.value)}
-        autoFocus
-      />
-      <button type="submit" disabled={modio.isBusy}>Email me a code</button>
-    </form>
-  );
-
-  // the code mod.io emailed
-  const renderCodeStep = () => (
-    <form onSubmit={(event) => { event.preventDefault(); modio.sendCode(); }}>
-      <p>mod.io emailed a code to {modio.email}.</p>
-      <input
-        placeholder="Code"
-        value={modio.code}
-        onChange={(event) => modio.setCode(event.target.value)}
-        autoFocus
-      />
-      <button type="submit" disabled={modio.isBusy}>Sign in</button>
-      <button type="button" disabled={modio.isBusy} onClick={modio.startAgain}>Use another email</button>
-    </form>
-  );
-
-  const renderSignIn = () => {
-    if (modio.step === "code") {
-      return renderCodeStep();
-    }
-    return renderEmailStep();
-  };
-
-  // whether the level's online already, with a link to it
-  const renderOnlineLine = () => {
-    const { online } = levelUpload;
-    if (online === undefined) {
-      return <p>Checking whether it's online...</p>;
-    }
-    if (online === null) {
-      return <p>It isn't on mod.io yet.</p>;
-    }
-    return (
-      <p>
-        It's <a href={online.page} target="_blank" rel="noreferrer">on mod.io</a>. Uploading again adds a new version.
-      </p>
-    );
-  };
-
-  // a new level's summary; a new version keeps its own
-  const renderSummary = () => {
-    if (levelUpload.online !== null) {
-      return null;
-    }
-    return (
-      <textarea
-        placeholder="Summary: what players should know about it"
-        rows={3}
-        maxLength={SUMMARY_MAX}
-        value={levelUpload.summary}
-        onChange={(event) => levelUpload.setSummary(event.target.value)}
-      />
-    );
-  };
-
-  // the picture the choice sends, or none to keep its own
-  const pictureToPreview = () => {
-    const { choice, viewPicture, imagePicture } = levelUpload.picture;
-    if (choice === "view") {
-      return viewPicture;
-    }
-    if (choice === "image") {
-      return imagePicture;
-    }
-    return null;
-  };
-
-  const renderPicturePreview = () => {
-    const shown = pictureToPreview();
-    if (!shown) {
-      return null;
-    }
-    return <img className="share-picture" src={`data:image/png;base64,${shown}`} alt="Its picture on mod.io" />;
-  };
-
-  const renderImagePicker = () => (
-    <input
-      type="file"
-      accept="image/png, image/jpeg, image/gif, image/webp"
-      onChange={(event) => {
-        const file = event.target.files?.[0];
-        if (file) {
-          levelUpload.chooseImage(file);
-        }
-      }}
-    />
-  );
-
-  // where its picture on mod.io comes from, and what it'll be (cropped to 16:9)
-  const renderPictureChoice = () => {
-    const { online, picture } = levelUpload;
-    if (online === undefined) {
-      return null;
-    }
-    return (
-      <fieldset className="share-picture-choice">
-        <legend>Picture</legend>
-        {pictureChoices(Boolean(online)).map((choice) => (
-          <label key={choice}>
-            <input
-              type="radio"
-              checked={picture.choice === choice}
-              onChange={() => picture.setChoice(choice)}
-            />
-            {PICTURE_LABELS[choice]}
-          </label>
-        ))}
-        {picture.choice === "image" && renderImagePicker()}
-        {renderPicturePreview()}
-      </fieldset>
-    );
-  };
-
-  const renderUploaded = () => {
-    const { uploaded } = levelUpload;
-    if (!uploaded) {
-      return null;
-    }
-    return (
-      <p>
-        {uploadedText(uploaded)} <a href={uploaded.mod.page} target="_blank" rel="noreferrer">See its page</a>
-      </p>
-    );
-  };
-
-  const renderUploadButton = () => {
-    const { online, isBusy, upload } = levelUpload;
-    if (isBusy) {
-      return <button disabled>Uploading...</button>;
-    }
-    return <button disabled={online === undefined} onClick={upload}>{uploadButtonText(Boolean(online))}</button>;
-  };
-
-  const renderSignedIn = () => (
-    <>
-      <p>
-        Signed in to mod.io. <button disabled={modio.isBusy} onClick={modio.signOut}>Sign out</button>
-      </p>
-      {renderOnlineLine()}
-      {renderSummary()}
-      {renderPictureChoice()}
-      {renderUploadButton()}
-      {renderUploaded()}
-      {levelUpload.problem && <p className="error">{levelUpload.problem}</p>}
-    </>
-  );
-
-  const renderShareContent = () => {
-    if (modio.signedIn === null) {
-      return <p>Checking mod.io...</p>;
-    }
-    if (!modio.signedIn) {
-      return renderSignIn();
-    }
-    return renderSignedIn();
-  };
-
-  // sharing the open level on mod.io, over the editor
-  const renderShareDialog = () => {
-    if (!isSharing || !level) {
-      return null;
-    }
-    return (
-      <div className="share-backdrop" onClick={() => setIsSharing(false)}>
-        <section
-          className="share-dialog"
-          role="dialog"
-          aria-label="Share on mod.io"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <h2>Share {level.name} on mod.io</h2>
-          {renderShareContent()}
-          {modio.problem && <p className="error">{modio.problem}</p>}
-          <button className="share-close" onClick={() => setIsSharing(false)}>Close</button>
-        </section>
-      </div>
-    );
-  };
 
   // build and boot, on the right
   const renderLevelActions = () => {
@@ -513,7 +310,9 @@ export default function App() {
         songs={songs}
         onLevelCfg={levelCfg.change}
       />
-      {renderShareDialog()}
+      {isSharing && level && (
+        <ShareDialog level={level} save={save} onClose={() => setIsSharing(false)} />
+      )}
     </div>
   );
 }

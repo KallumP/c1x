@@ -20,11 +20,20 @@ export function uploadButtonText(isOnline: boolean): string {
   return "Upload";
 }
 
+// what an upload says, before its link to the level on mod.io
 export function uploadedText({ isNew }: Uploaded): string {
   if (isNew) {
-    return "It's on mod.io.";
+    return "Upload successful, see it on";
   }
-  return "Its new version is on mod.io.";
+  return "Upload successful, see the new version on";
+}
+
+// what the dialog says of the map, before a link to it on mod.io if it's there
+export function onlineText(isOnline: boolean): string {
+  if (isOnline) {
+    return "This map is already on";
+  }
+  return "This map isn't on mod.io yet.";
 }
 
 // where a level's picture on mod.io comes from: the one it has, the view, or an image file
@@ -32,7 +41,7 @@ export type PictureChoice = "keep" | "view" | "image";
 
 export const PICTURE_LABELS: Record<PictureChoice, string> = {
   keep: "Keep its picture",
-  view: "The view as it is",
+  view: "The current level view from the level editor",
   image: "An image",
 };
 
