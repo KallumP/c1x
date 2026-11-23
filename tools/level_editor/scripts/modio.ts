@@ -260,7 +260,6 @@ const publicUrl = (path: string, query: Record<string, string> = {}) =>
 export const TOP_LEVELS = 10;
 const LEVELS_WITH_NAME = 100; // as many as the launcher lists
 
-// most downloaded first: the top ones, or those with name in theirs
 function levelListQuery(name: string): Record<string, string> {
   const sort = { _sort: "-downloads_total" };
   if (!name) {
@@ -269,8 +268,8 @@ function levelListQuery(name: string): Record<string, string> {
   return { ...sort, _limit: String(LEVELS_WITH_NAME), "name-lk": `*${name}*` };
 }
 
-// the game's levels with a file to download, of all its mods, as a level
-// uploaded by hand may not be tagged: the top ones, or those with name in theirs
+// the levels with a file to download, the top ones or those with name in theirs:
+// of all the game's mods, as a level uploaded by hand may not be tagged
 export async function listOnlineLevels(
   name: string,
   fetchUrl: Fetch = fetch,

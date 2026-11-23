@@ -26,7 +26,8 @@ typedef struct {
 } online_levels;
 
 /* whether c can be in a search: a letter, number, space, - or _. the search goes
-   on the tools' command line as it is, so nothing a shell would read can be */
+   on the tools' command line as it is, so nothing a shell would read can be, and
+   into mod.io's name filter, so neither can its wildcards (* and %) */
 extern int IsSearchCharacter(int c);
 
 /* search, trimmed and with one space between its words, into tidy (size long),

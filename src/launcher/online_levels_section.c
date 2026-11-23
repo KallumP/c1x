@@ -170,12 +170,11 @@ static void DrawLevelDownloadStatus(void) {
   DrawCommandOutput("download_output", &level_download);
 }
 
-/* drops a typed character a search can't have; nonzero drops it */
+/* imgui drops a typed character when this returns nonzero */
 static int FilterSearchCharacter(ImGuiInputTextCallbackData *data) {
   return !IsSearchCharacter(data->EventChar);
 }
 
-/* the search box, then Find levels beside it; Enter in the box finds them too */
 static void DrawSearch(const char *repo) {
   ImGuiInputTextFlags flags;
   int entered;
