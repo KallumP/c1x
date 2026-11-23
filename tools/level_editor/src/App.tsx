@@ -21,6 +21,7 @@ import { useLevelCfg } from "./hooks/useLevelCfg";
 import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevelSongs } from "./hooks/useLevelSongs";
 import { useLevels } from "./hooks/useLevels";
+import { useModioAccount } from "./hooks/useModioAccount";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
 import { useOutlineWarnings, usePathWarnings, useTriangles, useWarnings } from "./hooks/useWarnings";
@@ -112,6 +113,9 @@ export default function App() {
     }
   };
 
+  const modio = useModioAccount();
+  const [isSharing, setIsSharing] = useState(false);
+
   useUnsavedWarning(unsaved);
   const levelActions = useLevelActions(level, unsaved, save);
 
@@ -167,6 +171,91 @@ export default function App() {
     </button>
   );
 
+  const renderShareButton = () => (
+    <button
+      disabled={!level}
+      onClick={() => setIsSharing(true)}
+      title="Upload this level to mod.io, for others to play"
+    >
+      Share
+    </button>
+  );
+
+  // the email to send a sign-in code to
+  const renderEmailStep = () => (
+    <form onSubmit={(event) => { event.preventDefault(); modio.sendEmail(); }}>
+      <p>Sign in to mod.io to share levels. It emails you a code to sign in with.</p>
+      <input
+        type="email"
+        placeholder="Email"
+        value={modio.email}
+        onChange={(event) => modio.setEmail(event.target.value)}
+        autoFocus
+      />
+      <button type="submit" disabled={modio.isBusy}>Email me a code</button>
+    </form>
+  );
+
+  // the code mod.io emailed
+  const renderCodeStep = () => (
+    <form onSubmit={(event) => { event.preventDefault(); modio.sendCode(); }}>
+      <p>mod.io emailed a code to {modio.email}.</p>
+      <input
+        placeholder="Code"
+        value={modio.code}
+        onChange={(event) => modio.setCode(event.target.value)}
+        autoFocus
+      />
+      <button type="submit" disabled={modio.isBusy}>Sign in</button>
+      <button type="button" disabled={modio.isBusy} onClick={modio.startAgain}>Use another email</button>
+    </form>
+  );
+
+  const renderSignIn = () => {
+    if (modio.step === "code") {
+      return renderCodeStep();
+    }
+    return renderEmailStep();
+  };
+
+  const renderSignedIn = () => (
+    <p>
+      Signed in to mod.io. <button disabled={modio.isBusy} onClick={modio.signOut}>Sign out</button>
+    </p>
+  );
+
+  const renderShareContent = () => {
+    if (modio.signedIn === null) {
+      return <p>Checking mod.io...</p>;
+    }
+    if (!modio.signedIn) {
+      return renderSignIn();
+    }
+    return renderSignedIn();
+  };
+
+  // sharing the open level on mod.io, over the editor
+  const renderShareDialog = () => {
+    if (!isSharing || !level) {
+      return null;
+    }
+    return (
+      <div className="share-backdrop" onClick={() => setIsSharing(false)}>
+        <section
+          className="share-dialog"
+          role="dialog"
+          aria-label="Share on mod.io"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <h2>Share {level.name} on mod.io</h2>
+          {renderShareContent()}
+          {modio.problem && <p className="error">{modio.problem}</p>}
+          <button className="share-close" onClick={() => setIsSharing(false)}>Close</button>
+        </section>
+      </div>
+    );
+  };
+
   // build and boot, on the right
   const renderLevelActions = () => {
     const { isBusy, status, build, buildAndBoot } = levelActions;
@@ -218,6 +307,7 @@ export default function App() {
       <LevelPicker levels={levels} level={level} onOpen={openLevel} />
       {renderHistoryButtons()}
       {renderSaveButton()}
+      {renderShareButton()}
       {renderLevelActions()}
       {(isSaving || levelActions.isBusy) && <div className="progress" role="progressbar" aria-label="Working" />}
     </header>
@@ -296,6 +386,7 @@ export default function App() {
         songs={songs}
         onLevelCfg={levelCfg.change}
       />
+      {renderShareDialog()}
     </div>
   );
 }
