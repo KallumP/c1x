@@ -4,7 +4,8 @@
 //   POST /code                       signs in with it ({ code }), keeping the token in modio_token.json
 //   POST /sign-out                   forgets the token
 //   GET  /levels/<name>              the player's mod for the level, if they have one ({ online })
-//   POST /levels/<name>/upload       uploads it ({ summary, logo: a base64 png }), as an Uploaded
+//   POST /levels/<name>/upload       uploads it ({ summary, logo: a base64 png, or null to keep
+//                                    the picture it has }), as an Uploaded
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { uploadLevel } from "../scripts/levelUpload";
@@ -111,6 +112,14 @@ function levelTitle(root: string, name: string): string {
   return defaultLevelTitle(name);
 }
 
+// a base64 logo's bytes, or null for none: keep the picture the level has
+function logoBytes(logo: unknown): Uint8Array | null {
+  if (typeof logo !== "string" || logo === "") {
+    return null;
+  }
+  return new Uint8Array(Buffer.from(logo, "base64"));
+}
+
 async function uploadWithBody(
   root: string,
   name: string,
@@ -122,7 +131,7 @@ async function uploadWithBody(
   const details = {
     name: levelTitle(root, name),
     summary: String(summary),
-    logo: new Uint8Array(Buffer.from(String(logo), "base64")),
+    logo: logoBytes(logo),
   };
   return answered(await calls.uploadLevel(token, root, name, details), (uploaded) => uploaded);
 }
