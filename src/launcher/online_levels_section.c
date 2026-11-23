@@ -16,6 +16,7 @@
 #include "ui.h"
 
 #define AUTHOR_WIDTH 140.0f
+#define VIEW_WIDTH 60.0f
 #define COMMAND_MAX (PATH_MAX_LEN + 64)
 
 static background_command level_list;     /* c1x_tools list-online-levels */
@@ -81,6 +82,9 @@ static void DrawOnlineLevelRow(const char *repo, int index, int can_download) {
   igTextDisabled("by %s", found.authors[index]);
   igTableNextColumn();
   igPushID_Int(index);
+  if (igButton("View", (ImVec2){VIEW_WIDTH, 0})) { SDL_OpenURL(found.pages[index]); }
+  DrawTooltip("Open its page on mod.io.");
+  igTableNextColumn();
   igBeginDisabled(!can_download);
   if (igButton("Download", (ImVec2){BUTTON_WIDTH, 0})) {
     StartLevelDownload(repo, index);
@@ -95,9 +99,10 @@ static void DrawOnlineLevelTable(const char *repo) {
 
   can_download = !IsListingOrDownloading() && CanBuildLevels(repo);
   flags = ImGuiTableFlags_SizingFixedFit;
-  if (!igBeginTable("online_levels", 3, flags, (ImVec2){0, 0}, 0)) { return; }
+  if (!igBeginTable("online_levels", 4, flags, (ImVec2){0, 0}, 0)) { return; }
   igTableSetupColumn("name", ImGuiTableColumnFlags_WidthStretch, 0, 0);
   igTableSetupColumn("author", ImGuiTableColumnFlags_WidthFixed, AUTHOR_WIDTH, 0);
+  igTableSetupColumn("view", ImGuiTableColumnFlags_WidthFixed, VIEW_WIDTH, 0);
   igTableSetupColumn("download", ImGuiTableColumnFlags_WidthFixed, BUTTON_WIDTH, 0);
   for (i = 0; i < found.count; i++) { DrawOnlineLevelRow(repo, i, can_download); }
   igEndTable();
