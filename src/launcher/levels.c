@@ -197,14 +197,8 @@ static void SortLevels(const char *repo, custom_levels *levels) {
   int i;
 
   JoinPath(path, sizeof(path), repo, INCLUDED_LEVELS_FILE);
-  included = ReadWholeFile(path);
-  for (i = 0; i < levels->count; i++) {
-    if (included) {
-      LevelToSort(levels, i, included, &sorted[i]);
-    } else {
-      LevelToSort(levels, i, "", &sorted[i]);
-    }
-  }
+  included = ReadWholeFileOrEmpty(path);
+  for (i = 0; i < levels->count; i++) { LevelToSort(levels, i, included, &sorted[i]); }
   SDL_free(included);
   SDL_qsort(sorted, levels->count, sizeof(sorted[0]), CompareLevels);
   for (i = 0; i < levels->count; i++) { PutSortedLevel(levels, i, &sorted[i]); }
@@ -287,11 +281,9 @@ static void ReadModioPage(const char *repo, const char *name, char *page, size_t
   char path[PATH_MAX_LEN], file[SETTINGS_BOOT_LEVEL_MAX+32];
   char *note;
 
-  page[0] = 0;
   SDL_snprintf(file, sizeof(file), "level_src/%s/.modio.json", name);
   JoinPath(path, sizeof(path), repo, file);
-  note = ReadWholeFile(path);
-  if (!note) { return; }
+  note = ReadWholeFileOrEmpty(path);
   PageInModioNote(note, page, size);
   SDL_free(note);
 }
@@ -312,11 +304,7 @@ static void ReadLevelTitle(const char *repo, const char *name, char *title, size
 
   SDL_snprintf(file, sizeof(file), "level_src/%s/level.cfg", name);
   JoinPath(path, sizeof(path), repo, file);
-  cfg = ReadWholeFile(path);
-  if (!cfg) {
-    LevelTitle(name, "", title, size);
-    return;
-  }
+  cfg = ReadWholeFileOrEmpty(path);
   LevelTitle(name, cfg, title, size);
   SDL_free(cfg);
 }
