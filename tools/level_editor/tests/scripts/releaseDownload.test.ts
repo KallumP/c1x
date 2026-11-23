@@ -16,7 +16,9 @@ describe("a release's zip", () => {
   });
 
   test("downloads from its release on GitHub, tagged with a v", () => {
-    expect(releaseZipUrl("1.5")).toBe("https://github.com/KallumP/c1x/releases/download/v1.5/c1x-1.5.zip");
+    expect(releaseZipUrl("1.5")).toBe(
+      "https://github.com/KallumP/c1x/releases/download/v1.5/c1x-1.5.zip",
+    );
   });
 });
 
@@ -29,12 +31,17 @@ describe("the player's Downloads folder", () => {
 describe("downloading a release", () => {
   let downloads: string; // a stand-in for the player's Downloads folder
 
-  beforeEach(() => { downloads = join(mkdtempSync(join(tmpdir(), "downloads-")), "Downloads"); });
+  beforeEach(() => {
+    downloads = join(mkdtempSync(join(tmpdir(), "downloads-")), "Downloads");
+  });
   afterEach(() => { rmSync(dirname(downloads), { recursive: true, force: true }); });
 
   // runs the command for version, the download answering with answer; its exit
   // code, what it said, and the urls it asked for
-  async function downloaded(version: string, answer: Uint8Array | { problem: string } = ZIP) {
+  async function downloaded(
+    version: string,
+    answer: Uint8Array | { problem: string } = ZIP,
+  ) {
     const said: string[] = [];
     const asked: string[] = [];
     const downloadFile = async (url: string) => {
@@ -76,7 +83,8 @@ describe("downloading a release", () => {
   });
 
   test("says why it couldn't download it, and fails", async () => {
-    expect(await downloaded("1.5", { problem: "the download answered 404" })).toMatchObject({
+    const refused = await downloaded("1.5", { problem: "the download answered 404" });
+    expect(refused).toMatchObject({
       exitCode: 1,
       said: ["couldn't download c1x 1.5: the download answered 404"],
     });

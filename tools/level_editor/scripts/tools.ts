@@ -7,6 +7,7 @@ import { buildLevel, levelSourcePath } from "../builder/buildLevel";
 import { repoFolders } from "../builder/repoFolders";
 import { addressLine, startEditorServer } from "../server/editorServer";
 import { downloadLevelCommand } from "./levelDownload";
+import { downloadReleaseCommand } from "./releaseDownload";
 import { downloadFile } from "./download";
 import { fetchOnlineLevel } from "./modio";
 import { listOnlineLevelsCommand } from "./onlineLevels";
@@ -18,6 +19,7 @@ export type ToolsCommand =
   | { kind: "check-update"; version: string }
   | { kind: "list-online-levels" }
   | { kind: "download-level"; modId: number }
+  | { kind: "download-release"; version: string }
   | { kind: "usage" };
 
 export const USAGE = `usage: c1x_tools build-level <level>
@@ -25,6 +27,7 @@ export const USAGE = `usage: c1x_tools build-level <level>
        c1x_tools check-update <version>
        c1x_tools list-online-levels
        c1x_tools download-level <id>
+       c1x_tools download-release <version>
        (from tools/level_editor: npm run build-level -- <level>, npm run editor)
 
   build-level  builds a level source into build/levels: its name, such as
@@ -40,7 +43,10 @@ export const USAGE = `usage: c1x_tools build-level <level>
                name and page
   download-level
                downloads the level with that id from mod.io into level_src,
-               then builds it`;
+               then builds it
+  download-release
+               downloads that release of c1x (two numbers, like 1.5) into the
+               player's Downloads folder, and says where`;
 
 const MOD_ID = /^[1-9]\d*$/; // a mod's id on mod.io
 const EDITOR_PORT = 5173; // vite's, as npm run dev has it
@@ -59,6 +65,9 @@ export function toolsCommand(args: string[]): ToolsCommand {
   }
   if (command === "list-online-levels" && rest.length === 0) {
     return { kind: "list-online-levels" };
+  }
+  if (command === "download-release" && rest.length === 1) {
+    return { kind: "download-release", version: rest[0] };
   }
   if (command === "download-level" && rest.length === 1 && MOD_ID.test(rest[0])) {
     return { kind: "download-level", modId: Number(rest[0]) };
@@ -109,6 +118,9 @@ export async function runTools(repo: string, args: string[]): Promise<number> {
   }
   if (command.kind === "list-online-levels") {
     return listOnlineLevelsCommand(console.log);
+  }
+  if (command.kind === "download-release") {
+    return downloadReleaseCommand(command.version, console.log);
   }
   if (command.kind === "download-level") {
     return runDownloadLevel(repo, command.modId);
