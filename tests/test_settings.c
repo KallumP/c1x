@@ -232,7 +232,7 @@ UTEST(settings, the_memory_card_is_off_unless_its_turned_on) {
   ASSERT_EQ(0, s.memory_card);
 }
 
-UTEST(settings, the_game_has_sound_unless_its_muted) {
+UTEST(settings, mute_is_off_unless_its_turned_on) {
   pc_settings s;
 
   s.mute = 1;
