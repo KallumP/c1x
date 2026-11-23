@@ -1,6 +1,7 @@
 /*
- * the levels tab's levels shared on mod.io: listed by c1x's tools when asked,
- * each with a View level page button opening its page there, and a Download button that
+ * the levels tab's levels shared on mod.io: the most downloaded, or those with
+ * the search box's name in theirs, listed by c1x's tools when asked, each with
+ * a View level page button opening its page there, and a Download button that
  * downloads it into level_src/ and builds it (c1x_tools list-online-levels and
  * download-level, in the background)
  */
@@ -17,11 +18,14 @@
 #include "ui.h"
 
 #define AUTHOR_WIDTH 140.0f
+#define SEARCH_WIDTH 200.0f
 #define COMMAND_MAX (PATH_MAX_LEN + 64)
 
 static background_command level_list;     /* c1x_tools list-online-levels */
 static background_command level_download; /* c1x_tools download-level */
 static online_levels found;
+static char search[ONLINE_SEARCH_MAX];   /* what's typed in the search box */
+static char searched[ONLINE_SEARCH_MAX]; /* the search the list was for */
 static char download_name[ONLINE_LEVEL_TEXT_MAX];
 static char problem[COMMAND_MAX + 32]; /* why a list or download couldn't start, or "" */
 
@@ -34,10 +38,11 @@ static void StartLevelList(const char *repo) {
   char command[COMMAND_MAX];
   int has_command;
 
-  has_command = ListOnlineLevelsCommand(repo, "", command, sizeof(command));
+  has_command = ListOnlineLevelsCommand(repo, search, command, sizeof(command));
   if (StartToolsCommand(&level_list, repo, has_command, command, problem,
     sizeof(problem))) {
     found.count = 0;
+    SDL_strlcpy(searched, search, sizeof(searched));
   }
 }
 
@@ -121,6 +126,8 @@ static void DrawLevelListStatus(void) {
   } else if (level_list.output[0] && level_list.exit_code != 0) {
     igTextColored(PROBLEM_COLOUR, "Couldn't look on mod.io:");
     DrawCommandOutput("list_output", &level_list);
+  } else if (level_list.output[0] && found.count == 0 && searched[0]) {
+    igText("No levels match \"%s\".", searched);
   } else if (level_list.output[0] && found.count == 0) {
     igText("No levels are on mod.io yet.");
   }
@@ -146,14 +153,33 @@ static void DrawLevelDownloadStatus(void) {
   DrawCommandOutput("download_output", &level_download);
 }
 
+/* drops a typed character a search can't have; nonzero drops it */
+static int FilterSearchCharacter(ImGuiInputTextCallbackData *data) {
+  return !IsSearchCharacter(data->EventChar);
+}
+
+/* the search box, then Find levels beside it; Enter in the box finds them too */
+static void DrawSearch(const char *repo) {
+  ImGuiInputTextFlags flags;
+  int entered;
+
+  igBeginDisabled(IsListingOrDownloading() || !AreToolsBuilt(repo));
+  flags = ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_EnterReturnsTrue;
+  igSetNextItemWidth(SEARCH_WIDTH);
+  entered = igInputTextWithHint("##search", "Level name", search, sizeof(search), flags,
+    FilterSearchCharacter, 0);
+  DrawTooltip("Leave it empty for the most downloaded levels.");
+  igSameLine(0, -1);
+  if (igButton("Find levels", (ImVec2){0, 0}) || entered) { StartLevelList(repo); }
+  DrawTooltip("List the levels on mod.io with this in their name.");
+  igEndDisabled();
+}
+
 void DrawOnlineLevelsSection(const char *repo) {
   DrawHeading("Levels on mod.io");
   igTextWrapped("Levels other players have shared. "
     "Downloading one puts it in level_src/ and builds it.");
-  igBeginDisabled(IsListingOrDownloading() || !AreToolsBuilt(repo));
-  if (igButton("Find levels", (ImVec2){0, 0})) { StartLevelList(repo); }
-  igEndDisabled();
-  DrawTooltip("List the levels on mod.io.");
+  DrawSearch(repo);
   if (problem[0]) { igTextColored(PROBLEM_COLOUR, "%s", problem); }
   DrawLevelListStatus();
   DrawOnlineLevelTable(repo);
