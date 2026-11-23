@@ -37,7 +37,8 @@ describe("unzipping a level", () => {
   });
 
   test("skips the __MACOSX folder a mac puts in a zip", () => {
-    expect(unzipLevel(root, zipOf([...TIDE_RUINS, "__MACOSX/1_tide_ruins/._level.cfg"]), 17302)).toEqual({ name: "1_tide_ruins" });
+    const zip = zipOf([...TIDE_RUINS, "__MACOSX/1_tide_ruins/._level.cfg"]);
+    expect(unzipLevel(root, zip, 17302)).toEqual({ name: "1_tide_ruins" });
     expect(existsSync(join(root, "__MACOSX"))).toBe(false);
   });
 
