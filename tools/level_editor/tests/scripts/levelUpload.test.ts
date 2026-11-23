@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { unzipSync } from "fflate";
-import { uploadLevel, type LevelModio } from "../../scripts/levelUpload";
+import { uploadLevel, type UploadCalls } from "../../scripts/levelUpload";
 import type { LevelMod, NewLevel } from "../../scripts/modio";
 
 let root: string; // a stand-in for level_src/
@@ -22,7 +22,7 @@ const NEW_MOD: LevelMod = { id: 20000, page: "https://test.mod.io/m/new" };
 
 // stand-ins for mod.io's calls: the player has the mod own (or none), and each
 // call answers as given; what they were sent is kept
-type Refusals = Partial<Record<keyof LevelModio, { problem: string }>>;
+type Refusals = Partial<Record<keyof UploadCalls, { problem: string }>>;
 
 function standInModio(own: LevelMod | null, answers: Refusals = {}) {
   const sent = {
@@ -31,7 +31,7 @@ function standInModio(own: LevelMod | null, answers: Refusals = {}) {
     logos: [] as { modId: number; logo: Uint8Array }[],
     tokens: [] as string[],
   };
-  const modio: LevelModio = {
+  const modio: UploadCalls = {
     findOwnLevelMod: async (token) => {
       sent.tokens.push(token);
       return answers.findOwnLevelMod ?? own;
