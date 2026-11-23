@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { addLevelFile, addLevelMod, MODIO_GAME } from "../../scripts/modio";
+import { addLevelFile, addLevelMod, MODIO_GAME, sendSignInCode, signInWithCode } from "../../scripts/modio";
 
 // a stand-in for fetch answering every request with answer, and the requests it was sent
 function standInFetch(answer: unknown, status = 200) {
@@ -95,5 +95,51 @@ describe("adding a level's file", () => {
   test("is mod.io's reason when it refuses", async () => {
     const { fetchUrl } = standInFetch({ error: { code: 403, message: "You don't own this mod." } }, 403);
     expect(await addLevelFile("token", 17302, ZIP, fetchUrl)).toEqual({ problem: "You don't own this mod." });
+  });
+});
+
+const formFields = (init?: RequestInit) => Object.fromEntries(new URLSearchParams(String(init?.body)));
+
+describe("sending a sign-in code", () => {
+  test("posts the email and the game's api key to mod.io's email request", async () => {
+    const { fetchUrl, requests } = standInFetch({ code: 200 });
+    await sendSignInCode("me@example.com", fetchUrl);
+    expect(requests[0].url).toBe(`${MODIO_GAME.apiUrl}/oauth/emailrequest`);
+    expect(formFields(requests[0].init)).toEqual({ api_key: MODIO_GAME.apiKey, email: "me@example.com" });
+  });
+
+  test("sends them as a form", async () => {
+    const { fetchUrl, requests } = standInFetch({ code: 200 });
+    await sendSignInCode("me@example.com", fetchUrl);
+    expect(new Headers(requests[0].init?.headers).get("Content-Type")).toBe("application/x-www-form-urlencoded");
+  });
+
+  test("is nothing wrong once it's sent", async () => {
+    const { fetchUrl } = standInFetch({ code: 200 });
+    expect(await sendSignInCode("me@example.com", fetchUrl)).toEqual({});
+  });
+
+  test("is mod.io's reason when it refuses", async () => {
+    const { fetchUrl } = standInFetch({ error: { code: 422, message: "Invalid email." } }, 422);
+    expect(await sendSignInCode("nope", fetchUrl)).toEqual({ problem: "Invalid email." });
+  });
+});
+
+describe("signing in with a code", () => {
+  test("posts the code and the game's api key to mod.io's email exchange", async () => {
+    const { fetchUrl, requests } = standInFetch({ access_token: "token", date_expires: 1800000000 });
+    await signInWithCode("AB12C", fetchUrl);
+    expect(requests[0].url).toBe(`${MODIO_GAME.apiUrl}/oauth/emailexchange`);
+    expect(formFields(requests[0].init)).toEqual({ api_key: MODIO_GAME.apiKey, security_code: "AB12C" });
+  });
+
+  test("is the player's token and when it runs out", async () => {
+    const { fetchUrl } = standInFetch({ access_token: "token", date_expires: 1800000000 });
+    expect(await signInWithCode("AB12C", fetchUrl)).toEqual({ token: "token", expires: 1800000000 });
+  });
+
+  test("is mod.io's reason when it refuses", async () => {
+    const { fetchUrl } = standInFetch({ error: { code: 401, message: "The security code is invalid." } }, 401);
+    expect(await signInWithCode("WRONG", fetchUrl)).toEqual({ problem: "The security code is invalid." });
   });
 });
