@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { emailProblem, signInCode, signInCodeProblem } from "../../src/modioSignIn";
+import { emailProblem, typedSignInCode, signInCodeProblem } from "../../src/modioSignIn";
 
 describe("the email to sign in to mod.io with", () => {
   test("is fine with something before and after an @", () => {
@@ -13,7 +13,7 @@ describe("the email to sign in to mod.io with", () => {
 
 describe("the code mod.io emails", () => {
   test("is what was typed, in capitals, without spaces around it", () => {
-    expect(signInCode(" ab12c ")).toBe("AB12C");
+    expect(typedSignInCode(" ab12c ")).toBe("AB12C");
   });
 
   test("is fine with 5 letters and digits", () => {
