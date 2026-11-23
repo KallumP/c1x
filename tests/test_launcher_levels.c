@@ -53,7 +53,7 @@ static void MakeBuiltLevel(const char *name) {
   MakeEmptyFile(TEST_BUILT, file);
 }
 
-UTEST(launcher_levels, lists_built_levels_by_name_in_order) {
+UTEST(launcher_levels, lists_built_levels_in_order_of_title) {
   custom_levels levels;
 
   MakeFolder("build/test_launcher_levels_built");
