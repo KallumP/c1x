@@ -6,11 +6,10 @@ import type { Answer } from "./answer";
 import { releaseName } from "./releaseName";
 import { isPlainName, tryUnzip, zippedFiles } from "./zipEntries";
 
-// whether every file is inside top's folder, by names that stay where they're put
-const isIn = (top: string, parts: string[]) =>
+const isSafelyInside = (top: string, parts: string[]) =>
   parts.length > 1 && parts[0] === top && parts.every(isPlainName);
-const allIn = (top: string, files: [string[], Uint8Array][]) =>
-  files.every(([parts]) => isIn(top, parts));
+const areAllSafelyInside = (top: string, files: [string[], Uint8Array][]) =>
+  files.every(([parts]) => isSafelyInside(top, parts));
 
 function writeFiles(parent: string, files: [string[], Uint8Array][]): void {
   for (const [parts, data] of files) {
@@ -33,7 +32,7 @@ export function unzipRelease(
   }
   const top = releaseName(version);
   const files = zippedFiles(unzipped);
-  if (files.length === 0 || !allIn(top, files)) {
+  if (files.length === 0 || !areAllSafelyInside(top, files)) {
     return { problem: `The download isn't c1x ${version}.` };
   }
   const folder = join(parent, top);
