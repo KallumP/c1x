@@ -37,7 +37,7 @@ const JSON_ACCEPTED = { Accept: "application/json" };
 
 const gameUrl = (path: string) =>
   `${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}${path}`;
-const signedIn = (token: string) => ({
+const signedInHeaders = (token: string) => ({
   Authorization: `Bearer ${token}`,
   ...JSON_ACCEPTED,
 });
@@ -53,7 +53,6 @@ function refusalReason(answer: unknown, status: number): string {
   return [error.message, ...Object.values(error.errors ?? {})].join(" ");
 }
 
-// a request that gives up after TIMEOUT_MS
 const fetchWithTimeout = (fetchUrl: Fetch, url: string, init: RequestInit = {}) =>
   fetchUrl(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
 
@@ -159,7 +158,7 @@ export async function addLevelMod(
 ): Promise<Answer<LevelMod>> {
   const answer = await askModio(fetchUrl, gameUrl("/mods"), {
     method: "POST",
-    headers: signedIn(token),
+    headers: signedInHeaders(token),
     body: newLevelForm(level),
   });
   if (isProblem(answer)) {
@@ -181,7 +180,7 @@ export async function findOwnLevelMod(
     metadata_blob: folder,
   });
   const url = `${MODIO_GAME.apiUrl}/me/mods?${query}`;
-  const answer = await askModio(fetchUrl, url, { headers: signedIn(token) });
+  const answer = await askModio(fetchUrl, url, { headers: signedInHeaders(token) });
   if (isProblem(answer)) {
     return answer;
   }
@@ -204,7 +203,7 @@ async function postSignedInFile(
 ): Promise<Answer<object>> {
   const form = new FormData();
   form.append(field, file);
-  const request = { method: "POST", headers: signedIn(token), body: form };
+  const request = { method: "POST", headers: signedInHeaders(token), body: form };
   return withoutBody(await askModio(fetchUrl, gameUrl(path), request));
 }
 
@@ -233,14 +232,12 @@ export interface OnlineLevel {
   id: number;
   name: string;
   author: string;
-  folder: string;  // its folder in level_src/, as its uploader had it
   fileUrl: string; // its newest zip
 }
 
 type OnlineModAnswer = {
   id: number;
   name: string;
-  metadata_blob: string | null; // null for a level uploaded by hand
   submitted_by: { username: string };
   modfile: { download: { binary_url: string } } | null;
 };
@@ -254,7 +251,6 @@ function onlineLevelOf(mod: OnlineModAnswer): OnlineLevel | null {
     id: mod.id,
     name: mod.name,
     author: mod.submitted_by.username,
-    folder: mod.metadata_blob ?? "",
     fileUrl: mod.modfile.download.binary_url,
   };
 }
