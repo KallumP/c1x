@@ -9,6 +9,9 @@
 #include "modio_page.h"
 
 #define ONLINE_LEVELS_MAX 100
+/* how many most downloaded levels the tools list without a search. modio.ts has
+   the same number, and one of its tests checks the two are the same */
+#define TOP_LEVELS 10
 /* an author's or name's text, with room for its terminating 0; longer is cut short */
 #define ONLINE_LEVEL_TEXT_MAX 64
 

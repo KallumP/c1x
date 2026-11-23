@@ -120,6 +120,15 @@ static void DrawOnlineLevelTable(const char *repo) {
   igEndTable();
 }
 
+/* what the list is of: the top levels, or those with the search in their name */
+static void DrawListedLevelsHeading(void) {
+  if (searched[0]) {
+    igText("Levels with \"%s\" in their name:", searched);
+  } else {
+    igText("Top %d most downloaded:", TOP_LEVELS);
+  }
+}
+
 /* how the list went, in a line, with its output if it failed */
 static void DrawLevelListStatus(void) {
   if (IsBackgroundCommandRunning(&level_list)) {
@@ -131,6 +140,8 @@ static void DrawLevelListStatus(void) {
     igText("No levels match \"%s\".", searched);
   } else if (level_list.output[0] && found.count == 0) {
     igText("No levels are on mod.io yet.");
+  } else if (found.count > 0) {
+    DrawListedLevelsHeading();
   }
 }
 
