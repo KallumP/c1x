@@ -1,14 +1,7 @@
 #include <string.h>
 #include "utest.h"
 #include "launcher/online_levels.h"
-
-/* the tools' path as ToolsCommand quotes it: double quotes for cmd.exe, single for sh */
-#ifdef _WIN32
-#define TOOLS "\"C:/games/c1x/build/c1x_tools.exe\""
-#else
-#define TOOLS "'C:/games/c1x/build/c1x_tools'"
-#endif
-#define REPO "C:/games/c1x"
+#include "test_tools_command.h"
 
 UTEST(launcher_online_levels, the_list_runs_from_the_tools) {
   char command[512];

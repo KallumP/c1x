@@ -1,14 +1,7 @@
 #include <string.h>
 #include "utest.h"
 #include "launcher/newer_release.h"
-
-/* the tools' path as ToolsCommand quotes it: double quotes for cmd.exe, single for sh */
-#ifdef _WIN32
-#define TOOLS "\"C:/games/c1x/build/c1x_tools.exe\""
-#else
-#define TOOLS "'C:/games/c1x/build/c1x_tools'"
-#endif
-#define REPO "C:/games/c1x"
+#include "test_tools_command.h"
 
 UTEST(launcher_newer_release, a_version_is_two_numbers_with_a_dot_between) {
   ASSERT_TRUE(IsReleaseVersion("1.4"));
