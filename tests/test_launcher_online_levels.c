@@ -3,11 +3,40 @@
 #include "launcher/online_levels.h"
 #include "test_tools_command.h"
 
-UTEST(launcher_online_levels, the_list_runs_from_the_tools) {
+UTEST(launcher_online_levels, the_top_levels_list_runs_from_the_tools) {
   char command[512];
 
-  ASSERT_TRUE(ListOnlineLevelsCommand(REPO, command, sizeof(command)));
+  ASSERT_TRUE(ListOnlineLevelsCommand(REPO, "", command, sizeof(command)));
   ASSERT_STREQ(TOOLS " list-online-levels", command);
+}
+
+UTEST(launcher_online_levels, a_search_lists_the_levels_with_its_name) {
+  char command[512];
+
+  ASSERT_TRUE(ListOnlineLevelsCommand(REPO, "tide ruins-2_b", command, sizeof(command)));
+  ASSERT_STREQ(TOOLS " list-online-levels tide ruins-2_b", command);
+}
+
+UTEST(launcher_online_levels, a_search_with_other_characters_runs_nothing) {
+  char command[512];
+
+  ASSERT_FALSE(ListOnlineLevelsCommand(REPO, "tide & calc", command, sizeof(command)));
+}
+
+UTEST(launcher_online_levels, a_search_has_letters_numbers_spaces_dashes_underscores) {
+  const char *allowed;
+
+  for (allowed = "aZ7 -_"; *allowed; allowed++) {
+    ASSERT_TRUE(IsSearchCharacter(*allowed));
+  }
+}
+
+UTEST(launcher_online_levels, a_search_has_nothing_a_shell_or_mod_io_reads) {
+  const char *refused;
+
+  for (refused = "&\"'*%|;"; *refused; refused++) {
+    ASSERT_FALSE(IsSearchCharacter(*refused));
+  }
 }
 
 UTEST(launcher_online_levels, a_download_runs_from_the_tools_with_the_levels_id) {
