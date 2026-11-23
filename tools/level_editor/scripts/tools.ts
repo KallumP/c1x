@@ -1,22 +1,25 @@
 // c1x's tools for players, packed with node as build/c1x_tools.exe (toolsExe.ts)
-// so they need nothing installed: the level build, the level editor, and the
-// launcher's check for a newer release
+// so they need nothing installed: the level build, the level editor, the
+// launcher's check for a newer release, and the levels shared on mod.io
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { buildLevel, levelSourcePath } from "../builder/buildLevel";
 import { repoFolders } from "../builder/repoFolders";
 import { addressLine, startEditorServer } from "../server/editorServer";
+import { listOnlineLevelsCommand } from "./onlineLevels";
 import { checkUpdate } from "./updateCheck";
 
 export type ToolsCommand =
   | { kind: "build-level"; level: string }
   | { kind: "editor" }
   | { kind: "check-update"; version: string }
+  | { kind: "list-online-levels" }
   | { kind: "usage" };
 
 export const USAGE = `usage: c1x_tools build-level <level>
        c1x_tools editor
        c1x_tools check-update <version>
+       c1x_tools list-online-levels
        (from tools/level_editor: npm run build-level -- <level>, npm run editor)
 
   build-level  builds a level source into build/levels: its name, such as
@@ -26,7 +29,10 @@ export const USAGE = `usage: c1x_tools build-level <level>
   editor       starts the level editor (its page built into build/editor by
                make, or npm run build), and says where it is
   check-update asks GitHub for c1x's latest release, and says if it's newer
-               than version (two numbers, like 1.3), or why it can't tell`;
+               than version (two numbers, like 1.3), or why it can't tell
+  list-online-levels
+               lists the levels shared on mod.io, one a line: its id, author
+               and name`;
 
 const EDITOR_PORT = 5173; // vite's, as npm run dev has it
 
@@ -41,6 +47,9 @@ export function toolsCommand(args: string[]): ToolsCommand {
   }
   if (command === "check-update" && rest.length === 1) {
     return { kind: "check-update", version: rest[0] };
+  }
+  if (command === "list-online-levels" && rest.length === 0) {
+    return { kind: "list-online-levels" };
   }
   return { kind: "usage" };
 }
@@ -75,6 +84,9 @@ export async function runTools(repo: string, args: string[]): Promise<number> {
   }
   if (command.kind === "check-update") {
     return checkUpdate(command.version, console.log);
+  }
+  if (command.kind === "list-online-levels") {
+    return listOnlineLevelsCommand(console.log);
   }
   console.log(USAGE);
   return 1;
