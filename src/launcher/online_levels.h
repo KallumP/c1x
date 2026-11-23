@@ -14,6 +14,8 @@
 #define TOP_LEVELS 10
 /* an author's or name's text, with room for its terminating 0; longer is cut short */
 #define ONLINE_LEVEL_TEXT_MAX 64
+/* a search's text, with room for its terminating 0 */
+#define ONLINE_SEARCH_MAX ONLINE_LEVEL_TEXT_MAX
 
 typedef struct {
   int count;
@@ -22,9 +24,6 @@ typedef struct {
   char names[ONLINE_LEVELS_MAX][ONLINE_LEVEL_TEXT_MAX];
   char pages[ONLINE_LEVELS_MAX][MODIO_PAGE_MAX]; /* "" if it's too long to keep */
 } online_levels;
-
-/* a search's text, with room for its terminating 0 */
-#define ONLINE_SEARCH_MAX ONLINE_LEVEL_TEXT_MAX
 
 /* whether c can be in a search: a letter, number, space, - or _. the search goes
    on the tools' command line as it is, so nothing a shell would read can be */
