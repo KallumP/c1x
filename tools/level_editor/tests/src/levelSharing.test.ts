@@ -1,5 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { SUMMARY_MAX, summaryProblem, uploadButtonText, uploadedText } from "../../src/levelSharing";
+import {
+  firstPictureChoice,
+  pictureChoices,
+  pictureProblem,
+  SUMMARY_MAX,
+  summaryProblem,
+  uploadButtonText,
+  uploadedText,
+} from "../../src/levelSharing";
 
 const MOD = { id: 17302, page: "https://test.mod.io/m/tide-ruins" };
 
@@ -38,5 +46,35 @@ describe("what an upload says", () => {
 
   test("for a level already online, that its new version is", () => {
     expect(uploadedText({ mod: MOD, isNew: false })).toBe("Its new version is on mod.io.");
+  });
+});
+
+describe("the level's picture", () => {
+  test("is the view or an image for a level that isn't online", () => {
+    expect(pictureChoices(false)).toEqual(["view", "image"]);
+  });
+
+  test("can also be kept as it is once it's online", () => {
+    expect(pictureChoices(true)).toEqual(["keep", "view", "image"]);
+  });
+
+  test("starts as the view for a new level", () => {
+    expect(firstPictureChoice(false)).toBe("view");
+  });
+
+  test("starts kept as it is once it's online", () => {
+    expect(firstPictureChoice(true)).toBe("keep");
+  });
+
+  test("needs an image chosen to be an image", () => {
+    expect(pictureProblem("image", false)).toBe("Choose an image for its picture first.");
+  });
+
+  test("is fine as an image once one's chosen", () => {
+    expect(pictureProblem("image", true)).toBeNull();
+  });
+
+  test.each(["keep", "view"] as const)("is fine as %s without an image", (choice) => {
+    expect(pictureProblem(choice, false)).toBeNull();
   });
 });
