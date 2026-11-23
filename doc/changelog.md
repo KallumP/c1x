@@ -10,6 +10,7 @@
 - the launcher's new version button installs the release beside your c1x folder, with your settings, saves and levels, and opens it
 - a level's mod.io page opens from the launcher's Levels tab: **View level** in the mod.io list, and beside a level you downloaded
 - the launcher's Levels tab lists mod.io's 10 most downloaded levels, and searches them by name
+- a **Mute** setting starts the game with no sound
 
 ## 2026-11-22
 

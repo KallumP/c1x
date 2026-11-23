@@ -29,6 +29,12 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 |---|---|---|
 | `boot_level` | none | The custom level, built to `build/levels/`, that **CUSTOM LEVEL** on the title screen starts; without one, the title screen has no **CUSTOM LEVEL** (see [Custom levels](custom_levels.md)). |
 
+### Sound
+
+| Setting | Default | What it does |
+|---|---|---|
+| `mute` | `off` | Start the game with no sound. |
+
 ### Saving
 
 | Setting | Default | What it does |
