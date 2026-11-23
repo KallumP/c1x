@@ -12,6 +12,7 @@
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { levelOptions } from "../builder/levelCfg";
+import { repoFolders } from "../builder/repoFolders";
 import { uploadLevel } from "../scripts/levelUpload";
 import {
   emailSignInCode,
@@ -21,10 +22,9 @@ import {
   type Answer,
   type SignIn,
 } from "../scripts/modio";
-import { json, type ApiResponse, type ReadBody } from "./api";
-import { listLevels } from "./levels";
+import { json, NOT_FOUND, refused, type ApiResponse, type ReadBody } from "./api";
+import { hasLevelSource } from "./levels";
 import { errorMessage } from "../src/errorMessage";
-
 
 // mod.io's calls and the clock, or a test's stand-ins for them
 export interface ModioCalls {
@@ -44,17 +44,11 @@ const MODIO_CALLS: ModioCalls = {
 };
 
 const TOKEN_FILE = "modio_token.json";
-const NOT_FOUND: ApiResponse = { status: 404, type: "text/plain", body: "not found" };
 const NOT_SIGNED_IN: ApiResponse = {
   status: 401,
   type: "text/plain",
   body: "Sign in to mod.io first.",
 };
-const refused = (problem: string): ApiResponse => ({
-  status: 400,
-  type: "text/plain",
-  body: problem,
-});
 
 // mod.io's answer as json, or a 400 saying why it refused
 function answered<T>(
@@ -167,7 +161,7 @@ async function uploadWithBody(
   readBody: ReadBody,
   calls: ModioCalls,
 ): Promise<ApiResponse> {
-  const root = join(repo, "level_src");
+  const root = repoFolders(repo).sourcesDir;
   const { summary, logo } = JSON.parse(await readBody());
   const details = {
     name: levelOptions(join(root, name)).title,
@@ -184,9 +178,8 @@ async function levelResponse(
   readBody: ReadBody,
   calls: ModioCalls,
 ): Promise<ApiResponse> {
-  const root = join(repo, "level_src");
   const [name, action] = parts;
-  if (!listLevels(root).some((level) => level.name === name)) {
+  if (!hasLevelSource(repoFolders(repo).sourcesDir, name)) {
     return NOT_FOUND;
   }
   const token = signedInToken(repo, calls.now());
@@ -204,7 +197,8 @@ async function levelResponse(
 }
 
 // answers a request to the mod.io api in repo: its method, its path after
-// /api/modio, and its body when it's needed; a request it can't do is a 400 saying why
+// /api/modio, and its body when it's needed. a request that fails is a 400 saying
+// why, one for a path it doesn't have a 404, and one needing a sign-in without one a 401
 export async function modioApi(
   repo: string,
   method: string,

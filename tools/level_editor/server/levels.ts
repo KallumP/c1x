@@ -42,8 +42,12 @@ export function listLevels(root: string): LevelInfo[] {
     .sort((first, second) => (first.name < second.name ? -1 : 1));
 }
 
+// whether root has a level source called name
+export const hasLevelSource = (root: string, name: string) =>
+  listLevels(root).some((level) => level.name === name);
+
 export function levelFolder(root: string, name: string): string {
-  if (!listLevels(root).some((level) => level.name === name)) {
+  if (!hasLevelSource(root, name)) {
     throw new Error(`no level source ${name}`);
   }
   return join(root, name);

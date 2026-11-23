@@ -40,8 +40,18 @@ const FILE_TYPES: Record<string, string> = {
   ".gif": "image/gif", ".tif": "image/tiff", ".tiff": "image/tiff",
 };
 
-export const json = (value: unknown): ApiResponse => ({ status: 200, type: "application/json", body: JSON.stringify(value) });
-const NOT_FOUND: ApiResponse = { status: 404, type: "text/plain", body: "not found" };
+export const json = (value: unknown): ApiResponse => ({
+  status: 200,
+  type: "application/json",
+  body: JSON.stringify(value),
+});
+export const NOT_FOUND: ApiResponse = { status: 404, type: "text/plain", body: "not found" };
+// a request it couldn't do, saying why
+export const refused = (problem: string): ApiResponse => ({
+  status: 400,
+  type: "text/plain",
+  body: problem,
+});
 const SAVED = json({});
 
 function fileResponse(repo: string, name: string, file: string): ApiResponse {
@@ -136,6 +146,6 @@ export async function levelsApi(repo: string, method: string, path: string, read
   try {
     return await route(repo, method, parts, readBody);
   } catch (error) {
-    return { status: 400, type: "text/plain", body: errorMessage(error) };
+    return refused(errorMessage(error));
   }
 }
