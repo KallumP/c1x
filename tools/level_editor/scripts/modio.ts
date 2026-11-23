@@ -272,7 +272,7 @@ function levelListQuery(name: string): Record<string, string> {
 // the game's levels with a file to download, of all its mods, as a level
 // uploaded by hand may not be tagged: the top ones, or those with name in theirs
 export async function listOnlineLevels(
-  name: string = "",
+  name: string,
   fetchUrl: Fetch = fetch,
 ): Promise<Answer<OnlineLevel[]>> {
   const url = publicUrl("/mods", levelListQuery(name));
