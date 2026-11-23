@@ -69,7 +69,8 @@ async function answer(req: IncomingMessage, res: ServerResponse, { repo, pageDir
   if (found) {
     const [path, api] = found;
     const apiPath = url.slice(path.length) || "/";
-    sendApiResponse(res, await api(repo, req.method ?? "GET", apiPath, () => requestBody(req)));
+    const answered = await api(repo, req.method ?? "GET", apiPath, () => requestBody(req));
+    sendApiResponse(res, answered);
     return;
   }
   sendPageFile(res, pageDir, url);

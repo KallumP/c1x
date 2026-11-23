@@ -56,7 +56,11 @@ const json = (value: unknown): ApiResponse => ({
   type: "application/json",
   body: JSON.stringify(value),
 });
-const refused = (problem: string): ApiResponse => ({ status: 400, type: "text/plain", body: problem });
+const refused = (problem: string): ApiResponse => ({
+  status: 400,
+  type: "text/plain",
+  body: problem,
+});
 
 // mod.io's answer as json, or a 400 saying why it refused
 function answered<T>(

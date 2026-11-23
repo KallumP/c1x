@@ -75,7 +75,10 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
       await bootLevel(level.name);
       setStatus({ text: `CUSTOM LEVEL on the game's title screen starts ${level.name}` });
     } catch (error) {
-      setStatus({ text: `Couldn't set boot_level: ${errorMessage(error)}`, failed: true });
+      setStatus({
+        text: `Couldn't set boot_level: ${errorMessage(error)}`,
+        failed: true,
+      });
     } finally {
       setIsBusy(false);
     }

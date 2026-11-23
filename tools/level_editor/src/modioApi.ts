@@ -5,7 +5,8 @@ import type { LevelMod } from "../scripts/modio";
 
 export type { LevelMod, Uploaded };
 
-const NOT_SIGNED_IN = 401; // the server's answer when the player's sign-in is missing or has run out
+// the server's answer when the player's sign-in is missing or has run out
+const NOT_SIGNED_IN = 401;
 
 // a refusal from the editor server: its text, and its status
 class RefusedError extends Error {
@@ -32,7 +33,8 @@ const post = (url: string, body: unknown = {}) =>
   fetch(url, { method: "POST", body: JSON.stringify(body) });
 
 export async function fetchSignedIn(): Promise<boolean> {
-  return (await answer<{ signedIn: boolean }>(await fetch("/api/modio/account"))).signedIn;
+  const account = await answer<{ signedIn: boolean }>(await fetch("/api/modio/account"));
+  return account.signedIn;
 }
 
 export async function sendSignInEmail(email: string): Promise<void> {

@@ -5,7 +5,8 @@ import { join } from "node:path";
 import { zipSync, type Zippable } from "fflate";
 import { readGameTextures } from "../builder/gameTextures";
 
-const BLENDER_FILE = /\.blend\d*$/i; // a .blend, or blender's backups of one (.blend1, ...)
+// a .blend, or blender's backups of one (.blend1, ...)
+const BLENDER_FILE = /\.blend\d*$/i;
 
 // whether a file in the level's folder is shared: not hidden, not blender's,
 // and not one of the game's own images, which each player's build makes

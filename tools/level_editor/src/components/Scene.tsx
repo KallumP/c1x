@@ -29,7 +29,8 @@ export default function Scene({ orbitRef, onMiss, children }: {
   return (
     <Canvas
       camera={{ fov: 60, near: 0.05, far: 2000 }}
-      gl={{ preserveDrawingBuffer: true }} // so the view can be taken as a level's logo (levelLogo.ts)
+      // keeps what it drew, so the view can be taken as a level's logo (levelLogo.ts)
+      gl={{ preserveDrawingBuffer: true }}
       onPointerMissed={clickNothing}
     >
       <color attach="background" args={["#2b2d31"]} />

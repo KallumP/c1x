@@ -88,7 +88,8 @@ UTEST(launcher_online_levels, no_more_levels_are_kept_than_fit) {
 
   output[0] = 0;
   for (i = 0; i < ONLINE_LEVELS_MAX + 2; i++) {
-    snprintf(output + strlen(output), sizeof(output) - strlen(output), "online level: %d\ta\tL\n", i + 1);
+    size_t used = strlen(output);
+    snprintf(output + used, sizeof(output) - used, "online level: %d\ta\tL\n", i + 1);
   }
   FindOnlineLevels(output, &levels);
   ASSERT_EQ(ONLINE_LEVELS_MAX, levels.count);
