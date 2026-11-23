@@ -30,7 +30,7 @@ export async function sendSignInEmail(email: string): Promise<void> {
   await answer(await post("/api/modio/email", { email }));
 }
 
-export async function sendSignInCode(code: string): Promise<void> {
+export async function submitSignInCode(code: string): Promise<void> {
   await answer(await post("/api/modio/code", { code }));
 }
 

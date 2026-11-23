@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchSignedIn, sendSignInCode, sendSignInEmail, signOutOfModio } from "../modioApi";
+import { fetchSignedIn, submitSignInCode, sendSignInEmail, signOutOfModio } from "../modioApi";
 import { emailProblem, signInCode, signInCodeProblem } from "../modioSignIn";
 import { errorMessage } from "../errorMessage";
 
@@ -44,7 +44,7 @@ export function useModioAccount() {
 
   const sendCode = async () => {
     const typed = signInCode(code);
-    if (await runStep(signInCodeProblem(typed), () => sendSignInCode(typed))) {
+    if (await runStep(signInCodeProblem(typed), () => submitSignInCode(typed))) {
       setSignedIn(true);
     }
   };

@@ -12,7 +12,7 @@ import { uploadLevel } from "../scripts/levelUpload";
 import {
   findOwnLevelMod,
   isProblem,
-  sendSignInCode,
+  emailSignInCode,
   signInWithCode,
   type SignIn,
 } from "../scripts/modio";
@@ -26,7 +26,7 @@ type ReadBody = () => Promise<string>;
 
 // mod.io's calls and the clock, or a test's stand-ins for them
 export interface ModioCalls {
-  sendSignInCode: typeof sendSignInCode;
+  emailSignInCode: typeof emailSignInCode;
   signInWithCode: typeof signInWithCode;
   findOwnLevelMod: typeof findOwnLevelMod;
   uploadLevel: typeof uploadLevel;
@@ -34,7 +34,7 @@ export interface ModioCalls {
 }
 
 const MODIO_CALLS: ModioCalls = {
-  sendSignInCode,
+  emailSignInCode,
   signInWithCode,
   findOwnLevelMod,
   uploadLevel,
@@ -91,7 +91,7 @@ async function accountResponse(
   }
   if (method === "POST" && step === "email") {
     const { email } = JSON.parse(await readBody());
-    return answered(await calls.sendSignInCode(String(email)), () => ({}));
+    return answered(await calls.emailSignInCode(String(email)), () => ({}));
   }
   if (method === "POST" && step === "code") {
     return signInWithBody(repo, readBody, calls);

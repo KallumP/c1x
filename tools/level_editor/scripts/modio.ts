@@ -75,8 +75,7 @@ function askSignIn(step: string, fields: Record<string, string>, fetchUrl: Fetch
   });
 }
 
-// has mod.io email the player a code to sign in with
-export async function sendSignInCode(email: string, fetchUrl: Fetch = fetch): Promise<Answer<object>> {
+export async function emailSignInCode(email: string, fetchUrl: Fetch = fetch): Promise<Answer<object>> {
   const answer = await askSignIn("emailrequest", { email }, fetchUrl);
   if (isProblem(answer)) {
     return answer;
