@@ -16,30 +16,49 @@
 #include "ui.h"
 
 #define AUTHOR_WIDTH 140.0f
+#define COMMAND_MAX (PATH_MAX_LEN + 64)
+#define UNQUOTABLE_FOLDER "The project's folder has a quote in its path."
 
 static background_command level_list;     /* c1x_tools list-online-levels */
 static background_command level_download; /* c1x_tools download-level */
 static online_levels found;
-static char downloading[ONLINE_LEVEL_TEXT_MAX]; /* the level last downloaded */
+static char download_name[ONLINE_LEVEL_TEXT_MAX];
+static char problem[COMMAND_MAX + 32]; /* why a list or download couldn't start, or "" */
 
 static int IsBusy(void) {
-  return IsBackgroundCommandRunning(&level_list) || IsBackgroundCommandRunning(&level_download);
+  return IsBackgroundCommandRunning(&level_list)
+    || IsBackgroundCommandRunning(&level_download);
+}
+
+/* runs command in the background as c, saying why if it can't */
+static void StartCommand(background_command *c, const char *repo, const char *command) {
+  if (!StartBackgroundCommand(c, repo, command)) {
+    SDL_snprintf(problem, sizeof(problem), "Couldn't run %s.", command);
+  }
 }
 
 static void StartLevelList(const char *repo) {
-  char command[PATH_MAX_LEN + 64];
+  char command[COMMAND_MAX];
 
-  if (!ListOnlineLevelsCommand(repo, command, sizeof(command))) { return; }
+  problem[0] = 0;
+  if (!ListOnlineLevelsCommand(repo, command, sizeof(command))) {
+    SDL_strlcpy(problem, UNQUOTABLE_FOLDER, sizeof(problem));
+    return;
+  }
   found.count = 0;
-  StartBackgroundCommand(&level_list, repo, command);
+  StartCommand(&level_list, repo, command);
 }
 
 static void StartLevelDownload(const char *repo, int index) {
-  char command[PATH_MAX_LEN + 64];
+  char command[COMMAND_MAX];
 
-  if (!DownloadLevelCommand(repo, found.ids[index], command, sizeof(command))) { return; }
-  SDL_strlcpy(downloading, found.names[index], sizeof(downloading));
-  StartBackgroundCommand(&level_download, repo, command);
+  problem[0] = 0;
+  if (!DownloadLevelCommand(repo, found.ids[index], command, sizeof(command))) {
+    SDL_strlcpy(problem, UNQUOTABLE_FOLDER, sizeof(problem));
+    return;
+  }
+  SDL_strlcpy(download_name, found.names[index], sizeof(download_name));
+  StartCommand(&level_download, repo, command);
 }
 
 /* the levels the list has found so far; once a download finishes, the level
@@ -47,7 +66,8 @@ static void StartLevelDownload(const char *repo, int index) {
 void UpdateOnlineLevelsSection(const char *repo) {
   int was_listing = IsBackgroundCommandRunning(&level_list);
 
-  if (UpdateBackgroundCommand(&level_list) || was_listing) {
+  UpdateBackgroundCommand(&level_list);
+  if (was_listing) {
     FindOnlineLevels(level_list.output, &found);
   }
   if (UpdateBackgroundCommand(&level_download)) {
@@ -71,16 +91,19 @@ static void DrawOnlineLevelRow(const char *repo, int index, int can_download) {
   igTableNextColumn();
   igPushID_Int(index);
   igBeginDisabled(!can_download);
-  if (igButton("Download", (ImVec2){BUTTON_WIDTH, 0})) { StartLevelDownload(repo, index); }
+  if (igButton("Download", (ImVec2){BUTTON_WIDTH, 0})) {
+    StartLevelDownload(repo, index);
+  }
   igEndDisabled();
   igPopID();
 }
 
 static void DrawOnlineLevelTable(const char *repo) {
   int can_download = !IsBusy() && CanBuildLevels(repo);
+  ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit;
   int i;
 
-  if (!igBeginTable("online_levels", 3, ImGuiTableFlags_SizingFixedFit, (ImVec2){0, 0}, 0)) { return; }
+  if (!igBeginTable("online_levels", 3, flags, (ImVec2){0, 0}, 0)) { return; }
   igTableSetupColumn("name", ImGuiTableColumnFlags_WidthStretch, 0, 0);
   igTableSetupColumn("author", ImGuiTableColumnFlags_WidthFixed, AUTHOR_WIDTH, 0);
   igTableSetupColumn("download", ImGuiTableColumnFlags_WidthFixed, BUTTON_WIDTH, 0);
@@ -100,27 +123,35 @@ static void DrawLevelListStatus(void) {
   }
 }
 
+static int DidDownloadWork(void) {
+  return !IsBackgroundCommandRunning(&level_download) && level_download.exit_code == 0;
+}
+
 /* how the last download went, in a line, with its output while it runs or if it failed */
 static void DrawLevelDownloadStatus(void) {
   if (!level_download.output[0]) { return; }
-  if (IsBackgroundCommandRunning(&level_download)) {
-    igText("Downloading %s...", downloading);
-  } else if (level_download.exit_code != 0) {
-    igTextColored(PROBLEM_COLOUR, "%s didn't download and build; the output says why.", downloading);
-  } else {
-    igText("Downloaded and built %s: it's in the list above.", downloading);
+  if (DidDownloadWork()) {
+    igText("Downloaded and built %s: it's in the list above.", download_name);
     return;
+  }
+  if (IsBackgroundCommandRunning(&level_download)) {
+    igText("Downloading %s...", download_name);
+  } else {
+    igTextColored(PROBLEM_COLOUR, "%s didn't download and build; the output says why.",
+      download_name);
   }
   DrawCommandOutput("download_output", &level_download);
 }
 
 void DrawOnlineLevelsSection(const char *repo) {
   DrawHeading("Levels on mod.io");
-  igTextWrapped("Levels other players have shared. Downloading one puts it in level_src/ and builds it.");
+  igTextWrapped("Levels other players have shared. "
+    "Downloading one puts it in level_src/ and builds it.");
   igBeginDisabled(IsBusy() || !AreToolsBuilt(repo));
   if (igButton("Find levels", (ImVec2){0, 0})) { StartLevelList(repo); }
   igEndDisabled();
   DrawTooltip("List the levels on mod.io.");
+  if (problem[0]) { igTextColored(PROBLEM_COLOUR, "%s", problem); }
   DrawLevelListStatus();
   DrawOnlineLevelTable(repo);
   DrawLevelDownloadStatus();
