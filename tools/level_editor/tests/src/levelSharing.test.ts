@@ -103,6 +103,10 @@ describe("the level's picture", () => {
 });
 
 describe("whether an upload can go ahead", () => {
+  test("a new level needs a summary", () => {
+    expect(uploadProblem(false, "", "view", false)).toBe(summaryProblem(""));
+  });
+
   test("a level already online keeps its summary, so needs none", () => {
     expect(uploadProblem(true, "", "keep", false)).toBeNull();
   });
