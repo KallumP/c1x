@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   firstPictureChoice,
+  onlineText,
   pictureChoices,
   pictureProblem,
   SUMMARY_MAX,
@@ -39,13 +40,23 @@ describe("the upload button", () => {
   });
 });
 
-describe("what an upload says", () => {
-  test("for a new level, that it's on mod.io", () => {
-    expect(uploadedText({ mod: MOD, isNew: true })).toBe("It's on mod.io.");
+describe("what an upload says, before its link to mod.io", () => {
+  test("for a new level, where to see it", () => {
+    expect(uploadedText({ mod: MOD, isNew: true })).toBe("Upload successful, see it on");
   });
 
-  test("for a level already online, that its new version is", () => {
-    expect(uploadedText({ mod: MOD, isNew: false })).toBe("Its new version is on mod.io.");
+  test("for a level already online, where to see its new version", () => {
+    expect(uploadedText({ mod: MOD, isNew: false })).toBe("Upload successful, see the new version on");
+  });
+});
+
+describe("what the dialog says of a map, before its link to mod.io", () => {
+  test("once it's online, that it is already", () => {
+    expect(onlineText(true)).toBe("This map is already on");
+  });
+
+  test("before it's online, that it isn't yet", () => {
+    expect(onlineText(false)).toBe("This map isn't on mod.io yet.");
   });
 });
 
