@@ -208,13 +208,14 @@ static void DrawDisplayFields(void) {
   DrawSliderBeside("frame_rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
     SETTINGS_FRAME_RATE_MAX,
     "Target frame rate: frames drawn a second. The game logic still runs at 30 fps, so it plays the same.");
-  DrawOnOff("Box counter", &settings.box_display,
-    "Show the level's boxes count (eg 12/49) in the in-game hud");
+  DrawOnOff("Mute", &settings.mute, "Start the game with no sound.");
 }
 
 /* changes to how the original game plays or looks */
 static void DrawGameAdjustmentFields(void) {
   DrawFieldGroupTitle("Game adjustments");
+  DrawOnOff("Box counter", &settings.box_display,
+    "Show the level's boxes count (eg 12/49) in the in-game hud");
   DrawOnOff("Skip splash screens", &settings.skip_splash_screens,
     "Go straight to the main menu when the game starts.");
   DrawOnOff("Skip loading screen", &settings.skip_loading_screen,
@@ -230,11 +231,6 @@ static void DrawGameAdjustmentFields(void) {
     "Show how fast Crash is moving in the top right corner.");
   DrawOnOff("Spin display", &settings.spin_display,
     "Show how many spins Crash has left in the top right corner.");
-}
-
-static void DrawSoundFields(void) {
-  DrawFieldGroupTitle("Sound");
-  DrawOnOff("Mute", &settings.mute, "Start the game with no sound.");
 }
 
 /* the game's own save and load screens */
@@ -257,7 +253,6 @@ static void DrawFields(const char *repo) {
   DrawBootLevel(repo);
   DrawDisplayFields();
   DrawGameAdjustmentFields();
-  DrawSoundFields();
   DrawSavingFields();
   DrawReplayFields();
   EndFieldRows();
