@@ -25,40 +25,41 @@ static online_levels found;
 static char download_name[ONLINE_LEVEL_TEXT_MAX];
 static char problem[COMMAND_MAX + 32]; /* why a list or download couldn't start, or "" */
 
-static int IsBusy(void) {
+static int IsListingOrDownloading(void) {
   return IsBackgroundCommandRunning(&level_list)
     || IsBackgroundCommandRunning(&level_download);
 }
 
-/* runs command in the background as c, saying why if it can't */
-static void StartCommand(background_command *c, const char *repo, const char *command) {
+/* runs command (if there is one: has_command) in the background as c, saying
+   why if it can't. returns whether it started */
+static int StartToolsCommand(background_command *c, const char *repo, int has_command,
+  const char *command) {
+  problem[0] = 0;
+  if (!has_command) {
+    SDL_strlcpy(problem, UNQUOTABLE_FOLDER, sizeof(problem));
+    return 0;
+  }
   if (!StartBackgroundCommand(c, repo, command)) {
     SDL_snprintf(problem, sizeof(problem), "Couldn't run %s.", command);
+    return 0;
   }
+  return 1;
 }
 
 static void StartLevelList(const char *repo) {
   char command[COMMAND_MAX];
+  int has_command = ListOnlineLevelsCommand(repo, command, sizeof(command));
 
-  problem[0] = 0;
-  if (!ListOnlineLevelsCommand(repo, command, sizeof(command))) {
-    SDL_strlcpy(problem, UNQUOTABLE_FOLDER, sizeof(problem));
-    return;
-  }
-  found.count = 0;
-  StartCommand(&level_list, repo, command);
+  if (StartToolsCommand(&level_list, repo, has_command, command)) { found.count = 0; }
 }
 
 static void StartLevelDownload(const char *repo, int index) {
   char command[COMMAND_MAX];
+  int has_command = DownloadLevelCommand(repo, found.ids[index], command, sizeof(command));
 
-  problem[0] = 0;
-  if (!DownloadLevelCommand(repo, found.ids[index], command, sizeof(command))) {
-    SDL_strlcpy(problem, UNQUOTABLE_FOLDER, sizeof(problem));
-    return;
+  if (StartToolsCommand(&level_download, repo, has_command, command)) {
+    SDL_strlcpy(download_name, found.names[index], sizeof(download_name));
   }
-  SDL_strlcpy(download_name, found.names[index], sizeof(download_name));
-  StartCommand(&level_download, repo, command);
 }
 
 /* the levels the list has found so far; once a download finishes, the level
@@ -99,7 +100,7 @@ static void DrawOnlineLevelRow(const char *repo, int index, int can_download) {
 }
 
 static void DrawOnlineLevelTable(const char *repo) {
-  int can_download = !IsBusy() && CanBuildLevels(repo);
+  int can_download = !IsListingOrDownloading() && CanBuildLevels(repo);
   ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit;
   int i;
 
@@ -147,7 +148,7 @@ void DrawOnlineLevelsSection(const char *repo) {
   DrawHeading("Levels on mod.io");
   igTextWrapped("Levels other players have shared. "
     "Downloading one puts it in level_src/ and builds it.");
-  igBeginDisabled(IsBusy() || !AreToolsBuilt(repo));
+  igBeginDisabled(IsListingOrDownloading() || !AreToolsBuilt(repo));
   if (igButton("Find levels", (ImVec2){0, 0})) { StartLevelList(repo); }
   igEndDisabled();
   DrawTooltip("List the levels on mod.io.");

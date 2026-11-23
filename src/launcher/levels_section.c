@@ -52,7 +52,6 @@ int CanBuildLevels(const char *repo) {
 /* once a build finishes, the levels it made are listed here and for
    boot_level, and a level that built is the one the title screen's CUSTOM LEVEL starts */
 void UpdateLevelsSection(const char *repo) {
-  UpdateOnlineLevelsSection(repo);
   if (!UpdateBackgroundCommand(&build)) { return; }
   LoadLevelsSection(repo);
   ListSettingsLevels(repo);

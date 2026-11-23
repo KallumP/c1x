@@ -4,6 +4,7 @@
  */
 #include <SDL2/SDL.h>
 #include "online_levels.h"
+#include "tool_output.h"
 #include "tools.h"
 
 #define DOWNLOAD_ARGS_MAX 48
@@ -23,18 +24,6 @@ int DownloadLevelCommand(const char *repo, int id, char *command, size_t size) {
   return ToolsCommand(repo, args, command, size);
 }
 
-static int IsLineEnd(char c) {
-  return c == 0 || c == '\r' || c == '\n';
-}
-
-/* how many characters text has before stop, or its line's end */
-static size_t LengthBefore(const char *text, char stop) {
-  size_t length = 0;
-
-  while (!IsLineEnd(text[length]) && text[length] != stop) { length++; }
-  return length;
-}
-
 /* the first length characters of text into to, cut short to fit */
 static void CopyPart(char *to, const char *text, size_t length) {
   SDL_strlcpy(to, text, SDL_min(length + 1, ONLINE_LEVEL_TEXT_MAX));
@@ -42,16 +31,11 @@ static void CopyPart(char *to, const char *text, size_t length) {
 
 /* the id at the start of a level's line, then the tab after it; 0 if there isn't one */
 static int ReadId(const char *line, size_t *length) {
-  int id = 0;
-  size_t i = 0;
+  size_t digits = DigitCount(line);
 
-  while (SDL_isdigit(line[i]) && i < ID_DIGITS_MAX) {
-    id = id * 10 + (line[i] - '0');
-    i++;
-  }
-  if (i == 0 || line[i] != '\t') { return 0; }
-  *length = i + 1;
-  return id;
+  if (digits == 0 || digits > ID_DIGITS_MAX || line[digits] != '\t') { return 0; }
+  *length = digits + 1;
+  return SDL_atoi(line);
 }
 
 /* a level's line, after its prefix, as the next of levels; a line that isn't
@@ -64,10 +48,10 @@ static void ReadLevelLine(const char *line, online_levels *levels) {
   id = ReadId(line, &id_length);
   if (!id) { return; }
   author = line + id_length;
-  author_length = LengthBefore(author, '\t');
+  author_length = FieldLength(author);
   if (author[author_length] != '\t') { return; }
   name = author + author_length + 1;
-  name_length = LengthBefore(name, 0);
+  name_length = LineLength(name);
   if (!name[name_length]) { return; } /* no line end yet: more of it may be to come */
   levels->ids[levels->count] = id;
   CopyPart(levels->authors[levels->count], author, author_length);

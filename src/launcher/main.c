@@ -142,6 +142,7 @@ static void DrawFrame() {
   UpdateSettingsSection(repo);
   UpdateEditorSection();
   UpdateLevelsSection(repo);
+  UpdateOnlineLevelsSection(repo);
   FollowReleaseCheck();
   DrawLauncher();
   igRender();
