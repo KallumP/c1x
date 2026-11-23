@@ -27,6 +27,7 @@ speed run mode
 
 
 Generic
+- search function for levels. Search by username or level name, or level id? Should be able to select which search type is being used.
 - Make included level list better. It shouldnt show the underscores. See if the level files themselves can be updated, if not, change it in the launcher itself. The provided levels should always show at the top
 - the new version button should just download the zip file (the file name is deterministic)
 - maps should store what version it was built on
