@@ -34,6 +34,12 @@ static int ReadId(const char *line, size_t *length) {
   return SDL_atoi(line);
 }
 
+/* the field after field (length long), past the tab between them; 0 if there's no tab */
+static const char *FieldAfter(const char *field, size_t length) {
+  if (field[length] != '\t') { return 0; }
+  return field + length + 1;
+}
+
 /* a level's line, after its prefix, as the next of levels; a line that isn't
    one is skipped */
 static void ReadLevelLine(const char *line, online_levels *levels) {
@@ -45,11 +51,11 @@ static void ReadLevelLine(const char *line, online_levels *levels) {
   if (!id) { return; }
   author = line + id_length;
   author_length = FieldLength(author);
-  if (author[author_length] != '\t') { return; }
-  name = author + author_length + 1;
+  name = FieldAfter(author, author_length);
+  if (!name) { return; }
   name_length = FieldLength(name);
-  if (name[name_length] != '\t') { return; }
-  page = name + name_length + 1;
+  page = FieldAfter(name, name_length);
+  if (!page) { return; }
   page_length = LineLength(page);
   if (!page[page_length]) { return; } /* no line end yet: more of it may be to come */
   at = levels->count;
