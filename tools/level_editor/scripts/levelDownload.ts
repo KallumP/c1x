@@ -24,7 +24,7 @@ async function downloadedLevel(
   if (isProblem(zip)) {
     return zip;
   }
-  const unzipped = unzipLevel(root, zip, modId);
+  const unzipped = unzipLevel(root, zip, { modId, page: level.page });
   if (isProblem(unzipped)) {
     return unzipped;
   }

@@ -6,8 +6,14 @@ import { unzipSync, type Unzipped } from "fflate";
 import { isBootableName } from "../server/settings";
 import type { Answer } from "./modio";
 
-// { modId }: the mod.io level a folder was downloaded from
+// the file in a downloaded level's folder noting the mod.io level it's from
 const MODIO_NOTE = ".modio.json";
+// what that file notes: the mod's id, and its page on mod.io
+export interface ModioNote {
+  modId: number;
+  page: string;
+}
+
 const MAC_FOLDER = "__MACOSX/"; // what a mac adds to a zip it makes
 // a file name that stays in its folder on any system: no slashes either way, or a
 // drive's colon
@@ -87,13 +93,13 @@ function unzipProblem(
     ?? existingFolderProblem(root, name, modId);
 }
 
-function writeLevel(folder: string, files: Map<string, Uint8Array>, modId: number): void {
+function writeLevel(folder: string, files: Map<string, Uint8Array>, note: ModioNote): void {
   rmSync(folder, { recursive: true, force: true });
   mkdirSync(folder, { recursive: true });
   for (const [file, data] of files) {
     writeFileSync(join(folder, file), data);
   }
-  writeFileSync(join(folder, MODIO_NOTE), JSON.stringify({ modId }));
+  writeFileSync(join(folder, MODIO_NOTE), JSON.stringify(note));
 }
 
 function tryUnzip(zip: Uint8Array): Unzipped | null {
@@ -104,12 +110,13 @@ function tryUnzip(zip: Uint8Array): Unzipped | null {
   }
 }
 
-// unzips the level mod modId's zip into level_src/ (root), replacing it if it was
-// downloaded before; its folder's name
+// unzips the zip of the mod.io level note is about into level_src/ (root),
+// noting where it's from there and replacing it if it was downloaded before; its
+// folder's name
 export function unzipLevel(
   root: string,
   zip: Uint8Array,
-  modId: number,
+  note: ModioNote,
 ): Answer<{ name: string }> {
   const unzippedFiles = tryUnzip(zip);
   if (!unzippedFiles) {
@@ -121,10 +128,10 @@ export function unzipLevel(
     return { problem: "The zip doesn't hold one level's folder." };
   }
   const files = levelFiles(entries);
-  const problem = unzipProblem(root, name, files, modId);
+  const problem = unzipProblem(root, name, files, note.modId);
   if (problem) {
     return { problem };
   }
-  writeLevel(join(root, name), files, modId);
+  writeLevel(join(root, name), files, note);
   return { name };
 }
