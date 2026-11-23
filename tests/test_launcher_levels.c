@@ -229,3 +229,34 @@ UTEST(launcher_levels, the_level_sources_folder_opens_as_a_file_url) {
   LevelSourcesFolderUrl("C:/games/c1x", url, sizeof(url));
   ASSERT_STREQ("file:///C:/games/c1x/level_src", url);
 }
+
+UTEST(launcher_levels, a_level_downloaded_from_mod_io_has_its_page) {
+  custom_levels levels;
+
+  MakeLevelsRepo();
+  MakeLevelSource("tide_ruins", 1);
+  WriteWholeFile(TEST_SOURCES "/tide_ruins/.modio.json",
+    "{\"modId\":17302,\"page\":\"https://mod.io/g/c1x/m/tide-ruins\"}");
+  ListCustomLevels(TEST_LEVELS_REPO, &levels);
+  ASSERT_STREQ("https://mod.io/g/c1x/m/tide-ruins",
+    levels.modio_pages[FindCustomLevel(&levels, "tide_ruins")]);
+}
+
+UTEST(launcher_levels, a_level_of_your_own_has_no_mod_io_page) {
+  custom_levels levels;
+
+  MakeLevelsRepo();
+  MakeLevelSource("my_level", 1);
+  ListCustomLevels(TEST_LEVELS_REPO, &levels);
+  ASSERT_STREQ("", levels.modio_pages[FindCustomLevel(&levels, "my_level")]);
+}
+
+UTEST(launcher_levels, a_mod_io_note_without_a_page_has_none) {
+  custom_levels levels;
+
+  MakeLevelsRepo();
+  MakeLevelSource("old_download", 1);
+  WriteWholeFile(TEST_SOURCES "/old_download/.modio.json", "{\"modId\":17302}");
+  ListCustomLevels(TEST_LEVELS_REPO, &levels);
+  ASSERT_STREQ("", levels.modio_pages[FindCustomLevel(&levels, "old_download")]);
+}
