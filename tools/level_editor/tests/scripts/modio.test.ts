@@ -6,6 +6,7 @@ import {
   findOwnLevelMod,
   listOnlineLevels,
   onlineLevel,
+  setLevelLogo,
   MODIO_GAME,
   sendSignInCode,
   signInWithCode,
@@ -272,5 +273,37 @@ describe("downloading a level's zip", () => {
   test("says when the download is refused", async () => {
     const fetchUrl = async () => new Response("gone", { status: 404 });
     expect(await downloadLevelZip("https://mod.io/files/tide.zip", fetchUrl)).toEqual({ problem: "the download answered 404" });
+  });
+});
+
+describe("setting an online level's picture", () => {
+  test("posts it to its mod's media", async () => {
+    const { fetchUrl, requests } = standInFetch({ code: 201 });
+    await setLevelLogo("token", 17302, LOGO, fetchUrl);
+    expect(requests[0].url).toBe(`${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}/mods/17302/media`);
+    expect(requests[0].init?.method).toBe("POST");
+  });
+
+  test("sends it as the mod's logo, a png", async () => {
+    const { fetchUrl, requests } = standInFetch({ code: 201 });
+    await setLevelLogo("token", 17302, LOGO, fetchUrl);
+    const logo = formOf(requests[0].init).get("logo") as File;
+    expect([logo.name, logo.type, new Uint8Array(await logo.arrayBuffer())]).toEqual(["logo.png", "image/png", LOGO]);
+  });
+
+  test("signs in with the player's token", async () => {
+    const { fetchUrl, requests } = standInFetch({ code: 201 });
+    await setLevelLogo("token", 17302, LOGO, fetchUrl);
+    expect(new Headers(requests[0].init?.headers).get("Authorization")).toBe("Bearer token");
+  });
+
+  test("is nothing wrong once it's set", async () => {
+    const { fetchUrl } = standInFetch({ code: 201 });
+    expect(await setLevelLogo("token", 17302, LOGO, fetchUrl)).toEqual({});
+  });
+
+  test("is mod.io's reason when it refuses", async () => {
+    const { fetchUrl } = standInFetch({ error: { code: 422, message: "The logo is too small." } }, 422);
+    expect(await setLevelLogo("token", 17302, LOGO, fetchUrl)).toEqual({ problem: "The logo is too small." });
   });
 });
