@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { fetchOnlineLevel, isSignedOutError } from "../../src/modioApi";
+import { fetchOwnLevelMod, isSignedOutError } from "../../src/modioApi";
 
 afterEach(() => { vi.unstubAllGlobals(); });
 
@@ -20,17 +20,17 @@ async function thrownBy(request: Promise<unknown>): Promise<unknown> {
 describe("a request the editor server refuses", () => {
   test("throws its text", async () => {
     serverAnswers(400, "Your access token has expired.");
-    await expect(fetchOnlineLevel("1_tide_ruins")).rejects.toThrow("Your access token has expired.");
+    await expect(fetchOwnLevelMod("1_tide_ruins")).rejects.toThrow("Your access token has expired.");
   });
 
   test("signs the player out when it's a 401", async () => {
     serverAnswers(401, "Sign in to mod.io first.");
-    expect(isSignedOutError(await thrownBy(fetchOnlineLevel("1_tide_ruins")))).toBe(true);
+    expect(isSignedOutError(await thrownBy(fetchOwnLevelMod("1_tide_ruins")))).toBe(true);
   });
 
   test("doesn't sign the player out when it's anything else", async () => {
     serverAnswers(400, "Validation failed.");
-    expect(isSignedOutError(await thrownBy(fetchOnlineLevel("1_tide_ruins")))).toBe(false);
+    expect(isSignedOutError(await thrownBy(fetchOwnLevelMod("1_tide_ruins")))).toBe(false);
   });
 
   test("doesn't sign the player out when the server can't be reached", () => {
