@@ -27,7 +27,10 @@ UTEST(launcher_level_title, is_the_folders_name_when_none_of_it_can_be_drawn) {
 }
 
 UTEST(launcher_level_title, is_the_level_cfgs_title) {
-  ASSERT_STREQ("Grave Switchback", TitleOf("5_grave_switchback", "turn = 0\ntitle = Grave Switchback\n"));
+  const char *cfg;
+
+  cfg = "turn = 0\ntitle = Grave Switchback\n";
+  ASSERT_STREQ("Grave Switchback", TitleOf("5_grave_switchback", cfg));
 }
 
 UTEST(launcher_level_title, is_the_folders_name_in_words_when_the_level_cfgs_is_empty) {
@@ -39,5 +42,8 @@ UTEST(launcher_level_title, is_the_folders_name_in_words_when_the_level_cfgs_can
 }
 
 UTEST(launcher_level_title, is_the_folders_name_in_words_when_the_level_cfgs_is_too_long) {
-  ASSERT_STREQ("Tide Ruins", TitleOf("1_tide_ruins", "title = The Very Long Tide Ruins Of Doom\n"));
+  const char *cfg;
+
+  cfg = "title = The Very Long Tide Ruins Of Doom\n";
+  ASSERT_STREQ("Tide Ruins", TitleOf("1_tide_ruins", cfg));
 }
