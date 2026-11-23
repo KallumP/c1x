@@ -1,15 +1,9 @@
 import { useEffect, useState } from "react";
 import { fetchSignedIn, sendSignInCode, sendSignInEmail, signOutOfModio } from "../modioApi";
 import { emailProblem, signInCode, signInCodeProblem } from "../modioSignIn";
+import { errorMessage } from "../errorMessage";
 
 export type SignInStep = "email" | "code";
-
-function messageOf(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return String(error);
-}
 
 // signing in to mod.io: the player's email, then the code mod.io emails them
 export function useModioAccount() {
@@ -21,7 +15,7 @@ export function useModioAccount() {
   const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
-    fetchSignedIn().then(setSignedIn, (error) => setProblem(messageOf(error)));
+    fetchSignedIn().then(setSignedIn, (error) => setProblem(errorMessage(error)));
   }, []);
 
   // runs a step after checking what was typed, busy until it's done; whether it worked
@@ -35,7 +29,7 @@ export function useModioAccount() {
       await send();
       return true;
     } catch (error) {
-      setProblem(messageOf(error));
+      setProblem(errorMessage(error));
       return false;
     } finally {
       setIsBusy(false);

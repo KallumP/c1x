@@ -6,6 +6,7 @@ import { readGameTextures, writeGameTextures } from "../builder/gameTextures";
 import { fileNameOf } from "../src/imagePaths";
 import { isAudioSongName } from "../src/music";
 import { parseLevelCfg } from "./levelCfg";
+import { errorMessage } from "../src/errorMessage";
 
 export interface LevelInfo {
   name: string;  // its folder
@@ -74,8 +75,6 @@ function fileInFolder(folder: string, file: string): string | null {
   return path;
 }
 
-const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
-
 // whether file is one of a level's game textures that isn't in its folder yet
 function isMissingGameTexture(folder: string, file: string): boolean {
   try {
@@ -108,7 +107,7 @@ function makeGameTextures(folder: string, streamsDir: string, warn: (line: strin
   try {
     writeGameTextures(folder, streamsDir);
   } catch (error) {
-    warn(messageOf(error));
+    warn(errorMessage(error));
   }
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { bootLevel, buildLevel, type LevelInfo } from "../api";
 import { buildWarnings, builtText } from "../buildOutput";
+import { errorMessage } from "../errorMessage";
 
 export interface ActionStatus {
   text: string;
@@ -8,7 +9,6 @@ export interface ActionStatus {
   failed?: boolean;
 }
 
-const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
 const lastLine = (output: string) => output.trim().split(/\r?\n/).pop() ?? "";
 
 // building the open level, and setting it as the game's custom level (or both, F5)
@@ -57,7 +57,7 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
       }
       return result.ok;
     } catch (error) {
-      setStatus({ text: `Build failed: ${messageOf(error)}`, failed: true });
+      setStatus({ text: `Build failed: ${errorMessage(error)}`, failed: true });
       return false;
     } finally {
       setIsBusy(false);
@@ -75,7 +75,7 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
       await bootLevel(level.name);
       setStatus({ text: `CUSTOM LEVEL on the game's title screen starts ${level.name}` });
     } catch (error) {
-      setStatus({ text: `Couldn't set boot_level: ${messageOf(error)}`, failed: true });
+      setStatus({ text: `Couldn't set boot_level: ${errorMessage(error)}`, failed: true });
     } finally {
       setIsBusy(false);
     }

@@ -2,6 +2,7 @@ import { useEffect, useReducer, useState } from "react";
 import { fetchObjects, saveObjects, type LevelInfo } from "../api";
 import { editorReducer, emptyEditor } from "../editor";
 import { formatObjects, parseObjects } from "../objects";
+import { errorMessage } from "../errorMessage";
 
 // the open level's objects as they're edited: read from its objects.json when it
 // opens, and written back on save. unsaved is whether they differ from the file, and isLoaded whether
@@ -30,7 +31,7 @@ export function useEditor(level: LevelInfo | null, onError: (message: string) =>
         }
       } catch (error) {
         if (isLatestLoad) {
-          onError(`objects.json ${error instanceof Error ? error.message : error}`);
+          onError(`objects.json ${errorMessage(error)}`);
           setLoadedLevel(level); // loaded as far as it can be
         }
       }
@@ -51,7 +52,7 @@ export function useEditor(level: LevelInfo | null, onError: (message: string) =>
       setSavedText(text);
       return true;
     } catch (error) {
-      onError(`couldn't save: ${error instanceof Error ? error.message : error}`);
+      onError(`couldn't save: ${errorMessage(error)}`);
       return false;
     }
   };

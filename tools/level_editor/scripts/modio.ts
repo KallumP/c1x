@@ -1,5 +1,6 @@
 // mod.io's api, where custom levels are shared (see doc/custom_levels.md): each
 // level is a mod of c1x's game there, its file a zip of the level's source folder
+import { errorMessage } from "../src/errorMessage";
 
 // fetch, or a test's stand-in for it
 export type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
@@ -41,13 +42,6 @@ function refusalReason(answer: unknown, status: number): string {
     return `mod.io answered ${status}`;
   }
   return [error.message, ...Object.values(error.errors ?? {})].join(" ");
-}
-
-export function errorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return String(error);
 }
 
 // mod.io's answer to a request, or why there isn't one

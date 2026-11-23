@@ -19,6 +19,7 @@ import { checkOutlinesHaveSwitches, duplicateWarnings, readObjectsFile } from ".
 import { writeLevel } from "./levelWriting";
 import { makeMap } from "./makeMap";
 import { readMtl } from "./obj";
+import { errorMessage } from "../src/errorMessage";
 
 export interface BuildOptions {
   streamsDir: string;
@@ -60,7 +61,7 @@ function readImageOrWarn(path: string, material: string, warn: (line: string) =>
   try {
     return readImage(path);
   } catch (error) {
-    warn(`warning: ${error instanceof Error ? error.message : error} (material ${material}), so it is untextured`);
+    warn(`warning: ${errorMessage(error)} (material ${material}), so it is untextured`);
     return null;
   }
 }
@@ -125,14 +126,12 @@ function readLevelSource(source: string): LevelSource {
   return { objPath, name, options: levelOptions(folder), objects };
 }
 
-const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
-
 function failureMessage(error: unknown, source: string, scale: number): string {
   if (error instanceof TooBig) {
     return `${source}: at scale ${scale} it's ${error.extent} units along ${"xyz"[error.axis]}, and the game's collision only `
       + `reaches ${error.sideMax}. set its scale to ${fittingScale(scale, error)} or less (under Level in the level editor)`;
   }
-  return `${source}: ${messageOf(error)}`;
+  return `${source}: ${errorMessage(error)}`;
 }
 
 // builds the level source at source (a folder or a .obj) into levelsDir; whether it did
@@ -141,7 +140,7 @@ export function buildLevel(source: string, { streamsDir, levelsDir, log }: Build
   try {
     level = readLevelSource(source);
   } catch (error) {
-    log(messageOf(error));
+    log(errorMessage(error));
     return false;
   }
   if (!existsSync(join(streamsDir, `${BASE_LEVEL.file}.nsd`))) {

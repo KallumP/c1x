@@ -9,6 +9,7 @@ import { BOX_TYPES, parseObjects, type BoxDrop, type LevelObject } from "../src/
 import { IRON_OUTLINE, PLAIN_OUTLINE } from "./entities";
 import { turned } from "./obj";
 import type { Vec3 } from "./vectors";
+import { errorMessage } from "../src/errorMessage";
 
 export const OBJECTS_JSON = "objects.json";
 
@@ -106,6 +107,6 @@ export function readObjectsFile(folder: string): LevelObject[] {
   try {
     return parseObjects(readFileSync(path, "utf8"));
   } catch (error) {
-    throw new Error(`${path}: ${error instanceof Error ? error.message : error}`);
+    throw new Error(`${path}: ${errorMessage(error)}`);
   }
 }

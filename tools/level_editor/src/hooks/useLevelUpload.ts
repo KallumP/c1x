@@ -3,13 +3,7 @@ import type { LevelInfo } from "../api";
 import { imageLogo, viewLogo } from "../levelLogo";
 import { firstPictureChoice, pictureProblem, summaryProblem, type PictureChoice } from "../levelSharing";
 import { fetchOnlineLevel, uploadLevel, type LevelMod, type Uploaded } from "../modioApi";
-
-function messageOf(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return String(error);
-}
+import { errorMessage } from "../errorMessage";
 
 // the editor's view, as a picture for the level, or null if there's no view
 function takeViewPicture(): string | null {
@@ -69,7 +63,7 @@ export function useLevelUpload(
     if (!level || !signedIn) {
       return;
     }
-    fetchOnlineLevel(level.name).then(setOnline, (error) => setProblem(messageOf(error)));
+    fetchOnlineLevel(level.name).then(setOnline, (error) => setProblem(errorMessage(error)));
   }, [level, signedIn]);
 
   // a new level needs a summary; a new version keeps its mod's. either needs its picture
@@ -104,13 +98,13 @@ export function useLevelUpload(
     try {
       await sendUpload(level.name);
     } catch (error) {
-      setProblem(messageOf(error));
+      setProblem(errorMessage(error));
     } finally {
       setIsBusy(false);
     }
   };
 
-  const chooseImage = (file: File) => picture.chooseImage(file).catch((error) => setProblem(messageOf(error)));
+  const chooseImage = (file: File) => picture.chooseImage(file).catch((error) => setProblem(errorMessage(error)));
 
   return { online, summary, setSummary, problem, isBusy, uploaded, upload, picture, chooseImage };
 }

@@ -10,7 +10,6 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { uploadLevel } from "../scripts/levelUpload";
 import {
-  errorMessage,
   findOwnLevelMod,
   isProblem,
   sendSignInCode,
@@ -21,6 +20,7 @@ import { defaultLevelTitle } from "../src/levelTitle";
 import type { ApiResponse } from "./api";
 import { readLevelCfg } from "./levelCfg";
 import { listLevels } from "./levels";
+import { errorMessage } from "../src/errorMessage";
 
 type ReadBody = () => Promise<string>;
 

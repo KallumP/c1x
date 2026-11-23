@@ -15,6 +15,7 @@ import { buildLevel } from "./build";
 import { readLevelCfg, writeLevelCfg } from "./levelCfg";
 import { levelFileMakingGameTextures, listLevels, readObjects, writeObjects } from "./levels";
 import { bootLevel } from "./settings";
+import { errorMessage } from "../src/errorMessage";
 
 export interface ApiResponse {
   status: number;
@@ -126,6 +127,6 @@ export async function levelsApi(repo: string, method: string, path: string, read
   try {
     return await route(repo, method, parts, readBody);
   } catch (error) {
-    return { status: 400, type: "text/plain", body: error instanceof Error ? error.message : String(error) };
+    return { status: 400, type: "text/plain", body: errorMessage(error) };
   }
 }
