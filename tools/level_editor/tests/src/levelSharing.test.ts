@@ -5,6 +5,7 @@ import {
   pictureProblem,
   SUMMARY_MAX,
   summaryProblem,
+  uploadProblem,
   uploadButtonText,
   uploadedText,
 } from "../../src/levelSharing";
@@ -96,5 +97,23 @@ describe("the level's picture", () => {
 
   test.each(["keep", "view"] as const)("is fine as %s without an image", (choice) => {
     expect(pictureProblem(choice, false)).toBeNull();
+  });
+});
+
+describe("whether an upload can go ahead", () => {
+  test("a new level needs a summary", () => {
+    expect(uploadProblem(false, "", "view", false)).toBe("Write a summary for players first.");
+  });
+
+  test("a level already online keeps its summary, so needs none", () => {
+    expect(uploadProblem(true, "", "keep", false)).toBeNull();
+  });
+
+  test("an image picture needs an image chosen", () => {
+    expect(uploadProblem(true, "", "image", false)).toBe("Choose an image for its picture first.");
+  });
+
+  test("a new level with a summary and the view as its picture can", () => {
+    expect(uploadProblem(false, "A beach.", "view", false)).toBeNull();
   });
 });
