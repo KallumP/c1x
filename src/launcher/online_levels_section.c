@@ -35,15 +35,16 @@ static int IsListingOrDownloading(void) {
     || IsBackgroundCommandRunning(&level_download);
 }
 
-static void StartLevelList(const char *repo) {
+/* lists the levels with name in theirs, or the top levels for "" */
+static void StartLevelList(const char *repo, const char *name) {
   char command[COMMAND_MAX];
   int has_command;
 
-  has_command = ListOnlineLevelsCommand(repo, search, command, sizeof(command));
+  has_command = ListOnlineLevelsCommand(repo, name, command, sizeof(command));
   if (StartToolsCommand(&level_list, repo, has_command, command, problem,
     sizeof(problem))) {
     found.count = 0;
-    SDL_strlcpy(searched, search, sizeof(searched));
+    SDL_strlcpy(searched, name, sizeof(searched));
   }
 }
 
@@ -185,7 +186,7 @@ static void DrawSearch(const char *repo) {
     FilterSearchCharacter, 0);
   DrawTooltip("Leave it empty for the most downloaded levels.");
   igSameLine(0, -1);
-  if (igButton("Find levels", (ImVec2){0, 0}) || entered) { StartLevelList(repo); }
+  if (igButton("Find levels", (ImVec2){0, 0}) || entered) { StartLevelList(repo, search); }
   DrawTooltip("List the levels on mod.io with this in their name.");
   igEndDisabled();
 }
@@ -193,7 +194,7 @@ static void DrawSearch(const char *repo) {
 static void ListTopLevelsOnce(const char *repo) {
   if (has_listed_top_levels || !AreToolsBuilt(repo)) { return; }
   has_listed_top_levels = 1;
-  StartLevelList(repo);
+  StartLevelList(repo, "");
 }
 
 void DrawOnlineLevelsSection(const char *repo) {
