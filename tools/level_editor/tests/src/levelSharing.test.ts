@@ -25,7 +25,9 @@ describe("a level's summary on mod.io", () => {
   });
 
   test("can't be longer than mod.io takes", () => {
-    expect(summaryProblem("a".repeat(SUMMARY_MAX + 1))).toBe(`A summary can be at most ${SUMMARY_MAX} characters.`);
+    expect(summaryProblem("a".repeat(SUMMARY_MAX + 1))).toBe(
+      `A summary can be at most ${SUMMARY_MAX} characters.`,
+    );
   });
 });
 
@@ -41,7 +43,11 @@ describe("the upload button", () => {
 
 describe("what an upload says, around its link to mod.io", () => {
   test("for a new level, where to view it", () => {
-    expect(uploadedText({ mod: MOD, isNew: true })).toEqual({ before: "Upload successful, view it", link: "here", after: "." });
+    expect(uploadedText({ mod: MOD, isNew: true })).toEqual({
+      before: "Upload successful, view it",
+      link: "here",
+      after: ".",
+    });
   });
 
   test("for a level already online, where to view its new version", () => {
@@ -63,7 +69,11 @@ describe("what the dialog says of a map, around its link to mod.io", () => {
   });
 
   test("before it's online, that it isn't yet, with no link", () => {
-    expect(onlineText(false)).toEqual({ before: "This map isn't on mod.io yet.", link: null, after: "" });
+    expect(onlineText(false)).toEqual({
+      before: "This map isn't on mod.io yet.",
+      link: null,
+      after: "",
+    });
   });
 });
 

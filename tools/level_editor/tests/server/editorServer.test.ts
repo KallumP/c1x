@@ -55,7 +55,9 @@ describe("the editor server", () => {
 
   test("answers the mod.io api under /api/modio", async () => {
     const { address } = await started();
-    expect(await (await fetch(`${address}api/modio/account`)).json()).toEqual({ signedIn: false });
+    expect(await (await fetch(`${address}api/modio/account`)).json()).toEqual({
+      signedIn: false,
+    });
   });
 
   test("a file that isn't part of the page is not found, even one outside it", async () => {

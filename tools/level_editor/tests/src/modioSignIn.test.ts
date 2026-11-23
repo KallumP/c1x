@@ -21,6 +21,8 @@ describe("the code mod.io emails", () => {
   });
 
   test.each(["", "AB12", "AB12CD", "AB-2C"])("needs 5 letters and digits: %j", (code) => {
-    expect(signInCodeProblem(code)).toBe("The code mod.io emailed is 5 letters and digits.");
+    expect(signInCodeProblem(code)).toBe(
+      "The code mod.io emailed is 5 letters and digits.",
+    );
   });
 });

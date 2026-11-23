@@ -48,7 +48,12 @@ function standInCalls(answers: StandInAnswers = {}) {
 
 async function download(calls: DownloadCalls) {
   const said: string[] = [];
-  const exitCode = await downloadLevelCommand(root, 17302, (line) => said.push(line), calls);
+  const exitCode = await downloadLevelCommand(
+    root,
+    17302,
+    (line) => said.push(line),
+    calls,
+  );
   return { exitCode, said };
 }
 
@@ -66,7 +71,10 @@ describe("downloading a level", () => {
 
   test("builds it, saying so", async () => {
     const { calls, asked } = standInCalls();
-    expect(await download(calls)).toEqual({ exitCode: 0, said: ["downloaded Tide Ruins into level_src/1_tide_ruins"] });
+    expect(await download(calls)).toEqual({
+      exitCode: 0,
+      said: ["downloaded Tide Ruins into level_src/1_tide_ruins"],
+    });
     expect(asked.built).toEqual(["1_tide_ruins"]);
   });
 
@@ -77,14 +85,16 @@ describe("downloading a level", () => {
 
 describe("a level that can't be downloaded", () => {
   test("says why mod.io wouldn't give it", async () => {
-    expect(await download(standInCalls({ level: { problem: "Not found." } }).calls)).toEqual({
+    const { calls } = standInCalls({ level: { problem: "Not found." } });
+    expect(await download(calls)).toEqual({
       exitCode: 1,
       said: ["couldn't download level 17302: Not found."],
     });
   });
 
   test("says why its file didn't download", async () => {
-    expect(await download(standInCalls({ zip: { problem: "the download answered 404" } }).calls)).toEqual({
+    const { calls } = standInCalls({ zip: { problem: "the download answered 404" } });
+    expect(await download(calls)).toEqual({
       exitCode: 1,
       said: ["couldn't download level 17302: the download answered 404"],
     });

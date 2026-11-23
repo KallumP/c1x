@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { strToU8, zipSync } from "fflate";
@@ -13,7 +21,9 @@ afterEach(() => { rmSync(root, { recursive: true, force: true }); });
 // a zip of files, each with its own path as its text, and the folders given
 function zipOf(paths: string[], folders: string[] = []): Uint8Array {
   const files = Object.fromEntries(paths.map((path) => [path, strToU8(path)]));
-  const folderEntries = Object.fromEntries(folders.map((folder) => [folder, new Uint8Array()]));
+  const folderEntries = Object.fromEntries(
+    folders.map((folder) => [folder, new Uint8Array()]),
+  );
   return zipSync({ ...folderEntries, ...files });
 }
 
@@ -23,17 +33,25 @@ const filesIn = (name: string) => readdirSync(join(root, name)).sort();
 describe("unzipping a level", () => {
   test("puts its folder in level_src, and says its name", () => {
     expect(unzipLevel(root, zipOf(TIDE_RUINS), 17302)).toEqual({ name: "1_tide_ruins" });
-    expect(readFileSync(join(root, "1_tide_ruins", "tide_ruins.obj"), "utf8")).toBe("1_tide_ruins/tide_ruins.obj");
+    expect(readFileSync(join(root, "1_tide_ruins", "tide_ruins.obj"), "utf8")).toBe(
+      "1_tide_ruins/tide_ruins.obj",
+    );
   });
 
   test("notes which mod.io level it is", () => {
     unzipLevel(root, zipOf(TIDE_RUINS), 17302);
-    expect(JSON.parse(readFileSync(join(root, "1_tide_ruins", ".modio.json"), "utf8"))).toEqual({ modId: 17302 });
+    expect(JSON.parse(readFileSync(join(root, "1_tide_ruins", ".modio.json"), "utf8"))).toEqual({
+      modId: 17302,
+    });
   });
 
   test("skips the folder entries windows puts in a zip", () => {
     unzipLevel(root, zipOf(TIDE_RUINS, ["1_tide_ruins/"]), 17302);
-    expect(filesIn("1_tide_ruins")).toEqual([".modio.json", "level.cfg", "tide_ruins.obj"]);
+    expect(filesIn("1_tide_ruins")).toEqual([
+      ".modio.json",
+      "level.cfg",
+      "tide_ruins.obj",
+    ]);
   });
 
   test("skips the __MACOSX folder a mac puts in a zip", () => {
@@ -44,14 +62,22 @@ describe("unzipping a level", () => {
 
   test("skips folders inside the level's folder", () => {
     unzipLevel(root, zipOf([...TIDE_RUINS, "1_tide_ruins/backup/old.obj"]), 17302);
-    expect(filesIn("1_tide_ruins")).toEqual([".modio.json", "level.cfg", "tide_ruins.obj"]);
+    expect(filesIn("1_tide_ruins")).toEqual([
+      ".modio.json",
+      "level.cfg",
+      "tide_ruins.obj",
+    ]);
   });
 
   test.each(["1_tide_ruins/..\\escape.obj", "1_tide_ruins/C:escape.obj", "1_tide_ruins/.."])(
     "skips a file whose name could leave the level's folder: %j",
     (path) => {
       unzipLevel(root, zipOf([...TIDE_RUINS, path]), 17302);
-      expect(filesIn("1_tide_ruins")).toEqual([".modio.json", "level.cfg", "tide_ruins.obj"]);
+      expect(filesIn("1_tide_ruins")).toEqual([
+        ".modio.json",
+        "level.cfg",
+        "tide_ruins.obj",
+      ]);
       expect(readdirSync(root)).toEqual(["1_tide_ruins"]);
     },
   );
@@ -59,7 +85,11 @@ describe("unzipping a level", () => {
   test("replaces the level downloaded from the same mod.io level before", () => {
     unzipLevel(root, zipOf([...TIDE_RUINS, "1_tide_ruins/old.png"]), 17302);
     unzipLevel(root, zipOf(TIDE_RUINS), 17302);
-    expect(filesIn("1_tide_ruins")).toEqual([".modio.json", "level.cfg", "tide_ruins.obj"]);
+    expect(filesIn("1_tide_ruins")).toEqual([
+      ".modio.json",
+      "level.cfg",
+      "tide_ruins.obj",
+    ]);
   });
 });
 
@@ -113,6 +143,8 @@ describe("a zip that can't be unzipped as a level", () => {
   });
 
   test("isn't a zip", () => {
-    expect(unzipLevel(root, new Uint8Array([1, 2, 3]), 17302)).toEqual({ problem: "The download isn't a zip." });
+    expect(unzipLevel(root, new Uint8Array([1, 2, 3]), 17302)).toEqual({
+      problem: "The download isn't a zip.",
+    });
   });
 });

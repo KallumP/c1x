@@ -22,7 +22,10 @@ const zippedNames = (zip: Uint8Array) => Object.keys(unzipSync(zip)).sort();
 
 describe("a level's zip", () => {
   test("holds the level's folder, with its files inside it", () => {
-    makeLevel("my_level", ["my_level.obj", "my_level.mtl", "grass.png", "level.cfg", "objects.json"]);
+    makeLevel(
+      "my_level",
+      ["my_level.obj", "my_level.mtl", "grass.png", "level.cfg", "objects.json"],
+    );
     expect(zippedNames(zipLevel(root, "my_level"))).toEqual([
       "my_level/grass.png",
       "my_level/level.cfg",
@@ -34,7 +37,9 @@ describe("a level's zip", () => {
 
   test("keeps each file's contents", () => {
     makeLevel("my_level", ["my_level.obj"]);
-    expect(strFromU8(unzipSync(zipLevel(root, "my_level"))["my_level/my_level.obj"])).toBe("my_level.obj");
+    expect(strFromU8(unzipSync(zipLevel(root, "my_level"))["my_level/my_level.obj"])).toBe(
+      "my_level.obj",
+    );
   });
 
   test("holds its own song and loading screen", () => {
@@ -48,8 +53,21 @@ describe("a level's zip", () => {
 
   test("leaves out the game's own images its game_textures.json lists, but keeps the list", () => {
     makeLevel("my_level", ["my_level.obj", "tex_000.png", "grass.png"]);
-    const texture = { stream: "s0000004", page: "PoC1T", colourMode: 1, x: 192, y: 16, w: 32, h: 16, clutX: 0, clutY: 9 };
-    writeFileSync(join(root, "my_level", "game_textures.json"), JSON.stringify({ "tex_000.png": texture }));
+    const texture = {
+      stream: "s0000004",
+      page: "PoC1T",
+      colourMode: 1,
+      x: 192,
+      y: 16,
+      w: 32,
+      h: 16,
+      clutX: 0,
+      clutY: 9,
+    };
+    writeFileSync(
+      join(root, "my_level", "game_textures.json"),
+      JSON.stringify({ "tex_000.png": texture }),
+    );
     expect(zippedNames(zipLevel(root, "my_level"))).toEqual([
       "my_level/game_textures.json",
       "my_level/grass.png",

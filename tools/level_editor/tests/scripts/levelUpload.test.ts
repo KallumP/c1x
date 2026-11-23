@@ -71,7 +71,10 @@ describe("uploading a level that isn't online yet", () => {
 
   test("is the new mod, said to be new", async () => {
     const { modio } = standInModio(null);
-    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({ mod: NEW_MOD, isNew: true });
+    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({
+      mod: NEW_MOD,
+      isNew: true,
+    });
   });
 
   test("signs each call in with the player's token", async () => {
@@ -96,26 +99,41 @@ describe("uploading a level that's already online", () => {
 
   test("is the mod it has, not said to be new", async () => {
     const { modio } = standInModio(ONLINE);
-    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({ mod: ONLINE, isNew: false });
+    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({
+      mod: ONLINE,
+      isNew: false,
+    });
   });
 });
 
 describe("uploading a level mod.io refuses", () => {
   test("is why mod.io couldn't say if it's online", async () => {
-    const { modio, sent } = standInModio(null, { findOwnLevelMod: { problem: "expired" } });
-    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({ problem: "expired" });
+    const { modio, sent } = standInModio(
+      null,
+      { findOwnLevelMod: { problem: "expired" } },
+    );
+    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({
+      problem: "expired",
+    });
     expect(sent.files).toEqual([]);
   });
 
   test("is why mod.io didn't add its mod, adding no file", async () => {
-    const { modio, sent } = standInModio(null, { addLevelMod: { problem: "logo too small" } });
-    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({ problem: "logo too small" });
+    const { modio, sent } = standInModio(
+      null,
+      { addLevelMod: { problem: "logo too small" } },
+    );
+    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({
+      problem: "logo too small",
+    });
     expect(sent.files).toEqual([]);
   });
 
   test("is why mod.io didn't add its file", async () => {
     const { modio } = standInModio(ONLINE, { addLevelFile: { problem: "zip too big" } });
-    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({ problem: "zip too big" });
+    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({
+      problem: "zip too big",
+    });
   });
 });
 
@@ -149,7 +167,12 @@ describe("a level's picture", () => {
   });
 
   test("is why mod.io didn't set it", async () => {
-    const { modio } = standInModio(ONLINE, { setLevelLogo: { problem: "The logo is too small." } });
-    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({ problem: "The logo is too small." });
+    const { modio } = standInModio(
+      ONLINE,
+      { setLevelLogo: { problem: "The logo is too small." } },
+    );
+    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({
+      problem: "The logo is too small.",
+    });
   });
 });
