@@ -3,8 +3,8 @@
 
 import { dirname, resolve } from "node:path";
 import { errorMessage } from "../src/errorMessage";
+import { isProblem, type Answer } from "./answer";
 import { downloadFile } from "./download";
-import { type Answer, isProblem } from "./modio";
 import { copyPlayersThings } from "./playersThings";
 import { releaseName, unzipRelease } from "./releaseUnzip";
 import { versionNumbers } from "./updateCheck";

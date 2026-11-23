@@ -2,7 +2,8 @@
 // first time, then a new file on that same mod each time after
 import { zipLevel } from "./levelZip";
 import * as modio from "./modio";
-import { isProblem, type Answer, type LevelMod } from "./modio";
+import { isProblem, type Answer } from "./answer";
+import type { LevelMod } from "./modio";
 
 // mod.io's calls the upload makes, or a test's stand-ins for them
 export interface UploadCalls {

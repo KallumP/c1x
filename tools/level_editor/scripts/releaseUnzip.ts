@@ -2,7 +2,7 @@
 // one folder, c1x-<version>, as the release script makes it
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { Answer } from "./modio";
+import type { Answer } from "./answer";
 import { isPlainName, tryUnzip, zippedFiles } from "./zipEntries";
 
 // a release's folder, and its zip's name without .zip, as the release script makes it

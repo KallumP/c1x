@@ -1,13 +1,9 @@
 // mod.io's api, where custom levels are shared (see doc/custom_levels.md): each
 // level is a mod of c1x's game there, its file a zip of the level's source folder
 import { errorMessage } from "../src/errorMessage";
+import { isProblem, type Answer, type Problem } from "./answer";
 import { fetchWithTimeout } from "./download";
 import type { Fetch } from "./fetch";
-
-// what mod.io answered, or why there's no answer
-export type Answer<T> = T | Problem;
-// why there's no answer, signed out when mod.io refused the player's token
-export type Problem = { problem: string; signedOut?: true };
 
 // c1x's game on mod.io (https://mod.io/g/crash-1-n-hanced). the api key only
 // reads what's public, so it ships with the game, as mod.io means it to
@@ -85,9 +81,6 @@ async function askModio<T>(
     return { problem: `mod.io couldn't be reached (${errorMessage(error)})` };
   }
 }
-
-export const isProblem = <T>(answer: Answer<T>): answer is Problem =>
-  typeof answer === "object" && answer !== null && "problem" in answer;
 
 // nothing, once mod.io has done what it was asked, or why it didn't
 function withoutBody(answer: Answer<unknown>): Answer<object> {
