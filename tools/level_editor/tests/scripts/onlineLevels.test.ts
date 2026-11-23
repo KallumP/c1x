@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { listOnlineLevelsCommand, ONLINE_LEVEL_PREFIX, onlineLevelLine } from "../../scripts/onlineLevels";
 import type { OnlineLevel } from "../../scripts/modio";
@@ -41,5 +43,15 @@ describe("listing the online levels", () => {
       exitCode: 1,
       said: ["couldn't list the levels on mod.io: mod.io couldn't be reached (offline)"],
     });
+  });
+});
+
+describe("what the launcher reads", () => {
+  test("starts as the launcher's code says it does", () => {
+    const launcherCode = readFileSync(
+      fileURLToPath(new URL("../../../../src/launcher/online_levels.c", import.meta.url)),
+      "utf8",
+    );
+    expect(/#define ONLINE_LEVEL "(.*)"/.exec(launcherCode)?.[1]).toBe(ONLINE_LEVEL_PREFIX);
   });
 });
