@@ -176,3 +176,7 @@
 .share-close {
   align-self: flex-end;
 }
+
+.share-dialog a {
+  color: #8ab4f8;
+}

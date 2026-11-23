@@ -21,7 +21,9 @@ import { useLevelCfg } from "./hooks/useLevelCfg";
 import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevelSongs } from "./hooks/useLevelSongs";
 import { useLevels } from "./hooks/useLevels";
+import { useLevelUpload } from "./hooks/useLevelUpload";
 import { useModioAccount } from "./hooks/useModioAccount";
+import { SUMMARY_MAX, uploadButtonText, uploadedText } from "./levelSharing";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
 import { useOutlineWarnings, usePathWarnings, useTriangles, useWarnings } from "./hooks/useWarnings";
@@ -115,6 +117,7 @@ export default function App() {
 
   const modio = useModioAccount();
   const [isSharing, setIsSharing] = useState(false);
+  const levelUpload = useLevelUpload(level, modio.signedIn, save);
 
   useUnsavedWarning(unsaved);
   const levelActions = useLevelActions(level, unsaved, save);
@@ -218,10 +221,69 @@ export default function App() {
     return renderEmailStep();
   };
 
+  // whether the level's online already, with a link to it
+  const renderOnlineLine = () => {
+    const { online } = levelUpload;
+    if (online === undefined) {
+      return <p>Checking whether it's online...</p>;
+    }
+    if (online === null) {
+      return <p>It isn't on mod.io yet. Its logo is the view as it is now, so line it up first.</p>;
+    }
+    return (
+      <p>
+        It's <a href={online.page} target="_blank" rel="noreferrer">on mod.io</a>. Uploading again adds a new version.
+      </p>
+    );
+  };
+
+  // a new level's summary; a new version keeps its own
+  const renderSummary = () => {
+    if (levelUpload.online !== null) {
+      return null;
+    }
+    return (
+      <textarea
+        placeholder="Summary: what players should know about it"
+        rows={3}
+        maxLength={SUMMARY_MAX}
+        value={levelUpload.summary}
+        onChange={(event) => levelUpload.setSummary(event.target.value)}
+      />
+    );
+  };
+
+  const renderUploaded = () => {
+    const { uploaded } = levelUpload;
+    if (!uploaded) {
+      return null;
+    }
+    return (
+      <p>
+        {uploadedText(uploaded)} <a href={uploaded.mod.page} target="_blank" rel="noreferrer">See its page</a>
+      </p>
+    );
+  };
+
+  const renderUploadButton = () => {
+    const { online, isBusy, upload } = levelUpload;
+    if (isBusy) {
+      return <button disabled>Uploading...</button>;
+    }
+    return <button disabled={online === undefined} onClick={upload}>{uploadButtonText(Boolean(online))}</button>;
+  };
+
   const renderSignedIn = () => (
-    <p>
-      Signed in to mod.io. <button disabled={modio.isBusy} onClick={modio.signOut}>Sign out</button>
-    </p>
+    <>
+      <p>
+        Signed in to mod.io. <button disabled={modio.isBusy} onClick={modio.signOut}>Sign out</button>
+      </p>
+      {renderOnlineLine()}
+      {renderSummary()}
+      {renderUploadButton()}
+      {renderUploaded()}
+      {levelUpload.problem && <p className="error">{levelUpload.problem}</p>}
+    </>
   );
 
   const renderShareContent = () => {
