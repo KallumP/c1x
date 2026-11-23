@@ -143,7 +143,7 @@ static void DrawFrame() {
   UpdateEditorSection();
   UpdateLevelsSection(repo);
   UpdateOnlineLevelsSection(repo);
-  FollowReleaseCheck();
+  FollowNewerRelease();
   DrawLauncher();
   igRender();
   io = igGetIO();
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
     DrawFrame();
   }
   CloseEditorSection();
-  StopReleaseCheck();
+  StopNewerRelease();
   StopOnlineLevelsSection();
   CloseLauncherWindow();
   return 0;

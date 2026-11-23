@@ -46,8 +46,7 @@ void StartReleaseCheck(const char *repo) {
   StartBackgroundCommand(&release_check, repo, command);
 }
 
-/* the check's answer, and the download's, as they come in */
-void FollowReleaseCheck(void) {
+void FollowNewerRelease(void) {
   UpdateBackgroundCommand(&release_check);
   if (!newer_version[0]) {
     FindNewerRelease(release_check.output, newer_version, sizeof(newer_version));
@@ -59,7 +58,7 @@ void FollowReleaseCheck(void) {
   }
 }
 
-void StopReleaseCheck(void) {
+void StopNewerRelease(void) {
   StopBackgroundCommand(&release_check);
   StopBackgroundCommand(&release_download);
 }
