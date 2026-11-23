@@ -24,8 +24,17 @@ const signIn = (expires = LATER) => writeFileSync(tokenPath(), JSON.stringify({ 
 
 // stand-ins for mod.io, answering as given, and what they were sent
 function standInCalls(answers: Partial<{ problem: string; own: LevelMod | null }> = {}) {
-  const sent = { emails: [] as string[], codes: [] as string[], uploads: [] as { token: string; name: string; details: LevelDetails }[] };
-  const answer = <T>(value: T) => answers.problem ? { problem: answers.problem } : value;
+  const sent = {
+    emails: [] as string[],
+    codes: [] as string[],
+    uploads: [] as { token: string; name: string; details: LevelDetails }[],
+  };
+  const answer = <T>(value: T) => {
+    if (answers.problem) {
+      return { problem: answers.problem };
+    }
+    return value;
+  };
   const calls: ModioCalls = {
     sendSignInCode: async (email) => { sent.emails.push(email); return answer({}); },
     signInWithCode: async (code) => { sent.codes.push(code); return answer({ token: "new token", expires: LATER }); },
