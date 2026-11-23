@@ -66,11 +66,12 @@ The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): 
 
 Beside each level is whether it's built. It says `out of date` when a file in its source folder was saved after it was built (its `.blend` doesn't count: export the `.obj` again).
 
+- **mod.io**, beside a level downloaded from mod.io, opens its page there.
 - **Build** builds that level with `build/c1x_tools.exe`, without Node or the level editor, showing its output below. When it builds, it's set as the boot level and `settings.cfg` is saved. Only one level builds at a time.
 - **Check again** looks for level sources added, and ones saved, since the launcher opened.
 - **Open levels folder** opens `level_src/`, to drop a level into.
 
-**Levels on mod.io** lists the levels players have shared (see [Sharing levels](custom_levels.md#sharing-levels)) when you click **Find levels**. **Download** puts one in `level_src/` and builds it.
+**Levels on mod.io** lists the levels players have shared (see [Sharing levels](custom_levels.md#sharing-levels)) when you click **Find levels**. **View** opens a level's page on mod.io, and **Download** puts it in `level_src/` and builds it.
 
 If `c1x_tools.exe` isn't there (`make` skips it without Node; see [Building](building.md#the-level-build-and-editor-without-node)), the tab says so and **Build** is greyed out.
 
