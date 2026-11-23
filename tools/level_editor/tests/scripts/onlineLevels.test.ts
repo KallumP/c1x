@@ -16,14 +16,17 @@ const TIDE_RUINS: OnlineLevel = {
   fileUrl: "",
 };
 
-// runs the command with stand-in levels (or why there are none); its exit code and what it said
-async function listed(levels: OnlineLevel[] | { problem: string }) {
+// runs the command for name with stand-in levels (or why there are none); its exit
+// code, what it said, and the names the list was asked for
+async function listed(levels: OnlineLevel[] | { problem: string }, name = "") {
   const said: string[] = [];
-  const exitCode = await listOnlineLevelsCommand(
-    (line) => said.push(line),
-    async () => levels,
-  );
-  return { exitCode, said };
+  const askedFor: string[] = [];
+  const list = async (asked: string) => {
+    askedFor.push(asked);
+    return levels;
+  };
+  const exitCode = await listOnlineLevelsCommand(name, (line) => said.push(line), list);
+  return { exitCode, said, askedFor };
 }
 
 describe("an online level's line", () => {
@@ -44,21 +47,33 @@ describe("an online level's line", () => {
 describe("listing the online levels", () => {
   test("says each level's line, and works", async () => {
     const other = { ...TIDE_RUINS, id: 2, name: "Mossy Creek" };
-    expect(await listed([TIDE_RUINS, other])).toEqual({
+    expect(await listed([TIDE_RUINS, other])).toMatchObject({
       exitCode: 0,
       said: [onlineLevelLine(TIDE_RUINS), onlineLevelLine(other)],
     });
   });
 
   test("says when there are none", async () => {
-    expect(await listed([])).toEqual({
+    expect(await listed([])).toMatchObject({
       exitCode: 0,
       said: ["no levels are on mod.io yet"],
     });
   });
 
+  test("asks for the levels with the name in theirs", async () => {
+    expect((await listed([TIDE_RUINS], "tide")).askedFor).toEqual(["tide"]);
+  });
+
+  test("says when none have the name in theirs", async () => {
+    expect(await listed([], "zzz")).toMatchObject({
+      exitCode: 0,
+      said: ['no levels on mod.io have "zzz" in their name'],
+    });
+  });
+
   test("says why it couldn't list them, and fails", async () => {
-    expect(await listed({ problem: "mod.io couldn't be reached (offline)" })).toEqual({
+    const offline = { problem: "mod.io couldn't be reached (offline)" };
+    expect(await listed(offline)).toMatchObject({
       exitCode: 1,
       said: ["couldn't list the levels on mod.io: mod.io couldn't be reached (offline)"],
     });

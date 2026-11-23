@@ -257,19 +257,40 @@ const LEVEL_ANSWER = {
 };
 
 describe("listing the levels on mod.io", () => {
-  test("asks for all the game's mods, with the game's api key (each is a level, tagged or not)", async () => {
+  // the url listOnlineLevels asked for, given name
+  async function listUrl(name: string): Promise<URL> {
     const { fetchUrl, requests } = standInFetch({ data: [LEVEL_ANSWER] });
-    await listOnlineLevels(fetchUrl);
-    const url = new URL(requests[0].url);
+    await listOnlineLevels(name, fetchUrl);
+    return new URL(requests[0].url);
+  }
+
+  test("asks for the game's mods (each is a level, tagged or not)", async () => {
+    const url = await listUrl("");
     expect(`${url.origin}${url.pathname}`).toBe(
       `${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}/mods`,
     );
-    expect(Object.fromEntries(url.searchParams)).toEqual({ api_key: MODIO_GAME.apiKey });
+  });
+
+  test("asks for the 20 most downloaded, with the game's api key", async () => {
+    expect(Object.fromEntries((await listUrl("")).searchParams)).toEqual({
+      api_key: MODIO_GAME.apiKey,
+      _sort: "-downloads_total",
+      _limit: "20",
+    });
+  });
+
+  test("with a name, asks for the 100 most downloaded with it in theirs", async () => {
+    expect(Object.fromEntries((await listUrl("tide ruins")).searchParams)).toEqual({
+      api_key: MODIO_GAME.apiKey,
+      _sort: "-downloads_total",
+      _limit: "100",
+      "name-lk": "*tide ruins*",
+    });
   });
 
   test("is each level's id, name and author", async () => {
     const { fetchUrl } = standInFetch({ data: [LEVEL_ANSWER] });
-    expect(await listOnlineLevels(fetchUrl)).toEqual([
+    expect(await listOnlineLevels("", fetchUrl)).toEqual([
       {
         id: 17302,
         name: "Tide Ruins",
@@ -282,7 +303,7 @@ describe("listing the levels on mod.io", () => {
 
   test("leaves out a level with no file yet", async () => {
     const { fetchUrl } = standInFetch({ data: [{ ...LEVEL_ANSWER, modfile: null }] });
-    expect(await listOnlineLevels(fetchUrl)).toEqual([]);
+    expect(await listOnlineLevels("", fetchUrl)).toEqual([]);
   });
 });
 
