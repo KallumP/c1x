@@ -252,15 +252,28 @@ function onlineLevelOf(mod: OnlineModAnswer): OnlineLevel | null {
   };
 }
 
-const publicUrl = (path: string) =>
-  `${gameUrl(path)}?${new URLSearchParams({ api_key: MODIO_GAME.apiKey })}`;
+const publicUrl = (path: string, query: Record<string, string> = {}) =>
+  `${gameUrl(path)}?${new URLSearchParams({ api_key: MODIO_GAME.apiKey, ...query })}`;
 
-// the game's levels with a file to download: all its mods, as a level
-// uploaded by hand may not be tagged
+const TOP_LEVELS = 20;
+const LEVELS_WITH_NAME = 100; // as many as the launcher lists
+
+// most downloaded first: the top ones, or those with name in theirs
+function levelListQuery(name: string): Record<string, string> {
+  const sort = { _sort: "-downloads_total" };
+  if (!name) {
+    return { ...sort, _limit: String(TOP_LEVELS) };
+  }
+  return { ...sort, _limit: String(LEVELS_WITH_NAME), "name-lk": `*${name}*` };
+}
+
+// the game's levels with a file to download, of all its mods, as a level
+// uploaded by hand may not be tagged: the top ones, or those with name in theirs
 export async function listOnlineLevels(
+  name: string = "",
   fetchUrl: Fetch = fetch,
 ): Promise<Answer<OnlineLevel[]>> {
-  const url = publicUrl("/mods");
+  const url = publicUrl("/mods", levelListQuery(name));
   const answer = await askModio<{ data: OnlineModAnswer[] }>(fetchUrl, url, {
     headers: JSON_ACCEPTED,
   });

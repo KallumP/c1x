@@ -17,7 +17,7 @@ export type ToolsCommand =
   | { kind: "build-level"; level: string }
   | { kind: "editor" }
   | { kind: "check-update"; version: string }
-  | { kind: "list-online-levels" }
+  | { kind: "list-online-levels"; name: string }
   | { kind: "download-level"; modId: number }
   | { kind: "download-release"; version: string }
   | { kind: "usage" };
@@ -25,7 +25,7 @@ export type ToolsCommand =
 export const USAGE = `usage: c1x_tools build-level <level>
        c1x_tools editor
        c1x_tools check-update <version>
-       c1x_tools list-online-levels
+       c1x_tools list-online-levels [name]
        c1x_tools download-level <id>
        c1x_tools download-release <version>
        (from tools/level_editor: npm run build-level -- <level>, npm run editor)
@@ -39,8 +39,8 @@ export const USAGE = `usage: c1x_tools build-level <level>
   check-update asks GitHub for c1x's latest release, and says if it's newer
                than version (two numbers, like 1.3), or why it can't tell
   list-online-levels
-               lists the levels shared on mod.io, one a line: its id, author,
-               name and page
+               lists the 20 most downloaded levels shared on mod.io, or those
+               with name in theirs, one a line: its id, author, name and page
   download-level
                downloads the level with that id from mod.io into level_src,
                then builds it
@@ -64,8 +64,8 @@ export function toolsCommand(args: string[]): ToolsCommand {
   if (command === "check-update" && rest.length === 1) {
     return { kind: "check-update", version: rest[0] };
   }
-  if (command === "list-online-levels" && rest.length === 0) {
-    return { kind: "list-online-levels" };
+  if (command === "list-online-levels") {
+    return { kind: "list-online-levels", name: rest.join(" ") };
   }
   if (command === "download-release" && rest.length === 1) {
     return { kind: "download-release", version: rest[0] };
@@ -118,7 +118,7 @@ export async function runTools(repo: string, args: string[]): Promise<number> {
     return checkUpdate(command.version, console.log);
   }
   if (command.kind === "list-online-levels") {
-    return listOnlineLevelsCommand(console.log);
+    return listOnlineLevelsCommand(command.name, console.log);
   }
   if (command.kind === "download-release") {
     return downloadReleaseCommand(repo, command.version, console.log);
