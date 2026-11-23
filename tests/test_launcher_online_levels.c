@@ -113,3 +113,14 @@ UTEST(launcher_online_levels, an_id_too_long_for_an_int_isnt_a_level) {
   FindOnlineLevels("online level: 1234567890\ta\tOne\tp\n", &levels);
   ASSERT_EQ(0, levels.count);
 }
+
+UTEST(launcher_online_levels, a_page_too_long_to_keep_is_none) {
+  static online_levels levels;
+  static char line[ONLINE_LEVEL_PAGE_MAX + 64];
+
+  snprintf(line, sizeof(line), "online level: 1\ta\tOne\thttps://mod.io/%0*d\n",
+    ONLINE_LEVEL_PAGE_MAX, 0);
+  FindOnlineLevels(line, &levels);
+  ASSERT_EQ(1, levels.count);
+  ASSERT_STREQ("", levels.pages[0]);
+}

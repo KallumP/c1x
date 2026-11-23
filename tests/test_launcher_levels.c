@@ -274,3 +274,27 @@ UTEST(launcher_levels, a_mod_io_note_without_a_page_has_none) {
   MakeDownloadedLevel("old_download", "{\"modId\":17302}");
   ASSERT_STREQ("", ModioPageOf(&levels, "old_download"));
 }
+
+UTEST(launcher_levels, a_mod_io_page_with_a_backslash_is_none) {
+  static custom_levels levels;
+
+  MakeDownloadedLevel("escaped_page", "{\"modId\":1,\"page\":\"https:\\/\\/mod.io\\/m\"}");
+  ASSERT_STREQ("", ModioPageOf(&levels, "escaped_page"));
+}
+
+UTEST(launcher_levels, a_mod_io_page_with_no_end_is_none) {
+  static custom_levels levels;
+
+  MakeDownloadedLevel("cut_page", "{\"modId\":1,\"page\":\"https://mod.io/m");
+  ASSERT_STREQ("", ModioPageOf(&levels, "cut_page"));
+}
+
+UTEST(launcher_levels, a_mod_io_page_too_long_to_keep_is_none) {
+  static custom_levels levels;
+  static char note[ONLINE_LEVEL_PAGE_MAX + 64];
+
+  snprintf(note, sizeof(note), "{\"modId\":1,\"page\":\"https://mod.io/%0*d\"}",
+    ONLINE_LEVEL_PAGE_MAX, 0);
+  MakeDownloadedLevel("long_page", note);
+  ASSERT_STREQ("", ModioPageOf(&levels, "long_page"));
+}
