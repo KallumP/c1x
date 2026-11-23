@@ -16,7 +16,7 @@ Run `c1x_launcher.exe`, by double-clicking it or from any folder. It works on it
 
 The launcher's version is in the top right corner of its window, for example `v1.3`.
 
-When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to download that release's zip into your Downloads folder: it says **Downloading v1.4...**, then **Saved c1x-1.4.zip to Downloads**, with an **Open folder** button to find it and unzip it. Your copy of c1x isn't changed. If the download fails, the button opens the release's page on GitHub instead, to download it from there.
+When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to install that release beside your c1x folder: if yours is `c1x-1.3`, the new one is `c1x-1.4`, next to it. It says **Installing v1.4...**, then **v1.4 is ready**, with an **Open v1.4** button that opens the new version's launcher and closes this one. Your settings, controls, game files, memory card and custom levels are copied into the new folder. A custom level builds again there when you choose it, or with **Build** in the Levels tab. Your old folder isn't changed, so you can delete it once you're happy with the new one. If a `c1x-1.4` folder is already there, or the download fails, the button opens the release's page on GitHub instead, so you can download it from there.
 
 A new release unzips to its own folder. To carry on where you were, copy these across from the old folder:
 
@@ -31,7 +31,7 @@ If the launcher shows no button for a newer release, it couldn't check. That hap
 - **`build/c1x_tools.exe` is missing.** The check runs from it. A release comes with it, and in a project folder `make` builds it (see [Building](building.md#the-level-build-and-editor-without-node)).
 - **It's a launcher you built yourself.** That says `dev build` instead of a version, so there's nothing to compare. Only a released launcher checks (see [Releasing](releasing.md#the-launchers-version)).
 
-Besides this check, the launcher only goes online when you ask it to: downloading a release, or finding and downloading levels on mod.io.
+Besides this check, the launcher only goes online when you ask it to: installing a release, or finding and downloading levels on mod.io.
 
 ## Game
 
