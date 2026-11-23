@@ -1,47 +1,105 @@
 /*
- * the launcher's version, in the top right corner of its window, with a link
- * to the newest release's page if github has a newer one. it's checked once,
- * when the launcher opens, by c1x's tools (c1x_tools check-update); a build
- * that isn't a release has no version, and doesn't check
+ * the launcher's version, in the top right corner of its window, with a button
+ * downloading the newest release into the player's Downloads folder if github
+ * has a newer one. it's checked once, when the launcher opens, by c1x's tools
+ * (c1x_tools check-update), which download it too (c1x_tools download-release);
+ * a build that isn't a release has no version, and doesn't check
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "version_corner.h"
 #include "command.h"
+#include "help.h"
 #include "newer_release.h"
 #include "paths.h"
+#include "release_download.h"
 #include "tools.h"
 #include "ui.h"
 #include "version.h"
 
-#define LINK_LABEL_MAX 64
-#define LINK_TOOLTIP "Open its page on GitHub, to download it: " LATEST_RELEASE_PAGE
+#define LABEL_MAX 64
+#define COMMAND_MAX (PATH_MAX_LEN + 64)
 
-static background_command release_check;        /* c1x_tools check-update */
-static char newer_version[RELEASE_VERSION_MAX]; /* "" until the check finds one */
+/* where the newer release is up to */
+typedef enum {
+  RELEASE_NONE,        /* there isn't a newer one (or it's not known yet) */
+  RELEASE_OFFERED,     /* there is, to download */
+  RELEASE_DOWNLOADING,
+  RELEASE_SAVED,       /* downloaded into the player's Downloads folder */
+  RELEASE_FAILED,      /* it couldn't be downloaded */
+} release_state;
 
-static int HasNewerRelease(void) {
-  return newer_version[0] != 0;
-}
+static char tools_repo[PATH_MAX_LEN];              /* the repo the tools are run in */
+static background_command release_check;           /* c1x_tools check-update */
+static background_command release_download;        /* c1x_tools download-release */
+static char newer_version[RELEASE_VERSION_MAX];    /* "" until the check finds one */
+static char saved_path[PATH_MAX_LEN];              /* "" until the download saves it */
 
 void StartReleaseCheck(const char *repo) {
-  char command[PATH_MAX_LEN + 64];
+  char command[COMMAND_MAX];
 
+  SDL_strlcpy(tools_repo, repo, sizeof(tools_repo));
   if (!AreToolsBuilt(repo)) { return; }
   /* no command for a dev build, which has no version to compare */
   if (!NewerReleaseCommand(repo, LauncherVersion(), command, sizeof(command))) { return; }
   StartBackgroundCommand(&release_check, repo, command);
 }
 
+/* the check's answer, and the download's, as they come in */
 void FollowReleaseCheck(void) {
   UpdateBackgroundCommand(&release_check);
-  if (HasNewerRelease()) { return; }
-  FindNewerRelease(release_check.output, newer_version, sizeof(newer_version));
+  if (!newer_version[0]) {
+    FindNewerRelease(release_check.output, newer_version, sizeof(newer_version));
+  }
+  UpdateBackgroundCommand(&release_download);
+  if (!saved_path[0]) {
+    FindSavedRelease(release_download.output, saved_path, sizeof(saved_path));
+  }
 }
 
 void StopReleaseCheck(void) {
   StopBackgroundCommand(&release_check);
+  StopBackgroundCommand(&release_download);
+}
+
+static release_state ReleaseState(void) {
+  if (!newer_version[0]) { return RELEASE_NONE; }
+  if (saved_path[0]) { return RELEASE_SAVED; }
+  if (IsBackgroundCommandRunning(&release_download)) { return RELEASE_DOWNLOADING; }
+  if (release_download.output[0]) { return RELEASE_FAILED; }
+  return RELEASE_OFFERED;
+}
+
+static void StartReleaseDownload(void) {
+  char command[COMMAND_MAX];
+
+  if (!DownloadReleaseCommand(tools_repo, newer_version, command, sizeof(command))) {
+    return;
+  }
+  StartBackgroundCommand(&release_download, tools_repo, command);
+}
+
+/* the folder saved_path is in, as a file:// address, to open in the file browser */
+static void SavedFolderUrl(char *url, size_t size) {
+  char folder[PATH_MAX_LEN];
+  char *end;
+
+  SDL_strlcpy(folder, saved_path, sizeof(folder));
+  end = SDL_strrchr(folder, '\\');
+  if (!end) { end = SDL_strrchr(folder, '/'); }
+  if (end) { *end = 0; }
+  FileUrl(folder, url, size);
+}
+
+/* the name saved_path saves the zip as, without the folders before it */
+static const char *SavedFileName(void) {
+  const char *name;
+
+  name = SDL_strrchr(saved_path, '\\');
+  if (!name) { name = SDL_strrchr(saved_path, '/'); }
+  if (!name) { return saved_path; }
+  return name + 1;
 }
 
 static float TextWidth(const char *text) {
@@ -51,31 +109,80 @@ static float TextWidth(const char *text) {
   return text_size.x;
 }
 
-/* a small button opening the newest release's page, and what's next beside it */
-static void DrawNewerReleaseLink(const char *label) {
-  if (igSmallButton(label)) { SDL_OpenURL(LATEST_RELEASE_PAGE); }
-  DrawTooltip(LINK_TOOLTIP);
+/* what the release part of the corner says, for state, into label */
+static void ReleaseLabel(release_state state, char *label, size_t size) {
+  label[0] = 0;
+  if (state == RELEASE_OFFERED) {
+    SDL_snprintf(label, size, "Version %s is out", newer_version);
+  } else if (state == RELEASE_DOWNLOADING) {
+    SDL_snprintf(label, size, "Downloading %s...", newer_version);
+  } else if (state == RELEASE_SAVED) {
+    SDL_snprintf(label, size, "Saved %s to Downloads", SavedFileName());
+  } else if (state == RELEASE_FAILED) {
+    SDL_snprintf(label, size, "Couldn't download %s: open its page", newer_version);
+  }
+}
+
+/* how wide the release part of the corner is, with the gap after it */
+static float ReleasePartWidth(release_state state, const char *label) {
+  float spacing;
+
+  spacing = igGetStyle()->ItemSpacing.x;
+  if (state == RELEASE_NONE) { return 0; }
+  if (state == RELEASE_DOWNLOADING) { return TextWidth(label) + spacing; }
+  if (state == RELEASE_SAVED) {
+    return TextWidth(label) + spacing + ButtonWidth("Open folder") + spacing;
+  }
+  return ButtonWidth(label) + spacing;
+}
+
+static void DrawSavedRelease(const char *label) {
+  char url[PATH_MAX_LEN * 3 + 16]; /* each character of the path may be escaped as 3 */
+
+  igText("%s", label);
+  DrawTooltip(saved_path);
+  igSameLine(0, -1);
+  if (igSmallButton("Open folder")) {
+    SavedFolderUrl(url, sizeof(url));
+    SDL_OpenURL(url);
+  }
+  DrawTooltip("Open your Downloads folder, to unzip it.");
+}
+
+/* the release part of the corner, for state, and what's next beside it */
+static void DrawReleasePart(release_state state, const char *label) {
+  if (state == RELEASE_NONE) { return; }
+  if (state == RELEASE_OFFERED) {
+    if (igSmallButton(label)) { StartReleaseDownload(); }
+    DrawTooltip("Download it into your Downloads folder, to unzip.");
+  } else if (state == RELEASE_DOWNLOADING) {
+    igTextDisabled("%s", label);
+  } else if (state == RELEASE_SAVED) {
+    DrawSavedRelease(label);
+  } else {
+    if (igSmallButton(label)) { SDL_OpenURL(LATEST_RELEASE_PAGE); }
+    DrawTooltip(release_download.output);
+  }
   igSameLine(0, -1);
 }
 
 /* right-aligned on the line the cursor is on. the cursor is put back after,
    so what's drawn next (the game section's heading) starts on the same line */
 void DrawVersionCorner(void) {
-  char version_label[VERSION_LABEL_MAX], link_label[LINK_LABEL_MAX];
+  char version_label[VERSION_LABEL_MAX], release_label[LABEL_MAX];
   ImVec2 start, available;
+  release_state state;
   float width, indent;
 
+  state = ReleaseState();
+  ReleaseLabel(state, release_label, sizeof(release_label));
   VersionLabel(LauncherVersion(), version_label, sizeof(version_label));
-  width = TextWidth(version_label);
-  if (HasNewerRelease()) {
-    SDL_snprintf(link_label, sizeof(link_label), "Version %s is out", newer_version);
-    width += ButtonWidth(link_label) + igGetStyle()->ItemSpacing.x;
-  }
+  width = TextWidth(version_label) + ReleasePartWidth(state, release_label);
   igGetCursorPos(&start);
   igGetContentRegionAvail(&available);
   indent = SDL_max(0.0f, available.x - width); /* from the left in a window too narrow for it */
   igSetCursorPosX(start.x + indent);
-  if (HasNewerRelease()) { DrawNewerReleaseLink(link_label); }
+  DrawReleasePart(state, release_label);
   igTextDisabled("%s", version_label);
   igSetCursorPos(start);
 }
