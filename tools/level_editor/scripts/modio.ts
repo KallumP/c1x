@@ -236,6 +236,7 @@ export interface OnlineLevel {
   id: number;
   name: string;
   author: string;
+  page: string;    // its page on mod.io
   fileUrl: string; // its newest zip
 }
 
@@ -243,6 +244,7 @@ type OnlineModAnswer = {
   id: number;
   name: string;
   submitted_by: { username: string };
+  profile_url: string;
   modfile: { download: { binary_url: string } } | null;
 };
 
@@ -255,6 +257,7 @@ function onlineLevelOf(mod: OnlineModAnswer): OnlineLevel | null {
     id: mod.id,
     name: mod.name,
     author: mod.submitted_by.username,
+    page: mod.profile_url,
     fileUrl: mod.modfile.download.binary_url,
   };
 }

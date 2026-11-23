@@ -35,8 +35,8 @@ export const USAGE = `usage: c1x_tools build-level <level>
   check-update asks GitHub for c1x's latest release, and says if it's newer
                than version (two numbers, like 1.3), or why it can't tell
   list-online-levels
-               lists the levels shared on mod.io, one a line: its id, author
-               and name
+               lists the levels shared on mod.io, one a line: its id, author,
+               name and page
   download-level
                downloads the level with that id from mod.io into level_src,
                then builds it`;

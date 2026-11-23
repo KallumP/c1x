@@ -1,7 +1,8 @@
 /*
  * the launcher's levels tab: every custom level, built or not, each with a
  * Build button running build-level in the background, so a level source
- * dropped into level_src/ builds without node or the level editor
+ * dropped into level_src/ builds without node or the level editor, and a
+ * View level page button opening the page of one downloaded from mod.io
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -61,6 +62,15 @@ static void DrawToolsMissing(const char *repo) {
   igTextWrapped("Build it with make, which needs Node.js (see doc/building.md).");
 }
 
+/* a button opening the level's page on mod.io, if it was downloaded from there */
+static void DrawModioPageButton(int index) {
+  if (!levels.modio_pages[index][0]) { return; }
+  if (igButton(VIEW_LEVEL_PAGE, (ImVec2){ButtonWidth(VIEW_LEVEL_PAGE), 0})) {
+    SDL_OpenURL(levels.modio_pages[index]);
+  }
+  DrawTooltip("Open its page on mod.io, where it was downloaded from.");
+}
+
 static void DrawLevelRow(const char *repo, int index, int can_build) {
   igTableNextRow(0, 0);
   igTableNextColumn();
@@ -70,6 +80,8 @@ static void DrawLevelRow(const char *repo, int index, int can_build) {
   igText("%s", CustomLevelStatus(&levels, index));
   igTableNextColumn();
   igPushID_Int(index);
+  DrawModioPageButton(index);
+  igTableNextColumn();
   igBeginDisabled(!can_build);
   if (igButton("Build", (ImVec2){BUTTON_WIDTH, 0})) { StartLevelBuild(repo, levels.names[index]); }
   igEndDisabled();
@@ -77,11 +89,16 @@ static void DrawLevelRow(const char *repo, int index, int can_build) {
 }
 
 static void DrawLevelTable(const char *repo, int can_build) {
+  ImGuiTableFlags flags;
+  float page_width;
   int i;
 
-  if (!igBeginTable("custom_levels", 3, ImGuiTableFlags_SizingFixedFit, (ImVec2){0, 0}, 0)) { return; }
+  flags = ImGuiTableFlags_SizingFixedFit;
+  page_width = ButtonWidth(VIEW_LEVEL_PAGE);
+  if (!igBeginTable("custom_levels", 4, flags, (ImVec2){0, 0}, 0)) { return; }
   igTableSetupColumn("name", ImGuiTableColumnFlags_WidthStretch, 0, 0);
   igTableSetupColumn("status", ImGuiTableColumnFlags_WidthFixed, STATUS_WIDTH, 0);
+  igTableSetupColumn("page", ImGuiTableColumnFlags_WidthFixed, page_width, 0);
   igTableSetupColumn("build", ImGuiTableColumnFlags_WidthFixed, BUTTON_WIDTH, 0);
   for (i = 0; i < levels.count; i++) { DrawLevelRow(repo, i, can_build); }
   igEndTable();

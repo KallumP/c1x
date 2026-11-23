@@ -10,9 +10,10 @@ export const ONLINE_LEVEL_PREFIX = "online level: ";
 // text with its tabs and line ends made spaces, so it fits between a line's tabs
 const oneLine = (text: string) => text.replace(/[\t\r\n]/g, " ");
 
-// the prefix, then the level's id, author and name, with tabs between
-export function onlineLevelLine({ id, author, name }: OnlineLevel): string {
-  return `${ONLINE_LEVEL_PREFIX}${id}\t${oneLine(author)}\t${oneLine(name)}`;
+// the prefix, then the level's id, author, name and page, with tabs between
+export function onlineLevelLine({ id, author, name, page }: OnlineLevel): string {
+  const fields = [id, oneLine(author), oneLine(name), oneLine(page)];
+  return `${ONLINE_LEVEL_PREFIX}${fields.join("\t")}`;
 }
 
 // says each online level's line, or that there are none, or why it can't tell;

@@ -253,6 +253,7 @@ const LEVEL_ANSWER = {
   name: "Tide Ruins",
   metadata_blob: "1_tide_ruins",
   submitted_by: { username: "kallum" },
+  profile_url: "https://mod.io/g/crash-1-n-hanced/m/tide-ruins",
   modfile: { download: { binary_url: "https://mod.io/files/tide.zip" } },
 };
 
@@ -274,6 +275,7 @@ describe("listing the levels on mod.io", () => {
         id: 17302,
         name: "Tide Ruins",
         author: "kallum",
+        page: "https://mod.io/g/crash-1-n-hanced/m/tide-ruins",
         fileUrl: "https://mod.io/files/tide.zip",
       },
     ]);
@@ -302,6 +304,7 @@ describe("a level on mod.io, by its id", () => {
       id: 17302,
       name: "Tide Ruins",
       author: "kallum",
+      page: "https://mod.io/g/crash-1-n-hanced/m/tide-ruins",
       fileUrl: "https://mod.io/files/tide.zip",
     });
   });

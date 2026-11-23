@@ -4,6 +4,7 @@
  */
 #include <SDL2/SDL.h>
 #include "level_editor.h"
+#include "tool_output.h"
 #include "tools.h"
 
 int LevelEditorCommand(const char *repo, char *command, size_t size) {
@@ -48,7 +49,7 @@ int FindLevelEditorAddress(const char *dev_output, char *address, size_t size) {
   start = SDL_strstr(plain, ADDRESS_START);
   if (start) {
     while (start[length] && !SDL_isspace(start[length])) { length++; }
-    SDL_strlcpy(address, start, SDL_min(length + 1, size));
+    CopyCutShort(address, size, start, length);
   }
   SDL_free(plain);
   return start != 0;

@@ -1,7 +1,8 @@
 /*
  * the levels tab's levels shared on mod.io: listed by c1x's tools when asked,
- * each with a Download button that downloads it into level_src/ and builds it
- * (c1x_tools list-online-levels and download-level, in the background)
+ * each with a View level page button opening its page there, and a Download button that
+ * downloads it into level_src/ and builds it (c1x_tools list-online-levels and
+ * download-level, in the background)
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -81,6 +82,13 @@ static void DrawOnlineLevelRow(const char *repo, int index, int can_download) {
   igTextDisabled("by %s", found.authors[index]);
   igTableNextColumn();
   igPushID_Int(index);
+  if (found.pages[index][0]) {
+    if (igButton(VIEW_LEVEL_PAGE, (ImVec2){ButtonWidth(VIEW_LEVEL_PAGE), 0})) {
+      SDL_OpenURL(found.pages[index]);
+    }
+    DrawTooltip("Open its page on mod.io.");
+  }
+  igTableNextColumn();
   igBeginDisabled(!can_download);
   if (igButton("Download", (ImVec2){BUTTON_WIDTH, 0})) {
     StartLevelDownload(repo, index);
@@ -91,13 +99,16 @@ static void DrawOnlineLevelRow(const char *repo, int index, int can_download) {
 
 static void DrawOnlineLevelTable(const char *repo) {
   ImGuiTableFlags flags;
+  float page_width;
   int can_download, i;
 
   can_download = !IsListingOrDownloading() && CanBuildLevels(repo);
   flags = ImGuiTableFlags_SizingFixedFit;
-  if (!igBeginTable("online_levels", 3, flags, (ImVec2){0, 0}, 0)) { return; }
+  page_width = ButtonWidth(VIEW_LEVEL_PAGE);
+  if (!igBeginTable("online_levels", 4, flags, (ImVec2){0, 0}, 0)) { return; }
   igTableSetupColumn("name", ImGuiTableColumnFlags_WidthStretch, 0, 0);
   igTableSetupColumn("author", ImGuiTableColumnFlags_WidthFixed, AUTHOR_WIDTH, 0);
+  igTableSetupColumn("page", ImGuiTableColumnFlags_WidthFixed, page_width, 0);
   igTableSetupColumn("download", ImGuiTableColumnFlags_WidthFixed, BUTTON_WIDTH, 0);
   for (i = 0; i < found.count; i++) { DrawOnlineLevelRow(repo, i, can_download); }
   igEndTable();

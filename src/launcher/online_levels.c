@@ -24,11 +24,6 @@ int DownloadLevelCommand(const char *repo, int id, char *command, size_t size) {
   return ToolsCommand(repo, args, command, size);
 }
 
-/* the first length characters of text into to, cut short to fit */
-static void CopyPart(char *to, const char *text, size_t length) {
-  SDL_strlcpy(to, text, SDL_min(length + 1, ONLINE_LEVEL_TEXT_MAX));
-}
-
 /* the id at the start of a level's line, then the tab after it; 0 if there isn't one */
 static int ReadId(const char *line, size_t *length) {
   size_t digits;
@@ -39,24 +34,35 @@ static int ReadId(const char *line, size_t *length) {
   return SDL_atoi(line);
 }
 
+/* the field after field (length long), past the tab between them; 0 if there's no tab */
+static const char *FieldAfter(const char *field, size_t length) {
+  if (field[length] != '\t') { return 0; }
+  return field + length + 1;
+}
+
 /* a level's line, after its prefix, as the next of levels; a line that isn't
    one is skipped */
 static void ReadLevelLine(const char *line, online_levels *levels) {
-  size_t id_length, author_length, name_length;
-  const char *author, *name;
-  int id;
+  size_t id_length, author_length, name_length, page_length;
+  const char *author, *name, *page;
+  int id, at;
 
   id = ReadId(line, &id_length);
   if (!id) { return; }
   author = line + id_length;
   author_length = FieldLength(author);
-  if (author[author_length] != '\t') { return; }
-  name = author + author_length + 1;
-  name_length = LineLength(name);
-  if (!name[name_length]) { return; } /* no line end yet: more of it may be to come */
-  levels->ids[levels->count] = id;
-  CopyPart(levels->authors[levels->count], author, author_length);
-  CopyPart(levels->names[levels->count], name, name_length);
+  name = FieldAfter(author, author_length);
+  if (!name) { return; }
+  name_length = FieldLength(name);
+  page = FieldAfter(name, name_length);
+  if (!page) { return; }
+  page_length = LineLength(page);
+  if (!page[page_length]) { return; } /* no line end yet: more of it may be to come */
+  at = levels->count;
+  levels->ids[at] = id;
+  CopyCutShort(levels->authors[at], ONLINE_LEVEL_TEXT_MAX, author, author_length);
+  CopyCutShort(levels->names[at], ONLINE_LEVEL_TEXT_MAX, name, name_length);
+  CopyWhole(levels->pages[at], MODIO_PAGE_MAX, page, page_length);
   levels->count++;
 }
 
