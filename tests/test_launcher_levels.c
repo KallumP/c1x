@@ -250,3 +250,10 @@ UTEST(launcher_levels, a_space_in_the_level_sources_folder_url_is_escaped) {
   LevelSourcesFolderUrl("C:/my games/c1x", url, sizeof(url));
   ASSERT_STREQ("file:///C:/my%20games/c1x/level_src", url);
 }
+
+UTEST(launcher_levels, a_hash_or_percent_in_the_level_sources_folder_url_is_escaped) {
+  char url[256];
+
+  LevelSourcesFolderUrl("C:/a#b%c/c1x", url, sizeof(url));
+  ASSERT_STREQ("file:///C:/a%23b%25c/c1x/level_src", url);
+}
