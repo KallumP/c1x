@@ -232,6 +232,11 @@ static void DrawGameAdjustmentFields(void) {
     "Show how many spins Crash has left in the top right corner.");
 }
 
+static void DrawSoundFields(void) {
+  DrawFieldGroupTitle("Sound");
+  DrawOnOff("Mute", &settings.mute, "Start the game with no sound.");
+}
+
 /* the game's own save and load screens */
 static void DrawSavingFields(void) {
   DrawFieldGroupTitle("Saving");
@@ -252,6 +257,7 @@ static void DrawFields(const char *repo) {
   DrawBootLevel(repo);
   DrawDisplayFields();
   DrawGameAdjustmentFields();
+  DrawSoundFields();
   DrawSavingFields();
   DrawReplayFields();
   EndFieldRows();
