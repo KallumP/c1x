@@ -2,7 +2,7 @@
 #define _LAUNCHER_LEVELS_H_
 
 #include "pc/settings.h"
-#include "online_levels.h"
+#include "modio_page.h"
 
 #define CUSTOM_LEVELS_MAX 128
 
@@ -15,7 +15,7 @@ typedef struct {
   int out_of_date[CUSTOM_LEVELS_MAX]; /* built, but a source was saved since */
   /* its page on mod.io if it was downloaded from there (its source's .modio.json
      says), else "" */
-  char modio_pages[CUSTOM_LEVELS_MAX][ONLINE_LEVEL_PAGE_MAX];
+  char modio_pages[CUSTOM_LEVELS_MAX][MODIO_PAGE_MAX];
 } custom_levels;
 
 /* the repo's custom levels, sorted by name */

@@ -24,11 +24,6 @@ int DownloadLevelCommand(const char *repo, int id, char *command, size_t size) {
   return ToolsCommand(repo, args, command, size);
 }
 
-/* the first length characters of text into to (size long), cut short to fit */
-static void CopyPart(char *to, size_t size, const char *text, size_t length) {
-  SDL_strlcpy(to, text, SDL_min(length + 1, size));
-}
-
 /* the id at the start of a level's line, then the tab after it; 0 if there isn't one */
 static int ReadId(const char *line, size_t *length) {
   size_t digits;
@@ -59,12 +54,9 @@ static void ReadLevelLine(const char *line, online_levels *levels) {
   if (!page[page_length]) { return; } /* no line end yet: more of it may be to come */
   at = levels->count;
   levels->ids[at] = id;
-  CopyPart(levels->authors[at], ONLINE_LEVEL_TEXT_MAX, author, author_length);
-  CopyPart(levels->names[at], ONLINE_LEVEL_TEXT_MAX, name, name_length);
-  levels->pages[at][0] = 0;
-  if (page_length < ONLINE_LEVEL_PAGE_MAX) { /* cut short, it'd open a broken link */
-    CopyPart(levels->pages[at], ONLINE_LEVEL_PAGE_MAX, page, page_length);
-  }
+  CopyCutShort(levels->authors[at], ONLINE_LEVEL_TEXT_MAX, author, author_length);
+  CopyCutShort(levels->names[at], ONLINE_LEVEL_TEXT_MAX, name, name_length);
+  CopyWhole(levels->pages[at], MODIO_PAGE_MAX, page, page_length);
   levels->count++;
 }
 

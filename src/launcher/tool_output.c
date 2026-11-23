@@ -31,3 +31,14 @@ size_t FieldLength(const char *text) {
   while (!IsLineEnd(text[length]) && text[length] != '\t') { length++; }
   return length;
 }
+
+void CopyCutShort(char *to, size_t size, const char *text, size_t length) {
+  SDL_strlcpy(to, text, SDL_min(length + 1, size));
+}
+
+int CopyWhole(char *to, size_t size, const char *text, size_t length) {
+  to[0] = 0;
+  if (length >= size) { return 0; }
+  SDL_strlcpy(to, text, length + 1);
+  return 1;
+}

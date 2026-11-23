@@ -10,6 +10,7 @@
 #include "help.h"
 #include "paths.h"
 #include "text_file.h"
+#include "tool_output.h"
 
 /* whether name is one boot_level takes, by the game's own rules */
 static int IsBootableName(const char *name) {
@@ -198,8 +199,7 @@ static void PageInModioNote(const char *note, char *page, size_t size) {
   if (!end) { return; }
   length = (size_t)(end - start);
   if (HasBackslash(start, length)) { return; }
-  if (length >= size) { return; } /* cut short, it'd open a broken link */
-  SDL_strlcpy(page, start, length + 1);
+  CopyWhole(page, size, start, length);
 }
 
 /* the mod.io page of the level source called name, or "" if it wasn't downloaded */
@@ -220,7 +220,8 @@ static void FindModioPages(const char *repo, custom_levels *levels) {
   int i;
 
   for (i = 0; i < levels->count; i++) {
-    ReadModioPage(repo, levels->names[i], levels->modio_pages[i], ONLINE_LEVEL_PAGE_MAX);
+    ReadModioPage(repo, levels->names[i], levels->modio_pages[i],
+      sizeof(levels->modio_pages[i]));
   }
 }
 
