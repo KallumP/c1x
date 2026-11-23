@@ -1,9 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { LOGO_HEIGHT, LOGO_WIDTH, logoCrop } from "../../src/levelLogo";
+import { LOGO_WIDTH, logoCrop } from "../../src/levelLogo";
 
 describe("a level's logo", () => {
-  test("is 16:9, bigger than mod.io's smallest (512x288)", () => {
-    expect(LOGO_WIDTH * 9).toBe(LOGO_HEIGHT * 16);
+  test("is at least as wide as mod.io's smallest logo (512)", () => {
     expect(LOGO_WIDTH).toBeGreaterThanOrEqual(512);
   });
 

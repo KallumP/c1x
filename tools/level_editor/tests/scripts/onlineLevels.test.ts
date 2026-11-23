@@ -25,13 +25,12 @@ describe("an online level's line", () => {
 });
 
 describe("listing the online levels", () => {
-  test("says each level's line", async () => {
+  test("says each level's line, and works", async () => {
     const other = { ...TIDE_RUINS, id: 2, name: "Mossy Creek" };
-    expect((await listed([TIDE_RUINS, other])).said).toEqual([onlineLevelLine(TIDE_RUINS), onlineLevelLine(other)]);
-  });
-
-  test("works", async () => {
-    expect((await listed([TIDE_RUINS])).exitCode).toBe(0);
+    expect(await listed([TIDE_RUINS, other])).toEqual({
+      exitCode: 0,
+      said: [onlineLevelLine(TIDE_RUINS), onlineLevelLine(other)],
+    });
   });
 
   test("says when there are none", async () => {

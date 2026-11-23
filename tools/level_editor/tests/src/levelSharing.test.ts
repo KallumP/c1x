@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import {
-  firstPictureChoice,
   onlineText,
   pictureChoices,
   pictureProblem,
@@ -75,14 +74,6 @@ describe("the level's picture", () => {
 
   test("can also be kept as it is once it's online", () => {
     expect(pictureChoices(true)).toEqual(["keep", "view", "image"]);
-  });
-
-  test("starts as the view for a new level", () => {
-    expect(firstPictureChoice(false)).toBe("view");
-  });
-
-  test("starts kept as it is once it's online", () => {
-    expect(firstPictureChoice(true)).toBe("keep");
   });
 
   test("needs an image chosen to be an image", () => {

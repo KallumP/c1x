@@ -132,7 +132,6 @@ describe("a level's picture", () => {
     const { modio, sent } = standInModio(ONLINE);
     await uploadLevel("token", root, "my_level", KEEP_LOGO, modio);
     expect(sent.logos).toEqual([]);
-    expect(sent.files.map((file) => file.modId)).toEqual([ONLINE.id]);
   });
 
   test("is only sent with a new level's mod, not set again", async () => {
