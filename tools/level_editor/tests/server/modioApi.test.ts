@@ -246,20 +246,37 @@ describe("a level on mod.io", () => {
     signIn();
     const { calls } = standInCalls({ problem: "Too many requests." });
     const response = await request("GET", "/levels/1_tide_ruins", {}, calls);
-    expect([response.status, response.body.toString()]).toEqual([400, "Too many requests."]);
+    expect([response.status, response.body.toString()]).toEqual([
+      400,
+      "Too many requests.",
+    ]);
   });
 
   test("mod.io refusing the player's token signs them out", async () => {
     signIn();
-    const { calls } = standInCalls({ problem: "Your access token has expired.", signedOut: true });
+    const { calls } = standInCalls({
+      problem: "Your access token has expired.",
+      signedOut: true,
+    });
     const response = await request("GET", "/levels/1_tide_ruins", {}, calls);
-    expect([response.status, response.body.toString()]).toEqual([401, "Sign in to mod.io first."]);
+    expect([response.status, response.body.toString()]).toEqual([
+      401,
+      "Sign in to mod.io first.",
+    ]);
   });
 
   test("mod.io refusing the player's token forgets it", async () => {
     signIn();
-    const { calls } = standInCalls({ problem: "Your access token has expired.", signedOut: true });
-    await request("POST", "/levels/1_tide_ruins/upload", { summary: "A beach.", logo: "AQID" }, calls);
+    const { calls } = standInCalls({
+      problem: "Your access token has expired.",
+      signedOut: true,
+    });
+    await request(
+      "POST",
+      "/levels/1_tide_ruins/upload",
+      { summary: "A beach.", logo: "AQID" },
+      calls,
+    );
     expect(existsSync(tokenPath())).toBe(false);
   });
 

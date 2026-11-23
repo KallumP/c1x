@@ -4,7 +4,9 @@ import { errorMessage } from "../src/errorMessage";
 import type { Fetch } from "./fetch";
 
 // what mod.io answered, or why there's no answer
-export type Answer<T> = T | { problem: string };
+export type Answer<T> = T | Problem;
+// why there's no answer, signed out when mod.io refused the player's token
+export type Problem = { problem: string; signedOut?: true };
 
 // c1x's game on mod.io (https://mod.io/g/crash-1-n-hanced). the api key only
 // reads what's public, so it ships with the game, as mod.io means it to
@@ -55,6 +57,19 @@ function refusalReason(answer: unknown, status: number): string {
 const fetchWithTimeout = (fetchUrl: Fetch, url: string, init: RequestInit = {}) =>
   fetchUrl(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
 
+const isSignedInRequest = (init: RequestInit) =>
+  new Headers(init.headers).has("Authorization");
+
+// why mod.io refused a request: signed out too if it was the player's token it
+// refused (a wrong emailed code is refused the same way, but isn't signed in)
+function refusal(answer: unknown, status: number, init: RequestInit): Problem {
+  const problem = refusalReason(answer, status);
+  if (status === 401 && isSignedInRequest(init)) {
+    return { problem, signedOut: true };
+  }
+  return { problem };
+}
+
 // mod.io's answer to a request, or why there isn't one
 async function askModio(
   fetchUrl: Fetch,
@@ -65,7 +80,7 @@ async function askModio(
     const response = await fetchWithTimeout(fetchUrl, url, init);
     const answer = await response.json().catch(() => null);
     if (!response.ok) {
-      return { problem: refusalReason(answer, response.status) };
+      return refusal(answer, response.status, init);
     }
     return answer;
   } catch (error) {
@@ -73,7 +88,7 @@ async function askModio(
   }
 }
 
-export const isProblem = <T>(answer: Answer<T>): answer is { problem: string } =>
+export const isProblem = <T>(answer: Answer<T>): answer is Problem =>
   typeof answer === "object" && answer !== null && "problem" in answer;
 
 // nothing, once mod.io has done what it was asked, or why it didn't

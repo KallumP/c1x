@@ -74,6 +74,21 @@ function answered<T>(
 }
 
 const tokenPath = (repo: string) => join(repo, TOKEN_FILE);
+const forgetToken = (repo: string) => rmSync(tokenPath(repo), { force: true });
+
+// mod.io's answer to a request signed in as the player, as answered gives it, or
+// signed out, the token forgotten, when mod.io refused the token
+function answeredSignedIn<T>(
+  repo: string,
+  answer: Answer<T>,
+  toBody?: (value: T) => unknown,
+): ApiResponse {
+  if (isProblem(answer) && answer.signedOut) {
+    forgetToken(repo);
+    return NOT_SIGNED_IN;
+  }
+  return answered(answer, toBody);
+}
 
 // the player's token, if they've signed in and it hasn't run out
 function signedInToken(repo: string, now: number): string | null {
@@ -119,7 +134,7 @@ async function accountResponse(
     return signInWithBody(repo, readBody, calls);
   }
   if (method === "POST" && step === "sign-out") {
-    rmSync(tokenPath(repo), { force: true });
+    forgetToken(repo);
     return json({});
   }
   return NOT_FOUND;
@@ -134,19 +149,20 @@ function logoBytes(logo: unknown): Uint8Array | null {
 }
 
 async function uploadWithBody(
-  root: string,
+  repo: string,
   name: string,
   token: string,
   readBody: ReadBody,
   calls: ModioCalls,
 ): Promise<ApiResponse> {
+  const root = join(repo, "level_src");
   const { summary, logo } = JSON.parse(await readBody());
   const details = {
     name: levelOptions(join(root, name)).title,
     summary: String(summary),
     logo: logoBytes(logo),
   };
-  return answered(await calls.uploadLevel(token, root, name, details));
+  return answeredSignedIn(repo, await calls.uploadLevel(token, root, name, details));
 }
 
 async function levelResponse(
@@ -166,10 +182,11 @@ async function levelResponse(
     return NOT_SIGNED_IN;
   }
   if (method === "GET" && parts.length === 1) {
-    return answered(await calls.findOwnLevelMod(token, name), (online) => ({ online }));
+    const own = await calls.findOwnLevelMod(token, name);
+    return answeredSignedIn(repo, own, (online) => ({ online }));
   }
   if (method === "POST" && action === "upload" && parts.length === 2) {
-    return uploadWithBody(root, name, token, readBody, calls);
+    return uploadWithBody(repo, name, token, readBody, calls);
   }
   return NOT_FOUND;
 }
