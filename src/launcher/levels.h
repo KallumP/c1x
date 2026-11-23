@@ -27,6 +27,8 @@ typedef struct {
      says), else "" */
   char modio_pages[CUSTOM_LEVELS_MAX][MODIO_PAGE_MAX];
   level_kind kinds[CUSTOM_LEVELS_MAX];
+  /* its place among the levels that come with c1x, which they're listed in */
+  int included_ranks[CUSTOM_LEVELS_MAX];
 } custom_levels;
 
 /* the repo's custom levels by kind: those that come with c1x, in the order
