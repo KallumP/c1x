@@ -5,7 +5,7 @@ import {
   downloadLevelZip,
   findOwnLevelMod,
   listOnlineLevels,
-  onlineLevel,
+  fetchOnlineLevel,
   setLevelLogo,
   MODIO_GAME,
   emailSignInCode,
@@ -71,6 +71,11 @@ describe("adding a level's mod", () => {
     const refusal = { error: { code: 422, message: "Validation failed.", errors: { summary: "Too long." } } };
     const { fetchUrl } = standInFetch(refusal, 422);
     expect(await addLevelMod("token", NEW_LEVEL, fetchUrl)).toEqual({ problem: "Validation failed. Too long." });
+  });
+
+  test("is what mod.io answered when its refusal isn't json", async () => {
+    const fetchUrl = async () => new Response("Bad Gateway", { status: 502 });
+    expect(await addLevelMod("token", NEW_LEVEL, fetchUrl)).toEqual({ problem: "mod.io answered 502" });
   });
 
   test("says when mod.io can't be reached", async () => {
@@ -241,7 +246,7 @@ describe("listing the levels on mod.io", () => {
 describe("a level on mod.io, by its id", () => {
   test("asks for the mod with the game's api key", async () => {
     const { fetchUrl, requests } = standInFetch(LEVEL_ANSWER);
-    await onlineLevel(17302, fetchUrl);
+    await fetchOnlineLevel(17302, fetchUrl);
     const url = new URL(requests[0].url);
     expect(`${url.origin}${url.pathname}`).toBe(`${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}/mods/17302`);
     expect(url.searchParams.get("api_key")).toBe(MODIO_GAME.apiKey);
@@ -249,7 +254,7 @@ describe("a level on mod.io, by its id", () => {
 
   test("is the level", async () => {
     const { fetchUrl } = standInFetch(LEVEL_ANSWER);
-    expect(await onlineLevel(17302, fetchUrl)).toEqual({
+    expect(await fetchOnlineLevel(17302, fetchUrl)).toEqual({
       id: 17302,
       name: "Tide Ruins",
       author: "kallum",
@@ -260,7 +265,7 @@ describe("a level on mod.io, by its id", () => {
 
   test("says when it has no file yet", async () => {
     const { fetchUrl } = standInFetch({ ...LEVEL_ANSWER, modfile: null });
-    expect(await onlineLevel(17302, fetchUrl)).toEqual({ problem: "Tide Ruins has no file on mod.io yet." });
+    expect(await fetchOnlineLevel(17302, fetchUrl)).toEqual({ problem: "Tide Ruins has no file on mod.io yet." });
   });
 });
 
@@ -268,6 +273,13 @@ describe("downloading a level's zip", () => {
   test("is the file's bytes", async () => {
     const fetchUrl = async () => new Response(new Uint8Array([1, 2, 3]));
     expect(await downloadLevelZip("https://mod.io/files/tide.zip", fetchUrl)).toEqual(new Uint8Array([1, 2, 3]));
+  });
+
+  test("says when the download can't be reached", async () => {
+    const fetchUrl = async () => { throw new Error("offline"); };
+    expect(await downloadLevelZip("https://mod.io/files/tide.zip", fetchUrl)).toEqual({
+      problem: "the download failed (offline)",
+    });
   });
 
   test("says when the download is refused", async () => {

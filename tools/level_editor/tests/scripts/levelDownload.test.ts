@@ -24,7 +24,7 @@ const ZIP = zipSync({ "1_tide_ruins/tide_ruins.obj": strToU8("o Floor\n") });
 function standInCalls(answers: Partial<{ level: { problem: string }; zip: { problem: string }; builds: boolean }> = {}) {
   const asked = { ids: [] as number[], urls: [] as string[], built: [] as string[] };
   const calls: DownloadCalls = {
-    onlineLevel: async (id) => {
+    fetchOnlineLevel: async (id) => {
       asked.ids.push(id);
       return answers.level ?? TIDE_RUINS;
     },
