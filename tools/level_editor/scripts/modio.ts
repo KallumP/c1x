@@ -100,13 +100,15 @@ export async function signInWithCode(code: string, fetchUrl: Fetch = fetch): Pro
   return { token: access_token, expires: date_expires };
 }
 
+const logoFile = (logo: Uint8Array) => new File([logo], "logo.png", { type: "image/png" });
+
 function newLevelForm({ name, summary, folder, logo }: NewLevel): FormData {
   const form = new FormData();
   form.append("name", name);
   form.append("summary", summary);
   form.append("metadata_blob", folder);
   form.append("tags[]", LEVEL_TAG);
-  form.append("logo", new File([logo], "logo.png", { type: "image/png" }));
+  form.append("logo", logoFile(logo));
   return form;
 }
 
@@ -146,6 +148,26 @@ export async function findOwnLevelMod(
     return null;
   }
   return { id: mod.id, page: mod.profile_url };
+}
+
+// sets logo as the picture of the level mod modId
+export async function setLevelLogo(
+  token: string,
+  modId: number,
+  logo: Uint8Array,
+  fetchUrl: Fetch = fetch,
+): Promise<Answer<object>> {
+  const form = new FormData();
+  form.append("logo", logoFile(logo));
+  const answer = await askModio(fetchUrl, gameUrl(`/mods/${modId}/media`), {
+    method: "POST",
+    headers: signedIn(token),
+    body: form,
+  });
+  if (isProblem(answer)) {
+    return answer;
+  }
+  return {};
 }
 
 // adds zip as the newest file of the level mod modId
