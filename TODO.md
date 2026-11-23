@@ -27,6 +27,7 @@ speed run mode
 
 
 Generic
+- the new version button should just download the zip file (the name is deterministic)
 - maps should store what version it was built on
 - mute-able start
 - europe support
