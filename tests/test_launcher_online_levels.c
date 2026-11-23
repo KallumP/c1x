@@ -23,6 +23,20 @@ UTEST(launcher_online_levels, a_search_with_other_characters_runs_nothing) {
   ASSERT_FALSE(ListOnlineLevelsCommand(REPO, "tide & calc", command, sizeof(command)));
 }
 
+UTEST(launcher_online_levels, a_search_is_trimmed_with_one_space_between_words) {
+  char tidy[ONLINE_SEARCH_MAX];
+
+  TidySearch("  tide   ruins ", tidy, sizeof(tidy));
+  ASSERT_STREQ("tide ruins", tidy);
+}
+
+UTEST(launcher_online_levels, a_search_of_only_spaces_is_no_search) {
+  char tidy[ONLINE_SEARCH_MAX];
+
+  TidySearch("   ", tidy, sizeof(tidy));
+  ASSERT_STREQ("", tidy);
+}
+
 UTEST(launcher_online_levels, a_search_has_letters_numbers_spaces_dashes_underscores) {
   const char *allowed;
 
