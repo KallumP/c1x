@@ -75,7 +75,7 @@ Beside each level is whether it's built. It says `out of date` when a file in it
 - **Check again** looks for level sources added, and ones saved, since the launcher opened.
 - **Open levels folder** opens `level_src/`, to drop a level into.
 
-**Levels on mod.io** lists the levels players have shared (see [Sharing levels](custom_levels.md#sharing-levels)) when you click **Find levels**. **View level page** opens a level's page on mod.io, and **Download** puts it in `level_src/` and builds it.
+**Levels on mod.io** lists the levels players have shared (see [Sharing levels](custom_levels.md#sharing-levels)) when you click **Find levels**: the 20 most downloaded, or with part of a name in the box beside it, the levels with that in their name. **View level page** opens a level's page on mod.io, and **Download** puts it in `level_src/` and builds it.
 
 If `c1x_tools.exe` isn't there (`make` skips it without Node; see [Building](building.md#the-level-build-and-editor-without-node)), the tab says so and **Build** is greyed out.
 
