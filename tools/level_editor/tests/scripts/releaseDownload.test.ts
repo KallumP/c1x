@@ -102,7 +102,7 @@ describe("what the launcher reads", () => {
   test("starts as the launcher's code says it does", () => {
     const codeUrl = new URL("../../../../src/launcher/release_download.c", import.meta.url);
     const launcherCode = readFileSync(fileURLToPath(codeUrl), "utf8");
-    const launchersPrefix = /#define RELEASE_INSTALLED "(.*)"/.exec(launcherCode)?.[1];
+    const launchersPrefix = /#define INSTALLED_PREFIX "(.*)"/.exec(launcherCode)?.[1];
     expect(launchersPrefix).toBe(RELEASE_INSTALLED_PREFIX);
   });
 });

@@ -18,7 +18,7 @@
 
 /* what the tools say before the new version's folder. releaseDownload.ts
    has the same text, and one of its tests checks the two are the same */
-#define RELEASE_INSTALLED "installed release: "
+#define INSTALLED_PREFIX "installed release: "
 
 int DownloadReleaseCommand(const char *repo, const char *version, char *command,
   size_t size) {
@@ -29,7 +29,7 @@ int FindInstalledRelease(const char *output, char *folder, size_t size) {
   const char *rest;
   size_t length;
 
-  rest = CompleteLineAfter(output, RELEASE_INSTALLED, &length);
+  rest = CompleteLineAfter(output, INSTALLED_PREFIX, &length);
   if (!rest || length >= size) { return 0; }
   return CopyWhole(folder, size, rest, length);
 }
