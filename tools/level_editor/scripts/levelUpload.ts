@@ -2,14 +2,14 @@
 // first time, then a new file on that same mod each time after
 import { zipLevel } from "./levelZip";
 import * as modio from "./modio";
-import { isProblem, type Answer, type LevelMod, type NewLevel } from "./modio";
+import { isProblem, type Answer, type LevelMod } from "./modio";
 
 // mod.io's calls the upload makes, or a test's stand-ins for them
 export interface LevelModio {
-  findOwnLevelMod: (token: string, folder: string) => Promise<Answer<LevelMod | null>>;
-  addLevelMod: (token: string, level: NewLevel) => Promise<Answer<LevelMod>>;
-  addLevelFile: (token: string, modId: number, zip: Uint8Array) => Promise<Answer<object>>;
-  setLevelLogo: (token: string, modId: number, logo: Uint8Array) => Promise<Answer<object>>;
+  findOwnLevelMod: typeof modio.findOwnLevelMod;
+  addLevelMod: typeof modio.addLevelMod;
+  addLevelFile: typeof modio.addLevelFile;
+  setLevelLogo: typeof modio.setLevelLogo;
 }
 
 // what players see of a level's mod: its name and summary when it's new, and its
@@ -27,8 +27,8 @@ export interface Uploaded {
   isNew: boolean; // whether its mod was added, rather than updated
 }
 
-// the level's mod, with its picture set to logo if there's one
-async function updatedLevelMod(
+// the level's mod, already online, with its picture set to logo if there's one
+async function updateExistingMod(
   token: string,
   mod: LevelMod,
   logo: Uint8Array | null,
@@ -44,7 +44,7 @@ async function updatedLevelMod(
 }
 
 // the player's mod for level_src/<name>, adding one if they don't have it yet
-async function levelMod(
+async function findOrAddLevelMod(
   token: string,
   name: string,
   details: LevelDetails,
@@ -55,19 +55,21 @@ async function levelMod(
     return own;
   }
   if (own) {
-    return updatedLevelMod(token, own, details.logo, calls);
+    return updateExistingMod(token, own, details.logo, calls);
   }
-  if (!details.logo) {
+  const { logo } = details;
+  if (!logo) {
     return NO_LOGO;
   }
-  const added = await calls.addLevelMod(token, { ...details, logo: details.logo, folder: name });
+  const added = await calls.addLevelMod(token, { ...details, logo, folder: name });
   if (isProblem(added)) {
     return added;
   }
   return { mod: added, isNew: true };
 }
 
-// uploads level_src/<name>, as the player token signs in as, zipped as the newest file of its mod
+// uploads level_src/<name>, as the player token signs in as, zipped as the newest
+// file of its mod
 export async function uploadLevel(
   token: string,
   root: string,
@@ -75,7 +77,7 @@ export async function uploadLevel(
   details: LevelDetails,
   calls: LevelModio = modio,
 ): Promise<Answer<Uploaded>> {
-  const uploaded = await levelMod(token, name, details, calls);
+  const uploaded = await findOrAddLevelMod(token, name, details, calls);
   if (isProblem(uploaded)) {
     return uploaded;
   }
