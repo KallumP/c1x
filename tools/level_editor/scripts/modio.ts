@@ -1,6 +1,7 @@
 // mod.io's api, where custom levels are shared (see doc/custom_levels.md): each
 // level is a mod of c1x's game there, its file a zip of the level's source folder
 import { errorMessage } from "../src/errorMessage";
+import { fetchWithTimeout } from "./download";
 import type { Fetch } from "./fetch";
 
 // what mod.io answered, or why there's no answer
@@ -53,9 +54,6 @@ function refusalReason(answer: unknown, status: number): string {
   return [error.message, ...Object.values(error.errors ?? {})].join(" ");
 }
 
-const fetchWithTimeout = (fetchUrl: Fetch, url: string, init: RequestInit = {}) =>
-  fetchUrl(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
-
 const isSignedInRequest = (init: RequestInit) =>
   new Headers(init.headers).has("Authorization");
 
@@ -77,7 +75,7 @@ async function askModio<T>(
   init: RequestInit,
 ): Promise<Answer<T>> {
   try {
-    const response = await fetchWithTimeout(fetchUrl, url, init);
+    const response = await fetchWithTimeout(fetchUrl, url, TIMEOUT_MS, init);
     const answer = await response.json().catch(() => null);
     if (!response.ok) {
       return refusal(answer, response.status, init);
@@ -297,17 +295,3 @@ export async function fetchOnlineLevel(
   return level;
 }
 
-export async function downloadLevelZip(
-  fileUrl: string,
-  fetchUrl: Fetch = fetch,
-): Promise<Answer<Uint8Array>> {
-  try {
-    const response = await fetchWithTimeout(fetchUrl, fileUrl);
-    if (!response.ok) {
-      return { problem: `the download answered ${response.status}` };
-    }
-    return new Uint8Array(await response.arrayBuffer());
-  } catch (error) {
-    return { problem: `the download failed (${errorMessage(error)})` };
-  }
-}

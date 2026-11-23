@@ -1,12 +1,13 @@
 // c1x_tools download-level <id>: a level shared on mod.io, downloaded into
 // level_src/ and built, for the launcher's Levels tab
 import { unzipLevel } from "./levelUnzip";
-import { downloadLevelZip, isProblem, fetchOnlineLevel, type Answer } from "./modio";
+import { downloadFile } from "./download";
+import { fetchOnlineLevel, isProblem, type Answer } from "./modio";
 
 // mod.io's calls and the level build, or a test's stand-ins for them
 export interface DownloadCalls {
   fetchOnlineLevel: typeof fetchOnlineLevel;
-  downloadLevelZip: typeof downloadLevelZip;
+  downloadFile: typeof downloadFile;
   buildLevel: (name: string) => boolean; // whether it built
 }
 
@@ -20,7 +21,7 @@ async function downloadedLevel(
   if (isProblem(level)) {
     return level;
   }
-  const zip = await calls.downloadLevelZip(level.fileUrl);
+  const zip = await calls.downloadFile(level.fileUrl);
   if (isProblem(zip)) {
     return zip;
   }
