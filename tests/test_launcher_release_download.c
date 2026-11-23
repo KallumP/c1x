@@ -27,8 +27,10 @@ UTEST(launcher_release_download, finds_the_new_versions_folder) {
 UTEST(launcher_release_download, finds_nothing_before_it_says_where) {
   char folder[256];
 
-  ASSERT_FALSE(FindInstalledRelease("couldn't download c1x 1.5: the download answered 404\n",
-    folder, sizeof(folder)));
+  const char *output;
+
+  output = "couldn't download c1x 1.5: the download answered 404\n";
+  ASSERT_FALSE(FindInstalledRelease(output, folder, sizeof(folder)));
 }
 
 UTEST(launcher_release_download, finds_nothing_while_the_line_isnt_all_there) {
@@ -39,7 +41,7 @@ UTEST(launcher_release_download, finds_nothing_while_the_line_isnt_all_there) {
   ASSERT_FALSE(FindInstalledRelease(output, folder, sizeof(folder)));
 }
 
-UTEST(launcher_release_download, starts_the_launcher_at_the_top_of_the_new_folder) {
+UTEST(launcher_release_download, the_launcher_is_at_the_top_of_the_new_folder) {
   char path[256];
 
   InstalledLauncherPath("C:/Games/c1x-1.5", path, sizeof(path));
