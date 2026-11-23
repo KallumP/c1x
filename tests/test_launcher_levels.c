@@ -8,6 +8,8 @@
 #define TEST_LEVELS_REPO "build/test_launcher_levels_repo"
 #define TEST_BUILT TEST_LEVELS_REPO "/build/levels"
 #define TEST_SOURCES TEST_LEVELS_REPO "/level_src"
+#define TEST_MODIO_REPO "build/test_launcher_levels_modio"
+#define TEST_MODIO_SOURCES TEST_MODIO_REPO "/level_src"
 
 static void MakeEmptyFile(const char *folder, const char *name) {
   char path[256];
@@ -230,33 +232,45 @@ UTEST(launcher_levels, the_level_sources_folder_opens_as_a_file_url) {
   ASSERT_STREQ("file:///C:/games/c1x/level_src", url);
 }
 
-UTEST(launcher_levels, a_level_downloaded_from_mod_io_has_its_page) {
-  custom_levels levels;
+/* a level source called name in its own repo, kept apart from the other tests'
+   levels, and its .modio.json saying note, if there is one (note isn't 0) */
+static void MakeDownloadedLevel(const char *name, const char *note) {
+  char path[256];
 
-  MakeLevelsRepo();
-  MakeLevelSource("tide_ruins", 1);
-  WriteWholeFile(TEST_SOURCES "/tide_ruins/.modio.json",
+  MakeFolder(TEST_MODIO_REPO);
+  MakeFolder(TEST_MODIO_SOURCES);
+  snprintf(path, sizeof(path), "%s/%s", TEST_MODIO_SOURCES, name);
+  MakeFolder(path);
+  MakeEmptyFile(path, "map.obj");
+  if (!note) { return; }
+  snprintf(path, sizeof(path), "%s/%s/.modio.json", TEST_MODIO_SOURCES, name);
+  WriteWholeFile(path, note);
+}
+
+/* the mod.io page the launcher lists for the level source called name */
+static const char *ModioPageOf(custom_levels *levels, const char *name) {
+  ListCustomLevels(TEST_MODIO_REPO, levels);
+  return levels->modio_pages[FindCustomLevel(levels, name)];
+}
+
+UTEST(launcher_levels, a_level_downloaded_from_mod_io_has_its_page) {
+  static custom_levels levels;
+
+  MakeDownloadedLevel("tide_ruins",
     "{\"modId\":17302,\"page\":\"https://mod.io/g/c1x/m/tide-ruins\"}");
-  ListCustomLevels(TEST_LEVELS_REPO, &levels);
-  ASSERT_STREQ("https://mod.io/g/c1x/m/tide-ruins",
-    levels.modio_pages[FindCustomLevel(&levels, "tide_ruins")]);
+  ASSERT_STREQ("https://mod.io/g/c1x/m/tide-ruins", ModioPageOf(&levels, "tide_ruins"));
 }
 
 UTEST(launcher_levels, a_level_of_your_own_has_no_mod_io_page) {
-  custom_levels levels;
+  static custom_levels levels;
 
-  MakeLevelsRepo();
-  MakeLevelSource("my_level", 1);
-  ListCustomLevels(TEST_LEVELS_REPO, &levels);
-  ASSERT_STREQ("", levels.modio_pages[FindCustomLevel(&levels, "my_level")]);
+  MakeDownloadedLevel("my_level", 0);
+  ASSERT_STREQ("", ModioPageOf(&levels, "my_level"));
 }
 
 UTEST(launcher_levels, a_mod_io_note_without_a_page_has_none) {
-  custom_levels levels;
+  static custom_levels levels;
 
-  MakeLevelsRepo();
-  MakeLevelSource("old_download", 1);
-  WriteWholeFile(TEST_SOURCES "/old_download/.modio.json", "{\"modId\":17302}");
-  ListCustomLevels(TEST_LEVELS_REPO, &levels);
-  ASSERT_STREQ("", levels.modio_pages[FindCustomLevel(&levels, "old_download")]);
+  MakeDownloadedLevel("old_download", "{\"modId\":17302}");
+  ASSERT_STREQ("", ModioPageOf(&levels, "old_download"));
 }
