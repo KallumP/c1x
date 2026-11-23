@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   downloadReleaseCommand,
   downloadsFolder,
@@ -88,5 +89,15 @@ describe("downloading a release", () => {
       exitCode: 1,
       said: ["couldn't download c1x 1.5: the download answered 404"],
     });
+  });
+});
+
+describe("what the launcher reads", () => {
+  test("starts as the launcher's code says it does", () => {
+    const launcherCode = readFileSync(
+      fileURLToPath(new URL("../../../../src/launcher/release_download.c", import.meta.url)),
+      "utf8",
+    );
+    expect(/#define RELEASE_SAVED "(.*)"/.exec(launcherCode)?.[1]).toBe(RELEASE_SAVED_PREFIX);
   });
 });
