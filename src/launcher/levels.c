@@ -113,7 +113,7 @@ typedef struct {
 
 static const char *const LEVEL_KIND_TITLES[] = {
   "Comes with c1x",
-  "Downloaded from mod.io",
+  "Downloaded",
   "Your own",
 };
 

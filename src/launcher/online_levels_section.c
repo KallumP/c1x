@@ -94,7 +94,7 @@ static void DrawOnlineLevelRow(const char *repo, int index, int can_download) {
     if (igButton(VIEW_LEVEL_PAGE, (ImVec2){ButtonWidth(VIEW_LEVEL_PAGE), 0})) {
       SDL_OpenURL(found.pages[index]);
     }
-    DrawTooltip("Open its page on mod.io.");
+    DrawTooltip("Open its page in your browser.");
   }
   igTableNextColumn();
   igBeginDisabled(!can_download);
@@ -139,14 +139,14 @@ static void DrawOnlineLevelTable(const char *repo) {
 /* how the list went, in a line, with its output if it failed */
 static void DrawLevelListStatus(void) {
   if (IsBackgroundCommandRunning(&level_list)) {
-    igText("Looking on mod.io...");
+    igText("Looking for levels...");
   } else if (level_list.output[0] && level_list.exit_code != 0) {
-    igTextColored(PROBLEM_COLOUR, "Couldn't look on mod.io:");
+    igTextColored(PROBLEM_COLOUR, "Couldn't look for levels:");
     DrawCommandOutput("list_output", &level_list);
   } else if (level_list.output[0] && found.count == 0 && searched[0]) {
     igText("No levels match \"%s\".", searched);
   } else if (level_list.output[0] && found.count == 0) {
-    igText("No levels are on mod.io yet.");
+    igText("No levels are online yet.");
   }
 }
 
@@ -189,7 +189,7 @@ static void DrawSearch(const char *repo) {
   if (igButton("Find levels", (ImVec2){0, 0}) || entered) {
     StartLevelList(repo, search);
   }
-  DrawTooltip("List the levels on mod.io with this in their name.");
+  DrawTooltip("List the online levels with this in their name.");
   igEndDisabled();
 }
 
@@ -201,7 +201,7 @@ static void ListTopLevelsOnce(const char *repo) {
 
 void DrawOnlineLevelsSection(const char *repo) {
   ListTopLevelsOnce(repo);
-  DrawHeading("Levels on mod.io");
+  DrawHeading("Online levels");
   igTextWrapped("Levels other players have shared. "
     "Downloading one puts it in level_src/ and builds it.");
   DrawSearch(repo);

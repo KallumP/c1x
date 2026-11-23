@@ -66,7 +66,7 @@ The Controls tab shows each PlayStation button's keys, on its **Keyboard** tab, 
 
 ## Levels
 
-The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`. Each is listed by its title (its loading screen's, set under **Level** in the level editor), under **Comes with c1x** (the five levels that do), **Downloaded from mod.io** and **Your own**. The **Custom level** setting lists them the same way.
+The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`. Each is listed by its title (its loading screen's, set under **Level** in the level editor), under **Comes with c1x** (the five levels that do), **Downloaded** and **Your own**. The **Custom level** setting lists them the same way.
 
 Beside each level is whether it's built. It says `out of date` when a file in its source folder was saved after it was built (its `.blend` doesn't count: export the `.obj` again).
 
@@ -75,7 +75,7 @@ Beside each level is whether it's built. It says `out of date` when a file in it
 - **Check again** looks for level sources added, and ones saved, since the launcher opened.
 - **Open levels folder** opens `level_src/`, to drop a level into.
 
-**Levels on mod.io** lists the 10 most downloaded levels players have shared (see [Sharing levels](custom_levels.md#sharing-levels)) when you open the tab. Type part of a name in the box and click **Find levels** to list the levels with that in their name. **View level page** opens a level's page on mod.io, and **Download** puts it in `level_src/` and builds it.
+**Online levels** lists the 10 most downloaded levels players have shared (see [Sharing levels](custom_levels.md#sharing-levels)) when you open the tab. Type part of a name in the box and click **Find levels** to list the levels with that in their name. **View level page** opens a level's page on mod.io, and **Download** puts it in `level_src/` and builds it.
 
 If `c1x_tools.exe` isn't there (`make` skips it without Node; see [Building](building.md#the-level-build-and-editor-without-node)), the tab says so and **Build** is greyed out.
 

@@ -69,7 +69,7 @@ static void DrawModioPageButton(int index) {
   if (igButton(VIEW_LEVEL_PAGE, (ImVec2){ButtonWidth(VIEW_LEVEL_PAGE), 0})) {
     SDL_OpenURL(levels.modio_pages[index]);
   }
-  DrawTooltip("Open its page on mod.io, where it was downloaded from.");
+  DrawTooltip("Open the page it was downloaded from.");
 }
 
 static void DrawLevelRow(const char *repo, int index, int can_build) {
