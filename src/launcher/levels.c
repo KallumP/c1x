@@ -205,16 +205,27 @@ void CustomLevelLabel(const custom_levels *levels, int index, char *label, size_
   }
 }
 
-/* c onto the end of url, as a url has it: forward slashes, and spaces escaped */
+/* whether a url can have c as it is in a path: letters, digits, and - . _ ~ / : */
+static int IsUrlSafe(char c) {
+  return SDL_isalnum((unsigned char)c) || SDL_strchr("-._~/:", c);
+}
+
+/* c onto the end of url, as a url has it: forward slashes, and anything else
+   that isn't safe in one escaped as %XX */
 static void AppendUrlCharacter(char *url, size_t size, char c) {
+  char text[4];
+
   if (c == '\\') {
     SDL_strlcat(url, "/", size);
-  } else if (c == ' ') {
-    SDL_strlcat(url, "%20", size);
-  } else {
-    char one[2] = {c, 0};
-    SDL_strlcat(url, one, size);
+    return;
   }
+  if (IsUrlSafe(c)) {
+    text[0] = c;
+    text[1] = 0;
+  } else {
+    SDL_snprintf(text, sizeof(text), "%%%02X", (unsigned char)c);
+  }
+  SDL_strlcat(url, text, size);
 }
 
 void LevelSourcesFolderUrl(const char *repo, char *url, size_t size) {

@@ -95,7 +95,7 @@ static void DrawLevelTable(const char *repo, int can_build) {
 
 /* opens level_src/ in the file browser, to drop a downloaded level into */
 static void DrawOpenLevelsFolderButton(const char *repo) {
-  char url[PATH_MAX_LEN + 16];
+  char url[PATH_MAX_LEN * 3 + 16]; /* each character of the path may be escaped as 3 */
 
   if (!igButton("Open levels folder", (ImVec2){0, 0})) { return; }
   LevelSourcesFolderUrl(repo, url, sizeof(url));
