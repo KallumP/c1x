@@ -127,7 +127,7 @@ Once it's up, **Share** uploads a new version of it, keeping its summary, and it
 
 **Play someone else's from the launcher:**
 
-1. In the **Levels** tab, click **Find levels** under **Levels on mod.io**. Type part of a level's name first to search for it.
+1. Open the **Levels** tab: **Levels on mod.io** lists the most downloaded. To search for one, type part of its name and click **Find levels**.
 2. Click **Download** beside the one you want (**View level page** opens its page on mod.io). It goes in `level_src/` and builds.
 3. Choose it as the **Custom level**.
 

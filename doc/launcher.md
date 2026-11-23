@@ -35,7 +35,7 @@ If the launcher shows no button for a newer release, it couldn't check. That hap
 - **`build/c1x_tools.exe` is missing.** The check runs from it. A release comes with it, and in a project folder `make` builds it (see [Building](building.md#the-level-build-and-editor-without-node)).
 - **It's a launcher you built yourself.** That says `dev build` instead of a version, so there's nothing to compare. Only a released launcher checks (see [Releasing](releasing.md#the-launchers-version)).
 
-Besides this check, the launcher only goes online when you ask it to: installing a release, or finding and downloading levels on mod.io.
+Besides this check, the launcher only goes online for mod.io's levels, when you open the Levels tab, search or download one, and when you install a release.
 
 ## Game
 
@@ -75,7 +75,7 @@ Beside each level is whether it's built. It says `out of date` when a file in it
 - **Check again** looks for level sources added, and ones saved, since the launcher opened.
 - **Open levels folder** opens `level_src/`, to drop a level into.
 
-**Levels on mod.io** lists the levels players have shared (see [Sharing levels](custom_levels.md#sharing-levels)) when you click **Find levels**: the 20 most downloaded, or with part of a name in the box beside it, the levels with that in their name. **View level page** opens a level's page on mod.io, and **Download** puts it in `level_src/` and builds it.
+**Levels on mod.io** lists the 10 most downloaded levels players have shared (see [Sharing levels](custom_levels.md#sharing-levels)) when you open the tab. Type part of a name in the box and click **Find levels** to list the levels with that in their name. **View level page** opens a level's page on mod.io, and **Download** puts it in `level_src/` and builds it.
 
 If `c1x_tools.exe` isn't there (`make` skips it without Node; see [Building](building.md#the-level-build-and-editor-without-node)), the tab says so and **Build** is greyed out.
 
