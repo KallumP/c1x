@@ -93,3 +93,17 @@ UTEST(launcher_online_levels, no_more_levels_are_kept_than_fit) {
   FindOnlineLevels(output, &levels);
   ASSERT_EQ(ONLINE_LEVELS_MAX, levels.count);
 }
+
+UTEST(launcher_online_levels, an_id_of_0_isnt_a_level) {
+  online_levels levels;
+
+  FindOnlineLevels("online level: 0\ta\tOne\n", &levels);
+  ASSERT_EQ(0, levels.count);
+}
+
+UTEST(launcher_online_levels, an_id_too_long_for_an_int_isnt_a_level) {
+  online_levels levels;
+
+  FindOnlineLevels("online level: 1234567890\ta\tOne\n", &levels);
+  ASSERT_EQ(0, levels.count);
+}
