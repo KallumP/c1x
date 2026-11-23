@@ -2,7 +2,10 @@ import { describe, expect, test } from "vitest";
 import {
   addLevelFile,
   addLevelMod,
+  downloadLevelZip,
   findOwnLevelMod,
+  listOnlineLevels,
+  onlineLevel,
   MODIO_GAME,
   sendSignInCode,
   signInWithCode,
@@ -190,5 +193,79 @@ describe("finding the player's own mod for a level", () => {
   test("is mod.io's reason when it refuses", async () => {
     const { fetchUrl } = standInFetch({ error: { code: 401, message: "Your access token has expired." } }, 401);
     expect(await findOwnLevelMod("token", "1_tide_ruins", fetchUrl)).toEqual({ problem: "Your access token has expired." });
+  });
+});
+
+const LEVEL_ANSWER = {
+  id: 17302,
+  name: "Tide Ruins",
+  metadata_blob: "1_tide_ruins",
+  submitted_by: { username: "kallum" },
+  modfile: { download: { binary_url: "https://mod.io/files/tide.zip" } },
+};
+
+describe("listing the levels on mod.io", () => {
+  test("asks for the game's mods tagged Level, with the game's api key", async () => {
+    const { fetchUrl, requests } = standInFetch({ data: [LEVEL_ANSWER] });
+    await listOnlineLevels(fetchUrl);
+    const url = new URL(requests[0].url);
+    expect(`${url.origin}${url.pathname}`).toBe(`${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}/mods`);
+    expect(url.searchParams.get("api_key")).toBe(MODIO_GAME.apiKey);
+    expect(url.searchParams.get("tags")).toBe("Level");
+  });
+
+  test("is each level's id, name, author and folder", async () => {
+    const { fetchUrl } = standInFetch({ data: [LEVEL_ANSWER] });
+    expect(await listOnlineLevels(fetchUrl)).toEqual([
+      { id: 17302, name: "Tide Ruins", author: "kallum", folder: "1_tide_ruins", fileUrl: "https://mod.io/files/tide.zip" },
+    ]);
+  });
+
+  test("leaves out a level with no file yet", async () => {
+    const { fetchUrl } = standInFetch({ data: [{ ...LEVEL_ANSWER, modfile: null }] });
+    expect(await listOnlineLevels(fetchUrl)).toEqual([]);
+  });
+
+  test("is mod.io's reason when it refuses", async () => {
+    const { fetchUrl } = standInFetch({ error: { code: 401, message: "Invalid api key." } }, 401);
+    expect(await listOnlineLevels(fetchUrl)).toEqual({ problem: "Invalid api key." });
+  });
+});
+
+describe("a level on mod.io, by its id", () => {
+  test("asks for the mod with the game's api key", async () => {
+    const { fetchUrl, requests } = standInFetch(LEVEL_ANSWER);
+    await onlineLevel(17302, fetchUrl);
+    const url = new URL(requests[0].url);
+    expect(`${url.origin}${url.pathname}`).toBe(`${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}/mods/17302`);
+    expect(url.searchParams.get("api_key")).toBe(MODIO_GAME.apiKey);
+  });
+
+  test("is the level", async () => {
+    const { fetchUrl } = standInFetch(LEVEL_ANSWER);
+    expect(await onlineLevel(17302, fetchUrl)).toEqual({
+      id: 17302,
+      name: "Tide Ruins",
+      author: "kallum",
+      folder: "1_tide_ruins",
+      fileUrl: "https://mod.io/files/tide.zip",
+    });
+  });
+
+  test("says when it has no file yet", async () => {
+    const { fetchUrl } = standInFetch({ ...LEVEL_ANSWER, modfile: null });
+    expect(await onlineLevel(17302, fetchUrl)).toEqual({ problem: "Tide Ruins has no file on mod.io yet." });
+  });
+});
+
+describe("downloading a level's zip", () => {
+  test("is the file's bytes", async () => {
+    const fetchUrl = async () => new Response(new Uint8Array([1, 2, 3]));
+    expect(await downloadLevelZip("https://mod.io/files/tide.zip", fetchUrl)).toEqual(new Uint8Array([1, 2, 3]));
+  });
+
+  test("says when the download is refused", async () => {
+    const fetchUrl = async () => new Response("gone", { status: 404 });
+    expect(await downloadLevelZip("https://mod.io/files/tide.zip", fetchUrl)).toEqual({ problem: "the download answered 404" });
   });
 });
