@@ -88,10 +88,25 @@ describe("the editor's mod.io account", () => {
     expect(existsSync(tokenPath())).toBe(false);
   });
 
-  test("mod.io's refusal is a 400 saying why", async () => {
+  test("mod.io's refusal of the code is a 400 saying why", async () => {
     const { calls } = standInCalls({ problem: "The security code is invalid." });
     const response = await request("POST", "/code", { code: "WRONG" }, calls);
     expect([response.status, response.body.toString()]).toEqual([400, "The security code is invalid."]);
+  });
+
+  test("mod.io's refusal of the email is a 400 saying why", async () => {
+    const { calls } = standInCalls({ problem: "Invalid email." });
+    const response = await request("POST", "/email", { email: "nope" }, calls);
+    expect([response.status, response.body.toString()]).toEqual([400, "Invalid email."]);
+  });
+
+  test("a step it doesn't have is not found", async () => {
+    expect((await request("POST", "/password")).status).toBe(404);
+  });
+
+  test("a body that isn't json is a 400", async () => {
+    const response = await modioApi(repo, "POST", "/email", async () => "{ not json", standInCalls().calls);
+    expect(response.status).toBe(400);
   });
 });
 
@@ -142,6 +157,19 @@ describe("a level on mod.io", () => {
   test("needs the player signed in", async () => {
     const response = await request("POST", "/levels/1_tide_ruins/upload", { summary: "A beach.", logo: "AQID" });
     expect([response.status, response.body.toString()]).toEqual([401, "Sign in to mod.io first."]);
+  });
+
+  test("needs a sign-in that hasn't run out", async () => {
+    signIn(NOW);
+    const response = await request("GET", "/levels/1_tide_ruins");
+    expect([response.status, response.body.toString()]).toEqual([401, "Sign in to mod.io first."]);
+  });
+
+  test("GET /levels/<name> is mod.io's refusal, a 400 saying why", async () => {
+    signIn();
+    const { calls } = standInCalls({ problem: "Your access token has expired." });
+    const response = await request("GET", "/levels/1_tide_ruins", {}, calls);
+    expect([response.status, response.body.toString()]).toEqual([400, "Your access token has expired."]);
   });
 
   test("a level that isn't in level_src is not found", async () => {
