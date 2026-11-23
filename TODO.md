@@ -34,3 +34,4 @@ Generic
 - other demo showings dont work, the second one (that shows jungle rollers) opens but no gameplay shows
 - the save menu's own text no longer shows up
 - the last bonus token you get still rubber bands across the top of the screen
+- split up the tools code: tools/level_editor holds both the level editor and c1x_tools (the launcher's level build, update check and mod.io list/download), so move the launcher-only commands out from the editor's code
