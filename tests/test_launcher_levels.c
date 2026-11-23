@@ -212,15 +212,16 @@ UTEST(launcher_levels, statuses_say_whether_built_and_up_to_date) {
   ASSERT_STREQ("out of date", CustomLevelStatus(&levels, 0));
 }
 
-UTEST(launcher_levels, a_built_levels_label_is_its_name) {
+UTEST(launcher_levels, a_built_levels_label_is_its_title) {
   custom_levels levels;
   char label[64];
 
   levels.count = 1;
-  strcpy(levels.names[0], "tide_ruins");
+  strcpy(levels.names[0], "1_tide_ruins");
+  strcpy(levels.titles[0], "Tide Ruins");
   levels.built[0] = 1;
   CustomLevelLabel(&levels, 0, label, sizeof(label));
-  ASSERT_STREQ("tide_ruins", label);
+  ASSERT_STREQ("Tide Ruins", label);
 }
 
 UTEST(launcher_levels, an_unbuilt_levels_label_says_so) {
@@ -228,10 +229,11 @@ UTEST(launcher_levels, an_unbuilt_levels_label_says_so) {
   char label[64];
 
   levels.count = 1;
-  strcpy(levels.names[0], "sunset_canyon");
+  strcpy(levels.names[0], "3_sunset_canyon");
+  strcpy(levels.titles[0], "Sunset Canyon");
   levels.built[0] = 0;
   CustomLevelLabel(&levels, 0, label, sizeof(label));
-  ASSERT_STREQ("sunset_canyon (not built)", label);
+  ASSERT_STREQ("Sunset Canyon (not built)", label);
 }
 
 UTEST(launcher_levels, the_level_sources_folder_opens_as_a_file_url) {
