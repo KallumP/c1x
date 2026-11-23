@@ -40,7 +40,8 @@ describe("unzipping a level", () => {
 
   test("notes which mod.io level it is", () => {
     unzipLevel(root, zipOf(TIDE_RUINS), 17302);
-    expect(JSON.parse(readFileSync(join(root, "1_tide_ruins", ".modio.json"), "utf8"))).toEqual({
+    const note = readFileSync(join(root, "1_tide_ruins", ".modio.json"), "utf8");
+    expect(JSON.parse(note)).toEqual({
       modId: 17302,
     });
   });
@@ -69,7 +70,11 @@ describe("unzipping a level", () => {
     ]);
   });
 
-  test.each(["1_tide_ruins/..\\escape.obj", "1_tide_ruins/C:escape.obj", "1_tide_ruins/.."])(
+  test.each([
+    "1_tide_ruins/..\\escape.obj",
+    "1_tide_ruins/C:escape.obj",
+    "1_tide_ruins/..",
+  ])(
     "skips a file whose name could leave the level's folder: %j",
     (path) => {
       unzipLevel(root, zipOf([...TIDE_RUINS, path]), 17302);

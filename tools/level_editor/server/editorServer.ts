@@ -69,7 +69,8 @@ async function answer(req: IncomingMessage, res: ServerResponse, { repo, pageDir
   if (found) {
     const [path, api] = found;
     const apiPath = url.slice(path.length) || "/";
-    const answered = await api(repo, req.method ?? "GET", apiPath, () => requestBody(req));
+    const readBody = () => requestBody(req);
+    const answered = await api(repo, req.method ?? "GET", apiPath, readBody);
     sendApiResponse(res, answered);
     return;
   }

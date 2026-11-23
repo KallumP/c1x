@@ -17,7 +17,8 @@ export function levelSourcesApi(root: string): Plugin {
       });
       server.middlewares.use("/api/modio", async (req, res) => {
         const readBody = () => requestBody(req);
-        const answer = await modioApi(repo, req.method ?? "GET", req.url ?? "/", readBody);
+        const path = req.url ?? "/";
+        const answer = await modioApi(repo, req.method ?? "GET", path, readBody);
         sendApiResponse(res, answer);
       });
     },

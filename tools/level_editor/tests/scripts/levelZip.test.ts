@@ -37,9 +37,8 @@ describe("a level's zip", () => {
 
   test("keeps each file's contents", () => {
     makeLevel("my_level", ["my_level.obj"]);
-    expect(strFromU8(unzipSync(zipLevel(root, "my_level"))["my_level/my_level.obj"])).toBe(
-      "my_level.obj",
-    );
+    const unzipped = unzipSync(zipLevel(root, "my_level"));
+    expect(strFromU8(unzipped["my_level/my_level.obj"])).toBe("my_level.obj");
   });
 
   test("holds its own song and loading screen", () => {
