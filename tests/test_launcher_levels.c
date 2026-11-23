@@ -465,3 +465,19 @@ UTEST(launcher_levels, each_kind_of_level_has_a_section_title) {
   ASSERT_STREQ("Downloaded from mod.io", LevelKindTitle(LEVEL_DOWNLOADED));
   ASSERT_STREQ("Your own", LevelKindTitle(LEVEL_OWN));
 }
+
+UTEST(launcher_levels, the_first_level_of_a_kind_starts_its_section) {
+  static custom_levels levels;
+
+  ListLevelsOfEachKind(&levels);
+  ASSERT_TRUE(StartsLevelKind(&levels, FindCustomLevel(&levels, "zz_download")));
+}
+
+UTEST(launcher_levels, a_level_after_one_of_its_kind_doesnt_start_a_section) {
+  static custom_levels levels;
+  const char *names[] = { "aardvark", "beaver", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_one_kind", names, 0, 0);
+  ListCustomLevels("build/test_launcher_levels_one_kind", &levels);
+  ASSERT_FALSE(StartsLevelKind(&levels, 1));
+}
