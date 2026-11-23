@@ -3,8 +3,7 @@ import type { LevelInfo } from "../api";
 import { imageLogo, viewLogo } from "../levelLogo";
 import {
   pictureChoices,
-  pictureProblem,
-  summaryProblem,
+  uploadProblem,
   type PictureChoice,
 } from "../levelSharing";
 import {
@@ -51,7 +50,7 @@ function usePicture(online: LevelMod | null | undefined) {
     setChoice("image");
   };
 
-  return { choice, setChoice, viewPicture, imagePicture, chooseImage, chosen };
+  return { choice, setChoice, imagePicture, chosen, chooseImage };
 }
 
 // uploading the open level to mod.io once the player's signed in: a new mod, with
@@ -90,29 +89,19 @@ export function useLevelUpload(
     fetchOwnLevelMod(level.name).then(setOnline, showFailure);
   }, [level, signedIn]);
 
-  // a new level needs a summary; a new version keeps its mod's. either needs its picture
-  const typedProblem = () => {
-    if (!online) {
-      const summaryFault = summaryProblem(summary);
-      if (summaryFault) {
-        return summaryFault;
-      }
-    }
-    return pictureProblem(picture.choice, picture.imagePicture !== null);
-  };
-
-  const sendUpload = async (name: string) => {
+  const sendUpload = async () => {
     if (!(await save())) {
       setProblem("It didn't save, so it wasn't uploaded.");
       return;
     }
-    const done = await uploadLevel(name, summary.trim(), picture.chosen());
+    const done = await uploadLevel(level.name, summary.trim(), picture.chosen());
     setUploaded(done);
     setOnline(done.mod);
   };
 
   const upload = async () => {
-    const found = typedProblem();
+    const hasImage = picture.imagePicture !== null;
+    const found = uploadProblem(Boolean(online), summary, picture.choice, hasImage);
     setProblem(found);
     if (found || isBusy) {
       return;
@@ -120,7 +109,7 @@ export function useLevelUpload(
     setIsBusy(true);
     setUploaded(null);
     try {
-      await sendUpload(level.name);
+      await sendUpload();
     } catch (error) {
       showFailure(error);
     } finally {
@@ -130,6 +119,7 @@ export function useLevelUpload(
 
   const chooseImage = (file: File) =>
     picture.chooseImage(file).catch((error) => setProblem(errorMessage(error)));
+  const { choice, setChoice, imagePicture, chosen } = picture;
 
   return {
     online,
@@ -139,7 +129,7 @@ export function useLevelUpload(
     isBusy,
     uploaded,
     upload,
-    picture,
+    picture: { choice, setChoice, imagePicture, chosen },
     chooseImage,
   };
 }

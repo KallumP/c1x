@@ -65,6 +65,23 @@ export function pictureChoices(isOnline: boolean): PictureChoice[] {
   return ["view", "image"];
 }
 
+// why the level can't be uploaded as it's set up, or null if it can: a new level
+// needs a summary (one already online keeps its own), and an image needs choosing
+export function uploadProblem(
+  isOnline: boolean,
+  summary: string,
+  choice: PictureChoice,
+  hasImage: boolean,
+): string | null {
+  if (!isOnline) {
+    const missingSummary = summaryProblem(summary);
+    if (missingSummary) {
+      return missingSummary;
+    }
+  }
+  return pictureProblem(choice, hasImage);
+}
+
 export function pictureProblem(choice: PictureChoice, hasImage: boolean): string | null {
   if (choice === "image" && !hasImage) {
     return "Choose an image for its picture first.";

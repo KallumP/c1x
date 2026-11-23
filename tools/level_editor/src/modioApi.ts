@@ -8,7 +8,6 @@ export type { LevelMod, Uploaded };
 // the server's answer when the player's sign-in is missing or has run out
 const NOT_SIGNED_IN = 401;
 
-// a refusal from the editor server: its text, and its status
 class RefusedError extends Error {
   constructor(message: string, readonly status: number) {
     super(message);

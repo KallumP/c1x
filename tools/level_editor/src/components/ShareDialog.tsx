@@ -77,7 +77,7 @@ export default function ShareDialog({ level, save, onClose }: {
       return <p>Checking whether it's online...</p>;
     }
     if (online === null) {
-      return <p>{onlineText(false).before}</p>;
+      return <p>{renderLinkedText(onlineText(false), "")}</p>;
     }
     return <p>{renderLinkedText(onlineText(true), online.page)}</p>;
   };
