@@ -216,6 +216,30 @@ static void FindModioPages(const char *repo, custom_levels *levels) {
   }
 }
 
+/* the title of the level called name, by its source's level.cfg if it has one */
+static void ReadLevelTitle(const char *repo, const char *name, char *title, size_t size) {
+  char path[PATH_MAX_LEN], file[SETTINGS_BOOT_LEVEL_MAX+32];
+  char *cfg;
+
+  SDL_snprintf(file, sizeof(file), "level_src/%s/level.cfg", name);
+  JoinPath(path, sizeof(path), repo, file);
+  cfg = ReadWholeFile(path);
+  if (!cfg) {
+    LevelTitle(name, "", title, size);
+    return;
+  }
+  LevelTitle(name, cfg, title, size);
+  SDL_free(cfg);
+}
+
+static void FindTitles(const char *repo, custom_levels *levels) {
+  int i;
+
+  for (i = 0; i < levels->count; i++) {
+    ReadLevelTitle(repo, levels->names[i], levels->titles[i], sizeof(levels->titles[i]));
+  }
+}
+
 void ListCustomLevels(const char *repo, custom_levels *levels) {
   char folder[PATH_MAX_LEN];
 
@@ -227,6 +251,7 @@ void ListCustomLevels(const char *repo, custom_levels *levels) {
   SortLevels(levels);
   MarkOutOfDateLevels(repo, levels);
   FindModioPages(repo, levels);
+  FindTitles(repo, levels);
 }
 
 /* the index of the level called name, or -1 if there's none */

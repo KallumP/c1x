@@ -3,6 +3,7 @@
 
 #include "pc/settings.h"
 #include "modio_page.h"
+#include "level_title.h"
 
 #define CUSTOM_LEVELS_MAX 128
 
@@ -10,7 +11,9 @@
    into, and the level sources in level_src/ (a folder with a map) */
 typedef struct {
   int count;
+  /* its name: its folder's, and what boot_level says */
   char names[CUSTOM_LEVELS_MAX][SETTINGS_BOOT_LEVEL_MAX+1];
+  char titles[CUSTOM_LEVELS_MAX][LEVEL_TITLE_MAX]; /* what the launcher shows it as */
   int built[CUSTOM_LEVELS_MAX];
   int out_of_date[CUSTOM_LEVELS_MAX]; /* built, but a source was saved since */
   /* its page on mod.io if it was downloaded from there (its source's .modio.json
