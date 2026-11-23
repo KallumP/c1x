@@ -18,7 +18,7 @@ int IsSearchCharacter(int c) {
   return SDL_isalnum(c) || c == ' ' || c == '-' || c == '_';
 }
 
-static int IsSearch(const char *name) {
+static int CanSearchFor(const char *name) {
   size_t i;
 
   for (i = 0; name[i]; i++) {
@@ -31,7 +31,7 @@ int ListOnlineLevelsCommand(const char *repo, const char *name, char *command,
   size_t size) {
   char args[sizeof(LIST_COMMAND) + ONLINE_SEARCH_MAX];
 
-  if (!IsSearch(name)) { return 0; }
+  if (!CanSearchFor(name)) { return 0; }
   if (!name[0]) { return ToolsCommand(repo, LIST_COMMAND, command, size); }
   SDL_snprintf(args, sizeof(args), LIST_COMMAND " %s", name);
   return ToolsCommand(repo, args, command, size);
