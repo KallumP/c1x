@@ -1,20 +1,24 @@
-// the level editor's mod.io api, for sharing a level from the editor. paths are after /api/modio:
-//   GET  /account                    whether the player is signed in ({ signedIn })
-//   POST /email                      has mod.io email the player a code ({ email })
-//   POST /code                       signs in with it ({ code }), keeping the token in modio_token.json
-//   POST /sign-out                   forgets the token
-//   GET  /levels/<name>              the player's mod for the level, if they have one ({ online })
-//   POST /levels/<name>/upload       uploads it ({ summary, logo: a base64 png, or null to keep
-//                                    the picture it has }), as an Uploaded
+// the level editor's mod.io api, for sharing a level from the editor. paths are
+// after /api/modio:
+//   GET  /account               whether the player is signed in ({ signedIn })
+//   POST /email                 has mod.io email the player a code ({ email })
+//   POST /code                  signs in with it ({ code }), keeping the token in
+//                               modio_token.json
+//   POST /sign-out              forgets the token
+//   GET  /levels/<name>         the player's mod for the level, if they have one
+//                               ({ online })
+//   POST /levels/<name>/upload  uploads it ({ summary, logo: a base64 png, or null to
+//                               keep the picture it has }), as an Uploaded
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { levelOptions } from "../builder/levelCfg";
 import { uploadLevel } from "../scripts/levelUpload";
 import {
+  emailSignInCode,
   findOwnLevelMod,
   isProblem,
-  emailSignInCode,
   signInWithCode,
+  type Answer,
   type SignIn,
 } from "../scripts/modio";
 import type { ApiResponse } from "./api";
@@ -42,16 +46,27 @@ const MODIO_CALLS: ModioCalls = {
 
 const TOKEN_FILE = "modio_token.json";
 const NOT_FOUND: ApiResponse = { status: 404, type: "text/plain", body: "not found" };
-const NOT_SIGNED_IN: ApiResponse = { status: 401, type: "text/plain", body: "Sign in to mod.io first." };
-const json = (value: unknown): ApiResponse => ({ status: 200, type: "application/json", body: JSON.stringify(value) });
+const NOT_SIGNED_IN: ApiResponse = {
+  status: 401,
+  type: "text/plain",
+  body: "Sign in to mod.io first.",
+};
+const json = (value: unknown): ApiResponse => ({
+  status: 200,
+  type: "application/json",
+  body: JSON.stringify(value),
+});
 const refused = (problem: string): ApiResponse => ({ status: 400, type: "text/plain", body: problem });
 
 // mod.io's answer as json, or a 400 saying why it refused
-function answered<T>(answer: T | { problem: string }, toBody: (value: T) => unknown): ApiResponse {
+function answered<T>(
+  answer: Answer<T>,
+  toBody: (value: T) => unknown = (value) => value,
+): ApiResponse {
   if (isProblem(answer)) {
     return refused(answer.problem);
   }
-  return json(toBody(answer as T));
+  return json(toBody(answer));
 }
 
 const tokenPath = (repo: string) => join(repo, TOKEN_FILE);
@@ -68,7 +83,11 @@ function signedInToken(repo: string, now: number): string | null {
   return token;
 }
 
-async function signInWithBody(repo: string, readBody: ReadBody, calls: ModioCalls): Promise<ApiResponse> {
+async function signInWithBody(
+  repo: string,
+  readBody: ReadBody,
+  calls: ModioCalls,
+): Promise<ApiResponse> {
   const { code } = JSON.parse(await readBody());
   const signIn = await calls.signInWithCode(String(code));
   if (isProblem(signIn)) {
@@ -90,7 +109,7 @@ async function accountResponse(
   }
   if (method === "POST" && step === "email") {
     const { email } = JSON.parse(await readBody());
-    return answered(await calls.emailSignInCode(String(email)), () => ({}));
+    return answered(await calls.emailSignInCode(String(email)));
   }
   if (method === "POST" && step === "code") {
     return signInWithBody(repo, readBody, calls);
@@ -123,7 +142,7 @@ async function uploadWithBody(
     summary: String(summary),
     logo: logoBytes(logo),
   };
-  return answered(await calls.uploadLevel(token, root, name, details), (uploaded) => uploaded);
+  return answered(await calls.uploadLevel(token, root, name, details));
 }
 
 async function levelResponse(

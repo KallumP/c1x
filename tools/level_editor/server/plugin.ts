@@ -1,4 +1,5 @@
-// the editor's apis on vite's dev server: api.ts at /api/levels, and modioApi.ts at /api/modio
+// the editor's apis on vite's dev server: api.ts at /api/levels, and modioApi.ts at
+// /api/modio
 import { dirname } from "node:path";
 import type { Plugin } from "vite";
 import { levelsApi } from "./api";
@@ -15,7 +16,8 @@ export function levelSourcesApi(root: string): Plugin {
         sendApiResponse(res, await levelsApi(repo, req.method ?? "GET", req.url ?? "/", () => requestBody(req)));
       });
       server.middlewares.use("/api/modio", async (req, res) => {
-        sendApiResponse(res, await modioApi(repo, req.method ?? "GET", req.url ?? "/", () => requestBody(req)));
+        const answer = await modioApi(repo, req.method ?? "GET", req.url ?? "/", () => requestBody(req));
+        sendApiResponse(res, answer);
       });
     },
   };

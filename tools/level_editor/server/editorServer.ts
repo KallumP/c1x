@@ -13,12 +13,17 @@ export interface EditorServerOptions {
   firstPort: number; // the port it tries first; then the next, and so on
 }
 
-type Api = (repo: string, method: string, path: string, readBody: () => Promise<string>) => Promise<ApiResponse>;
+type Api = (
+  repo: string,
+  method: string,
+  path: string,
+  readBody: () => Promise<string>,
+) => Promise<ApiResponse>;
 
 // each api, by the path it's under
 const APIS: [string, Api][] = [
   ["/api/levels", levelsApi],
-  ["/api/modio", (repo, method, path, readBody) => modioApi(repo, method, path, readBody)],
+  ["/api/modio", modioApi],
 ];
 const PORTS_TRIED = 20;
 const PAGE_TYPES: Record<string, string> = {
@@ -55,14 +60,16 @@ function sendPageFile(res: ServerResponse, pageDir: string, urlPath: string): vo
   sendApiResponse(res, { status: 200, type: PAGE_TYPES[extname(file).toLowerCase()] ?? "application/octet-stream", body: readFileSync(file) });
 }
 
-const isUnder = (url: string, path: string) => url === path || url.startsWith(`${path}/`) || url.startsWith(`${path}?`);
+const isUnder = (url: string, path: string) =>
+  url === path || url.startsWith(`${path}/`) || url.startsWith(`${path}?`);
 
 async function answer(req: IncomingMessage, res: ServerResponse, { repo, pageDir }: EditorServerOptions): Promise<void> {
   const url = req.url ?? "/";
   const found = APIS.find(([path]) => isUnder(url, path));
   if (found) {
     const [path, api] = found;
-    sendApiResponse(res, await api(repo, req.method ?? "GET", url.slice(path.length) || "/", () => requestBody(req)));
+    const apiPath = url.slice(path.length) || "/";
+    sendApiResponse(res, await api(repo, req.method ?? "GET", apiPath, () => requestBody(req)));
     return;
   }
   sendPageFile(res, pageDir, url);
