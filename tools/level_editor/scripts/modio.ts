@@ -111,7 +111,11 @@ function newLevelForm({ name, summary, folder, logo }: NewLevel): FormData {
 }
 
 // adds a level as a new mod of the game, as the player token signs in as
-export async function addLevelMod(token: string, level: NewLevel, fetchUrl: Fetch = fetch): Promise<Answer<LevelMod>> {
+export async function addLevelMod(
+  token: string,
+  level: NewLevel,
+  fetchUrl: Fetch = fetch,
+): Promise<Answer<LevelMod>> {
   const answer = await askModio(fetchUrl, gameUrl("/mods"), {
     method: "POST",
     headers: signedIn(token),
@@ -125,9 +129,14 @@ export async function addLevelMod(token: string, level: NewLevel, fetchUrl: Fetc
 }
 
 // the mod the player token signs in as added for the level in level_src/<folder>, or null if they haven't
-export async function findOwnLevelMod(token: string, folder: string, fetchUrl: Fetch = fetch): Promise<Answer<LevelMod | null>> {
+export async function findOwnLevelMod(
+  token: string,
+  folder: string,
+  fetchUrl: Fetch = fetch,
+): Promise<Answer<LevelMod | null>> {
   const query = new URLSearchParams({ game_id: String(MODIO_GAME.gameId), metadata_blob: folder });
-  const answer = await askModio(fetchUrl, `${MODIO_GAME.apiUrl}/me/mods?${query}`, { headers: signedIn(token) });
+  const url = `${MODIO_GAME.apiUrl}/me/mods?${query}`;
+  const answer = await askModio(fetchUrl, url, { headers: signedIn(token) });
   if (isProblem(answer)) {
     return answer;
   }
@@ -140,7 +149,12 @@ export async function findOwnLevelMod(token: string, folder: string, fetchUrl: F
 }
 
 // adds zip as the newest file of the level mod modId
-export async function addLevelFile(token: string, modId: number, zip: Uint8Array, fetchUrl: Fetch = fetch): Promise<Answer<object>> {
+export async function addLevelFile(
+  token: string,
+  modId: number,
+  zip: Uint8Array,
+  fetchUrl: Fetch = fetch,
+): Promise<Answer<object>> {
   const form = new FormData();
   form.append("filedata", new File([zip], "level.zip", { type: "application/zip" }));
   const answer = await askModio(fetchUrl, gameUrl(`/mods/${modId}/files`), {

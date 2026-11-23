@@ -64,7 +64,8 @@ describe("adding a level's mod", () => {
   });
 
   test("is mod.io's reason when it refuses", async () => {
-    const { fetchUrl } = standInFetch({ error: { code: 422, message: "Validation failed.", errors: { summary: "Too long." } } }, 422);
+    const refusal = { error: { code: 422, message: "Validation failed.", errors: { summary: "Too long." } } };
+    const { fetchUrl } = standInFetch(refusal, 422);
     expect(await addLevelMod("token", NEW_LEVEL, fetchUrl)).toEqual({ problem: "Validation failed. Too long." });
   });
 
@@ -159,7 +160,10 @@ describe("finding the player's own mod for a level", () => {
     await findOwnLevelMod("token", "1_tide_ruins", fetchUrl);
     const url = new URL(requests[0].url);
     expect(`${url.origin}${url.pathname}`).toBe(`${MODIO_GAME.apiUrl}/me/mods`);
-    expect(Object.fromEntries(url.searchParams)).toEqual({ game_id: String(MODIO_GAME.gameId), metadata_blob: "1_tide_ruins" });
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      game_id: String(MODIO_GAME.gameId),
+      metadata_blob: "1_tide_ruins",
+    });
   });
 
   test("signs in with the player's token", async () => {

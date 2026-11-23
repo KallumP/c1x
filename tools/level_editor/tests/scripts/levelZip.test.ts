@@ -39,7 +39,11 @@ describe("a level's zip", () => {
 
   test("holds its own song and loading screen", () => {
     makeLevel("my_level", ["my_level.obj", "song.ogg", "loading.png"]);
-    expect(zippedNames(zipLevel(root, "my_level"))).toEqual(["my_level/loading.png", "my_level/my_level.obj", "my_level/song.ogg"]);
+    expect(zippedNames(zipLevel(root, "my_level"))).toEqual([
+      "my_level/loading.png",
+      "my_level/my_level.obj",
+      "my_level/song.ogg",
+    ]);
   });
 
   test("leaves out the game's own images its game_textures.json lists, but keeps the list", () => {

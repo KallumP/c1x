@@ -22,8 +22,14 @@ const NEW_MOD: LevelMod = { id: 20000, page: "https://test.mod.io/m/new" };
 
 // stand-ins for mod.io's calls: the player has the mod own (or none), and each
 // call answers as given; what they were sent is kept
-function standInModio(own: LevelMod | null, answers: Partial<Record<keyof LevelModio, { problem: string }>> = {}) {
-  const sent = { newLevels: [] as NewLevel[], files: [] as { modId: number; zip: Uint8Array }[], tokens: [] as string[] };
+type Refusals = Partial<Record<keyof LevelModio, { problem: string }>>;
+
+function standInModio(own: LevelMod | null, answers: Refusals = {}) {
+  const sent = {
+    newLevels: [] as NewLevel[],
+    files: [] as { modId: number; zip: Uint8Array }[],
+    tokens: [] as string[],
+  };
   const modio: LevelModio = {
     findOwnLevelMod: async (token) => {
       sent.tokens.push(token);
