@@ -68,8 +68,8 @@ async function findOrAddLevelMod(
   return { mod: added, isNew: true };
 }
 
-// uploads level_src/<name>, as the player token signs in as, zipped as the newest
-// file of its mod
+// uploads level_src/<name>, signed in with the player's token, zipped as the
+// newest file of its mod
 export async function uploadLevel(
   token: string,
   root: string,

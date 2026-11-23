@@ -69,19 +69,20 @@ function refusal(answer: unknown, status: number, init: RequestInit): Problem {
   return { problem };
 }
 
-// mod.io's answer to a request, or why there isn't one
-async function askModio(
+// mod.io's answer to a request, taken to be a T (the shape mod.io documents for
+// it), or why there isn't one
+async function askModio<T>(
   fetchUrl: Fetch,
   url: string,
   init: RequestInit,
-): Promise<Answer<unknown>> {
+): Promise<Answer<T>> {
   try {
     const response = await fetchWithTimeout(fetchUrl, url, init);
     const answer = await response.json().catch(() => null);
     if (!response.ok) {
       return refusal(answer, response.status, init);
     }
-    return answer;
+    return answer as T;
   } catch (error) {
     return { problem: `mod.io couldn't be reached (${errorMessage(error)})` };
   }
@@ -104,12 +105,12 @@ export interface SignIn {
 }
 
 // posts fields as a form, with the game's api key, to one of mod.io's sign-in steps
-function askSignIn(
+function askSignIn<T>(
   step: string,
   fields: Record<string, string>,
   fetchUrl: Fetch,
-): Promise<Answer<unknown>> {
-  return askModio(fetchUrl, `${MODIO_GAME.apiUrl}/oauth/${step}`, {
+): Promise<Answer<T>> {
+  return askModio<T>(fetchUrl, `${MODIO_GAME.apiUrl}/oauth/${step}`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded", ...JSON_ACCEPTED },
     body: new URLSearchParams({ api_key: MODIO_GAME.apiKey, ...fields }).toString(),
@@ -129,11 +130,12 @@ export async function signInWithCode(
   code: string,
   fetchUrl: Fetch = fetch,
 ): Promise<Answer<SignIn>> {
-  const answer = await askSignIn("emailexchange", { security_code: code }, fetchUrl);
+  const fields = { security_code: code };
+  const answer = await askSignIn<SignInAnswer>("emailexchange", fields, fetchUrl);
   if (isProblem(answer)) {
     return answer;
   }
-  const { access_token, date_expires } = answer as SignInAnswer;
+  const { access_token, date_expires } = answer;
   return { token: access_token, expires: date_expires };
 }
 
@@ -150,13 +152,13 @@ function newLevelForm({ name, summary, folder, logo }: NewLevel): FormData {
   return form;
 }
 
-// adds a level as a new mod of the game, as the player token signs in as
+// adds a level as a new mod of the game, signed in with the player's token
 export async function addLevelMod(
   token: string,
   level: NewLevel,
   fetchUrl: Fetch = fetch,
 ): Promise<Answer<LevelMod>> {
-  const answer = await askModio(fetchUrl, gameUrl("/mods"), {
+  const answer = await askModio<ModAnswer>(fetchUrl, gameUrl("/mods"), {
     method: "POST",
     headers: signedInHeaders(token),
     body: newLevelForm(level),
@@ -164,12 +166,12 @@ export async function addLevelMod(
   if (isProblem(answer)) {
     return answer;
   }
-  const { id, profile_url } = answer as ModAnswer;
+  const { id, profile_url } = answer;
   return { id, page: profile_url };
 }
 
-// the mod the player token signs in as added for the level in level_src/<folder>,
-// or null if they haven't
+// the mod the player, signed in with their token, added for the level in
+// level_src/<folder>, or null if they haven't
 export async function findOwnLevelMod(
   token: string,
   folder: string,
@@ -180,11 +182,13 @@ export async function findOwnLevelMod(
     metadata_blob: folder,
   });
   const url = `${MODIO_GAME.apiUrl}/me/mods?${query}`;
-  const answer = await askModio(fetchUrl, url, { headers: signedInHeaders(token) });
+  const answer = await askModio<{ data: ModAnswer[] }>(fetchUrl, url, {
+    headers: signedInHeaders(token),
+  });
   if (isProblem(answer)) {
     return answer;
   }
-  const mods = (answer as { data: ModAnswer[] }).data;
+  const mods = answer.data;
   const mod = mods.find((candidate) => candidate.metadata_blob === folder);
   if (!mod) {
     return null;
@@ -192,8 +196,8 @@ export async function findOwnLevelMod(
   return { id: mod.id, page: mod.profile_url };
 }
 
-// posts file as a form's field to one of the game's paths, as the player token
-// signs in as
+// posts file as a form's field to one of the game's paths, signed in with the
+// player's token
 async function postSignedInFile(
   token: string,
   path: string,
@@ -255,20 +259,23 @@ function onlineLevelOf(mod: OnlineModAnswer): OnlineLevel | null {
   };
 }
 
-const publicUrl = (path: string, query: Record<string, string> = {}) =>
-  `${gameUrl(path)}?${new URLSearchParams({ api_key: MODIO_GAME.apiKey, ...query })}`;
+const publicUrl = (path: string) =>
+  `${gameUrl(path)}?${new URLSearchParams({ api_key: MODIO_GAME.apiKey })}`;
 
 // the game's levels with a file to download: all its mods, as a level
 // uploaded by hand may not be tagged
 export async function listOnlineLevels(
   fetchUrl: Fetch = fetch,
 ): Promise<Answer<OnlineLevel[]>> {
-  const answer = await askModio(fetchUrl, publicUrl("/mods"), { headers: JSON_ACCEPTED });
+  const url = publicUrl("/mods");
+  const answer = await askModio<{ data: OnlineModAnswer[] }>(fetchUrl, url, {
+    headers: JSON_ACCEPTED,
+  });
   if (isProblem(answer)) {
     return answer;
   }
-  const mods = (answer as { data: OnlineModAnswer[] }).data;
-  return mods.map(onlineLevelOf).filter((level): level is OnlineLevel => level !== null);
+  const levels = answer.data.map(onlineLevelOf);
+  return levels.filter((level): level is OnlineLevel => level !== null);
 }
 
 export async function fetchOnlineLevel(
@@ -276,11 +283,10 @@ export async function fetchOnlineLevel(
   fetchUrl: Fetch = fetch,
 ): Promise<Answer<OnlineLevel>> {
   const url = publicUrl(`/mods/${modId}`);
-  const answer = await askModio(fetchUrl, url, { headers: JSON_ACCEPTED });
-  if (isProblem(answer)) {
-    return answer;
+  const mod = await askModio<OnlineModAnswer>(fetchUrl, url, { headers: JSON_ACCEPTED });
+  if (isProblem(mod)) {
+    return mod;
   }
-  const mod = answer as OnlineModAnswer;
   const level = onlineLevelOf(mod);
   if (!level) {
     return { problem: `${mod.name} has no file on mod.io yet.` };
