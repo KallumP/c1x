@@ -1,0 +1,176 @@
+// the level editor's mod.io api, for sharing a level from the editor. paths are after /api/modio:
+//   GET  /account                    whether the player is signed in ({ signedIn })
+//   POST /email                      has mod.io email the player a code ({ email })
+//   POST /code                       signs in with it ({ code }), keeping the token in modio_token.json
+//   POST /sign-out                   forgets the token
+//   GET  /levels/<name>              the player's mod for the level, if they have one ({ online })
+//   POST /levels/<name>/upload       uploads it ({ summary, logo: a base64 png }), as an Uploaded
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { uploadLevel } from "../scripts/levelUpload";
+import {
+  errorMessage,
+  findOwnLevelMod,
+  isProblem,
+  sendSignInCode,
+  signInWithCode,
+  type SignIn,
+} from "../scripts/modio";
+import { defaultLevelTitle } from "../src/levelTitle";
+import type { ApiResponse } from "./api";
+import { readLevelCfg } from "./levelCfg";
+import { listLevels } from "./levels";
+
+type ReadBody = () => Promise<string>;
+
+// mod.io's calls and the clock, or a test's stand-ins for them
+export interface ModioCalls {
+  sendSignInCode: typeof sendSignInCode;
+  signInWithCode: typeof signInWithCode;
+  findOwnLevelMod: typeof findOwnLevelMod;
+  uploadLevel: typeof uploadLevel;
+  now: () => number; // seconds since 1970
+}
+
+const MODIO_CALLS: ModioCalls = {
+  sendSignInCode,
+  signInWithCode,
+  findOwnLevelMod,
+  uploadLevel,
+  now: () => Date.now() / 1000,
+};
+
+const TOKEN_FILE = "modio_token.json";
+const NOT_FOUND: ApiResponse = { status: 404, type: "text/plain", body: "not found" };
+const NOT_SIGNED_IN: ApiResponse = { status: 401, type: "text/plain", body: "Sign in to mod.io first." };
+const json = (value: unknown): ApiResponse => ({ status: 200, type: "application/json", body: JSON.stringify(value) });
+const refused = (problem: string): ApiResponse => ({ status: 400, type: "text/plain", body: problem });
+
+// mod.io's answer as json, or a 400 saying why it refused
+function answered<T>(answer: T | { problem: string }, toBody: (value: T) => unknown): ApiResponse {
+  if (isProblem(answer)) {
+    return refused(answer.problem);
+  }
+  return json(toBody(answer as T));
+}
+
+const tokenPath = (repo: string) => join(repo, TOKEN_FILE);
+
+// the player's token, if they've signed in and it hasn't run out
+function signedInToken(repo: string, now: number): string | null {
+  if (!existsSync(tokenPath(repo))) {
+    return null;
+  }
+  const { token, expires } = JSON.parse(readFileSync(tokenPath(repo), "utf8")) as SignIn;
+  if (expires <= now) {
+    return null;
+  }
+  return token;
+}
+
+async function signInWithBody(repo: string, readBody: ReadBody, calls: ModioCalls): Promise<ApiResponse> {
+  const { code } = JSON.parse(await readBody());
+  const signIn = await calls.signInWithCode(String(code));
+  if (isProblem(signIn)) {
+    return refused(signIn.problem);
+  }
+  writeFileSync(tokenPath(repo), JSON.stringify(signIn));
+  return json({ signedIn: true });
+}
+
+async function accountResponse(
+  repo: string,
+  method: string,
+  step: string,
+  readBody: ReadBody,
+  calls: ModioCalls,
+): Promise<ApiResponse> {
+  if (method === "GET" && step === "account") {
+    return json({ signedIn: signedInToken(repo, calls.now()) !== null });
+  }
+  if (method === "POST" && step === "email") {
+    const { email } = JSON.parse(await readBody());
+    return answered(await calls.sendSignInCode(String(email)), () => ({}));
+  }
+  if (method === "POST" && step === "code") {
+    return signInWithBody(repo, readBody, calls);
+  }
+  if (method === "POST" && step === "sign-out") {
+    rmSync(tokenPath(repo), { force: true });
+    return json({});
+  }
+  return NOT_FOUND;
+}
+
+// the title players see: its level.cfg's, or its folder's name in words
+function levelTitle(root: string, name: string): string {
+  const { title } = readLevelCfg(root, name);
+  if (title) {
+    return title;
+  }
+  return defaultLevelTitle(name);
+}
+
+async function uploadWithBody(
+  root: string,
+  name: string,
+  token: string,
+  readBody: ReadBody,
+  calls: ModioCalls,
+): Promise<ApiResponse> {
+  const { summary, logo } = JSON.parse(await readBody());
+  const details = {
+    name: levelTitle(root, name),
+    summary: String(summary),
+    logo: new Uint8Array(Buffer.from(String(logo), "base64")),
+  };
+  return answered(await calls.uploadLevel(token, root, name, details), (uploaded) => uploaded);
+}
+
+async function levelResponse(
+  repo: string,
+  method: string,
+  parts: string[],
+  readBody: ReadBody,
+  calls: ModioCalls,
+): Promise<ApiResponse> {
+  const root = join(repo, "level_src");
+  const [name, action] = parts;
+  if (!listLevels(root).some((level) => level.name === name)) {
+    return NOT_FOUND;
+  }
+  const token = signedInToken(repo, calls.now());
+  if (!token) {
+    return NOT_SIGNED_IN;
+  }
+  if (method === "GET" && parts.length === 1) {
+    return answered(await calls.findOwnLevelMod(token, name), (online) => ({ online }));
+  }
+  if (method === "POST" && action === "upload" && parts.length === 2) {
+    return uploadWithBody(root, name, token, readBody, calls);
+  }
+  return NOT_FOUND;
+}
+
+// answers a request to the mod.io api in repo: its method, its path after
+// /api/modio, and its body when it's needed; a request it can't do is a 400 saying why
+export async function modioApi(
+  repo: string,
+  method: string,
+  path: string,
+  readBody: ReadBody,
+  calls: ModioCalls = MODIO_CALLS,
+): Promise<ApiResponse> {
+  const parts = decodeURIComponent(path.split("?")[0]).split("/").filter(Boolean);
+  try {
+    if (parts[0] === "levels") {
+      return await levelResponse(repo, method, parts.slice(1), readBody, calls);
+    }
+    if (parts.length === 1) {
+      return await accountResponse(repo, method, parts[0], readBody, calls);
+    }
+    return NOT_FOUND;
+  } catch (error) {
+    return refused(errorMessage(error));
+  }
+}
