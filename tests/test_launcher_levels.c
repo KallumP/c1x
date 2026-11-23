@@ -19,7 +19,6 @@ static void MakeEmptyFile(const char *folder, const char *name) {
   WriteWholeFile(path, "");
 }
 
-/* a file in folder whose text is text */
 static void MakeFileSaying(const char *folder, const char *name, const char *text) {
   char path[256];
 

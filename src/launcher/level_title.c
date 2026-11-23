@@ -1,7 +1,6 @@
 /*
- * a custom level's title, as the level editor gives it (levelTitle.ts): drawn
- * on its loading screen in the game's own letters, so only letters, spaces and
- * full stops, up to 20 of them
+ * kept in step with levelTitle.ts: the loading screen draws a title in the
+ * game's own letters, which have only letters, spaces and full stops
  */
 #include <SDL2/SDL.h>
 #include "level_title.h"

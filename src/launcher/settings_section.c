@@ -144,14 +144,13 @@ static void DrawUnbuiltLevelChoice(const char *repo, const char *label, const ch
   igEndDisabled();
 }
 
-/* the start of the section of the dropdown listing levels of kind */
 static void DrawLevelKindHeading(level_kind kind) {
   igSeparator();
   igTextDisabled("%s", LevelKindTitle(kind));
 }
 
 static void DrawCustomLevelChoice(const char *repo, int index) {
-  char label[SETTINGS_BOOT_LEVEL_MAX + 16];
+  char label[LEVEL_TITLE_MAX + 16]; /* its title, and that it isn't built */
 
   CustomLevelLabel(&levels, index, label, sizeof(label));
   if (levels.built[index]) {
@@ -162,7 +161,7 @@ static void DrawCustomLevelChoice(const char *repo, int index) {
 }
 
 /* what the boot level dropdown shows for the current boot_level: its label as
-   the dropdown lists it, or its name if it isn't a level there is */
+   the dropdown lists it, or, if it isn't a level there is, its name, not built */
 static void BootLevelPreview(char *preview, size_t size) {
   int at;
 
