@@ -90,10 +90,19 @@ function savedSignIn(repo: string): SignIn | null {
     return null;
   }
   try {
-    return JSON.parse(readFileSync(tokenPath(repo), "utf8")) as SignIn;
+    return signInIn(JSON.parse(readFileSync(tokenPath(repo), "utf8")));
   } catch {
     return null;
   }
+}
+
+// the sign-in a token file's json holds, or null if it's missing its token or expiry
+function signInIn(saved: unknown): SignIn | null {
+  const { token, expires } = (saved ?? {}) as Partial<Record<keyof SignIn, unknown>>;
+  if (typeof token !== "string" || typeof expires !== "number") {
+    return null;
+  }
+  return { token, expires };
 }
 
 // the player's token, if they've signed in and it hasn't run out
