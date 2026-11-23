@@ -123,17 +123,30 @@ static void ReleaseLabel(release_state state, char *label, size_t size) {
   }
 }
 
-/* how wide the release part of the corner is, with the gap after it */
-static float ReleasePartWidth(release_state state, const char *label) {
-  float spacing;
+/* whether the corner shows the launcher's own version: not beside the download's
+   message, where a second version reads as if it were part of it */
+static int ShowsOwnVersion(release_state state) {
+  return state == RELEASE_NONE || state == RELEASE_OFFERED;
+}
 
-  spacing = igGetStyle()->ItemSpacing.x;
+static float ReleasePartWidth(release_state state, const char *label) {
   if (state == RELEASE_NONE) { return 0; }
-  if (state == RELEASE_DOWNLOADING) { return TextWidth(label) + spacing; }
+  if (state == RELEASE_DOWNLOADING) { return TextWidth(label); }
   if (state == RELEASE_SAVED) {
-    return TextWidth(label) + spacing + ButtonWidth("Open folder") + spacing;
+    return TextWidth(label) + igGetStyle()->ItemSpacing.x + ButtonWidth("Open folder");
   }
-  return ButtonWidth(label) + spacing;
+  return ButtonWidth(label);
+}
+
+/* how wide the corner is: its release part, and the launcher's version if it shows */
+static float CornerWidth(release_state state, const char *release_label,
+  const char *version_label) {
+  float width;
+
+  width = ReleasePartWidth(state, release_label);
+  if (!ShowsOwnVersion(state)) { return width; }
+  if (width > 0) { width += igGetStyle()->ItemSpacing.x; }
+  return width + TextWidth(version_label);
 }
 
 static void DrawSavedRelease(const char *label) {
@@ -149,7 +162,6 @@ static void DrawSavedRelease(const char *label) {
   DrawTooltip("Open your Downloads folder, to unzip it.");
 }
 
-/* the release part of the corner, for state, and what's next beside it */
 static void DrawReleasePart(release_state state, const char *label) {
   if (state == RELEASE_NONE) { return; }
   if (state == RELEASE_OFFERED) {
@@ -163,7 +175,6 @@ static void DrawReleasePart(release_state state, const char *label) {
     if (igSmallButton(label)) { SDL_OpenURL(LATEST_RELEASE_PAGE); }
     DrawTooltip(release_download.output);
   }
-  igSameLine(0, -1);
 }
 
 /* right-aligned on the line the cursor is on. the cursor is put back after,
@@ -177,12 +188,15 @@ void DrawVersionCorner(void) {
   state = ReleaseState();
   ReleaseLabel(state, release_label, sizeof(release_label));
   VersionLabel(LauncherVersion(), version_label, sizeof(version_label));
-  width = TextWidth(version_label) + ReleasePartWidth(state, release_label);
+  width = CornerWidth(state, release_label, version_label);
   igGetCursorPos(&start);
   igGetContentRegionAvail(&available);
   indent = SDL_max(0.0f, available.x - width); /* from the left in a window too narrow for it */
   igSetCursorPosX(start.x + indent);
   DrawReleasePart(state, release_label);
-  igTextDisabled("%s", version_label);
+  if (ShowsOwnVersion(state)) {
+    if (state != RELEASE_NONE) { igSameLine(0, -1); }
+    igTextDisabled("%s", version_label);
+  }
   igSetCursorPos(start);
 }
