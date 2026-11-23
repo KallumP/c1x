@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, posix, sep } from "node:path";
 import { docLink, htmlDocPage } from "./htmlDocs";
+import { releaseName } from "./releaseDownload";
 
 export type ReleaseFile = { from: string; to: string; asPage?: boolean }; // asPage: a doc, written as its html page
 type Command = { program: string; args: string[] };
@@ -85,7 +86,7 @@ export function releaseFolder(repo: string, version: string): string {
   if (!/^\d+\.\d+$/.test(version)) {
     throw new Error(`the version has to be two numbers, like 1.3, not "${version}"`);
   }
-  return join(repo, "release", `c1x-${version}`);
+  return join(repo, "release", releaseName(version));
 }
 
 // a link's path, and the place on the page it goes to (with its #), if it has one
