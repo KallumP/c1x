@@ -75,7 +75,7 @@ static void DrawLevelRow(const char *repo, int index, int can_build) {
   igTableNextRow(0, 0);
   igTableNextColumn();
   igAlignTextToFramePadding();
-  igText("%s", levels.names[index]);
+  igText("%s", levels.titles[index]);
   igTableNextColumn();
   igText("%s", CustomLevelStatus(&levels, index));
   igTableNextColumn();

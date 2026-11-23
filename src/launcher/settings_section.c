@@ -125,12 +125,6 @@ static void DrawSliderBeside(const char *name, uint32_t *setting, uint32_t min,
   DrawTooltip(tooltip);
 }
 
-static int IsCustomLevelBuilt(const char *name) {
-  int at = FindCustomLevel(&levels, name);
-
-  return at >= 0 && levels.built[at];
-}
-
 static void DrawBootLevelChoice(const char *name, const char *level) {
   bool selected;
 
@@ -161,17 +155,21 @@ static void DrawCustomLevelChoice(const char *repo, int index) {
   }
 }
 
-/* what the boot level dropdown shows for the current boot_level */
+/* what the boot level dropdown shows for the current boot_level: its label as
+   the dropdown lists it, or its name if it isn't a level there is */
 static void BootLevelPreview(char *preview, size_t size) {
+  int at;
+
   if (!settings.boot_level[0]) {
     SDL_strlcpy(preview, NO_BOOT_LEVEL, size);
+    return;
   }
-  else if (!IsCustomLevelBuilt(settings.boot_level)) {
+  at = FindCustomLevel(&levels, settings.boot_level);
+  if (at < 0) {
     SDL_snprintf(preview, size, "%s (not built)", settings.boot_level);
+    return;
   }
-  else {
-    SDL_strlcpy(preview, settings.boot_level, size);
-  }
+  CustomLevelLabel(&levels, at, preview, size);
 }
 
 #define BOOT_LEVEL_TOOLTIP "The level that CUSTOM LEVEL on the game's title screen starts. Choosing one that isn't built builds it first."

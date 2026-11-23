@@ -31,7 +31,7 @@ extern const char *CustomLevelStatus(const custom_levels *levels, int index);
 /* level_src/ as a file:// url, for opening it in the file browser */
 extern void LevelSourcesFolderUrl(const char *repo, char *url, size_t size);
 
-/* the level's name, saying if it isn't built, as the launcher lists it */
+/* the level's title, saying if it isn't built, as the launcher lists it */
 extern void CustomLevelLabel(const custom_levels *levels, int index, char *label, size_t size);
 
 #endif /* _LAUNCHER_LEVELS_H_ */

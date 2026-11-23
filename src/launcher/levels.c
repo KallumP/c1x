@@ -272,9 +272,9 @@ const char *CustomLevelStatus(const custom_levels *levels, int index) {
 
 void CustomLevelLabel(const custom_levels *levels, int index, char *label, size_t size) {
   if (levels->built[index]) {
-    SDL_strlcpy(label, levels->names[index], size);
+    SDL_strlcpy(label, levels->titles[index], size);
   } else {
-    SDL_snprintf(label, size, "%s (not built)", levels->names[index]);
+    SDL_snprintf(label, size, "%s (not built)", levels->titles[index]);
   }
 }
 
