@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import type { Fetch } from "../../scripts/fetch";
 import {
@@ -8,6 +10,7 @@ import {
   fetchOnlineLevel,
   setLevelLogo,
   MODIO_GAME,
+  TOP_LEVELS,
   emailSignInCode,
   signInWithCode,
 } from "../../scripts/modio";
@@ -372,5 +375,14 @@ describe("a request signed in as the player", () => {
     const { fetchUrl, requests } = standInFetch({ ...MOD_ANSWER, data: [] });
     await send(fetchUrl);
     expect(sentHeader(requests[0].init, "Authorization")).toBe("Bearer token");
+  });
+});
+
+describe("how many top levels there are", () => {
+  test("is as many as the launcher says there are", () => {
+    const codeUrl = new URL("../../../../src/launcher/online_levels.h", import.meta.url);
+    const launcherCode = readFileSync(fileURLToPath(codeUrl), "utf8");
+    const launchersCount = /#define TOP_LEVELS (\d+)/.exec(launcherCode)?.[1];
+    expect(Number(launchersCount)).toBe(TOP_LEVELS);
   });
 });
