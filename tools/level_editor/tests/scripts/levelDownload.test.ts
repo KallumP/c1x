@@ -34,7 +34,7 @@ function standInCalls(answers: StandInAnswers = {}) {
       asked.ids.push(id);
       return answers.level ?? TIDE_RUINS;
     },
-    downloadLevelZip: async (url) => {
+    downloadFile: async (url) => {
       asked.urls.push(url);
       return answers.zip ?? ZIP;
     },
@@ -103,7 +103,7 @@ describe("a level that can't be downloaded", () => {
 
   test("builds nothing when it can't be unzipped, and fails", async () => {
     const { calls, asked } = standInCalls();
-    calls.downloadLevelZip = async () => new Uint8Array([1, 2, 3]);
+    calls.downloadFile = async () => new Uint8Array([1, 2, 3]);
     expect((await download(calls)).exitCode).toBe(1);
     expect(asked.built).toEqual([]);
   });
