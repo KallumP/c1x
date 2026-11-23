@@ -29,6 +29,8 @@ export interface LevelMod {
   page: string; // its page on mod.io
 }
 
+type ModAnswer = { id: number; metadata_blob?: string; profile_url: string };
+
 const gameUrl = (path: string) => `${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}${path}`;
 const signedIn = (token: string) => ({ Authorization: `Bearer ${token}`, Accept: "application/json" });
 
@@ -118,8 +120,23 @@ export async function addLevelMod(token: string, level: NewLevel, fetchUrl: Fetc
   if (isProblem(answer)) {
     return answer;
   }
-  const { id, profile_url } = answer as { id: number; profile_url: string };
+  const { id, profile_url } = answer as ModAnswer;
   return { id, page: profile_url };
+}
+
+// the mod the player token signs in as added for the level in level_src/<folder>, or null if they haven't
+export async function findOwnLevelMod(token: string, folder: string, fetchUrl: Fetch = fetch): Promise<Answer<LevelMod | null>> {
+  const query = new URLSearchParams({ game_id: String(MODIO_GAME.gameId), metadata_blob: folder });
+  const answer = await askModio(fetchUrl, `${MODIO_GAME.apiUrl}/me/mods?${query}`, { headers: signedIn(token) });
+  if (isProblem(answer)) {
+    return answer;
+  }
+  const mods = (answer as { data: ModAnswer[] }).data;
+  const mod = mods.find((candidate) => candidate.metadata_blob === folder);
+  if (!mod) {
+    return null;
+  }
+  return { id: mod.id, page: mod.profile_url };
 }
 
 // adds zip as the newest file of the level mod modId
