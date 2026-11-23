@@ -125,12 +125,6 @@ static void DrawSliderBeside(const char *name, uint32_t *setting, uint32_t min,
   DrawTooltip(tooltip);
 }
 
-static int IsCustomLevelBuilt(const char *name) {
-  int at = FindCustomLevel(&levels, name);
-
-  return at >= 0 && levels.built[at];
-}
-
 static void DrawBootLevelChoice(const char *name, const char *level) {
   bool selected;
 
@@ -150,8 +144,13 @@ static void DrawUnbuiltLevelChoice(const char *repo, const char *label, const ch
   igEndDisabled();
 }
 
+static void DrawLevelKindHeading(level_kind kind) {
+  igSeparator();
+  igTextDisabled("%s", LevelKindTitle(kind));
+}
+
 static void DrawCustomLevelChoice(const char *repo, int index) {
-  char label[SETTINGS_BOOT_LEVEL_MAX + 16];
+  char label[LEVEL_TITLE_MAX + 16]; /* its title, and that it isn't built */
 
   CustomLevelLabel(&levels, index, label, sizeof(label));
   if (levels.built[index]) {
@@ -161,17 +160,21 @@ static void DrawCustomLevelChoice(const char *repo, int index) {
   }
 }
 
-/* what the boot level dropdown shows for the current boot_level */
+/* what the boot level dropdown shows for the current boot_level: its label as
+   the dropdown lists it, or, if it isn't a level there is, its name, not built */
 static void BootLevelPreview(char *preview, size_t size) {
+  int at;
+
   if (!settings.boot_level[0]) {
     SDL_strlcpy(preview, NO_BOOT_LEVEL, size);
+    return;
   }
-  else if (!IsCustomLevelBuilt(settings.boot_level)) {
+  at = FindCustomLevel(&levels, settings.boot_level);
+  if (at < 0) {
     SDL_snprintf(preview, size, "%s (not built)", settings.boot_level);
+    return;
   }
-  else {
-    SDL_strlcpy(preview, settings.boot_level, size);
-  }
+  CustomLevelLabel(&levels, at, preview, size);
 }
 
 #define BOOT_LEVEL_TOOLTIP "The level that CUSTOM LEVEL on the game's title screen starts. Choosing one that isn't built builds it first."
@@ -185,7 +188,10 @@ static void DrawBootLevel(const char *repo) {
   igSetNextItemWidth(BOOT_LEVEL_WIDTH);
   if (igBeginCombo("##boot_level", preview, 0)) {
     DrawBootLevelChoice(NO_BOOT_LEVEL, "");
-    for (i=0;i<levels.count;i++) { DrawCustomLevelChoice(repo, i); }
+    for (i = 0; i < levels.count; i++) {
+      if (StartsLevelKind(&levels, i)) { DrawLevelKindHeading(levels.kinds[i]); }
+      DrawCustomLevelChoice(repo, i);
+    }
     igEndCombo();
   }
   DrawTooltip(BOOT_LEVEL_TOOLTIP);

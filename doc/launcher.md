@@ -62,7 +62,7 @@ The Controls tab shows each PlayStation button's keys, on its **Keyboard** tab, 
 
 ## Levels
 
-The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`.
+The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`. Each is listed by its title (its loading screen's, set under **Level** in the level editor), under **Comes with c1x** (the five levels that do), **Downloaded from mod.io** and **Your own**. The **Custom level** setting lists them the same way.
 
 Beside each level is whether it's built. It says `out of date` when a file in its source folder was saved after it was built (its `.blend` doesn't count: export the `.obj` again).
 

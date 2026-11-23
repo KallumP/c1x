@@ -1,0 +1,7 @@
+# the levels that come with c1x, in the order the launcher lists them, above any
+# others: one folder in level_src a line
+1_tide_ruins
+2_mossy_creek
+3_sunset_canyon
+4_acid_cave
+5_grave_switchback

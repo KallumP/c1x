@@ -55,6 +55,14 @@ char *ReadWholeFile(const char *path) {
   return SDL_LoadFile(path, 0);
 }
 
+char *ReadWholeFileOrEmpty(const char *path) {
+  char *text;
+
+  text = ReadWholeFile(path);
+  if (text) { return text; }
+  return SDL_strdup("");
+}
+
 int WriteWholeFile(const char *path, const char *text) {
   FILE *file;
   int written;

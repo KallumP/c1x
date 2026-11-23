@@ -16,6 +16,9 @@ extern const char *LineEndingOf(const char *text);
 extern const char *ConfigLineValue(const char *line, size_t len, const char *name,
   char *buf, size_t size);
 extern char *ReadWholeFile(const char *path);
+/* the text of the file at path (to SDL_free), or "" (also to SDL_free) if it
+   can't be read, for a file that needn't be there */
+extern char *ReadWholeFileOrEmpty(const char *path);
 extern int WriteWholeFile(const char *path, const char *text);
 
 #endif /* _LAUNCHER_TEXT_FILE_H_ */

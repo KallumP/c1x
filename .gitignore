@@ -15,6 +15,7 @@ level_src/*
 !level_src/3_sunset_canyon/
 !level_src/4_acid_cave/
 !level_src/5_grave_switchback/
+!level_src/included_levels.txt
 # the acid cave's textures are the game's: made from streams/ when it's built or
 # opened in the level editor (see its game_textures.json)
 level_src/4_acid_cave/tex_*.png

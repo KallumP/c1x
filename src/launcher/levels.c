@@ -97,28 +97,117 @@ static void AddLevelSources(const char *sources, custom_levels *levels) {
   closedir(dir);
 }
 
+/* the levels that come with c1x, in the order they're listed: a folder a line */
+#define INCLUDED_LEVELS_FILE "level_src/included_levels.txt"
+/* the rank of a level that doesn't come with c1x: after all that do */
+#define NOT_INCLUDED CUSTOM_LEVELS_MAX
+
 typedef struct {
   char name[SETTINGS_BOOT_LEVEL_MAX+1];
+  char title[LEVEL_TITLE_MAX];
+  char modio_page[MODIO_PAGE_MAX];
   int built;
+  level_kind kind;
+  int rank; /* its place among the levels that come with c1x, or NOT_INCLUDED */
 } custom_level;
 
+static const char *const LEVEL_KIND_TITLES[] = {
+  "Comes with c1x",
+  "Downloaded from mod.io",
+  "Your own",
+};
+
+const char *LevelKindTitle(level_kind kind) {
+  return LEVEL_KIND_TITLES[kind];
+}
+
+int StartsLevelKind(const custom_levels *levels, int index) {
+  return index == 0 || levels->kinds[index - 1] != levels->kinds[index];
+}
+
+/* in the order levels.h gives; levels with the same title go by folder name */
 static int CompareLevels(const void *a, const void *b) {
-  return SDL_strcmp(((const custom_level*)a)->name, ((const custom_level*)b)->name);
+  const custom_level *first, *second;
+  int by_title;
+
+  first = a;
+  second = b;
+  if (first->kind != second->kind) { return (int)first->kind - (int)second->kind; }
+  if (first->rank != second->rank) { return first->rank - second->rank; }
+  by_title = SDL_strcasecmp(first->title, second->title);
+  if (by_title) { return by_title; }
+  return SDL_strcmp(first->name, second->name);
+}
+
+/* name's place among the levels included_levels.txt's text, included, lists; or
+   NOT_INCLUDED if it doesn't list it. lines starting with # say what it is */
+static int IncludedRank(const char *included, const char *name) {
+  const char *line, *next, *end;
+  size_t length;
+  int rank;
+
+  rank = 0;
+  for (line = included; *line; line = next) {
+    end = EndOfLine(line, &next);
+    length = (size_t)(end - line);
+    if (length == 0 || line[0] == '#') { continue; }
+    if (length == SDL_strlen(name) && SDL_strncmp(line, name, length) == 0) {
+      return rank;
+    }
+    rank++;
+  }
+  return NOT_INCLUDED;
+}
+
+static level_kind KindOfLevel(int rank, const char *modio_page) {
+  if (rank != NOT_INCLUDED) { return LEVEL_COMES_WITH_C1X; }
+  if (modio_page[0]) { return LEVEL_DOWNLOADED; }
+  return LEVEL_OWN;
+}
+
+/* where each level is from, and its place among those that come with c1x, by
+   level_src/included_levels.txt and the mod.io pages already found */
+static void FindKinds(const char *repo, custom_levels *levels) {
+  char path[PATH_MAX_LEN];
+  char *included;
+  int i, rank;
+
+  JoinPath(path, sizeof(path), repo, INCLUDED_LEVELS_FILE);
+  included = ReadWholeFileOrEmpty(path);
+  for (i = 0; i < levels->count; i++) {
+    rank = IncludedRank(included, levels->names[i]);
+    levels->included_ranks[i] = rank;
+    levels->kinds[i] = KindOfLevel(rank, levels->modio_pages[i]);
+  }
+  SDL_free(included);
+}
+
+static void LevelToSort(const custom_levels *levels, int index, custom_level *level) {
+  SDL_strlcpy(level->name, levels->names[index], sizeof(level->name));
+  SDL_strlcpy(level->title, levels->titles[index], sizeof(level->title));
+  SDL_strlcpy(level->modio_page, levels->modio_pages[index], sizeof(level->modio_page));
+  level->built = levels->built[index];
+  level->rank = levels->included_ranks[index];
+  level->kind = levels->kinds[index];
+}
+
+static void PutSortedLevel(custom_levels *levels, int index, const custom_level *level) {
+  SDL_strlcpy(levels->names[index], level->name, sizeof(levels->names[0]));
+  SDL_strlcpy(levels->titles[index], level->title, sizeof(levels->titles[0]));
+  SDL_strlcpy(levels->modio_pages[index], level->modio_page,
+    sizeof(levels->modio_pages[0]));
+  levels->built[index] = level->built;
+  levels->included_ranks[index] = level->rank;
+  levels->kinds[index] = level->kind;
 }
 
 static void SortLevels(custom_levels *levels) {
   static custom_level sorted[CUSTOM_LEVELS_MAX];
   int i;
 
-  for (i = 0; i < levels->count; i++) {
-    SDL_strlcpy(sorted[i].name, levels->names[i], sizeof(sorted[i].name));
-    sorted[i].built = levels->built[i];
-  }
+  for (i = 0; i < levels->count; i++) { LevelToSort(levels, i, &sorted[i]); }
   SDL_qsort(sorted, levels->count, sizeof(sorted[0]), CompareLevels);
-  for (i = 0; i < levels->count; i++) {
-    SDL_strlcpy(levels->names[i], sorted[i].name, sizeof(levels->names[0]));
-    levels->built[i] = sorted[i].built;
-  }
+  for (i = 0; i < levels->count; i++) { PutSortedLevel(levels, i, &sorted[i]); }
 }
 
 /* when the file at path was last saved; 0 if it isn't a file */
@@ -198,11 +287,9 @@ static void ReadModioPage(const char *repo, const char *name, char *page, size_t
   char path[PATH_MAX_LEN], file[SETTINGS_BOOT_LEVEL_MAX+32];
   char *note;
 
-  page[0] = 0;
   SDL_snprintf(file, sizeof(file), "level_src/%s/.modio.json", name);
   JoinPath(path, sizeof(path), repo, file);
-  note = ReadWholeFile(path);
-  if (!note) { return; }
+  note = ReadWholeFileOrEmpty(path);
   PageInModioNote(note, page, size);
   SDL_free(note);
 }
@@ -216,6 +303,26 @@ static void FindModioPages(const char *repo, custom_levels *levels) {
   }
 }
 
+/* the title of the level called name, by its source's level.cfg if it has one */
+static void ReadLevelTitle(const char *repo, const char *name, char *title, size_t size) {
+  char path[PATH_MAX_LEN], file[SETTINGS_BOOT_LEVEL_MAX+32];
+  char *cfg;
+
+  SDL_snprintf(file, sizeof(file), "level_src/%s/level.cfg", name);
+  JoinPath(path, sizeof(path), repo, file);
+  cfg = ReadWholeFileOrEmpty(path);
+  LevelTitle(name, cfg, title, size);
+  SDL_free(cfg);
+}
+
+static void FindTitles(const char *repo, custom_levels *levels) {
+  int i;
+
+  for (i = 0; i < levels->count; i++) {
+    ReadLevelTitle(repo, levels->names[i], levels->titles[i], sizeof(levels->titles[i]));
+  }
+}
+
 void ListCustomLevels(const char *repo, custom_levels *levels) {
   char folder[PATH_MAX_LEN];
 
@@ -224,9 +331,11 @@ void ListCustomLevels(const char *repo, custom_levels *levels) {
   AddBuiltLevels(folder, levels);
   JoinPath(folder, sizeof(folder), repo, "level_src");
   AddLevelSources(folder, levels);
+  FindTitles(repo, levels);
+  FindModioPages(repo, levels);
+  FindKinds(repo, levels);
   SortLevels(levels);
   MarkOutOfDateLevels(repo, levels);
-  FindModioPages(repo, levels);
 }
 
 /* the index of the level called name, or -1 if there's none */
@@ -247,9 +356,9 @@ const char *CustomLevelStatus(const custom_levels *levels, int index) {
 
 void CustomLevelLabel(const custom_levels *levels, int index, char *label, size_t size) {
   if (levels->built[index]) {
-    SDL_strlcpy(label, levels->names[index], size);
+    SDL_strlcpy(label, levels->titles[index], size);
   } else {
-    SDL_snprintf(label, size, "%s (not built)", levels->names[index]);
+    SDL_snprintf(label, size, "%s (not built)", levels->titles[index]);
   }
 }
 

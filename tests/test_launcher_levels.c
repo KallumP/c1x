@@ -9,13 +9,28 @@
 #define TEST_BUILT TEST_LEVELS_REPO "/build/levels"
 #define TEST_SOURCES TEST_LEVELS_REPO "/level_src"
 #define TEST_MODIO_REPO "build/test_launcher_levels_modio"
-#define TEST_MODIO_SOURCES TEST_MODIO_REPO "/level_src"
+#define TEST_TITLES_REPO "build/test_launcher_levels_titles"
 
-static void MakeEmptyFile(const char *folder, const char *name) {
+static void MakeFileSaying(const char *folder, const char *name, const char *text) {
   char path[256];
 
   snprintf(path, sizeof(path), "%s/%s", folder, name);
-  WriteWholeFile(path, "");
+  WriteWholeFile(path, text);
+}
+
+static void MakeEmptyFile(const char *folder, const char *name) {
+  MakeFileSaying(folder, name, "");
+}
+
+/* a level source called name in repo's level_src (a folder with a map), its
+   folder's path into folder (size long) */
+static void MakeSourceIn(const char *repo, const char *name, char *folder, size_t size) {
+  snprintf(folder, size, "%s/level_src", repo);
+  MakeFolder(repo);
+  MakeFolder(folder);
+  snprintf(folder, size, "%s/level_src/%s", repo, name);
+  MakeFolder(folder);
+  MakeEmptyFile(folder, "map.obj");
 }
 
 static void MakeLevelsRepo(void) {
@@ -44,7 +59,7 @@ static void MakeBuiltLevel(const char *name) {
   MakeEmptyFile(TEST_BUILT, file);
 }
 
-UTEST(launcher_levels, lists_built_levels_by_name_in_order) {
+UTEST(launcher_levels, lists_built_levels_in_order_of_title) {
   custom_levels levels;
 
   MakeFolder("build/test_launcher_levels_built");
@@ -203,15 +218,16 @@ UTEST(launcher_levels, statuses_say_whether_built_and_up_to_date) {
   ASSERT_STREQ("out of date", CustomLevelStatus(&levels, 0));
 }
 
-UTEST(launcher_levels, a_built_levels_label_is_its_name) {
+UTEST(launcher_levels, a_built_levels_label_is_its_title) {
   custom_levels levels;
   char label[64];
 
   levels.count = 1;
-  strcpy(levels.names[0], "tide_ruins");
+  strcpy(levels.names[0], "1_tide_ruins");
+  strcpy(levels.titles[0], "Tide Ruins");
   levels.built[0] = 1;
   CustomLevelLabel(&levels, 0, label, sizeof(label));
-  ASSERT_STREQ("tide_ruins", label);
+  ASSERT_STREQ("Tide Ruins", label);
 }
 
 UTEST(launcher_levels, an_unbuilt_levels_label_says_so) {
@@ -219,10 +235,11 @@ UTEST(launcher_levels, an_unbuilt_levels_label_says_so) {
   char label[64];
 
   levels.count = 1;
-  strcpy(levels.names[0], "sunset_canyon");
+  strcpy(levels.names[0], "3_sunset_canyon");
+  strcpy(levels.titles[0], "Sunset Canyon");
   levels.built[0] = 0;
   CustomLevelLabel(&levels, 0, label, sizeof(label));
-  ASSERT_STREQ("sunset_canyon (not built)", label);
+  ASSERT_STREQ("Sunset Canyon (not built)", label);
 }
 
 UTEST(launcher_levels, the_level_sources_folder_opens_as_a_file_url) {
@@ -235,16 +252,10 @@ UTEST(launcher_levels, the_level_sources_folder_opens_as_a_file_url) {
 /* a level source called name in its own repo, kept apart from the other tests'
    levels, and its .modio.json saying note, if there is one (note isn't 0) */
 static void MakeDownloadedLevel(const char *name, const char *note) {
-  char path[256];
+  char folder[256];
 
-  MakeFolder(TEST_MODIO_REPO);
-  MakeFolder(TEST_MODIO_SOURCES);
-  snprintf(path, sizeof(path), "%s/%s", TEST_MODIO_SOURCES, name);
-  MakeFolder(path);
-  MakeEmptyFile(path, "map.obj");
-  if (!note) { return; }
-  snprintf(path, sizeof(path), "%s/%s/.modio.json", TEST_MODIO_SOURCES, name);
-  WriteWholeFile(path, note);
+  MakeSourceIn(TEST_MODIO_REPO, name, folder, sizeof(folder));
+  if (note) { MakeFileSaying(folder, ".modio.json", note); }
 }
 
 /* the mod.io page the launcher lists for the level source called name */
@@ -297,4 +308,186 @@ UTEST(launcher_levels, a_mod_io_page_too_long_to_keep_is_none) {
     MODIO_PAGE_MAX, 0);
   MakeDownloadedLevel("long_page", note);
   ASSERT_STREQ("", ModioPageOf(&levels, "long_page"));
+}
+
+/* a level source called name in a repo of its own, with level.cfg saying cfg if
+   there is one (cfg isn't 0) */
+static void MakeTitledLevel(const char *name, const char *cfg) {
+  char folder[256];
+
+  MakeSourceIn(TEST_TITLES_REPO, name, folder, sizeof(folder));
+  if (cfg) { MakeFileSaying(folder, "level.cfg", cfg); }
+}
+
+/* the title the launcher lists the level called name by */
+static const char *TitleListed(custom_levels *levels, const char *name) {
+  ListCustomLevels(TEST_TITLES_REPO, levels);
+  return levels->titles[FindCustomLevel(levels, name)];
+}
+
+UTEST(launcher_levels, a_level_source_is_titled_as_its_level_cfg_says) {
+  static custom_levels levels;
+
+  MakeTitledLevel("steps", "title = Sunken Steps\n");
+  ASSERT_STREQ("Sunken Steps", TitleListed(&levels, "steps"));
+}
+
+UTEST(launcher_levels, a_built_level_without_a_source_is_titled_by_its_name) {
+  static custom_levels levels;
+
+  MakeTitledLevel("steps", 0);
+  MakeFolder(TEST_TITLES_REPO "/build");
+  MakeFolder(TEST_TITLES_REPO "/build/levels");
+  MakeEmptyFile(TEST_TITLES_REPO "/build/levels", "old_cave.nsd");
+  MakeEmptyFile(TEST_TITLES_REPO "/build/levels", "old_cave.nsf");
+  ASSERT_STREQ("Old Cave", TitleListed(&levels, "old_cave"));
+}
+
+/* repo, kept apart from the other tests', with a level source for each of names
+   (ending with 0), titled by its level.cfg as titles says (0 for none), and
+   included_levels.txt saying included, if there's one (included isn't 0) */
+static void MakeOrderedLevels(const char *repo, const char **names, const char **titles,
+  const char *included) {
+  char folder[256], cfg[64];
+  int i;
+
+  for (i = 0; names[i]; i++) {
+    MakeSourceIn(repo, names[i], folder, sizeof(folder));
+    if (titles && titles[i]) {
+      snprintf(cfg, sizeof(cfg), "title = %s\n", titles[i]);
+      MakeFileSaying(folder, "level.cfg", cfg);
+    }
+  }
+  snprintf(folder, sizeof(folder), "%s/level_src", repo);
+  if (included) { MakeFileSaying(folder, "included_levels.txt", included); }
+}
+
+UTEST(launcher_levels, included_levels_come_first_in_their_order) {
+  static custom_levels levels;
+  const char *names[] = { "aardvark", "1_tide_ruins", "2_mossy_creek", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_included", names, 0,
+    "# comes with c1x\n2_mossy_creek\n1_tide_ruins\n");
+  ListCustomLevels("build/test_launcher_levels_included", &levels);
+  ASSERT_STREQ("2_mossy_creek", levels.names[0]);
+  ASSERT_STREQ("1_tide_ruins", levels.names[1]);
+  ASSERT_STREQ("aardvark", levels.names[2]);
+}
+
+UTEST(launcher_levels, levels_not_included_are_in_order_of_their_titles) {
+  static custom_levels levels;
+  const char *names[] = { "beta", "zeta_cave", 0 };
+  const char *titles[] = { 0, "Alpha", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_by_title", names, titles, 0);
+  ListCustomLevels("build/test_launcher_levels_by_title", &levels);
+  ASSERT_STREQ("zeta_cave", levels.names[0]);
+  ASSERT_STREQ("beta", levels.names[1]);
+}
+
+/* repo's level source called name, downloaded from mod.io: it notes its page */
+static void NoteDownloaded(const char *repo, const char *name) {
+  char folder[256];
+
+  snprintf(folder, sizeof(folder), "%s/level_src/%s", repo, name);
+  MakeFileSaying(folder, ".modio.json", "{\"modId\":1,\"page\":\"https://mod.io/m/x\"}");
+}
+
+#define TEST_KINDS_REPO "build/test_launcher_levels_kinds"
+
+/* the levels in TEST_KINDS_REPO: 1_tide_ruins comes with c1x, zz_download was
+   downloaded from mod.io, and aardvark is the player's own */
+static void ListLevelsOfEachKind(custom_levels *levels) {
+  const char *names[] = { "aardvark", "zz_download", "1_tide_ruins", 0 };
+
+  MakeOrderedLevels(TEST_KINDS_REPO, names, 0, "1_tide_ruins\n");
+  NoteDownloaded(TEST_KINDS_REPO, "zz_download");
+  ListCustomLevels(TEST_KINDS_REPO, levels);
+}
+
+UTEST(launcher_levels, an_included_level_comes_with_c1x) {
+  static custom_levels levels;
+
+  ListLevelsOfEachKind(&levels);
+  ASSERT_EQ(LEVEL_COMES_WITH_C1X, levels.kinds[FindCustomLevel(&levels, "1_tide_ruins")]);
+}
+
+UTEST(launcher_levels, a_level_with_a_mod_io_page_was_downloaded) {
+  static custom_levels levels;
+
+  ListLevelsOfEachKind(&levels);
+  ASSERT_EQ(LEVEL_DOWNLOADED, levels.kinds[FindCustomLevel(&levels, "zz_download")]);
+}
+
+UTEST(launcher_levels, any_other_level_is_the_players_own) {
+  static custom_levels levels;
+
+  ListLevelsOfEachKind(&levels);
+  ASSERT_EQ(LEVEL_OWN, levels.kinds[FindCustomLevel(&levels, "aardvark")]);
+}
+
+UTEST(launcher_levels, downloaded_levels_come_after_those_with_c1x_and_before_your_own) {
+  static custom_levels levels;
+
+  ListLevelsOfEachKind(&levels);
+  ASSERT_STREQ("1_tide_ruins", levels.names[0]);
+  ASSERT_STREQ("zz_download", levels.names[1]);
+  ASSERT_STREQ("aardvark", levels.names[2]);
+}
+
+UTEST(launcher_levels, the_first_level_of_a_kind_starts_its_section) {
+  static custom_levels levels;
+
+  ListLevelsOfEachKind(&levels);
+  ASSERT_TRUE(StartsLevelKind(&levels, FindCustomLevel(&levels, "zz_download")));
+}
+
+UTEST(launcher_levels, a_level_after_one_of_its_kind_doesnt_start_a_section) {
+  static custom_levels levels;
+  const char *names[] = { "aardvark", "beaver", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_one_kind", names, 0, 0);
+  ListCustomLevels("build/test_launcher_levels_one_kind", &levels);
+  ASSERT_FALSE(StartsLevelKind(&levels, 1));
+}
+
+UTEST(launcher_levels, titles_are_in_order_whatever_their_capitals) {
+  static custom_levels levels;
+  const char *names[] = { "first", "second", 0 };
+  const char *titles[] = { "apple", "Banana", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_capitals", names, titles, 0);
+  ListCustomLevels("build/test_launcher_levels_capitals", &levels);
+  ASSERT_STREQ("first", levels.names[0]);
+}
+
+UTEST(launcher_levels, levels_with_the_same_title_are_in_order_of_folder) {
+  static custom_levels levels;
+  const char *names[] = { "z_level", "a_level", 0 };
+  const char *titles[] = { "Same", "Same", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_same_title", names, titles, 0);
+  ListCustomLevels("build/test_launcher_levels_same_title", &levels);
+  ASSERT_STREQ("a_level", levels.names[0]);
+}
+
+UTEST(launcher_levels, the_included_list_can_have_blank_lines_and_windows_line_ends) {
+  static custom_levels levels;
+  const char *names[] = { "1_tide_ruins", "2_mossy_creek", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_crlf", names, 0,
+    "\r\n2_mossy_creek\r\n\r\n1_tide_ruins\r\n");
+  ListCustomLevels("build/test_launcher_levels_crlf", &levels);
+  ASSERT_STREQ("2_mossy_creek", levels.names[0]);
+  ASSERT_STREQ("1_tide_ruins", levels.names[1]);
+}
+
+UTEST(launcher_levels, an_included_level_downloaded_from_mod_io_comes_with_c1x) {
+  static custom_levels levels;
+  const char *names[] = { "1_tide_ruins", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_both", names, 0, "1_tide_ruins\n");
+  NoteDownloaded("build/test_launcher_levels_both", "1_tide_ruins");
+  ListCustomLevels("build/test_launcher_levels_both", &levels);
+  ASSERT_EQ(LEVEL_COMES_WITH_C1X, levels.kinds[0]);
 }
