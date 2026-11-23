@@ -205,19 +205,24 @@ const LEVEL_ANSWER = {
 };
 
 describe("listing the levels on mod.io", () => {
-  test("asks for the game's mods tagged Level, with the game's api key", async () => {
+  test("asks for all the game's mods, with the game's api key (each is a level, tagged or not)", async () => {
     const { fetchUrl, requests } = standInFetch({ data: [LEVEL_ANSWER] });
     await listOnlineLevels(fetchUrl);
     const url = new URL(requests[0].url);
     expect(`${url.origin}${url.pathname}`).toBe(`${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}/mods`);
-    expect(url.searchParams.get("api_key")).toBe(MODIO_GAME.apiKey);
-    expect(url.searchParams.get("tags")).toBe("Level");
+    expect(Object.fromEntries(url.searchParams)).toEqual({ api_key: MODIO_GAME.apiKey });
   });
 
   test("is each level's id, name, author and folder", async () => {
     const { fetchUrl } = standInFetch({ data: [LEVEL_ANSWER] });
     expect(await listOnlineLevels(fetchUrl)).toEqual([
-      { id: 17302, name: "Tide Ruins", author: "kallum", folder: "1_tide_ruins", fileUrl: "https://mod.io/files/tide.zip" },
+      {
+        id: 17302,
+        name: "Tide Ruins",
+        author: "kallum",
+        folder: "1_tide_ruins",
+        fileUrl: "https://mod.io/files/tide.zip",
+      },
     ]);
   });
 
