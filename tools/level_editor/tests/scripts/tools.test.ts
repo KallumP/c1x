@@ -25,6 +25,10 @@ describe("the tools exe's commands", () => {
     });
   });
 
+  test("download-release <version> downloads that release into Downloads", () => {
+    expect(toolsCommand(["download-release", "1.5"])).toEqual({ kind: "download-release", version: "1.5" });
+  });
+
   const NOT_IDS = ["", "abc", "1.5", "-3", "0"];
 
   test.each(NOT_IDS)("download-level needs a mod's id: %j", (id) => {
@@ -39,6 +43,7 @@ describe("the tools exe's commands", () => {
     [["check-update"]],
     [["check-update", "1.4", "1.5"]],
     [["list-online-levels", "now"]],
+    [["download-release"]],
     [["play"]],
   ])("anything else says how to use it: %j", (args) => {
     expect(toolsCommand(args)).toEqual({ kind: "usage" });
