@@ -19,4 +19,10 @@ extern int DownloadReleaseCommand(const char *repo, const char *version, char *c
    yet (the output is read while it runs), or is too long for folder */
 extern int FindInstalledRelease(const char *output, char *folder, size_t size);
 
+/* the new version's launcher, at the top of its folder as in every release */
+extern void InstalledLauncherPath(const char *folder, char *path, size_t size);
+
+/* starts the new version's launcher in its folder; returns 0 if it can't */
+extern int StartInstalledLauncher(const char *folder);
+
 #endif /* _LAUNCHER_RELEASE_DOWNLOAD_H_ */

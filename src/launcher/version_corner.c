@@ -1,8 +1,8 @@
 /*
  * the launcher's version, in the top right corner of its window, with a button
- * downloading the newest release into the player's Downloads folder if github
- * has a newer one. it's checked once, when the launcher opens, by c1x's tools
- * (c1x_tools check-update), which download it too (c1x_tools download-release);
+ * installing the newest release beside this one's folder if github has a newer
+ * one, then opening it. it's checked once, when the launcher opens, by c1x's
+ * tools (c1x_tools check-update), which install it too (c1x_tools download-release);
  * a build that isn't a release has no version, and doesn't check
  */
 #include <SDL2/SDL.h>
@@ -25,16 +25,16 @@
 typedef enum {
   RELEASE_NONE,        /* there isn't a newer one (or it's not known yet) */
   RELEASE_OFFERED,     /* there is, to download */
-  RELEASE_DOWNLOADING,
-  RELEASE_SAVED,       /* downloaded into the player's Downloads folder */
-  RELEASE_FAILED,      /* it couldn't be downloaded */
+  RELEASE_INSTALLING,
+  RELEASE_INSTALLED,   /* unzipped beside this folder, to open */
+  RELEASE_FAILED,      /* it couldn't be installed */
 } release_state;
 
 static char tools_repo[PATH_MAX_LEN];              /* the repo the tools are run in */
 static background_command release_check;           /* c1x_tools check-update */
 static background_command release_download;        /* c1x_tools download-release */
 static char newer_version[RELEASE_VERSION_MAX];    /* "" until the check finds one */
-static char saved_path[PATH_MAX_LEN];              /* "" until the download saves it */
+static char installed_folder[PATH_MAX_LEN];        /* "" until the download installs it */
 
 void StartReleaseCheck(const char *repo) {
   char command[COMMAND_MAX];
@@ -53,8 +53,9 @@ void FollowReleaseCheck(void) {
     FindNewerRelease(release_check.output, newer_version, sizeof(newer_version));
   }
   UpdateBackgroundCommand(&release_download);
-  if (!saved_path[0]) {
-    FindInstalledRelease(release_download.output, saved_path, sizeof(saved_path));
+  if (!installed_folder[0]) {
+    FindInstalledRelease(release_download.output, installed_folder,
+      sizeof(installed_folder));
   }
 }
 
@@ -65,8 +66,8 @@ void StopReleaseCheck(void) {
 
 static release_state ReleaseState(void) {
   if (!newer_version[0]) { return RELEASE_NONE; }
-  if (saved_path[0]) { return RELEASE_SAVED; }
-  if (IsBackgroundCommandRunning(&release_download)) { return RELEASE_DOWNLOADING; }
+  if (installed_folder[0]) { return RELEASE_INSTALLED; }
+  if (IsBackgroundCommandRunning(&release_download)) { return RELEASE_INSTALLING; }
   if (release_download.output[0]) { return RELEASE_FAILED; }
   return RELEASE_OFFERED;
 }
@@ -80,26 +81,24 @@ static void StartReleaseDownload(void) {
   StartBackgroundCommand(&release_download, tools_repo, command);
 }
 
-/* the folder saved_path is in, as a file:// address, to open in the file browser */
-static void SavedFolderUrl(char *url, size_t size) {
-  char folder[PATH_MAX_LEN];
-  char *end;
+/* opens the new version in place of this one: its launcher, or its folder if
+   that can't start, so the player can open it themselves */
+static void OpenInstalledRelease(void) {
+  char url[PATH_MAX_LEN * 3 + 16]; /* each character of the path may be escaped as 3 */
+  SDL_Event quit;
 
-  SDL_strlcpy(folder, saved_path, sizeof(folder));
-  end = SDL_strrchr(folder, '\\');
-  if (!end) { end = SDL_strrchr(folder, '/'); }
-  if (end) { *end = 0; }
-  FileUrl(folder, url, size);
+  if (!StartInstalledLauncher(installed_folder)) {
+    FileUrl(installed_folder, url, sizeof(url));
+    SDL_OpenURL(url);
+    return;
+  }
+  SDL_zero(quit);
+  quit.type = SDL_QUIT;
+  SDL_PushEvent(&quit);
 }
 
-/* the name saved_path saves the zip as, without the folders before it */
-static const char *SavedFileName(void) {
-  const char *name;
-
-  name = SDL_strrchr(saved_path, '\\');
-  if (!name) { name = SDL_strrchr(saved_path, '/'); }
-  if (!name) { return saved_path; }
-  return name + 1;
+static void OpenButtonLabel(char *label, size_t size) {
+  SDL_snprintf(label, size, "Open v%s", newer_version);
 }
 
 static float TextWidth(const char *text) {
@@ -114,12 +113,12 @@ static void ReleaseLabel(release_state state, char *label, size_t size) {
   label[0] = 0;
   if (state == RELEASE_OFFERED) {
     SDL_snprintf(label, size, "Version %s is out", newer_version);
-  } else if (state == RELEASE_DOWNLOADING) {
-    SDL_snprintf(label, size, "Downloading v%s...", newer_version);
-  } else if (state == RELEASE_SAVED) {
-    SDL_snprintf(label, size, "Saved %s to Downloads", SavedFileName());
+  } else if (state == RELEASE_INSTALLING) {
+    SDL_snprintf(label, size, "Installing v%s...", newer_version);
+  } else if (state == RELEASE_INSTALLED) {
+    SDL_snprintf(label, size, "v%s is ready", newer_version);
   } else if (state == RELEASE_FAILED) {
-    SDL_snprintf(label, size, "Couldn't download v%s: open its page", newer_version);
+    SDL_snprintf(label, size, "Couldn't install v%s: open its page", newer_version);
   }
 }
 
@@ -130,10 +129,13 @@ static int ShowsOwnVersion(release_state state) {
 }
 
 static float ReleasePartWidth(release_state state, const char *label) {
+  char open_label[LABEL_MAX];
+
   if (state == RELEASE_NONE) { return 0; }
-  if (state == RELEASE_DOWNLOADING) { return TextWidth(label); }
-  if (state == RELEASE_SAVED) {
-    return TextWidth(label) + igGetStyle()->ItemSpacing.x + ButtonWidth("Open folder");
+  if (state == RELEASE_INSTALLING) { return TextWidth(label); }
+  if (state == RELEASE_INSTALLED) {
+    OpenButtonLabel(open_label, sizeof(open_label));
+    return TextWidth(label) + igGetStyle()->ItemSpacing.x + ButtonWidth(open_label);
   }
   return ButtonWidth(label);
 }
@@ -149,28 +151,26 @@ static float CornerWidth(release_state state, const char *release_label,
   return width + TextWidth(version_label);
 }
 
-static void DrawSavedRelease(const char *label) {
-  char url[PATH_MAX_LEN * 3 + 16]; /* each character of the path may be escaped as 3 */
+static void DrawInstalledRelease(const char *label) {
+  char open_label[LABEL_MAX];
 
   igText("%s", label);
-  DrawTooltip(saved_path);
+  DrawTooltip(installed_folder);
   igSameLine(0, -1);
-  if (igSmallButton("Open folder")) {
-    SavedFolderUrl(url, sizeof(url));
-    SDL_OpenURL(url);
-  }
-  DrawTooltip("Open your Downloads folder, to unzip it.");
+  OpenButtonLabel(open_label, sizeof(open_label));
+  if (igSmallButton(open_label)) { OpenInstalledRelease(); }
+  DrawTooltip("Close this launcher and open the new version's.");
 }
 
 static void DrawReleasePart(release_state state, const char *label) {
   if (state == RELEASE_NONE) { return; }
   if (state == RELEASE_OFFERED) {
     if (igSmallButton(label)) { StartReleaseDownload(); }
-    DrawTooltip("Download it into your Downloads folder, to unzip.");
-  } else if (state == RELEASE_DOWNLOADING) {
+    DrawTooltip("Install it beside this folder, with your settings, saves and levels.");
+  } else if (state == RELEASE_INSTALLING) {
     igTextDisabled("%s", label);
-  } else if (state == RELEASE_SAVED) {
-    DrawSavedRelease(label);
+  } else if (state == RELEASE_INSTALLED) {
+    DrawInstalledRelease(label);
   } else {
     if (igSmallButton(label)) { SDL_OpenURL(LATEST_RELEASE_PAGE); }
     DrawTooltip(release_download.output);
