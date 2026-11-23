@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { addLevelFile, addLevelMod, MODIO_GAME, sendSignInCode, signInWithCode } from "../../scripts/modio";
+import {
+  addLevelFile,
+  addLevelMod,
+  findOwnLevelMod,
+  MODIO_GAME,
+  sendSignInCode,
+  signInWithCode,
+} from "../../scripts/modio";
 
 // a stand-in for fetch answering every request with answer, and the requests it was sent
 function standInFetch(answer: unknown, status = 200) {
@@ -141,5 +148,43 @@ describe("signing in with a code", () => {
   test("is mod.io's reason when it refuses", async () => {
     const { fetchUrl } = standInFetch({ error: { code: 401, message: "The security code is invalid." } }, 401);
     expect(await signInWithCode("WRONG", fetchUrl)).toEqual({ problem: "The security code is invalid." });
+  });
+});
+
+describe("finding the player's own mod for a level", () => {
+  const OWN_MODS = { data: [{ id: 17302, metadata_blob: "1_tide_ruins", profile_url: MOD_ANSWER.profile_url }] };
+
+  test("asks for the player's mods of the game with the level's folder as their metadata", async () => {
+    const { fetchUrl, requests } = standInFetch(OWN_MODS);
+    await findOwnLevelMod("token", "1_tide_ruins", fetchUrl);
+    const url = new URL(requests[0].url);
+    expect(`${url.origin}${url.pathname}`).toBe(`${MODIO_GAME.apiUrl}/me/mods`);
+    expect(Object.fromEntries(url.searchParams)).toEqual({ game_id: String(MODIO_GAME.gameId), metadata_blob: "1_tide_ruins" });
+  });
+
+  test("signs in with the player's token", async () => {
+    const { fetchUrl, requests } = standInFetch(OWN_MODS);
+    await findOwnLevelMod("token", "1_tide_ruins", fetchUrl);
+    expect(new Headers(requests[0].init?.headers).get("Authorization")).toBe("Bearer token");
+  });
+
+  test("is the mod's id and page", async () => {
+    const { fetchUrl } = standInFetch(OWN_MODS);
+    expect(await findOwnLevelMod("token", "1_tide_ruins", fetchUrl)).toEqual({ id: 17302, page: MOD_ANSWER.profile_url });
+  });
+
+  test("is none when the player has no mod for it", async () => {
+    const { fetchUrl } = standInFetch({ data: [] });
+    expect(await findOwnLevelMod("token", "1_tide_ruins", fetchUrl)).toBeNull();
+  });
+
+  test("is none when mod.io answers with another level's mod", async () => {
+    const { fetchUrl } = standInFetch({ data: [{ id: 1, metadata_blob: "2_mossy_creek", profile_url: "" }] });
+    expect(await findOwnLevelMod("token", "1_tide_ruins", fetchUrl)).toBeNull();
+  });
+
+  test("is mod.io's reason when it refuses", async () => {
+    const { fetchUrl } = standInFetch({ error: { code: 401, message: "Your access token has expired." } }, 401);
+    expect(await findOwnLevelMod("token", "1_tide_ruins", fetchUrl)).toEqual({ problem: "Your access token has expired." });
   });
 });
