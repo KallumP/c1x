@@ -6,12 +6,12 @@ export type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 // what mod.io answered, or why there's no answer
 export type Answer<T> = T | { problem: string };
 
-// c1x's game on mod.io. the api key only reads what's public, so it ships with
-// the game, as mod.io means it to. it's the test site's game for now
+// c1x's game on mod.io (https://mod.io/g/crash-1-n-hanced). the api key only
+// reads what's public, so it ships with the game, as mod.io means it to
 export const MODIO_GAME = {
-  apiUrl: "https://g-1414.test.mod.io/v1",
-  gameId: 1414,
-  apiKey: "f4f1565165a835697fb9ca26cf0e1030",
+  apiUrl: "https://g-14831.modapi.io/v1",
+  gameId: 14831,
+  apiKey: "47f26292d1f91710d3499d89459a4d1c",
 };
 
 const LEVEL_TAG = "Level";
