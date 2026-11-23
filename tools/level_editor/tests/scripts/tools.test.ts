@@ -25,7 +25,7 @@ describe("the tools exe's commands", () => {
     });
   });
 
-  test("download-release <version> downloads that release into Downloads", () => {
+  test("download-release <version> installs that release", () => {
     expect(toolsCommand(["download-release", "1.5"])).toEqual({
       kind: "download-release",
       version: "1.5",
