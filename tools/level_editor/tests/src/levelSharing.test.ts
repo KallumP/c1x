@@ -50,13 +50,17 @@ describe("what an upload says, before its link to mod.io", () => {
   });
 });
 
-describe("what the dialog says of a map, before its link to mod.io", () => {
-  test("once it's online, that it is already", () => {
-    expect(onlineText(true)).toBe("This map is already on");
+describe("what the dialog says of a map, around its link to mod.io", () => {
+  test("once it's online, that it's been uploaded, where to view it, and that it can be again", () => {
+    expect(onlineText(true)).toEqual({
+      before: "This map has already been uploaded to mod.io, view it",
+      link: "here",
+      after: ". Alternatively, upload a new version below.",
+    });
   });
 
-  test("before it's online, that it isn't yet", () => {
-    expect(onlineText(false)).toBe("This map isn't on mod.io yet.");
+  test("before it's online, that it isn't yet, with no link", () => {
+    expect(onlineText(false)).toEqual({ before: "This map isn't on mod.io yet.", link: null, after: "" });
   });
 });
 
