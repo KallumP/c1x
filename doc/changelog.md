@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-23
+
+### Added
+
+- share custom levels on mod.io: **Share** in the level editor uploads one, and the launcher's Levels tab finds and downloads them
+- an **Open levels folder** button in the launcher's Levels tab
+
 ## 2026-11-22
 
 ### Added
