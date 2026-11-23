@@ -6,6 +6,7 @@
 
 - share custom levels on mod.io: **Share** in the level editor uploads one, and the launcher's Levels tab finds and downloads them
 - an **Open levels folder** button in the launcher's Levels tab
+- the launcher lists custom levels by their titles, with the levels that come with c1x first
 - a level's mod.io page opens from the launcher's Levels tab: **View level page** in the mod.io list, and beside a level you downloaded
 
 ## 2026-11-22
