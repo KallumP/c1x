@@ -16,9 +16,13 @@ Run `c1x_launcher.exe`, by double-clicking it or from any folder. It works on it
 
 The launcher's version is in the top right corner of its window, for example `v1.3`.
 
-When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to install that release beside your c1x folder: if yours is `c1x-1.3`, the new one is `c1x-1.4`, next to it. It says **Installing v1.4...**, then **v1.4 is ready**, with an **Open v1.4** button that opens the new version's launcher and closes this one. Your settings, controls, game files, memory card and custom levels are copied into the new folder. A custom level builds again there when you choose it, or with **Build** in the Levels tab. Your old folder isn't changed, so you can delete it once you're happy with the new one. If a `c1x-1.4` folder is already there, or the download fails, the button opens the release's page on GitHub instead, so you can download it from there.
+When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to install that release next to your c1x folder, as `c1x-1.4` beside `c1x-1.3`, then **Open v1.4** to switch to it.
 
-A new release unzips to its own folder. To carry on where you were, copy these across from the old folder:
+- Your settings, controls, game files, memory card and custom levels are copied in. Custom levels build again when you choose them.
+- Your old folder isn't changed: delete it once you're happy with the new one.
+- If it can't install, the button opens the release's page on GitHub instead.
+
+If you download a release yourself, copy these across from the old folder:
 
 - `streams/`, the game's files
 - `settings.cfg` and `controls.cfg`
