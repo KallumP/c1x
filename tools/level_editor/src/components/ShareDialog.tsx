@@ -17,7 +17,8 @@ import "./ShareDialog.css";
 
 export default function ShareDialog({ level, save, onClose }: {
   level: LevelInfo;
-  save: () => Promise<boolean>; // saves the level first, as the upload zips its files; whether it saved
+  // saves the level first, as the upload zips its files; whether it saved
+  save: () => Promise<boolean>;
   onClose: () => void;
 }) {
   const modio = useModioAccount();
@@ -49,7 +50,9 @@ export default function ShareDialog({ level, save, onClose }: {
         autoFocus
       />
       <button type="submit" disabled={modio.isBusy}>Sign in</button>
-      <button type="button" disabled={modio.isBusy} onClick={modio.startAgain}>Use another email</button>
+      <button type="button" disabled={modio.isBusy} onClick={modio.startAgain}>
+        Use another email
+      </button>
     </form>
   );
 
@@ -95,7 +98,6 @@ export default function ShareDialog({ level, save, onClose }: {
     );
   };
 
-  // a part of the dialog, under its own heading
   const renderShareSection = (title: string, content: ReactNode) => (
     <section className="share-section">
       <h3>{title}</h3>
@@ -103,24 +105,14 @@ export default function ShareDialog({ level, save, onClose }: {
     </section>
   );
 
-  // the picture the choice sends, or none to keep its own
-  const pictureToPreview = () => {
-    const { choice, viewPicture, imagePicture } = levelUpload.picture;
-    if (choice === "view") {
-      return viewPicture;
-    }
-    if (choice === "image") {
-      return imagePicture;
-    }
-    return null;
-  };
-
+  // the picture the choice sends; none when it keeps its own
   const renderPicturePreview = () => {
-    const shown = pictureToPreview();
+    const shown = levelUpload.picture.chosen();
     if (!shown) {
       return null;
     }
-    return <img className="share-picture" src={`data:image/png;base64,${shown}`} alt="Its picture on mod.io" />;
+    const source = `data:image/png;base64,${shown}`;
+    return <img className="share-picture" src={source} alt="Its picture on mod.io" />;
   };
 
   const renderImagePicker = () => (
@@ -144,7 +136,11 @@ export default function ShareDialog({ level, save, onClose }: {
     }
     const choices = pictureChoices(Boolean(online)).map((choice) => (
       <label key={choice}>
-        <input type="radio" checked={picture.choice === choice} onChange={() => picture.setChoice(choice)} />
+        <input
+          type="radio"
+          checked={picture.choice === choice}
+          onChange={() => picture.setChoice(choice)}
+        />
         {PICTURE_LABELS[choice]}
       </label>
     ));
@@ -166,7 +162,8 @@ export default function ShareDialog({ level, save, onClose }: {
     if (!uploaded) {
       return null;
     }
-    return <p className="share-success">{renderLinkedText(uploadedText(uploaded), uploaded.mod.page)}</p>;
+    const text = renderLinkedText(uploadedText(uploaded), uploaded.mod.page);
+    return <p className="share-success">{text}</p>;
   };
 
   const renderUploadButton = () => {
@@ -181,7 +178,7 @@ export default function ShareDialog({ level, save, onClose }: {
     );
   };
 
-  // who's signed in, under the title, with a way out
+  // that the player's signed in, under the title, with a way out
   const renderAccountLine = () => (
     <div className="share-account">
       <span>Signed in to mod.io</span>
@@ -213,10 +210,9 @@ export default function ShareDialog({ level, save, onClose }: {
     return renderSignedIn();
   };
 
-  // the dialog's buttons, along its bottom: upload once signed in, and close
   const renderShareFooter = () => (
     <footer className="share-footer">
-      <button onClick={() => onClose()}>Close</button>
+      <button onClick={onClose}>Close</button>
       {modio.signedIn && renderUploadButton()}
     </footer>
   );

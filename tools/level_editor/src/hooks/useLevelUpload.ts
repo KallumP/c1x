@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import type { LevelInfo } from "../api";
 import { imageLogo, viewLogo } from "../levelLogo";
-import { firstPictureChoice, pictureProblem, summaryProblem, type PictureChoice } from "../levelSharing";
+import {
+  firstPictureChoice,
+  pictureProblem,
+  summaryProblem,
+  type PictureChoice,
+} from "../levelSharing";
 import {
   fetchOwnLevelMod,
   isSignedOutError,
@@ -51,12 +56,14 @@ function usePicture(online: LevelMod | null | undefined) {
 // uploading the open level to mod.io once the player's signed in: a new mod, with
 // a summary and a picture, or a new version of the one it has
 export function useLevelUpload(
-  level: LevelInfo | null,
+  level: LevelInfo,
   signedIn: boolean | null,
   save: () => Promise<boolean>,
-  onSignedOut: () => void, // the player's sign-in was refused, so they have to sign in again
+  // the player's sign-in was refused, so they have to sign in again
+  onSignedOut: () => void,
 ) {
-  const [online, setOnline] = useState<LevelMod | null | undefined>(undefined); // undefined until mod.io says
+  // undefined until mod.io says
+  const [online, setOnline] = useState<LevelMod | null | undefined>(undefined);
   const [summary, setSummary] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -76,7 +83,7 @@ export function useLevelUpload(
     setOnline(undefined);
     setUploaded(null);
     setProblem(null);
-    if (!level || !signedIn) {
+    if (!signedIn) {
       return;
     }
     fetchOwnLevelMod(level.name).then(setOnline, showFailure);
@@ -106,7 +113,7 @@ export function useLevelUpload(
   const upload = async () => {
     const found = typedProblem();
     setProblem(found);
-    if (!level || found || isBusy) {
+    if (found || isBusy) {
       return;
     }
     setIsBusy(true);
@@ -120,7 +127,18 @@ export function useLevelUpload(
     }
   };
 
-  const chooseImage = (file: File) => picture.chooseImage(file).catch((error) => setProblem(errorMessage(error)));
+  const chooseImage = (file: File) =>
+    picture.chooseImage(file).catch((error) => setProblem(errorMessage(error)));
 
-  return { online, summary, setSummary, problem, isBusy, uploaded, upload, picture, chooseImage };
+  return {
+    online,
+    summary,
+    setSummary,
+    problem,
+    isBusy,
+    uploaded,
+    upload,
+    picture,
+    chooseImage,
+  };
 }

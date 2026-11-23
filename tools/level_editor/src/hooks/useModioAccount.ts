@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
-import { fetchSignedIn, submitSignInCode, sendSignInEmail, signOutOfModio } from "../modioApi";
+import {
+  fetchSignedIn,
+  sendSignInEmail,
+  signOutOfModio,
+  submitSignInCode,
+} from "../modioApi";
 import { emailProblem, signInCode, signInCodeProblem } from "../modioSignIn";
 import { errorMessage } from "../errorMessage";
 
-export type SignInStep = "email" | "code";
+type SignInStep = "email" | "code";
 
 // signing in to mod.io: the player's email, then the code mod.io emails them
 export function useModioAccount() {
-  const [signedIn, setSignedIn] = useState<boolean | null>(null); // null until the server says
+  // null until the server says
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [step, setStep] = useState<SignInStep>("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -19,7 +25,10 @@ export function useModioAccount() {
   }, []);
 
   // runs a step after checking what was typed, busy until it's done; whether it worked
-  const runStep = async (typedProblem: string | null, send: () => Promise<void>): Promise<boolean> => {
+  const runStep = async (
+    typedProblem: string | null,
+    send: () => Promise<void>,
+  ): Promise<boolean> => {
     setProblem(typedProblem);
     if (typedProblem) {
       return false;
@@ -56,7 +65,8 @@ export function useModioAccount() {
     setProblem(null);
   };
 
-  // back to the email step: the player signed out, or their sign-in ran out or was refused
+  // back to the email step: the player signed out, or their sign-in ran out or was
+  // refused
   const signedOut = () => {
     setSignedIn(false);
     startAgain();

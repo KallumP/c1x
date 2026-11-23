@@ -47,7 +47,8 @@ export function onlineText(isOnline: boolean): LinkedText {
   return { before: "This map isn't on mod.io yet.", link: null, after: "" };
 }
 
-// where a level's picture on mod.io comes from: the one it has, the view, or an image file
+// where a level's picture on mod.io comes from: the one it has, the view, or an
+// image file
 export type PictureChoice = "keep" | "view" | "image";
 
 export const PICTURE_LABELS: Record<PictureChoice, string> = {
