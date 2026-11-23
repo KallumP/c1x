@@ -114,9 +114,24 @@ See [Objects](../level_src/README.md#objects) for how each box, enemy and obstac
 
 Levels are shared on [c1x's page on mod.io](https://mod.io/g/crash-1-n-hanced), each as a zip of its folder.
 
-**Share yours from the level editor:** open the level and click **Share**. Sign in to mod.io with your email (it emails you a code to sign in with), write a summary for players, pick its picture, and click **Upload**. The picture is the view as it was when you clicked **Share** (so line it up first), or an image of your own, cut to 16:9. Once it's up, **Share** uploads a new version of it, keeping its summary, and its picture unless you pick a new one.
+**Share yours from the level editor:**
 
-**Play someone else's from the launcher:** in the **Levels** tab, click **Find levels** under **Levels on mod.io**, then **Download** beside the one you want. It goes in `level_src/` and builds, ready to choose as the **Custom level**. A level you made yourself is never replaced: if one has the same folder name, rename yours first.
+1. Open the level, and line the view up if you want it as the level's picture.
+2. Click **Share** in the top left corner.
+3. Sign in to mod.io with your email. It emails you a code to sign in with.
+4. Write a summary for players.
+5. Pick its picture: the view as it was when you clicked **Share**, or an image of your own, cut to 16:9.
+6. Click **Upload**.
+
+Once it's up, **Share** uploads a new version of it, keeping its summary, and its picture unless you pick a new one.
+
+**Play someone else's from the launcher:**
+
+1. In the **Levels** tab, click **Find levels** under **Levels on mod.io**.
+2. Click **Download** beside the one you want. It goes in `level_src/` and builds.
+3. Choose it as the **Custom level**.
+
+A level you made yourself is never replaced: if one has the same folder name, rename yours first.
 
 ### By hand
 
