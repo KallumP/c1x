@@ -35,15 +35,22 @@ const post = (fetchUrl: Fetch, url: string, body: unknown = {}) =>
 // each takes fetch, or a test's stand-in for it
 
 export async function fetchSignedIn(fetchUrl: Fetch = fetch): Promise<boolean> {
-  const account = await answer<{ signedIn: boolean }>(await fetchUrl("/api/modio/account"));
+  const response = await fetchUrl("/api/modio/account");
+  const account = await answer<{ signedIn: boolean }>(response);
   return account.signedIn;
 }
 
-export async function sendSignInEmail(email: string, fetchUrl: Fetch = fetch): Promise<void> {
+export async function sendSignInEmail(
+  email: string,
+  fetchUrl: Fetch = fetch,
+): Promise<void> {
   await answer(await post(fetchUrl, "/api/modio/email", { email }));
 }
 
-export async function submitSignInCode(code: string, fetchUrl: Fetch = fetch): Promise<void> {
+export async function submitSignInCode(
+  code: string,
+  fetchUrl: Fetch = fetch,
+): Promise<void> {
   await answer(await post(fetchUrl, "/api/modio/code", { code }));
 }
 
