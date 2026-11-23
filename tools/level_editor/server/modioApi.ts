@@ -90,16 +90,25 @@ function answeredSignedIn<T>(
   return answered(answer, toBody);
 }
 
-// the player's token, if they've signed in and it hasn't run out
-function signedInToken(repo: string, now: number): string | null {
+// the sign-in kept in the token file, or null if there isn't one it can read
+function savedSignIn(repo: string): SignIn | null {
   if (!existsSync(tokenPath(repo))) {
     return null;
   }
-  const { token, expires } = JSON.parse(readFileSync(tokenPath(repo), "utf8")) as SignIn;
-  if (expires <= now) {
+  try {
+    return JSON.parse(readFileSync(tokenPath(repo), "utf8")) as SignIn;
+  } catch {
     return null;
   }
-  return token;
+}
+
+// the player's token, if they've signed in and it hasn't run out
+function signedInToken(repo: string, now: number): string | null {
+  const signIn = savedSignIn(repo);
+  if (!signIn || signIn.expires <= now) {
+    return null;
+  }
+  return signIn.token;
 }
 
 async function signInWithBody(
