@@ -47,3 +47,11 @@ UTEST(launcher_level_title, is_the_folders_name_in_words_when_the_level_cfgs_is_
   cfg = "title = The Very Long Tide Ruins Of Doom\n";
   ASSERT_STREQ("Tide Ruins", TitleOf("1_tide_ruins", cfg));
 }
+
+UTEST(launcher_level_title, is_the_last_title_the_level_cfg_gives) {
+  ASSERT_STREQ("Second", TitleOf("level", "title = First\ntitle = Second\n"));
+}
+
+UTEST(launcher_level_title, is_cut_to_the_20_characters_a_loading_screen_draws) {
+  ASSERT_STREQ("A Very Long Folder N", TitleOf("a_very_long_folder_name_indeed", ""));
+}

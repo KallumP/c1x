@@ -450,3 +450,44 @@ UTEST(launcher_levels, a_level_after_one_of_its_kind_doesnt_start_a_section) {
   ListCustomLevels("build/test_launcher_levels_one_kind", &levels);
   ASSERT_FALSE(StartsLevelKind(&levels, 1));
 }
+
+UTEST(launcher_levels, titles_are_in_order_whatever_their_capitals) {
+  static custom_levels levels;
+  const char *names[] = { "first", "second", 0 };
+  const char *titles[] = { "apple", "Banana", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_capitals", names, titles, 0);
+  ListCustomLevels("build/test_launcher_levels_capitals", &levels);
+  ASSERT_STREQ("first", levels.names[0]);
+}
+
+UTEST(launcher_levels, levels_with_the_same_title_are_in_order_of_folder) {
+  static custom_levels levels;
+  const char *names[] = { "z_level", "a_level", 0 };
+  const char *titles[] = { "Same", "Same", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_same_title", names, titles, 0);
+  ListCustomLevels("build/test_launcher_levels_same_title", &levels);
+  ASSERT_STREQ("a_level", levels.names[0]);
+}
+
+UTEST(launcher_levels, the_included_list_can_have_blank_lines_and_windows_line_ends) {
+  static custom_levels levels;
+  const char *names[] = { "1_tide_ruins", "2_mossy_creek", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_crlf", names, 0,
+    "\r\n2_mossy_creek\r\n\r\n1_tide_ruins\r\n");
+  ListCustomLevels("build/test_launcher_levels_crlf", &levels);
+  ASSERT_STREQ("2_mossy_creek", levels.names[0]);
+  ASSERT_STREQ("1_tide_ruins", levels.names[1]);
+}
+
+UTEST(launcher_levels, an_included_level_downloaded_from_mod_io_comes_with_c1x) {
+  static custom_levels levels;
+  const char *names[] = { "1_tide_ruins", 0 };
+
+  MakeOrderedLevels("build/test_launcher_levels_both", names, 0, "1_tide_ruins\n");
+  NoteDownloaded("build/test_launcher_levels_both", "1_tide_ruins");
+  ListCustomLevels("build/test_launcher_levels_both", &levels);
+  ASSERT_EQ(LEVEL_COMES_WITH_C1X, levels.kinds[0]);
+}
