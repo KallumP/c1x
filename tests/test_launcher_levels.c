@@ -10,12 +10,21 @@
 #define TEST_SOURCES TEST_LEVELS_REPO "/level_src"
 #define TEST_MODIO_REPO "build/test_launcher_levels_modio"
 #define TEST_MODIO_SOURCES TEST_MODIO_REPO "/level_src"
+#define TEST_TITLES_REPO "build/test_launcher_levels_titles"
 
 static void MakeEmptyFile(const char *folder, const char *name) {
   char path[256];
 
   snprintf(path, sizeof(path), "%s/%s", folder, name);
   WriteWholeFile(path, "");
+}
+
+/* a file in folder whose text is text */
+static void MakeFileSaying(const char *folder, const char *name, const char *text) {
+  char path[256];
+
+  snprintf(path, sizeof(path), "%s/%s", folder, name);
+  WriteWholeFile(path, text);
 }
 
 static void MakeLevelsRepo(void) {
@@ -297,4 +306,48 @@ UTEST(launcher_levels, a_mod_io_page_too_long_to_keep_is_none) {
     MODIO_PAGE_MAX, 0);
   MakeDownloadedLevel("long_page", note);
   ASSERT_STREQ("", ModioPageOf(&levels, "long_page"));
+}
+
+/* a level source called name in a repo of its own, with level.cfg saying cfg if
+   there is one (cfg isn't 0) */
+static void MakeTitledLevel(const char *name, const char *cfg) {
+  char folder[256];
+
+  MakeFolder(TEST_TITLES_REPO);
+  MakeFolder(TEST_TITLES_REPO "/level_src");
+  snprintf(folder, sizeof(folder), "%s/level_src/%s", TEST_TITLES_REPO, name);
+  MakeFolder(folder);
+  MakeEmptyFile(folder, "map.obj");
+  if (cfg) { MakeFileSaying(folder, "level.cfg", cfg); }
+}
+
+/* the title the launcher lists the level called name by */
+static const char *TitleListed(custom_levels *levels, const char *name) {
+  ListCustomLevels(TEST_TITLES_REPO, levels);
+  return levels->titles[FindCustomLevel(levels, name)];
+}
+
+UTEST(launcher_levels, a_level_source_is_titled_as_its_level_cfg_says) {
+  static custom_levels levels;
+
+  MakeTitledLevel("steps", "title = Sunken Steps\n");
+  ASSERT_STREQ("Sunken Steps", TitleListed(&levels, "steps"));
+}
+
+UTEST(launcher_levels, a_level_source_without_a_title_is_titled_by_its_folder) {
+  static custom_levels levels;
+
+  MakeTitledLevel("2_mossy_creek", 0);
+  ASSERT_STREQ("Mossy Creek", TitleListed(&levels, "2_mossy_creek"));
+}
+
+UTEST(launcher_levels, a_built_level_without_a_source_is_titled_by_its_name) {
+  static custom_levels levels;
+
+  MakeTitledLevel("steps", 0);
+  MakeFolder(TEST_TITLES_REPO "/build");
+  MakeFolder(TEST_TITLES_REPO "/build/levels");
+  MakeEmptyFile(TEST_TITLES_REPO "/build/levels", "old_cave.nsd");
+  MakeEmptyFile(TEST_TITLES_REPO "/build/levels", "old_cave.nsf");
+  ASSERT_STREQ("Old Cave", TitleListed(&levels, "old_cave"));
 }
