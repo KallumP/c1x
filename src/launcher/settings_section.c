@@ -198,9 +198,9 @@ static void DrawBootLevel(const char *repo) {
   DrawLevelBuildStatus();
 }
 
-/* the window and what's shown over the game */
-static void DrawDisplayFields(void) {
-  DrawFieldGroupTitle("Display");
+/* the window, sound and what's shown over the game */
+static void DrawGeneralFields(void) {
+  DrawFieldGroupTitle("General");
   DrawOnOff("Fullscreen", &settings.fullscreen,
     "Alt+Enter or F11 switches while playing.");
   DrawOnOff("FPS display", &settings.fps_display,
@@ -251,7 +251,7 @@ static void DrawReplayFields(void) {
 static void DrawFields(const char *repo) {
   if (!BeginFieldRows("settings_fields")) { return; }
   DrawBootLevel(repo);
-  DrawDisplayFields();
+  DrawGeneralFields();
   DrawGameAdjustmentFields();
   DrawSavingFields();
   DrawReplayFields();
