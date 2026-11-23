@@ -45,5 +45,8 @@ export async function downloadLevelCommand(
     return 1;
   }
   say(`downloaded ${downloaded.name} into level_src/${downloaded.folder}`);
-  return Number(!calls.buildLevel(downloaded.folder));
+  if (!calls.buildLevel(downloaded.folder)) {
+    return 1;
+  }
+  return 0;
 }
