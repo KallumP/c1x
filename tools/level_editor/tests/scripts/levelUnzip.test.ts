@@ -47,6 +47,14 @@ describe("unzipping a level", () => {
     expect(filesIn("1_tide_ruins")).toEqual([".modio.json", "level.cfg", "tide_ruins.obj"]);
   });
 
+  test.each(["1_tide_ruins/..\\escape.obj", "1_tide_ruins/C:escape.obj", "1_tide_ruins/.."])(
+    "skips a file whose name could leave the level's folder: %j",
+    (path) => {
+      unzipLevel(root, zipOf([...TIDE_RUINS, path]), 17302);
+      expect(filesIn("1_tide_ruins")).toEqual([".modio.json", "level.cfg", "tide_ruins.obj"]);
+    },
+  );
+
   test("replaces the level downloaded from the same mod.io level before", () => {
     unzipLevel(root, zipOf([...TIDE_RUINS, "1_tide_ruins/old.png"]), 17302);
     unzipLevel(root, zipOf(TIDE_RUINS), 17302);
@@ -86,6 +94,14 @@ describe("a zip that can't be unzipped as a level", () => {
       problem: "There's already a level called 1_tide_ruins: rename its folder in level_src first.",
     });
     expect(filesIn("1_tide_ruins")).toEqual(["mine.obj"]);
+  });
+
+  test("would replace a level whose mod.io note can't be read", () => {
+    mkdirSync(join(root, "1_tide_ruins"));
+    writeFileSync(join(root, "1_tide_ruins", ".modio.json"), "{ not json");
+    expect(unzipLevel(root, zipOf(TIDE_RUINS), 17302)).toEqual({
+      problem: "There's already a level called 1_tide_ruins: rename its folder in level_src first.",
+    });
   });
 
   test("would replace a level from another mod.io level", () => {
