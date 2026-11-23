@@ -6,6 +6,7 @@ import { DEFAULT_MUSIC, isAudioSongName, soundtrack } from "../src/music";
 import { EID_NONE } from "./entryIds";
 import { entriesById, PAGE_ENTRIES, type Entry, type Level, type Page } from "./levelFiles";
 import { ZONE_MIDI } from "./zones";
+import { errorMessage } from "../src/errorMessage";
 
 const MUSIC_HEADER = 0;      // a music entry's item holding its header: its track count, then its instruments
 const INSTRUMENTS_AT = 8;    // where the header's instrument eids start
@@ -57,7 +58,8 @@ export function soundtrackMusic(name: string | undefined, readOtherLevel?: (lid:
   try {
     return levelMusic(readOtherLevel(lid));
   } catch (error) {
-    throw new Error(`${what} couldn't be read, and the level's music comes from it: ${error instanceof Error ? error.message : error}`);
+    const reason = errorMessage(error);
+    throw new Error(`${what} couldn't be read, and the level's music comes from it: ${reason}`);
   }
 }
 

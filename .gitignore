@@ -29,3 +29,6 @@ memory_card_replay/
 
 # claude code plans and project skills
 .claude/
+
+# the level editor's mod.io sign-in
+modio_token.json

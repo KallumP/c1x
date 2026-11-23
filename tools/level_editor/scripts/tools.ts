@@ -1,22 +1,29 @@
 // c1x's tools for players, packed with node as build/c1x_tools.exe (toolsExe.ts)
-// so they need nothing installed: the level build, the level editor, and the
-// launcher's check for a newer release
+// so they need nothing installed: the level build, the level editor, the
+// launcher's check for a newer release, and the levels shared on mod.io
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { buildLevel, levelSourcePath } from "../builder/buildLevel";
 import { repoFolders } from "../builder/repoFolders";
 import { addressLine, startEditorServer } from "../server/editorServer";
+import { downloadLevelCommand } from "./levelDownload";
+import { downloadLevelZip, fetchOnlineLevel } from "./modio";
+import { listOnlineLevelsCommand } from "./onlineLevels";
 import { checkUpdate } from "./updateCheck";
 
 export type ToolsCommand =
   | { kind: "build-level"; level: string }
   | { kind: "editor" }
   | { kind: "check-update"; version: string }
+  | { kind: "list-online-levels" }
+  | { kind: "download-level"; modId: number }
   | { kind: "usage" };
 
 export const USAGE = `usage: c1x_tools build-level <level>
        c1x_tools editor
        c1x_tools check-update <version>
+       c1x_tools list-online-levels
+       c1x_tools download-level <id>
        (from tools/level_editor: npm run build-level -- <level>, npm run editor)
 
   build-level  builds a level source into build/levels: its name, such as
@@ -26,8 +33,15 @@ export const USAGE = `usage: c1x_tools build-level <level>
   editor       starts the level editor (its page built into build/editor by
                make, or npm run build), and says where it is
   check-update asks GitHub for c1x's latest release, and says if it's newer
-               than version (two numbers, like 1.3), or why it can't tell`;
+               than version (two numbers, like 1.3), or why it can't tell
+  list-online-levels
+               lists the levels shared on mod.io, one a line: its id, author
+               and name
+  download-level
+               downloads the level with that id from mod.io into level_src,
+               then builds it`;
 
+const MOD_ID = /^[1-9]\d*$/; // a mod's id on mod.io
 const EDITOR_PORT = 5173; // vite's, as npm run dev has it
 
 // what the command line asks for
@@ -42,6 +56,12 @@ export function toolsCommand(args: string[]): ToolsCommand {
   if (command === "check-update" && rest.length === 1) {
     return { kind: "check-update", version: rest[0] };
   }
+  if (command === "list-online-levels" && rest.length === 0) {
+    return { kind: "list-online-levels" };
+  }
+  if (command === "download-level" && rest.length === 1 && MOD_ID.test(rest[0])) {
+    return { kind: "download-level", modId: Number(rest[0]) };
+  }
   return { kind: "usage" };
 }
 
@@ -49,6 +69,16 @@ export function toolsCommand(args: string[]): ToolsCommand {
 function runBuildLevel(repo: string, level: string): boolean {
   const { sourcesDir, streamsDir, levelsDir } = repoFolders(repo);
   return buildLevel(levelSourcePath(level, sourcesDir), { streamsDir, levelsDir, log: console.log });
+}
+
+// downloads a level from mod.io into level_src and builds it; its exit code
+function runDownloadLevel(repo: string, modId: number): Promise<number> {
+  const calls = {
+    fetchOnlineLevel,
+    downloadLevelZip,
+    buildLevel: (name: string) => runBuildLevel(repo, name),
+  };
+  return downloadLevelCommand(repoFolders(repo).sourcesDir, modId, console.log, calls);
 }
 
 // starts the editor, which runs until the process is stopped; whether it started
@@ -75,6 +105,12 @@ export async function runTools(repo: string, args: string[]): Promise<number> {
   }
   if (command.kind === "check-update") {
     return checkUpdate(command.version, console.log);
+  }
+  if (command.kind === "list-online-levels") {
+    return listOnlineLevelsCommand(console.log);
+  }
+  if (command.kind === "download-level") {
+    return runDownloadLevel(repo, command.modId);
   }
   console.log(USAGE);
   return 1;

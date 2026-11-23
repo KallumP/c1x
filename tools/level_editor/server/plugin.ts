@@ -1,7 +1,7 @@
-// the editor's api (api.ts) on vite's dev server, at /api/levels
+// the editor's apis (apis.ts) on vite's dev server
 import { dirname } from "node:path";
 import type { Plugin } from "vite";
-import { levelsApi } from "./api";
+import { APIS } from "./apis";
 import { requestBody, sendApiResponse } from "./http";
 
 // root is level_src/, in the repo
@@ -10,9 +10,13 @@ export function levelSourcesApi(root: string): Plugin {
   return {
     name: "level-sources-api",
     configureServer(server) {
-      server.middlewares.use("/api/levels", async (req, res) => {
-        sendApiResponse(res, await levelsApi(repo, req.method ?? "GET", req.url ?? "/", () => requestBody(req)));
-      });
+      for (const [path, api] of APIS) {
+        server.middlewares.use(path, async (req, res) => {
+          const readBody = () => requestBody(req);
+          const answer = await api(repo, req.method ?? "GET", req.url ?? "/", readBody);
+          sendApiResponse(res, answer);
+        });
+      }
     },
   };
 }

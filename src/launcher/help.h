@@ -20,7 +20,8 @@ typedef struct {
 
 extern const help_page help_pages[HELP_PAGE_COUNT];
 
-/* path as a file:/// address, its backslashes as slashes and spaces and #s escaped */
+/* path as a file:/// address, its backslashes as slashes and anything unsafe in an
+   address escaped */
 extern void FileUrl(const char *path, char *url, size_t size);
 
 /* where page is for repo: its own page, or the doc on github */

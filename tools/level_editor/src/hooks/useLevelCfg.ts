@@ -4,6 +4,7 @@ import { DEFAULT_CAMERA, type Camera } from "../camera";
 import { DEFAULT_SCALE } from "../coords";
 import { DEFAULT_MUSIC, DEFAULT_MUSIC_VOLUME } from "../music";
 import { DEFAULT_SKY, isSameSky } from "../sky";
+import { errorMessage } from "../errorMessage";
 
 const isSameCamera = (first: Camera, second: Camera) => first.distance === second.distance && first.angle === second.angle && first.view === second.view;
 
@@ -39,7 +40,7 @@ export function useLevelCfg(level: LevelInfo | null, onError: (message: string) 
         }
       } catch (error) {
         if (isLatestLoad) {
-          onError(`level.cfg ${error instanceof Error ? error.message : error}`);
+          onError(`level.cfg ${errorMessage(error)}`);
           setLoadedLevel(level); // loaded as far as it can be
         }
       }
@@ -62,7 +63,7 @@ export function useLevelCfg(level: LevelInfo | null, onError: (message: string) 
       setSavedCfg(cfg);
       return true;
     } catch (error) {
-      onError(`couldn't save level.cfg: ${error instanceof Error ? error.message : error}`);
+      onError(`couldn't save level.cfg: ${errorMessage(error)}`);
       return false;
     }
   };

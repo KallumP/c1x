@@ -4,6 +4,7 @@
  */
 #include <SDL2/SDL.h>
 #include "newer_release.h"
+#include "tool_output.h"
 #include "tools.h"
 
 #define CHECK_COMMAND "check-update "
@@ -11,14 +12,6 @@
 /* what the tools say before a newer release's version. updateCheck.ts has the
    same text, and one of its tests checks the two are the same */
 #define NEWER_RELEASE "newer release: "
-
-/* how many digits text starts with */
-static size_t DigitCount(const char *text) {
-  size_t count = 0;
-
-  while (SDL_isdigit(text[count])) { count++; }
-  return count;
-}
 
 int IsReleaseVersion(const char *version) {
   size_t first, second;
@@ -38,14 +31,6 @@ int NewerReleaseCommand(const char *repo, const char *version, char *command,
   if (SDL_strlen(version) >= RELEASE_VERSION_MAX) { return 0; }
   SDL_snprintf(args, sizeof(args), CHECK_COMMAND "%s", version);
   return ToolsCommand(repo, args, command, size);
-}
-
-/* how many characters text has before its line ends, or it does */
-static size_t LineLength(const char *text) {
-  size_t length = 0;
-
-  while (text[length] && text[length] != '\r' && text[length] != '\n') { length++; }
-  return length;
 }
 
 int FindNewerRelease(const char *output, char *version, size_t size) {

@@ -1,0 +1,127 @@
+/* sharing a level on mod.io: a dialog over the editor */
+.share-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 55%);
+}
+
+.share-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(440px, calc(100% - 32px));
+  padding: 16px 20px;
+  background: #2b2d31;
+  border: 1px solid #555;
+  border-radius: 6px;
+}
+
+.share-dialog h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.share-dialog p {
+  margin: 0;
+}
+
+.share-dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.share-dialog input,
+.share-dialog textarea {
+  padding: 5px 8px;
+  background: #1e1f22;
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 4px;
+}
+
+.share-dialog button {
+  padding: 4px 10px;
+  background: #383a40;
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.share-dialog button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.share-dialog a {
+  color: #8ab4f8;
+}
+
+/* the parts of the share dialog, each under its heading */
+.share-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #232428;
+  border: 1px solid #3f4147;
+  border-radius: 4px;
+}
+
+.share-section h3 {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9a9ca3;
+}
+
+.share-section label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.share-picture {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+}
+
+/* that the player's signed in, quietly under the title */
+.share-account {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #9a9ca3;
+}
+
+.share-account button {
+  padding: 1px 8px;
+  font-size: 12px;
+}
+
+.share-success {
+  color: #81c995;
+}
+
+/* the dialog's buttons, along its bottom */
+.share-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 10px;
+  border-top: 1px solid #3f4147;
+}
+
+.share-dialog .share-primary {
+  background: #3b6fd1;
+  border-color: #4a7fe0;
+  color: #fff;
+}

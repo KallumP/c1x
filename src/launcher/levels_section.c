@@ -10,6 +10,7 @@
 #include "level_build.h"
 #include "tools.h"
 #include "levels.h"
+#include "online_levels_section.h"
 #include "command.h"
 #include "paths.h"
 #include "settings_section.h"
@@ -28,16 +29,11 @@ void LoadLevelsSection(const char *repo) {
 
 void StartLevelBuild(const char *repo, const char *level) {
   char command[PATH_MAX_LEN + 64];
+  int has_command;
 
-  problem[0] = 0;
   SDL_strlcpy(building, level, sizeof(building));
-  if (!BuildLevelCommand(repo, level, command, sizeof(command))) {
-    SDL_strlcpy(problem, "The project's folder has a quote in its path.", sizeof(problem));
-    return;
-  }
-  if (!StartBackgroundCommand(&build, repo, command)) {
-    SDL_snprintf(problem, sizeof(problem), "Couldn't run %s.", command);
-  }
+  has_command = BuildLevelCommand(repo, level, command, sizeof(command));
+  StartToolsCommand(&build, repo, has_command, command, problem, sizeof(problem));
 }
 
 int IsLevelBuilding(void) {
@@ -91,6 +87,15 @@ static void DrawLevelTable(const char *repo, int can_build) {
   igEndTable();
 }
 
+/* opens level_src/ in the file browser, to drop a downloaded level into */
+static void DrawOpenLevelsFolderButton(const char *repo) {
+  char url[PATH_MAX_LEN * 3 + 16]; /* each character of the path may be escaped as 3 */
+
+  if (!igButton("Open levels folder", (ImVec2){0, 0})) { return; }
+  LevelSourcesFolderUrl(repo, url, sizeof(url));
+  SDL_OpenURL(url);
+}
+
 /* how the last build went, in a line */
 void DrawLevelBuildStatus(void) {
   if (problem[0]) {
@@ -116,7 +121,11 @@ void DrawLevelsSection(const char *repo) {
   DrawLevelTable(repo, CanBuildLevels(repo));
   if (igButton("Check again", (ImVec2){0, 0})) { LoadLevelsSection(repo); }
   DrawTooltip("Look for new level sources in level_src/, and ones saved since they were built.");
+  igSameLine(0, -1);
+  DrawOpenLevelsFolderButton(repo);
   igSpacing();
   DrawLevelBuildStatus();
   DrawCommandOutput("build_output", &build);
+  igSpacing();
+  DrawOnlineLevelsSection(repo);
 }

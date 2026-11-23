@@ -2,12 +2,13 @@
 // (see toolsExe.ts); make runs this
 import { fileURLToPath } from "node:url";
 import { makeToolsExe } from "./toolsExe";
+import { errorMessage } from "../src/errorMessage";
 
 const REPO = fileURLToPath(new URL("../../..", import.meta.url));
 
 try {
   console.log(`made ${makeToolsExe(REPO)}`);
 } catch (error) {
-  console.log(`error: ${error instanceof Error ? error.message : error}`);
+  console.log(`error: ${errorMessage(error)}`);
   process.exitCode = 1;
 }

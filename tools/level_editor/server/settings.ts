@@ -1,7 +1,7 @@
 // the game's settings.cfg (see doc/settings.md), for the editor's boot button
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { listLevels } from "./levels";
+import { levelFolder } from "./levels";
 
 const BOOT_LEVEL = /^\s*boot_level\s*=/;
 
@@ -29,12 +29,12 @@ export function writeBootLevel(path: string, name: string): void {
 
 const BOOTABLE = /^[A-Za-z0-9_-]+$/; // the names boot_level takes (doc/settings.md)
 
+export const isBootableName = (name: string) => BOOTABLE.test(name);
+
 // sets the game in repo to boot into the level built from level_src/<name>
 export function bootLevel(repo: string, name: string): void {
-  if (!listLevels(join(repo, "level_src")).some((level) => level.name === name)) {
-    throw new Error(`no level source ${name}`);
-  }
-  if (!BOOTABLE.test(name)) {
+  levelFolder(join(repo, "level_src"), name); // throws if there's no such source
+  if (!isBootableName(name)) {
     throw new Error(`the game can only boot a level named with letters, digits, _ and -, not ${name}`);
   }
   writeBootLevel(join(repo, "settings.cfg"), name);

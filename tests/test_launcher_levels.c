@@ -222,3 +222,10 @@ UTEST(launcher_levels, an_unbuilt_levels_label_says_so) {
   CustomLevelLabel(&levels, 0, label, sizeof(label));
   ASSERT_STREQ("sunset_canyon (not built)", label);
 }
+
+UTEST(launcher_levels, the_level_sources_folder_opens_as_a_file_url) {
+  char url[256];
+
+  LevelSourcesFolderUrl("C:/games/c1x", url, sizeof(url));
+  ASSERT_STREQ("file:///C:/games/c1x/level_src", url);
+}

@@ -3,12 +3,13 @@
 // launcher as that version (release.bat does all of it)
 import { fileURLToPath } from "node:url";
 import { makeRelease } from "./release";
+import { errorMessage } from "../src/errorMessage";
 
 const REPO = fileURLToPath(new URL("../../..", import.meta.url));
 
 try {
   console.log(`made ${makeRelease(REPO, process.argv[2] ?? "")}`);
 } catch (error) {
-  console.log(`error: ${error instanceof Error ? error.message : error}`);
+  console.log(`error: ${errorMessage(error)}`);
   process.exitCode = 1;
 }

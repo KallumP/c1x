@@ -14,8 +14,33 @@ describe("the tools exe's commands", () => {
     expect(toolsCommand(["check-update", "1.4"])).toEqual({ kind: "check-update", version: "1.4" });
   });
 
-  test("anything else says how to use it", () => {
-    [[], ["build-level"], ["build-level", "a", "b"], ["editor", "now"], ["check-update"], ["check-update", "1.4", "1.5"], ["play"]].forEach((args) =>
-      expect(toolsCommand(args)).toEqual({ kind: "usage" }));
+  test("list-online-levels lists the levels on mod.io", () => {
+    expect(toolsCommand(["list-online-levels"])).toEqual({ kind: "list-online-levels" });
+  });
+
+  test("download-level <id> downloads a level from mod.io", () => {
+    expect(toolsCommand(["download-level", "17302"])).toEqual({
+      kind: "download-level",
+      modId: 17302,
+    });
+  });
+
+  const NOT_IDS = ["", "abc", "1.5", "-3", "0"];
+
+  test.each(NOT_IDS)("download-level needs a mod's id: %j", (id) => {
+    expect(toolsCommand(["download-level", id])).toEqual({ kind: "usage" });
+  });
+
+  test.each([
+    [[]],
+    [["build-level"]],
+    [["build-level", "a", "b"]],
+    [["editor", "now"]],
+    [["check-update"]],
+    [["check-update", "1.4", "1.5"]],
+    [["list-online-levels", "now"]],
+    [["play"]],
+  ])("anything else says how to use it: %j", (args) => {
+    expect(toolsCommand(args)).toEqual({ kind: "usage" });
   });
 });

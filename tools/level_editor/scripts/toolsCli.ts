@@ -1,4 +1,4 @@
-// c1x_tools build-level <level> | editor | check-update <version> (see tools.ts); bundled into
+// c1x_tools and its commands (see tools.ts); bundled into
 // build/c1x_tools.exe by npm run tools-exe, which make runs
 import { isSea } from "node:sea";
 import { fileURLToPath } from "node:url";

@@ -15,6 +15,7 @@ import { buildLevel } from "./build";
 import { readLevelCfg, writeLevelCfg } from "./levelCfg";
 import { levelFileMakingGameTextures, listLevels, readObjects, writeObjects } from "./levels";
 import { bootLevel } from "./settings";
+import { errorMessage } from "../src/errorMessage";
 
 export interface ApiResponse {
   status: number;
@@ -22,7 +23,16 @@ export interface ApiResponse {
   body: string | Buffer;
 }
 
-type ReadBody = () => Promise<string>;
+export type ReadBody = () => Promise<string>;
+
+// an api: what it answers a request with, by its method, its path after the api's
+// own, and its body when it's needed
+export type Api = (
+  repo: string,
+  method: string,
+  path: string,
+  readBody: ReadBody,
+) => Promise<ApiResponse>;
 
 const FILE_TYPES: Record<string, string> = {
   ".obj": "text/plain", ".mtl": "text/plain", ".json": "application/json",
@@ -30,8 +40,18 @@ const FILE_TYPES: Record<string, string> = {
   ".gif": "image/gif", ".tif": "image/tiff", ".tiff": "image/tiff",
 };
 
-const json = (value: unknown): ApiResponse => ({ status: 200, type: "application/json", body: JSON.stringify(value) });
-const NOT_FOUND: ApiResponse = { status: 404, type: "text/plain", body: "not found" };
+export const json = (value: unknown): ApiResponse => ({
+  status: 200,
+  type: "application/json",
+  body: JSON.stringify(value),
+});
+export const NOT_FOUND: ApiResponse = { status: 404, type: "text/plain", body: "not found" };
+// a request it couldn't do, saying why
+export const refused = (problem: string): ApiResponse => ({
+  status: 400,
+  type: "text/plain",
+  body: problem,
+});
 const SAVED = json({});
 
 function fileResponse(repo: string, name: string, file: string): ApiResponse {
@@ -126,6 +146,6 @@ export async function levelsApi(repo: string, method: string, path: string, read
   try {
     return await route(repo, method, parts, readBody);
   } catch (error) {
-    return { status: 400, type: "text/plain", body: error instanceof Error ? error.message : String(error) };
+    return refused(errorMessage(error));
   }
 }

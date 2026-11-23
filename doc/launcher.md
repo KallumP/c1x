@@ -62,7 +62,15 @@ The Controls tab shows each PlayStation button's keys, on its **Keyboard** tab, 
 
 ## Levels
 
-The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`, saying whether it's built. A level says `out of date` when a file in its source folder was saved after it was built (its `.blend` doesn't count: export the `.obj` again). **Build** builds that level with `build/c1x_tools.exe`, without Node or the level editor, showing its output below. When it builds, it's set as the boot level and `settings.cfg` is saved. Only one level builds at a time. **Check again** looks for level sources added, and ones saved, since the launcher opened.
+The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`.
+
+Beside each level is whether it's built. It says `out of date` when a file in its source folder was saved after it was built (its `.blend` doesn't count: export the `.obj` again).
+
+- **Build** builds that level with `build/c1x_tools.exe`, without Node or the level editor, showing its output below. When it builds, it's set as the boot level and `settings.cfg` is saved. Only one level builds at a time.
+- **Check again** looks for level sources added, and ones saved, since the launcher opened.
+- **Open levels folder** opens `level_src/`, to drop a level into.
+
+**Levels on mod.io** lists the levels players have shared (see [Sharing levels](custom_levels.md#sharing-levels)) when you click **Find levels**. **Download** puts one in `level_src/` and builds it.
 
 If `c1x_tools.exe` isn't there (`make` skips it without Node; see [Building](building.md#the-level-build-and-editor-without-node)), the tab says so and **Build** is greyed out.
 

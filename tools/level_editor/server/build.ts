@@ -3,7 +3,7 @@
 import { join } from "node:path";
 import { buildLevel as buildLevelSource } from "../builder/buildLevel";
 import { repoFolders } from "../builder/repoFolders";
-import { listLevels } from "./levels";
+import { levelFolder } from "./levels";
 
 export interface BuildResult {
   ok: boolean;
@@ -12,9 +12,7 @@ export interface BuildResult {
 
 // builds level_src/<name> in repo into its build/levels, from the base level in its streams
 export async function buildLevel(repo: string, name: string): Promise<BuildResult> {
-  if (!listLevels(join(repo, "level_src")).some((level) => level.name === name)) {
-    throw new Error(`no level source ${name}`);
-  }
+  levelFolder(repoFolders(repo).sourcesDir, name); // throws if there's no such source
   const lines: string[] = [];
   const { sourcesDir, streamsDir, levelsDir } = repoFolders(repo);
   const ok = buildLevelSource(join(sourcesDir, name), { streamsDir, levelsDir, log: (line) => lines.push(line) });

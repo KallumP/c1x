@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include "levels.h"
+#include "help.h"
 #include "paths.h"
 
 /* whether name is one boot_level takes, by the game's own rules */
@@ -203,4 +204,11 @@ void CustomLevelLabel(const custom_levels *levels, int index, char *label, size_
   } else {
     SDL_snprintf(label, size, "%s (not built)", levels->names[index]);
   }
+}
+
+void LevelSourcesFolderUrl(const char *repo, char *url, size_t size) {
+  char path[PATH_MAX_LEN];
+
+  JoinPath(path, sizeof(path), repo, "level_src");
+  FileUrl(path, url, size);
 }

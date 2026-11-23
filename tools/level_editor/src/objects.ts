@@ -1,5 +1,6 @@
 // a level source's objects.json (see doc/custom_levels.md), read and written
 // here for the editor, and read for the level build too (builder/levelObjects.ts)
+import { errorMessage } from "./errorMessage";
 
 export const KINDS = ["spawn", "end", "box", "enemy", "obstacle"] as const;
 export type Kind = (typeof KINDS)[number];
@@ -782,7 +783,7 @@ export function parseObjects(text: string): LevelObject[] {
   try {
     entries = JSON.parse(text);
   } catch (error) {
-    throw new Error(`isn't valid JSON: ${error instanceof Error ? error.message : error}`);
+    throw new Error(`isn't valid JSON: ${errorMessage(error)}`);
   }
   if (!Array.isArray(entries)) {
     throw new Error("should be a list of objects, [{...}, ...]");

@@ -15,6 +15,7 @@
 #include "settings_section.h"
 #include "editor_section.h"
 #include "levels_section.h"
+#include "online_levels_section.h"
 #include "controls_section.h"
 #include "help_section.h"
 #include "version_corner.h"
@@ -141,6 +142,7 @@ static void DrawFrame() {
   UpdateSettingsSection(repo);
   UpdateEditorSection();
   UpdateLevelsSection(repo);
+  UpdateOnlineLevelsSection(repo);
   FollowReleaseCheck();
   DrawLauncher();
   igRender();
@@ -178,6 +180,7 @@ int main(int argc, char *argv[]) {
   }
   CloseEditorSection();
   StopReleaseCheck();
+  StopOnlineLevelsSection();
   CloseLauncherWindow();
   return 0;
 }

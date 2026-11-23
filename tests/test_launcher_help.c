@@ -28,6 +28,13 @@ UTEST(launcher_help, spaces_and_hashes_in_a_path_are_escaped) {
   ASSERT_STREQ("file:///C:/my%20games/c1x%20%232/README.html", url);
 }
 
+UTEST(launcher_help, percents_and_other_unsafe_characters_in_a_path_are_escaped) {
+  char url[256];
+
+  FileUrl("C:/a%b?c/README.html", url, sizeof(url));
+  ASSERT_STREQ("file:///C:/a%25b%3Fc/README.html", url);
+}
+
 UTEST(launcher_help, a_release_opens_its_own_page) {
   char url[512];
   const char *page = "doc/controls.html";

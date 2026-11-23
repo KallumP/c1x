@@ -6,6 +6,7 @@ import { readGameTextures, writeGameTextures } from "../builder/gameTextures";
 import { fileNameOf } from "../src/imagePaths";
 import { isAudioSongName } from "../src/music";
 import { parseLevelCfg } from "./levelCfg";
+import { errorMessage } from "../src/errorMessage";
 
 export interface LevelInfo {
   name: string;  // its folder
@@ -41,8 +42,12 @@ export function listLevels(root: string): LevelInfo[] {
     .sort((first, second) => (first.name < second.name ? -1 : 1));
 }
 
+// whether root has a level source called name
+export const hasLevelSource = (root: string, name: string) =>
+  listLevels(root).some((level) => level.name === name);
+
 export function levelFolder(root: string, name: string): string {
-  if (!listLevels(root).some((level) => level.name === name)) {
+  if (!hasLevelSource(root, name)) {
     throw new Error(`no level source ${name}`);
   }
   return join(root, name);
@@ -73,8 +78,6 @@ function fileInFolder(folder: string, file: string): string | null {
   }
   return path;
 }
-
-const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 // whether file is one of a level's game textures that isn't in its folder yet
 function isMissingGameTexture(folder: string, file: string): boolean {
@@ -108,7 +111,7 @@ function makeGameTextures(folder: string, streamsDir: string, warn: (line: strin
   try {
     writeGameTextures(folder, streamsDir);
   } catch (error) {
-    warn(messageOf(error));
+    warn(errorMessage(error));
   }
 }
 

@@ -6,7 +6,7 @@ You can turn a map made in Blender into a level that the game starts from its ti
 2. [Place objects in the level editor](#2-place-objects-in-the-level-editor)
 3. [Build the level and play it](#3-build-the-level-and-play-it)
 
-Each level gets its own folder in `level_src/`, such as `level_src/1_tide_ruins/`. Some example levels are already there (see [level_src/README.md](../level_src/README.md)). To try one, skip to step 3.
+Each level gets its own folder in `level_src/`, such as `level_src/1_tide_ruins/`. Some example levels are already there (see [level_src/README.md](../level_src/README.md)). To try one, skip to step 3. To share a level, or play one someone else made, see [Sharing levels](#sharing-levels).
 
 ## 1. Make the map in Blender
 
@@ -109,3 +109,42 @@ See [Objects](../level_src/README.md#objects) for how each box, enemy and obstac
 - **The build says a level couldn't be read, and an enemy comes from it:** some enemies are taken from the game's own levels, such as the crab from N. Sanity Beach. Extract all the game's files into `streams/` (see [Running](running.md)).
 - **The build says an image is from one of the game's files that isn't in `streams/`:** the level uses textures from the game (see [Textures from the game](#textures-from-the-game)). Extract all the game's files into `streams/`.
 - **The build says there are more texture pages than the game holds:** each image on the map and each kind of enemy from another level takes room for textures. Use fewer images or fewer kinds of enemy.
+
+## Sharing levels
+
+Levels are shared on [c1x's page on mod.io](https://mod.io/g/crash-1-n-hanced), each as a zip of its folder.
+
+**Share yours from the level editor:**
+
+1. Open the level, and line the view up if you want it as the level's picture.
+2. Click **Share** in the top left corner.
+3. Sign in to mod.io with your email. It emails you a code to sign in with.
+4. Write a summary for players.
+5. Pick its picture: the view as it was when you clicked **Share**, or an image of your own, cut to 16:9.
+6. Click **Upload**.
+
+Once it's up, **Share** uploads a new version of it, keeping its summary, and its picture unless you pick a new one.
+
+**Play someone else's from the launcher:**
+
+1. In the **Levels** tab, click **Find levels** under **Levels on mod.io**.
+2. Click **Download** beside the one you want. It goes in `level_src/` and builds.
+3. Choose it as the **Custom level**.
+
+A level you made yourself is never replaced: if one has the same folder name, rename yours first.
+
+### By hand
+
+To upload on mod.io's site instead, add a level on [c1x's page](https://mod.io/g/crash-1-n-hanced) with the zip as its file, a 16:9 picture (at least 512 by 288) and a summary. To play one downloaded from there, unzip it into `level_src/` (the launcher's **Open levels folder** button opens it) and build it in the **Levels** tab.
+
+**Zip it:** zip the level's folder itself, not the files inside it, so that unzipping it gives `my_level/` with the level in it. Put in:
+
+- the `.obj` and `.mtl`
+- the textures you copied in
+- `level.cfg` and `objects.json`
+- `game_textures.json`, `loading.png` and your own song, if the level has them
+
+Leave out:
+
+- the images `game_textures.json` lists: they're the game's own, and each player's build makes them from their own `streams/`
+- the `.blend`, unless you want others to change the map

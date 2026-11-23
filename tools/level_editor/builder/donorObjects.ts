@@ -9,6 +9,7 @@ import { MOVED_ENEMY_CODE, objectEntity } from "./entities";
 import { EID_NONE, eidToString, stringToEid } from "./entryIds";
 import { ENTRY_GOOL, entriesById, PAGE_ENTRIES, PAGE_SOUNDS, PAGE_TEXTURE, soundPage, type Entry, type Level, type Page } from "./levelFiles";
 import { entryBytes } from "./levelWriting";
+import { errorMessage } from "../src/errorMessage";
 
 // a real level an enemy is taken from: its id, name, and its files in streams/
 export interface DonorLevel {
@@ -283,7 +284,9 @@ function readDonorLevel(type: ObjectType, donor: DonorLevel, readOtherLevel?: (l
   try {
     return readOtherLevel(donor.lid);
   } catch (error) {
-    throw new Error(`${what} couldn't be read, and the level's ${objectName(type)}s come from it: ${error instanceof Error ? error.message : error}`);
+    const things = `${objectName(type)}s`;
+    const reason = errorMessage(error);
+    throw new Error(`${what} couldn't be read, and the level's ${things} come from it: ${reason}`);
   }
 }
 

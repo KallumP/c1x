@@ -53,3 +53,10 @@ UTEST(launcher_command, isnt_running_after_being_stopped) {
   StopBackgroundCommand(&command);
   ASSERT_FALSE(IsBackgroundCommandRunning(&command));
 }
+
+UTEST(launcher_command, a_tools_command_that_couldnt_be_made_says_why) {
+  char problem[128];
+
+  ASSERT_FALSE(StartToolsCommand(&command, ".", 0, "", problem, sizeof(problem)));
+  ASSERT_STREQ("The project's folder has a quote in its path.", problem);
+}

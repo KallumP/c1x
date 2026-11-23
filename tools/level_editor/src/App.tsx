@@ -6,6 +6,7 @@ import LevelPicker from "./components/LevelPicker";
 import ObjectMarkers from "./components/ObjectMarkers";
 import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
+import ShareDialog from "./components/ShareDialog";
 import Scene, { type Orbit } from "./components/Scene";
 import { levelTurn } from "./camera";
 import { movedAlong, movedNodeAlong, type Axis } from "./axisDrag";
@@ -112,6 +113,8 @@ export default function App() {
     }
   };
 
+  const [isSharing, setIsSharing] = useState(false);
+
   useUnsavedWarning(unsaved);
   const levelActions = useLevelActions(level, unsaved, save);
 
@@ -167,6 +170,16 @@ export default function App() {
     </button>
   );
 
+  const renderShareButton = () => (
+    <button
+      disabled={!level}
+      onClick={() => setIsSharing(true)}
+      title="Upload this level to mod.io, for others to play"
+    >
+      Share
+    </button>
+  );
+
   // build and boot, on the right
   const renderLevelActions = () => {
     const { isBusy, status, build, buildAndBoot } = levelActions;
@@ -218,6 +231,7 @@ export default function App() {
       <LevelPicker levels={levels} level={level} onOpen={openLevel} />
       {renderHistoryButtons()}
       {renderSaveButton()}
+      {renderShareButton()}
       {renderLevelActions()}
       {(isSaving || levelActions.isBusy) && <div className="progress" role="progressbar" aria-label="Working" />}
     </header>
@@ -296,6 +310,9 @@ export default function App() {
         songs={songs}
         onLevelCfg={levelCfg.change}
       />
+      {isSharing && level && (
+        <ShareDialog level={level} save={save} onClose={() => setIsSharing(false)} />
+      )}
     </div>
   );
 }

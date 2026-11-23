@@ -53,6 +53,13 @@ describe("the editor server", () => {
     expect(await (await fetch(`${address}api/levels/cave/objects`, { method: "PUT", body: "[]" })).json()).toEqual({});
   });
 
+  test("answers the mod.io api under /api/modio", async () => {
+    const { address } = await started();
+    expect(await (await fetch(`${address}api/modio/account`)).json()).toEqual({
+      signedIn: false,
+    });
+  });
+
   test("a file that isn't part of the page is not found, even one outside it", async () => {
     const { address } = await started();
     expect((await fetch(`${address}nope.js`)).status).toBe(404);

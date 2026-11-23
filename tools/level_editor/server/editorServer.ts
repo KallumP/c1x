@@ -1,9 +1,9 @@
 // the level editor without vite or node installed: its built page (vite build)
-// and its api (api.ts), served by node's own http server, in the tools exe
+// and its apis (apis.ts), served by node's own http server, in the tools exe
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { extname, relative, resolve, sep } from "node:path";
-import { levelsApi } from "./api";
+import { APIS } from "./apis";
 import { requestBody, sendApiResponse } from "./http";
 
 export interface EditorServerOptions {
@@ -12,7 +12,6 @@ export interface EditorServerOptions {
   firstPort: number; // the port it tries first; then the next, and so on
 }
 
-const API_PATH = "/api/levels";
 const PORTS_TRIED = 20;
 const PAGE_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json",
@@ -48,10 +47,18 @@ function sendPageFile(res: ServerResponse, pageDir: string, urlPath: string): vo
   sendApiResponse(res, { status: 200, type: PAGE_TYPES[extname(file).toLowerCase()] ?? "application/octet-stream", body: readFileSync(file) });
 }
 
+const isUnder = (url: string, path: string) =>
+  url === path || url.startsWith(`${path}/`) || url.startsWith(`${path}?`);
+
 async function answer(req: IncomingMessage, res: ServerResponse, { repo, pageDir }: EditorServerOptions): Promise<void> {
   const url = req.url ?? "/";
-  if (url === API_PATH || url.startsWith(`${API_PATH}/`) || url.startsWith(`${API_PATH}?`)) {
-    sendApiResponse(res, await levelsApi(repo, req.method ?? "GET", url.slice(API_PATH.length) || "/", () => requestBody(req)));
+  const found = APIS.find(([path]) => isUnder(url, path));
+  if (found) {
+    const [path, api] = found;
+    const apiPath = url.slice(path.length) || "/";
+    const readBody = () => requestBody(req);
+    const answered = await api(repo, req.method ?? "GET", apiPath, readBody);
+    sendApiResponse(res, answered);
     return;
   }
   sendPageFile(res, pageDir, url);

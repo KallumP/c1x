@@ -8,6 +8,7 @@ import { pngBytes, type RgbImage } from "./images";
 import { nsdPageLayout, PAGE_SIZE, PAGE_TEXTURE, readPages, SECTOR_SIZE } from "./levelFiles";
 import { regionImage } from "./textureRegions";
 import { SIZES } from "./tpage";
+import { errorMessage } from "../src/errorMessage";
 
 export const GAME_TEXTURES_FILE = "game_textures.json";
 
@@ -95,7 +96,7 @@ function parseGameTextures(text: string): Record<string, unknown> {
   try {
     return JSON.parse(text);
   } catch (error) {
-    throw new Error(`${GAME_TEXTURES_FILE} isn't valid JSON: ${error instanceof Error ? error.message : error}`);
+    throw new Error(`${GAME_TEXTURES_FILE} isn't valid JSON: ${errorMessage(error)}`);
   }
 }
 
@@ -109,7 +110,7 @@ export function readGameTextures(folder: string): Map<string, GameTexture> {
   try {
     return new Map(entries.map(([name, value]) => [name, gameTexture(name, value)]));
   } catch (error) {
-    throw new Error(`${GAME_TEXTURES_FILE}: ${error instanceof Error ? error.message : error}`);
+    throw new Error(`${GAME_TEXTURES_FILE}: ${errorMessage(error)}`);
   }
 }
 
