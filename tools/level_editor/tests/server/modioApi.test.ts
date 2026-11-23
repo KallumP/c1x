@@ -97,6 +97,11 @@ describe("the editor's mod.io account", () => {
     expect(json((await request("GET", "/account")).body)).toEqual({ signedIn: false });
   });
 
+  test("isn't signed in with a token file missing its token or expiry", async () => {
+    writeFileSync(tokenPath(), "{}");
+    expect(json((await request("GET", "/account")).body)).toEqual({ signedIn: false });
+  });
+
   test("POST /email has mod.io email the code", async () => {
     const { calls, sent } = standInCalls();
     const response = await request("POST", "/email", { email: "me@example.com" }, calls);
