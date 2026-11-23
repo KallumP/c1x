@@ -99,7 +99,8 @@ static void AddLevelSources(const char *sources, custom_levels *levels) {
 
 /* the levels that come with c1x, in the order they're listed: a folder a line */
 #define INCLUDED_LEVELS_FILE "level_src/included_levels.txt"
-#define NOT_INCLUDED CUSTOM_LEVELS_MAX /* the rank of a level that doesn't come with c1x */
+/* the rank of a level that doesn't come with c1x: after all that do */
+#define NOT_INCLUDED CUSTOM_LEVELS_MAX
 
 typedef struct {
   char name[SETTINGS_BOOT_LEVEL_MAX+1];
@@ -133,7 +134,9 @@ static int IncludedRank(const char *included, const char *name) {
     end = EndOfLine(line, &next);
     length = (size_t)(end - line);
     if (length == 0 || line[0] == '#') { continue; }
-    if (length == SDL_strlen(name) && SDL_strncmp(line, name, length) == 0) { return rank; }
+    if (length == SDL_strlen(name) && SDL_strncmp(line, name, length) == 0) {
+      return rank;
+    }
     rank++;
   }
   return NOT_INCLUDED;
