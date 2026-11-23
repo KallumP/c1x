@@ -82,8 +82,10 @@ static void DrawOnlineLevelRow(const char *repo, int index, int can_download) {
   igTextDisabled("by %s", found.authors[index]);
   igTableNextColumn();
   igPushID_Int(index);
-  if (igButton("View", (ImVec2){VIEW_WIDTH, 0})) { SDL_OpenURL(found.pages[index]); }
-  DrawTooltip("Open its page on mod.io.");
+  if (found.pages[index][0]) {
+    if (igButton("View", (ImVec2){VIEW_WIDTH, 0})) { SDL_OpenURL(found.pages[index]); }
+    DrawTooltip("Open its page on mod.io.");
+  }
   igTableNextColumn();
   igBeginDisabled(!can_download);
   if (igButton("Download", (ImVec2){BUTTON_WIDTH, 0})) {

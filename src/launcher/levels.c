@@ -198,7 +198,8 @@ static void PageInModioNote(const char *note, char *page, size_t size) {
   if (!end) { return; }
   length = (size_t)(end - start);
   if (HasBackslash(start, length)) { return; }
-  SDL_strlcpy(page, start, SDL_min(length + 1, size));
+  if (length >= size) { return; } /* cut short, it'd open a broken link */
+  SDL_strlcpy(page, start, length + 1);
 }
 
 /* the mod.io page of the level source called name, or "" if it wasn't downloaded */

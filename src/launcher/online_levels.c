@@ -61,7 +61,10 @@ static void ReadLevelLine(const char *line, online_levels *levels) {
   levels->ids[at] = id;
   CopyPart(levels->authors[at], ONLINE_LEVEL_TEXT_MAX, author, author_length);
   CopyPart(levels->names[at], ONLINE_LEVEL_TEXT_MAX, name, name_length);
-  CopyPart(levels->pages[at], ONLINE_LEVEL_PAGE_MAX, page, page_length);
+  levels->pages[at][0] = 0;
+  if (page_length < ONLINE_LEVEL_PAGE_MAX) { /* cut short, it'd open a broken link */
+    CopyPart(levels->pages[at], ONLINE_LEVEL_PAGE_MAX, page, page_length);
+  }
   levels->count++;
 }
 
