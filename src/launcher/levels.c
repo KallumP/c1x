@@ -97,26 +97,79 @@ static void AddLevelSources(const char *sources, custom_levels *levels) {
   closedir(dir);
 }
 
+/* the levels that come with c1x, in the order they're listed: a folder a line */
+#define INCLUDED_LEVELS_FILE "level_src/included_levels.txt"
+#define NOT_INCLUDED CUSTOM_LEVELS_MAX /* the rank of a level that doesn't come with c1x */
+
 typedef struct {
   char name[SETTINGS_BOOT_LEVEL_MAX+1];
+  char title[LEVEL_TITLE_MAX];
   int built;
+  int rank; /* its place among the levels that come with c1x, or NOT_INCLUDED */
 } custom_level;
 
+/* the levels that come with c1x first, in their order, then the rest by title */
 static int CompareLevels(const void *a, const void *b) {
-  return SDL_strcmp(((const custom_level*)a)->name, ((const custom_level*)b)->name);
+  const custom_level *first, *second;
+  int by_title;
+
+  first = a;
+  second = b;
+  if (first->rank != second->rank) { return first->rank - second->rank; }
+  by_title = SDL_strcasecmp(first->title, second->title);
+  if (by_title) { return by_title; }
+  return SDL_strcmp(first->name, second->name);
 }
 
-static void SortLevels(custom_levels *levels) {
+/* name's place among the levels included_levels.txt's text, included, lists; or
+   NOT_INCLUDED if it doesn't list it. lines starting with # say what it is */
+static int IncludedRank(const char *included, const char *name) {
+  const char *line, *next, *end;
+  size_t length;
+  int rank;
+
+  rank = 0;
+  for (line = included; *line; line = next) {
+    end = EndOfLine(line, &next);
+    length = (size_t)(end - line);
+    if (length == 0 || line[0] == '#') { continue; }
+    if (length == SDL_strlen(name) && SDL_strncmp(line, name, length) == 0) { return rank; }
+    rank++;
+  }
+  return NOT_INCLUDED;
+}
+
+/* the level at index as one to sort, ranked by the included levels' list */
+static void LevelToSort(const custom_levels *levels, int index, const char *included,
+  custom_level *level) {
+  SDL_strlcpy(level->name, levels->names[index], sizeof(level->name));
+  SDL_strlcpy(level->title, levels->titles[index], sizeof(level->title));
+  level->built = levels->built[index];
+  level->rank = IncludedRank(included, levels->names[index]);
+}
+
+/* the levels in order: those that come with c1x first, as included_levels.txt
+   lists them, then the rest by title */
+static void SortLevels(const char *repo, custom_levels *levels) {
   static custom_level sorted[CUSTOM_LEVELS_MAX];
+  char path[PATH_MAX_LEN];
+  char *included;
   int i;
 
+  JoinPath(path, sizeof(path), repo, INCLUDED_LEVELS_FILE);
+  included = ReadWholeFile(path);
   for (i = 0; i < levels->count; i++) {
-    SDL_strlcpy(sorted[i].name, levels->names[i], sizeof(sorted[i].name));
-    sorted[i].built = levels->built[i];
+    if (included) {
+      LevelToSort(levels, i, included, &sorted[i]);
+    } else {
+      LevelToSort(levels, i, "", &sorted[i]);
+    }
   }
+  SDL_free(included);
   SDL_qsort(sorted, levels->count, sizeof(sorted[0]), CompareLevels);
   for (i = 0; i < levels->count; i++) {
     SDL_strlcpy(levels->names[i], sorted[i].name, sizeof(levels->names[0]));
+    SDL_strlcpy(levels->titles[i], sorted[i].title, sizeof(levels->titles[0]));
     levels->built[i] = sorted[i].built;
   }
 }
@@ -248,10 +301,10 @@ void ListCustomLevels(const char *repo, custom_levels *levels) {
   AddBuiltLevels(folder, levels);
   JoinPath(folder, sizeof(folder), repo, "level_src");
   AddLevelSources(folder, levels);
-  SortLevels(levels);
+  FindTitles(repo, levels);
+  SortLevels(repo, levels);
   MarkOutOfDateLevels(repo, levels);
   FindModioPages(repo, levels);
-  FindTitles(repo, levels);
 }
 
 /* the index of the level called name, or -1 if there's none */

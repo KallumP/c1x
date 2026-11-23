@@ -21,7 +21,8 @@ typedef struct {
   char modio_pages[CUSTOM_LEVELS_MAX][MODIO_PAGE_MAX];
 } custom_levels;
 
-/* the repo's custom levels, sorted by name */
+/* the repo's custom levels: those that come with c1x first, in the order
+   level_src/included_levels.txt lists them, then the rest by title */
 extern void ListCustomLevels(const char *repo, custom_levels *levels);
 extern int FindCustomLevel(const custom_levels *levels, const char *name);
 
