@@ -6,8 +6,8 @@ import { errorMessage } from "../src/errorMessage";
 import { isProblem, type Answer } from "./answer";
 import { downloadFile } from "./download";
 import { copyPlayersThings } from "./playersThings";
-import { releaseName, unzipRelease } from "./releaseUnzip";
-import { versionNumbers } from "./updateCheck";
+import { isReleaseVersion, releaseName } from "./releaseName";
+import { unzipRelease } from "./releaseUnzip";
 
 const RELEASES_URL = "https://github.com/KallumP/c1x/releases";
 
@@ -45,7 +45,7 @@ export async function downloadReleaseCommand(
   say: (line: string) => void,
   download: typeof downloadFile = downloadFile,
 ): Promise<number> {
-  if (!versionNumbers(version)) {
+  if (!isReleaseVersion(version)) {
     say(`"${version}" isn't a version: it has to be two numbers, like 1.5`);
     return 1;
   }

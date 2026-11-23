@@ -10,7 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { strToU8, zipSync } from "fflate";
-import { releaseName, unzipRelease } from "../../scripts/releaseUnzip";
+import { unzipRelease } from "../../scripts/releaseUnzip";
 
 let parent: string; // a stand-in for the folder c1x-1.3 is in
 
@@ -27,12 +27,6 @@ const RELEASE = [
   "c1x-1.4/build/c1x.exe",
   "c1x-1.4/level_src/1_tide_ruins/map.obj",
 ];
-
-describe("a release's folder", () => {
-  test("is named c1x and its version", () => {
-    expect(releaseName("1.5")).toBe("c1x-1.5");
-  });
-});
 
 describe("unzipping a release", () => {
   test("puts it beside the current folder, as its own folder", () => {
