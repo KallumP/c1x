@@ -91,6 +91,15 @@ static void DrawLevelTable(const char *repo, int can_build) {
   igEndTable();
 }
 
+/* opens level_src/ in the file browser, to drop a downloaded level into */
+static void DrawOpenLevelsFolderButton(const char *repo) {
+  char url[PATH_MAX_LEN + 16];
+
+  if (!igButton("Open levels folder", (ImVec2){0, 0})) { return; }
+  LevelSourcesFolderUrl(repo, url, sizeof(url));
+  SDL_OpenURL(url);
+}
+
 /* how the last build went, in a line */
 void DrawLevelBuildStatus(void) {
   if (problem[0]) {
@@ -116,6 +125,8 @@ void DrawLevelsSection(const char *repo) {
   DrawLevelTable(repo, CanBuildLevels(repo));
   if (igButton("Check again", (ImVec2){0, 0})) { LoadLevelsSection(repo); }
   DrawTooltip("Look for new level sources in level_src/, and ones saved since they were built.");
+  igSameLine(0, -1);
+  DrawOpenLevelsFolderButton(repo);
   igSpacing();
   DrawLevelBuildStatus();
   DrawCommandOutput("build_output", &build);

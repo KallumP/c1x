@@ -204,3 +204,26 @@ void CustomLevelLabel(const custom_levels *levels, int index, char *label, size_
     SDL_snprintf(label, size, "%s (not built)", levels->names[index]);
   }
 }
+
+/* c onto the end of url, as a url has it: forward slashes, and spaces escaped */
+static void AppendUrlCharacter(char *url, size_t size, char c) {
+  if (c == '\\') {
+    SDL_strlcat(url, "/", size);
+  } else if (c == ' ') {
+    SDL_strlcat(url, "%20", size);
+  } else {
+    char one[2] = {c, 0};
+    SDL_strlcat(url, one, size);
+  }
+}
+
+void LevelSourcesFolderUrl(const char *repo, char *url, size_t size) {
+  char path[PATH_MAX_LEN];
+  const char *c;
+
+  JoinPath(path, sizeof(path), repo, "level_src");
+  SDL_strlcpy(url, "file://", size);
+  /* a windows path (C:/...) needs the slash a unix path (/home/...) starts with */
+  if (path[0] != '/') { SDL_strlcat(url, "/", size); }
+  for (c = path; *c; c++) { AppendUrlCharacter(url, size, *c); }
+}
