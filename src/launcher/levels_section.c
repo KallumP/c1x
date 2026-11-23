@@ -2,7 +2,7 @@
  * the launcher's levels tab: every custom level, built or not, each with a
  * Build button running build-level in the background, so a level source
  * dropped into level_src/ builds without node or the level editor, and a
- * mod.io button opening the page of one downloaded from there
+ * View level page button opening the page of one downloaded from mod.io
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -18,7 +18,6 @@
 #include "ui.h"
 
 #define STATUS_WIDTH 90.0f
-#define MODIO_WIDTH 60.0f
 
 static custom_levels levels;
 static background_command build;
@@ -66,7 +65,7 @@ static void DrawToolsMissing(const char *repo) {
 /* a button opening the level's page on mod.io, if it was downloaded from there */
 static void DrawModioPageButton(int index) {
   if (!levels.modio_pages[index][0]) { return; }
-  if (igButton("mod.io", (ImVec2){MODIO_WIDTH, 0})) {
+  if (igButton(VIEW_LEVEL_PAGE, (ImVec2){ButtonWidth(VIEW_LEVEL_PAGE), 0})) {
     SDL_OpenURL(levels.modio_pages[index]);
   }
   DrawTooltip("Open its page on mod.io, where it was downloaded from.");
@@ -91,13 +90,15 @@ static void DrawLevelRow(const char *repo, int index, int can_build) {
 
 static void DrawLevelTable(const char *repo, int can_build) {
   ImGuiTableFlags flags;
+  float page_width;
   int i;
 
   flags = ImGuiTableFlags_SizingFixedFit;
+  page_width = ButtonWidth(VIEW_LEVEL_PAGE);
   if (!igBeginTable("custom_levels", 4, flags, (ImVec2){0, 0}, 0)) { return; }
   igTableSetupColumn("name", ImGuiTableColumnFlags_WidthStretch, 0, 0);
   igTableSetupColumn("status", ImGuiTableColumnFlags_WidthFixed, STATUS_WIDTH, 0);
-  igTableSetupColumn("mod.io", ImGuiTableColumnFlags_WidthFixed, MODIO_WIDTH, 0);
+  igTableSetupColumn("page", ImGuiTableColumnFlags_WidthFixed, page_width, 0);
   igTableSetupColumn("build", ImGuiTableColumnFlags_WidthFixed, BUTTON_WIDTH, 0);
   for (i = 0; i < levels.count; i++) { DrawLevelRow(repo, i, can_build); }
   igEndTable();
