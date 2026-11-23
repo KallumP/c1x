@@ -23,6 +23,14 @@ UTEST(launcher_online_levels, a_search_with_other_characters_runs_nothing) {
   ASSERT_FALSE(ListOnlineLevelsCommand(REPO, "tide & calc", command, sizeof(command)));
 }
 
+UTEST(launcher_online_levels, a_search_too_long_to_keep_runs_nothing) {
+  char command[512], name[ONLINE_SEARCH_MAX + 1];
+
+  memset(name, 'a', ONLINE_SEARCH_MAX);
+  name[ONLINE_SEARCH_MAX] = 0;
+  ASSERT_FALSE(ListOnlineLevelsCommand(REPO, name, command, sizeof(command)));
+}
+
 UTEST(launcher_online_levels, a_search_is_trimmed_with_one_space_between_words) {
   char tidy[ONLINE_SEARCH_MAX];
 
