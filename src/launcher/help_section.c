@@ -13,7 +13,7 @@
 #define HELP_BUTTON_WIDTH 140
 
 static void OpenHelpPage(const char *repo, const help_page *page) {
-  char url[PATH_MAX_LEN * 3];
+  char url[FILE_URL_MAX];
 
   HelpPageAddress(repo, page, url, sizeof(url));
   SDL_OpenURL(url);

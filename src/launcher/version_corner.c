@@ -83,7 +83,7 @@ static void StartReleaseDownload(void) {
 /* opens the new version in place of this one: its launcher, or its folder if
    that can't start, so the player can open it themselves */
 static void OpenInstalledRelease(void) {
-  char url[PATH_MAX_LEN * 3 + 16]; /* each character of the path may be escaped as 3 */
+  char url[FILE_URL_MAX];
   SDL_Event quit;
 
   if (!StartInstalledLauncher(installed_folder)) {
