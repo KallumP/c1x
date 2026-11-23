@@ -6,6 +6,7 @@
 #include "gfx.h"
 #include "gool.h"
 
+/* laid out as the ps1 game's: a demo entry (formats/pbak.h) holds one */
 typedef struct {
   vec player_trans;
   ang player_rot;
@@ -15,7 +16,6 @@ typedef struct {
   uint32_t progress;
   lid_t lid;
   int flag;
-  uint16_t level_spawns[GOOL_LEVEL_SPAWN_COUNT];
   uint32_t spawns[GOOL_SPAWN_COUNT];
   int _box_count;
 } level_state;
