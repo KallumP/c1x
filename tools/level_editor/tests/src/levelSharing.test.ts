@@ -40,13 +40,17 @@ describe("the upload button", () => {
   });
 });
 
-describe("what an upload says, before its link to mod.io", () => {
-  test("for a new level, where to see it", () => {
-    expect(uploadedText({ mod: MOD, isNew: true })).toBe("Upload successful, see it on");
+describe("what an upload says, around its link to mod.io", () => {
+  test("for a new level, where to view it", () => {
+    expect(uploadedText({ mod: MOD, isNew: true })).toEqual({ before: "Upload successful, view it", link: "here", after: "." });
   });
 
-  test("for a level already online, where to see its new version", () => {
-    expect(uploadedText({ mod: MOD, isNew: false })).toBe("Upload successful, see the new version on");
+  test("for a level already online, where to view its new version", () => {
+    expect(uploadedText({ mod: MOD, isNew: false })).toEqual({
+      before: "Upload successful, view the new version",
+      link: "here",
+      after: ".",
+    });
   });
 });
 
