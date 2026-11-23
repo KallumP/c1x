@@ -15,6 +15,7 @@
 #define ONLINE_LEVEL "online level: "
 
 int IsSearchCharacter(int c) {
+  if (c < 0 || c > 127) { return 0; } /* isalnum is only defined for a byte */
   return SDL_isalnum(c) || c == ' ' || c == '-' || c == '_';
 }
 
