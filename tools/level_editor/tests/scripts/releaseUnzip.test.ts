@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { strToU8, zipSync } from "fflate";
@@ -15,20 +22,31 @@ function zipOf(paths: string[]): Uint8Array {
   return zipSync(Object.fromEntries(paths.map((path) => [path, strToU8(path)])));
 }
 
-const RELEASE = ["c1x-1.4/c1x_launcher.exe", "c1x-1.4/build/c1x.exe", "c1x-1.4/level_src/1_tide_ruins/map.obj"];
+const RELEASE = [
+  "c1x-1.4/c1x_launcher.exe",
+  "c1x-1.4/build/c1x.exe",
+  "c1x-1.4/level_src/1_tide_ruins/map.obj",
+];
 
 describe("unzipping a release", () => {
   test("puts it beside the current folder, as its own folder", () => {
-    expect(unzipRelease(zipOf(RELEASE), parent, "1.4")).toEqual({ folder: join(parent, "c1x-1.4") });
+    expect(unzipRelease(zipOf(RELEASE), parent, "1.4")).toEqual({
+      folder: join(parent, "c1x-1.4"),
+    });
   });
 
   test("keeps the folders inside it", () => {
     unzipRelease(zipOf(RELEASE), parent, "1.4");
-    expect(readFileSync(join(parent, "c1x-1.4", "build", "c1x.exe"), "utf8")).toBe("c1x-1.4/build/c1x.exe");
+    expect(readFileSync(join(parent, "c1x-1.4", "build", "c1x.exe"), "utf8")).toBe(
+      "c1x-1.4/build/c1x.exe",
+    );
   });
 
   test("skips the folder entries windows puts in a zip", () => {
-    const zip = zipSync({ "c1x-1.4/": new Uint8Array(), "c1x-1.4/c1x_launcher.exe": strToU8("exe") });
+    const zip = zipSync({
+      "c1x-1.4/": new Uint8Array(),
+      "c1x-1.4/c1x_launcher.exe": strToU8("exe"),
+    });
     expect(unzipRelease(zip, parent, "1.4")).toEqual({ folder: join(parent, "c1x-1.4") });
   });
 });
@@ -50,7 +68,8 @@ describe("a release that isn't unzipped", () => {
   });
 
   test("is one with a file that could leave its folder", () => {
-    expect(unzipRelease(zipOf([...RELEASE, "c1x-1.4/../escape.exe"]), parent, "1.4")).toEqual({
+    const zip = zipOf([...RELEASE, "c1x-1.4/../escape.exe"]);
+    expect(unzipRelease(zip, parent, "1.4")).toEqual({
       problem: "The download isn't c1x 1.4.",
     });
     expect(existsSync(join(parent, "escape.exe"))).toBe(false);
