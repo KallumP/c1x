@@ -7,6 +7,7 @@
 #include "tools.h"
 
 #define DOWNLOAD_ARGS_MAX 48
+#define ID_DIGITS_MAX 9 /* the most an id has: any more could be too big for an int */
 /* what the tools say before each level's line. onlineLevels.ts has the same
    text, and one of its tests checks the two are the same */
 #define ONLINE_LEVEL "online level: "
@@ -44,31 +45,34 @@ static int ReadId(const char *line, size_t *length) {
   int id = 0;
   size_t i = 0;
 
-  while (SDL_isdigit(line[i]) && i < 9) { id = id * 10 + (line[i] - '0'); i++; }
+  while (SDL_isdigit(line[i]) && i < ID_DIGITS_MAX) {
+    id = id * 10 + (line[i] - '0');
+    i++;
+  }
   if (i == 0 || line[i] != '\t') { return 0; }
   *length = i + 1;
   return id;
 }
 
-/* a level's line, after its prefix, as the next of levels; whether it was one */
-static int ReadLevelLine(const char *line, online_levels *levels) {
+/* a level's line, after its prefix, as the next of levels; a line that isn't
+   one is skipped */
+static void ReadLevelLine(const char *line, online_levels *levels) {
   size_t id_length, author_length, name_length;
   const char *author, *name;
   int id;
 
   id = ReadId(line, &id_length);
-  if (!id) { return 0; }
+  if (!id) { return; }
   author = line + id_length;
   author_length = LengthBefore(author, '\t');
-  if (author[author_length] != '\t') { return 0; }
+  if (author[author_length] != '\t') { return; }
   name = author + author_length + 1;
   name_length = LengthBefore(name, 0);
-  if (!name[name_length]) { return 0; } /* no line end yet: more of it may be to come */
+  if (!name[name_length]) { return; } /* no line end yet: more of it may be to come */
   levels->ids[levels->count] = id;
   CopyPart(levels->authors[levels->count], author, author_length);
   CopyPart(levels->names[levels->count], name, name_length);
   levels->count++;
-  return 1;
 }
 
 void FindOnlineLevels(const char *output, online_levels *levels) {

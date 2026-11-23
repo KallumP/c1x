@@ -8,7 +8,8 @@
 #include <stddef.h>
 
 #define ONLINE_LEVELS_MAX 100
-#define ONLINE_LEVEL_TEXT_MAX 64 /* an author's or name's text with its end; longer is cut short */
+/* an author's or name's text with its end; longer is cut short */
+#define ONLINE_LEVEL_TEXT_MAX 64
 
 typedef struct {
   int count;
