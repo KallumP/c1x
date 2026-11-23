@@ -20,7 +20,8 @@ UTEST(launcher_online_levels, a_download_runs_from_the_tools_with_the_levels_id)
 UTEST(launcher_online_levels, a_line_is_a_levels_id_author_name_and_page) {
   online_levels levels;
 
-  FindOnlineLevels("online level: 17302\tkallum\tTide Ruins\thttps://mod.io/m/tide\n", &levels);
+  FindOnlineLevels("online level: 17302\tkallum\tTide Ruins\t"
+    "https://mod.io/m/tide\n", &levels);
   ASSERT_EQ(1, levels.count);
   ASSERT_EQ(17302, levels.ids[0]);
   ASSERT_STREQ("kallum", levels.authors[0]);
@@ -31,7 +32,8 @@ UTEST(launcher_online_levels, a_line_is_a_levels_id_author_name_and_page) {
 UTEST(launcher_online_levels, each_line_is_a_level_in_order) {
   online_levels levels;
 
-  FindOnlineLevels("online level: 1\ta\tOne\tp1\r\nonline level: 2\tb\tTwo\tp2\r\n", &levels);
+  FindOnlineLevels("online level: 1\ta\tOne\tp1\r\n"
+    "online level: 2\tb\tTwo\tp2\r\n", &levels);
   ASSERT_EQ(2, levels.count);
   ASSERT_STREQ("One", levels.names[0]);
   ASSERT_STREQ("Two", levels.names[1]);
@@ -47,7 +49,8 @@ UTEST(launcher_online_levels, other_lines_arent_levels) {
 UTEST(launcher_online_levels, a_line_not_all_there_yet_isnt_a_level) {
   online_levels levels;
 
-  FindOnlineLevels("online level: 1\ta\tOne\tp1\nonline level: 2\tb\tTwo\thttps://mo", &levels);
+  FindOnlineLevels("online level: 1\ta\tOne\tp1\n"
+    "online level: 2\tb\tTwo\thttps://mo", &levels);
   ASSERT_EQ(1, levels.count);
 }
 
