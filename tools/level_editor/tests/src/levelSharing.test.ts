@@ -1,10 +1,13 @@
 import { describe, expect, test } from "vitest";
+import { fetchOwnLevelMod } from "../../src/modioApi";
 import {
   onlineText,
   pictureChoices,
   pictureProblem,
   SUMMARY_MAX,
   summaryProblem,
+  failureOutcome,
+  uploadAfterSaving,
   uploadProblem,
   uploadButtonText,
   uploadedText,
@@ -115,5 +118,44 @@ describe("whether an upload can go ahead", () => {
 
   test("a new level with a summary and the view as its picture can", () => {
     expect(uploadProblem(false, "A beach.", "view", false)).toBeNull();
+  });
+});
+
+describe("what a failed request does", () => {
+  const refusedWith = (status: number) => async () => new Response("refused", { status });
+
+  async function failureOf(status: number) {
+    try {
+      await fetchOwnLevelMod("1_tide_ruins", refusedWith(status));
+    } catch (error) {
+      return failureOutcome(error);
+    }
+    return null;
+  }
+
+  test("signs the player out when their sign-in was refused", async () => {
+    expect(await failureOf(401)).toEqual({ signOut: true });
+  });
+
+  test("says why otherwise", async () => {
+    expect(await failureOf(400)).toEqual({ problem: "refused" });
+  });
+});
+
+describe("uploading after saving", () => {
+  const UPLOADED = { mod: MOD, isNew: true };
+
+  test("uploads once it's saved", async () => {
+    expect(await uploadAfterSaving(async () => true, async () => UPLOADED)).toEqual(UPLOADED);
+  });
+
+  test("uploads nothing when it doesn't save", async () => {
+    let wasUploaded = false;
+    const upload = async () => {
+      wasUploaded = true;
+      return UPLOADED;
+    };
+    expect(await uploadAfterSaving(async () => false, upload)).toBeNull();
+    expect(wasUploaded).toBe(false);
   });
 });
