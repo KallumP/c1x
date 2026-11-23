@@ -146,7 +146,9 @@ describe("uploading after saving", () => {
   const UPLOADED = { mod: MOD, isNew: true };
 
   test("uploads once it's saved", async () => {
-    expect(await uploadAfterSaving(async () => true, async () => UPLOADED)).toEqual(UPLOADED);
+    expect(await uploadAfterSaving(async () => true, async () => UPLOADED)).toEqual(
+      UPLOADED,
+    );
   });
 
   test("uploads nothing when it doesn't save", async () => {

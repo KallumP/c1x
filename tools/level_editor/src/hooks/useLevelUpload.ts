@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import type { LevelInfo } from "../api";
 import { imageLogo, viewLogo } from "../levelLogo";
 import {
+  failureOutcome,
   pictureChoices,
+  uploadAfterSaving,
   uploadProblem,
   type PictureChoice,
 } from "../levelSharing";
 import {
   fetchOwnLevelMod,
-  isSignedOutError,
   uploadLevel,
   type LevelMod,
   type Uploaded,
@@ -72,11 +73,12 @@ export function useLevelUpload(
 
   // why a request failed, or back to signing in if it was the sign-in that failed
   const showFailure = (error: unknown) => {
-    if (isSignedOutError(error)) {
+    const outcome = failureOutcome(error);
+    if ("signOut" in outcome) {
       onSignedOut();
       return;
     }
-    setProblem(errorMessage(error));
+    setProblem(outcome.problem);
   };
 
   useEffect(() => {
@@ -90,11 +92,12 @@ export function useLevelUpload(
   }, [level, signedIn]);
 
   const sendUpload = async () => {
-    if (!(await save())) {
+    const send = () => uploadLevel(level.name, summary.trim(), picture.chosen());
+    const done = await uploadAfterSaving(save, send);
+    if (!done) {
       setProblem("It didn't save, so it wasn't uploaded.");
       return;
     }
-    const done = await uploadLevel(level.name, summary.trim(), picture.chosen());
     setUploaded(done);
     setOnline(done.mod);
   };

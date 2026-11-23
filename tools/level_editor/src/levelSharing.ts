@@ -1,5 +1,6 @@
 // what the editor says when sharing a level on mod.io
-import type { Uploaded } from "./modioApi";
+import { errorMessage } from "./errorMessage";
+import { isSignedOutError, type Uploaded } from "./modioApi";
 
 export const SUMMARY_MAX = 250; // the longest summary mod.io takes
 
@@ -87,4 +88,24 @@ export function pictureProblem(choice: PictureChoice, hasImage: boolean): string
     return "Choose an image for its picture first.";
   }
   return null;
+}
+
+// what to do about a failed request: sign the player out if it was their sign-in
+// that was refused, else say why it failed
+export function failureOutcome(error: unknown): { signOut: true } | { problem: string } {
+  if (isSignedOutError(error)) {
+    return { signOut: true };
+  }
+  return { problem: errorMessage(error) };
+}
+
+// saves the level, then uploads it; what it uploaded, or null if it didn't save
+export async function uploadAfterSaving(
+  save: () => Promise<boolean>,
+  upload: () => Promise<Uploaded>,
+): Promise<Uploaded | null> {
+  if (!(await save())) {
+    return null;
+  }
+  return upload();
 }

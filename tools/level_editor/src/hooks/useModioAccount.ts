@@ -5,7 +5,7 @@ import {
   signOutOfModio,
   submitSignInCode,
 } from "../modioApi";
-import { emailProblem, signInCodeProblem, typedSignInCode } from "../modioSignIn";
+import { attempt, trySendCode, trySendEmail } from "../modioSignIn";
 import { errorMessage } from "../errorMessage";
 
 type SignInStep = "email" | "code";
@@ -24,36 +24,26 @@ export function useModioAccount() {
     fetchSignedIn().then(setSignedIn, (error) => setProblem(errorMessage(error)));
   }, []);
 
-  // runs a step after checking what was typed, busy until it's done; whether it worked
-  const runStep = async (
-    typedProblem: string | null,
-    send: () => Promise<void>,
-  ): Promise<boolean> => {
-    setProblem(typedProblem);
-    if (typedProblem) {
-      return false;
-    }
+  // runs a step, busy until it's done, showing why if it failed; whether it worked
+  const runStep = async (step: () => Promise<string | null>): Promise<boolean> => {
     setIsBusy(true);
     try {
-      await send();
-      return true;
-    } catch (error) {
-      setProblem(errorMessage(error));
-      return false;
+      const failure = await step();
+      setProblem(failure);
+      return failure === null;
     } finally {
       setIsBusy(false);
     }
   };
 
   const sendEmail = async () => {
-    if (await runStep(emailProblem(email), () => sendSignInEmail(email.trim()))) {
+    if (await runStep(() => trySendEmail(email, sendSignInEmail))) {
       setStep("code");
     }
   };
 
   const sendCode = async () => {
-    const typed = typedSignInCode(code);
-    if (await runStep(signInCodeProblem(typed), () => submitSignInCode(typed))) {
+    if (await runStep(() => trySendCode(code, submitSignInCode))) {
       setSignedIn(true);
     }
   };
@@ -73,7 +63,7 @@ export function useModioAccount() {
   };
 
   const signOut = async () => {
-    if (await runStep(null, signOutOfModio)) {
+    if (await runStep(() => attempt(signOutOfModio))) {
       returnToSignIn();
     }
   };

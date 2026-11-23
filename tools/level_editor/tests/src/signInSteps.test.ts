@@ -23,7 +23,9 @@ describe("sending the email to sign in with", () => {
 
   test("sends nothing when it isn't an email, saying so", async () => {
     const { send, sent } = standInSend();
-    expect(await trySendEmail("me", send)).toBe("Type the email you sign in to mod.io with.");
+    expect(await trySendEmail("me", send)).toBe(
+      "Type the email you sign in to mod.io with.",
+    );
     expect(sent).toEqual([]);
   });
 
@@ -42,7 +44,9 @@ describe("sending the code mod.io emailed", () => {
 
   test("sends nothing when it isn't a code, saying so", async () => {
     const { send, sent } = standInSend();
-    expect(await trySendCode("ab", send)).toBe("The code mod.io emailed is 5 letters and digits.");
+    expect(await trySendCode("ab", send)).toBe(
+      "The code mod.io emailed is 5 letters and digits.",
+    );
     expect(sent).toEqual([]);
   });
 
