@@ -68,9 +68,14 @@ export default function ShareDialog({ level, save, onClose }: {
       return <p>Checking whether it's online...</p>;
     }
     if (online === null) {
-      return <p>{onlineText(false)}</p>;
+      return <p>{onlineText(false).before}</p>;
     }
-    return <p>{onlineText(true)} {renderModioLink(online.page)}.</p>;
+    const { before, link, after } = onlineText(true);
+    return (
+      <p>
+        {before} <a href={online.page} target="_blank" rel="noreferrer">{link}</a>{after}
+      </p>
+    );
   };
 
   // a new map's summary; a new version keeps its own

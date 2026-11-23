@@ -28,12 +28,23 @@ export function uploadedText({ isNew }: Uploaded): string {
   return "Upload successful, see the new version on";
 }
 
-// what the dialog says of the map, before a link to it on mod.io if it's there
-export function onlineText(isOnline: boolean): string {
+// a line of text with a link in it: the link's text, or null for none
+export interface LinkedText {
+  before: string;
+  link: string | null;
+  after: string;
+}
+
+// what the dialog says of the map, around a link to it on mod.io if it's there
+export function onlineText(isOnline: boolean): LinkedText {
   if (isOnline) {
-    return "This map is already on";
+    return {
+      before: "This map has already been uploaded to mod.io, view it",
+      link: "here",
+      after: ". Alternatively, upload a new version below.",
+    };
   }
-  return "This map isn't on mod.io yet.";
+  return { before: "This map isn't on mod.io yet.", link: null, after: "" };
 }
 
 // where a level's picture on mod.io comes from: the one it has, the view, or an image file
