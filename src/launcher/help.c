@@ -20,26 +20,33 @@ const help_page help_pages[HELP_PAGE_COUNT] = {
     "What's changed in each version." },
 };
 
-/* how one character of a path goes in a file address */
-static const char *UrlCharacter(char c, char *one) {
+/* whether a file address can have c as it is: letters, digits, and - . _ ~ / : */
+static int IsUrlSafe(char c) {
+  return SDL_isalnum((unsigned char)c) || SDL_strchr("-._~/:", c);
+}
+
+/* how one character of a path goes in a file address, into text: backslashes
+   as slashes, and anything that isn't safe in one escaped as %XX */
+static const char *UrlCharacter(char c, char *text, size_t size) {
   if (c == '\\') { return "/"; }
-  if (c == ' ') { return "%20"; }
-  if (c == '#') { return "%23"; }
-  if (c == '%') { return "%25"; }
-  one[0] = c;
-  one[1] = 0;
-  return one;
+  if (IsUrlSafe(c)) {
+    text[0] = c;
+    text[1] = 0;
+    return text;
+  }
+  SDL_snprintf(text, size, "%%%02X", (unsigned char)c);
+  return text;
 }
 
 void FileUrl(const char *path, char *url, size_t size) {
-  char one[2];
+  char text[4];
 
   SDL_strlcpy(url, "file://", size);
   if (path[0] != '/' && path[0] != '\\') {
     SDL_strlcat(url, "/", size); /* a drive's path, C:/..., after the third slash */
   }
   for (; *path; path++) {
-    SDL_strlcat(url, UrlCharacter(*path, one), size);
+    SDL_strlcat(url, UrlCharacter(*path, text, sizeof(text)), size);
   }
 }
 
