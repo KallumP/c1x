@@ -14,8 +14,12 @@ describe("the tools exe's commands", () => {
     expect(toolsCommand(["check-update", "1.4"])).toEqual({ kind: "check-update", version: "1.4" });
   });
 
+  test("list-online-levels lists the levels on mod.io", () => {
+    expect(toolsCommand(["list-online-levels"])).toEqual({ kind: "list-online-levels" });
+  });
+
   test("anything else says how to use it", () => {
-    [[], ["build-level"], ["build-level", "a", "b"], ["editor", "now"], ["check-update"], ["check-update", "1.4", "1.5"], ["play"]].forEach((args) =>
+    [[], ["build-level"], ["build-level", "a", "b"], ["editor", "now"], ["check-update"], ["check-update", "1.4", "1.5"], ["list-online-levels", "now"], ["play"]].forEach((args) =>
       expect(toolsCommand(args)).toEqual({ kind: "usage" }));
   });
 });
