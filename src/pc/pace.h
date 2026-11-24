@@ -65,7 +65,8 @@ static inline int32_t FrameTicks(lid_t lid, uint32_t frame) {
  * recorded, from the last frame's recorded time (the draw stamp) to this one's
  */
 static inline int32_t DemoFrameTicks(int32_t recorded_ticks, int32_t draw_stamp) {
-  return FRAME_TICKS;
+  if (recorded_ticks < draw_stamp) { return 0; }
+  return recorded_ticks - draw_stamp;
 }
 
 #endif /* _PC_PACE_H_ */
