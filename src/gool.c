@@ -1237,7 +1237,11 @@ static int GoolObjectDrawTweened(gool_object *obj, int alpha) {
   if (obj->handle.subtype != 3) { return SUCCESS; }
   if (!GoolObjectIsDisplayed(obj, obj->status_b)) { return SUCCESS; }
   GoolObjectPose(obj, &now);
-  TweenPoseAt(GoolObjectTweenSlot(obj), &now, alpha, &drawn);
+  /* the hud's own jump limit: its newest token blinks by jumping off screen */
+  if (obj->status_b & GOOL_FLAGS_SCREEN_PLANE)
+    TweenScreenPoseAt(GoolObjectTweenSlot(obj), &now, alpha, &drawn);
+  else
+    TweenPoseAt(GoolObjectTweenSlot(obj), &now, alpha, &drawn);
   GoolSetObjectPose(obj, &drawn);
   cur_obj = obj;
   GoolObjectTransform(obj);

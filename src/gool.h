@@ -74,6 +74,9 @@
 #define GOOL_FLAG_STRING_CENTER     0x4000000
 #define GOOL_FLAG_SOLID_BOTTOM      0x8000000
 #define GOOL_FLAG_STALL             0x10000000
+/* pc: moved in the screen's x and y (2D, or by the camera), as the hud is;
+   GoolOpMisc's angles and the velocity op read it so */
+#define GOOL_FLAGS_SCREEN_PLANE     (GOOL_FLAG_2D | 0x200000)
 
 /* state/status c flags */
 #define GOOL_FLAG_GROUND_STATE      0x4
