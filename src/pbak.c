@@ -11,6 +11,7 @@ pbak_header *cur_pbak_header; /* 80056704; gp[0xC2] */
 
 extern ns_struct ns;
 extern lid_t cur_lid;
+extern int draw_count;
 extern gool_object *crash;
 extern gool_handle handles[8];
 #include "pc/gfx/gl.h"
@@ -42,6 +43,10 @@ void PbakStart() {
   crash->bound = cur_pbak_header->crash_bound;
   checkpoint_id = -1;
   LevelRestart(&cur_pbak_header->savestate);
+  /* pc: after the restart, which zeroes it; objects (jungle rollers' rollers)
+     time themselves by it, so without the recorded count they're out of step
+     with the recording */
+  draw_count = cur_pbak_header->draw_count;
 }
 
 //----- (8002E98C) --------------------------------------------------------
