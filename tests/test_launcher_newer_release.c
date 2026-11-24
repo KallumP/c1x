@@ -1,4 +1,5 @@
 #include <string.h>
+#include <time.h>
 #include "utest.h"
 #include "launcher/newer_release.h"
 #include "test_tools_command.h"
@@ -161,16 +162,37 @@ UTEST(launcher_newer_release, the_version_is_left_as_it_was_without_a_newer_rele
   ASSERT_STREQ("1.4", version);
 }
 
+/* 24 Nov 2026 at 11:52, in local time, as the label shows it */
+static time_t BuiltAt(void) {
+  struct tm built;
+
+  memset(&built, 0, sizeof(built));
+  built.tm_year = 2026 - 1900;
+  built.tm_mon = 10;
+  built.tm_mday = 24;
+  built.tm_hour = 11;
+  built.tm_min = 52;
+  built.tm_isdst = -1;
+  return mktime(&built);
+}
+
 UTEST(launcher_newer_release, a_releases_label_is_its_version_after_a_v) {
   char label[VERSION_LABEL_MAX];
 
-  VersionLabel("1.3", label, sizeof(label));
+  VersionLabel("1.3", BuiltAt(), label, sizeof(label));
   ASSERT_STREQ("v1.3", label);
 }
 
-UTEST(launcher_newer_release, a_build_without_a_version_is_labelled_a_dev_build) {
+UTEST(launcher_newer_release, a_dev_builds_label_says_when_it_was_built) {
   char label[VERSION_LABEL_MAX];
 
-  VersionLabel("", label, sizeof(label));
+  VersionLabel("", BuiltAt(), label, sizeof(label));
+  ASSERT_STREQ("dev build, built 24 Nov 11:52", label);
+}
+
+UTEST(launcher_newer_release, an_unknown_build_time_leaves_just_dev_build) {
+  char label[VERSION_LABEL_MAX];
+
+  VersionLabel("", 0, label, sizeof(label));
   ASSERT_STREQ("dev build", label);
 }

@@ -51,9 +51,27 @@ int FindNewerRelease(const char *output, char *version, size_t size) {
   return 1;
 }
 
-void VersionLabel(const char *version, char *label, size_t size) {
-  if (!version[0]) {
+static const char *MONTH_NAMES[] = {
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+
+/* "dev build", with when it was built if that's known */
+static void DevBuildLabel(time_t built, char *label, size_t size) {
+  struct tm *local;
+
+  local = 0;
+  if (built) { local = localtime(&built); }
+  if (!local) {
     SDL_strlcpy(label, "dev build", size);
+    return;
+  }
+  SDL_snprintf(label, size, "dev build, built %d %s %02d:%02d", local->tm_mday,
+    MONTH_NAMES[local->tm_mon], local->tm_hour, local->tm_min);
+}
+
+void VersionLabel(const char *version, time_t built, char *label, size_t size) {
+  if (!version[0]) {
+    DevBuildLabel(built, label, size);
     return;
   }
   SDL_snprintf(label, size, "v%s", version);
