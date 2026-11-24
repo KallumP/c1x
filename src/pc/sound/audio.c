@@ -149,42 +149,50 @@ void SwAudioInit() {
 void SwAudioKill() {
   int i;
 
+  /* pc: stop the audio thread first (closing waits for it): it mixes from
+     the samples freed below */
+  SDL_CloseAudio();
   for (i=0;i<24;i++) {
     SwUnloadSample(i);
   }
-  SDL_PauseAudio(1);
-  SDL_CloseAudio();
 }
 
 void SwSetMVol(uint32_t vol) {
   m_amp = (double)vol / 0x7F;  
 }
 
-uint8_t pcm_buf[0x80000];
-void SwLoadSample(int voice_idx, uint8_t *data, size_t size) {
-  svoice_t *svoice;
-  sampler_t *sampler;
+/* a sample of size bytes of pcm, looping from loop_offs bytes in (-1 for none) */
+static sample_t *NewSample(uint8_t *pcm, size_t size, int loop_offs) {
   sample_t *sample;
-  int loop_offs, loop_idx;
+  int loop_idx;
 
-  size -= 32;
-  size = ADPCMToPCM16(data, size, pcm_buf, &loop_offs);
-  data = pcm_buf;
-  svoice = &svoices[voice_idx];
-  sampler = &svoice->sampler;
-  if (sampler->sample)
-    SwUnloadSample(voice_idx);
   sample = (sample_t*)malloc(sizeof(sample_t)+size+sizeof(int16_t));
-  sampler->sample = sample;
   sample->len = size/sizeof(int16_t);
   sample->loop_idx = 0;
   if (loop_offs != -1) {
     loop_idx = loop_offs/sizeof(int16_t);
     sample->loop_idx = loop_idx - sample->len;
   }
-  memcpy(sample->data, data, size);
+  memcpy(sample->data, pcm, size);
   /* used when interpolating looping samples */
-  sample->data[sample->len] = sample->data[0]; 
+  sample->data[sample->len] = sample->data[0];
+  return sample;
+}
+
+static void SwapVoiceSample(int voice_idx, sample_t *sample) {
+  SDL_LockAudio(); /* pc: the audio thread may be mixing the old sample */
+  SwUnloadSample(voice_idx);
+  svoices[voice_idx].sampler.sample = sample;
+  SDL_UnlockAudio();
+}
+
+uint8_t pcm_buf[0x80000];
+void SwLoadSample(int voice_idx, uint8_t *data, size_t size) {
+  int loop_offs;
+
+  size -= 32;
+  size = ADPCMToPCM16(data, size, pcm_buf, &loop_offs);
+  SwapVoiceSample(voice_idx, NewSample(pcm_buf, size, loop_offs));
 }
 
 void SwUnloadSample(int voice_idx) {
@@ -193,8 +201,12 @@ void SwUnloadSample(int voice_idx) {
 
   svoice = &svoices[voice_idx];
   sampler = &svoice->sampler;
-  if (sampler->sample) 
-    free(sampler->sample);
+  free(sampler->sample);
+  sampler->sample = 0; /* pc: so nothing mixes or frees it again */
+}
+
+int SwVoiceHasSample(int voice_idx) {
+  return svoices[voice_idx].sampler.sample != 0;
 }
 
 void SwNoteOn(int voice_idx) {
