@@ -1152,7 +1152,7 @@ void GfxTransformFragment(gool_frag *frag, int32_t z, eid_t tpag,
   *prims_tail+=sizeof(poly4i);
 }
 
-/* pc: a font char's corners on screen, from its bound (split out of GfxTransformFontChar) */
+/* a font char's corners on screen, from its bound (split out of GfxTransformFontChar) */
 static void GfxFontCharVerts(bound2 *bound, vec *r_verts) {
   vec verts[4];
   int i;
@@ -1173,7 +1173,7 @@ static void GfxFontCharVerts(bound2 *bound, vec *r_verts) {
   // if (_$T0 < 0) { return 0; } /* return on fail */ // TODO!
 }
 
-/* pc: add a font char's quad to the ot (split out of GfxTransformFontChar) */
+/* add a font char's quad to the ot (split out of GfxTransformFontChar) */
 static void GfxAddFontCharPrim(gool_object *obj, texinfo *info, vec *r_verts,
   fvec *uvs, int texid, int32_t z, void *ot, int gouraud) {
   poly4i *prim, *next;
@@ -1227,7 +1227,7 @@ void GfxTransformFontChar(gool_object *obj, gool_glyph *glyph, int32_t z,
   GfxAddFontCharPrim(obj, &info, r_verts, uvs, texid, z, ot, gouraud);
 }
 
-/* pc: the slash's texture, made the first time it's drawn */
+/* the slash's texture, made the first time it's drawn */
 static int GfxSlashTexture() {
   static int texid = 0;
   static uint8_t rgba[SLASH_WIDTH*SLASH_HEIGHT*4];
@@ -1242,7 +1242,7 @@ static int GfxSlashTexture() {
 }
 
 /*
- * pc: a '/' for a font with none (the hud's digits), in bound, drawn from the
+ * a '/' for a font with none (the hud's digits), in bound, drawn from the
  * slash image (slash.h) in like_glyph's colours, so it matches the font
  */
 void GfxTransformFontSlash(gool_object *obj, gool_glyph *like_glyph, int32_t z,
@@ -1277,7 +1277,7 @@ void GfxLoadWorlds(zone_header *header) {
   for (i=0;i<header->world_count;i++) {
     world=&header->worlds[i];
     wgeo=NSLookup(&world->eid);
-    if (ISERRORCODE(wgeo)) { continue; } /* pc: skip on failed lookup */
+    if (ISERRORCODE(wgeo)) { continue; }
     w_header=(wgeo_header*)wgeo->items[0];
     if (w_header->is_backdrop) {
       world->trans.x=0;

@@ -384,7 +384,7 @@ int TextureLoad(texinfo *texinfo, fvec(*uvs)[4]) {
 }
 
 /*
- * pc: the page's pixels were changed (a save's icon put in it), so its
+ * the page's pixels were changed (a save's icon put in it), so its
  * textures are forgotten, to be made again from the page when next drawn
  */
 void TexturePageChanged(eid_t eid) {

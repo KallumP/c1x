@@ -19,7 +19,7 @@
 #include "pc/custommenu.h"
 #include "pc/jumpgrace.h"
 #include "pc/settings.h"
-#include "pc/card_game.h" /* pc: CardControl, the memory card as save files */
+#include "pc/card_game.h" /* CardControl, the memory card as save files */
 
 /* forward declarations for unexported funcs */
 int GoolObjectChangeState(gool_object*,uint32_t,int,uint32_t*);
@@ -722,7 +722,7 @@ gool_object *GoolObjectCreate(void *parent, int exec, int subtype, int argc, uin
       return child;
   }
   GoolObjectAddChild(_parent, child);
-  TweenForget(GoolObjectTweenSlot(child)); /* pc: not tweened from the slot's last object */
+  TweenForget(GoolObjectTweenSlot(child)); /* not tweened from the slot's last object */
   child->handle.subtype = 3;
   GoolObjectInit(child, exec, subtype, argc, argv);
   zone = child->zone ? child->zone : cur_zone;
@@ -808,7 +808,7 @@ int GoolObjectInit(gool_object *obj, int exec, int subtype, int argc, int *argv)
   state = maps->subtype_map[idx_states+subtype];
   if (state == 0xFF)
     return ERROR_INVALID_STATE;
-  /* pc: the level end screen looks up the level's box total by its id, and
+  /* the level end screen looks up the level's box total by its id, and
      custom levels aren't in its list; it never sets it for them, so the
      total would be whatever this (reused) object's memory held */
   LevelEndBoxTotal(exec, ended_lid, &obj->memory[LEVELEND_BOX_TOTAL]);
@@ -948,20 +948,20 @@ void GoolObjectLocalBound(gool_object *obj, vec *scale) {
   obj->scale = *scale;
 }
 
-/* pc: the object's slot in the tween pose table (pc/tween.h) */
+/* the object's slot in the tween pose table (pc/tween.h) */
 int GoolObjectTweenSlot(gool_object *obj) {
   if (obj == player) { return GOOL_OBJECT_COUNT; }
   return obj - objects;
 }
 
-/* pc: where the object is drawn */
+/* where the object is drawn */
 void GoolObjectPose(gool_object *obj, tween_pose *pose) {
   pose->trans = obj->trans;
   pose->rot = obj->rot;
   pose->scale = obj->scale;
 }
 
-/* pc: move the object to pose, to draw it there */
+/* move the object to pose, to draw it there */
 static void GoolSetObjectPose(gool_object *obj, tween_pose *pose) {
   obj->trans = pose->trans;
   obj->rot = pose->rot;
@@ -976,7 +976,7 @@ static void GoolRecordObjectPose(gool_object *obj) {
   TweenRecord(GoolObjectTweenSlot(obj), &pose);
 }
 
-/* pc: keep where every object is, before the game frame moves them, to tween from */
+/* keep where every object is, before the game frame moves them, to tween from */
 static void GoolRecordObjectPoses() {
   int i;
 
@@ -992,7 +992,7 @@ void GoolUpdateObjects(int flag) {
 
   object_bound_count = 0;
   draw_count_ro = draw_count;
-  frames_elapsed = GameFramesElapsed(context.draw_stamp); /* pc: starts part way, see pc/frames.h */
+  frames_elapsed = GameFramesElapsed(context.draw_stamp); /* starts part way, see pc/frames.h */
   if (!crash) { return; }
   GoolRecordObjectPoses();
   for (i=0;i<8;i++) {
@@ -1107,7 +1107,7 @@ static int GoolObjectPopFrame(gool_object *obj, uint32_t *flags) {
   return SUCCESS;
 }
 
-/* pc: a jump tapped just after leaving the floor counts him as on it, so a
+/* a jump tapped just after leaving the floor counts him as on it, so a
    spin that carries him off a ledge doesn't lose the jump (JumpGraceCountsAsFloor),
    when the spin_ledge_jump setting is on */
 static void CrashJumpGrace(gool_object *obj) {
@@ -1130,11 +1130,11 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
   int res;
 
   if (obj->handle.subtype != 3) { return SUCCESS; }
-  EnhancedTitleSeeObject(obj); /* pc: has the title's logo landed? */
-  CustomMenuSeeObject(obj); /* pc: which row is the title menu's cursor on? */
+  EnhancedTitleSeeObject(obj); /* has the title's logo landed? */
+  CustomMenuSeeObject(obj); /* which row is the title menu's cursor on? */
   if (obj == crash) {
     PadUpdate();
-    CustomMenuReadPad(); /* pc: before the title's menu reads it */
+    CustomMenuReadPad(); /* before the title's menu reads it */
     CrashJumpGrace(obj);
   }
   cur_obj = obj;
@@ -1238,7 +1238,7 @@ static void GoolObjectTweenedPose(gool_object *obj, tween_pose *now, int alpha,
     TweenWorldPoseAt(GoolObjectTweenSlot(obj), now, alpha, drawn);
 }
 
-/* pc: draw the object (only) in its pose alpha of the way from the last game frame */
+/* draw the object (only) in its pose alpha of the way from the last game frame */
 static int GoolObjectDrawTweened(gool_object *obj, int alpha) {
   tween_pose now, drawn;
 
@@ -1254,7 +1254,7 @@ static int GoolObjectDrawTweened(gool_object *obj, int alpha) {
   return SUCCESS;
 }
 
-/* pc: draw every object, without updating them, part way (alpha) from the last game frame */
+/* draw every object, without updating them, part way (alpha) from the last game frame */
 void GoolDrawObjectsTweened(int32_t alpha) {
   int i;
 
@@ -1389,10 +1389,10 @@ void GoolObjectTransform(gool_object *obj) {
   }
 }
 
-#define TEXT_SLASH_WIDTH_PERCENT 60 /* pc: a drawn slash's width, of a char's */
+#define TEXT_SLASH_WIDTH_PERCENT 60 /* a drawn slash's width, of a char's */
 
 /*
- * pc: draw a '/' at x for a font with none (the hud's digits), from the slash
+ * draw a '/' at x for a font with none (the hud's digits), from the slash
  * image in the font's '1' colours, a little narrower than a digit. keeps
  * max_x the text's right edge; returns where the next char starts
  */
@@ -1484,7 +1484,7 @@ static int GoolTextStringTransform(
       }
     }
     glyph = &font->glyphs[c - 0x20];
-    if (c == '/' && !glyph->has_texture) { /* pc: a font with no slash (the hud's digits) */
+    if (c == '/' && !glyph->has_texture) { /* a font with no slash (the hud's digits) */
       bound.p1.x = GoolTextSlashTransform(obj, font, bound.p1.x, y_offs, &scale, size, prims_tail, flag, &max_x);
       continue;
     }
@@ -1517,7 +1517,7 @@ static int GoolTextStringTransform(
 }
 
 /*
- * pc: drop text's trailing spaces, keeping its first character. the port
+ * drop text's trailing spaces, keeping its first character. the port
  * searched for text's end from where its string starts in the object's
  * strings rather than from 0, so it read and wrote past the end of the
  * 256 byte buffer it's in (the gem screen's strings start ~1400 in)
@@ -1532,7 +1532,7 @@ static void GoolTextTrimSpaces(char *text) {
 }
 
 /*
- * pc: text in the letters and size of obj's own, at another place (x and y in
+ * text in the letters and size of obj's own, at another place (x and y in
  * the game's units, as an object's trans is)
  */
 static void GoolTextDrawAt(gool_object *obj, gool_font *font, eid_t tpag,
@@ -1561,7 +1561,7 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
   int32_t arg;
   int i, j, res;
 
-  BoxHudSizeCounterText(obj); /* pc: the box counter's digits are smaller */
+  BoxHudSizeCounterText(obj); /* the box counter's digits are smaller */
   size = abs(obj->scale.x) / 27279; /* scale ignores flip */
   res = SwCalcSpriteRotMatrix(
     &obj->vectors,
@@ -1573,8 +1573,8 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
     0x3C00,
     &params);
   if (!res) { return; }
-  params.trans.y += BoxHudCounterTextDrop(obj); /* pc: onto the other counters' line */
-  params.trans.y += CustomMenuTextDrop(obj); /* pc: the title menu's rows make room for CUSTOM LEVEL */
+  params.trans.y += BoxHudCounterTextDrop(obj); /* onto the other counters' line */
+  params.trans.y += CustomMenuTextDrop(obj); /* the title menu's rows make room for CUSTOM LEVEL */
   str = text->strings;
   for (i=0,j=0;j<terms_skip;i++) {
     if (str[i] == 0) { j++; }
@@ -1587,7 +1587,7 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
     font = (gool_font*)&anims[font_offset*4];
   sprintf(buf, &str[i], obj->sp[-2], obj->sp[-3], obj->sp[-4], obj->sp[-5]);
   GoolTextTrimSpaces(buf);
-  if (BoxHudCounterText(obj, buf, sizeof(buf))) /* pc: the box counter's "broken/total", centred */
+  if (BoxHudCounterText(obj, buf, sizeof(buf))) /* the box counter's "broken/total", centred */
     flag = 1;
   tpag = font->tpage;
   if (flag)
@@ -1596,8 +1596,8 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
     arg = 0;
   prims_tail = GLGetPrimsTail();
   GoolTextStringTransform(obj, buf, -arg/2, font, tpag, size, prims_tail);
-  EnhancedTitleSeeMenuText(buf); /* pc: N-Hanced goes with the title's START */
-  if (CustomMenuIsTopItem(obj)) /* pc: CUSTOM LEVEL, in the title menu's letters */
+  EnhancedTitleSeeMenuText(buf); /* N-Hanced goes with the title's START */
+  if (CustomMenuIsTopItem(obj)) /* CUSTOM LEVEL, in the title menu's letters */
     GoolTextDrawAt(obj, font, tpag, size, CUSTOM_MENU_TEXT, MENU_ITEM_X, CUSTOM_MENU_Y);
 }
 
@@ -1631,7 +1631,7 @@ int GoolObjectColors(gool_object *obj) {
     if (obj->collider) {
       collider = obj->collider;
       g_header = (gool_header*)collider->global->items[0];
-      if (g_header->category == 0x300) /* pc: an argument, not a null list (on the psx, null still read ram) */
+      if (g_header->category == 0x300) /* an argument, not a null list (on the psx, null still read ram) */
         GoolSendEvent(obj, collider, GOOL_EVENT_HIT_INVINCIBLE, 1, &no_argument);
     }
   case 3:
@@ -2103,7 +2103,7 @@ static inline void GoolOpReactSolidSurfaces(gool_object*,uint32_t);
 #define G_OPB(ins) ((ins      ) & 0xFFF)
 #define G_OP(ins) G_OPB(ins)
 
-/* pc: an operand that refers to nothing (such as a link to no object) reads 0 */
+/* an operand that refers to nothing (such as a link to no object) reads 0 */
 #define G_DEREF(x) ({ uint32_t *p = x; ((p) ? *(p) : 0); })
 
 #define G_TRANS_GOPA(obj,ins,a) \
@@ -2129,7 +2129,7 @@ G_TRANS_GOPB(obj,ins,b)
                : obj->regs[a])
 
 
-/* pc: whether obj is a native (The Great Gate's SheNC) in a custom level */
+/* whether obj is a native (The Great Gate's SheNC) in a custom level */
 static int GoolObjectIsCustomLevelNative(gool_object *obj) {
   static eid_t native_eid = 0;
 
@@ -2137,7 +2137,7 @@ static int GoolObjectIsCustomLevelNative(gool_object *obj) {
   return ns.ldat->lid == LID_TEST && obj->global && obj->global->eid == native_eid;
 }
 
-/* pc: turns the push a native's shield just gave crash, along the game's x,
+/* turns the push a native's shield just gave crash, along the game's x,
    to lie along the native's own path (ShieldPushWay), at the same speed */
 static void GoolTurnShieldPush(gool_object *native) {
   vec *start, *end, way;
@@ -3382,12 +3382,11 @@ static inline void GoolOpReactSolidSurfaces(gool_object *obj, uint32_t instructi
   }
 }
 
-/* pc: an object's gool category */
 static uint32_t GoolObjectCategory(gool_object *obj) {
   return obj->global ? ((gool_header*)obj->global->items[0])->category : 0;
 }
 
-/* pc: where an object stood, at the first point of its entity's path (as GoolObjectOrientOnPath) */
+/* where an object stood, at the first point of its entity's path (as GoolObjectOrientOnPath) */
 static int GoolObjectStood(gool_object *obj, vec *stood) {
   zone_entity *entity;
   zone_rect *rect;
@@ -3401,7 +3400,7 @@ static int GoolObjectStood(gool_object *obj, vec *stood) {
   return 1;
 }
 
-/* pc: whether event is a flung enemy passing a box too far from where it stood to break it (FlingBreaksBox) */
+/* whether event is a flung enemy passing a box too far from where it stood to break it (FlingBreaksBox) */
 static int GoolFlungPastReach(gool_object *sender, gool_object *recipient, uint32_t event) {
   vec stood;
 
@@ -3413,7 +3412,7 @@ static int GoolFlungPastReach(gool_object *sender, gool_object *recipient, uint3
 
 static switch_chain_stops switch_chain_stops_now;
 
-/* pc: whether event is a switch, filled in by another's chain, passing the fill on into its own before it's hit (switchchain.h) */
+/* whether event is a switch, filled in by another's chain, passing the fill on into its own before it's hit (switchchain.h) */
 static int GoolSwitchChainStops(gool_object *sender, gool_object *recipient, uint32_t event) {
   zone_entity *entity;
 
@@ -3441,9 +3440,9 @@ int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event, i
   int res, test, i;
 
   if (recipient && GoolFlungPastReach(sender, recipient, event))
-    recipient = 0; /* pc: it flies on through the box, as if it weren't there */
+    recipient = 0; /* it flies on through the box, as if it weren't there */
   if (recipient && GoolSwitchChainStops(sender, recipient, event))
-    recipient = 0; /* pc: the switch's own chain waits for it to be hit */
+    recipient = 0; /* the switch's own chain waits for it to be hit */
   if (sender)
     sender->misc_flag = !!recipient;
   if (!recipient) { return SUCCESS; }

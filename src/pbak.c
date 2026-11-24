@@ -43,7 +43,7 @@ void PbakStart() {
   crash->bound = cur_pbak_header->crash_bound;
   checkpoint_id = -1;
   LevelRestart(&cur_pbak_header->savestate);
-  /* pc: after the restart, which zeroes it; objects (jungle rollers' rollers)
+  /* after the restart, which zeroes it; objects (jungle rollers' rollers)
      time themselves by it, so without the recorded count they're out of step
      with the recording */
   draw_count = cur_pbak_header->draw_count;

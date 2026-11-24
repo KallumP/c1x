@@ -25,7 +25,7 @@ static inline int VoiceDelayElapsed(uint16_t *key_on_frames, int8_t *delay) {
  * sample: they're up to 10 s long, and the default sustain (128 updates,
  * about 4 s) cut them off
  */
-#define VOICE_KEYED_ON_BY_FRAME 0x1000 /* pc: voice flag, set when it's created with a key-on frame */
+#define VOICE_KEYED_ON_BY_FRAME 0x1000 /* voice flag, set when it's created with a key-on frame */
 
 static inline int VoiceSustainEnded(int keyed_on_by_frame, int8_t *sustain) {
   if (keyed_on_by_frame) { return 0; }
