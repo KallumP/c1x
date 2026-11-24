@@ -32,7 +32,6 @@ Generic
 - the last bonus token you get still rubber bands across the top of the screen
 - Split level editor app.tsx into its own components
 - linux download downloads a windows version...
-- the bonus round music is played at a wrong pitch
 - why do comments mention "pc:" we dont support ps1 anymore
 - cant grab axis through a model. It just does normal drag on the model
 
