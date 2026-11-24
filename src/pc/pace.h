@@ -14,17 +14,34 @@
  * 30 fps it ran a fifth fast: 36 s, against 45 s in a recording of the PS1's
  * intro. it's drawn here at the pace the PS1 managed, in sections (one for
  * now: a frame every two and three vblanks in turn, 24 fps), with vblanks as
- * the game counts them
+ * the game counts them. with the ps1_speed setting off, frames come an even
+ * 30 a second instead
  */
 #define FRAME_TICKS  34 /* two vblanks, as the game counts them */
 #define VBLANK_TICKS 17
 
-#define NTSC_FRAMES  30000LL /* two-vblank frames ... */
-#define NTSC_SECONDS 1001LL  /* ... in this many seconds */
+#define NTSC_FRAMES   30000LL /* two-vblank frames ... */
+#define NTSC_SECONDS  1001LL  /* ... in this many seconds */
+#define EVEN_FRAMES   30LL    /* off the ps1's speed: frames ... */
+#define EVEN_SECONDS  1LL     /* ... in this many seconds */
 
-/* the ticks the first frame frames take at two ntsc vblanks a frame */
-static inline int64_t NtscTicksBeforeFrame(uint32_t frame) {
-  return frame * (TICKS_A_SECOND_UNITS * NTSC_SECONDS) / (0x8000 * NTSC_FRAMES);
+/* the ticks the first frame frames take, at frames frames every seconds seconds */
+static inline int64_t TicksBeforeFrame(uint32_t frame, int64_t frames, int64_t seconds) {
+  return frame * (TICKS_A_SECOND_UNITS * seconds) / (0x8000 * frames);
+}
+
+/* the ticks a game frame lasts: at the ps1's 29.97 a second, or an even 30 */
+static inline int32_t GameFrameTicks(uint32_t frame, int ps1_speed) {
+  int64_t frames, seconds;
+
+  frames = EVEN_FRAMES;
+  seconds = EVEN_SECONDS;
+  if (ps1_speed) {
+    frames = NTSC_FRAMES;
+    seconds = NTSC_SECONDS;
+  }
+  return (int32_t)(TicksBeforeFrame(frame+1, frames, seconds)
+    - TicksBeforeFrame(frame, frames, seconds));
 }
 
 typedef struct {
@@ -42,12 +59,11 @@ static inline uint32_t PaceVblanks(const pace_section *section, uint32_t n) {
   return n * section->vblanks / section->frames;
 }
 
-static inline int32_t FrameTicks(lid_t lid, uint32_t frame, int ps1_speed) {
+/* the ticks the intro's frame lasts, at the pace the ps1 managed */
+static inline int32_t IntroFrameTicks(uint32_t frame) {
   const pace_section *section;
   uint32_t start, i, n;
 
-  if (lid != LID_INTRO)
-    return (int32_t)(NtscTicksBeforeFrame(frame+1) - NtscTicksBeforeFrame(frame));
   start = 0;
   for (i = 0; i < sizeof(intro_pace)/sizeof(intro_pace[0]); i++) {
     section = &intro_pace[i];
@@ -58,6 +74,12 @@ static inline int32_t FrameTicks(lid_t lid, uint32_t frame, int ps1_speed) {
     start = section->end_frame;
   }
   return FRAME_TICKS;
+}
+
+/* the ticks frame of level lid lasts, at the ps1's speed or not */
+static inline int32_t FrameTicks(lid_t lid, uint32_t frame, int ps1_speed) {
+  if (lid == LID_INTRO) { return IntroFrameTicks(frame); }
+  return GameFrameTicks(frame, ps1_speed);
 }
 
 /*
