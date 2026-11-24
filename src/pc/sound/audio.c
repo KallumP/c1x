@@ -149,7 +149,8 @@ void SwAudioInit() {
 void SwAudioKill() {
   int i;
 
-  /* pc: stop the audio thread first (closing waits for it): it mixes from the samples freed below */
+  /* pc: stop the audio thread first (closing waits for it): it mixes from
+     the samples freed below */
   SDL_CloseAudio();
   for (i=0;i<24;i++) {
     SwUnloadSample(i);
@@ -200,8 +201,7 @@ void SwUnloadSample(int voice_idx) {
 
   svoice = &svoices[voice_idx];
   sampler = &svoice->sampler;
-  if (sampler->sample)
-    free(sampler->sample);
+  free(sampler->sample);
   sampler->sample = 0; /* pc: so nothing mixes or frees it again */
 }
 
