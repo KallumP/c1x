@@ -207,7 +207,7 @@ static void DrawGeneralFields(void) {
     "Shows an FPS counter in the top right corner.");
   DrawSliderBeside("frame_rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
     SETTINGS_FRAME_RATE_MAX,
-    "Target frame rate: frames drawn a second. The game logic still runs at its own speed, so it plays the same.");
+    "Target frame rate: frames drawn a second. The game logic still runs at the PS1's speed, so it plays the same.");
   DrawOnOff("Mute", &settings.mute, "Start the game with no sound.");
 }
 
@@ -227,8 +227,6 @@ static void DrawGameAdjustmentFields(void) {
     "Draw 3D models in front of or behind each other by their actual depth.");
   DrawOnOff("Fix jumping while spinning off a ledge", &settings.spin_ledge_jump,
     "In the original, once a spin carries Crash off a ledge (such as one he landed on mid-spin), he can't jump until the spin ends. This lets him jump for a moment after leaving the ledge, as he can when walking off one.");
-  DrawOnOff("PS1 speed", &settings.ps1_speed,
-    "Run the game logic at the PS1's 29.97 fps. Off runs it at an even 30 fps.");
   DrawOnOff("Speed display", &settings.speed_display,
     "Show how fast Crash is moving in the top right corner.");
   DrawOnOff("Spin display", &settings.spin_display,

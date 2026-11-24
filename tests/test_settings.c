@@ -21,7 +21,6 @@ static const struct {
   { "fullscreen",           offsetof(pc_settings, fullscreen) },
   { "memory_card",          offsetof(pc_settings, memory_card) },
   { "mute",                 offsetof(pc_settings, mute) },
-  { "ps1_speed",            offsetof(pc_settings, ps1_speed) },
 };
 
 #define ON_OFF_SETTING_COUNT (int)(sizeof(on_off_settings)/sizeof(on_off_settings[0]))
@@ -239,12 +238,4 @@ UTEST(settings, mute_is_off_unless_its_turned_on) {
   s.mute = 1;
   SettingsReset(&s);
   ASSERT_EQ(0, s.mute);
-}
-
-UTEST(settings, the_game_runs_at_the_ps1s_speed_unless_its_turned_off) {
-  pc_settings s;
-
-  s.ps1_speed = 0;
-  SettingsReset(&s);
-  ASSERT_EQ(1, s.ps1_speed);
 }
