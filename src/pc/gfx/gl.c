@@ -893,10 +893,10 @@ void GLUpdate() {
   else
     ticks_cur_frame = 17; /* default to 17 */
   frame_ticks = GLFrameTicks(); /* pc: two ntsc vblanks, or the intro's own pace */
-  if (pbak_state == 2) /* pc: a demo's frame lasts as long as when it was recorded */
+  if (pbak_state == PBAK_STATE_PLAYING) /* pc: a demo's frame lasts as long as when it was recorded */
     frame_ticks = DemoFrameTicks(cur_pbak_frame->ticks_elapsed, context.draw_stamp);
   GLWaitForFrame(frame_ticks);
-  if (pbak_state == 2)
+  if (pbak_state == PBAK_STATE_PLAYING)
     SetTicksElapsed(cur_pbak_frame->ticks_elapsed);
   ticks_elapsed = GetTicksElapsed();
   elapsed_since = ticks_elapsed - context.draw_stamp; /* time elapsed between draws */

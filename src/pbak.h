@@ -5,7 +5,10 @@
 #include "ns.h"
 #include "formats/pbak.h"
 
-#define PBAK_STATE_CHOSEN 3 /* pbak_state: a demo chosen, its level loading */
+/* pbak_state's values */
+#define PBAK_STATE_PLAYING 2
+/* a demo chosen and its level loading, or one ended and the title loading */
+#define PBAK_STATE_CHOSEN  3
 
 extern int PbakInit();
 extern int PbakKill();
