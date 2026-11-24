@@ -1,6 +1,8 @@
 // dragging the selected object along one of its axis arrows: x, y (across the
 // floor) or up, in blender
+import { withEndPadRaise } from "./endPad";
 import { pathPositions, withNodeAt } from "./enemyPaths";
+import type { Triangle } from "./overlaps";
 import type { LevelObject, Vec3 } from "./objects";
 
 export type Axis = "x" | "y" | "up";
@@ -57,4 +59,28 @@ export function movedNodeAlong(object: LevelObject, node: number, axis: Axis, me
   const moved = position.map((value, axisIndex) => (axisIndex === index ? snap(value + metres, grid) : value)) as Vec3;
   const path = withNodeAt(object, node, moved, turn, scale);
   return { path: path.map((offset, nodeIndex) => (nodeIndex === node ? (offset.map(roundToMillimetre) as Vec3) : offset)) };
+}
+
+// what's dragged: an object as it was when grabbed, or the node of its path that is
+export interface AxisGrab {
+  object: LevelObject;
+  node: number | null;
+}
+
+// what a drag is measured against: the grid it snaps to (0: none), and the level's turn, scale and floor
+export interface DragSettings {
+  grid: number;
+  turn: number;
+  scale: number;
+  triangles: Triangle[];
+}
+
+// the change dragging grabbed metres along axis makes; an end pad stays raised over the floor
+export function axisDragChanges(grabbed: AxisGrab, axis: Axis, metres: number, settings: DragSettings): Partial<LevelObject> {
+  const { object, node } = grabbed;
+  const { grid, turn, scale, triangles } = settings;
+  if (node !== null) {
+    return movedNodeAlong(object, node, axis, metres, grid, turn, scale);
+  }
+  return withEndPadRaise(object, movedAlong(object, axis, metres, grid), scale, triangles);
 }

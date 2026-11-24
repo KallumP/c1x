@@ -9,11 +9,11 @@ import PropertiesPanel from "./components/PropertiesPanel";
 import ShareDialog from "./components/ShareDialog";
 import Scene, { type Orbit } from "./components/Scene";
 import { levelTurn } from "./camera";
-import { movedAlong, movedNodeAlong, type Axis } from "./axisDrag";
+import { axisDragChanges, type Axis } from "./axisDrag";
 import { draggedBy, newObject, type Tool } from "./editor";
 import { raisedEndPad, withEndPadRaise } from "./endPad";
 import { pathPositions } from "./enemyPaths";
-import { spawnView } from "./spawnView";
+import { levelStartView } from "./spawnView";
 import type { LevelObject } from "./objects";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
@@ -88,10 +88,7 @@ export default function App() {
         dispatch({ type: "checkpoint" }); // the whole drag is one change to undo
         dragging.hasMoved = true;
       }
-      const { object, node } = dragging;
-      const changes = node === null
-        ? withEndPadRaise(object, movedAlong(object, axis, metres, grid), scale, triangles)
-        : movedNodeAlong(object, node, axis, metres, grid, turn, scale);
+      const changes = axisDragChanges(dragging, axis, metres, { grid, turn, scale, triangles });
       dispatch({ type: "update", index: dragging.index, changes, record: false });
     },
     onRelease: () => {
@@ -250,18 +247,12 @@ export default function App() {
     return <AxisHandles at={[x, y, z + raise]} {...axisDrag} />;
   };
 
-  // where the camera starts: behind the spawn, the way its arrow points, if the level has one
-  const startSpawnView = () => {
-    const spawn = state.objects.find((object) => object.kind === "spawn");
-    return spawn ? spawnView(spawn, turn, scale) : null;
-  };
-
   const renderLevel = () => (
     <>
       {group && (
         <LevelMesh
           group={group}
-          spawn={startSpawnView()}
+          spawn={levelStartView(state.objects, turn, scale)}
           isReady={editor.isLoaded && levelCfg.isLoaded}
           onClick={clickLevel}
           onPointerMove={drag.moveOverLevel}
