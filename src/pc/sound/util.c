@@ -248,6 +248,19 @@ int16_t FluidSynthAttenuation(int16_t centibels) {
   return (int16_t)scaled;
 }
 
+#define SHIFT_STEP 8 /* the ps1 tunes by a shift in 16ths of a semitone: 8 of its 128ths */
+
+/*
+ * the soundfont fineTune (in cents) for a vab tone's shift, which the ps1
+ * (libsnd's SsPitchFromNote) adds to the note, rounded down to its steps
+ */
+int16_t VabShiftToFineTune(uint8_t shift) {
+  int steps;
+
+  steps = shift / SHIFT_STEP;
+  return (int16_t)lround(steps * 100.0 / 16);
+}
+
 #define LINEAR_VELOCITY_ATTENUATION 480 /* centibels; half fluidsynth's default 960 */
 
 /*
