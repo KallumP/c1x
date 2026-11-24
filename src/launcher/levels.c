@@ -105,8 +105,8 @@ static void AddLevelSources(const char *sources, custom_levels *levels) {
 typedef struct {
   char name[SETTINGS_BOOT_LEVEL_MAX+1];
   char title[LEVEL_TITLE_MAX];
-  char modio_page[MODIO_PAGE_MAX];
   int built;
+  int downloaded;
   level_kind kind;
   int rank; /* its place among the levels that come with c1x, or NOT_INCLUDED */
 } custom_level;
@@ -159,14 +159,14 @@ static int IncludedRank(const char *included, const char *name) {
   return NOT_INCLUDED;
 }
 
-static level_kind KindOfLevel(int rank, const char *modio_page) {
+static level_kind KindOfLevel(int rank, int downloaded) {
   if (rank != NOT_INCLUDED) { return LEVEL_COMES_WITH_C1X; }
-  if (modio_page[0]) { return LEVEL_DOWNLOADED; }
+  if (downloaded) { return LEVEL_DOWNLOADED; }
   return LEVEL_OWN;
 }
 
 /* where each level is from, and its place among those that come with c1x, by
-   level_src/included_levels.txt and the mod.io pages already found */
+   level_src/included_levels.txt and the downloaded levels already found */
 static void FindKinds(const char *repo, custom_levels *levels) {
   char path[PATH_MAX_LEN];
   char *included;
@@ -177,7 +177,7 @@ static void FindKinds(const char *repo, custom_levels *levels) {
   for (i = 0; i < levels->count; i++) {
     rank = IncludedRank(included, levels->names[i]);
     levels->included_ranks[i] = rank;
-    levels->kinds[i] = KindOfLevel(rank, levels->modio_pages[i]);
+    levels->kinds[i] = KindOfLevel(rank, levels->downloaded[i]);
   }
   SDL_free(included);
 }
@@ -185,8 +185,8 @@ static void FindKinds(const char *repo, custom_levels *levels) {
 static void LevelToSort(const custom_levels *levels, int index, custom_level *level) {
   SDL_strlcpy(level->name, levels->names[index], sizeof(level->name));
   SDL_strlcpy(level->title, levels->titles[index], sizeof(level->title));
-  SDL_strlcpy(level->modio_page, levels->modio_pages[index], sizeof(level->modio_page));
   level->built = levels->built[index];
+  level->downloaded = levels->downloaded[index];
   level->rank = levels->included_ranks[index];
   level->kind = levels->kinds[index];
 }
@@ -194,9 +194,8 @@ static void LevelToSort(const custom_levels *levels, int index, custom_level *le
 static void PutSortedLevel(custom_levels *levels, int index, const custom_level *level) {
   SDL_strlcpy(levels->names[index], level->name, sizeof(levels->names[0]));
   SDL_strlcpy(levels->titles[index], level->title, sizeof(levels->titles[0]));
-  SDL_strlcpy(levels->modio_pages[index], level->modio_page,
-    sizeof(levels->modio_pages[0]));
   levels->built[index] = level->built;
+  levels->downloaded[index] = level->downloaded;
   levels->included_ranks[index] = level->rank;
   levels->kinds[index] = level->kind;
 }
@@ -262,44 +261,28 @@ static void MarkOutOfDateLevels(const char *repo, custom_levels *levels) {
   }
 }
 
-#define MODIO_NOTE_PAGE_KEY "\"page\":\""
+#define MODIO_NOTE_MOD_KEY "\"modId\":"
 
-/* the page in a downloaded level's .modio.json, whose text is note, into page;
-   "" if it has none. the tools write the note with JSON.stringify, which leaves a
-   url as it is, so a page with a \ in it is taken to be none rather than unescaped */
-static void PageInModioNote(const char *note, char *page, size_t size) {
-  const char *start, *end;
-  size_t length;
-
-  page[0] = 0;
-  start = SDL_strstr(note, MODIO_NOTE_PAGE_KEY);
-  if (!start) { return; }
-  start += SDL_strlen(MODIO_NOTE_PAGE_KEY);
-  end = SDL_strchr(start, '"');
-  if (!end) { return; }
-  length = (size_t)(end - start);
-  if (memchr(start, '\\', length)) { return; }
-  CopyWhole(page, size, start, length);
-}
-
-/* the mod.io page of the level source called name, or "" if it wasn't downloaded */
-static void ReadModioPage(const char *repo, const char *name, char *page, size_t size) {
+/* whether the level source called name was downloaded from mod.io: its
+   .modio.json notes the mod it's from */
+static int WasDownloaded(const char *repo, const char *name) {
   char path[PATH_MAX_LEN], file[SETTINGS_BOOT_LEVEL_MAX+32];
   char *note;
+  int downloaded;
 
   SDL_snprintf(file, sizeof(file), "level_src/%s/.modio.json", name);
   JoinPath(path, sizeof(path), repo, file);
   note = ReadWholeFileOrEmpty(path);
-  PageInModioNote(note, page, size);
+  downloaded = SDL_strstr(note, MODIO_NOTE_MOD_KEY) != 0;
   SDL_free(note);
+  return downloaded;
 }
 
-static void FindModioPages(const char *repo, custom_levels *levels) {
+static void FindDownloadedLevels(const char *repo, custom_levels *levels) {
   int i;
 
   for (i = 0; i < levels->count; i++) {
-    ReadModioPage(repo, levels->names[i], levels->modio_pages[i],
-      sizeof(levels->modio_pages[i]));
+    levels->downloaded[i] = WasDownloaded(repo, levels->names[i]);
   }
 }
 
@@ -332,7 +315,7 @@ void ListCustomLevels(const char *repo, custom_levels *levels) {
   JoinPath(folder, sizeof(folder), repo, "level_src");
   AddLevelSources(folder, levels);
   FindTitles(repo, levels);
-  FindModioPages(repo, levels);
+  FindDownloadedLevels(repo, levels);
   FindKinds(repo, levels);
   SortLevels(levels);
   MarkOutOfDateLevels(repo, levels);
