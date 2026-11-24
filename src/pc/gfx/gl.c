@@ -727,6 +727,17 @@ static int32_t GLFrameTicks() {
   return FrameTicks(lid, frame++);
 }
 
+/* pc: how long this game frame lasts: the level's pace, or a demo's recorded frame */
+static int32_t GLThisFrameTicks() {
+  int32_t level_ticks;
+
+  /* counted in a demo too, so the level's frames keep their numbers */
+  level_ticks = GLFrameTicks();
+  if (pbak_state == PBAK_STATE_PLAYING)
+    return DemoFrameTicks(cur_pbak_frame->ticks_elapsed, context.draw_stamp);
+  return level_ticks;
+}
+
 /* brightness: draw the fade overlay and move the fade on a step */
 static void GLDrawFade() {
   if (fade_counter == 0) { return; }
@@ -892,9 +903,7 @@ void GLUpdate() {
     ticks_cur_frame = ticks_elapsed - context.draw_stamp; /* time elapsed between current sync and previous draw  */
   else
     ticks_cur_frame = 17; /* default to 17 */
-  frame_ticks = GLFrameTicks(); /* pc: two ntsc vblanks, or the intro's own pace */
-  if (pbak_state == PBAK_STATE_PLAYING) /* pc: a demo's frame lasts as long as when it was recorded */
-    frame_ticks = DemoFrameTicks(cur_pbak_frame->ticks_elapsed, context.draw_stamp);
+  frame_ticks = GLThisFrameTicks();
   GLWaitForFrame(frame_ticks);
   if (pbak_state == PBAK_STATE_PLAYING)
     SetTicksElapsed(cur_pbak_frame->ticks_elapsed);
