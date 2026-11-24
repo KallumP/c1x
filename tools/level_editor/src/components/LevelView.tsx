@@ -2,18 +2,11 @@ import { useRef } from "react";
 import type * as THREE from "three";
 import type { ThreeEvent } from "@react-three/fiber";
 import { axisHandlesSpot } from "../axisDrag";
-import {
-  draggedBy,
-  newObject,
-  type EditorAction,
-  type EditorState,
-  type Tool,
-} from "../editor";
-import { raisedEndPad, withEndPadRaise } from "../endPad";
+import { newObject, type EditorAction, type EditorState, type Tool } from "../editor";
+import { raisedEndPad } from "../endPad";
 import { useAxisDrag } from "../hooks/useAxisDrag";
-import { useDrag } from "../hooks/useDrag";
+import { useObjectDrag } from "../hooks/useObjectDrag";
 import type { LevelFrame } from "../levelFrame";
-import type { LevelObject } from "../objects";
 import { levelStartView } from "../spawnView";
 import { clickedFloor, isClick } from "../three/clicks";
 import AxisHandles from "./AxisHandles";
@@ -39,25 +32,7 @@ export default function LevelView(props: LevelViewProps) {
   const { group, state, dispatch, tool, frame } = props;
   const { grid, turn, scale, triangles } = frame;
   const orbitRef = useRef<Orbit>(null);
-  // the object being dragged, as it was when grabbed
-  const dragged = useRef<LevelObject | null>(null);
-  const drag = useDrag(orbitRef, grid, {
-    grab: ({ index, node }) => {
-      dragged.current = state.objects[index];
-      if (node === null) {
-        dispatch({ type: "select", index });
-      } else {
-        dispatch({ type: "selectNode", index, node });
-      }
-    },
-    begin: () => dispatch({ type: "checkpoint" }),
-    move: ({ index, node }, from, to) => {
-      const object = dragged.current ?? state.objects[index];
-      const moved = draggedBy(object, node, from, to, turn, scale);
-      const changes = withEndPadRaise(object, moved, scale, triangles);
-      dispatch({ type: "update", index, changes, record: false });
-    },
-  });
+  const drag = useObjectDrag(orbitRef, state, dispatch, frame);
   const axisDrag = useAxisDrag(orbitRef, state, dispatch, frame);
 
   // a click on the map: with Select, clears the selection; placing, puts an
