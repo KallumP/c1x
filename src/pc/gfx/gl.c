@@ -714,7 +714,7 @@ void GLClear() {
   }
 }
 
-/* pc: how long this frame lasts (see pc/pace.h), counting frames from when the level changed */
+/* how long this frame lasts (see pc/pace.h), counting frames from when the level changed */
 static int32_t GLLevelFrameTicks() {
   static lid_t lid = -1;
   static uint32_t frame = 0;
@@ -727,7 +727,7 @@ static int32_t GLLevelFrameTicks() {
   return FrameTicks(lid, frame++);
 }
 
-/* pc: how long this game frame lasts: the level's pace, or a demo's recorded frame */
+/* how long this game frame lasts: the level's pace, or a demo's recorded frame */
 static int32_t GLThisFrameTicks() {
   int32_t level_ticks;
 
@@ -757,7 +757,7 @@ static void GLDrawFade() {
   }
 }
 
-/* pc: draw the fade overlay as it is, for a frame between game frames */
+/* draw the fade overlay as it is, for a frame between game frames */
 static void GLDrawFadeStill() {
   if (fade_counter == 0) { return; }
   if (fade_counter < -2)
@@ -775,7 +775,7 @@ static void GLDrawBorders() {
 }
 
 /*
- * pc: drawing frames between game frames (see pc/tween.h). the game sets
+ * drawing frames between game frames (see pc/tween.h). the game sets
  * tween_draw to draw the terrain and objects part way from the last game
  * frame; frames are drawn while GLUpdate waits for the next game frame
  */
@@ -891,7 +891,7 @@ void GLUpdate() {
   cur_display_flags = next_display_flags;  /* copy display/animate flags */
   if (cur_display_flags & CARD_DISPLAY_FLAG) {
     CardGameUpdate(); /* memory card i/o, as the ps1 game did it each frame a card screen was up */
-    SavePointClearForCardScreen(); /* pc: a bonus round's SAVE POINT text goes with the save screen up */
+    SavePointClearForCardScreen(); /* a bonus round's SAVE POINT text goes with the save screen up */
   }
   vram_fill_color = next_vram_fill_color;
   if (!paused && (cur_display_flags & 0x1000))

@@ -149,7 +149,7 @@ void SwAudioInit() {
 void SwAudioKill() {
   int i;
 
-  /* pc: stop the audio thread first (closing waits for it): it mixes from
+  /* stop the audio thread first (closing waits for it): it mixes from
      the samples freed below */
   SDL_CloseAudio();
   for (i=0;i<24;i++) {
@@ -180,7 +180,7 @@ static sample_t *NewSample(uint8_t *pcm, size_t size, int loop_offs) {
 }
 
 static void SwapVoiceSample(int voice_idx, sample_t *sample) {
-  SDL_LockAudio(); /* pc: the audio thread may be mixing the old sample */
+  SDL_LockAudio(); /* the audio thread may be mixing the old sample */
   SwUnloadSample(voice_idx);
   svoices[voice_idx].sampler.sample = sample;
   SDL_UnlockAudio();
@@ -202,7 +202,7 @@ void SwUnloadSample(int voice_idx) {
   svoice = &svoices[voice_idx];
   sampler = &svoice->sampler;
   free(sampler->sample);
-  sampler->sample = 0; /* pc: so nothing mixes or frees it again */
+  sampler->sample = 0; /* so nothing mixes or frees it again */
 }
 
 int SwVoiceHasSample(int voice_idx) {

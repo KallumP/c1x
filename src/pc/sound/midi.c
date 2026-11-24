@@ -38,7 +38,7 @@ fluid_settings_t *settings;
 fluid_sfloader_t *loader = 0;
 midi_context_t midi_contexts[2] = { 0 };
 
-/* pc: a custom level's audio song, playing as the level's music (its first
+/* a custom level's audio song, playing as the level's music (its first
    track) in place of the midi; kept loaded while the level's music reopens */
 static stream_song level_audio_song;
 static char level_audio_song_path[AUDIO_SONG_PATH_MAX];
@@ -224,7 +224,7 @@ void SwMidiKill() {
   delete_fluid_settings(settings);
 }
 
-/* pc: loads the custom level's audio song, if it has one (once: the level's music reopens as it plays) */
+/* loads the custom level's audio song, if it has one (once: the level's music reopens as it plays) */
 static void SwOpenAudioSong() {
   const audio_song *own;
 

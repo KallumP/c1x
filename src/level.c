@@ -397,7 +397,7 @@ void LevelResetGlobals(int flag) {
   saved_level_count = 1;
   life_count = init_life_count;
   memset(level_spawns, 0, sizeof(level_spawns));
-  CardGameForgetLast(); /* pc: as the ps1 game forgot the save last written here */
+  CardGameForgetLast(); /* as the ps1 game forgot the save last written here */
 }
 
 //----- (800262DC) --------------------------------------------------------

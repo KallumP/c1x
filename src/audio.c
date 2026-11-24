@@ -87,7 +87,7 @@ int AudioInit() {
   SwVoiceSetCallback(0, SwMidiProcess);
   /* set gain to that of 8 simultaneously sounded voices */
   SwVoiceSetGain(0, 8.0f);
-  AudioVoiceParamsReset(); /* pc: these were set on voices[23] (master_voice), not voice_params, so the first voice created had no defaults */
+  AudioVoiceParamsReset(); /* the original set these on voices[23] (master_voice), not voice_params, so the first voice created had no defaults */
   /* set reverb mode for levels with reverb */
   switch (cur_lid) {
   case LID_GENERATORROOM:
@@ -289,8 +289,8 @@ int AudioVoiceCreate(gool_object *obj, eid_t *eid, int vol) {
   size = adio->items[1]-adio->items[0];
   SwLoadSample(idx, adio->items[0], size);
   voice->params = voice_params;
-  voice->case7val = VoiceKeyOnFrames(ns.ldat->lid, voice->case7val); /* pc: as tuned for the intro */
-  if (voice->case7val) /* pc: keyed on by frame (AudioControl op 7)? */
+  voice->case7val = VoiceKeyOnFrames(ns.ldat->lid, voice->case7val); /* as tuned for the intro */
+  if (voice->case7val) /* keyed on by frame (AudioControl op 7)? */
     voice->flags |= VOICE_KEYED_ON_BY_FRAME; /* then it plays to the end of its sample */
   voice->amplitude = (vol*init_vol) >> 14;
   if (voice->flags & 0x40)
@@ -511,11 +511,11 @@ void AudioUpdate() {
     voice = &voices[i];
     if (!(voice->flags & 8)) { continue; } /* skip inactive/free voices */
     if (voice->flags & 0x10) { /* delayed voice? */
-      if (!VoiceDelayElapsed(&voice->case7val, &voice->delay_counter)) /* pc: waits out its key-on frame too */
-        continue; /* pc: still waiting to key on, so not off yet either */
+      if (!VoiceDelayElapsed(&voice->case7val, &voice->delay_counter)) /* waits out its key-on frame too */
+        continue; /* still waiting to key on, so not off yet either */
       voice->flags &= ~0x10; /* clear key triggered status */
       SwNoteOn(i);
-      continue; /* pc: keyed on after the key status was read; it's read again next update */
+      continue; /* keyed on after the key status was read; it's read again next update */
     }
     if (keys_status[i] == KEYS_STATUS_ON) {
       if (!VoiceSustainEnded(voice->flags & VOICE_KEYED_ON_BY_FRAME, &voice->sustain_counter)) { /* decrement sustain; still sustaining? (pc: or keyed on by frame) */

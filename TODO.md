@@ -29,9 +29,7 @@ speed run mode
 Generic
 - europe support
 - Jaws of Darkness's demo drifts from its recording: Crash dies 5 times in it
-- Split level editor app.tsx into its own components
 - linux download downloads a windows version...
-- why do comments mention "pc:" we dont support ps1 anymore
 - cant grab axis through a model. It just does normal drag on the model
 
 - sunset vista demo gameplay doesnt playback properly

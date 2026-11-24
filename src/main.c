@@ -99,7 +99,7 @@ void CoreObjectsCreate() {
     NSOpen(&ns.ldat->exec_map[29], 0, 1);
     if (cur_lid != LID_THEGREATHALL) { /* not the great hall? */
       NSOpen(&ns.ldat->exec_map[34], 0, 1); /* load boxes code */
-      BoxHudCreate(); /* pc: the box counter, when box_display is on */
+      BoxHudCreate(); /* the box counter, when box_display is on */
     }
     NSOpen(&ns.ldat->exec_map[3], 0, 1);
     NSOpen(&ns.ldat->exec_map[4], 0, 1);
@@ -112,7 +112,7 @@ static void CoreDrawWorlds(void *ot) {
   zone_header *header;
 
   header = (zone_header*)cur_zone->items[0];
-  terrain_reach = REACH_UNKNOWN; /* pc: until the terrain is drawn, below */
+  terrain_reach = REACH_UNKNOWN; /* until the terrain is drawn, below */
   if (!(cur_display_flags & GOOL_FLAG_DISPLAY_WORLDS) || !header->world_count || wgeom_disabled)
     return;
   if (header->flags & ZONE_FLAG_DARK2)
@@ -136,7 +136,7 @@ static void CoreSetCamera(tween_pose *pose) {
 }
 
 /*
- * pc: draw a frame between game frames, alpha of the way from the last one
+ * draw a frame between game frames, alpha of the way from the last one
  * to the current one: the terrain and objects, from a camera part way. no
  * game state moves on: the camera and everything worked out from it are put
  * back as the game frame left them, and paused keeps the ripple still
@@ -175,7 +175,7 @@ void CoreLoop(lid_t lid) {
   LevelInitGlobals();
   NSInit(&ns, lid);
   CoreObjectsCreate();
-  GLSetTweenDraw(CoreDrawTweened); /* pc: frames between game frames */
+  GLSetTweenDraw(CoreDrawTweened); /* frames between game frames */
   do {
     lid = ns.ldat->lid;
     is_pause_lid = lid != LID_TITLE && lid != LID_LEVELEND && lid != LID_INTRO;
@@ -240,8 +240,8 @@ void CoreLoop(lid_t lid) {
         checkpoint_id = -1;
       }
       NSInit(&ns, lid);
-      TweenForgetAll(); /* pc: nothing in the new level is tweened from the old one */
-      CardGameForgetScreen(); /* pc: the old level's card screen texts were freed with it */
+      TweenForgetAll(); /* nothing in the new level is tweened from the old one */
+      CardGameForgetScreen(); /* the old level's card screen texts were freed with it */
       CoreObjectsCreate();
       if (bonus_return2) {
         next_lid = -2;
@@ -263,12 +263,12 @@ void CoreLoop(lid_t lid) {
       CamUpdate();
     }
     GfxUpdateMatrices();
-    TweenRecordCamera((tween_pose*)&cam); /* pc: drawn at, to tween from next game frame */
+    TweenRecordCamera((tween_pose*)&cam); /* drawn at, to tween from next game frame */
     ot = context.ot;
     header = (zone_header*)cur_zone->items[0];
     CoreDrawWorlds(ot);
     GoolUpdateObjects(!paused);
-    BoxHudUpdate(); /* pc */
+    BoxHudUpdate();
     GLClear();
     if (ns.ldat->lid == LID_TITLE)
       TitleUpdate(ot);
