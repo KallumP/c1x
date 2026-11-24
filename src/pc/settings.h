@@ -27,6 +27,7 @@ typedef struct {
   int fullscreen;                 /* fill the screen instead of a window */
   int memory_card;                /* the game's save and load screens save to files in memory_card/ */
   int mute;                       /* the game plays no sound */
+  int two_players;                /* a second crash plays beside the first, on pad 2 */
   char boot_level[SETTINGS_BOOT_LEVEL_MAX+1]; /* custom level to boot into, or "" */
 } pc_settings;
 
