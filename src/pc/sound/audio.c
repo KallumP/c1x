@@ -173,10 +173,7 @@ void SwLoadSample(int voice_idx, uint8_t *data, size_t size) {
   data = pcm_buf;
   svoice = &svoices[voice_idx];
   sampler = &svoice->sampler;
-  if (sampler->sample)
-    SwUnloadSample(voice_idx);
   sample = (sample_t*)malloc(sizeof(sample_t)+size+sizeof(int16_t));
-  sampler->sample = sample;
   sample->len = size/sizeof(int16_t);
   sample->loop_idx = 0;
   if (loop_offs != -1) {
@@ -185,7 +182,11 @@ void SwLoadSample(int voice_idx, uint8_t *data, size_t size) {
   }
   memcpy(sample->data, data, size);
   /* used when interpolating looping samples */
-  sample->data[sample->len] = sample->data[0]; 
+  sample->data[sample->len] = sample->data[0];
+  SDL_LockAudio(); /* pc: the audio thread may be mixing the old sample */
+  SwUnloadSample(voice_idx);
+  sampler->sample = sample;
+  SDL_UnlockAudio();
 }
 
 void SwUnloadSample(int voice_idx) {
