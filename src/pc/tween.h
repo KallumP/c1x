@@ -13,6 +13,10 @@
  */
 #define TWEEN_ONE  0x1000  /* alpha for all the way to the current game frame */
 #define TWEEN_JUMP 0x80000 /* a move further than this in a game frame is a jump (respawn, teleport), not tweened */
+/* the same for an object on the screen (the hud, and what flies to it), in
+   its far smaller screen units: the newest hud token blinks by jumping off
+   the screen and back, which would be tweened across it */
+#define TWEEN_SCREEN_JUMP 0x8000
 
 /* how far through a game frame of frame_ticks ticks elapsed ticks are, as an alpha */
 static inline int32_t TweenAlpha(int32_t elapsed, int32_t frame_ticks) {
@@ -36,13 +40,18 @@ static inline int32_t TweenLerpAngle(int32_t a, int32_t b, int32_t alpha) {
   return a + (delta * alpha) / TWEEN_ONE;
 }
 
-static inline int TweenJumped(vec *a, vec *b) {
+/* whether a move from a to b goes further than limit along an axis */
+static inline int TweenJumpedFurther(vec *a, vec *b, int32_t limit) {
   int i;
 
   for (i = 0; i < 3; i++) {
-    if (abs(b->c[i] - a->c[i]) > TWEEN_JUMP) { return 1; }
+    if (abs(b->c[i] - a->c[i]) > limit) { return 1; }
   }
   return 0;
+}
+
+static inline int TweenJumped(vec *a, vec *b) {
+  return TweenJumpedFurther(a, b, TWEEN_JUMP);
 }
 
 static inline void TweenLerpVec(vec *a, vec *b, int32_t alpha, vec *out) {
@@ -87,6 +96,7 @@ extern void TweenForgetAll();
 extern void TweenForget(int slot);
 extern void TweenRecord(int slot, const tween_pose *pose);
 extern void TweenPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out);
+extern void TweenScreenPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out);
 extern void TweenRecordCamera(const tween_pose *drawn);
 extern void TweenCameraAt(int32_t alpha, tween_pose *out);
 
