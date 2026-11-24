@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   alongAxis,
   axisDragChanges,
+  axisHandlesSpot,
   movedAlong,
   movedNodeAlong,
   type DragSettings,
@@ -105,5 +106,17 @@ describe("axisDragChanges", () => {
     const crab = enemyObject("crab", { path: [[0, 0, 0], [2, 0, 0]] });
     const changes = axisDragChanges({ object: crab, node: 1 }, "y", 1, settings);
     expect(changes).toEqual({ path: [[0, 0, 0], [2, 1, 0]] });
+  });
+});
+
+describe("axisHandlesSpot", () => {
+  test("an object's arrows are where it stands, raised", () => {
+    const box = newObject("basic", [1, 2, 3]);
+    expect(axisHandlesSpot({ ...box, raise: 0.5 }, null, 0, 400)).toEqual([1, 2, 3.5]);
+  });
+
+  test("a path node's arrows are at that node, in the level", () => {
+    const crab = enemyObject("crab", { at: [1, 2, 3], path: [[0, 0, 0], [2, 0, 0]] });
+    expect(axisHandlesSpot(crab, 1, 0, 400)).toEqual([3, 2, 3]);
   });
 });
