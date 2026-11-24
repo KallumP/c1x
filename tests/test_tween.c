@@ -357,3 +357,15 @@ UTEST(tween_poses, a_screen_object_flying_up_the_screen_is_tweened) {
   TweenScreenPoseAt(4, &now, TWEEN_ONE/2, &out);
   ASSERT_EQ(TOKEN_FLIGHT/2, out.trans.x);
 }
+
+UTEST(screen_plane, a_2d_object_is_on_the_screen_plane) {
+  ASSERT_TRUE(GoolIsOnScreenPlane(GOOL_FLAG_2D));
+}
+
+UTEST(screen_plane, an_object_moved_by_the_camera_is_on_the_screen_plane) {
+  ASSERT_TRUE(GoolIsOnScreenPlane(GOOL_FLAG_CAMERA_PLANE));
+}
+
+UTEST(screen_plane, a_world_object_is_not_on_the_screen_plane) {
+  ASSERT_FALSE(GoolIsOnScreenPlane(GOOL_FLAG_COLLIDABLE | GOOL_FLAG_GRAVITY));
+}
