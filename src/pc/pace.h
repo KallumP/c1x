@@ -42,7 +42,7 @@ static inline uint32_t PaceVblanks(const pace_section *section, uint32_t n) {
   return n * section->vblanks / section->frames;
 }
 
-static inline int32_t FrameTicks(lid_t lid, uint32_t frame) {
+static inline int32_t FrameTicks(lid_t lid, uint32_t frame, int ps1_speed) {
   const pace_section *section;
   uint32_t start, i, n;
 

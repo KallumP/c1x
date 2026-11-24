@@ -724,7 +724,7 @@ static int32_t GLFrameTicks() {
     lid = ns.ldat->lid;
     frame = 0;
   }
-  return FrameTicks(lid, frame++);
+  return FrameTicks(lid, frame++, game_settings.ps1_speed);
 }
 
 /* brightness: draw the fade overlay and move the fade on a step */
