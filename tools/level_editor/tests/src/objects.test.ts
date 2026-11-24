@@ -8,6 +8,8 @@ import {
   hasPath,
   parseObjects,
   pillarCount,
+  raisedSpot,
+  type LevelObject,
   reverseButtonTitle,
 } from "../../src/objects";
 import { enemyObject, obstacleObject } from "../helpers";
@@ -1054,5 +1056,12 @@ describe("? boxes' drops", () => {
     ['[{"kind": "enemy", "type": "crab", "at": [0, 0, 0], "drop": "life"}]', "object 1"],
   ])("refuses %s", (json, message) => {
     expect(() => parseObjects(json)).toThrow(message);
+  });
+});
+
+describe("raisedSpot", () => {
+  test("is where the object stands, lifted by its raise", () => {
+    const box: LevelObject = { kind: "box", at: [1, 2, 3], raise: 0.5, stack: 1, box: "basic" };
+    expect(raisedSpot(box)).toEqual([1, 2, 3.5]);
   });
 });
