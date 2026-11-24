@@ -1,5 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { alongAxis, movedAlong, movedNodeAlong } from "../../src/axisDrag";
+import {
+  alongAxis,
+  axisDragChanges,
+  axisHandlesSpot,
+  movedAlong,
+  movedNodeAlong,
+} from "../../src/axisDrag";
+import { newObject } from "../../src/editor";
+import type { LevelFrame } from "../../src/levelFrame";
+import type { Triangle } from "../../src/overlaps";
 import type { LevelObject } from "../../src/objects";
 import { enemyObject, noMinusZero } from "../helpers";
 
@@ -72,5 +81,44 @@ describe("movedNodeAlong", () => {
   test("an enemy without a path of its own gets its default path, with the node moved", () => {
     const { path } = movedNodeAlong(enemyObject("crab", { at: [0, 0, 0] }), 1, "x", 1, 0, 0, 400);
     expect(path?.map(noMinusZero)).toEqual([[-2, 0, 0], [3, 0, 0]]);
+  });
+});
+
+describe("axisDragChanges", () => {
+  // a flat floor 0.5 up, under everything near the origin
+  const FLOOR: Triangle[] = [
+    [[-5, -5, 0.5], [5, -5, 0.5], [5, 5, 0.5]],
+    [[-5, -5, 0.5], [5, 5, 0.5], [-5, 5, 0.5]],
+  ];
+  const frame: LevelFrame = { grid: 0, turn: 0, scale: 400, triangles: FLOOR };
+
+  test("an object's drag moves the object", () => {
+    const box = newObject("basic", [1, 2, 3]);
+    const changes = axisDragChanges({ object: box, node: null }, "x", 1, frame);
+    expect(changes).toEqual({ at: [2, 2, 3] });
+  });
+
+  test("an end pad's drag raises it over the floor where it lands", () => {
+    const pad = newObject("end", [0, 0, 0]);
+    const changes = axisDragChanges({ object: pad, node: null }, "x", 1, frame);
+    expect(changes.raise).toBeCloseTo(0.5 + 128 / 400, 2);
+  });
+
+  test("a path node's drag moves only that node", () => {
+    const crab = enemyObject("crab", { path: [[0, 0, 0], [2, 0, 0]] });
+    const changes = axisDragChanges({ object: crab, node: 1 }, "y", 1, frame);
+    expect(changes).toEqual({ path: [[0, 0, 0], [2, 1, 0]] });
+  });
+});
+
+describe("axisHandlesSpot", () => {
+  test("an object's arrows are where it stands, raised", () => {
+    const box = newObject("basic", [1, 2, 3]);
+    expect(axisHandlesSpot({ ...box, raise: 0.5 }, null, 0, 400)).toEqual([1, 2, 3.5]);
+  });
+
+  test("a path node's arrows are at that node, in the level", () => {
+    const crab = enemyObject("crab", { at: [1, 2, 3], path: [[0, 0, 0], [2, 0, 0]] });
+    expect(axisHandlesSpot(crab, 1, 0, 400)).toEqual([3, 2, 3]);
   });
 });

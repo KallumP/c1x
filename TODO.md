@@ -34,6 +34,7 @@ Generic
 - linux download downloads a windows version...
 - the bonus round music is played at a wrong pitch
 - why do comments mention "pc:" we dont support ps1 anymore
+- cant grab axis through a model. It just does normal drag on the model
 
 - sunset vista demo gameplay doesnt playback properly
 - jaws of darkness demo gamplay isnt right

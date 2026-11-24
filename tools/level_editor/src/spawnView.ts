@@ -23,3 +23,16 @@ export function spawnView(spawn: LevelObject, turn: number, scale: number): View
   behind[2] += ABOVE / scale;
   return { position: blenderToView(behind), target: blenderToView(spot) };
 }
+
+// where the camera starts on a level: behind its spawn, if it has one
+export function levelStartView(
+  objects: LevelObject[],
+  turn: number,
+  scale: number,
+): View | null {
+  const spawn = objects.find((object) => object.kind === "spawn");
+  if (!spawn) {
+    return null;
+  }
+  return spawnView(spawn, turn, scale);
+}

@@ -1,7 +1,9 @@
 // dragging the selected object along one of its axis arrows: x, y (across the
 // floor) or up, in blender
+import { withEndPadRaise } from "./endPad";
 import { pathPositions, withNodeAt } from "./enemyPaths";
-import type { LevelObject, Vec3 } from "./objects";
+import type { LevelFrame } from "./levelFrame";
+import { raisedSpot, type LevelObject, type Vec3 } from "./objects";
 
 export type Axis = "x" | "y" | "up";
 
@@ -57,4 +59,41 @@ export function movedNodeAlong(object: LevelObject, node: number, axis: Axis, me
   const moved = position.map((value, axisIndex) => (axisIndex === index ? snap(value + metres, grid) : value)) as Vec3;
   const path = withNodeAt(object, node, moved, turn, scale);
   return { path: path.map((offset, nodeIndex) => (nodeIndex === node ? (offset.map(roundToMillimetre) as Vec3) : offset)) };
+}
+
+// what's dragged: an object as it was when grabbed, or the node of its path that is
+export interface AxisGrab {
+  object: LevelObject;
+  node: number | null;
+}
+
+// the change dragging grabbed metres along axis makes; an end pad stays raised
+// over the floor
+export function axisDragChanges(
+  grabbed: AxisGrab,
+  axis: Axis,
+  metres: number,
+  frame: LevelFrame,
+): Partial<LevelObject> {
+  const { object, node } = grabbed;
+  const { grid, turn, scale, triangles } = frame;
+  if (node !== null) {
+    return movedNodeAlong(object, node, axis, metres, grid, turn, scale);
+  }
+  const moved = movedAlong(object, axis, metres, grid);
+  return withEndPadRaise(object, moved, scale, triangles);
+}
+
+// where the axis arrows sit: on the grabbed object where it stands, raised, or
+// on its path's node
+export function axisHandlesSpot(
+  object: LevelObject,
+  node: number | null,
+  turn: number,
+  scale: number,
+): Vec3 {
+  if (node !== null) {
+    return pathPositions(object, turn, scale)[node];
+  }
+  return raisedSpot(object);
 }
