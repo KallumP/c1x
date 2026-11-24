@@ -781,7 +781,7 @@ static int GLIsTweening() {
   if (!tween_draw || game_settings.frame_rate <= SETTINGS_FRAME_RATE_MIN) { return 0; }
   if (TimeGetSpeed() != 1) { return 0; } /* a fast replay */
   if (!ns.ldat || ns.ldat->lid == LID_TITLE) { return 0; } /* the title screen draws more than objects */
-  return ns.draw_skip_counter == 0 && pbak_state == 0;
+  return ns.draw_skip_counter == 0 && pbak_state != PBAK_STATE_CHOSEN;
 }
 
 /*

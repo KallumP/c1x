@@ -5,6 +5,8 @@
 #include "ns.h"
 #include "formats/pbak.h"
 
+#define PBAK_STATE_CHOSEN 3 /* pbak_state: a demo chosen, its level loading */
+
 extern int PbakInit();
 extern int PbakKill();
 extern void PbakStart();
