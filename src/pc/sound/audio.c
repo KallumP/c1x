@@ -149,11 +149,12 @@ void SwAudioInit() {
 void SwAudioKill() {
   int i;
 
+  /* pc: stop the audio thread first: it mixes from the samples freed below */
+  SDL_PauseAudio(1);
+  SDL_CloseAudio();
   for (i=0;i<24;i++) {
     SwUnloadSample(i);
   }
-  SDL_PauseAudio(1);
-  SDL_CloseAudio();
 }
 
 void SwSetMVol(uint32_t vol) {
