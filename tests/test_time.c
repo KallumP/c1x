@@ -2,8 +2,8 @@
 #include <SDL2/SDL.h>
 #include "pc/time.h"
 
-/* the game's clock runs at 34000000/0x8000 (about 1037.6) ticks a second */
-#define TICKS_A_SECOND_TIMES_0x8000 34000000LL
+/* the game's clock runs at 33868800/0x8000 (about 1033.6) ticks a second */
+#define TICKS_A_SECOND_TIMES_0x8000 33868800LL
 
 /* the whole ticks in a number of seconds */
 static int32_t TicksIn(int64_t seconds) {
