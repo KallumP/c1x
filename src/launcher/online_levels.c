@@ -77,8 +77,8 @@ static const char *FieldAfter(const char *field, size_t length) {
 /* a level's line, after its prefix, as the next of levels; a line that isn't
    one is skipped */
 static void ReadLevelLine(const char *line, online_levels *levels) {
-  size_t id_length, author_length, name_length, page_length;
-  const char *author, *name, *page;
+  size_t id_length, author_length, name_length;
+  const char *author, *name;
   int id, at;
 
   id = ReadId(line, &id_length);
@@ -87,16 +87,12 @@ static void ReadLevelLine(const char *line, online_levels *levels) {
   author_length = FieldLength(author);
   name = FieldAfter(author, author_length);
   if (!name) { return; }
-  name_length = FieldLength(name);
-  page = FieldAfter(name, name_length);
-  if (!page) { return; }
-  page_length = LineLength(page);
-  if (!page[page_length]) { return; } /* no line end yet: more of it may be to come */
+  name_length = LineLength(name);
+  if (!name[name_length]) { return; } /* no line end yet: more of it may be to come */
   at = levels->count;
   levels->ids[at] = id;
   CopyCutShort(levels->authors[at], ONLINE_LEVEL_TEXT_MAX, author, author_length);
   CopyCutShort(levels->names[at], ONLINE_LEVEL_TEXT_MAX, name, name_length);
-  CopyWhole(levels->pages[at], MODIO_PAGE_MAX, page, page_length);
   levels->count++;
 }
 
