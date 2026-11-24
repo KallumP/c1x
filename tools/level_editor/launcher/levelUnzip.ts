@@ -10,7 +10,6 @@ import { isPlainName, tryUnzip, zippedFiles } from "./zipEntries";
 const MODIO_NOTE = ".modio.json";
 interface ModioNote {
   modId: number;
-  page: string;
 }
 
 // the one folder all the files are in, or null if they aren't in one
