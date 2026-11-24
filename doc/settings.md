@@ -9,7 +9,6 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | `fullscreen` | `off` | Fill the screen instead of a 1024x768 window. The picture keeps its 4:3 shape, with black bars at the sides on a widescreen. <kbd>Alt</kbd>+<kbd>Enter</kbd> or <kbd>F11</kbd> switches between the two while playing, without changing the setting. |
 | `fps_display` | `on` | Show how many frames are drawn a second in the top right corner (see `frame_rate`). |
 | `frame_rate` | `60` | How many frames a second to draw, from `30` to `240`. The game itself still runs at its own speed (see `ps1_speed`), so it plays the same; the frames in between show the camera and everything moving smoothly between them. `30` draws only the game's own frames. Each game frame gets the same whole number of frames, so the counter can read a little off the setting: `144` shows about 150. |
-| `ps1_speed` | `on` | Run the game at the PS1's speed, 29.97 frames a second. Off runs it at an even 30. The title screen's demos always play at the PS1's speed. |
 | `mute` | `off` | Start the game with no sound. |
 
 ### Game adjustments
@@ -22,6 +21,7 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | `loading_screen_min_ms` | `1000` | Keep the loading screen up for at least this many milliseconds (up to `60000`), as levels load much faster than from the PS1's CD. `0` shows it only while loading. |
 | `fix_model_draw_order` | `on` | Draw 3D models in front of or behind each other by their actual depth, so a crate can't be drawn over Crash in front of it. `off` keeps the original game's order. |
 | `spin_ledge_jump` | `on` | Let Crash jump for a moment after a spin carries him off a ledge (such as one he landed on mid-spin), as he can after walking off one. `off` keeps the original game, where he can't jump until the spin ends. |
+| `ps1_speed` | `on` | Run the game at the PS1's speed, 29.97 frames a second. Off runs it at an even 30. The title screen's demos always play at the PS1's speed. |
 | `speed_display` | `off` | Show how fast Crash is moving in the top right corner. |
 | `spin_display` | `off` | Show how many spins Crash has left in the top right corner, and the seconds until the next comes back. He holds up to 5, and each comes back 2 seconds after it's used. |
 
