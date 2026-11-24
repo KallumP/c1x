@@ -44,39 +44,25 @@ describe("the upload button", () => {
   });
 });
 
-describe("what an upload says, around its link to mod.io", () => {
-  test("for a new level, where to view it", () => {
-    expect(uploadedText({ mod: MOD, isNew: true })).toEqual({
-      before: "Upload successful, view it",
-      link: "here",
-      after: ".",
-    });
+describe("what an upload says", () => {
+  test("for a new level, that it uploaded", () => {
+    expect(uploadedText({ mod: MOD, isNew: true })).toBe("Upload successful.");
   });
 
-  test("for a level already online, where to view its new version", () => {
-    expect(uploadedText({ mod: MOD, isNew: false })).toEqual({
-      before: "Upload successful, view the new version",
-      link: "here",
-      after: ".",
-    });
+  test("for a level already online, that its new version uploaded", () => {
+    expect(uploadedText({ mod: MOD, isNew: false })).toBe("Upload successful, a new version is up.");
   });
 });
 
-describe("what the dialog says of a map, around its link to mod.io", () => {
-  test("once it's online, that it's been uploaded, where to view it, and that it can be again", () => {
-    expect(onlineText(true)).toEqual({
-      before: "This map has already been uploaded to mod.io, view it",
-      link: "here",
-      after: ". Alternatively, upload a new version below.",
-    });
+describe("what the dialog says of a map", () => {
+  test("once it's online, that it's been uploaded and can be again", () => {
+    expect(onlineText(true)).toBe(
+      "This map has already been uploaded to mod.io. Alternatively, upload a new version below.",
+    );
   });
 
-  test("before it's online, that it isn't yet, with no link", () => {
-    expect(onlineText(false)).toEqual({
-      before: "This map isn't on mod.io yet.",
-      link: null,
-      after: "",
-    });
+  test("before it's online, that it isn't yet", () => {
+    expect(onlineText(false)).toBe("This map isn't on mod.io yet.");
   });
 });
 
