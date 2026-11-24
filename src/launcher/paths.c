@@ -32,6 +32,10 @@ void JoinPath(char *path, size_t size, const char *folder, const char *name) {
   }
 }
 
+time_t LauncherBuiltTime(const char *repo) {
+  return 0;
+}
+
 /* the repo folder, from the launcher's own path; returns 0 if it can't tell */
 int FindRepoFolder(char *repo, size_t size) {
   char *launcher_folder;

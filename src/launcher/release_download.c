@@ -10,11 +10,6 @@
 #include "tool_output.h"
 #include "tools.h"
 
-#ifdef _WIN32
-#define LAUNCHER_FILE_NAME "c1x_launcher.exe"
-#else
-#define LAUNCHER_FILE_NAME "c1x_launcher"
-#endif
 
 /* what the tools say before the new version's folder. releaseDownload.ts
    has the same text, and one of its tests checks the two are the same */
