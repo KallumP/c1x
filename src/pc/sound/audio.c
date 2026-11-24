@@ -193,8 +193,9 @@ void SwUnloadSample(int voice_idx) {
 
   svoice = &svoices[voice_idx];
   sampler = &svoice->sampler;
-  if (sampler->sample) 
+  if (sampler->sample)
     free(sampler->sample);
+  sampler->sample = 0; /* pc: so nothing mixes or frees it again */
 }
 
 void SwNoteOn(int voice_idx) {
