@@ -1,7 +1,8 @@
 #include "utest.h"
 #include "pc/pace.h"
+#include "pc/time.h"
 
-#define TICKS_A_SECOND (34000000.0 / 0x8000)
+#define TICKS_A_SECOND (TICKS_A_SECOND_UNITS / (double)0x8000)
 
 /* seconds from the first frame of lid to the start of frame */
 static double SecondsToFrame(lid_t lid, uint32_t frame) {
