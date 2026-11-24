@@ -74,9 +74,13 @@
 #define GOOL_FLAG_STRING_CENTER     0x4000000
 #define GOOL_FLAG_SOLID_BOTTOM      0x8000000
 #define GOOL_FLAG_STALL             0x10000000
-/* pc: moved in the screen's x and y (2D, or by the camera), as the hud is;
-   GoolOpMisc's angles and the velocity op read it so */
-#define GOOL_FLAGS_SCREEN_PLANE     (GOOL_FLAG_2D | 0x200000)
+#define GOOL_FLAG_CAMERA_PLANE      0x200000 /* drawn by the camera's own position (the hud) */
+/* moved in the screen's x and y, not the world's x and z */
+#define GOOL_FLAGS_SCREEN_PLANE     (GOOL_FLAG_2D | GOOL_FLAG_CAMERA_PLANE)
+
+static inline int GoolIsOnScreenPlane(uint32_t status_b) {
+  return (status_b & GOOL_FLAGS_SCREEN_PLANE) != 0;
+}
 
 /* state/status c flags */
 #define GOOL_FLAG_GROUND_STATE      0x4
