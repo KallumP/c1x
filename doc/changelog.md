@@ -6,6 +6,7 @@
 
 - the title screen's demos play, instead of showing a level where nothing happens, and go back to the title when they end
 - the game no longer runs slightly faster than on the PS1
+- the game no longer sometimes crashes when a demo ends or start is pressed during one
 
 ## 2026-11-23
 
