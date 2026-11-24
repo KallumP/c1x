@@ -3,7 +3,8 @@
  * installing the newest release beside this one's folder if github has a newer
  * one, then opening it. it's checked once, when the launcher opens, by c1x's
  * tools (c1x_tools check-update), which install it too (c1x_tools download-release);
- * a build that isn't a release has no version, and doesn't check
+ * a build that isn't a release has no version, and doesn't check: it says when it
+ * was built instead
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -35,6 +36,7 @@ static background_command release_check;           /* c1x_tools check-update */
 static background_command release_download;        /* c1x_tools download-release */
 static char newer_version[RELEASE_VERSION_MAX];    /* "" until the check finds one */
 static char installed_folder[PATH_MAX_LEN];        /* "" until the download installs it */
+static time_t launcher_built;                      /* 0 until read, or if it can't be */
 
 void StartReleaseCheck(const char *repo) {
   char command[COMMAND_MAX];
@@ -44,6 +46,10 @@ void StartReleaseCheck(const char *repo) {
   /* no command for a dev build, which has no version to compare */
   if (!NewerReleaseCommand(repo, LauncherVersion(), command, sizeof(command))) { return; }
   StartBackgroundCommand(&release_check, repo, command);
+}
+
+void ReadLauncherBuiltTime(const char *repo) {
+  launcher_built = LauncherBuiltTime(repo);
 }
 
 void FollowNewerRelease(void) {
@@ -186,7 +192,7 @@ void DrawVersionCorner(void) {
 
   state = ReleaseState();
   ReleaseLabel(state, release_label, sizeof(release_label));
-  VersionLabel(LauncherVersion(), 0, version_label, sizeof(version_label));
+  VersionLabel(LauncherVersion(), launcher_built, version_label, sizeof(version_label));
   width = CornerWidth(state, release_label, version_label);
   igGetCursorPos(&start);
   igGetContentRegionAvail(&available);
