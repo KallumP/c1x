@@ -1230,6 +1230,14 @@ static int GoolObjectIsDisplayed(gool_object *obj, uint32_t status_b) {
   }
 }
 
+static void GoolObjectTweenedPose(gool_object *obj, tween_pose *now, int alpha,
+  tween_pose *drawn) {
+  if (GoolIsOnScreenPlane(obj->status_b))
+    TweenScreenPoseAt(GoolObjectTweenSlot(obj), now, alpha, drawn);
+  else
+    TweenWorldPoseAt(GoolObjectTweenSlot(obj), now, alpha, drawn);
+}
+
 /* pc: draw the object (only) in its pose alpha of the way from the last game frame */
 static int GoolObjectDrawTweened(gool_object *obj, int alpha) {
   tween_pose now, drawn;
@@ -1237,11 +1245,7 @@ static int GoolObjectDrawTweened(gool_object *obj, int alpha) {
   if (obj->handle.subtype != 3) { return SUCCESS; }
   if (!GoolObjectIsDisplayed(obj, obj->status_b)) { return SUCCESS; }
   GoolObjectPose(obj, &now);
-  /* the hud's own jump limit: its newest token blinks by jumping off screen */
-  if (GoolIsOnScreenPlane(obj->status_b))
-    TweenScreenPoseAt(GoolObjectTweenSlot(obj), &now, alpha, &drawn);
-  else
-    TweenWorldPoseAt(GoolObjectTweenSlot(obj), &now, alpha, &drawn);
+  GoolObjectTweenedPose(obj, &now, alpha, &drawn);
   GoolSetObjectPose(obj, &drawn);
   cur_obj = obj;
   GoolObjectTransform(obj);
