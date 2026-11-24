@@ -485,7 +485,7 @@ size_t VabToSf2(uint8_t *vab, uint8_t *sf2) {
       hrc.igen->genAmount.shAmount = atr->center;
       Sf2Next(sf2, sfInstGenList, hrc.igen);
       hrc.igen->sfGenOper = fineTune;
-      hrc.igen->genAmount.shAmount = -(atr->shift*99)/127; /* is this correct? */
+      hrc.igen->genAmount.shAmount = VabShiftToFineTune(atr->shift);
       Sf2Next(sf2, sfInstGenList, hrc.igen);
       hrc.igen->sfGenOper = sampleID;
       hrc.igen->genAmount.shAmount = atr->vag-1;
