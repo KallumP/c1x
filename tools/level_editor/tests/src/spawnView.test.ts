@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { LevelObject } from "../../src/objects";
-import { spawnView } from "../../src/spawnView";
-import { noMinusZero } from "../helpers";
+import { levelStartView, spawnView } from "../../src/spawnView";
+import { enemyObject, noMinusZero } from "../helpers";
 
 const spawn = (more: Partial<LevelObject> = {}): LevelObject => ({ kind: "spawn", at: [1, 2, 3], raise: 0, stack: 1, ...more });
 const rounded = (vector: number[]) => noMinusZero(vector.map((value) => Math.round(value * 1000) / 1000));
@@ -25,5 +25,16 @@ describe("spawnView", () => {
 
   test("is further away at a smaller scale, as everything in the level is bigger", () => {
     expect(rounded(spawnView(spawn(), 0, 200).position)).toEqual([1, 16, 12.5]);
+  });
+});
+
+describe("levelStartView", () => {
+  test("is the view from behind the level's spawn", () => {
+    const objects = [enemyObject("crab"), spawn()];
+    expect(levelStartView(objects, 90, 400)).toEqual(spawnView(spawn(), 90, 400));
+  });
+
+  test("a level without a spawn has none", () => {
+    expect(levelStartView([enemyObject("crab")], 0, 400)).toBeNull();
   });
 });

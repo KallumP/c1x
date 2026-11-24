@@ -1,5 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { alongAxis, movedAlong, movedNodeAlong } from "../../src/axisDrag";
+import {
+  alongAxis,
+  axisDragChanges,
+  movedAlong,
+  movedNodeAlong,
+  type DragSettings,
+} from "../../src/axisDrag";
+import { newObject } from "../../src/editor";
+import type { Triangle } from "../../src/overlaps";
 import type { LevelObject } from "../../src/objects";
 import { enemyObject, noMinusZero } from "../helpers";
 
@@ -72,5 +80,30 @@ describe("movedNodeAlong", () => {
   test("an enemy without a path of its own gets its default path, with the node moved", () => {
     const { path } = movedNodeAlong(enemyObject("crab", { at: [0, 0, 0] }), 1, "x", 1, 0, 0, 400);
     expect(path?.map(noMinusZero)).toEqual([[-2, 0, 0], [3, 0, 0]]);
+  });
+});
+
+describe("axisDragChanges", () => {
+  // a flat floor 0.5 up, under everything near the origin
+  const FLOOR: Triangle[] = [
+    [[-5, -5, 0.5], [5, -5, 0.5], [5, 5, 0.5]],
+    [[-5, -5, 0.5], [5, 5, 0.5], [-5, 5, 0.5]],
+  ];
+  const settings: DragSettings = { grid: 0, turn: 0, scale: 400, triangles: FLOOR };
+
+  test("an object's drag moves the object", () => {
+    const box = newObject("basic", [1, 2, 3]);
+    expect(axisDragChanges({ object: box, node: null }, "x", 1, settings)).toEqual({ at: [2, 2, 3] });
+  });
+
+  test("an end pad's drag across the floor raises it over the floor where it lands", () => {
+    const pad = newObject("end", [0, 0, 0]);
+    expect(axisDragChanges({ object: pad, node: null }, "x", 1, settings).raise).toBeGreaterThan(0.5);
+  });
+
+  test("a path node's drag moves only that node", () => {
+    const crab = enemyObject("crab", { path: [[0, 0, 0], [2, 0, 0]] });
+    const changes = axisDragChanges({ object: crab, node: 1 }, "y", 1, settings);
+    expect(changes).toEqual({ path: [[0, 0, 0], [2, 1, 0]] });
   });
 });
