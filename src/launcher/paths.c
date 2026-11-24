@@ -2,6 +2,7 @@
  * paths for the launcher, which lives in the repo's top folder and works
  * on that folder, whatever folder it's started from
  */
+#include <sys/stat.h>
 #include <SDL2/SDL.h>
 #include "paths.h"
 
@@ -33,7 +34,12 @@ void JoinPath(char *path, size_t size, const char *folder, const char *name) {
 }
 
 time_t LauncherBuiltTime(const char *repo) {
-  return 0;
+  char launcher[PATH_MAX_LEN];
+  struct stat info;
+
+  JoinPath(launcher, sizeof(launcher), repo, LAUNCHER_FILE_NAME);
+  if (stat(launcher, &info) != 0) { return 0; }
+  return info.st_mtime;
 }
 
 /* the repo folder, from the launcher's own path; returns 0 if it can't tell */
