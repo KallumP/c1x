@@ -15,19 +15,19 @@ const objects = [newObject("basic", [0, 0, 0]), newObject("basic", [1, 2, 3]), c
 
 // the drag's handlers with the editor at state, keeping what they dispatch
 // and whether the camera orbits
-function dragWith(state: EditorState) {
+function dragWith(state: EditorState, dragging = { current: null as AxisDragging | null }) {
   const dispatched: EditorAction[] = [];
   const orbiting = { isOn: true };
   const handlers = axisDragHandlers({
     state,
     dispatch: (action) => dispatched.push(action),
-    dragging: { current: null as AxisDragging | null },
+    dragging,
     setOrbiting: (isOn) => {
       orbiting.isOn = isOn;
     },
     settings: SETTINGS,
   });
-  return { handlers, dispatched, orbiting };
+  return { handlers, dispatched, orbiting, dragging };
 }
 
 function selecting(selected: number | null, node: number | null = null): EditorState {
@@ -57,12 +57,21 @@ describe("dragging an axis arrow", () => {
   });
 
   test("each move is measured from where the object was when grabbed, unrecorded", () => {
-    const { handlers, dispatched } = dragWith(selecting(1));
-    handlers.onGrab();
-    handlers.onMove("x", 1);
-    handlers.onMove("x", 2);
-    const update = { type: "update", index: 1, changes: { at: [3, 2, 3] }, record: false };
-    expect(dispatched.at(-1)).toEqual(update);
+    const grabbing = dragWith(selecting(1));
+    grabbing.handlers.onGrab();
+    grabbing.handlers.onMove("x", 1);
+    // drawn again with the object already moved, the drag carrying on
+    const moved = selecting(1);
+    moved.objects = objects.map((object, index) => {
+      if (index !== 1) {
+        return object;
+      }
+      return { ...object, at: [2, 2, 3] };
+    });
+    const moving = dragWith(moved, grabbing.dragging);
+    moving.handlers.onMove("x", 2);
+    const changes = { at: [3, 2, 3] };
+    expect(moving.dispatched.at(-1)).toEqual({ type: "update", index: 1, changes, record: false });
   });
 
   test("with a path node selected, it moves that node", () => {
