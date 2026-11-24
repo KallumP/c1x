@@ -30,16 +30,16 @@ async function listed(levels: OnlineLevel[] | { problem: string }, name = "") {
 }
 
 describe("an online level's line", () => {
-  test("is its id, author, name and page after the prefix, between tabs", () => {
+  test("is its id, author and name after the prefix, between tabs", () => {
     expect(onlineLevelLine(TIDE_RUINS)).toBe(
-      `${ONLINE_LEVEL_PREFIX}17302\tkallum\tTide Ruins\t${TIDE_RUINS.page}`,
+      `${ONLINE_LEVEL_PREFIX}17302\tkallum\tTide Ruins`,
     );
   });
 
   test("has no tabs or line ends in its name or author but those", () => {
     const level = { ...TIDE_RUINS, name: "Tide\tRuins\r\n2", author: "kal\nlum" };
     expect(onlineLevelLine(level)).toBe(
-      `${ONLINE_LEVEL_PREFIX}17302\tkal lum\tTide Ruins  2\t${TIDE_RUINS.page}`,
+      `${ONLINE_LEVEL_PREFIX}17302\tkal lum\tTide Ruins  2`,
     );
   });
 });
