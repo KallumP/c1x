@@ -2,6 +2,10 @@
 
 ## 2026-11-24
 
+### Changed
+
+- the launcher and level editor only upload and download mod.io levels, without links to their pages
+
 ### Fixed
 
 - the title screen's demos play, instead of showing a level where nothing happens, and go back to the title when they end
