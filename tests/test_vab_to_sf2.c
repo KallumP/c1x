@@ -34,15 +34,19 @@ static uint8_t *CreateOneToneVab(uint8_t tone_vol, uint8_t prog_vol) {
   return (uint8_t*)va;
 }
 
-/* the soundfont VabToSf2 makes of a one tone vab (to free), and its size */
-static uint8_t *ConvertOneToneVab(uint8_t tone_vol, uint8_t prog_vol, size_t *size) {
-  uint8_t *vab, *sf2;
+/* the soundfont VabToSf2 makes of vab (to free; vab is freed), and its size */
+static uint8_t *ConvertVab(uint8_t *vab, size_t *size) {
+  uint8_t *sf2;
 
-  vab = CreateOneToneVab(tone_vol, prog_vol);
   sf2 = calloc(1, SF2_BUFFER_SIZE);
   *size = VabToSf2(vab, sf2);
   free(vab);
   return sf2;
+}
+
+/* the soundfont VabToSf2 makes of a one tone vab (to free), and its size */
+static uint8_t *ConvertOneToneVab(uint8_t tone_vol, uint8_t prog_vol, size_t *size) {
+  return ConvertVab(CreateOneToneVab(tone_vol, prog_vol), size);
 }
 
 /* the data of the first chunk with id in sf2 (setting its size), or 0 */
@@ -88,6 +92,20 @@ static int ToneAttenuation(uint8_t tone_vol, uint8_t prog_vol) {
 
 UTEST(vab_to_sf2, a_tone_keeps_its_root_key) {
   ASSERT_EQ(60, ToneGenerator(127, 127, overridingRootKey));
+}
+
+/* the bonus round's lead instruments have a shift of 70, which the ps1 tunes up */
+UTEST(vab_to_sf2, a_shifted_tone_is_tuned_up) {
+  uint8_t *vab, *sf2;
+  size_t size;
+  int fine_tune;
+
+  vab = CreateOneToneVab(127, 127);
+  ((VabA*)vab)->vagatrs[0][0].shift = 70;
+  sf2 = ConvertVab(vab, &size);
+  fine_tune = FindInstrumentGenerator(sf2, size, fineTune);
+  free(sf2);
+  ASSERT_EQ(50, fine_tune);
 }
 
 UTEST(vab_to_sf2, a_full_volume_tone_is_not_attenuated) {
