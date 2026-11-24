@@ -3,7 +3,7 @@
 import { withEndPadRaise } from "./endPad";
 import { pathPositions, withNodeAt } from "./enemyPaths";
 import type { LevelFrame } from "./levelFrame";
-import type { LevelObject, Vec3 } from "./objects";
+import { raisedSpot, type LevelObject, type Vec3 } from "./objects";
 
 export type Axis = "x" | "y" | "up";
 
@@ -95,6 +95,5 @@ export function axisHandlesSpot(
   if (node !== null) {
     return pathPositions(object, turn, scale)[node];
   }
-  const [x, y, z] = object.at;
-  return [x, y, z + object.raise];
+  return raisedSpot(object);
 }

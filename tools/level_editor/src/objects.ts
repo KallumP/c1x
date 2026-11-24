@@ -514,6 +514,12 @@ export interface LevelObject {
   range?: number;       // how near crash comes, in metres, before a gunman shoots (GUNMAN_RANGE without one)
 }
 
+// where object stands in blender, lifted by its raise
+export function raisedSpot(object: LevelObject): Vec3 {
+  const [x, y, z] = object.at;
+  return [x, y, z + object.raise];
+}
+
 // whether an object moves along a path: an enemy that does, or a leaf
 export const hasPath = (object: LevelObject) =>
   (object.kind === "enemy" && isPathEnemy(object.enemy)) || (object.kind === "obstacle" && isPathObstacle(object.obstacle));
