@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-24
+
+### Fixed
+
+- the title screen's demos play, instead of showing a level where nothing happens, and go back to the title when they end
+
 ## 2026-11-23
 
 ### Added
