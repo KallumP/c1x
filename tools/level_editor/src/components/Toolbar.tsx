@@ -75,10 +75,10 @@ export default function Toolbar(props: ToolbarProps) {
   // build and boot, on the right
   const renderLevelActions = () => {
     const { isBusy, status, build, buildAndBoot } = levelActions;
-    const isShown = status && !status.failed;
+    const isStatusShown = status && !status.failed;
     return (
       <div className="level-actions">
-        {isShown && <span className="status" title={status.detail}>{status.text}</span>}
+        {isStatusShown && <span className="status" title={status.detail}>{status.text}</span>}
         <button disabled={!level || isBusy} onClick={build} title={BUILD_TITLE}>
           Build
         </button>
