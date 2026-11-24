@@ -3,6 +3,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import AxisHandles from "./components/AxisHandles";
 import LevelMesh from "./components/LevelMesh";
 import LevelPicker from "./components/LevelPicker";
+import MessageStrip from "./components/MessageStrip";
 import ObjectMarkers from "./components/ObjectMarkers";
 import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
@@ -144,36 +145,6 @@ export default function App() {
     );
   };
 
-  // the level's error and a failed build's, in full under the toolbar
-  const renderErrorStrip = () => {
-    const failedAction = levelActions.status?.failed ? levelActions.status : null;
-    if (!error && !failedAction) {
-      return null;
-    }
-    return (
-      <div className="error error-strip" role="alert">
-        {error && <div>{error}</div>}
-        {failedAction && <div title={failedAction.detail}>{failedAction.text}</div>}
-      </div>
-    );
-  };
-
-  // a build's warnings, under the toolbar where an error would be
-  const renderBuildWarningStrip = () => {
-    const { warnings } = levelActions;
-    if (warnings.length === 0) {
-      return null;
-    }
-    return (
-      <div className="warning-strip" role="status">
-        {warnings.map((warning, index) => <div key={index}>Warning: {warning}</div>)}
-      </div>
-    );
-  };
-
-  // the error strip, or else a build's warnings
-  const renderMessageStrip = () => renderErrorStrip() ?? renderBuildWarningStrip();
-
   const renderHeader = () => (
     <header className="toolbar">
       <LevelPicker levels={levels} level={level} onOpen={openLevel} />
@@ -236,7 +207,7 @@ export default function App() {
   return (
     <div className="app">
       {renderHeader()}
-      {renderMessageStrip()}
+      <MessageStrip error={error} status={levelActions.status} warnings={levelActions.warnings} />
       <Palette tool={tool} onTool={setTool} grid={grid} onGrid={setGrid} />
       {renderMain()}
       <PropertiesPanel
