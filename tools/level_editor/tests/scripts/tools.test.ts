@@ -1,5 +1,5 @@
-import { describe, expect, test } from "vitest";
-import { toolsCommand } from "../../scripts/tools";
+import { describe, expect, test, vi } from "vitest";
+import { runTools, toolsCommand, type ToolsHandlers } from "../../scripts/tools";
 
 describe("the tools exe's commands", () => {
   test("build-level <level> builds a level", () => {
@@ -59,5 +59,45 @@ describe("the tools exe's commands", () => {
     [["play"]],
   ])("anything else says how to use it: %j", (args) => {
     expect(toolsCommand(args)).toEqual({ kind: "usage" });
+  });
+});
+
+const EXIT_CODE = 7; // a stand-in handler's, to show runTools gives it back
+
+// handlers that only note being called, none touching the network or the disk
+function standInHandlers(): ToolsHandlers {
+  return {
+    buildLevel: vi.fn(() => true),
+    editor: vi.fn(async () => true),
+    checkUpdate: vi.fn(async () => EXIT_CODE),
+    listOnlineLevels: vi.fn(async () => EXIT_CODE),
+    downloadLevel: vi.fn(async () => EXIT_CODE),
+    downloadRelease: vi.fn(async () => EXIT_CODE),
+  };
+}
+
+describe("the launcher's commands reach their own handlers", () => {
+  test("check-update", async () => {
+    const handlers = standInHandlers();
+    expect(await runTools(["check-update", "1.4"], handlers)).toBe(EXIT_CODE);
+    expect(handlers.checkUpdate).toHaveBeenCalledWith("1.4");
+  });
+
+  test("list-online-levels", async () => {
+    const handlers = standInHandlers();
+    expect(await runTools(["list-online-levels", "tide"], handlers)).toBe(EXIT_CODE);
+    expect(handlers.listOnlineLevels).toHaveBeenCalledWith("tide");
+  });
+
+  test("download-level", async () => {
+    const handlers = standInHandlers();
+    expect(await runTools(["download-level", "17302"], handlers)).toBe(EXIT_CODE);
+    expect(handlers.downloadLevel).toHaveBeenCalledWith(17302);
+  });
+
+  test("download-release", async () => {
+    const handlers = standInHandlers();
+    expect(await runTools(["download-release", "1.5"], handlers)).toBe(EXIT_CODE);
+    expect(handlers.downloadRelease).toHaveBeenCalledWith("1.5");
   });
 });
