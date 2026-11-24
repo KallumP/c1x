@@ -1,21 +1,23 @@
 import { describe, expect, test } from "vitest";
 import { messageStrip } from "../../src/messageStrip";
 
-const FAILED = { text: "Build failed: no floor", detail: "the whole output", failed: true };
+const FAILED = { text: "Build failed: no floor", detail: "its output", failed: true };
 
 describe("messageStrip", () => {
   test("shows the level's error", () => {
-    expect(messageStrip("couldn't save", null, [])).toEqual({ kind: "error", lines: [{ text: "couldn't save" }] });
+    const strip = messageStrip("couldn't save", null, []);
+    expect(strip).toEqual({ kind: "error", lines: [{ text: "couldn't save" }] });
   });
 
   test("shows a failed build, its output on hover", () => {
     const strip = messageStrip(null, FAILED, []);
-    expect(strip).toEqual({ kind: "error", lines: [{ text: FAILED.text, detail: FAILED.detail }] });
+    const lines = [{ text: FAILED.text, detail: FAILED.detail }];
+    expect(strip).toEqual({ kind: "error", lines });
   });
 
   test("shows the level's error and a failed build together, the error first", () => {
-    const lines = messageStrip("couldn't save", FAILED, [])?.lines.map((line) => line.text);
-    expect(lines).toEqual(["couldn't save", FAILED.text]);
+    const strip = messageStrip("couldn't save", FAILED, []);
+    expect(strip?.lines.map((line) => line.text)).toEqual(["couldn't save", FAILED.text]);
   });
 
   test("an error hides the build's warnings", () => {

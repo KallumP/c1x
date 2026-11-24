@@ -94,12 +94,14 @@ describe("axisDragChanges", () => {
 
   test("an object's drag moves the object", () => {
     const box = newObject("basic", [1, 2, 3]);
-    expect(axisDragChanges({ object: box, node: null }, "x", 1, settings)).toEqual({ at: [2, 2, 3] });
+    const changes = axisDragChanges({ object: box, node: null }, "x", 1, settings);
+    expect(changes).toEqual({ at: [2, 2, 3] });
   });
 
-  test("an end pad's drag across the floor raises it over the floor where it lands", () => {
+  test("an end pad's drag raises it over the floor where it lands", () => {
     const pad = newObject("end", [0, 0, 0]);
-    expect(axisDragChanges({ object: pad, node: null }, "x", 1, settings).raise).toBeGreaterThan(0.5);
+    const changes = axisDragChanges({ object: pad, node: null }, "x", 1, settings);
+    expect(changes.raise).toBeGreaterThan(0.5);
   });
 
   test("a path node's drag moves only that node", () => {

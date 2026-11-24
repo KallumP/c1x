@@ -14,9 +14,12 @@ const STRIP_LOOKS = {
 };
 
 const renderLines = (strip: Strip) =>
-  strip.lines.map((line, index) => <div key={index} title={line.detail}>{line.text}</div>);
+  strip.lines.map((line, index) => (
+    <div key={index} title={line.detail}>{line.text}</div>
+  ));
 
-// the level's error and a failed build's, in full under the toolbar, or else the build's warnings
+// the level's error and a failed build's, in full under the toolbar, or else
+// the build's warnings
 export default function MessageStrip({ error, status, warnings }: MessageStripProps) {
   const strip = messageStrip(error, status, warnings);
   if (!strip) {

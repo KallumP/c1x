@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 import type { DragSettings } from "../../../src/axisDrag";
-import { emptyEditor, newObject, type EditorAction, type EditorState } from "../../../src/editor";
+import {
+  emptyEditor,
+  newObject,
+  type EditorAction,
+  type EditorState,
+} from "../../../src/editor";
 import { axisDragHandlers, type AxisDragging } from "../../../src/hooks/useAxisDrag";
 import { enemyObject } from "../../helpers";
 
@@ -25,8 +30,9 @@ function dragWith(state: EditorState) {
   return { handlers, dispatched, orbiting };
 }
 
-const selecting = (selected: number | null, selectedNode: number | null = null): EditorState =>
-  ({ ...emptyEditor, objects, selected, selectedNode });
+function selecting(selected: number | null, node: number | null = null): EditorState {
+  return { ...emptyEditor, objects, selected, selectedNode: node };
+}
 
 describe("dragging an axis arrow", () => {
   test("with nothing selected, it doesn't move anything", () => {
@@ -55,7 +61,8 @@ describe("dragging an axis arrow", () => {
     handlers.onGrab();
     handlers.onMove("x", 1);
     handlers.onMove("x", 2);
-    expect(dispatched.at(-1)).toEqual({ type: "update", index: 1, changes: { at: [3, 2, 3] }, record: false });
+    const update = { type: "update", index: 1, changes: { at: [3, 2, 3] }, record: false };
+    expect(dispatched.at(-1)).toEqual(update);
   });
 
   test("with a path node selected, it moves that node", () => {
@@ -63,7 +70,8 @@ describe("dragging an axis arrow", () => {
     handlers.onGrab();
     handlers.onMove("y", 1);
     const changes = { path: [[0, 0, 0], [2, 1, 0]] };
-    expect(dispatched.at(-1)).toEqual({ type: "update", index: 2, changes, record: false });
+    const update = { type: "update", index: 2, changes, record: false };
+    expect(dispatched.at(-1)).toEqual(update);
   });
 
   test("letting go turns orbiting back on", () => {

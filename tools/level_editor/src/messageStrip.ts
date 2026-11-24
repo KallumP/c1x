@@ -24,13 +24,18 @@ function errorLines(error: string | null, status: ActionStatus | null): StripLin
 }
 
 // what the strip shows, if anything
-export function messageStrip(error: string | null, status: ActionStatus | null, warnings: string[]): Strip | null {
+export function messageStrip(
+  error: string | null,
+  status: ActionStatus | null,
+  warnings: string[],
+): Strip | null {
   const errors = errorLines(error, status);
   if (errors.length > 0) {
     return { kind: "error", lines: errors };
   }
   if (warnings.length > 0) {
-    return { kind: "warning", lines: warnings.map((warning) => ({ text: `Warning: ${warning}` })) };
+    const lines = warnings.map((warning) => ({ text: `Warning: ${warning}` }));
+    return { kind: "warning", lines };
   }
   return null;
 }

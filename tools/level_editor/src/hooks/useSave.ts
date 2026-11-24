@@ -6,7 +6,8 @@ export interface Savable {
   save: () => Promise<boolean>;
 }
 
-// saves the parts that changed, in order, stopping at one that fails; whether they all saved
+// saves the parts that changed, in order, stopping at one that fails; whether
+// they all saved
 export async function saveChanged(parts: Savable[]): Promise<boolean> {
   for (const part of parts) {
     if (part.unsaved && !(await part.save())) {

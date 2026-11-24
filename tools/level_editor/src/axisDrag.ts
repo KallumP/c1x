@@ -67,7 +67,8 @@ export interface AxisGrab {
   node: number | null;
 }
 
-// what a drag is measured against: the grid it snaps to (0: none), and the level's turn, scale and floor
+// what a drag is measured against: the grid it snaps to (0: none), and the
+// level's turn, scale and floor
 export interface DragSettings {
   grid: number;
   turn: number;
@@ -75,12 +76,34 @@ export interface DragSettings {
   triangles: Triangle[];
 }
 
-// the change dragging grabbed metres along axis makes; an end pad stays raised over the floor
-export function axisDragChanges(grabbed: AxisGrab, axis: Axis, metres: number, settings: DragSettings): Partial<LevelObject> {
+// the change dragging grabbed metres along axis makes; an end pad stays raised
+// over the floor
+export function axisDragChanges(
+  grabbed: AxisGrab,
+  axis: Axis,
+  metres: number,
+  settings: DragSettings,
+): Partial<LevelObject> {
   const { object, node } = grabbed;
   const { grid, turn, scale, triangles } = settings;
   if (node !== null) {
     return movedNodeAlong(object, node, axis, metres, grid, turn, scale);
   }
-  return withEndPadRaise(object, movedAlong(object, axis, metres, grid), scale, triangles);
+  const moved = movedAlong(object, axis, metres, grid);
+  return withEndPadRaise(object, moved, scale, triangles);
+}
+
+// where the axis arrows sit: on the grabbed object where it stands, raised, or
+// on its path's node
+export function axisHandlesSpot(
+  object: LevelObject,
+  node: number | null,
+  turn: number,
+  scale: number,
+): Vec3 {
+  if (node !== null) {
+    return pathPositions(object, turn, scale)[node];
+  }
+  const [x, y, z] = object.at;
+  return [x, y, z + object.raise];
 }

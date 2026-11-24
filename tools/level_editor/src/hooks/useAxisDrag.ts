@@ -4,7 +4,8 @@ import type { AxisDragHandlers } from "../components/AxisHandles";
 import type { Orbit } from "../components/Scene";
 import type { EditorAction, EditorState } from "../editor";
 
-// the object (or node of its path) an axis arrow's dragging, as it was when grabbed, and whether it's moved yet
+// the object (or node of its path) an axis arrow's dragging, as it was when
+// grabbed, and whether it's moved yet
 export interface AxisDragging extends AxisGrab {
   index: number;
   hasMoved: boolean;
@@ -27,8 +28,9 @@ export function axisDragHandlers(parts: AxisDragParts): AxisDragHandlers {
         return;
       }
       setOrbiting(false);
-      const object = state.objects[state.selected];
-      dragging.current = { index: state.selected, node: state.selectedNode, object, hasMoved: false };
+      const index = state.selected;
+      const object = state.objects[index];
+      dragging.current = { index, node: state.selectedNode, object, hasMoved: false };
     },
     onMove: (axis, metres) => {
       const grabbed = dragging.current;

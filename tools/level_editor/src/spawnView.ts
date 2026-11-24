@@ -25,7 +25,11 @@ export function spawnView(spawn: LevelObject, turn: number, scale: number): View
 }
 
 // where the camera starts on a level: behind its spawn, if it has one
-export function levelStartView(objects: LevelObject[], turn: number, scale: number): View | null {
+export function levelStartView(
+  objects: LevelObject[],
+  turn: number,
+  scale: number,
+): View | null {
   const spawn = objects.find((object) => object.kind === "spawn");
   if (!spawn) {
     return null;
