@@ -2,13 +2,13 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import AxisHandles from "./components/AxisHandles";
 import LevelMesh from "./components/LevelMesh";
-import LevelPicker from "./components/LevelPicker";
 import MessageStrip from "./components/MessageStrip";
 import ObjectMarkers from "./components/ObjectMarkers";
 import Palette from "./components/Palette";
 import PropertiesPanel from "./components/PropertiesPanel";
 import ShareDialog from "./components/ShareDialog";
 import Scene, { type Orbit } from "./components/Scene";
+import Toolbar from "./components/Toolbar";
 import { levelTurn } from "./camera";
 import { draggedBy, newObject, type Tool } from "./editor";
 import { raisedEndPad, withEndPadRaise } from "./endPad";
@@ -23,7 +23,7 @@ import { useLevelCfg } from "./hooks/useLevelCfg";
 import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevelSongs } from "./hooks/useLevelSongs";
 import { useLevels } from "./hooks/useLevels";
-import { saveButtonText, useSave } from "./hooks/useSave";
+import { useSave } from "./hooks/useSave";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
 import { useOutlineWarnings, usePathWarnings, useTriangles, useWarnings } from "./hooks/useWarnings";
@@ -105,57 +105,6 @@ export default function App() {
     }
   };
 
-
-  const renderHistoryButtons = () => (
-    <>
-      <button disabled={state.past.length === 0} onClick={() => dispatch({ type: "undo" })} title="Undo (Ctrl+Z)">Undo</button>
-      <button disabled={state.future.length === 0} onClick={() => dispatch({ type: "redo" })} title="Redo (Ctrl+Y)">Redo</button>
-    </>
-  );
-
-  const renderSaveButton = () => (
-    <button className={unsaved ? "save unsaved" : "save"} disabled={!unsaved || isSaving} onClick={save} title="Save (Ctrl+S)">
-      {saveButtonText(isSaving, unsaved)}
-    </button>
-  );
-
-  const renderShareButton = () => (
-    <button
-      disabled={!level}
-      onClick={() => setIsSharing(true)}
-      title="Upload this level to mod.io, for others to play"
-    >
-      Share
-    </button>
-  );
-
-  // build and boot, on the right
-  const renderLevelActions = () => {
-    const { isBusy, status, build, buildAndBoot } = levelActions;
-    return (
-      <div className="level-actions">
-        {status && !status.failed && <span className="status" title={status.detail}>{status.text}</span>}
-        <button disabled={!level || isBusy} onClick={build} title="Build this level, saving first (Ctrl+Shift+B)">
-          Build
-        </button>
-        <button disabled={!level || isBusy} onClick={buildAndBoot} title="Build this level, then set it as the level CUSTOM LEVEL on the game's title screen starts (F5)">
-          Build + boot
-        </button>
-      </div>
-    );
-  };
-
-  const renderHeader = () => (
-    <header className="toolbar">
-      <LevelPicker levels={levels} level={level} onOpen={openLevel} />
-      {renderHistoryButtons()}
-      {renderSaveButton()}
-      {renderShareButton()}
-      {renderLevelActions()}
-      {(isSaving || levelActions.isBusy) && <div className="progress" role="progressbar" aria-label="Working" />}
-    </header>
-  );
-
   // the selected object's axis arrows, or its selected path node's, while selecting
   const renderAxisHandles = () => {
     if (tool.kind !== "select" || state.selected === null) {
@@ -206,7 +155,18 @@ export default function App() {
 
   return (
     <div className="app">
-      {renderHeader()}
+      <Toolbar
+        levels={levels}
+        level={level}
+        onOpen={openLevel}
+        state={state}
+        dispatch={dispatch}
+        unsaved={unsaved}
+        isSaving={isSaving}
+        onSave={save}
+        onShare={() => setIsSharing(true)}
+        levelActions={levelActions}
+      />
       <MessageStrip error={error} status={levelActions.status} warnings={levelActions.warnings} />
       <Palette tool={tool} onTool={setTool} grid={grid} onGrid={setGrid} />
       {renderMain()}

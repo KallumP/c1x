@@ -93,3 +93,5 @@ export function useLevelActions(level: LevelInfo | null, unsaved: boolean, save:
 
   return { isBusy, status, warnings, build, buildAndBoot };
 }
+
+export type LevelActions = ReturnType<typeof useLevelActions>;
