@@ -16,8 +16,8 @@ afterEach(() => { rmSync(root, { recursive: true, force: true }); });
 
 const LOGO = new Uint8Array([1, 2, 3]);
 const DETAILS = { name: "My Level", summary: "A level.", logo: LOGO };
-const ONLINE: LevelMod = { id: 17302, page: "https://test.mod.io/m/my-level" };
-const NEW_MOD: LevelMod = { id: 20000, page: "https://test.mod.io/m/new" };
+const ONLINE: LevelMod = { id: 17302 };
+const NEW_MOD: LevelMod = { id: 20000 };
 
 // stand-ins for mod.io's calls: the player has the mod own (or none), and each
 // call answers as given; what they were sent is kept

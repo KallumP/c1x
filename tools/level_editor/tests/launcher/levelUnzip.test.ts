@@ -27,10 +27,7 @@ function zipOf(paths: string[], folders: string[] = []): Uint8Array {
 }
 
 // the mod.io level the zip is from, as the download notes it
-const TIDE_RUINS_MOD = {
-  modId: 17302,
-  page: "https://mod.io/g/crash-1-n-hanced/m/tide-ruins",
-};
+const TIDE_RUINS_MOD = { modId: 17302 };
 const TIDE_RUINS = ["1_tide_ruins/tide_ruins.obj", "1_tide_ruins/level.cfg"];
 const filesIn = (name: string) => readdirSync(join(root, name)).sort();
 
@@ -44,7 +41,7 @@ describe("unzipping a level", () => {
     );
   });
 
-  test("notes which mod.io level it is, and its page", () => {
+  test("notes which mod.io level it is", () => {
     unzipLevel(root, zipOf(TIDE_RUINS), TIDE_RUINS_MOD);
     const note = readFileSync(join(root, "1_tide_ruins", ".modio.json"), "utf8");
     expect(JSON.parse(note)).toEqual(TIDE_RUINS_MOD);
@@ -135,7 +132,7 @@ describe("a zip that can't be unzipped as a level", () => {
   });
 
   test("would replace a level from another mod.io level", () => {
-    unzipLevel(root, zipOf(TIDE_RUINS), { modId: 1, page: "https://mod.io/m/other" });
+    unzipLevel(root, zipOf(TIDE_RUINS), { modId: 1 });
     expect(unzipLevel(root, zipOf(TIDE_RUINS), TIDE_RUINS_MOD)).toEqual({
       problem: "There's already a level called 1_tide_ruins: rename its folder in level_src first.",
     });

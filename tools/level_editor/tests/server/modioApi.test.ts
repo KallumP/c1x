@@ -25,7 +25,7 @@ afterEach(() => { rmSync(repo, { recursive: true, force: true }); });
 
 const NOW = 1700000000; // seconds since 1970
 const LATER = NOW + 1000;
-const ONLINE: LevelMod = { id: 17302, page: "https://test.mod.io/m/tide-ruins" };
+const ONLINE: LevelMod = { id: 17302 };
 const tokenPath = () => join(repo, "modio_token.json");
 const signIn = (expires = LATER) => writeFileSync(
   tokenPath(),
