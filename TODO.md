@@ -33,3 +33,7 @@ Generic
 - split up the tools code: tools/level_editor holds both the level editor and c1x_tools (the launcher's level build, update check and mod.io list/download), so move the launcher-only commands out from the editor's code
 - Split level editor app.tsx into its own components
 - linux download downloads a windows version...
+
+- sunset vista demo gameplay doesnt playback properly
+- jaws of darkness is bugged
+- the lab is bugged
