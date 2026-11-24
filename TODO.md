@@ -27,7 +27,6 @@ speed run mode
 
 
 Generic
-- show the last build time in dev launcher next to version
 - europe support
 - Jaws of Darkness's demo drifts from its recording: Crash dies 5 times in it
 - the last bonus token you get still rubber bands across the top of the screen
