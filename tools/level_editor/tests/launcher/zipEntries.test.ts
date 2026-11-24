@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { strToU8, unzipSync, zipSync } from "fflate";
-import { zippedFiles } from "../../scripts/zipEntries";
+import { zippedFiles } from "../../launcher/zipEntries";
 
 // the paths of a zip's files, as zippedFiles splits them
 function zippedPaths(paths: string[]): string[] {

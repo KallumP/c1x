@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { isNewer, versionNumbers } from "./updateCheck";
+import { isNewer, versionNumbers } from "../launcher/updateCheck";
 
 const FIRST_VERSION = "1.0";
 

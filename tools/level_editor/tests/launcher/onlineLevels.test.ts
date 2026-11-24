@@ -5,7 +5,7 @@ import {
   listOnlineLevelsCommand,
   ONLINE_LEVEL_PREFIX,
   onlineLevelLine,
-} from "../../scripts/onlineLevels";
+} from "../../launcher/onlineLevels";
 import type { OnlineLevel } from "../../scripts/modio";
 
 const TIDE_RUINS: OnlineLevel = {

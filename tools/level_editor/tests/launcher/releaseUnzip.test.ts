@@ -10,7 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { strToU8, zipSync } from "fflate";
-import { unzipRelease } from "../../scripts/releaseUnzip";
+import { unzipRelease } from "../../launcher/releaseUnzip";
 
 let parent: string; // a stand-in for the folder c1x-1.3 is in
 

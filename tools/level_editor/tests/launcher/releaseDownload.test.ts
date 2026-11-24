@@ -8,7 +8,7 @@ import {
   downloadReleaseCommand,
   RELEASE_INSTALLED_PREFIX,
   releaseZipUrl,
-} from "../../scripts/releaseDownload";
+} from "../../launcher/releaseDownload";
 
 describe("a release's zip", () => {
   test("downloads from its release on GitHub, tagged with a v", () => {

@@ -2,8 +2,8 @@
 // mod.io, or those with name in theirs, one line each for the launcher's Levels
 // tab to read
 
-import { isProblem, type Answer } from "./answer";
-import { listOnlineLevels, type OnlineLevel } from "./modio";
+import { isProblem, type Answer } from "../scripts/answer";
+import { listOnlineLevels, type OnlineLevel } from "../scripts/modio";
 
 // what's said before each level's line, which the launcher looks for.
 // online_levels.c has the same text, and a test checks the two are the same

@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { isBootableName } from "../server/settings";
-import type { Answer } from "./answer";
+import type { Answer } from "../scripts/answer";
 import { isPlainName, tryUnzip, zippedFiles } from "./zipEntries";
 
 // the file in a downloaded level's folder noting the mod.io level it's from

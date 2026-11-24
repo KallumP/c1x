@@ -1,7 +1,7 @@
 // c1x_tools check-update <version>: whether GitHub has a release of c1x newer
 // than version, the one the launcher was built as (see doc/releasing.md)
 import { errorMessage } from "../src/errorMessage";
-import type { Fetch } from "./fetch";
+import type { Fetch } from "../scripts/fetch";
 
 // GitHub's latest release by its tag, such as v1.4, or why it can't be told
 export type LatestRelease = { tag: string } | { problem: string };

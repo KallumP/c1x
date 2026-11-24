@@ -2,8 +2,8 @@
 // one folder, c1x-<version>, as the release script makes it
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { Answer } from "./answer";
-import { releaseName } from "./releaseName";
+import type { Answer } from "../scripts/answer";
+import { releaseName } from "../scripts/releaseName";
 import { isPlainName, tryUnzip, zippedFiles } from "./zipEntries";
 
 const isSafelyInside = (top: string, parts: string[]) =>

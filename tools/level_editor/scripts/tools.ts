@@ -6,12 +6,12 @@ import { join } from "node:path";
 import { buildLevel, levelSourcePath } from "../builder/buildLevel";
 import { repoFolders } from "../builder/repoFolders";
 import { addressLine, startEditorServer } from "../server/editorServer";
-import { downloadLevelCommand } from "./levelDownload";
-import { downloadReleaseCommand } from "./releaseDownload";
-import { downloadFile } from "./download";
+import { downloadLevelCommand } from "../launcher/levelDownload";
+import { downloadReleaseCommand } from "../launcher/releaseDownload";
+import { downloadFile } from "../launcher/download";
 import { fetchOnlineLevel } from "./modio";
-import { listOnlineLevelsCommand } from "./onlineLevels";
-import { checkUpdate } from "./updateCheck";
+import { listOnlineLevelsCommand } from "../launcher/onlineLevels";
+import { checkUpdate } from "../launcher/updateCheck";
 
 export type ToolsCommand =
   | { kind: "build-level"; level: string }
@@ -105,26 +105,48 @@ async function runEditor(repo: string): Promise<boolean> {
   return true;
 }
 
-// runs what the command line asks for, in the project's folder repo; its exit code
-export async function runTools(repo: string, args: string[]): Promise<number> {
+// what each command does: whether it worked, or its exit code
+export type ToolsHandlers = {
+  buildLevel: (level: string) => boolean;
+  editor: () => Promise<boolean>;
+  checkUpdate: (version: string) => Promise<number>;
+  listOnlineLevels: (name: string) => Promise<number>;
+  downloadLevel: (modId: number) => Promise<number>;
+  downloadRelease: (version: string) => Promise<number>;
+};
+
+// the commands, run in the project's folder repo
+export function toolsHandlers(repo: string): ToolsHandlers {
+  return {
+    buildLevel: (level) => runBuildLevel(repo, level),
+    editor: () => runEditor(repo),
+    checkUpdate: (version) => checkUpdate(version, console.log),
+    listOnlineLevels: (name) => listOnlineLevelsCommand(name, console.log),
+    downloadLevel: (modId) => runDownloadLevel(repo, modId),
+    downloadRelease: (version) => downloadReleaseCommand(repo, version, console.log),
+  };
+}
+
+// runs what the command line asks for with handlers; its exit code
+export async function runTools(args: string[], handlers: ToolsHandlers): Promise<number> {
   const command = toolsCommand(args);
   if (command.kind === "build-level") {
-    return Number(!runBuildLevel(repo, command.level));
+    return Number(!handlers.buildLevel(command.level));
   }
   if (command.kind === "editor") {
-    return Number(!(await runEditor(repo)));
+    return Number(!(await handlers.editor()));
   }
   if (command.kind === "check-update") {
-    return checkUpdate(command.version, console.log);
+    return handlers.checkUpdate(command.version);
   }
   if (command.kind === "list-online-levels") {
-    return listOnlineLevelsCommand(command.name, console.log);
+    return handlers.listOnlineLevels(command.name);
   }
   if (command.kind === "download-release") {
-    return downloadReleaseCommand(repo, command.version, console.log);
+    return handlers.downloadRelease(command.version);
   }
   if (command.kind === "download-level") {
-    return runDownloadLevel(repo, command.modId);
+    return handlers.downloadLevel(command.modId);
   }
   console.log(USAGE);
   return 1;
