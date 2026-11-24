@@ -64,6 +64,7 @@ SRC =	src/ns.c \
 TEST_SRC = $(wildcard tests/*.c) \
 	src/ns.c \
 	src/pad.c \
+	src/pbak.c \
 	src/pc/math.c \
 	src/pc/pad.c \
 	src/pc/controls.c \

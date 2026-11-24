@@ -7,6 +7,7 @@
 
 extern int PbakInit();
 extern int PbakKill();
+extern void PbakStart();
 extern void PbakPlay(eid_t*);
 extern void PbakChoose(eid_t*);
 

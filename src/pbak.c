@@ -31,7 +31,7 @@ int PbakKill() {
 }
 
 //----- (8002E8CC) --------------------------------------------------------
-static inline void PbakStart() {
+void PbakStart() {
   uint32_t seed;
 
   pbak_state = 2;
