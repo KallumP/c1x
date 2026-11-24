@@ -207,7 +207,9 @@ static void DrawGeneralFields(void) {
     "Shows an FPS counter in the top right corner.");
   DrawSliderBeside("frame_rate", &settings.frame_rate, SETTINGS_FRAME_RATE_MIN,
     SETTINGS_FRAME_RATE_MAX,
-    "Target frame rate: frames drawn a second. The game logic still runs at 30 fps, so it plays the same.");
+    "Target frame rate: frames drawn a second. The game logic still runs at its own speed, so it plays the same.");
+  DrawOnOff("PS1 speed", &settings.ps1_speed,
+    "Run the game logic at the PS1's 29.97 fps. Off runs it at an even 30 fps.");
   DrawOnOff("Mute", &settings.mute, "Start the game with no sound.");
 }
 

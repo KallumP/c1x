@@ -132,6 +132,7 @@ static char *SettingsTextWith(char *text, const pc_settings *s) {
   text = ReplaceOnOffLine(text, "fullscreen", s->fullscreen);
   text = ReplaceOnOffLine(text, "memory_card", s->memory_card);
   text = ReplaceOnOffLine(text, "mute", s->mute);
+  text = ReplaceOnOffLine(text, "ps1_speed", s->ps1_speed);
   if (s->boot_level[0]) {
     text = ReplaceSettingLine(text, "boot_level", s->boot_level);
   }
@@ -176,5 +177,6 @@ int AreSettingsEqual(const pc_settings *a, const pc_settings *b) {
     && a->fullscreen == b->fullscreen
     && a->memory_card == b->memory_card
     && a->mute == b->mute
+    && a->ps1_speed == b->ps1_speed
     && SDL_strcmp(a->boot_level, b->boot_level) == 0;
 }
