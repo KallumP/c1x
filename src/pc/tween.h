@@ -91,7 +91,8 @@ typedef struct {
 extern void TweenForgetAll();
 extern void TweenForget(int slot);
 extern void TweenRecord(int slot, const tween_pose *pose);
-extern void TweenWorldPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out);
+extern void TweenWorldPoseAt(int slot, const tween_pose *now, int32_t alpha,
+  tween_pose *out);
 extern void TweenScreenPoseAt(int slot, const tween_pose *now, int32_t alpha,
   tween_pose *out);
 extern void TweenRecordCamera(const tween_pose *drawn);
