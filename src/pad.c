@@ -8,8 +8,10 @@ int pad_count;
 
 extern pbak_header *cur_pbak_header;
 extern pbak_frame *cur_pbak_frame;
+extern lid_t cur_lid;
 
 #include "pc/pad.h"
+#include "pc/demonudge.h"
 #include "pc/gfx/gl.h"
 extern gl_context context;
 
@@ -37,7 +39,8 @@ static inline void PadUpdatePbak(pad *pad) {
       context.ticks_per_frame = cur_pbak_header->ticks_per_frame;
     }
     held = pad->held;
-    pad->held = cur_pbak_frame->held;
+    pad->held = DemoNudgedHeld(cur_lid, cur_pbak_header->frame_count,
+      cur_pbak_frame - cur_pbak_header->frames, cur_pbak_frame->held);
     ++cur_pbak_frame;
     count = cur_pbak_header->frame_count;
     if (held & 0x9F0 || (cur_pbak_frame >= &cur_pbak_header->frames[count])) { /* X, [], /\, O, start, or select pressed? */
