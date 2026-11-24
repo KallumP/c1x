@@ -9,6 +9,7 @@ Custom levels
 Editor
 - allow spacees in the level name folder
 - delete a level. need to know how to do this using the api or just request it by email to me
+- cant grab axis through a model. It just does normal drag on the model
 - zone size chooser? Should show error if a zone has too many objects
 - invisible walls
 - death zones
@@ -27,12 +28,24 @@ speed run mode
 - The final table should be like this "Level | Total time | Level time"
 
 
+local multiplayer
+- ability to have more than one crash
+- maybe two controllers?
+- can each break boxes and kill enemies
+- camera follows closes crash
+
+time trails
+- Should be able to start a time trail by running over a clock object at the start of the level
+- Should store the time from the start to the end
+- Some boxes pause timer (i will define what box from each level)
+- The end should show what relic was gotten (i define the time bands, bronze, gold plat)
+- Show the relic list somewhere?
 
 Generic
+- play as coco
 - europe support
 - Jaws of Darkness's demo drifts from its recording: Crash dies 5 times in it
 - linux download downloads a windows version...
-- cant grab axis through a model. It just does normal drag on the model
 
 - sunset vista demo gameplay doesnt playback properly
 - jaws of darkness demo gamplay isnt right
