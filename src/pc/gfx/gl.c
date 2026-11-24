@@ -715,7 +715,7 @@ void GLClear() {
 }
 
 /* pc: how long this frame lasts (see pc/pace.h), counting frames from when the level changed */
-static int32_t GLFrameTicks() {
+static int32_t GLLevelFrameTicks() {
   static lid_t lid = -1;
   static uint32_t frame = 0;
 
@@ -732,7 +732,7 @@ static int32_t GLThisFrameTicks() {
   int32_t level_ticks;
 
   /* counted in a demo too, so the level's frames keep their numbers */
-  level_ticks = GLFrameTicks();
+  level_ticks = GLLevelFrameTicks();
   if (pbak_state == PBAK_STATE_PLAYING)
     return DemoFrameTicks(cur_pbak_frame->ticks_elapsed, context.draw_stamp);
   return level_ticks;
