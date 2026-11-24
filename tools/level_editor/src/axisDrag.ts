@@ -2,7 +2,7 @@
 // floor) or up, in blender
 import { withEndPadRaise } from "./endPad";
 import { pathPositions, withNodeAt } from "./enemyPaths";
-import type { Triangle } from "./overlaps";
+import type { LevelFrame } from "./levelFrame";
 import type { LevelObject, Vec3 } from "./objects";
 
 export type Axis = "x" | "y" | "up";
@@ -67,25 +67,16 @@ export interface AxisGrab {
   node: number | null;
 }
 
-// what a drag is measured against: the grid it snaps to (0: none), and the
-// level's turn, scale and floor
-export interface DragSettings {
-  grid: number;
-  turn: number;
-  scale: number;
-  triangles: Triangle[];
-}
-
 // the change dragging grabbed metres along axis makes; an end pad stays raised
 // over the floor
 export function axisDragChanges(
   grabbed: AxisGrab,
   axis: Axis,
   metres: number,
-  settings: DragSettings,
+  frame: LevelFrame,
 ): Partial<LevelObject> {
   const { object, node } = grabbed;
-  const { grid, turn, scale, triangles } = settings;
+  const { grid, turn, scale, triangles } = frame;
   if (node !== null) {
     return movedNodeAlong(object, node, axis, metres, grid, turn, scale);
   }

@@ -98,7 +98,7 @@ export default function App() {
         state={state}
         dispatch={dispatch}
         tool={tool}
-        settings={{ grid, turn, scale, triangles }}
+        frame={{ grid, turn, scale, triangles }}
         boxWarnings={boxWarnings}
         pathWarnings={pathWarnings}
       />

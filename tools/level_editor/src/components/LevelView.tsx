@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import type * as THREE from "three";
 import type { ThreeEvent } from "@react-three/fiber";
-import { axisHandlesSpot, type DragSettings } from "../axisDrag";
+import { axisHandlesSpot } from "../axisDrag";
 import {
   draggedBy,
   newObject,
@@ -12,6 +12,7 @@ import {
 import { raisedEndPad, withEndPadRaise } from "../endPad";
 import { useAxisDrag } from "../hooks/useAxisDrag";
 import { useDrag } from "../hooks/useDrag";
+import type { LevelFrame } from "../levelFrame";
 import type { LevelObject } from "../objects";
 import { levelStartView } from "../spawnView";
 import { clickedFloor, isClick } from "../three/clicks";
@@ -27,7 +28,7 @@ interface LevelViewProps {
   state: EditorState;
   dispatch: (action: EditorAction) => void;
   tool: Tool;
-  settings: DragSettings;
+  frame: LevelFrame;
   boxWarnings: Set<number>;
   pathWarnings: Set<number>;
 }
@@ -35,8 +36,8 @@ interface LevelViewProps {
 // the level in 3D: its map, its objects to select and drag, and the selected
 // one's axis arrows
 export default function LevelView(props: LevelViewProps) {
-  const { group, state, dispatch, tool, settings } = props;
-  const { grid, turn, scale, triangles } = settings;
+  const { group, state, dispatch, tool, frame } = props;
+  const { grid, turn, scale, triangles } = frame;
   const orbitRef = useRef<Orbit>(null);
   // the object being dragged, as it was when grabbed
   const dragged = useRef<LevelObject | null>(null);
@@ -57,7 +58,7 @@ export default function LevelView(props: LevelViewProps) {
       dispatch({ type: "update", index, changes, record: false });
     },
   });
-  const axisDrag = useAxisDrag(orbitRef, state, dispatch, settings);
+  const axisDrag = useAxisDrag(orbitRef, state, dispatch, frame);
 
   // a click on the map: with Select, clears the selection; placing, puts an
   // object on the floor there

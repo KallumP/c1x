@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import type { DragSettings } from "../../../src/axisDrag";
 import {
   emptyEditor,
   newObject,
@@ -7,15 +6,18 @@ import {
   type EditorState,
 } from "../../../src/editor";
 import { axisDragHandlers, type AxisDragging } from "../../../src/hooks/useAxisDrag";
+import type { LevelFrame } from "../../../src/levelFrame";
 import { enemyObject } from "../../helpers";
 
-const SETTINGS: DragSettings = { grid: 0, turn: 0, scale: 400, triangles: [] };
+const FRAME: LevelFrame = { grid: 0, turn: 0, scale: 400, triangles: [] };
 const crab = enemyObject("crab", { path: [[0, 0, 0], [2, 0, 0]] });
 const objects = [newObject("basic", [0, 0, 0]), newObject("basic", [1, 2, 3]), crab];
 
+const noDrag = () => ({ current: null as AxisDragging | null });
+
 // the drag's handlers with the editor at state, keeping what they dispatch
 // and whether the camera orbits
-function dragWith(state: EditorState, dragging = { current: null as AxisDragging | null }) {
+function dragWith(state: EditorState, dragging = noDrag()) {
   const dispatched: EditorAction[] = [];
   const orbiting = { isOn: true };
   const handlers = axisDragHandlers({
@@ -25,7 +27,7 @@ function dragWith(state: EditorState, dragging = { current: null as AxisDragging
     setOrbiting: (isOn) => {
       orbiting.isOn = isOn;
     },
-    settings: SETTINGS,
+    frame: FRAME,
   });
   return { handlers, dispatched, orbiting, dragging };
 }
@@ -70,8 +72,8 @@ describe("dragging an axis arrow", () => {
     });
     const moving = dragWith(moved, grabbing.dragging);
     moving.handlers.onMove("x", 2);
-    const changes = { at: [3, 2, 3] };
-    expect(moving.dispatched.at(-1)).toEqual({ type: "update", index: 1, changes, record: false });
+    const update = { type: "update", index: 1, changes: { at: [3, 2, 3] }, record: false };
+    expect(moving.dispatched.at(-1)).toEqual(update);
   });
 
   test("with a path node selected, it moves that node", () => {
