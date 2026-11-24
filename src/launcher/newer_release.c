@@ -51,7 +51,7 @@ int FindNewerRelease(const char *output, char *version, size_t size) {
   return 1;
 }
 
-void VersionLabel(const char *version, char *label, size_t size) {
+void VersionLabel(const char *version, time_t built, char *label, size_t size) {
   if (!version[0]) {
     SDL_strlcpy(label, "dev build", size);
     return;

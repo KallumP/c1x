@@ -6,6 +6,7 @@
  * asked of github by c1x's tools (tools.h: c1x_tools check-update)
  */
 #include <stddef.h>
+#include <time.h>
 
 #define RELEASE_VERSION_MAX 16 /* a version's text with its end, such as "1.4" */
 #define VERSION_LABEL_MAX 32
@@ -35,7 +36,8 @@ extern int NewerReleaseCommand(const char *repo, const char *version, char *comm
    there yet (the output is read while the check runs), or isn't a version */
 extern int FindNewerRelease(const char *output, char *version, size_t size);
 
-/* what the launcher shows as its version: "v1.3", or "dev build" for "" */
-extern void VersionLabel(const char *version, char *label, size_t size);
+/* what the launcher shows as its version: "v1.3", or for "" a dev build and
+   when it was built ("dev build, built 24 Nov 11:52"), or "dev build" if built is 0 */
+extern void VersionLabel(const char *version, time_t built, char *label, size_t size);
 
 #endif /* _LAUNCHER_NEWER_RELEASE_H_ */

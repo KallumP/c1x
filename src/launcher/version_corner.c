@@ -186,7 +186,7 @@ void DrawVersionCorner(void) {
 
   state = ReleaseState();
   ReleaseLabel(state, release_label, sizeof(release_label));
-  VersionLabel(LauncherVersion(), version_label, sizeof(version_label));
+  VersionLabel(LauncherVersion(), 0, version_label, sizeof(version_label));
   width = CornerWidth(state, release_label, version_label);
   igGetCursorPos(&start);
   igGetContentRegionAvail(&available);
