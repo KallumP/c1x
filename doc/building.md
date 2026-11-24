@@ -14,7 +14,7 @@ To compile c1x, install the dependencies listed below, then run `rebuild.bat` on
 
 ## The level build and editor without Node
 
-`c1x_tools.exe` is c1x's tools bundled into one file with Node.js built in (a [single executable application](https://nodejs.org/api/single-executable-applications.html)): the level build (`tools/level_editor/builder/`), the level editor's server (`server/`) and the check for a newer release (`scripts/updateCheck.ts`).
+`c1x_tools.exe` is c1x's tools bundled into one file with Node.js built in (a [single executable application](https://nodejs.org/api/single-executable-applications.html)): the level build (`tools/level_editor/builder/`), the level editor's server (`server/`) and the launcher's commands (`launcher/`: the check for a newer release, the levels shared on mod.io, and downloading a level or a new release).
 
 So players with the final build can make [custom levels](custom_levels.md) and use the level editor from the launcher without installing anything extra.
 
