@@ -42,14 +42,14 @@ UTEST(tween, a_small_move_is_not_a_jump) {
   vec a = { .x = 0, .y = 0, .z = 0 };
   vec b = { .x = 0x8000, .y = -0x8000, .z = 0x100 };
 
-  ASSERT_FALSE(TweenJumped(&a, &b));
+  ASSERT_FALSE(TweenJumpedFurther(&a, &b, TWEEN_JUMP));
 }
 
 UTEST(tween, a_teleport_is_a_jump) {
   vec a = { .x = 0, .y = 0, .z = 0 };
   vec b = { .x = 0, .y = 0, .z = -(TWEEN_JUMP+1) };
 
-  ASSERT_TRUE(TweenJumped(&a, &b));
+  ASSERT_TRUE(TweenJumpedFurther(&a, &b, TWEEN_JUMP));
 }
 
 UTEST(tween, lerp_vec_lerps_each_axis) {
@@ -236,7 +236,7 @@ UTEST(tween_poses, a_pose_is_drawn_part_way_from_the_last_game_frame) {
   before = Pose(0, 0x000, 0x1000);
   now = Pose(1000, 0x100, 0x2000);
   TweenRecord(5, &before);
-  TweenPoseAt(5, &now, TWEEN_ONE/2, &out);
+  TweenWorldPoseAt(5, &now, TWEEN_ONE/2, &out);
   ASSERT_EQ(500, out.trans.x);
   ASSERT_EQ(0x80, out.rot.y);
   ASSERT_EQ(0x1800, out.scale.z);
@@ -247,7 +247,7 @@ UTEST(tween_poses, an_object_without_a_last_pose_is_drawn_where_it_is) {
 
   TweenForgetAll();
   now = Pose(1000, 0x100, 0x1000);
-  TweenPoseAt(7, &now, TWEEN_ONE/2, &out);
+  TweenWorldPoseAt(7, &now, TWEEN_ONE/2, &out);
   ASSERT_EQ(1000, out.trans.x);
   ASSERT_EQ(0x100, out.rot.x);
 }
@@ -260,7 +260,7 @@ UTEST(tween_poses, a_new_object_in_a_slot_is_not_tweened_from_the_old_one) {
   now = Pose(1000, 0, 0x1000);
   TweenRecord(3, &before);
   TweenForget(3);
-  TweenPoseAt(3, &now, TWEEN_ONE/2, &out);
+  TweenWorldPoseAt(3, &now, TWEEN_ONE/2, &out);
   ASSERT_EQ(1000, out.trans.x);
 }
 
@@ -271,7 +271,7 @@ UTEST(tween_poses, a_jump_is_not_tweened) {
   before = Pose(0, 0, 0x1000);
   now = Pose(TWEEN_JUMP*2, 0, 0x1000);
   TweenRecord(1, &before);
-  TweenPoseAt(1, &now, TWEEN_ONE/2, &out);
+  TweenWorldPoseAt(1, &now, TWEEN_ONE/2, &out);
   ASSERT_EQ(TWEEN_JUMP*2, out.trans.x);
 }
 
@@ -282,7 +282,7 @@ UTEST(tween_poses, a_flip_is_not_tweened) {
   before = Pose(0, 0, 0x1000);
   now = Pose(0, 0, -0x1000);
   TweenRecord(2, &before);
-  TweenPoseAt(2, &now, TWEEN_ONE/2, &out);
+  TweenWorldPoseAt(2, &now, TWEEN_ONE/2, &out);
   ASSERT_EQ(-0x1000, out.scale.x);
 }
 
@@ -294,7 +294,7 @@ UTEST(tween_poses, slots_out_of_range_are_drawn_where_they_are) {
   now = Pose(1000, 0, 0x1000);
   TweenRecord(TWEEN_SLOTS, &before);
   TweenRecord(-1, &before);
-  TweenPoseAt(TWEEN_SLOTS, &now, TWEEN_ONE/2, &out);
+  TweenWorldPoseAt(TWEEN_SLOTS, &now, TWEEN_ONE/2, &out);
   ASSERT_EQ(1000, out.trans.x);
 }
 
@@ -331,4 +331,41 @@ UTEST(tween_poses, the_first_camera_is_drawn_where_it_is) {
   TweenRecordCamera(&first);
   TweenCameraAt(TWEEN_ONE/4, &out);
   ASSERT_EQ(1000, out.trans.x);
+}
+
+#define TOKEN_BLINK 76800 /* the newest hud token blinks by jumping this far off screen and back */
+#define TOKEN_FLIGHT 7620 /* a collected token flies about this far up the screen a game frame */
+
+UTEST(tween_poses, a_screen_object_jumping_off_screen_is_not_tweened) {
+  tween_pose before, now, out;
+
+  TweenForgetAll();
+  before = Pose(0, 0, 0x1000);
+  now = Pose(TOKEN_BLINK, 0, 0x1000);
+  TweenRecord(4, &before);
+  TweenScreenPoseAt(4, &now, TWEEN_ONE/2, &out);
+  ASSERT_EQ(TOKEN_BLINK, out.trans.x);
+}
+
+UTEST(tween_poses, a_screen_object_flying_up_the_screen_is_tweened) {
+  tween_pose before, now, out;
+
+  TweenForgetAll();
+  before = Pose(0, 0, 0x1000);
+  now = Pose(TOKEN_FLIGHT, 0, 0x1000);
+  TweenRecord(4, &before);
+  TweenScreenPoseAt(4, &now, TWEEN_ONE/2, &out);
+  ASSERT_EQ(TOKEN_FLIGHT/2, out.trans.x);
+}
+
+UTEST(screen_plane, a_2d_object_is_on_the_screen_plane) {
+  ASSERT_TRUE(GoolIsOnScreenPlane(GOOL_FLAG_2D));
+}
+
+UTEST(screen_plane, an_object_moved_by_the_camera_is_on_the_screen_plane) {
+  ASSERT_TRUE(GoolIsOnScreenPlane(GOOL_FLAG_CAMERA_PLANE));
+}
+
+UTEST(screen_plane, a_world_object_is_not_on_the_screen_plane) {
+  ASSERT_FALSE(GoolIsOnScreenPlane(GOOL_FLAG_COLLIDABLE | GOOL_FLAG_GRAVITY));
 }

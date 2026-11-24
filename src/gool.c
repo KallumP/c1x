@@ -1230,6 +1230,14 @@ static int GoolObjectIsDisplayed(gool_object *obj, uint32_t status_b) {
   }
 }
 
+static void GoolObjectTweenedPose(gool_object *obj, tween_pose *now, int alpha,
+  tween_pose *drawn) {
+  if (GoolIsOnScreenPlane(obj->status_b))
+    TweenScreenPoseAt(GoolObjectTweenSlot(obj), now, alpha, drawn);
+  else
+    TweenWorldPoseAt(GoolObjectTweenSlot(obj), now, alpha, drawn);
+}
+
 /* pc: draw the object (only) in its pose alpha of the way from the last game frame */
 static int GoolObjectDrawTweened(gool_object *obj, int alpha) {
   tween_pose now, drawn;
@@ -1237,7 +1245,7 @@ static int GoolObjectDrawTweened(gool_object *obj, int alpha) {
   if (obj->handle.subtype != 3) { return SUCCESS; }
   if (!GoolObjectIsDisplayed(obj, obj->status_b)) { return SUCCESS; }
   GoolObjectPose(obj, &now);
-  TweenPoseAt(GoolObjectTweenSlot(obj), &now, alpha, &drawn);
+  GoolObjectTweenedPose(obj, &now, alpha, &drawn);
   GoolSetObjectPose(obj, &drawn);
   cur_obj = obj;
   GoolObjectTransform(obj);
@@ -1307,9 +1315,15 @@ void GoolObjectTransform(gool_object *obj) {
     x = obj->scale.x;
     shrink = abs(x) / 27279;
     obj_vectors = &obj->vectors;
-    cam_vectors = (gool_vectors*)(status_b & 0x200000 ? &cam_trans: &cam_trans_prev);
+    if (status_b & GOOL_FLAG_CAMERA_PLANE) {
+      cam_vectors = (gool_vectors*)&cam_trans;
+      m_rot = &ms_cam_rot;
+    }
+    else {
+      cam_vectors = (gool_vectors*)&cam_trans_prev;
+      m_rot = &ms_rot;
+    }
     flag = status_b & GOOL_FLAG_2D;
-    m_rot = status_b & 0x200000 ? &ms_cam_rot: &ms_rot;
     header = (zone_header*)cur_zone->items[0];
     far = header->visibility_depth >> 8;
     flag2 = (status_b & 0x40000)?0:1;
@@ -2593,7 +2607,7 @@ void GoolOpMisc(gool_object *obj, uint32_t instruction) {
     link = obj->links[link_idx];
     src_trans = &link->trans;
     dst_trans = (vec*)ptr;
-    if (obj->status_b & 0x200200)
+    if (GoolIsOnScreenPlane(obj->status_b))
       GoolObjectPush(obj, AngDistXY(src_trans, dst_trans)); /* angleXY(src_trans, dst_trans)); */
     else
       GoolObjectPush(obj, AngDistXZ(src_trans, dst_trans)); /* angleXZ(src_trans, dst_trans)); */
@@ -3050,7 +3064,7 @@ void GoolOpTransformVectors(gool_object *obj, uint32_t instruction) {
     target_rotx = obj->target_rot.x & 0xFFF; /* xz or xy plane */
     target.x = sin(target_rotx);
     velocity->x = ((target.x/16) * speed) >> 8;
-    if (obj->status_b & 0x200200) {
+    if (GoolIsOnScreenPlane(obj->status_b)) {
       target.y = cos(target_rotx);
       velocity->y = ((target.y/16) * speed) >> 8;
     }
