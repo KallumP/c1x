@@ -34,6 +34,8 @@ Generic
 - Split level editor app.tsx into its own components
 - linux download downloads a windows version...
 
+- see if intro lines up properly (adjustments were made to when the audio lines start)
+- jungle rollers doesnt end properly, craash is supposed to be on the iron crates
 - sunset vista demo gameplay doesnt playback properly
 - jaws of darkness is bugged
 - the lab is bugged
