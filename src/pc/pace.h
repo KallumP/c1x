@@ -22,14 +22,13 @@
 #define NTSC_FRAMES  30000LL /* two-vblank frames ... */
 #define NTSC_SECONDS 1001LL  /* ... in this many seconds */
 
-/* the ticks the first frame frames take at two ntsc vblanks a frame */
-static inline int64_t NtscTicksBeforeFrame(uint32_t frame) {
+static inline int64_t NtscTicksToFrame(uint32_t frame) {
   return frame * (PS1_CPU_HZ * NTSC_SECONDS) / (TICK_CYCLES * NTSC_FRAMES);
 }
 
 /* the ticks a game frame lasts, at the ps1's 29.97 a second */
 static inline int32_t GameFrameTicks(uint32_t frame) {
-  return (int32_t)(NtscTicksBeforeFrame(frame+1) - NtscTicksBeforeFrame(frame));
+  return (int32_t)(NtscTicksToFrame(frame+1) - NtscTicksToFrame(frame));
 }
 
 typedef struct {
@@ -64,7 +63,6 @@ static inline int32_t IntroFrameTicks(uint32_t frame) {
   return FRAME_TICKS;
 }
 
-/* the ticks frame of level lid lasts */
 static inline int32_t FrameTicks(lid_t lid, uint32_t frame) {
   if (lid == LID_INTRO) { return IntroFrameTicks(frame); }
   return GameFrameTicks(frame);
