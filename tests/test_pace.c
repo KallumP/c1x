@@ -48,6 +48,18 @@ UTEST(pace, the_intro_draws_a_frame_every_two_and_three_vblanks_in_turn) {
   ASSERT_EQ(3*VBLANK_TICKS, FrameTicks(LID_INTRO, 1001));
 }
 
+#define LAST_FRAME_RECORDED_AT 57106 /* jungle rollers' demo's frame 1253 */
+#define LAG_FRAME_TICKS        51    /* the ps1 took a frame and a half */
+
+UTEST(pace, a_demo_frame_waits_as_long_as_its_recorded_frame) {
+  int32_t recorded = LAST_FRAME_RECORDED_AT + LAG_FRAME_TICKS;
+  ASSERT_EQ(LAG_FRAME_TICKS, DemoFrameTicks(recorded, LAST_FRAME_RECORDED_AT));
+}
+
+UTEST(pace, a_demo_frame_recorded_before_the_last_doesnt_wait) {
+  ASSERT_EQ(0, DemoFrameTicks(LAST_FRAME_RECORDED_AT - 1, LAST_FRAME_RECORDED_AT));
+}
+
 UTEST(pace, the_intro_lasts_as_long_as_on_the_ps1) {
   /* its 1106 frames last 45 s in a recording of the PS1's intro */
   ASSERT_NEAR(45.0, SecondsToFrame(LID_INTRO, 1106), 0.5);

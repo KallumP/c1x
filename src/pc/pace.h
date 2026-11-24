@@ -60,4 +60,12 @@ static inline int32_t FrameTicks(lid_t lid, uint32_t frame) {
   return FRAME_TICKS;
 }
 
+/*
+ * how long a demo's frame waits: as long as the ps1's did when it was
+ * recorded, from the last frame's recorded time (the draw stamp) to this one's
+ */
+static inline int32_t DemoFrameTicks(int32_t recorded_ticks, int32_t draw_stamp) {
+  return FRAME_TICKS;
+}
+
 #endif /* _PC_PACE_H_ */
