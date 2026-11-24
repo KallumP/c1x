@@ -29,7 +29,6 @@ speed run mode
 Generic
 - europe support
 - Jaws of Darkness's demo drifts from its recording: Crash dies 5 times in it
-- the last bonus token you get still rubber bands across the top of the screen
 - Split level editor app.tsx into its own components
 - linux download downloads a windows version...
 - why do comments mention "pc:" we dont support ps1 anymore

@@ -8,6 +8,7 @@
 - the game no longer runs slightly faster than on the PS1
 - the game no longer sometimes crashes when a demo ends or start is pressed during one
 - the bonus round music, and some instruments in other levels' music, are no longer out of tune
+- the newest bonus token at the top of the screen no longer rubber bands across it at high frame rates
 
 ## 2026-11-23
 
