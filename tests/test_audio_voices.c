@@ -21,7 +21,7 @@ UTEST(audio_voices, loading_a_sample_gives_the_voice_it) {
   SwUnloadSample(VOICE);
 }
 
-/* the audio thread mixes any sample a voice still has, so it can't be one already freed */
+/* the audio thread mixes any sample a voice has, so it can't be a freed one */
 UTEST(audio_voices, an_unloaded_voice_has_no_sample) {
   LoadSilentSample(VOICE);
   SwUnloadSample(VOICE);
