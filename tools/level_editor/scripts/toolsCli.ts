@@ -3,7 +3,7 @@
 import { isSea } from "node:sea";
 import { fileURLToPath } from "node:url";
 import { repoOfExe } from "../builder/repoFolders";
-import { runTools } from "./tools";
+import { runTools, toolsHandlers } from "./tools";
 
 // the project's folder: above build/ for the exe, else three up from this file
 function repoFolder(): string {
@@ -13,6 +13,6 @@ function repoFolder(): string {
   return fileURLToPath(new URL("../../..", import.meta.url));
 }
 
-runTools(repoFolder(), process.argv.slice(2)).then((exitCode) => {
+runTools(process.argv.slice(2), toolsHandlers(repoFolder())).then((exitCode) => {
   process.exitCode = exitCode;
 });
