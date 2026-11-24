@@ -332,3 +332,28 @@ UTEST(tween_poses, the_first_camera_is_drawn_where_it_is) {
   TweenCameraAt(TWEEN_ONE/4, &out);
   ASSERT_EQ(1000, out.trans.x);
 }
+
+#define TOKEN_BLINK 76800 /* the newest hud token blinks by jumping this far off screen and back */
+#define TOKEN_FLIGHT 7620 /* a collected token flies about this far up the screen a game frame */
+
+UTEST(tween_poses, a_screen_object_jumping_off_screen_is_not_tweened) {
+  tween_pose before, now, out;
+
+  TweenForgetAll();
+  before = Pose(0, 0, 0x1000);
+  now = Pose(TOKEN_BLINK, 0, 0x1000);
+  TweenRecord(4, &before);
+  TweenScreenPoseAt(4, &now, TWEEN_ONE/2, &out);
+  ASSERT_EQ(TOKEN_BLINK, out.trans.x);
+}
+
+UTEST(tween_poses, a_screen_object_flying_up_the_screen_is_tweened) {
+  tween_pose before, now, out;
+
+  TweenForgetAll();
+  before = Pose(0, 0, 0x1000);
+  now = Pose(TOKEN_FLIGHT, 0, 0x1000);
+  TweenRecord(4, &before);
+  TweenScreenPoseAt(4, &now, TWEEN_ONE/2, &out);
+  ASSERT_EQ(TOKEN_FLIGHT/2, out.trans.x);
+}
