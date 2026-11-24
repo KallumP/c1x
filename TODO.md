@@ -34,7 +34,7 @@ Generic
 - Split level editor app.tsx into its own components
 - linux download downloads a windows version...
 - the bonus round music is played at a wrong pitch
-
+- why do comments mention "pc:" we dont support ps1 anymore
 
 - sunset vista demo gameplay doesnt playback properly
 - jaws of darkness demo gamplay isnt right
