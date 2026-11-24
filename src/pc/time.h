@@ -3,6 +3,13 @@
 
 #include "common.h"
 
+/*
+ * the game's clock: the ps1's ticked once every TICK_CYCLES cycles of its cpu
+ * (about 1033.6 a second)
+ */
+#define PS1_CPU_HZ  33868800
+#define TICK_CYCLES 0x8000
+
 extern void SetTicksElapsed(int32_t ticks);
 extern int GetTicksElapsed();
 extern void TimeSetFixed(int fixed);

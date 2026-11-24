@@ -1,19 +1,19 @@
 #include "common.h"
+#include "pc/time.h"
 
 int32_t ticks_base = 0;
 
 /*
- * a counter's count (at freq a second) as ticks: 34000000/0x8000 a second.
- * whole seconds and the rest are converted apart, as 1000000*34*count
- * overflows an int64 once count passes about 2.7e11 (7.5 hours of a
- * 10 MHz counter)
+ * a counter's count (at freq a second) as ticks. whole seconds and the rest
+ * are converted apart, as count*PS1_CPU_HZ overflows an int64 once
+ * count passes about 2.7e11 (7.5 hours of a 10 MHz counter)
  */
 int32_t TimeTicksFromCount(int64_t count, int64_t freq) {
   int64_t secs, rest;
 
   secs = count / freq;
   rest = count % freq;
-  return ((secs*34000000) + ((rest*34000000) / freq)) / 0x8000;
+  return ((secs*PS1_CPU_HZ) + ((rest*PS1_CPU_HZ) / freq)) / TICK_CYCLES;
 }
 
 #ifdef _WIN32

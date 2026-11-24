@@ -5,6 +5,7 @@
 ### Fixed
 
 - the title screen's demos play, instead of showing a level where nothing happens, and go back to the title when they end
+- the game no longer runs slightly faster than on the PS1
 
 ## 2026-11-23
 

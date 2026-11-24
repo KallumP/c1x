@@ -23,7 +23,7 @@ typedef struct {
   int spin_ledge_jump;            /* crash can jump just after a spin carries him off a ledge */
   int replay_inputs;              /* replay the newest recording instead of recording */
   uint32_t replay_speed;          /* times normal speed, 0 = as fast as possible */
-  uint32_t frame_rate;            /* frames drawn a second; the game itself runs at 30 */
+  uint32_t frame_rate;            /* frames drawn a second; the game itself runs at the ps1's 29.97 */
   int fullscreen;                 /* fill the screen instead of a window */
   int memory_card;                /* the game's save and load screens save to files in memory_card/ */
   int mute;                       /* the game plays no sound */

@@ -1,4 +1,5 @@
 #include "pc/tween.h"
+#include "pc/time.h"
 
 /* each object's pose in the last game frame, by slot */
 static tween_pose last_poses[TWEEN_SLOTS];
@@ -78,20 +79,17 @@ void TweenCameraAt(int32_t alpha, tween_pose *out) {
 
 /*
  * a game frame's frames are spaced evenly: its own, then the frames between.
- * the clock runs at 34000000/0x8000 ticks a second (pc/time.c), so a game
- * frame of frame_ticks is frame_ticks x frame_rate x 0x8000 / 34000000
- * frames' worth at frame_rate, rounded to whole frames. spacing them inside
- * each game frame, rather than on a frame_rate clock of their own, keeps them
- * evenly apart: 34-tick game frames are a little shorter than 1/30 s, so a
- * clock of their own would drift across them.
+ * a game frame of frame_ticks is frame_ticks x frame_rate x TICK_CYCLES /
+ * PS1_CPU_HZ frames' worth at frame_rate (pc/time.h), rounded to
+ * whole frames. spacing them inside each game frame, rather than on a
+ * frame_rate clock of their own, keeps them evenly apart: game frames aren't
+ * quite 1/30 s, so a clock of their own would drift across them.
  *
  * they're spaced by when they're shown, from when the game frame's own was
  * (shown_ticks into it): a frame between takes longer to show than the game
  * frame's own, which was worked out before the wait, so it starts that much
  * earlier (draw_ticks, how long one takes to show)
  */
-#define TICKS_A_SECOND_UNITS 34000000 /* a second, in ticks x 0x8000 */
-
 void TweenPacerReset(tween_pacer *p) {
   p->drawn = 0;
   p->shown_ticks = 0;
@@ -102,8 +100,8 @@ int TweenFramesPerGameFrame(int32_t frame_ticks, uint32_t frame_rate) {
   int64_t units;
   int frames;
 
-  units = (int64_t)frame_ticks * frame_rate * 0x8000;
-  frames = (int)((units + TICKS_A_SECOND_UNITS / 2) / TICKS_A_SECOND_UNITS);
+  units = (int64_t)frame_ticks * frame_rate * TICK_CYCLES;
+  frames = (int)((units + PS1_CPU_HZ / 2) / PS1_CPU_HZ);
   if (frames < 1) { return 1; }
   return frames;
 }

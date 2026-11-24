@@ -715,7 +715,7 @@ void GLClear() {
 }
 
 /* pc: how long this frame lasts (see pc/pace.h), counting frames from when the level changed */
-static int32_t GLFrameTicks() {
+static int32_t GLLevelFrameTicks() {
   static lid_t lid = -1;
   static uint32_t frame = 0;
 
@@ -725,6 +725,17 @@ static int32_t GLFrameTicks() {
     frame = 0;
   }
   return FrameTicks(lid, frame++);
+}
+
+/* pc: how long this game frame lasts: the level's pace, or a demo's recorded frame */
+static int32_t GLThisFrameTicks() {
+  int32_t level_ticks;
+
+  /* counted in a demo too, so the level's frames keep their numbers */
+  level_ticks = GLLevelFrameTicks();
+  if (pbak_state == PBAK_STATE_PLAYING)
+    return DemoFrameTicks(cur_pbak_frame->ticks_elapsed, context.draw_stamp);
+  return level_ticks;
 }
 
 /* brightness: draw the fade overlay and move the fade on a step */
@@ -781,7 +792,7 @@ static int GLIsTweening() {
   if (!tween_draw || game_settings.frame_rate <= SETTINGS_FRAME_RATE_MIN) { return 0; }
   if (TimeGetSpeed() != 1) { return 0; } /* a fast replay */
   if (!ns.ldat || ns.ldat->lid == LID_TITLE) { return 0; } /* the title screen draws more than objects */
-  return ns.draw_skip_counter == 0 && pbak_state == 0;
+  return ns.draw_skip_counter == 0 && pbak_state != PBAK_STATE_CHOSEN;
 }
 
 /*
@@ -892,9 +903,9 @@ void GLUpdate() {
     ticks_cur_frame = ticks_elapsed - context.draw_stamp; /* time elapsed between current sync and previous draw  */
   else
     ticks_cur_frame = 17; /* default to 17 */
-  frame_ticks = GLFrameTicks(); /* pc: 34, unless drawing at the PS1's pace */
+  frame_ticks = GLThisFrameTicks();
   GLWaitForFrame(frame_ticks);
-  if (pbak_state == 2)
+  if (pbak_state == PBAK_STATE_PLAYING)
     SetTicksElapsed(cur_pbak_frame->ticks_elapsed);
   ticks_elapsed = GetTicksElapsed();
   elapsed_since = ticks_elapsed - context.draw_stamp; /* time elapsed between draws */
