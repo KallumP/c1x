@@ -8,7 +8,8 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 |---|---|---|
 | `fullscreen` | `off` | Fill the screen instead of a 1024x768 window. The picture keeps its 4:3 shape, with black bars at the sides on a widescreen. <kbd>Alt</kbd>+<kbd>Enter</kbd> or <kbd>F11</kbd> switches between the two while playing, without changing the setting. |
 | `fps_display` | `on` | Show how many frames are drawn a second in the top right corner (see `frame_rate`). |
-| `frame_rate` | `60` | How many frames a second to draw, from `30` to `240`. The game itself still runs at 30 frames a second, as on the PS1, so it plays the same; the frames in between show the camera and everything moving smoothly between them. `30` draws only the game's own frames. The game's frames are a little faster than 30 a second, and each gets the same whole number of frames, so the counter can read a little over the setting: `60` shows 61, and `144` about 152. |
+| `frame_rate` | `60` | How many frames a second to draw, from `30` to `240`. The game itself still runs at its own speed (see `ps1_speed`), so it plays the same; the frames in between show the camera and everything moving smoothly between them. `30` draws only the game's own frames. Each game frame gets the same whole number of frames, so the counter can read a little off the setting: `144` shows about 150. |
+| `ps1_speed` | `on` | Run the game at the PS1's speed, 29.97 frames a second. Off runs it at an even 30. The title screen's demos always play at the PS1's speed. |
 | `mute` | `off` | Start the game with no sound. |
 
 ### Game adjustments

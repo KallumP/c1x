@@ -2,6 +2,10 @@
 
 ## 2026-11-24
 
+### Added
+
+- option to run the game at an even 30 fps instead of the PS1's speed
+
 ### Fixed
 
 - the title screen's demos play, instead of showing a level where nothing happens, and go back to the title when they end

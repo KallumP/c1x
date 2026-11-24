@@ -39,3 +39,6 @@ Generic
 - sunset vista demo gameplay doesnt playback properly
 - jaws of darkness is bugged
 - the lab is bugged
+- the bonus round music is played at a wrong pitch
+
+investigate if the ps1 speed feels the same as playing on an emulator
