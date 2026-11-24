@@ -24,7 +24,7 @@
 
 /* the ticks the first frame frames take at two ntsc vblanks a frame */
 static inline int64_t NtscTicksBeforeFrame(uint32_t frame) {
-  return frame * (TICKS_A_SECOND_UNITS * NTSC_SECONDS) / (0x8000 * NTSC_FRAMES);
+  return frame * (PS1_CPU_HZ * NTSC_SECONDS) / (TICK_CYCLES * NTSC_FRAMES);
 }
 
 /* the ticks a game frame lasts, at the ps1's 29.97 a second */
