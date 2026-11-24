@@ -92,6 +92,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/slash.c \
 	src/pc/screen_fit.c \
 	src/pc/fullscreen.c \
+	src/pc/sound/audio.c \
 	src/pc/sound/mix.c \
 	src/pc/sound/stream.c \
 	src/pc/sound/util.c \

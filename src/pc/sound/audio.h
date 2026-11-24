@@ -8,6 +8,7 @@ extern void SwAudioKill();
 extern void SwSetMVol(uint32_t vol);
 extern void SwLoadSample(int voice_idx, uint8_t *data, size_t size);
 extern void SwUnloadSample(int voice_idx);
+extern int SwVoiceHasSample(int voice_idx);
 extern void SwNoteOn(int voice_idx);
 extern void SwNoteOff(int voice_idx);
 extern void SwVoiceSetVolume(int voice_idx, uint32_t voll, uint32_t volr);

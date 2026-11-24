@@ -200,6 +200,10 @@ void SwUnloadSample(int voice_idx) {
   sampler->sample = 0; /* pc: so nothing mixes or frees it again */
 }
 
+int SwVoiceHasSample(int voice_idx) {
+  return svoices[voice_idx].sampler.sample != 0;
+}
+
 void SwNoteOn(int voice_idx) {
   svoice_t *svoice;
   sampler_t *sampler;
