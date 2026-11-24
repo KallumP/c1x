@@ -22,6 +22,7 @@ import { useLevelCfg } from "./hooks/useLevelCfg";
 import { useLevelGroup } from "./hooks/useLevelGroup";
 import { useLevelSongs } from "./hooks/useLevelSongs";
 import { useLevels } from "./hooks/useLevels";
+import { saveButtonText, useSave } from "./hooks/useSave";
 import { useEditorShortcuts } from "./hooks/useEditorShortcuts";
 import { confirmDiscard, useUnsavedWarning } from "./hooks/useUnsavedWarning";
 import { useOutlineWarnings, usePathWarnings, useTriangles, useWarnings } from "./hooks/useWarnings";
@@ -96,19 +97,7 @@ export default function App() {
       axisDragged.current = null;
     },
   };
-  const [isSaving, setIsSaving] = useState(false);
-  // saves the objects and level.cfg, whichever changed; whether they saved
-  const save = async (): Promise<boolean> => {
-    setIsSaving(true);
-    try {
-      if (editor.unsaved && !(await editor.save())) {
-        return false;
-      }
-      return !levelCfg.unsaved || (await levelCfg.save());
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const { save, isSaving } = useSave(editor, levelCfg);
 
   const [isSharing, setIsSharing] = useState(false);
 
@@ -154,16 +143,9 @@ export default function App() {
     </>
   );
 
-  const saveButtonText = () => {
-    if (isSaving) {
-      return "Saving...";
-    }
-    return unsaved ? "Save" : "Saved";
-  };
-
   const renderSaveButton = () => (
     <button className={unsaved ? "save unsaved" : "save"} disabled={!unsaved || isSaving} onClick={save} title="Save (Ctrl+S)">
-      {saveButtonText()}
+      {saveButtonText(isSaving, unsaved)}
     </button>
   );
 
