@@ -9,12 +9,12 @@ import PropertiesPanel from "./components/PropertiesPanel";
 import ShareDialog from "./components/ShareDialog";
 import Scene, { type Orbit } from "./components/Scene";
 import { levelTurn } from "./camera";
-import { axisDragChanges, type Axis } from "./axisDrag";
 import { draggedBy, newObject, type Tool } from "./editor";
 import { raisedEndPad, withEndPadRaise } from "./endPad";
 import { pathPositions } from "./enemyPaths";
 import { levelStartView } from "./spawnView";
 import type { LevelObject } from "./objects";
+import { useAxisDrag } from "./hooks/useAxisDrag";
 import { useDrag } from "./hooks/useDrag";
 import { useEditor } from "./hooks/useEditor";
 import { useLevelActions } from "./hooks/useLevelActions";
@@ -65,38 +65,7 @@ export default function App() {
       dispatch({ type: "update", index, changes, record: false });
     },
   });
-  // the object being dragged by an axis arrow (or the node of its path that is), as it was when grabbed, and whether it's moved yet
-  const axisDragged = useRef<{ index: number; node: number | null; object: LevelObject; hasMoved: boolean } | null>(null);
-  const setOrbiting = (isOn: boolean) => {
-    if (orbitRef.current) {
-      orbitRef.current.enabled = isOn;
-    }
-  };
-  const axisDrag = {
-    onGrab: () => {
-      if (state.selected === null) {
-        return;
-      }
-      setOrbiting(false);
-      axisDragged.current = { index: state.selected, node: state.selectedNode, object: state.objects[state.selected], hasMoved: false };
-    },
-    onMove: (axis: Axis, metres: number) => {
-      const dragging = axisDragged.current;
-      if (!dragging) {
-        return;
-      }
-      if (!dragging.hasMoved) {
-        dispatch({ type: "checkpoint" }); // the whole drag is one change to undo
-        dragging.hasMoved = true;
-      }
-      const changes = axisDragChanges(dragging, axis, metres, { grid, turn, scale, triangles });
-      dispatch({ type: "update", index: dragging.index, changes, record: false });
-    },
-    onRelease: () => {
-      setOrbiting(true);
-      axisDragged.current = null;
-    },
-  };
+  const axisDrag = useAxisDrag(orbitRef, state, dispatch, { grid, turn, scale, triangles });
   const { save, isSaving } = useSave(editor, levelCfg);
 
   const [isSharing, setIsSharing] = useState(false);

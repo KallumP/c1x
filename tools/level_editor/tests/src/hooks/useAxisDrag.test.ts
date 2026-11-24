@@ -8,7 +8,8 @@ const SETTINGS: DragSettings = { grid: 0, turn: 0, scale: 400, triangles: [] };
 const crab = enemyObject("crab", { path: [[0, 0, 0], [2, 0, 0]] });
 const objects = [newObject("basic", [0, 0, 0]), newObject("basic", [1, 2, 3]), crab];
 
-// the drag's handlers with the editor at state, keeping what they dispatch and whether the camera orbits
+// the drag's handlers with the editor at state, keeping what they dispatch
+// and whether the camera orbits
 function dragWith(state: EditorState) {
   const dispatched: EditorAction[] = [];
   const orbiting = { isOn: true };
@@ -61,7 +62,8 @@ describe("dragging an axis arrow", () => {
     const { handlers, dispatched } = dragWith(selecting(2, 1));
     handlers.onGrab();
     handlers.onMove("y", 1);
-    expect(dispatched.at(-1)).toEqual({ type: "update", index: 2, changes: { path: [[0, 0, 0], [2, 1, 0]] }, record: false });
+    const changes = { path: [[0, 0, 0], [2, 1, 0]] };
+    expect(dispatched.at(-1)).toEqual({ type: "update", index: 2, changes, record: false });
   });
 
   test("letting go turns orbiting back on", () => {
