@@ -268,7 +268,7 @@ void CoreLoop(lid_t lid) {
     header = (zone_header*)cur_zone->items[0];
     CoreDrawWorlds(ot);
     GoolUpdateObjects(!paused);
-    BoxHudUpdate(); /* pc */
+    BoxHudUpdate();
     GLClear();
     if (ns.ldat->lid == LID_TITLE)
       TitleUpdate(ot);

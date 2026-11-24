@@ -729,7 +729,7 @@ entry *NSLookup(void *en_ref) {
   if (ref->is_eid)
     ref->pte = NSProbeSafe(ref->eid); /* pc: not past the page table */
   pte = ref->pte; /* ??? */
-  if (ISERRORCODE(pte)) { return (entry*)pte; } /* pc */
+  if (ISERRORCODE(pte)) { return (entry*)pte; }
   return NSResolve(pte);
 }
 

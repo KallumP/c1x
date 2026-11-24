@@ -994,7 +994,7 @@ void GoolUpdateObjects(int flag) {
   draw_count_ro = draw_count;
   frames_elapsed = GameFramesElapsed(context.draw_stamp); /* pc: starts part way, see pc/frames.h */
   if (!crash) { return; }
-  GoolRecordObjectPoses(); /* pc */
+  GoolRecordObjectPoses();
   for (i=0;i<8;i++) {
     handle = &handles[i];
     GoolObjectHandleTraverseTreePreorder(
@@ -1293,7 +1293,7 @@ void GoolObjectTransform(gool_object *obj) {
   switch (anim->type) {
   case GOOL_ANIM_TYPE_VTX:
     en = NSLookup(&anim->v.eid);
-    if (ISERRORCODE(en)) { return; } /* pc */
+    if (ISERRORCODE(en)) { return; }
     if (en->type != 20) {
       svtx = NSLookup(&anim->v.eid);
       GfxTransformSvtx((svtx_frame*)svtx->items[frame_idx], ot, obj);
