@@ -149,8 +149,7 @@ void SwAudioInit() {
 void SwAudioKill() {
   int i;
 
-  /* pc: stop the audio thread first: it mixes from the samples freed below */
-  SDL_PauseAudio(1);
+  /* pc: stop the audio thread first (closing waits for it): it mixes from the samples freed below */
   SDL_CloseAudio();
   for (i=0;i<24;i++) {
     SwUnloadSample(i);
