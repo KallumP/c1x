@@ -50,10 +50,6 @@ static inline int TweenJumpedFurther(vec *a, vec *b, int32_t limit) {
   return 0;
 }
 
-static inline int TweenJumped(vec *a, vec *b) {
-  return TweenJumpedFurther(a, b, TWEEN_JUMP);
-}
-
 static inline void TweenLerpVec(vec *a, vec *b, int32_t alpha, vec *out) {
   int i;
 
@@ -95,8 +91,9 @@ typedef struct {
 extern void TweenForgetAll();
 extern void TweenForget(int slot);
 extern void TweenRecord(int slot, const tween_pose *pose);
-extern void TweenPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out);
-extern void TweenScreenPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out);
+extern void TweenWorldPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out);
+extern void TweenScreenPoseAt(int slot, const tween_pose *now, int32_t alpha,
+  tween_pose *out);
 extern void TweenRecordCamera(const tween_pose *drawn);
 extern void TweenCameraAt(int32_t alpha, tween_pose *out);
 

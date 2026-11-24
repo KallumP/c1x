@@ -48,31 +48,29 @@ static void TweenScaleVec(vec *last, vec *now, int32_t alpha, vec *out) {
 
 /*
  * the pose to draw the slot's object in, alpha of the way from its pose in the
- * last game frame to now. without one, or if it moved further than jump (a
- * jump), it's drawn where it is
+ * last game frame to now. without one, or if it moved further than jump_limit
+ * (a jump), it's drawn where it is
  */
-static void TweenPoseWithin(int slot, const tween_pose *now, int32_t alpha, int32_t jump,
-  tween_pose *out) {
+static void TweenPoseWithinJumpLimit(int slot, const tween_pose *now, int32_t alpha,
+  int32_t jump_limit, tween_pose *out) {
   tween_pose *last, cur;
 
   cur = *now;
   *out = cur;
   if (!IsSlot(slot) || !has_last_pose[slot]) { return; }
   last = &last_poses[slot];
-  if (TweenJumpedFurther(&last->trans, &cur.trans, jump)) { return; }
+  if (TweenJumpedFurther(&last->trans, &cur.trans, jump_limit)) { return; }
   TweenLerpVec(&last->trans, &cur.trans, alpha, &out->trans);
   TweenLerpAng(&last->rot, &cur.rot, alpha, &out->rot);
   TweenScaleVec(&last->scale, &cur.scale, alpha, &out->scale);
 }
 
-/* the pose to draw the slot's object in the world in (TweenPoseWithin) */
-void TweenPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out) {
-  TweenPoseWithin(slot, now, alpha, TWEEN_JUMP, out);
+void TweenWorldPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out) {
+  TweenPoseWithinJumpLimit(slot, now, alpha, TWEEN_JUMP, out);
 }
 
-/* the pose to draw the slot's object on the screen in (TweenPoseWithin) */
 void TweenScreenPoseAt(int slot, const tween_pose *now, int32_t alpha, tween_pose *out) {
-  TweenPoseWithin(slot, now, alpha, TWEEN_SCREEN_JUMP, out);
+  TweenPoseWithinJumpLimit(slot, now, alpha, TWEEN_SCREEN_JUMP, out);
 }
 
 
@@ -86,7 +84,7 @@ void TweenRecordCamera(const tween_pose *drawn) {
 
 /* the camera pose to draw at, alpha of the way from the last game frame's to this one's */
 void TweenCameraAt(int32_t alpha, tween_pose *out) {
-  TweenPoseAt(TWEEN_CAMERA_SLOT, &drawn_camera, alpha, out);
+  TweenWorldPoseAt(TWEEN_CAMERA_SLOT, &drawn_camera, alpha, out);
 }
 
 /*

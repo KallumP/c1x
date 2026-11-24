@@ -1241,7 +1241,7 @@ static int GoolObjectDrawTweened(gool_object *obj, int alpha) {
   if (GoolIsOnScreenPlane(obj->status_b))
     TweenScreenPoseAt(GoolObjectTweenSlot(obj), &now, alpha, &drawn);
   else
-    TweenPoseAt(GoolObjectTweenSlot(obj), &now, alpha, &drawn);
+    TweenWorldPoseAt(GoolObjectTweenSlot(obj), &now, alpha, &drawn);
   GoolSetObjectPose(obj, &drawn);
   cur_obj = obj;
   GoolObjectTransform(obj);
