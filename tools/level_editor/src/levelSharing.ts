@@ -21,31 +21,20 @@ export function uploadButtonText(isOnline: boolean): string {
   return "Upload";
 }
 
-// what an upload says, around its link to the level on mod.io
-export function uploadedText({ isNew }: Uploaded): LinkedText {
+// what an upload says once it's done
+export function uploadedText({ isNew }: Uploaded): string {
   if (isNew) {
-    return { before: "Upload successful, view it", link: "here", after: "." };
+    return "Upload successful.";
   }
-  return { before: "Upload successful, view the new version", link: "here", after: "." };
+  return "Upload successful, a new version is up.";
 }
 
-// a line of text with a link in it: the link's text, or null for none
-export interface LinkedText {
-  before: string;
-  link: string | null;
-  after: string;
-}
-
-// what the dialog says of the map, around a link to it on mod.io if it's there
-export function onlineText(isOnline: boolean): LinkedText {
+// what the dialog says of whether the map's on mod.io
+export function onlineText(isOnline: boolean): string {
   if (isOnline) {
-    return {
-      before: "This map has already been uploaded to mod.io, view it",
-      link: "here",
-      after: ". Alternatively, upload a new version below.",
-    };
+    return "This map has already been uploaded to mod.io. Alternatively, upload a new version below.";
   }
-  return { before: "This map isn't on mod.io yet.", link: null, after: "" };
+  return "This map isn't on mod.io yet.";
 }
 
 // where a level's picture on mod.io comes from: the one it has, the view, or an

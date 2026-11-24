@@ -11,7 +11,6 @@ import {
   SUMMARY_MAX,
   uploadButtonText,
   uploadedText,
-  type LinkedText,
 } from "../levelSharing";
 import "./ShareDialog.css";
 
@@ -61,23 +60,13 @@ export default function ShareDialog({ level, save, onClose }: {
     return renderEmailStep();
   };
 
-  // text with a link to page in it, if it has one
-  const renderLinkedText = ({ before, link, after }: LinkedText, page = "") => (
-    <>
-      {before} {link && <a href={page} target="_blank" rel="noreferrer">{link}</a>}{after}
-    </>
-  );
-
-  // whether the map's online already, with a link to it
+  // whether the map's online already
   const renderOnlineLine = () => {
     const { online } = levelUpload;
     if (online === undefined) {
       return <p>Checking whether it's online...</p>;
     }
-    if (online === null) {
-      return <p>{renderLinkedText(onlineText(false))}</p>;
-    }
-    return <p>{renderLinkedText(onlineText(true), online.page)}</p>;
+    return <p>{onlineText(online !== null)}</p>;
   };
 
   // a new map's summary; a new version keeps its own
@@ -151,7 +140,7 @@ export default function ShareDialog({ level, save, onClose }: {
     ));
   };
 
-  // why the last request failed, or where to see the upload
+  // why the last request failed, or that the upload worked
   const renderUploadResult = () => {
     const { uploaded, problem } = levelUpload;
     if (problem) {
@@ -160,8 +149,7 @@ export default function ShareDialog({ level, save, onClose }: {
     if (!uploaded) {
       return null;
     }
-    const text = renderLinkedText(uploadedText(uploaded), uploaded.mod.page);
-    return <p className="share-success">{text}</p>;
+    return <p className="share-success">{uploadedText(uploaded)}</p>;
   };
 
   const renderUploadButton = () => {
