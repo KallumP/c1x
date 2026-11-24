@@ -3,10 +3,10 @@
 
 import { dirname, resolve } from "node:path";
 import { errorMessage } from "../src/errorMessage";
-import { isProblem, type Answer } from "./answer";
+import { isProblem, type Answer } from "../scripts/answer";
 import { downloadFile } from "./download";
 import { copyPlayersThings } from "./playersThings";
-import { isReleaseVersion, releaseName } from "./releaseName";
+import { isReleaseVersion, releaseName } from "../scripts/releaseName";
 import { unzipRelease } from "./releaseUnzip";
 
 const RELEASES_URL = "https://github.com/KallumP/c1x/releases";

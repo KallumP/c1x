@@ -10,7 +10,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { copyPlayersThings } from "../../scripts/playersThings";
+import { copyPlayersThings } from "../../launcher/playersThings";
 
 let games: string; // a stand-in for the folder both versions are in
 let current: string; // c1x-1.3, the player's

@@ -1,7 +1,7 @@
 // downloading a file whole, for a level from mod.io and a release from GitHub
 import { errorMessage } from "../src/errorMessage";
-import type { Answer } from "./answer";
-import { fetchWithTimeout, type Fetch } from "./fetch";
+import type { Answer } from "../scripts/answer";
+import { fetchWithTimeout, type Fetch } from "../scripts/fetch";
 
 // long enough for a release's zip on a slow connection; a request still has to
 // give up some time, rather than leave the launcher saying it's downloading

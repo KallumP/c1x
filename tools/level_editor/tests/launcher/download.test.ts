@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { downloadFile } from "../../scripts/download";
+import { downloadFile } from "../../launcher/download";
 
 describe("downloading a file", () => {
   test("is the file's bytes", async () => {

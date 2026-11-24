@@ -6,12 +6,12 @@ import { join } from "node:path";
 import { buildLevel, levelSourcePath } from "../builder/buildLevel";
 import { repoFolders } from "../builder/repoFolders";
 import { addressLine, startEditorServer } from "../server/editorServer";
-import { downloadLevelCommand } from "./levelDownload";
-import { downloadReleaseCommand } from "./releaseDownload";
-import { downloadFile } from "./download";
+import { downloadLevelCommand } from "../launcher/levelDownload";
+import { downloadReleaseCommand } from "../launcher/releaseDownload";
+import { downloadFile } from "../launcher/download";
 import { fetchOnlineLevel } from "./modio";
-import { listOnlineLevelsCommand } from "./onlineLevels";
-import { checkUpdate } from "./updateCheck";
+import { listOnlineLevelsCommand } from "../launcher/onlineLevels";
+import { checkUpdate } from "../launcher/updateCheck";
 
 export type ToolsCommand =
   | { kind: "build-level"; level: string }

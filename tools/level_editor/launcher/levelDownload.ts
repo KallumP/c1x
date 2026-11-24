@@ -2,8 +2,8 @@
 // level_src/ and built, for the launcher's Levels tab
 import { unzipLevel } from "./levelUnzip";
 import { downloadFile } from "./download";
-import { isProblem, type Answer } from "./answer";
-import { fetchOnlineLevel } from "./modio";
+import { isProblem, type Answer } from "../scripts/answer";
+import { fetchOnlineLevel } from "../scripts/modio";
 
 // mod.io's calls and the level build, or a test's stand-ins for them
 export interface DownloadCalls {

@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { strToU8, zipSync } from "fflate";
-import { downloadLevelCommand, type DownloadCalls } from "../../scripts/levelDownload";
+import { downloadLevelCommand, type DownloadCalls } from "../../launcher/levelDownload";
 import type { OnlineLevel } from "../../scripts/modio";
 
 let root: string; // a stand-in for level_src/

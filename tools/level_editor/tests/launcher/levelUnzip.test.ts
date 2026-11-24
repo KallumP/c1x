@@ -10,7 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { strToU8, zipSync } from "fflate";
-import { unzipLevel } from "../../scripts/levelUnzip";
+import { unzipLevel } from "../../launcher/levelUnzip";
 
 let root: string; // a stand-in for level_src/
 

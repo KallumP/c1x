@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { checkUpdate, isNewer, latestRelease, NEWER_RELEASE_PREFIX, versionNumbers } from "../../scripts/updateCheck";
-import type { LatestRelease } from "../../scripts/updateCheck";
+import { checkUpdate, isNewer, latestRelease, NEWER_RELEASE_PREFIX, versionNumbers } from "../../launcher/updateCheck";
+import type { LatestRelease } from "../../launcher/updateCheck";
 
 describe("a version's numbers", () => {
   test("are its two numbers", () => {
