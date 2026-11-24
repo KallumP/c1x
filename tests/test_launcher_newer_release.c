@@ -190,7 +190,7 @@ UTEST(launcher_newer_release, a_dev_builds_label_says_when_it_was_built) {
   ASSERT_STREQ("dev build, built 24 Nov 11:52", label);
 }
 
-UTEST(launcher_newer_release, a_dev_build_built_at_an_unknown_time_is_labelled_a_dev_build) {
+UTEST(launcher_newer_release, an_unknown_build_time_leaves_just_dev_build) {
   char label[VERSION_LABEL_MAX];
 
   VersionLabel("", 0, label, sizeof(label));
