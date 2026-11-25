@@ -67,12 +67,11 @@ export async function fetchOwnLevelMod(
   return own.online;
 }
 
-// logo is a base64 png, or null to keep the picture it has
+// logo is a base64 png, or null for none, which a new version doesn't need
 export async function uploadLevel(
   name: string,
-  summary: string,
   logo: string | null,
   fetchUrl: Fetch = fetch,
 ): Promise<Uploaded> {
-  return answer(await post(fetchUrl, `${levelUrl(name)}/upload`, { summary, logo }));
+  return answer(await post(fetchUrl, `${levelUrl(name)}/upload`, { logo }));
 }

@@ -92,7 +92,7 @@ export function useLevelUpload(
   }, [level, signedIn]);
 
   const sendUpload = async () => {
-    const send = () => uploadLevel(level.name, summary.trim(), picture.chosen());
+    const send = () => uploadLevel(level.name, picture.chosen());
     const done = await uploadAfterSaving(save, send);
     if (!done) {
       setProblem("It didn't save, so it wasn't uploaded.");

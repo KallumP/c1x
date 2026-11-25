@@ -7,8 +7,8 @@
 //   POST /sign-out              forgets the token
 //   GET  /levels/<name>         the player's mod for the level, if they have one
 //                               ({ online })
-//   POST /levels/<name>/upload  uploads it ({ summary, logo: a base64 png, or null to
-//                               keep the picture it has }), as an Uploaded
+//   POST /levels/<name>/upload  uploads it ({ logo: a base64 png, or null for none,
+//                               which a new version doesn't need }), as an Uploaded
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { levelOptions } from "../builder/levelCfg";
@@ -145,7 +145,7 @@ async function accountResponse(
   return NOT_FOUND;
 }
 
-// a base64 logo's bytes, or null for none: keep the picture the level has
+// a base64 logo's bytes, or null for none
 function logoBytes(logo: unknown): Uint8Array | null {
   if (typeof logo !== "string" || logo === "") {
     return null;
@@ -161,12 +161,8 @@ async function uploadWithBody(
   calls: ModioCalls,
 ): Promise<ApiResponse> {
   const root = repoFolders(repo).sourcesDir;
-  const { summary, logo } = JSON.parse(await readBody());
-  const details = {
-    name: levelOptions(join(root, name)).title,
-    summary: String(summary),
-    logo: logoBytes(logo),
-  };
+  const { logo } = JSON.parse(await readBody());
+  const details = { name: levelOptions(join(root, name)).title, logo: logoBytes(logo) };
   return answeredSignedIn(repo, await calls.uploadLevel(token, root, name, details));
 }
 
