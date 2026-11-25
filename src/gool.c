@@ -181,6 +181,22 @@ static void GoolFreePlayerSlots() {
   }
 }
 
+static void GoolPlayerSlotRelease(gool_object *obj) {
+  if (obj->parent)
+    GoolObjectRemoveChild(obj->parent, obj);
+  GoolEmptyPlayerSlot(obj);
+  if (obj == crash)
+    crash = 0;
+}
+
+/* player slots live outside the object pool, so one must never go on the free list */
+static void GoolObjectFree(gool_object *obj) {
+  if (CoopIsPlayer(obj))
+    GoolPlayerSlotRelease(obj);
+  else
+    GoolObjectAddChild((gool_object*)&free_objects, obj);
+}
+
 //----- (8001AAD8) --------------------------------------------------------
 int GoolInitAllocTable() {
   gool_handle *handle; // $v1
@@ -679,7 +695,7 @@ gool_object *GoolObjectSpawn(entry *zone, int entity_idx) {
   obj->handle.subtype = entity->group;
   res = GoolObjectInit(obj, entity->type, entity->subtype, 0, 0);
   if (ISERRORCODE(res))
-    GoolObjectAddChild((gool_object*)&free_objects, obj);
+    GoolObjectFree(obj);
   spawns[id] |= 1; /* set 'spawned' bit */
   obj->pid_flags = id << 8; /* TODO: make bitfield in struct */
   if (zone && zone->type == 17) { zone = cur_zone; }
@@ -883,15 +899,6 @@ int GoolObjectInit(gool_object *obj, int exec, int subtype, int argc, int *argv)
   return SUCCESS;
 }
 
-/* a killed player's slot is emptied and kept for them, not returned to the free list */
-static void GoolPlayerSlotRelease(gool_object *obj) {
-  if (obj->parent)
-    GoolObjectRemoveChild(obj->parent, obj);
-  GoolEmptyPlayerSlot(obj);
-  if (obj == crash)
-    crash = 0;
-}
-
 //----- (8001CDD0) --------------------------------------------------------
 int GoolObjectKill(gool_object *obj, int sig) {
   gool_object *child, *next;
@@ -916,10 +923,7 @@ int GoolObjectKill(gool_object *obj, int sig) {
   idx = obj->pid_flags >> 8;
   spawns[idx] &= 0xFFFFFFFE; /* clear bit 1 */
   obj->handle.type = 0;
-  if (CoopIsPlayer(obj))
-    GoolPlayerSlotRelease(obj);
-  else
-    GoolObjectAddChild((gool_object*)&free_objects, obj); /* return to free list */
+  GoolObjectFree(obj);
   return SUCCESS;
 }
 
