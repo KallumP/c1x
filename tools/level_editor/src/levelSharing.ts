@@ -20,7 +20,7 @@ export function uploadedText({ isNew }: Uploaded): string {
 // what the dialog says of whether the map has been uploaded
 export function onlineText(isOnline: boolean): string {
   if (isOnline) {
-    return "This map has already been uploaded. Alternatively, upload a new version below.";
+    return "This map is already online. You can update the map if you've made changes below.";
   }
   return "This map hasn't been uploaded yet.";
 }
