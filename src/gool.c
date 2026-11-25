@@ -1203,6 +1203,17 @@ static void CrashJumpGrace(gool_object *obj) {
     obj->status_a |= JUMP_GRACE_FLOOR;
 }
 
+/* in range (as OutOfRange measures it) of any player in play, not just crash */
+static int GoolObjectNearAnyPlayer(gool_object *obj, int32_t x, int32_t y, int32_t z) {
+  int idx;
+
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (!CoopPlayerInPlay(idx)) { continue; }
+    if (!OutOfRange(obj, &obj->trans, &players[idx]->trans, x, y, z)) { return 1; }
+  }
+  return 0;
+}
+
 //----- (8001DA0C) --------------------------------------------------------
 int GoolObjectUpdate(gool_object *obj, int flag) {
   gool_header *header;
@@ -1995,9 +2006,9 @@ int GoolObjectPhysics(gool_object *obj) {
       obj->velocity.y = -0x2EE000;
   }
   if (status_b & GOOL_FLAG_COLLIDABLE) { /* collidable? */
-    /* not the same render frame as crash and within range of crash? */
+    /* not the same render frame as crash and within range of a player? */
     if (obj->anim_stamp != crash->anim_stamp &&
-      !OutOfRange(obj, &obj->trans, &crash->trans, 0x7D000, 0xAF000, 0x7D000))
+      GoolObjectNearAnyPlayer(obj, 0x7D000, 0xAF000, 0x7D000))
       GoolObjectBound(obj); /* compute and record object rect */
   }
   return 0;
@@ -3055,7 +3066,7 @@ static inline
 int GoolOpChangeAnim(gool_object *obj, uint32_t instruction, uint32_t *flags) {
   gool_anim *anim;
   uint32_t frame_idx, anim_offs, wait, flip;
-  int out_of_range;
+  int near_player;
 
   frame_idx = instruction & 0x7F;
   anim_offs = (instruction >> 7) & 0x1FF;
@@ -3072,9 +3083,8 @@ int GoolOpChangeAnim(gool_object *obj, uint32_t instruction, uint32_t *flags) {
   else if (flip == 2)
     obj->scale.x = -obj->scale.x;
   if (obj->status_b & 0x18) { /* object is solid and stopped by solid matter */
-    out_of_range = OutOfRange(obj, &obj->trans, &crash->trans,
-                              0x7D000, 0xAF000, 0x7D000);
-    if (!out_of_range || (obj->status_b & 0x80000000))
+    near_player = GoolObjectNearAnyPlayer(obj, 0x7D000, 0xAF000, 0x7D000);
+    if (near_player || (obj->status_b & 0x80000000))
       GoolObjectLocalBound(obj, &obj->scale);
   }
   if (*flags & GOOL_FLAG_SUSPEND_ON_ANIM)
