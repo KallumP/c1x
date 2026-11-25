@@ -131,10 +131,10 @@ export default function ShareDialog({ level, save, onClose }: {
       <section
         className="share-dialog"
         role="dialog"
-        aria-label="Share on mod.io"
+        aria-label="Share level"
         onClick={(event) => event.stopPropagation()}
       >
-        <h2>Share {level.name} on mod.io</h2>
+        <h2>Share {level.name}</h2>
         {renderShareContent()}
         {modio.problem && <p className="error">{modio.problem}</p>}
         {renderShareFooter()}

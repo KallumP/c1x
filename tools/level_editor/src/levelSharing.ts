@@ -17,12 +17,12 @@ export function uploadedText({ isNew }: Uploaded): string {
   return "Upload successful, a new version is up.";
 }
 
-// what the dialog says of whether the map's on mod.io
+// what the dialog says of whether the map has been uploaded
 export function onlineText(isOnline: boolean): string {
   if (isOnline) {
-    return "This map has already been uploaded to mod.io. Alternatively, upload a new version below.";
+    return "This map has already been uploaded. Alternatively, upload a new version below.";
   }
-  return "This map isn't on mod.io yet.";
+  return "This map hasn't been uploaded yet.";
 }
 
 // what to do about a failed request: sign the player out if it was their sign-in

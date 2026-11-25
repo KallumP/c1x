@@ -66,7 +66,7 @@ export default function Toolbar(props: ToolbarProps) {
     <button
       disabled={!level}
       onClick={props.onShare}
-      title="Upload this level to mod.io, for others to play"
+      title="Upload this level for others to play"
     >
       Share
     </button>
