@@ -95,3 +95,37 @@ UTEST(coop, other_objects_read_pad_one) {
   UsePlayerSlots(slots);
   ASSERT_EQ(0, CoopObjectPadPort(&other));
 }
+
+/* player one at the origin, player two a box to the right; both in play */
+static void PlacePlayersApart(gool_object *slots) {
+  UsePlayerSlots(slots);
+  slots[0].handle.type = 1;
+  slots[0].trans = (vec){ 0, 0, 0 };
+  slots[COOP_PLAYER_TWO].handle.type = 1;
+  slots[COOP_PLAYER_TWO].trans = (vec){ 0x19000, 0, 0 };
+}
+
+UTEST(coop, the_nearest_player_is_player_two_beside_him) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  vec beside_two = { 0x20000, 0, 0 };
+
+  PlacePlayersApart(slots);
+  ASSERT_TRUE(&slots[COOP_PLAYER_TWO] == CoopNearestPlayer(&beside_two));
+}
+
+UTEST(coop, the_nearest_player_is_player_one_beside_him) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  vec beside_one = { -0x8000, 0, 0 };
+
+  PlacePlayersApart(slots);
+  ASSERT_TRUE(&slots[0] == CoopNearestPlayer(&beside_one));
+}
+
+UTEST(coop, a_player_out_of_play_is_never_the_nearest) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  vec beside_two = { 0x20000, 0, 0 };
+
+  PlacePlayersApart(slots);
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  ASSERT_TRUE(&slots[0] == CoopNearestPlayer(&beside_two));
+}
