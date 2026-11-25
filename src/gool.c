@@ -3616,7 +3616,7 @@ int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event, i
     exec = recipient->global;
     descs = (gool_state*)exec->items[4];
     desc = &descs[state];
-    if ((recipient == crash) &&
+    if (CoopIsPlayer(recipient) &&
         (recipient->invincibility_state >= 2 && recipient->invincibility_state <= 4))
       status_c |= 0x1002;
     if (!(status_c & desc->flags)) {
