@@ -2255,37 +2255,62 @@ static int GoolObjectIsCustomLevelNative(gool_object *obj) {
   return ns.ldat->lid == LID_TEST && obj->global && obj->global->eid == native_eid;
 }
 
-/* turns the push a native's shield just gave crash, along the game's x,
+/* turns the push a native's shield just gave a player, along the game's x,
    to lie along the native's own path (ShieldPushWay), at the same speed */
-static void GoolTurnShieldPush(gool_object *native) {
+static void GoolTurnShieldPush(gool_object *native, gool_object *player) {
   vec *start, *end, way;
   int32_t heading;
 
   start = (vec*)&native->memory[SHIELD_PATH_START];
   end = (vec*)&native->memory[SHIELD_PATH_END];
-  way = ShieldPushWay(&native->trans, &crash->trans, start, end);
+  way = ShieldPushWay(&native->trans, &player->trans, start, end);
   heading = angle12(atan2(way.x, way.z));
-  crash->target_rot.x = heading;
-  crash->velocity.x = ((sin(heading)>>4)*SHIELD_PUSH_SPEED)>>8;
-  crash->velocity.z = ((cos(heading)>>4)*SHIELD_PUSH_SPEED)>>8;
+  player->target_rot.x = heading;
+  player->velocity.x = ((sin(heading)>>4)*SHIELD_PUSH_SPEED)>>8;
+  player->velocity.z = ((cos(heading)>>4)*SHIELD_PUSH_SPEED)>>8;
+}
+
+/* each player's velocity and heading, to tell afterwards whom a shield pushed */
+typedef struct {
+  vec velocity[GOOL_PLAYER_COUNT];
+  int32_t heading[GOOL_PLAYER_COUNT];
+} player_motions;
+
+static void GoolRecordPlayerMotions(player_motions *before) {
+  int idx;
+
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    before->velocity[idx] = players[idx]->velocity;
+    before->heading[idx] = players[idx]->target_rot.x;
+  }
+}
+
+static void GoolTurnShieldPushes(gool_object *native, player_motions *before) {
+  gool_object *player;
+  int idx;
+
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (!CoopPlayerInPlay(idx)) { continue; }
+    player = players[idx];
+    if (ShieldPushed(&before->velocity[idx], before->heading[idx], &player->velocity,
+      player->target_rot.x))
+      GoolTurnShieldPush(native, player);
+  }
 }
 
 static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_ref *transition);
 
 /* runs obj's code (GoolObjectInterpretCode). a custom level's native
-   that pushes crash with its shield pushes him along its path (GoolTurnShieldPush) */
+   that pushes a crash with its shield pushes him along its path (GoolTurnShieldPush) */
 int GoolObjectInterpret(gool_object *obj, uint32_t flags, gool_state_ref *transition) {
-  vec velocity_before;
-  int32_t heading_before;
+  player_motions before;
   int res;
 
   if (!crash || !GoolObjectIsCustomLevelNative(obj))
     return GoolObjectInterpretCode(obj, flags, transition);
-  velocity_before = crash->velocity;
-  heading_before = crash->target_rot.x;
+  GoolRecordPlayerMotions(&before);
   res = GoolObjectInterpretCode(obj, flags, transition);
-  if (ShieldPushed(&velocity_before, heading_before, &crash->velocity, crash->target_rot.x))
-    GoolTurnShieldPush(obj);
+  GoolTurnShieldPushes(obj, &before);
   return res;
 }
 
