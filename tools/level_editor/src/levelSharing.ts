@@ -4,7 +4,7 @@ import { isSignedOutError, type Uploaded } from "./modioApi";
 
 export function uploadButtonText(isOnline: boolean): string {
   if (isOnline) {
-    return "Upload new version";
+    return "Update level";
   }
   return "Upload";
 }
