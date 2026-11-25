@@ -17,12 +17,12 @@ export function uploadedText({ isNew }: Uploaded): string {
   return "Upload successful, a new version is up.";
 }
 
-// what the dialog says of whether the map has been uploaded
+// what the dialog says of whether the level has been uploaded
 export function onlineText(isOnline: boolean): string {
   if (isOnline) {
-    return "This map is already online. You can update the map if you've made changes below.";
+    return "This level is already online. You can update the level if you've made changes below.";
   }
-  return "This map hasn't been uploaded yet.";
+  return "This level hasn't been uploaded yet.";
 }
 
 // what to do about a failed request: sign the player out if it was their sign-in

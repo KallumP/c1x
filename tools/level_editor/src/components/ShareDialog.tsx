@@ -1,6 +1,5 @@
-// sharing the open level on mod.io: signing in, whether the map's online already,
+// sharing the open level on mod.io: signing in, whether it's online already,
 // and uploading it
-import type { ReactNode } from "react";
 import type { LevelInfo } from "../api";
 import { useLevelUpload } from "../hooks/useLevelUpload";
 import { useModioAccount } from "../hooks/useModioAccount";
@@ -53,7 +52,7 @@ export default function ShareDialog({ level, save, onClose }: {
     return renderEmailStep();
   };
 
-  // whether the map's online already
+  // whether the level's online already
   const renderOnlineLine = () => {
     const { online } = levelUpload;
     if (online === undefined) {
@@ -61,13 +60,6 @@ export default function ShareDialog({ level, save, onClose }: {
     }
     return <p>{onlineText(online !== null)}</p>;
   };
-
-  const renderShareSection = (title: string, content: ReactNode) => (
-    <section className="share-section">
-      <h3>{title}</h3>
-      {content}
-    </section>
-  );
 
   // why the last request failed, or that the upload worked
   const renderUploadResult = () => {
@@ -104,7 +96,7 @@ export default function ShareDialog({ level, save, onClose }: {
   const renderSignedIn = () => (
     <>
       {renderAccountLine()}
-      {renderShareSection("Map", renderOnlineLine())}
+      {renderOnlineLine()}
       {renderUploadResult()}
     </>
   );
