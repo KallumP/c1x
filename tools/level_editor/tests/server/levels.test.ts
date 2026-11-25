@@ -24,8 +24,8 @@ describe("listLevels", () => {
     level("b_level", { "map.obj": "", "map.mtl": "" });
     level("a_level", { "a.obj": "" });
     expect(listLevels(root)).toEqual([
-      { name: "a_level", obj: "a.obj", scale: 400, songs: [] },
-      { name: "b_level", obj: "map.obj", scale: 400, songs: [] },
+      { name: "a_level", obj: "a.obj", scale: 400, songs: [], included: false },
+      { name: "b_level", obj: "map.obj", scale: 400, songs: [], included: false },
     ]);
   });
 
@@ -34,6 +34,14 @@ describe("listLevels", () => {
     level("two", { "a.obj": "", "b.obj": "" });
     writeFileSync(join(root, "README.md"), "");
     expect(listLevels(root)).toEqual([]);
+  });
+
+  test("marks the levels that come with c1x, which included_levels.txt lists", () => {
+    level("1_tide_ruins", { "tide.obj": "" });
+    level("my_level", { "my.obj": "" });
+    const included = "# the levels that come with c1x\n1_tide_ruins\n";
+    writeFileSync(join(root, "included_levels.txt"), included);
+    expect(listLevels(root).map((listed) => listed.included)).toEqual([true, false]);
   });
 
   test("takes the scale from level.cfg", () => {
