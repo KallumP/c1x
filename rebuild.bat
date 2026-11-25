@@ -1,9 +1,13 @@
 @echo off
 rem Rebuild c1 on Windows using MSYS2 MinGW32 (see doc/building.md, "Windows (MSYS2)").
 rem
-rem   rebuild.bat          build whatever changed
+rem   rebuild.bat          build everything
 rem   rebuild.bat clean    remove all build output first, then build everything
 rem   rebuild.bat test     build and run the unit tests
+rem
+rem Each one compiles every c1x source again (make remove-objects): make doesn't
+rem know which files include a changed header, and a stale object it keeps can
+rem read a setting from the wrong place.
 rem
 rem MSYS2 is expected in C:\msys64; set MSYS2_ROOT to use another location.
 
@@ -40,7 +44,7 @@ pushd "%~dp0"
 if "%TARGET%"=="clean" (
   "%BASH%" -lc "export OS=Windows_NT; make clean; make"
 ) else (
-  "%BASH%" -lc "export OS=Windows_NT; make %TARGET%"
+  "%BASH%" -lc "export OS=Windows_NT; make remove-objects && make %TARGET%"
 )
 set "RESULT=%ERRORLEVEL%"
 popd

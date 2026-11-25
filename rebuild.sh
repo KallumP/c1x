@@ -2,9 +2,13 @@
 # Rebuild c1x on Linux: the game (build/c1x), the launcher (c1x_launcher) and
 # the tools (build/c1x_tools and the level editor's page; see doc/building.md).
 #
-#   ./rebuild.sh          build whatever changed
+#   ./rebuild.sh          build everything
 #   ./rebuild.sh clean    remove all build output first, then build everything
 #   ./rebuild.sh test     build and run the unit tests
+#
+# Each one compiles every c1x source again (make remove-objects): make doesn't
+# know which files include a changed header, and a stale object it keeps can
+# read a setting from the wrong place.
 #
 # The tools are a copy of node with c1x's scripts put in it (the level build, the
 # level editor and the check for a newer release), which
@@ -83,6 +87,7 @@ if [ "$target" = "clean" ]; then
   make clean || true
   make -j"$(nproc)" || result=$?
 else
+  make remove-objects
   make -j"$(nproc)" $target || result=$?
 fi
 

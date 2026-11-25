@@ -48,8 +48,8 @@ Fedora (64-bit): `sudo dnf install make gcc gcc-c++ glibc-devel.i686 libstdc++-d
 
 On Linux, run `./rebuild.sh` from the project directory, which runs `make` for the game (`build/c1x`), the launcher (`c1x_launcher`) and the tools:
 
-- `./rebuild.sh` builds whatever changed
-- `./rebuild.sh clean` does a full rebuild
+- `./rebuild.sh` builds everything, compiling every source again
+- `./rebuild.sh clean` also removes `build/` first
 - `./rebuild.sh test` builds and runs the tests
 
 Then run `./c1x_launcher` and click **Play** (see [Launcher](launcher.md)).
@@ -64,7 +64,7 @@ Windows (MSYS2):
 
 1. Install [MSYS2](https://www.msys2.org/) (e.g. `winget install MSYS2.MSYS2`).
 2. From an MSYS2 shell: `pacman -S --needed make mingw-w64-i686-gcc mingw-w64-i686-SDL2 mingw-w64-i686-fluidsynth`
-3. Run `rebuild.bat` from the project directory, which runs `make` in the MINGW32 environment for you (`rebuild.bat clean` for a full rebuild, `rebuild.bat test` for the tests). If the launcher, the game or `c1x_tools.exe` is running from this folder, it closes them first (not for `rebuild.bat test`), as Windows won't let `make` replace a running program.
+3. Run `rebuild.bat` from the project directory, which runs `make` in the MINGW32 environment for you (`rebuild.bat clean` also removes `build/`, `rebuild.bat test` runs the tests). Each one compiles every source again, as `make` alone can keep an old object file after a header it includes changes. If the launcher, the game or `c1x_tools.exe` is running from this folder, it closes them first (not for `rebuild.bat test`), as Windows won't let `make` replace a running program.
 
    This builds the game into `build/`, copying the DLLs it needs next to it (see below), and the launcher to `c1x_launcher.exe` in the project directory, which needs no DLLs.
 

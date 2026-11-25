@@ -233,6 +233,15 @@ ifeq ($(OS),Windows_NT)
 	rm -rf $(dir $(OUT))
 endif
 
+# every object file of c1x's own, for rebuild.bat and rebuild.sh to build fresh:
+# make doesn't know which files include a header, so after a header changes an
+# old object can be kept that still has the struct as it was. src/ext's are
+# left, as they don't include c1x's headers
+remove-objects:
+	find src tests res -name '*.o' -not -path 'src/ext/*' -delete
+
+.PHONY: remove-objects
+
 #install:
 #	...
 
