@@ -48,3 +48,13 @@ UTEST(coop, each_player_has_a_tween_slot_past_the_objects_and_before_the_camera)
     ASSERT_LT(CoopPlayerTweenSlot(i), TWEEN_CAMERA_SLOT);
   }
 }
+
+UTEST(coop, every_player_takes_the_zone_player_colours_and_others_the_object_colours) {
+  gool_object slots[GOOL_PLAYER_COUNT], other;
+  zone_header header;
+  int i;
+
+  for (i=0;i<GOOL_PLAYER_COUNT;i++) { players[i] = &slots[i]; }
+  for (i=0;i<GOOL_PLAYER_COUNT;i++) { ASSERT_TRUE(&header.player_colors == CoopZoneColors(&slots[i], &header)); }
+  ASSERT_TRUE(&header.object_colors == CoopZoneColors(&other, &header));
+}
