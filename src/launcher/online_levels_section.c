@@ -193,7 +193,7 @@ void DrawOnlineLevelsSection(const char *repo) {
   ListTopLevelsOnce(repo);
   DrawHeading("Online levels");
   igTextWrapped("Levels other players have shared. "
-    "Downloading one puts it in level_src/ and builds it.");
+    "Browse the top levels or search for one below.");
   DrawSearch(repo);
   if (problem[0]) { igTextColored(PROBLEM_COLOUR, "%s", problem); }
   DrawLevelListStatus();
