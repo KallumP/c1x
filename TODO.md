@@ -7,6 +7,9 @@ Custom levels
 
 
 Editor
+- the share screen should say "This level will show up as: x" and show the stripped title no underscores dashes numbers
+- allow spacees in the level name folder
+- dont allow uploading of the included levels
 - delete a level. need to know how to do this using the api or just request it by email to me
 - zone size chooser? Should show error if a zone has too many objects
 - invisible walls
