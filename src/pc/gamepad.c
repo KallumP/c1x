@@ -47,10 +47,13 @@ static int FindFreeGamepad() {
   return GamepadFind(NO_CONTROLLER_ID);
 }
 
-/* the controller a newly plugged in id plays as: the first free one, or GAMEPAD_NONE */
+/* the controller a plugged in id plays as: its own if already connected, else the first free one,
+   or GAMEPAD_NONE */
 int GamepadConnect(int id) {
   int idx;
 
+  idx = GamepadFind(id);
+  if (idx != GAMEPAD_NONE) { return idx; }
   idx = FindFreeGamepad();
   if (idx == GAMEPAD_NONE) { return GAMEPAD_NONE; }
   gamepads[idx].id = id;
