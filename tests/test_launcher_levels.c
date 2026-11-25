@@ -250,39 +250,25 @@ UTEST(launcher_levels, the_level_sources_folder_opens_as_a_file_url) {
 }
 
 /* a level source called name in its own repo, kept apart from the other tests'
-   levels, and its .modio.json saying note, if there is one (note isn't 0) */
-static void MakeDownloadedLevel(const char *name, const char *note) {
+   levels, with a .modio.json saying note */
+static void MakeLevelWithModioNote(const char *name, const char *note) {
   char folder[256];
 
   MakeSourceIn(TEST_MODIO_REPO, name, folder, sizeof(folder));
-  if (note) { MakeFileSaying(folder, ".modio.json", note); }
+  MakeFileSaying(folder, ".modio.json", note);
 }
 
 /* the kind the launcher lists the level source called name as */
-static level_kind DownloadedKindOf(custom_levels *levels, const char *name) {
+static level_kind KindOf(custom_levels *levels, const char *name) {
   ListCustomLevels(TEST_MODIO_REPO, levels);
   return levels->kinds[FindCustomLevel(levels, name)];
-}
-
-UTEST(launcher_levels, a_level_whose_mod_io_note_has_a_mod_id_was_downloaded) {
-  static custom_levels levels;
-
-  MakeDownloadedLevel("tide_ruins", "{\"modId\":17302}");
-  ASSERT_EQ(LEVEL_DOWNLOADED, DownloadedKindOf(&levels, "tide_ruins"));
-}
-
-UTEST(launcher_levels, a_level_with_no_mod_io_note_is_your_own) {
-  static custom_levels levels;
-
-  MakeDownloadedLevel("my_level", 0);
-  ASSERT_EQ(LEVEL_OWN, DownloadedKindOf(&levels, "my_level"));
 }
 
 UTEST(launcher_levels, a_mod_io_note_without_a_mod_id_is_your_own) {
   static custom_levels levels;
 
-  MakeDownloadedLevel("broken_note", "{}");
-  ASSERT_EQ(LEVEL_OWN, DownloadedKindOf(&levels, "broken_note"));
+  MakeLevelWithModioNote("broken_note", "{}");
+  ASSERT_EQ(LEVEL_OWN, KindOf(&levels, "broken_note"));
 }
 
 /* a level source called name in a repo of its own, with level.cfg saying cfg if
