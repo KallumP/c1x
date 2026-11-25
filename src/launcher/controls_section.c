@@ -1,7 +1,7 @@
 /*
  * the launcher's controls section: each button's keys and controller buttons
- * from controls.cfg (see doc/controls.md), on a Keyboard, a Player 2 keys and a
- * Controller tab. click one and press another to change it
+ * from controls.cfg (see doc/controls.md), on a Player 1 keyboard, a Player 2
+ * keyboard and a Controller tab. click one and press another to change it
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -323,10 +323,11 @@ static void DrawPlayerTwoKeyboardHelp(void) {
 }
 
 static void DrawControllerHelp(void) {
-  igTextWrapped("Click a controller button, then press the one you want instead (Esc to cancel). "
+  igTextWrapped("These buttons are for both players' controllers: the first controller "
+    "plugged in plays as player one, the second as player two. "
+    "Click a controller button, then press the one you want instead (Esc to cancel). "
     "Buttons are named as on an Xbox controller: A is the bottom face button. "
-    "The left stick always moves like the d-pad. "
-    "Both players' controllers use these buttons: the first plugged in is player one's.");
+    "The left stick always moves like the d-pad.");
   if (SDL_NumJoysticks() == 0) { igTextDisabled("No controller found: plug one in to set its buttons."); }
 }
 
@@ -345,8 +346,8 @@ static void DrawBindingTab(const char *name, binding_kind kind, void (*draw_help
 
 void DrawControlsSection(const char *repo) {
   if (igBeginTabBar("controls_kind", 0)) {
-    DrawBindingTab("Keyboard", KEYBOARD, DrawKeyboardHelp);
-    DrawBindingTab("Player 2 keys", P2_KEYBOARD, DrawPlayerTwoKeyboardHelp);
+    DrawBindingTab("Player 1 keyboard", KEYBOARD, DrawKeyboardHelp);
+    DrawBindingTab("Player 2 keyboard", P2_KEYBOARD, DrawPlayerTwoKeyboardHelp);
     DrawBindingTab("Controller", CONTROLLER, DrawControllerHelp);
     igEndTabBar();
   }
