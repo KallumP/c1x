@@ -67,7 +67,7 @@ export async function fetchOwnLevelMod(
   return own.online;
 }
 
-// logo is a base64 png, or null for none, which a new version doesn't need
+// logo is the level's picture, a base64 png, or null if there's none
 export async function uploadLevel(
   name: string,
   logo: string | null,

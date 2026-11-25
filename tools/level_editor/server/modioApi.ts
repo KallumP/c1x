@@ -7,8 +7,8 @@
 //   POST /sign-out              forgets the token
 //   GET  /levels/<name>         the player's mod for the level, if they have one
 //                               ({ online })
-//   POST /levels/<name>/upload  uploads it ({ logo: a base64 png, or null for none,
-//                               which a new version doesn't need }), as an Uploaded
+//   POST /levels/<name>/upload  uploads it ({ logo: a base64 png, or null for none }),
+//                               as an Uploaded
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { levelOptions } from "../builder/levelCfg";

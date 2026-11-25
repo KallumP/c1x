@@ -18,15 +18,6 @@ function takeViewPicture(): string | null {
   return viewLogo(canvas);
 }
 
-// the picture an upload sends: the view for a new level; none for a new version,
-// which keeps the picture it has
-function pictureToSend(online: LevelMod | null | undefined, view: string | null): string | null {
-  if (online) {
-    return null;
-  }
-  return view;
-}
-
 // uploading the open level to mod.io once the player's signed in: a new mod, its
 // picture the view as it was when the Share dialog opened, or a new version of
 // the one it has
@@ -39,12 +30,10 @@ export function useLevelUpload(
 ) {
   // undefined until mod.io says
   const [online, setOnline] = useState<LevelMod | null | undefined>(undefined);
-  const [viewPicture, setViewPicture] = useState<string | null>(null);
+  const [viewPicture] = useState(takeViewPicture);
   const [problem, setProblem] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [uploaded, setUploaded] = useState<Uploaded | null>(null);
-
-  useEffect(() => setViewPicture(takeViewPicture()), []);
 
   // why a request failed, or back to signing in if it was the sign-in that failed
   const showFailure = (error: unknown) => {
@@ -67,7 +56,7 @@ export function useLevelUpload(
   }, [level, signedIn]);
 
   const sendUpload = async () => {
-    const send = () => uploadLevel(level.name, pictureToSend(online, viewPicture));
+    const send = () => uploadLevel(level.name, viewPicture);
     const done = await uploadAfterSaving(save, send);
     if (!done) {
       setProblem("It didn't save, so it wasn't uploaded.");
