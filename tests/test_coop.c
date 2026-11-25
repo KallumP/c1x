@@ -398,3 +398,19 @@ UTEST(coop, the_camera_reaches_a_new_lead) {
     subject = CoopCameraSubject(&camera, &new_lead);
   ASSERT_EQ(FAR_AHEAD, subject.x);
 }
+
+UTEST(coop, a_player_past_the_leash_is_left_behind) {
+  gool_object lead, other;
+
+  lead.trans = (vec){ 0, 0, 0 };
+  other.trans = (vec){ 0, 0, -(COOP_LEASH_DISTANCE + 1) };
+  ASSERT_TRUE(CoopLeftBehind(&lead, &other));
+}
+
+UTEST(coop, a_player_within_the_leash_isnt_left_behind) {
+  gool_object lead, other;
+
+  lead.trans = (vec){ 0, 0, 0 };
+  other.trans = (vec){ 0, 0, -COOP_LEASH_DISTANCE };
+  ASSERT_FALSE(CoopLeftBehind(&lead, &other));
+}
