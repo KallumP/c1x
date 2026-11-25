@@ -9,7 +9,6 @@ extern uint8_t keys[512]; /* indexed by SDL scancode */
 
 #define PAD_KEYS_MAX 64
 
-/* a player's keys */
 typedef struct {
   sw_pad_mapping keys[PAD_KEYS_MAX];
   int count;
@@ -81,15 +80,17 @@ uint32_t PadGamepadHeld(int gamepad_idx) {
   return held;
 }
 
-/* restore the built-in default bindings, for keys and controllers */
-static void SetKeys(key_bindings *bindings, const sw_pad_mapping *defaults, int count) {
+static void CopyDefaultKeys(key_bindings *bindings, const sw_pad_mapping *defaults,
+  int count) {
   memcpy(bindings->keys, defaults, count*sizeof(sw_pad_mapping));
   bindings->count = count;
 }
 
+/* restore the built-in default bindings, for keys and controllers */
 void PadResetBindings() {
-  SetKeys(&player_keys[PAD_PLAYER_ONE], pad_default_mappings, PAD_DEFAULT_KEY_COUNT);
-  SetKeys(&player_keys[PAD_PLAYER_TWO], pad_p2_default_mappings,
+  CopyDefaultKeys(&player_keys[PAD_PLAYER_ONE], pad_default_mappings,
+    PAD_DEFAULT_KEY_COUNT);
+  CopyDefaultKeys(&player_keys[PAD_PLAYER_TWO], pad_p2_default_mappings,
     PAD_P2_DEFAULT_KEY_COUNT);
   memcpy(gamepad_mappings, gamepad_default_mappings, sizeof(gamepad_default_mappings));
   gamepad_mapping_count = sizeof(gamepad_default_mappings)/sizeof(gamepad_mapping);
