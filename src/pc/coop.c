@@ -22,7 +22,6 @@ int CoopPlayerInPlay(int idx) {
   return players[idx]->handle.type != 0;
 }
 
-/* the zone's colours for obj: every player takes the player colours, other objects the object colours */
 gool_colors *CoopZoneColors(gool_object *obj, zone_header *header) {
   if (CoopIsPlayer(obj)) { return &header->player_colors; }
   return &header->object_colors;

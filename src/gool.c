@@ -152,7 +152,6 @@ extern mat16 ms_rot, ms_cam_rot;
 extern int32_t cam_rot_xz;
 extern quad28_t uv_map[600];
 
-/* a player's slot, empty and not linked to any other object */
 static void GoolEmptyPlayerSlot(gool_object *slot) {
   slot->handle.type = 0;
   slot->parent = 0;
