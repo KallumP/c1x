@@ -164,7 +164,7 @@ static void GoolEmptyPlayerSlot(gool_object *slot) {
 static int GoolAllocPlayerSlots() {
   int i;
 
-  for (i=0;i<COOP_PLAYER_COUNT;i++) {
+  for (i=0;i<GOOL_PLAYER_COUNT;i++) {
     players[i] = (gool_object*)malloc(sizeof(gool_object)+0x100);
     if (!players[i]) { return 0; }
     GoolEmptyPlayerSlot(players[i]);
@@ -175,7 +175,7 @@ static int GoolAllocPlayerSlots() {
 static void GoolFreePlayerSlots() {
   int i;
 
-  for (i=0;i<COOP_PLAYER_COUNT;i++) {
+  for (i=0;i<GOOL_PLAYER_COUNT;i++) {
     free(players[i]);
     players[i] = 0;
   }
@@ -1054,7 +1054,7 @@ static void GoolRecordObjectPose(gool_object *obj) {
 static void GoolRecordObjectPoses() {
   int i;
 
-  for (i=0;i<COOP_PLAYER_COUNT;i++)
+  for (i=0;i<GOOL_PLAYER_COUNT;i++)
     GoolRecordObjectPose(players[i]);
   for (i=0;i<GOOL_OBJECT_COUNT;i++)
     GoolRecordObjectPose(&objects[i]);

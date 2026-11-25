@@ -131,7 +131,8 @@ static inline int GoolIsOnScreenPlane(uint32_t status_b) {
 
 /* constants */
 #define GOOL_OBJECT_COUNT           160 /* orig 96; pc: a warp pad's sparkles filled it at a bonus round's end, so the save screen's slot name and cursor couldn't be made */
-#define GOOL_BOUND_COUNT            (GOOL_OBJECT_COUNT+1) /* orig 28; one per object and the player */
+#define GOOL_PLAYER_COUNT           2   /* pc: player one (crash) and player two, each in their own slot outside the objects */
+#define GOOL_BOUND_COUNT            (GOOL_OBJECT_COUNT+GOOL_PLAYER_COUNT) /* orig 28; one per object and player */
 #define GOOL_LEVEL_SPAWN_COUNT      3592
 #define GOOL_SPAWN_COUNT            304
 
