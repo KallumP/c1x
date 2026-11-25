@@ -21,6 +21,7 @@ extern int CoopPlayerInPlay(int idx);
 extern gool_colors *CoopZoneColors(gool_object *obj, zone_header *header);
 extern int CoopPlayerTweenSlot(int idx);
 extern int CoopObjectPadPort(gool_object *obj);
+extern gool_object *CoopNearestPlayer(vec *trans);
 extern vec CoopBesideLead(vec lead);
 
 #endif /* _PC_COOP_H_ */
