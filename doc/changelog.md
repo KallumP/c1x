@@ -4,11 +4,11 @@
 
 ### Added
 
-- the level editor's Share says the name a level will show up as on mod.io
+- the level editor's Share says the name a level will show up as online
 
 ### Changed
 
-- the levels that come with c1x can't be uploaded to mod.io
+- the levels that come with c1x can't be shared
 
 ## 2026-11-24
 
