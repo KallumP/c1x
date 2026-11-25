@@ -32,12 +32,12 @@ describe("what an upload says", () => {
 describe("what the dialog says of a map", () => {
   test("once it's online, that it's been uploaded and can be again", () => {
     expect(onlineText(true)).toBe(
-      "This map has already been uploaded to mod.io. Alternatively, upload a new version below.",
+      "This map has already been uploaded. Alternatively, upload a new version below.",
     );
   });
 
   test("before it's online, that it isn't yet", () => {
-    expect(onlineText(false)).toBe("This map isn't on mod.io yet.");
+    expect(onlineText(false)).toBe("This map hasn't been uploaded yet.");
   });
 });
 
