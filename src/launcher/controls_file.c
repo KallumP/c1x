@@ -67,13 +67,14 @@ static void ResetPads(launcher_controls *c) {
 void ResetControls(launcher_controls *c) {
   SDL_zerop(c);
   ResetKeys(c->key_count, c->keys, pad_default_mappings, PAD_DEFAULT_KEY_COUNT);
-  ResetKeys(c->p2_key_count, c->p2_keys, pad_p2_default_mappings, PAD_P2_DEFAULT_KEY_COUNT);
+  ResetKeys(c->p2_key_count, c->p2_keys, pad_p2_default_mappings,
+    PAD_P2_DEFAULT_KEY_COUNT);
   ResetPads(c);
 }
 
 /* the first line for a button replaces its default key, later lines add keys */
-static void AddKey(int *key_count, SDL_Scancode (*keys)[BUTTON_KEYS_MAX], uint32_t *rebound,
-  int button, SDL_Scancode code) {
+static void AddKey(int *key_count, SDL_Scancode (*keys)[BUTTON_KEYS_MAX],
+  uint32_t *rebound, int button, SDL_Scancode code) {
   uint32_t bit = 1u << button;
 
   if (!(*rebound & bit)) {
@@ -121,7 +122,8 @@ static void ReadControlsLine(const char *line, launcher_controls *c, rebound_but
     return;
   }
   code = SDL_GetScancodeFromName(value);
-  if (code != SDL_SCANCODE_UNKNOWN) { AddPlayerKey(c, rebound, player_idx, button, code); }
+  if (code != SDL_SCANCODE_UNKNOWN)
+    AddPlayerKey(c, rebound, player_idx, button, code);
 }
 
 /*
@@ -300,7 +302,8 @@ char *SetButtonPadLines(const char *text, const char *name, const int *pads, int
 }
 
 /* whether text needs kind lines for the line name: not if it has none and they'd keep the default */
-static int NeedsButtonLines(const char *text, int is_default, const char *name, line_kind kind) {
+static int NeedsButtonLines(const char *text, int is_default, const char *name,
+  line_kind kind) {
   int current[BUTTON_KEYS_MAX];
 
   if (ButtonBindingsInText(text, name, kind, current) > 0) { return 1; }
@@ -309,8 +312,8 @@ static int NeedsButtonLines(const char *text, int is_default, const char *name, 
 
 /* replace the key lines called name in text with keys, if it needs them.
    takes text over (freeing it) and returns the text to use from now on, to SDL_free */
-static char *ReplaceKeyLines(char *text, const char *name, const SDL_Scancode *keys, int count,
-  int is_default) {
+static char *ReplaceKeyLines(char *text, const char *name, const SDL_Scancode *keys,
+  int count, int is_default) {
   char *changed;
 
   if (!NeedsButtonLines(text, is_default, name, KEY_LINES)) { return text; }
