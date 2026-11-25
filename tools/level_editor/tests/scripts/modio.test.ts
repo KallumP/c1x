@@ -210,7 +210,9 @@ describe("finding the player's own mod for a level", () => {
 
   test("is the mod's id", async () => {
     const { fetchUrl } = standInFetch(OWN_MODS);
-    expect(await findOwnLevelMod("token", "1_tide_ruins", fetchUrl)).toEqual({ id: 17302 });
+    expect(await findOwnLevelMod("token", "1_tide_ruins", fetchUrl)).toEqual({
+      id: 17302,
+    });
   });
 
   test("is none when the player has no mod for it", async () => {

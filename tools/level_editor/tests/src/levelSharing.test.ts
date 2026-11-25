@@ -25,7 +25,9 @@ describe("what an upload says", () => {
   });
 
   test("for a level already online, that its new version uploaded", () => {
-    expect(uploadedText({ mod: MOD, isNew: false })).toBe("Upload successful, a new version is up.");
+    expect(uploadedText({ mod: MOD, isNew: false })).toBe(
+      "Upload successful, a new version is up.",
+    );
   });
 });
 
