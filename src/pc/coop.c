@@ -155,6 +155,35 @@ gool_object *CoopLeadPlayer(vec *direction) {
   return lead;
 }
 
+/* the gap left after one frame's easing; a gap too small to ease is closed */
+static int32_t EasedGap(int32_t gap) {
+  if (gap / COOP_CAMERA_EASE == 0) { return 0; }
+  return gap - gap / COOP_CAMERA_EASE;
+}
+
+static void StartFromLastSubject(coop_camera *camera, gool_object *lead) {
+  if (camera->lead) {
+    camera->offset.x = camera->subject.x - lead->trans.x;
+    camera->offset.y = camera->subject.y - lead->trans.y;
+    camera->offset.z = camera->subject.z - lead->trans.z;
+  }
+  camera->lead = lead;
+}
+
+vec CoopCameraSubject(coop_camera *camera, gool_object *lead) {
+  vec subject;
+
+  if (lead != camera->lead) { StartFromLastSubject(camera, lead); }
+  camera->offset.x = EasedGap(camera->offset.x);
+  camera->offset.y = EasedGap(camera->offset.y);
+  camera->offset.z = EasedGap(camera->offset.z);
+  subject.x = lead->trans.x + camera->offset.x;
+  subject.y = lead->trans.y + camera->offset.y;
+  subject.z = lead->trans.z + camera->offset.z;
+  camera->subject = subject;
+  return subject;
+}
+
 /* the checkpoint is player one's: a player two running crash's script never saves it */
 int CoopMaySaveLevelState(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
