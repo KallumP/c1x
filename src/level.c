@@ -536,10 +536,7 @@ void LevelRestart(level_state *state) {
   crash->scale = state->player_scale;
   crash->zone = cur_zone;
   crash->floor_impact_stamp = 0;
-  crash->velocity.x = 0;
-  crash->velocity.y = 0;
-  crash->velocity.z = 0;
-  crash->speed = 0;
+  GoolObjectStop(crash);
   crash->target_rot.x = crash->rot.x;
   if (collider=crash->collider) {
     collider->collider = 0;

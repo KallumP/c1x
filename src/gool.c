@@ -39,7 +39,7 @@ int GoolProject(vec*,vec*);
 int GoolSendToColliders2(gool_object*,gool_object*,uint32_t,int,int,uint32_t*);
 int GoolObjectInterrupt(gool_object*,uint32_t,int,uint32_t*);
 
-#define init_obj          player
+#define init_obj          players[0]
 #define main_obj          crash
 
 #define GETRFP(obj)       (!obj->fp)?0:((uint32_t)obj->fp-(uint32_t)&obj->process)
@@ -123,8 +123,6 @@ gool_object *crash = 0;            /* 800566B4; gp[0xAE] */
 uint16_t level_spawns[GOOL_LEVEL_SPAWN_COUNT]; /* 8005E348 */
 uint32_t spawns[GOOL_SPAWN_COUNT]; /* 8005FF58 */
 gool_object *objects;              /* 80060DB0 */
-gool_object *player;               /* 80060DB4 */
-gool_object *player_two = 0;       /* the second crash, with two_players on */
 gool_handle handles[8];            /* 80060DB8 */
 gool_handle free_objects;          /* 80060DF8 */
 gool_object *cur_obj;              /* 80060E00 */
@@ -154,6 +152,50 @@ extern mat16 ms_rot, ms_cam_rot;
 extern int32_t cam_rot_xz;
 extern quad28_t uv_map[600];
 
+static void GoolEmptyPlayerSlot(gool_object *slot) {
+  slot->handle.type = 0;
+  slot->parent = 0;
+  slot->sibling = 0;
+  slot->children = 0;
+}
+
+/* each player's own slot, outside the object pool; 0 if one couldn't be made */
+static int GoolAllocPlayerSlots() {
+  int i;
+
+  for (i=0;i<GOOL_PLAYER_COUNT;i++) {
+    players[i] = (gool_object*)malloc(sizeof(gool_object)+0x100);
+    if (!players[i]) { return 0; }
+    GoolEmptyPlayerSlot(players[i]);
+  }
+  return 1;
+}
+
+static void GoolFreePlayerSlots() {
+  int i;
+
+  for (i=0;i<GOOL_PLAYER_COUNT;i++) {
+    free(players[i]);
+    players[i] = 0;
+  }
+}
+
+static void GoolPlayerSlotRelease(gool_object *obj) {
+  if (obj->parent)
+    GoolObjectRemoveChild(obj->parent, obj);
+  GoolEmptyPlayerSlot(obj);
+  if (obj == crash)
+    crash = 0;
+}
+
+/* player slots live outside the object pool, so one must never go on the free list */
+static void GoolObjectFree(gool_object *obj) {
+  if (CoopIsPlayer(obj))
+    GoolPlayerSlotRelease(obj);
+  else
+    GoolObjectAddChild((gool_object*)&free_objects, obj);
+}
+
 //----- (8001AAD8) --------------------------------------------------------
 int GoolInitAllocTable() {
   gool_handle *handle; // $v1
@@ -161,9 +203,8 @@ int GoolInitAllocTable() {
   int i; // $a0 MAPDST
 
   crash   = 0;
-  player  = (gool_object*)malloc(sizeof(gool_object)+0x100);
   objects = (gool_object*)malloc(sizeof(gool_object)*GOOL_OBJECT_COUNT);
-  if (!objects || !player) { return ERROR_MALLOC_FAILED; }
+  if (!objects || !GoolAllocPlayerSlots()) { return ERROR_MALLOC_FAILED; }
   cur_obj = 0;
   frames_elapsed = 0;
   free_objects.type = 2;
@@ -183,17 +224,13 @@ int GoolInitAllocTable() {
     handle->type = 2;
     handle->children = 0;
   }
-  player->handle.type = 0;
-  player->parent = 0;
-  player->sibling = 0;
-  player->children = 0;
   return SUCCESS;
 }
 
 //----- (8001AC28) --------------------------------------------------------
 int GoolKillAllocTable() {
   free(objects);
-  free(player);
+  GoolFreePlayerSlots();
   return SUCCESS;
 }
 
@@ -598,7 +635,6 @@ static inline gool_object *GoolObjectAlloc(int flag) {
 gool_object *GoolObjectSpawn(entry *zone, int entity_idx) {
   gool_object *obj, *near_box; /* near_box = $s3 */
   gool_handle *handle;
-  gool_colors *colors;
   zone_header *header;
   zone_entity *entity;
   gool_header *g_header;
@@ -658,15 +694,13 @@ gool_object *GoolObjectSpawn(entry *zone, int entity_idx) {
   obj->handle.subtype = entity->group;
   res = GoolObjectInit(obj, entity->type, entity->subtype, 0, 0);
   if (ISERRORCODE(res))
-    GoolObjectAddChild((gool_object*)&free_objects, obj);
+    GoolObjectFree(obj);
   spawns[id] |= 1; /* set 'spawned' bit */
   obj->pid_flags = id << 8; /* TODO: make bitfield in struct */
   if (zone && zone->type == 17) { zone = cur_zone; }
   obj->zone = zone;
   header = (zone_header*)zone->items[0];
-  colors = is_main ? &header->player_colors:
-                     &header->object_colors;
-  obj->colors = *colors;
+  obj->colors = *CoopZoneColors(obj, header);
   obj->entity = entity;
   obj->path_length = entity->path_length << 8;
   if (!(entity->spawn_flags & 1)) { /* has rot initializer? */
@@ -709,15 +743,32 @@ gool_object *GoolObjectSpawn(entry *zone, int entity_idx) {
   return obj;
 }
 
+static entry *GoolObjectZoneOrCurrent(gool_object *obj) {
+  if (obj->zone) { return obj->zone; }
+  return cur_zone;
+}
+
+/* starts child's program under parent; GoolObjectInit's result */
+static int GoolObjectSetUp(gool_object *child, gool_object *parent, int exec, int subtype,
+  int argc, uint32_t *argv) {
+  zone_header *header;
+  int res;
+
+  GoolObjectAddChild(parent, child);
+  TweenForget(GoolObjectTweenSlot(child)); /* not tweened from the slot's last object */
+  child->handle.subtype = 3;
+  res = GoolObjectInit(child, exec, subtype, argc, argv);
+  header = (zone_header*)GoolObjectZoneOrCurrent(child)->items[0];
+  child->colors = *CoopZoneColors(child, header);
+  return res;
+}
+
 //----- (8001C6C8) --------------------------------------------------------
 gool_object *GoolObjectCreate(void *parent, int exec, int subtype, int argc, uint32_t *argv, int flag) {
-  gool_object *_parent, *child;
-  entry *zone;
-  zone_header *header;
+  gool_object *child;
 
-  _parent = (gool_object*)parent;
   if (!exec && !subtype) {
-    crash = player;
+    crash = players[0];
     child = crash;
   }
   else {
@@ -725,63 +776,50 @@ gool_object *GoolObjectCreate(void *parent, int exec, int subtype, int argc, uin
     if (ISERRORCODE(child))
       return child;
   }
-  GoolObjectAddChild(_parent, child);
-  TweenForget(GoolObjectTweenSlot(child)); /* not tweened from the slot's last object */
-  child->handle.subtype = 3;
-  GoolObjectInit(child, exec, subtype, argc, argv);
-  zone = child->zone ? child->zone : cur_zone;
-  header = (zone_header*)zone->items[0];
-  child->colors = child == crash ? header->player_colors :
-                                   header->object_colors;
+  GoolObjectSetUp(child, (gool_object*)parent, exec, subtype, argc, argv);
   return child;
 }
 
-/* a second crash, from the same crash program, beside the first under the player handle */
-static gool_object *GoolPlayerTwoCreate() {
+/* the crash program (exec 0, subtype 0) in the player's slot, under the player handle */
+static void GoolPlayerCreate(int player_idx) {
   gool_object *obj;
-  zone_header *header;
+  int res;
 
-  obj = GoolObjectAlloc(1);
-  if (ISERRORCODE(obj))
-    return obj;
-  GoolObjectAddChild((gool_object*)&handles[6], obj);
-  obj->handle.subtype = 3;
-  GoolObjectInit(obj, 0, 0, 0, 0);
-  header = (zone_header*)cur_zone->items[0];
-  obj->colors = header->player_colors;
-  return obj;
+  obj = players[player_idx];
+  res = GoolObjectSetUp(obj, (gool_object*)&handles[6], 0, 0, 0, 0);
+  if (ISERRORCODE(res))
+    GoolObjectFree(obj);
 }
 
-/* player two stands still beside crash, facing the same way */
+void GoolObjectStop(gool_object *obj) {
+  obj->velocity.x = 0;
+  obj->velocity.y = 0;
+  obj->velocity.z = 0;
+  obj->speed = 0;
+}
+
 static void GoolPlayerTwoStandBesideCrash() {
-  player_two->trans = CoopBesideLead(crash->trans);
-  player_two->rot = crash->rot;
-  player_two->target_rot = crash->target_rot;
-  player_two->scale = crash->scale;
-  player_two->zone = cur_zone;
-  player_two->velocity.x = 0;
-  player_two->velocity.y = 0;
-  player_two->velocity.z = 0;
-  player_two->speed = 0;
-  TweenForget(GoolObjectTweenSlot(player_two)); /* placed there, not moved there */
+  gool_object *two;
+
+  two = players[COOP_PLAYER_TWO];
+  two->trans = CoopBesideLead(crash->trans);
+  two->rot = crash->rot;
+  two->target_rot = crash->target_rot;
+  two->scale = crash->scale;
+  two->zone = cur_zone;
+  GoolObjectStop(two);
+  TweenForget(GoolObjectTweenSlot(two)); /* placed there, not moved there */
 }
 
-/* with two_players on, put player two beside crash, creating him if he isn't there yet */
 void GoolPlacePlayerTwo() {
-  gool_object *obj;
-
   if (!game_settings.two_players || !crash || ns.ldat->lid == LID_TITLE) { return; }
-  if (!player_two) {
-    obj = GoolPlayerTwoCreate();
-    if (ISERRORCODE(obj)) { return; }
-    player_two = obj;
-  }
+  if (!CoopPlayerInPlay(COOP_PLAYER_TWO))
+    GoolPlayerCreate(COOP_PLAYER_TWO);
   GoolPlayerTwoStandBesideCrash();
 }
 
-/* the pad an object reads: player two his own, every other object player one's */
 static int GoolObjectPadPort(gool_object *obj) {
-  if (obj == player_two) { return COOP_PLAYER_TWO_PORT; }
+  if (obj == players[COOP_PLAYER_TWO]) { return COOP_PLAYER_TWO_PORT; }
   return 0;
 }
 
@@ -854,7 +892,7 @@ int GoolObjectInit(gool_object *obj, int exec, int subtype, int argc, int *argv)
   obj->subtype = subtype;
   obj->anim_seq = 0;
   obj->once_p = 0;
-  obj->player = player;
+  obj->player = players[0];
   header = (gool_header*)obj->global->items[0];
   maps = (gool_state_maps*)obj->global->items[3];
   idx_states = header->subtype_map_idx;
@@ -873,7 +911,7 @@ int GoolObjectInit(gool_object *obj, int exec, int subtype, int argc, int *argv)
 
 //----- (8001CDD0) --------------------------------------------------------
 int GoolObjectKill(gool_object *obj, int sig) {
-  gool_object *child, *next, *children;
+  gool_object *child, *next;
   int idx;
 
   /* when the object is crash, we do not send the term event
@@ -895,19 +933,7 @@ int GoolObjectKill(gool_object *obj, int sig) {
   idx = obj->pid_flags >> 8;
   spawns[idx] &= 0xFFFFFFFE; /* clear bit 1 */
   obj->handle.type = 0;
-  if (obj == player_two)
-    player_two = 0;
-  if (obj == crash) {
-    children = GoolObjectGetChildren(&free_objects);
-    GoolObjectAddChild((gool_object*)&free_objects, obj);
-    GoolObjectSetChildren(&free_objects, children);
-    player->parent = 0;
-    player->children = 0;
-    player->sibling = 0;
-    crash = 0;
-  }
-  else
-    GoolObjectAddChild((gool_object*)&free_objects, obj); /* return to free list */
+  GoolObjectFree(obj);
   return SUCCESS;
 }
 
@@ -1005,7 +1031,10 @@ void GoolObjectLocalBound(gool_object *obj, vec *scale) {
 
 /* the object's slot in the tween pose table (pc/tween.h) */
 int GoolObjectTweenSlot(gool_object *obj) {
-  if (obj == player) { return GOOL_OBJECT_COUNT; }
+  int player_idx;
+
+  player_idx = CoopPlayerIndex(obj);
+  if (player_idx != COOP_NOT_A_PLAYER) { return CoopPlayerTweenSlot(player_idx); }
   return obj - objects;
 }
 
@@ -1035,7 +1064,8 @@ static void GoolRecordObjectPose(gool_object *obj) {
 static void GoolRecordObjectPoses() {
   int i;
 
-  GoolRecordObjectPose(player);
+  for (i=0;i<GOOL_PLAYER_COUNT;i++)
+    GoolRecordObjectPose(players[i]);
   for (i=0;i<GOOL_OBJECT_COUNT;i++)
     GoolRecordObjectPose(&objects[i]);
 }
@@ -1664,7 +1694,7 @@ static inline int GoolObjectColorByZone(gool_object *obj) {
   obj->invincibility_state = 0;
   zone = obj->zone ? obj->zone : cur_zone;
   header = (zone_header*)zone->items[0];
-  colors = obj == crash ? &header->player_colors : &header->object_colors;
+  colors = CoopZoneColors(obj, header);
   obj->colors.intensity = colors->intensity;
   return 0;
 }

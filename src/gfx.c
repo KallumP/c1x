@@ -28,6 +28,7 @@ static inline void GfxCopyMatrix(mat16 *m_s, mat16 *m_d) {
 #include "pc/gfx/tex.h"
 #include "pc/gfx/gl.h"
 #include "pc/slash.h"
+#include "pc/coop.h"
 extern sw_transform_struct params;
 
 static rgb Rgb8To32(rgb8 c) {
@@ -692,7 +693,6 @@ extern int draw_count;
 
 extern int paused;
 extern ns_struct ns;
-extern gool_object *player;
 extern gool_object *crash;
 extern lid_t cur_lid;
 extern entry *cur_zone;
@@ -921,7 +921,7 @@ static inline int GfxCalcObjectZoneMatrices(
     if (pause_obj)
       trans=pause_obj->vectors.trans;
     else
-      trans=player->vectors.trans; /* TODO: player? or crash? */
+      trans=players[0]->vectors.trans; /* TODO: player? or crash? */
     obj_trans=&obj->vectors.trans;
     colors->color.r = 0;
     colors->color.g = 0;
