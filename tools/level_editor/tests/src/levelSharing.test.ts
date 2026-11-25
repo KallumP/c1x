@@ -3,6 +3,7 @@ import { fetchOwnLevelMod } from "../../src/modioApi";
 import {
   onlineText,
   failureOutcome,
+  showsUpAsText,
   uploadAfterSaving,
   uploadButtonText,
   uploadedText,
@@ -16,6 +17,16 @@ describe("the upload button", () => {
     [true, "Update level"],
   ])("for a level online (%s) says %j", (isOnline, text) => {
     expect(uploadButtonText(isOnline)).toBe(text);
+  });
+});
+
+describe("what the level shows up as on mod.io", () => {
+  test("is the title its level.cfg gives", () => {
+    expect(showsUpAsText("Ice Climb", "7_my-level")).toBe("This level will show up as: Ice Climb");
+  });
+
+  test("without one, its folder's name without its number, underscores and dashes", () => {
+    expect(showsUpAsText("", "7_my-level_2")).toBe("This level will show up as: Mylevel");
   });
 });
 
