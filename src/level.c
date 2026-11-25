@@ -545,6 +545,7 @@ void LevelRestart(level_state *state) {
     collider->collider = 0;
     crash->collider = 0;
   }
+  GoolPlacePlayerTwo();
   draw_count = 0;
   screen_shake = 0;
   // dword_800566E8 = 0;

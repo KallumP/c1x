@@ -24,6 +24,7 @@ void SettingsReset(pc_settings *s) {
   s->fullscreen = 0;
   s->memory_card = 0;
   s->mute = 0;
+  s->two_players = 0;
   s->boot_level[0] = 0;
 }
 
@@ -113,6 +114,8 @@ static int SettingsApply(const char *name, const char *value, pc_settings *s) {
     return AppliedOrInvalid(SettingsParseOnOff(value, &s->memory_card));
   if (SDL_strcasecmp(name, "mute") == 0)
     return AppliedOrInvalid(SettingsParseOnOff(value, &s->mute));
+  if (SDL_strcasecmp(name, "two_players") == 0)
+    return AppliedOrInvalid(SettingsParseOnOff(value, &s->two_players));
   if (SDL_strcasecmp(name, "boot_level") == 0)
     return AppliedOrInvalid(SettingsParseLevelName(value, s->boot_level));
   return -1;

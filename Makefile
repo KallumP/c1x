@@ -32,6 +32,7 @@ SRC =	src/ns.c \
 	src/pc/fps.c \
 	src/pc/spin.c \
 	src/pc/jumpgrace.c \
+	src/pc/coop.c \
 	src/pc/levelend.c \
 	src/pc/audiosong.c \
 	src/pc/boxhud.c \
@@ -80,6 +81,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/fps.c \
 	src/pc/spin.c \
 	src/pc/jumpgrace.c \
+	src/pc/coop.c \
 	src/pc/levelend.c \
 	src/pc/audiosong.c \
 	src/pc/boxhud.c \

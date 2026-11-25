@@ -19,6 +19,7 @@
 #include "pc/custommenu.h"
 #include "pc/jumpgrace.h"
 #include "pc/settings.h"
+#include "pc/coop.h"
 #include "pc/card_game.h" /* CardControl, the memory card as save files */
 
 /* forward declarations for unexported funcs */
@@ -123,6 +124,7 @@ uint16_t level_spawns[GOOL_LEVEL_SPAWN_COUNT]; /* 8005E348 */
 uint32_t spawns[GOOL_SPAWN_COUNT]; /* 8005FF58 */
 gool_object *objects;              /* 80060DB0 */
 gool_object *player;               /* 80060DB4 */
+gool_object *player_two = 0;       /* the second crash, with two_players on */
 gool_handle handles[8];            /* 80060DB8 */
 gool_handle free_objects;          /* 80060DF8 */
 gool_object *cur_obj;              /* 80060E00 */
@@ -678,6 +680,8 @@ gool_object *GoolObjectSpawn(entry *zone, int entity_idx) {
   GoolObjectOrientOnPath(obj, 0, &obj->trans);
   if (obj == crash && next_lid == -1)
     LevelSaveState(obj, &savestate, 1); /* save state when spawning crash */
+  if (obj == crash)
+    GoolPlacePlayerTwo();
   exec = obj->global;
   g_header = (gool_header*)exec->items[0];
   if (g_header->category == 0x300) /* is an enemy? */
@@ -730,6 +734,55 @@ gool_object *GoolObjectCreate(void *parent, int exec, int subtype, int argc, uin
   child->colors = child == crash ? header->player_colors :
                                    header->object_colors;
   return child;
+}
+
+/* a second crash, from the same crash program, beside the first under the player handle */
+static gool_object *GoolPlayerTwoCreate() {
+  gool_object *obj;
+  zone_header *header;
+
+  obj = GoolObjectAlloc(1);
+  if (ISERRORCODE(obj))
+    return obj;
+  GoolObjectAddChild((gool_object*)&handles[6], obj);
+  obj->handle.subtype = 3;
+  GoolObjectInit(obj, 0, 0, 0, 0);
+  header = (zone_header*)cur_zone->items[0];
+  obj->colors = header->player_colors;
+  return obj;
+}
+
+/* player two stands still beside crash, facing the same way */
+static void GoolPlayerTwoStandBesideCrash() {
+  player_two->trans = CoopBesideLead(crash->trans);
+  player_two->rot = crash->rot;
+  player_two->target_rot = crash->target_rot;
+  player_two->scale = crash->scale;
+  player_two->zone = cur_zone;
+  player_two->velocity.x = 0;
+  player_two->velocity.y = 0;
+  player_two->velocity.z = 0;
+  player_two->speed = 0;
+  TweenForget(GoolObjectTweenSlot(player_two)); /* placed there, not moved there */
+}
+
+/* with two_players on, put player two beside crash, creating him if he isn't there yet */
+void GoolPlacePlayerTwo() {
+  gool_object *obj;
+
+  if (!game_settings.two_players || !crash || ns.ldat->lid == LID_TITLE) { return; }
+  if (!player_two) {
+    obj = GoolPlayerTwoCreate();
+    if (ISERRORCODE(obj)) { return; }
+    player_two = obj;
+  }
+  GoolPlayerTwoStandBesideCrash();
+}
+
+/* the pad an object reads: player two his own, every other object player one's */
+static int GoolObjectPadPort(gool_object *obj) {
+  if (obj == player_two) { return COOP_PLAYER_TWO_PORT; }
+  return 0;
 }
 
 //----- (8001CB80) --------------------------------------------------------
@@ -842,6 +895,8 @@ int GoolObjectKill(gool_object *obj, int sig) {
   idx = obj->pid_flags >> 8;
   spawns[idx] &= 0xFFFFFFFE; /* clear bit 1 */
   obj->handle.type = 0;
+  if (obj == player_two)
+    player_two = 0;
   if (obj == crash) {
     children = GoolObjectGetChildren(&free_objects);
     GoolObjectAddChild((gool_object*)&free_objects, obj);
@@ -1782,7 +1837,7 @@ static inline int32_t GoolObjectControlDir(gool_object *obj, int scale) {
   }
   if (state_flags & GOOL_FLAG_FLING_STATE) /* ??? */
     accel_state = &accel_states[3];
-  dir = (pads[0].held >> 12) & 0xF; /* directional buttons */
+  dir = (pads[GoolObjectPadPort(obj)].held >> 12) & 0xF; /* directional buttons */
   move_state = &move_states[dir];
   if (move_state->dir == 8) { /* none pressed or invalid combination? */
     decel = accel_state->decel;
@@ -2340,7 +2395,7 @@ static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_
       break;
     case 0x1A: {
       uint32_t res;
-      res = GoolTestControls(instruction&0x1FFFFF,0);
+      res = GoolTestControls(instruction&0x1FFFFF,GoolObjectPadPort(obj));
       GoolObjectPush(obj,res);
       break;
     }

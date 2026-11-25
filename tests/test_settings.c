@@ -21,6 +21,7 @@ static const struct {
   { "fullscreen",           offsetof(pc_settings, fullscreen) },
   { "memory_card",          offsetof(pc_settings, memory_card) },
   { "mute",                 offsetof(pc_settings, mute) },
+  { "two_players",          offsetof(pc_settings, two_players) },
 };
 
 #define ON_OFF_SETTING_COUNT (int)(sizeof(on_off_settings)/sizeof(on_off_settings[0]))
@@ -170,6 +171,13 @@ UTEST(settings, spin_ledge_jump_is_on_by_default) {
 
   SettingsReset(&s);
   ASSERT_EQ(1, s.spin_ledge_jump);
+}
+
+UTEST(settings, one_player_by_default) {
+  pc_settings s;
+
+  SettingsReset(&s);
+  ASSERT_EQ(0, s.two_players);
 }
 
 UTEST(settings, boot_level_takes_a_level_name) {
