@@ -129,3 +129,25 @@ UTEST(coop, a_player_out_of_play_is_never_the_nearest) {
   slots[COOP_PLAYER_TWO].handle.type = 0;
   ASSERT_TRUE(&slots[0] == CoopNearestPlayer(&beside_two));
 }
+
+/* his own death script would save where he died as everyone's checkpoint */
+UTEST(coop, player_two_doesnt_save_the_level_state) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  UsePlayerSlots(slots);
+  ASSERT_FALSE(CoopMaySaveLevelState(&slots[COOP_PLAYER_TWO]));
+}
+
+UTEST(coop, player_one_saves_the_level_state) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  UsePlayerSlots(slots);
+  ASSERT_TRUE(CoopMaySaveLevelState(&slots[0]));
+}
+
+UTEST(coop, other_objects_save_the_level_state) {
+  gool_object slots[GOOL_PLAYER_COUNT], checkpoint;
+
+  UsePlayerSlots(slots);
+  ASSERT_TRUE(CoopMaySaveLevelState(&checkpoint));
+}
