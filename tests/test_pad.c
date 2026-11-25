@@ -40,7 +40,7 @@ UTEST(pad, held_buttons_combine) {
   ASSERT_EQ(HELD(PAD_CROSS | PAD_LEFT | PAD_START), SwPadRead(0));
 }
 
-UTEST(pad, only_player_one_is_read) {
+UTEST(pad, player_one_keys_dont_play_pad_two) {
   memset(keys, 0, sizeof(keys));
   press(SDL_SCANCODE_SPACE);
   ASSERT_EQ(0u, SwPadRead(1));
@@ -63,10 +63,40 @@ UTEST(pad, keys_and_controller_buttons_combine) {
   GamepadReleaseAll();
 }
 
-UTEST(pad, a_controller_only_plays_player_one) {
+UTEST(pad, controller_one_doesnt_play_pad_two) {
   memset(keys, 0, sizeof(keys));
   GamepadReleaseAll();
   GamepadSetButton(0, SDL_CONTROLLER_BUTTON_A, 1);
   ASSERT_EQ(0u, SwPadRead(1));
   GamepadReleaseAll();
+}
+
+UTEST(pad, pad_two_reads_player_two_keys) {
+  memset(keys, 0, sizeof(keys));
+  GamepadReleaseAll();
+  press(SDL_SCANCODE_RCTRL);
+  ASSERT_EQ((uint32_t)PAD_CROSS, SwPadRead(1));
+}
+
+UTEST(pad, pad_two_reads_controller_two) {
+  memset(keys, 0, sizeof(keys));
+  GamepadReleaseAll();
+  GamepadSetButton(1, SDL_CONTROLLER_BUTTON_A, 1);
+  ASSERT_EQ((uint32_t)PAD_CROSS, SwPadRead(1));
+  GamepadReleaseAll();
+}
+
+UTEST(pad, controller_two_doesnt_play_pad_one) {
+  memset(keys, 0, sizeof(keys));
+  GamepadReleaseAll();
+  GamepadSetButton(1, SDL_CONTROLLER_BUTTON_A, 1);
+  ASSERT_EQ(0u, SwPadRead(0));
+  GamepadReleaseAll();
+}
+
+UTEST(pad, player_two_keys_dont_play_pad_one) {
+  memset(keys, 0, sizeof(keys));
+  GamepadReleaseAll();
+  press(SDL_SCANCODE_RCTRL);
+  ASSERT_EQ(0u, SwPadRead(0));
 }

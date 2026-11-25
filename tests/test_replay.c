@@ -100,6 +100,19 @@ UTEST(replay, replay_feeds_the_recorded_buttons_instead_of_the_keyboard) {
   keys[SDL_SCANCODE_LEFT] = 0;
 }
 
+/* replays only record pad 1, so player two stands still to keep them playing the same */
+UTEST(replay, pad_two_reads_nothing_while_replaying) {
+  SDL_Scancode held[1] = { 0 };
+
+  Record(RECORDED_LEVEL, held, 1);
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
+  keys[SDL_SCANCODE_RCTRL] = 1;
+  ReplayUpdate();
+  ASSERT_EQ(0u, SwPadRead(1));
+  ReplayStop();
+  keys[SDL_SCANCODE_RCTRL] = 0;
+}
+
 UTEST(replay, replay_starts_on_the_fixed_clock_at_the_recorded_time) {
   SDL_Scancode held[1] = { 0 };
   replay_header header;
