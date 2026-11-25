@@ -19,8 +19,8 @@ export interface LevelDetails {
   logo: Uint8Array | null;
 }
 
-// the summary a new level's mod gets: players only write its name
-export const levelSummary = (name: string) => `${name}, a custom level for c1x.`;
+// mod.io needs a summary for a new mod: one made from the level's name
+const levelSummary = (name: string) => `${name}, a custom level for c1x.`;
 
 const NO_LOGO = { problem: "A level needs a picture the first time it's uploaded." };
 
