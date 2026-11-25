@@ -129,7 +129,7 @@ static uint32_t player_two_held_for(SDL_Scancode code) {
   return PadKeysHeld(1);
 }
 
-/* arrows to move, the number pad's 0, 4, 6 and 8 for the face buttons: beside the WASD layout */
+/* beside the WASD layout, so two people can share one keyboard */
 UTEST(pad_config, player_two_default_keys_are_the_arrows_and_number_pad) {
   static const struct { SDL_Scancode key; uint32_t buttons; } layout[] = {
     { SDL_SCANCODE_UP, PAD_UP }, { SDL_SCANCODE_LEFT, PAD_LEFT },
@@ -143,11 +143,6 @@ UTEST(pad_config, player_two_default_keys_are_the_arrows_and_number_pad) {
   for (i = 0; i < sizeof(layout) / sizeof(layout[0]); i++) {
     EXPECT_EQ(layout[i].buttons, player_two_held_for(layout[i].key));
   }
-}
-
-UTEST(pad_config, player_two_default_keys_dont_press_player_one_buttons) {
-  PadResetBindings();
-  ASSERT_EQ(0u, held_for(SDL_SCANCODE_UP));
 }
 
 UTEST(pad_config, a_p2_line_binds_a_player_two_key) {

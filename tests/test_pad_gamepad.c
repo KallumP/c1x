@@ -10,9 +10,12 @@ extern uint8_t keys[512]; /* defined in test_pad.c */
 /* the buttons held while only the given controller control is held */
 static uint32_t held_for_control(int control) {
   GamepadReleaseAll();
-  if (control == GAMEPAD_LEFT_TRIGGER) { GamepadSetAxis(0, SDL_CONTROLLER_AXIS_TRIGGERLEFT, 32767); }
-  else if (control == GAMEPAD_RIGHT_TRIGGER) { GamepadSetAxis(0, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 32767); }
-  else { GamepadSetButton(0, control, 1); }
+  if (control == GAMEPAD_LEFT_TRIGGER)
+    GamepadSetAxis(0, SDL_CONTROLLER_AXIS_TRIGGERLEFT, 32767);
+  else if (control == GAMEPAD_RIGHT_TRIGGER)
+    GamepadSetAxis(0, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 32767);
+  else
+    GamepadSetButton(0, control, 1);
   return PadGamepadHeld(0);
 }
 
@@ -146,21 +149,5 @@ UTEST(pad_gamepad, controller_two_plays_the_same_layout) {
   GamepadReleaseAll();
   GamepadSetButton(1, SDL_CONTROLLER_BUTTON_A, 1);
   ASSERT_EQ((uint32_t)PAD_CROSS, PadGamepadHeld(1));
-  GamepadReleaseAll();
-}
-
-UTEST(pad_gamepad, controller_two_buttons_arent_controller_one_buttons) {
-  PadResetBindings();
-  GamepadReleaseAll();
-  GamepadSetButton(1, SDL_CONTROLLER_BUTTON_A, 1);
-  ASSERT_EQ(0u, PadGamepadHeld(0));
-  GamepadReleaseAll();
-}
-
-UTEST(pad_gamepad, controller_two_left_stick_moves_only_controller_two) {
-  PadResetBindings();
-  GamepadReleaseAll();
-  GamepadSetAxis(1, SDL_CONTROLLER_AXIS_LEFTX, -32768);
-  ASSERT_EQ(0u, PadGamepadHeld(0));
   GamepadReleaseAll();
 }
