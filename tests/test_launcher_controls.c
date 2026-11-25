@@ -261,12 +261,12 @@ UTEST(launcher_controls, saving_the_defaults_adds_no_lines) {
   SDL_free(text);
 }
 
-UTEST(launcher_controls, reset_binds_player_two_cross_to_right_ctrl) {
+UTEST(launcher_controls, reset_binds_player_two_cross_to_keypad_0) {
   launcher_controls c;
 
   ResetControls(&c);
   ASSERT_EQ(1, c.p2_key_count[FindPadButton("cross")]);
-  ASSERT_EQ(SDL_SCANCODE_RCTRL, c.p2_keys[FindPadButton("cross")][0]);
+  ASSERT_EQ(SDL_SCANCODE_KP_0, c.p2_keys[FindPadButton("cross")][0]);
 }
 
 UTEST(launcher_controls, reset_leaves_player_two_select_without_a_key) {

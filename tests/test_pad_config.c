@@ -129,12 +129,13 @@ static uint32_t player_two_held_for(SDL_Scancode code) {
   return PadKeysHeld(1);
 }
 
-/* arrows to move, right ctrl to jump, right shift to spin: beside the WASD layout on one keyboard */
-UTEST(pad_config, player_two_default_keys_are_the_arrows) {
+/* arrows to move, the number pad's 0, 4, 6 and 8 for the face buttons: beside the WASD layout */
+UTEST(pad_config, player_two_default_keys_are_the_arrows_and_number_pad) {
   static const struct { SDL_Scancode key; uint32_t buttons; } layout[] = {
     { SDL_SCANCODE_UP, PAD_UP }, { SDL_SCANCODE_LEFT, PAD_LEFT },
     { SDL_SCANCODE_DOWN, PAD_DOWN }, { SDL_SCANCODE_RIGHT, PAD_RIGHT },
-    { SDL_SCANCODE_RCTRL, PAD_CROSS }, { SDL_SCANCODE_RSHIFT, PAD_SQUARE },
+    { SDL_SCANCODE_KP_0, PAD_CROSS }, { SDL_SCANCODE_KP_4, PAD_SQUARE },
+    { SDL_SCANCODE_KP_6, PAD_CIRCLE }, { SDL_SCANCODE_KP_8, PAD_TRIANGLE },
   };
   size_t i;
 
@@ -160,7 +161,7 @@ UTEST(pad_config, a_p2_line_replaces_player_two_default_key) {
   PadResetBindings();
   WriteWholeFile(CONFIG_PATH, "p2 cross = V\n");
   PadLoadBindings(CONFIG_PATH);
-  ASSERT_EQ(0u, player_two_held_for(SDL_SCANCODE_RCTRL));
+  ASSERT_EQ(0u, player_two_held_for(SDL_SCANCODE_KP_0));
 }
 
 UTEST(pad_config, a_p2_line_leaves_player_one_keys_alone) {
@@ -174,7 +175,7 @@ UTEST(pad_config, a_player_one_line_leaves_player_two_keys_alone) {
   PadResetBindings();
   WriteWholeFile(CONFIG_PATH, "cross = V\n");
   PadLoadBindings(CONFIG_PATH);
-  ASSERT_EQ((uint32_t)PAD_CROSS, player_two_held_for(SDL_SCANCODE_RCTRL));
+  ASSERT_EQ((uint32_t)PAD_CROSS, player_two_held_for(SDL_SCANCODE_KP_0));
 }
 
 /* controller layouts are shared by both players, so a p2 line only binds keys */

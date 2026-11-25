@@ -106,11 +106,11 @@ UTEST(replay, pad_two_reads_nothing_while_replaying) {
 
   Record(RECORDED_LEVEL, held, 1);
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
-  keys[SDL_SCANCODE_RCTRL] = 1;
+  keys[SDL_SCANCODE_KP_0] = 1;
   ReplayUpdate();
   ASSERT_EQ(0u, SwPadRead(1));
   ReplayStop();
-  keys[SDL_SCANCODE_RCTRL] = 0;
+  keys[SDL_SCANCODE_KP_0] = 0;
 }
 
 UTEST(replay, replay_starts_on_the_fixed_clock_at_the_recorded_time) {

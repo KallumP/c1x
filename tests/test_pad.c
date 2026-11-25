@@ -74,7 +74,7 @@ UTEST(pad, controller_one_doesnt_play_pad_two) {
 UTEST(pad, pad_two_reads_player_two_keys) {
   memset(keys, 0, sizeof(keys));
   GamepadReleaseAll();
-  press(SDL_SCANCODE_RCTRL);
+  press(SDL_SCANCODE_KP_0);
   ASSERT_EQ((uint32_t)PAD_CROSS, SwPadRead(1));
 }
 
@@ -97,6 +97,6 @@ UTEST(pad, controller_two_doesnt_play_pad_one) {
 UTEST(pad, player_two_keys_dont_play_pad_one) {
   memset(keys, 0, sizeof(keys));
   GamepadReleaseAll();
-  press(SDL_SCANCODE_RCTRL);
+  press(SDL_SCANCODE_KP_0);
   ASSERT_EQ(0u, SwPadRead(0));
 }
