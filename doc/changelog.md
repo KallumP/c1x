@@ -4,6 +4,7 @@
 
 ### Added
 
+- two players can play together, on one keyboard or two controllers
 - the level editor's Share says the name a level will show up as online
 
 ### Changed
