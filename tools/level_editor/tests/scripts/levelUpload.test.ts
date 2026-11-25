@@ -104,6 +104,27 @@ describe("uploading a level that's already online", () => {
   });
 });
 
+describe("uploading a level whose folder the game can't boot", () => {
+  beforeEach(() => {
+    mkdirSync(join(root, "my level"));
+    writeFileSync(join(root, "my level", "my_level.obj"), "v 0 0 0");
+  });
+
+  test("says to rename its folder", async () => {
+    const { modio } = standInModio(null);
+    expect(await uploadLevel("token", root, "my level", DETAILS, modio)).toEqual({
+      problem: "Rename the level's folder, my level, to only letters, digits, _ and - "
+        + "first: otherwise players can't download it.",
+    });
+  });
+
+  test("asks mod.io nothing", async () => {
+    const { modio, sent } = standInModio(null);
+    await uploadLevel("token", root, "my level", DETAILS, modio);
+    expect(sent.tokens).toEqual([]);
+  });
+});
+
 describe("uploading a level mod.io refuses", () => {
   test("is why mod.io couldn't say if it's online", async () => {
     const { modio, sent } = standInModio(
