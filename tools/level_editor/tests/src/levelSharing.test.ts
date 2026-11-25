@@ -29,15 +29,15 @@ describe("what an upload says", () => {
   });
 });
 
-describe("what the dialog says of a map", () => {
+describe("what the dialog says of a level", () => {
   test("once it's online, that it's been uploaded and can be again", () => {
     expect(onlineText(true)).toBe(
-      "This map is already online. You can update the map if you've made changes below.",
+      "This level is already online. You can update the level if you've made changes below.",
     );
   });
 
   test("before it's online, that it isn't yet", () => {
-    expect(onlineText(false)).toBe("This map hasn't been uploaded yet.");
+    expect(onlineText(false)).toBe("This level hasn't been uploaded yet.");
   });
 });
 
