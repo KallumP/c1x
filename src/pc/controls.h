@@ -6,7 +6,7 @@
 
 #define PAD_BUTTON_COUNT 16
 #define PAD_DEFAULT_KEY_COUNT 16 /* a key for each button */
-#define PAD_P2_DEFAULT_KEY_COUNT 6 /* moving, jumping and spinning */
+#define PAD_P2_DEFAULT_KEY_COUNT 8 /* the d-pad and the face buttons */
 #define PAD_P2_PREFIX "p2 " /* starts a binding name for player two's key: "p2 cross" */
 
 /* a key bound to a button (or buttons) */

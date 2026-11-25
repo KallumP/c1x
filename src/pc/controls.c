@@ -27,14 +27,17 @@ const sw_pad_mapping pad_default_mappings[PAD_DEFAULT_KEY_COUNT] = {
   { .code = SDL_SCANCODE_K,         .bits = PAD_SQUARE   },
 };
 
-/* player two's keys, beside the WASD layout on one keyboard: arrows to move, right ctrl to jump, right shift to spin */
+/* player two's keys, beside the WASD layout on one keyboard: arrows to move, the number pad's
+   0, 4, 6 and 8 for the face buttons, laid out as on a PlayStation pad */
 const sw_pad_mapping pad_p2_default_mappings[PAD_P2_DEFAULT_KEY_COUNT] = {
-  { .code = SDL_SCANCODE_UP,     .bits = PAD_UP     },
-  { .code = SDL_SCANCODE_RIGHT,  .bits = PAD_RIGHT  },
-  { .code = SDL_SCANCODE_DOWN,   .bits = PAD_DOWN   },
-  { .code = SDL_SCANCODE_LEFT,   .bits = PAD_LEFT   },
-  { .code = SDL_SCANCODE_RCTRL,  .bits = PAD_CROSS  },
-  { .code = SDL_SCANCODE_RSHIFT, .bits = PAD_SQUARE },
+  { .code = SDL_SCANCODE_UP,    .bits = PAD_UP       },
+  { .code = SDL_SCANCODE_RIGHT, .bits = PAD_RIGHT    },
+  { .code = SDL_SCANCODE_DOWN,  .bits = PAD_DOWN     },
+  { .code = SDL_SCANCODE_LEFT,  .bits = PAD_LEFT     },
+  { .code = SDL_SCANCODE_KP_8,  .bits = PAD_TRIANGLE },
+  { .code = SDL_SCANCODE_KP_6,  .bits = PAD_CIRCLE   },
+  { .code = SDL_SCANCODE_KP_0,  .bits = PAD_CROSS    },
+  { .code = SDL_SCANCODE_KP_4,  .bits = PAD_SQUARE   },
 };
 
 /* a controller's buttons where a PlayStation pad's are: the bottom face button is cross */
