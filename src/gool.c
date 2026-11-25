@@ -80,6 +80,21 @@ static inline void GoolObjectAddChild(gool_object *obj, gool_object *child) {
   child->sibling = GoolObjectGetChildren(obj);
   GoolObjectSetChildren(obj, child);
 }
+/* pc: move child to the end of obj's children, so it updates after its siblings */
+static void GoolObjectMoveToLastChild(gool_object *obj, gool_object *child) {
+  gool_object *last;
+
+  GoolObjectRemoveChild(obj, child);
+  child->sibling = 0;
+  last = GoolObjectGetChildren(obj);
+  if (!last) {
+    GoolObjectSetChildren(obj, child);
+    return;
+  }
+  while (last->sibling)
+    last = last->sibling;
+  last->sibling = child;
+}
 
 /* .data */
 const gool_move_state move_states[16] = { /* 80052B64 */
@@ -787,8 +802,12 @@ static void GoolPlayerCreate(int player_idx) {
 
   obj = players[player_idx];
   res = GoolObjectSetUp(obj, (gool_object*)&handles[6], 0, 0, 0, 0);
-  if (ISERRORCODE(res))
+  if (ISERRORCODE(res)) {
     GoolObjectFree(obj);
+    return;
+  }
+  /* after crash, whose update reads the pads, so this player doesn't read them a frame late */
+  GoolObjectMoveToLastChild((gool_object*)&handles[6], obj);
 }
 
 void GoolObjectStop(gool_object *obj) {
