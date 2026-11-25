@@ -324,3 +324,36 @@ UTEST(coop, other_objects_save_the_level_state) {
   UsePlayerSlots(slots);
   ASSERT_TRUE(CoopMaySaveLevelState(&checkpoint));
 }
+
+UTEST(coop, the_lead_is_the_player_further_along_the_path) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  vec along_x = { 0x1000, 0, 0 };
+
+  PlacePlayersApart(slots);
+  ASSERT_TRUE(&slots[COOP_PLAYER_TWO] == CoopLeadPlayer(&along_x));
+}
+
+UTEST(coop, the_lead_follows_the_path_direction_not_the_axis) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  vec back_along_x = { -0x1000, 0, 0 };
+
+  PlacePlayersApart(slots);
+  ASSERT_TRUE(&slots[0] == CoopLeadPlayer(&back_along_x));
+}
+
+UTEST(coop, player_one_leads_when_level_with_player_two) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  vec along_z = { 0, 0, 0x1000 };
+
+  PlacePlayersApart(slots);
+  ASSERT_TRUE(&slots[0] == CoopLeadPlayer(&along_z));
+}
+
+UTEST(coop, a_player_out_of_play_never_leads) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  vec along_x = { 0x1000, 0, 0 };
+
+  PlacePlayersApart(slots);
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  ASSERT_TRUE(&slots[0] == CoopLeadPlayer(&along_x));
+}
