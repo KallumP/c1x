@@ -199,16 +199,6 @@ async function postSignedInFile(
   return withoutBody(await askModio(fetchUrl, gameUrl(path), request));
 }
 
-export function setLevelLogo(
-  token: string,
-  modId: number,
-  logo: Uint8Array,
-  fetchUrl: Fetch = fetch,
-): Promise<Answer<object>> {
-  const file = logoFile(logo);
-  return postSignedInFile(token, `/mods/${modId}/media`, "logo", file, fetchUrl);
-}
-
 export function addLevelFile(
   token: string,
   modId: number,
