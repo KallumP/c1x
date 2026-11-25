@@ -40,7 +40,7 @@ export const USAGE = `usage: c1x_tools build-level <level>
                than version (two numbers, like 1.3), or why it can't tell
   list-online-levels
                lists the 10 most downloaded levels shared on mod.io, or those
-               with name in theirs, one a line: its id, author, name and page
+               with name in theirs, one a line: its id, author and name
   download-level
                downloads the level with that id from mod.io into level_src,
                then builds it
