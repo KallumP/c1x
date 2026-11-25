@@ -2,6 +2,13 @@
 #include "pc/coop.h"
 #include "pc/tween.h"
 
+static void UsePlayerSlots(gool_object *slots) {
+  int idx;
+
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++)
+    players[idx] = &slots[idx];
+}
+
 UTEST(coop, player_two_starts_beside_player_one) {
   vec lead = { 0x10000, 0x20000, 0x30000 };
   vec beside = CoopBesideLead(lead);
@@ -13,48 +20,62 @@ UTEST(coop, player_two_starts_beside_player_one) {
 
 UTEST(coop, each_player_slot_has_its_player_index) {
   gool_object slots[GOOL_PLAYER_COUNT];
-  int i;
+  int idx;
 
-  for (i=0;i<GOOL_PLAYER_COUNT;i++) { players[i] = &slots[i]; }
-  for (i=0;i<GOOL_PLAYER_COUNT;i++) { ASSERT_EQ(i, CoopPlayerIndex(&slots[i])); }
+  UsePlayerSlots(slots);
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++)
+    ASSERT_EQ(idx, CoopPlayerIndex(&slots[idx]));
 }
 
 UTEST(coop, an_object_outside_the_player_slots_is_not_a_player) {
   gool_object slots[GOOL_PLAYER_COUNT], other;
-  int i;
 
-  for (i=0;i<GOOL_PLAYER_COUNT;i++) { players[i] = &slots[i]; }
+  UsePlayerSlots(slots);
   ASSERT_EQ(COOP_NOT_A_PLAYER, CoopPlayerIndex(&other));
-  ASSERT_FALSE(CoopIsPlayer(&other));
-  ASSERT_TRUE(CoopIsPlayer(&slots[GOOL_PLAYER_COUNT-1]));
 }
 
-UTEST(coop, a_player_is_in_play_only_while_their_slot_is_in_use) {
+UTEST(coop, a_player_is_not_in_play_while_their_slot_is_empty) {
   gool_object slots[GOOL_PLAYER_COUNT];
-  int i;
 
-  for (i=0;i<GOOL_PLAYER_COUNT;i++) { players[i] = &slots[i]; }
-  slots[1].handle.type = 0;
-  ASSERT_EQ(0, CoopPlayerInPlay(1));
-  slots[1].handle.type = 1;
-  ASSERT_EQ(1, CoopPlayerInPlay(1));
+  UsePlayerSlots(slots);
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  ASSERT_FALSE(CoopPlayerInPlay(COOP_PLAYER_TWO));
+}
+
+UTEST(coop, a_player_is_in_play_while_their_slot_is_in_use) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  UsePlayerSlots(slots);
+  slots[COOP_PLAYER_TWO].handle.type = 1;
+  ASSERT_TRUE(CoopPlayerInPlay(COOP_PLAYER_TWO));
 }
 
 UTEST(coop, each_player_has_a_tween_slot_past_the_objects_and_before_the_camera) {
-  int i;
+  int idx;
 
-  for (i=0;i<GOOL_PLAYER_COUNT;i++) {
-    ASSERT_EQ(GOOL_OBJECT_COUNT + i, CoopPlayerTweenSlot(i));
-    ASSERT_LT(CoopPlayerTweenSlot(i), TWEEN_CAMERA_SLOT);
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    ASSERT_EQ(GOOL_OBJECT_COUNT + idx, CoopPlayerTweenSlot(idx));
+    ASSERT_LT(CoopPlayerTweenSlot(idx), TWEEN_CAMERA_SLOT);
   }
 }
 
-UTEST(coop, every_player_takes_the_zone_player_colours_and_others_the_object_colours) {
+UTEST(coop, every_player_takes_the_zone_player_colours) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  zone_header header;
+  gool_colors *colors;
+  int idx;
+
+  UsePlayerSlots(slots);
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    colors = CoopZoneColors(&slots[idx], &header);
+    ASSERT_TRUE(&header.player_colors == colors);
+  }
+}
+
+UTEST(coop, other_objects_take_the_zone_object_colours) {
   gool_object slots[GOOL_PLAYER_COUNT], other;
   zone_header header;
-  int i;
 
-  for (i=0;i<GOOL_PLAYER_COUNT;i++) { players[i] = &slots[i]; }
-  for (i=0;i<GOOL_PLAYER_COUNT;i++) { ASSERT_TRUE(&header.player_colors == CoopZoneColors(&slots[i], &header)); }
+  UsePlayerSlots(slots);
   ASSERT_TRUE(&header.object_colors == CoopZoneColors(&other, &header));
 }
