@@ -743,13 +743,30 @@ gool_object *GoolObjectSpawn(entry *zone, int entity_idx) {
   return obj;
 }
 
+static entry *GoolObjectZoneOrCurrent(gool_object *obj) {
+  if (obj->zone) { return obj->zone; }
+  return cur_zone;
+}
+
+/* starts child's program under parent; GoolObjectInit's result */
+static int GoolObjectSetUp(gool_object *child, gool_object *parent, int exec, int subtype,
+  int argc, uint32_t *argv) {
+  zone_header *header;
+  int res;
+
+  GoolObjectAddChild(parent, child);
+  TweenForget(GoolObjectTweenSlot(child)); /* not tweened from the slot's last object */
+  child->handle.subtype = 3;
+  res = GoolObjectInit(child, exec, subtype, argc, argv);
+  header = (zone_header*)GoolObjectZoneOrCurrent(child)->items[0];
+  child->colors = *CoopZoneColors(child, header);
+  return res;
+}
+
 //----- (8001C6C8) --------------------------------------------------------
 gool_object *GoolObjectCreate(void *parent, int exec, int subtype, int argc, uint32_t *argv, int flag) {
-  gool_object *_parent, *child;
-  entry *zone;
-  zone_header *header;
+  gool_object *child;
 
-  _parent = (gool_object*)parent;
   if (!exec && !subtype) {
     crash = players[0];
     child = crash;
@@ -759,27 +776,19 @@ gool_object *GoolObjectCreate(void *parent, int exec, int subtype, int argc, uin
     if (ISERRORCODE(child))
       return child;
   }
-  GoolObjectAddChild(_parent, child);
-  TweenForget(GoolObjectTweenSlot(child)); /* not tweened from the slot's last object */
-  child->handle.subtype = 3;
-  GoolObjectInit(child, exec, subtype, argc, argv);
-  zone = child->zone ? child->zone : cur_zone;
-  header = (zone_header*)zone->items[0];
-  child->colors = *CoopZoneColors(child, header);
+  GoolObjectSetUp(child, (gool_object*)parent, exec, subtype, argc, argv);
   return child;
 }
 
-/* a second crash in player two's slot, from the same crash program, beside the first under the player handle */
-static void GoolPlayerTwoCreate() {
+/* the crash program (exec 0, subtype 0) in the player's slot, under the player handle */
+static void GoolPlayerCreate(int player_idx) {
   gool_object *obj;
-  zone_header *header;
+  int res;
 
-  obj = players[COOP_PLAYER_TWO];
-  GoolObjectAddChild((gool_object*)&handles[6], obj);
-  obj->handle.subtype = 3;
-  GoolObjectInit(obj, 0, 0, 0, 0);
-  header = (zone_header*)cur_zone->items[0];
-  obj->colors = *CoopZoneColors(obj, header);
+  obj = players[player_idx];
+  res = GoolObjectSetUp(obj, (gool_object*)&handles[6], 0, 0, 0, 0);
+  if (ISERRORCODE(res))
+    GoolObjectFree(obj);
 }
 
 /* player two stands still beside crash, facing the same way */
@@ -803,7 +812,7 @@ static void GoolPlayerTwoStandBesideCrash() {
 void GoolPlacePlayerTwo() {
   if (!game_settings.two_players || !crash || ns.ldat->lid == LID_TITLE) { return; }
   if (!CoopPlayerInPlay(COOP_PLAYER_TWO))
-    GoolPlayerTwoCreate();
+    GoolPlayerCreate(COOP_PLAYER_TWO);
   GoolPlayerTwoStandBesideCrash();
 }
 
