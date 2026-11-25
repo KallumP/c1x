@@ -231,6 +231,8 @@ static void DrawGameAdjustmentFields(void) {
     "Show how fast Crash is moving in the top right corner.");
   DrawOnOff("Spin display", &settings.spin_display,
     "Show how many spins Crash has left in the top right corner.");
+  DrawOnOff("Two players", &settings.two_players,
+    "A second Crash plays beside the first, on the Player 2 keyboard keys or a second controller.");
 }
 
 /* the game's own save and load screens */
