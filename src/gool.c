@@ -894,9 +894,18 @@ int GoolObjectInit(gool_object *obj, int exec, int subtype, int argc, int *argv)
   return SUCCESS;
 }
 
+/* a killed player's slot is emptied and kept for them, not returned to the free list */
+static void GoolPlayerSlotRelease(gool_object *obj) {
+  if (obj->parent)
+    GoolObjectRemoveChild(obj->parent, obj);
+  GoolEmptyPlayerSlot(obj);
+  if (obj == crash)
+    crash = 0;
+}
+
 //----- (8001CDD0) --------------------------------------------------------
 int GoolObjectKill(gool_object *obj, int sig) {
-  gool_object *child, *next, *children;
+  gool_object *child, *next;
   int idx;
 
   /* when the object is crash, we do not send the term event
@@ -920,13 +929,8 @@ int GoolObjectKill(gool_object *obj, int sig) {
   obj->handle.type = 0;
   if (obj == player_two)
     player_two = 0;
-  if (obj == crash) {
-    children = GoolObjectGetChildren(&free_objects);
-    GoolObjectAddChild((gool_object*)&free_objects, obj);
-    GoolObjectSetChildren(&free_objects, children);
-    GoolEmptyPlayerSlot(players[0]);
-    crash = 0;
-  }
+  if (CoopIsPlayer(obj))
+    GoolPlayerSlotRelease(obj);
   else
     GoolObjectAddChild((gool_object*)&free_objects, obj); /* return to free list */
   return SUCCESS;
