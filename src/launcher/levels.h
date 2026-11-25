@@ -22,7 +22,6 @@ typedef struct {
   char titles[CUSTOM_LEVELS_MAX][LEVEL_TITLE_MAX]; /* what the launcher shows it as */
   int built[CUSTOM_LEVELS_MAX];
   int out_of_date[CUSTOM_LEVELS_MAX]; /* built, but a source was saved since */
-  int downloaded[CUSTOM_LEVELS_MAX]; /* its source's .modio.json notes a mod.io mod */
   level_kind kinds[CUSTOM_LEVELS_MAX];
   /* its place among the levels that come with c1x, which they're listed in */
   int included_ranks[CUSTOM_LEVELS_MAX];

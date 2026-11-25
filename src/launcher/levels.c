@@ -5,13 +5,11 @@
  */
 #include <SDL2/SDL.h>
 #include <dirent.h>
-#include <string.h>
 #include <sys/stat.h>
 #include "levels.h"
 #include "help.h"
 #include "paths.h"
 #include "text_file.h"
-#include "tool_output.h"
 
 /* whether name is one boot_level takes, by the game's own rules */
 static int IsBootableName(const char *name) {
@@ -106,7 +104,6 @@ typedef struct {
   char name[SETTINGS_BOOT_LEVEL_MAX+1];
   char title[LEVEL_TITLE_MAX];
   int built;
-  int downloaded;
   level_kind kind;
   int rank; /* its place among the levels that come with c1x, or NOT_INCLUDED */
 } custom_level;
@@ -159,6 +156,23 @@ static int IncludedRank(const char *included, const char *name) {
   return NOT_INCLUDED;
 }
 
+#define MODIO_NOTE_MOD_KEY "\"modId\":"
+
+/* whether the level source called name was downloaded from mod.io: its
+   .modio.json notes the mod it's from */
+static int WasDownloaded(const char *repo, const char *name) {
+  char path[PATH_MAX_LEN], file[SETTINGS_BOOT_LEVEL_MAX+32];
+  char *note;
+  int downloaded;
+
+  SDL_snprintf(file, sizeof(file), "level_src/%s/.modio.json", name);
+  JoinPath(path, sizeof(path), repo, file);
+  note = ReadWholeFileOrEmpty(path);
+  downloaded = SDL_strstr(note, MODIO_NOTE_MOD_KEY) != 0;
+  SDL_free(note);
+  return downloaded;
+}
+
 static level_kind KindOfLevel(int rank, int downloaded) {
   if (rank != NOT_INCLUDED) { return LEVEL_COMES_WITH_C1X; }
   if (downloaded) { return LEVEL_DOWNLOADED; }
@@ -166,7 +180,7 @@ static level_kind KindOfLevel(int rank, int downloaded) {
 }
 
 /* where each level is from, and its place among those that come with c1x, by
-   level_src/included_levels.txt and the downloaded levels already found */
+   level_src/included_levels.txt and each source's .modio.json */
 static void FindKinds(const char *repo, custom_levels *levels) {
   char path[PATH_MAX_LEN];
   char *included;
@@ -177,7 +191,7 @@ static void FindKinds(const char *repo, custom_levels *levels) {
   for (i = 0; i < levels->count; i++) {
     rank = IncludedRank(included, levels->names[i]);
     levels->included_ranks[i] = rank;
-    levels->kinds[i] = KindOfLevel(rank, levels->downloaded[i]);
+    levels->kinds[i] = KindOfLevel(rank, WasDownloaded(repo, levels->names[i]));
   }
   SDL_free(included);
 }
@@ -186,7 +200,6 @@ static void LevelToSort(const custom_levels *levels, int index, custom_level *le
   SDL_strlcpy(level->name, levels->names[index], sizeof(level->name));
   SDL_strlcpy(level->title, levels->titles[index], sizeof(level->title));
   level->built = levels->built[index];
-  level->downloaded = levels->downloaded[index];
   level->rank = levels->included_ranks[index];
   level->kind = levels->kinds[index];
 }
@@ -195,7 +208,6 @@ static void PutSortedLevel(custom_levels *levels, int index, const custom_level 
   SDL_strlcpy(levels->names[index], level->name, sizeof(levels->names[0]));
   SDL_strlcpy(levels->titles[index], level->title, sizeof(levels->titles[0]));
   levels->built[index] = level->built;
-  levels->downloaded[index] = level->downloaded;
   levels->included_ranks[index] = level->rank;
   levels->kinds[index] = level->kind;
 }
@@ -261,31 +273,6 @@ static void MarkOutOfDateLevels(const char *repo, custom_levels *levels) {
   }
 }
 
-#define MODIO_NOTE_MOD_KEY "\"modId\":"
-
-/* whether the level source called name was downloaded from mod.io: its
-   .modio.json notes the mod it's from */
-static int WasDownloaded(const char *repo, const char *name) {
-  char path[PATH_MAX_LEN], file[SETTINGS_BOOT_LEVEL_MAX+32];
-  char *note;
-  int downloaded;
-
-  SDL_snprintf(file, sizeof(file), "level_src/%s/.modio.json", name);
-  JoinPath(path, sizeof(path), repo, file);
-  note = ReadWholeFileOrEmpty(path);
-  downloaded = SDL_strstr(note, MODIO_NOTE_MOD_KEY) != 0;
-  SDL_free(note);
-  return downloaded;
-}
-
-static void FindDownloadedLevels(const char *repo, custom_levels *levels) {
-  int i;
-
-  for (i = 0; i < levels->count; i++) {
-    levels->downloaded[i] = WasDownloaded(repo, levels->names[i]);
-  }
-}
-
 /* the title of the level called name, by its source's level.cfg if it has one */
 static void ReadLevelTitle(const char *repo, const char *name, char *title, size_t size) {
   char path[PATH_MAX_LEN], file[SETTINGS_BOOT_LEVEL_MAX+32];
@@ -315,7 +302,6 @@ void ListCustomLevels(const char *repo, custom_levels *levels) {
   JoinPath(folder, sizeof(folder), repo, "level_src");
   AddLevelSources(folder, levels);
   FindTitles(repo, levels);
-  FindDownloadedLevels(repo, levels);
   FindKinds(repo, levels);
   SortLevels(levels);
   MarkOutOfDateLevels(repo, levels);
