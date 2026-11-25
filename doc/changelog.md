@@ -4,7 +4,7 @@
 
 ### Changed
 
-- the launcher and level editor only upload and download mod.io levels, without links to their pages
+- sharing on mod.io is just upload and download: no links to level pages, and the level editor uses the view as the picture instead of asking for a summary and picture
 
 ### Fixed
 
