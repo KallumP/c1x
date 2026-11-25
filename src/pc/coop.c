@@ -18,8 +18,8 @@ int CoopIsPlayer(gool_object *obj) {
 }
 
 /* the player is in the level: their slot holds a live object */
-int CoopPlayerInPlay(int index) {
-  return players[index]->handle.type != 0;
+int CoopPlayerInPlay(int idx) {
+  return players[idx]->handle.type != 0;
 }
 
 /* the zone's colours for obj: every player takes the player colours, other objects the object colours */
@@ -29,8 +29,8 @@ gool_colors *CoopZoneColors(gool_object *obj, zone_header *header) {
 }
 
 /* the player's slot in the tween pose table (pc/tween.h), after the objects' */
-int CoopPlayerTweenSlot(int index) {
-  return GOOL_OBJECT_COUNT + index;
+int CoopPlayerTweenSlot(int idx) {
+  return GOOL_OBJECT_COUNT + idx;
 }
 
 /* where player two starts, beside player one at lead */

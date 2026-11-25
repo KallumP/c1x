@@ -785,8 +785,9 @@ static void GoolPlayerTwoCreate() {
 
 /* player two stands still beside crash, facing the same way */
 static void GoolPlayerTwoStandBesideCrash() {
-  gool_object *two = players[COOP_PLAYER_TWO];
+  gool_object *two;
 
+  two = players[COOP_PLAYER_TWO];
   two->trans = CoopBesideLead(crash->trans);
   two->rot = crash->rot;
   two->target_rot = crash->target_rot;
@@ -1021,10 +1022,10 @@ void GoolObjectLocalBound(gool_object *obj, vec *scale) {
 
 /* the object's slot in the tween pose table (pc/tween.h) */
 int GoolObjectTweenSlot(gool_object *obj) {
-  int player_index;
+  int player_idx;
 
-  player_index = CoopPlayerIndex(obj);
-  if (player_index != COOP_NOT_A_PLAYER) { return CoopPlayerTweenSlot(player_index); }
+  player_idx = CoopPlayerIndex(obj);
+  if (player_idx != COOP_NOT_A_PLAYER) { return CoopPlayerTweenSlot(player_idx); }
   return obj - objects;
 }
 
