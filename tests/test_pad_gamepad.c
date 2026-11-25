@@ -10,10 +10,13 @@ extern uint8_t keys[512]; /* defined in test_pad.c */
 /* the buttons held while only the given controller control is held */
 static uint32_t held_for_control(int control) {
   GamepadReleaseAll();
-  if (control == GAMEPAD_LEFT_TRIGGER) { GamepadSetAxis(SDL_CONTROLLER_AXIS_TRIGGERLEFT, 32767); }
-  else if (control == GAMEPAD_RIGHT_TRIGGER) { GamepadSetAxis(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 32767); }
-  else { GamepadSetButton(control, 1); }
-  return PadGamepadHeld();
+  if (control == GAMEPAD_LEFT_TRIGGER)
+    GamepadSetAxis(0, SDL_CONTROLLER_AXIS_TRIGGERLEFT, 32767);
+  else if (control == GAMEPAD_RIGHT_TRIGGER)
+    GamepadSetAxis(0, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 32767);
+  else
+    GamepadSetButton(0, control, 1);
+  return PadGamepadHeld(0);
 }
 
 /* face buttons by position, as on a PlayStation pad: bottom is cross */
@@ -40,24 +43,24 @@ UTEST(pad_gamepad, the_default_layout_matches_a_playstation_pad) {
 UTEST(pad_gamepad, nothing_held_when_the_controller_is_untouched) {
   PadResetBindings();
   GamepadReleaseAll();
-  ASSERT_EQ(0u, PadGamepadHeld());
+  ASSERT_EQ(0u, PadGamepadHeld(0));
 }
 
 UTEST(pad_gamepad, held_controller_buttons_combine) {
   PadResetBindings();
   GamepadReleaseAll();
-  GamepadSetButton(SDL_CONTROLLER_BUTTON_A, 1);
-  GamepadSetButton(SDL_CONTROLLER_BUTTON_DPAD_LEFT, 1);
-  ASSERT_EQ((uint32_t)(PAD_CROSS | PAD_LEFT), PadGamepadHeld());
+  GamepadSetButton(0, SDL_CONTROLLER_BUTTON_A, 1);
+  GamepadSetButton(0, SDL_CONTROLLER_BUTTON_DPAD_LEFT, 1);
+  ASSERT_EQ((uint32_t)(PAD_CROSS | PAD_LEFT), PadGamepadHeld(0));
   GamepadReleaseAll();
 }
 
 /* the buttons held with the left stick at x, y (SDL's y is down) */
 static uint32_t held_for_stick(int x, int y) {
   GamepadReleaseAll();
-  GamepadSetAxis(SDL_CONTROLLER_AXIS_LEFTX, x);
-  GamepadSetAxis(SDL_CONTROLLER_AXIS_LEFTY, y);
-  return PadGamepadHeld();
+  GamepadSetAxis(0, SDL_CONTROLLER_AXIS_LEFTX, x);
+  GamepadSetAxis(0, SDL_CONTROLLER_AXIS_LEFTY, y);
+  return PadGamepadHeld(0);
 }
 
 UTEST(pad_gamepad, the_left_stick_pushed_far_presses_its_direction) {
@@ -84,8 +87,8 @@ UTEST(pad_gamepad, the_left_stick_pushed_diagonally_presses_both_directions) {
 UTEST(pad_gamepad, the_right_stick_presses_nothing) {
   PadResetBindings();
   GamepadReleaseAll();
-  GamepadSetAxis(SDL_CONTROLLER_AXIS_RIGHTX, 32767);
-  EXPECT_EQ(0u, PadGamepadHeld());
+  GamepadSetAxis(0, SDL_CONTROLLER_AXIS_RIGHTX, 32767);
+  EXPECT_EQ(0u, PadGamepadHeld(0));
   GamepadReleaseAll();
 }
 
@@ -138,5 +141,13 @@ UTEST(pad_gamepad, reset_restores_the_default_controller_layout) {
   PadResetBindings();
   EXPECT_EQ((uint32_t)PAD_CROSS, held_for_control(SDL_CONTROLLER_BUTTON_A));
   EXPECT_EQ((uint32_t)PAD_CIRCLE, held_for_control(SDL_CONTROLLER_BUTTON_B));
+  GamepadReleaseAll();
+}
+
+UTEST(pad_gamepad, controller_two_plays_the_same_layout) {
+  PadResetBindings();
+  GamepadReleaseAll();
+  GamepadSetButton(1, SDL_CONTROLLER_BUTTON_A, 1);
+  ASSERT_EQ((uint32_t)PAD_CROSS, PadGamepadHeld(1));
   GamepadReleaseAll();
 }

@@ -2,8 +2,9 @@
  * controls.cfg for the launcher: read into each button's keys and controller
  * buttons the way the game reads it (see PadLoadBindings), using the game's
  * own line parser, and saved by changing each button's lines, keeping the
- * rest of the file. a button's key lines and its controller ("pad:") lines
- * are kept apart: changing one never touches the other
+ * rest of the file. a button's key lines, its controller ("pad:") lines and
+ * player two's key ("p2 ") lines are kept apart: changing one never touches
+ * the others
  */
 #include <SDL2/SDL.h>
 #include <stdio.h>
@@ -12,6 +13,13 @@
 #include "pc/config.h"
 
 #define BINDING_TEXT_MAX 64
+#define LINE_NAME_MAX    32
+
+/* the buttons a controls file has rebound so far, for each player's keys and for controllers */
+typedef struct {
+  uint32_t keys[PAD_PLAYER_COUNT];
+  uint32_t pads;
+} rebound_buttons;
 
 /* which of a button's lines: its keys, or its controller buttons */
 typedef enum { KEY_LINES, PAD_LINES } line_kind;
@@ -35,12 +43,13 @@ static int FindPadButtonByBits(uint32_t bits) {
   return -1;
 }
 
-static void ResetKeys(launcher_controls *c) {
+static void ResetKeys(launcher_controls *c, int player_idx,
+  const sw_pad_mapping *defaults, int default_count) {
   int i, button;
 
-  for (i = 0; i < PAD_DEFAULT_KEY_COUNT; i++) {
-    button = FindPadButtonByBits(pad_default_mappings[i].bits);
-    c->keys[button][c->key_count[button]++] = pad_default_mappings[i].code;
+  for (i = 0; i < default_count; i++) {
+    button = FindPadButtonByBits(defaults[i].bits);
+    c->keys[player_idx][button][c->key_count[player_idx][button]++] = defaults[i].code;
   }
 }
 
@@ -56,20 +65,24 @@ static void ResetPads(launcher_controls *c) {
 /* every button back to its default key and controller button */
 void ResetControls(launcher_controls *c) {
   SDL_zerop(c);
-  ResetKeys(c);
+  ResetKeys(c, PAD_PLAYER_ONE, pad_default_mappings, PAD_DEFAULT_KEY_COUNT);
+  ResetKeys(c, PAD_PLAYER_TWO, pad_p2_default_mappings, PAD_P2_DEFAULT_KEY_COUNT);
   ResetPads(c);
 }
 
-/* the first line for a button replaces its default key, later lines add keys */
-static void AddKey(launcher_controls *c, uint32_t *rebound, int button, SDL_Scancode code) {
+/* the player's first line for a button replaces its default key, later lines add keys */
+static void AddKey(launcher_controls *c, rebound_buttons *rebound, int player_idx,
+  int button, SDL_Scancode code) {
   uint32_t bit = 1u << button;
+  int *count;
 
-  if (!(*rebound & bit)) {
-    c->key_count[button] = 0;
-    *rebound |= bit;
+  count = &c->key_count[player_idx][button];
+  if (!(rebound->keys[player_idx] & bit)) {
+    *count = 0;
+    rebound->keys[player_idx] |= bit;
   }
-  if (c->key_count[button] == BUTTON_KEYS_MAX) { return; }
-  c->keys[button][c->key_count[button]++] = code;
+  if (*count == BUTTON_KEYS_MAX) { return; }
+  c->keys[player_idx][button][(*count)++] = code;
 }
 
 /* the first pad line for a button replaces its default controller button, later ones add more */
@@ -84,28 +97,27 @@ static void AddPad(launcher_controls *c, uint32_t *rebound, int button, int cont
   c->pads[button][c->pad_count[button]++] = control;
 }
 
-/* the buttons a controls file has rebound so far, for keys and for controllers */
-typedef struct {
-  uint32_t keys;
-  uint32_t pads;
-} rebound_buttons;
-
 /* add one controls file line's binding to c, if it's a valid one */
 static void ReadControlsLine(const char *line, launcher_controls *c, rebound_buttons *rebound) {
   char buf[128], *name, *value;
+  const char *button_name;
   uint32_t bits;
   SDL_Scancode code;
-  int control;
+  int control, player_idx, button;
 
   if (ConfigParseLine(line, buf, sizeof(buf), &name, &value) != 1) { return; }
-  if (PadFindButton(name, &bits) == -1) { return; }
+  button_name = PadBindingButtonName(name, &player_idx);
+  if (PadFindButton(button_name, &bits) == -1) { return; }
+  button = FindPadButtonByBits(bits);
   if (IsGamepadValue(value)) {
+    /* both players share the controller layout */
+    if (player_idx != PAD_PLAYER_ONE) { return; }
     control = PadParseGamepadControl(value);
-    if (control != -1) { AddPad(c, &rebound->pads, FindPadButtonByBits(bits), control); }
+    if (control != -1) { AddPad(c, &rebound->pads, button, control); }
     return;
   }
   code = SDL_GetScancodeFromName(value);
-  if (code != SDL_SCANCODE_UNKNOWN) { AddKey(c, &rebound->keys, FindPadButtonByBits(bits), code); }
+  if (code != SDL_SCANCODE_UNKNOWN) { AddKey(c, rebound, player_idx, button, code); }
 }
 
 /*
@@ -130,9 +142,10 @@ static int AreBindingsEqual(const int *a, int a_count, const int *b, int b_count
 }
 
 static int AreButtonKeysEqual(const launcher_controls *a, const launcher_controls *b,
-  int button) {
-  return AreBindingsEqual((const int *)a->keys[button], a->key_count[button],
-    (const int *)b->keys[button], b->key_count[button]);
+  int player_idx, int button) {
+  return AreBindingsEqual((const int *)a->keys[player_idx][button],
+    a->key_count[player_idx][button], (const int *)b->keys[player_idx][button],
+    b->key_count[player_idx][button]);
 }
 
 static int AreButtonPadsEqual(const launcher_controls *a, const launcher_controls *b,
@@ -143,10 +156,12 @@ static int AreButtonPadsEqual(const launcher_controls *a, const launcher_control
 
 /* whether a and b give every button the same keys and controller buttons, in the same order */
 int AreControlsEqual(const launcher_controls *a, const launcher_controls *b) {
-  int button;
+  int button, player_idx;
 
   for (button = 0; button < PAD_BUTTON_COUNT; button++) {
-    if (!AreButtonKeysEqual(a, b, button)) { return 0; }
+    for (player_idx = 0; player_idx < PAD_PLAYER_COUNT; player_idx++) {
+      if (!AreButtonKeysEqual(a, b, player_idx, button)) { return 0; }
+    }
     if (!AreButtonPadsEqual(a, b, button)) { return 0; }
   }
   return 1;
@@ -276,25 +291,35 @@ char *SetButtonPadLines(const char *text, const char *name, const int *pads, int
   return SetButtonLinesOfKind(text, name, pads, count, PAD_LINES);
 }
 
-/* whether text needs kind lines for button: not if it has none and the button keeps its default */
-static int NeedsButtonLines(const char *text, int is_default, int button, line_kind kind) {
+/* whether text needs kind lines for the line name: not if it has none and they'd keep the default */
+static int NeedsButtonLines(const char *text, int is_default, const char *name,
+  line_kind kind) {
   int current[BUTTON_KEYS_MAX];
 
-  if (ButtonBindingsInText(text, pad_button_names[button].name, kind, current) > 0) { return 1; }
+  if (ButtonBindingsInText(text, name, kind, current) > 0) { return 1; }
   return !is_default;
 }
 
-/* replace button's key lines in text with its keys in c, if it needs them.
+/* the name of the player's key lines for a button: "cross", or "p2 cross" for player two */
+static void KeyLineName(int player_idx, int button, char *name, size_t size) {
+  const char *prefix = "";
+
+  if (player_idx == PAD_PLAYER_TWO) { prefix = PAD_P2_PREFIX; }
+  SDL_snprintf(name, size, "%s%s", prefix, pad_button_names[button].name);
+}
+
+/* replace the player's key lines for button in text with their keys in c, if it needs them.
    takes text over (freeing it) and returns the text to use from now on, to SDL_free */
 static char *ReplaceButtonKeyLines(char *text, const launcher_controls *c,
-  const launcher_controls *defaults, int button) {
-  char *changed;
+  const launcher_controls *defaults, int player_idx, int button) {
+  char name[LINE_NAME_MAX], *changed;
+  int is_default;
 
-  if (!NeedsButtonLines(text, AreButtonKeysEqual(c, defaults, button), button, KEY_LINES)) {
-    return text;
-  }
-  changed = SetButtonLines(text, pad_button_names[button].name, c->keys[button],
-    c->key_count[button]);
+  KeyLineName(player_idx, button, name, sizeof(name));
+  is_default = AreButtonKeysEqual(c, defaults, player_idx, button);
+  if (!NeedsButtonLines(text, is_default, name, KEY_LINES)) { return text; }
+  changed = SetButtonLines(text, name, c->keys[player_idx][button],
+    c->key_count[player_idx][button]);
   SDL_free(text);
   return changed;
 }
@@ -305,7 +330,8 @@ static char *ReplaceButtonPadLines(char *text, const launcher_controls *c,
   const launcher_controls *defaults, int button) {
   char *changed;
 
-  if (!NeedsButtonLines(text, AreButtonPadsEqual(c, defaults, button), button, PAD_LINES)) {
+  if (!NeedsButtonLines(text, AreButtonPadsEqual(c, defaults, button),
+    pad_button_names[button].name, PAD_LINES)) {
     return text;
   }
   changed = SetButtonPadLines(text, pad_button_names[button].name, c->pads[button],
@@ -317,11 +343,12 @@ static char *ReplaceButtonPadLines(char *text, const launcher_controls *c,
 /* text (a controls file's, to SDL_free) with every button bound to its keys and controller buttons in c */
 static char *ControlsTextWith(char *text, const launcher_controls *c) {
   launcher_controls defaults;
-  int button;
+  int button, player_idx;
 
   ResetControls(&defaults);
   for (button = 0; button < PAD_BUTTON_COUNT; button++) {
-    text = ReplaceButtonKeyLines(text, c, &defaults, button);
+    for (player_idx = 0; player_idx < PAD_PLAYER_COUNT; player_idx++)
+      text = ReplaceButtonKeyLines(text, c, &defaults, player_idx, button);
     text = ReplaceButtonPadLines(text, c, &defaults, button);
   }
   return text;

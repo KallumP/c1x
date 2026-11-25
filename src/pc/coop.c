@@ -32,6 +32,15 @@ int CoopPlayerTweenSlot(int idx) {
   return GOOL_OBJECT_COUNT + idx;
 }
 
+/* the pads[] entry obj reads: each player their own pad, every other object pad 1's */
+int CoopObjectPadPort(gool_object *obj) {
+  int player_idx;
+
+  player_idx = CoopPlayerIndex(obj);
+  if (player_idx == COOP_NOT_A_PLAYER) { return 0; }
+  return player_idx;
+}
+
 /* where player two starts, beside player one at lead */
 vec CoopBesideLead(vec lead) {
   vec beside;

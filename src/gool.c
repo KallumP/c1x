@@ -818,11 +818,6 @@ void GoolPlacePlayerTwo() {
   GoolPlayerTwoStandBesideCrash();
 }
 
-static int GoolObjectPadPort(gool_object *obj) {
-  if (obj == players[COOP_PLAYER_TWO]) { return COOP_PLAYER_TWO_PORT; }
-  return 0;
-}
-
 //----- (8001CB80) --------------------------------------------------------
 int GoolObjectInit(gool_object *obj, int exec, int subtype, int argc, int *argv) {
   gool_object *parent; // $a0 MAPDST
@@ -1196,11 +1191,15 @@ static int GoolObjectPopFrame(gool_object *obj, uint32_t *flags) {
    spin that carries him off a ledge doesn't lose the jump (JumpGraceCountsAsFloor),
    when the spin_ledge_jump setting is on */
 static void CrashJumpGrace(gool_object *obj) {
-  static jump_grace grace;
+  static jump_grace graces[GOOL_PLAYER_COUNT];
+  jump_grace *grace;
+  uint32_t tapped;
 
-  JumpGraceTrackFloor(&grace, obj->status_a & 1);
+  grace = &graces[CoopPlayerIndex(obj)];
+  JumpGraceTrackFloor(grace, obj->status_a & 1);
   if (!game_settings.spin_ledge_jump) { return; }
-  if (JumpGraceCountsAsFloor(&grace, obj->velocity.y, pads[0].tapped))
+  tapped = pads[CoopObjectPadPort(obj)].tapped;
+  if (JumpGraceCountsAsFloor(grace, obj->velocity.y, tapped))
     obj->status_a |= JUMP_GRACE_FLOOR;
 }
 
@@ -1220,8 +1219,9 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
   if (obj == crash) {
     PadUpdate();
     CustomMenuReadPad(); /* before the title's menu reads it */
-    CrashJumpGrace(obj);
   }
+  if (CoopIsPlayer(obj))
+    CrashJumpGrace(obj);
   cur_obj = obj;
   status_b = obj->status_b;
   if ((cur_display_flags & GOOL_FLAG_ANIMATE) == 0)
@@ -1867,7 +1867,7 @@ static inline int32_t GoolObjectControlDir(gool_object *obj, int scale) {
   }
   if (state_flags & GOOL_FLAG_FLING_STATE) /* ??? */
     accel_state = &accel_states[3];
-  dir = (pads[GoolObjectPadPort(obj)].held >> 12) & 0xF; /* directional buttons */
+  dir = (pads[CoopObjectPadPort(obj)].held >> 12) & 0xF; /* directional buttons */
   move_state = &move_states[dir];
   if (move_state->dir == 8) { /* none pressed or invalid combination? */
     decel = accel_state->decel;
@@ -2425,7 +2425,7 @@ static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_
       break;
     case 0x1A: {
       uint32_t res;
-      res = GoolTestControls(instruction&0x1FFFFF,GoolObjectPadPort(obj));
+      res = GoolTestControls(instruction&0x1FFFFF,CoopObjectPadPort(obj));
       GoolObjectPush(obj,res);
       break;
     }

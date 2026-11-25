@@ -79,3 +79,19 @@ UTEST(coop, other_objects_take_the_zone_object_colours) {
   UsePlayerSlots(slots);
   ASSERT_TRUE(&header.object_colors == CoopZoneColors(&other, &header));
 }
+
+UTEST(coop, each_player_reads_their_own_pad) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  int idx;
+
+  UsePlayerSlots(slots);
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++)
+    ASSERT_EQ(idx, CoopObjectPadPort(&slots[idx]));
+}
+
+UTEST(coop, other_objects_read_pad_one) {
+  gool_object slots[GOOL_PLAYER_COUNT], other;
+
+  UsePlayerSlots(slots);
+  ASSERT_EQ(0, CoopObjectPadPort(&other));
+}

@@ -1,15 +1,29 @@
 /*
  * game controllers: which buttons are held and where the sticks and triggers
- * are, from SDL's controller events (see pc/init.c). every connected
- * controller feeds the same state, so any of them plays as pad 1
+ * are on each, from SDL's controller events (see pc/init.c). controllers are
+ * numbered in the order they're plugged in: controller 1 (0) plays pad 1,
+ * controller 2 (1) pad 2
  */
 #include <string.h>
 #include "pc/gamepad.h"
 
 #define TRIGGER_HELD_FROM 16384 /* about halfway; a trigger axis runs 0 to 32767 */
+#define NO_CONTROLLER_ID  -1    /* SDL instance ids start at 0 */
 
-static uint8_t buttons_held[SDL_CONTROLLER_BUTTON_MAX];
-static int axes[SDL_CONTROLLER_AXIS_MAX];
+typedef struct {
+  int id; /* SDL's instance id for the plugged in controller */
+  uint8_t buttons_held[SDL_CONTROLLER_BUTTON_MAX];
+  int axes[SDL_CONTROLLER_AXIS_MAX];
+} gamepad;
+
+static gamepad gamepads[GAMEPAD_COUNT] = {
+  { .id = NO_CONTROLLER_ID },
+  { .id = NO_CONTROLLER_ID },
+};
+
+static int IsGamepadIndex(int gamepad_idx) {
+  return gamepad_idx >= 0 && gamepad_idx < GAMEPAD_COUNT;
+}
 
 static int IsButton(int button) {
   return button >= 0 && button < SDL_CONTROLLER_BUTTON_MAX;
@@ -19,24 +33,71 @@ static int IsAxis(int axis) {
   return axis >= 0 && axis < SDL_CONTROLLER_AXIS_MAX;
 }
 
-void GamepadSetButton(int button, int down) {
-  if (!IsButton(button)) { return; }
-  buttons_held[button] = down != 0;
+/* the controller plugged in as id, or GAMEPAD_NONE */
+int GamepadFind(int id) {
+  int idx;
+
+  for (idx=0;idx<GAMEPAD_COUNT;idx++) {
+    if (gamepads[idx].id == id) { return idx; }
+  }
+  return GAMEPAD_NONE;
 }
 
-void GamepadSetAxis(int axis, int value) {
-  if (!IsAxis(axis)) { return; }
-  axes[axis] = value;
+static int FindFreeGamepad() {
+  return GamepadFind(NO_CONTROLLER_ID);
 }
 
-/* let go of everything, e.g. when a controller is unplugged mid-press */
+/* the controller a plugged in id plays as: its own if already connected, else the first free one,
+   or GAMEPAD_NONE */
+int GamepadConnect(int id) {
+  int idx;
+
+  idx = GamepadFind(id);
+  if (idx != GAMEPAD_NONE) { return idx; }
+  idx = FindFreeGamepad();
+  if (idx == GAMEPAD_NONE) { return GAMEPAD_NONE; }
+  gamepads[idx].id = id;
+  return idx;
+}
+
+static void GamepadRelease(int gamepad_idx) {
+  gamepad *pad;
+
+  pad = &gamepads[gamepad_idx];
+  memset(pad->buttons_held, 0, sizeof(pad->buttons_held));
+  memset(pad->axes, 0, sizeof(pad->axes));
+}
+
+/* let go of an unplugged controller, so nothing stays held from it mid-press */
+void GamepadDisconnect(int id) {
+  int idx;
+
+  idx = GamepadFind(id);
+  if (idx == GAMEPAD_NONE) { return; }
+  GamepadRelease(idx);
+  gamepads[idx].id = NO_CONTROLLER_ID;
+}
+
+/* every controller lets go of everything: a fresh start for the tests */
 void GamepadReleaseAll() {
-  memset(buttons_held, 0, sizeof(buttons_held));
-  memset(axes, 0, sizeof(axes));
+  int idx;
+
+  for (idx=0;idx<GAMEPAD_COUNT;idx++)
+    GamepadRelease(idx);
 }
 
-static int IsTriggerPulled(int axis) {
-  return axes[axis] >= TRIGGER_HELD_FROM;
+void GamepadSetButton(int gamepad_idx, int button, int down) {
+  if (!IsGamepadIndex(gamepad_idx) || !IsButton(button)) { return; }
+  gamepads[gamepad_idx].buttons_held[button] = down != 0;
+}
+
+void GamepadSetAxis(int gamepad_idx, int axis, int value) {
+  if (!IsGamepadIndex(gamepad_idx) || !IsAxis(axis)) { return; }
+  gamepads[gamepad_idx].axes[axis] = value;
+}
+
+static int IsTriggerPulled(int gamepad_idx, int axis) {
+  return gamepads[gamepad_idx].axes[axis] >= TRIGGER_HELD_FROM;
 }
 
 /* the trigger control (GAMEPAD_LEFT/RIGHT_TRIGGER) an axis at value pulls, or -1 if it doesn't pull one */
@@ -48,15 +109,18 @@ int GamepadPulledTrigger(int axis, int value) {
 }
 
 /* is a control (an SDL button or GAMEPAD_LEFT/RIGHT_TRIGGER) held? */
-int GamepadIsHeld(int control) {
-  if (IsButton(control)) { return buttons_held[control]; }
-  if (control == GAMEPAD_LEFT_TRIGGER) { return IsTriggerPulled(SDL_CONTROLLER_AXIS_TRIGGERLEFT); }
-  if (control == GAMEPAD_RIGHT_TRIGGER) { return IsTriggerPulled(SDL_CONTROLLER_AXIS_TRIGGERRIGHT); }
+int GamepadIsHeld(int gamepad_idx, int control) {
+  if (!IsGamepadIndex(gamepad_idx)) { return 0; }
+  if (IsButton(control)) { return gamepads[gamepad_idx].buttons_held[control]; }
+  if (control == GAMEPAD_LEFT_TRIGGER)
+    return IsTriggerPulled(gamepad_idx, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+  if (control == GAMEPAD_RIGHT_TRIGGER)
+    return IsTriggerPulled(gamepad_idx, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
   return 0;
 }
 
 /* an axis's position, -32768 to 32767 (0 to 32767 for the triggers) */
-int GamepadAxis(int axis) {
-  if (!IsAxis(axis)) { return 0; }
-  return axes[axis];
+int GamepadAxis(int gamepad_idx, int axis) {
+  if (!IsGamepadIndex(gamepad_idx) || !IsAxis(axis)) { return 0; }
+  return gamepads[gamepad_idx].axes[axis];
 }

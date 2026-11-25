@@ -1,7 +1,7 @@
 /*
  * the launcher's controls section: each button's keys and controller buttons
- * from controls.cfg (see doc/controls.md), on a Keyboard and a Controller tab.
- * click one and press another to change it
+ * from controls.cfg (see doc/controls.md), on a Keyboard, a Player 2 keys and a
+ * Controller tab. click one and press another to change it
  */
 #include <SDL2/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -21,7 +21,7 @@
 #define UNTITLED_GROUP ""
 
 /* what a tab binds buttons to */
-typedef enum { KEYBOARD, CONTROLLER } binding_kind;
+typedef enum { KEYBOARD, P2_KEYBOARD, CONTROLLER } binding_kind;
 
 /*
  * the buttons in the order they're shown, one to a row, grouped by what they do.
@@ -99,9 +99,21 @@ int SaveControlsSection(const char *repo) {
 }
 
 /* a button's binding count for a kind: how many keys, or controller buttons */
+/* the player whose keys a keyboard tab shows */
+static int KeyboardPlayer(binding_kind kind) {
+  if (kind == P2_KEYBOARD) { return PAD_PLAYER_TWO; }
+  return PAD_PLAYER_ONE;
+}
+
 static int *BindingCount(binding_kind kind, int button) {
   if (kind == CONTROLLER) { return &controls.pad_count[button]; }
-  return &controls.key_count[button];
+  return &controls.key_count[KeyboardPlayer(kind)][button];
+}
+
+/* player two's keys are optional (he can play on a controller); player one's buttons keep one */
+static int MinBindings(binding_kind kind) {
+  if (kind == P2_KEYBOARD) { return 0; }
+  return 1;
 }
 
 static int MaxBindings(binding_kind kind) {
@@ -111,12 +123,12 @@ static int MaxBindings(binding_kind kind) {
 
 static int BindingAt(binding_kind kind, int button, int index) {
   if (kind == CONTROLLER) { return controls.pads[button][index]; }
-  return controls.keys[button][index];
+  return controls.keys[KeyboardPlayer(kind)][button][index];
 }
 
 static void SetBindingAt(binding_kind kind, int button, int index, int binding) {
   if (kind == CONTROLLER) { controls.pads[button][index] = binding; }
-  else { controls.keys[button][index] = (SDL_Scancode)binding; }
+  else { controls.keys[KeyboardPlayer(kind)][button][index] = (SDL_Scancode)binding; }
 }
 
 static const char *ControllerLabel(int control) {
@@ -149,7 +161,7 @@ static void FinishCapture(int binding) {
 int TakeControlsKeyPress(SDL_Scancode code) {
   if (capturing_button == NOT_CAPTURING) { return 0; }
   if (code == SDL_SCANCODE_ESCAPE) { StopCapture(); } /* cancelled */
-  else if (capturing_kind == KEYBOARD) { FinishCapture(code); }
+  else if (capturing_kind != CONTROLLER) { FinishCapture(code); }
   return 1; /* a key while waiting for a controller button does nothing */
 }
 
@@ -210,7 +222,7 @@ static void DrawRemoveBinding(int button, int index) {
   ImVec2 text_size;
 
   igSameLine(0, REMOVE_KEY_GAP);
-  if (*BindingCount(shown_kind, button) == 1) {
+  if (*BindingCount(shown_kind, button) <= MinBindings(shown_kind)) {
     igCalcTextSize(&text_size, "x", 0, false, -1);
     igDummy((ImVec2){text_size.x + 2 * igGetStyle()->FramePadding.x, igGetFrameHeight()});
     return;
@@ -303,10 +315,18 @@ static void DrawKeyboardHelp(void) {
     "A button can have several keys.");
 }
 
+static void DrawPlayerTwoKeyboardHelp(void) {
+  igTextWrapped("Player two's keys, for two players on one keyboard "
+    "(the two_players setting). "
+    "Click a key, then press the key you want instead (Esc to cancel). "
+    "Player two can play on a second controller instead.");
+}
+
 static void DrawControllerHelp(void) {
   igTextWrapped("Click a controller button, then press the one you want instead (Esc to cancel). "
     "Buttons are named as on an Xbox controller: A is the bottom face button. "
-    "The left stick always moves like the d-pad.");
+    "The left stick always moves like the d-pad. "
+    "Both players' controllers use these buttons: the first plugged in is player one's.");
   if (SDL_NumJoysticks() == 0) { igTextDisabled("No controller found: plug one in to set its buttons."); }
 }
 
@@ -326,6 +346,7 @@ static void DrawBindingTab(const char *name, binding_kind kind, void (*draw_help
 void DrawControlsSection(const char *repo) {
   if (igBeginTabBar("controls_kind", 0)) {
     DrawBindingTab("Keyboard", KEYBOARD, DrawKeyboardHelp);
+    DrawBindingTab("Player 2 keys", P2_KEYBOARD, DrawPlayerTwoKeyboardHelp);
     DrawBindingTab("Controller", CONTROLLER, DrawControllerHelp);
     igEndTabBar();
   }

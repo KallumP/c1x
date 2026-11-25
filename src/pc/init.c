@@ -87,8 +87,12 @@ static void ToggleFullscreen() {
 
 /* connect a controller that was plugged in (also sent for ones there at startup) */
 static void ConnectController(int device_index) {
+  SDL_GameController *controller;
+
   if (!SDL_IsGameController(device_index)) { return; }
-  SDL_GameControllerOpen(device_index);
+  controller = SDL_GameControllerOpen(device_index);
+  if (!controller) { return; }
+  GamepadConnect(SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(controller)));
 }
 
 /* let go of a controller that was unplugged */
@@ -97,7 +101,7 @@ static void DisconnectController(SDL_JoystickID instance_id) {
 
   controller = SDL_GameControllerFromInstanceID(instance_id);
   if (controller) { SDL_GameControllerClose(controller); }
-  GamepadReleaseAll(); /* so nothing stays held from the unplugged one */
+  GamepadDisconnect(instance_id);
 }
 
 /* a key going down; a fullscreen toggle (alt+enter, f11) isn't the game's, so enter doesn't press start */
@@ -133,10 +137,11 @@ void SDLUpdate() {
       break;
     case SDL_CONTROLLERBUTTONDOWN:
     case SDL_CONTROLLERBUTTONUP:
-      GamepadSetButton(e.cbutton.button, e.type == SDL_CONTROLLERBUTTONDOWN);
+      GamepadSetButton(GamepadFind(e.cbutton.which), e.cbutton.button,
+        e.type == SDL_CONTROLLERBUTTONDOWN);
       break;
     case SDL_CONTROLLERAXISMOTION:
-      GamepadSetAxis(e.caxis.axis, e.caxis.value);
+      GamepadSetAxis(GamepadFind(e.caxis.which), e.caxis.axis, e.caxis.value);
       break;
     case SDL_MOUSEBUTTONUP:
     case SDL_MOUSEBUTTONDOWN:
