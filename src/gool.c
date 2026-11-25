@@ -753,8 +753,7 @@ gool_object *GoolObjectCreate(void *parent, int exec, int subtype, int argc, uin
   GoolObjectInit(child, exec, subtype, argc, argv);
   zone = child->zone ? child->zone : cur_zone;
   header = (zone_header*)zone->items[0];
-  child->colors = child == crash ? header->player_colors :
-                                   header->object_colors;
+  child->colors = *CoopZoneColors(child, header);
   return child;
 }
 
@@ -768,7 +767,7 @@ static void GoolPlayerTwoCreate() {
   obj->handle.subtype = 3;
   GoolObjectInit(obj, 0, 0, 0, 0);
   header = (zone_header*)cur_zone->items[0];
-  obj->colors = header->player_colors;
+  obj->colors = *CoopZoneColors(obj, header);
 }
 
 /* player two stands still beside crash, facing the same way */
@@ -1684,7 +1683,7 @@ static inline int GoolObjectColorByZone(gool_object *obj) {
   obj->invincibility_state = 0;
   zone = obj->zone ? obj->zone : cur_zone;
   header = (zone_header*)zone->items[0];
-  colors = obj == crash ? &header->player_colors : &header->object_colors;
+  colors = CoopZoneColors(obj, header);
   obj->colors.intensity = colors->intensity;
   return 0;
 }
