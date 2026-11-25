@@ -3471,7 +3471,7 @@ static inline void GoolOpReactSolidSurfaces(gool_object *obj, uint32_t instructi
   case 1:
     trans = obj->trans;
     trans2 = obj->trans;
-    if (obj == crash || obj->parent == crash)
+    if (CoopIsPlayer(obj) || CoopIsPlayer(obj->parent))
       ZoneFindNearestObjectNode2(obj, &trans2);
     *((gool_objnode*)&obj->misc_node) = ZoneFindNearestObjectNode(obj, &trans);
     if (G_OPB(instruction) != 0xBE0)
