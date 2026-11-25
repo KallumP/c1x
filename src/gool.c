@@ -1019,7 +1019,7 @@ void GoolObjectLocalBound(gool_object *obj, vec *scale) {
     frame_idx = obj->anim_frame >> 8;
     frame = (svtx_frame*)svtx->items[frame_idx];
     bnd = *(bound*)&frame->bound_x1;
-    if (obj == crash) { /* is crash object? */
+    if (CoopIsPlayer(obj)) { /* is a crash object? */
       bnd.p1.x += frame->col_x; /* readjust bound box center for collision purposes */
       bnd.p1.y += frame->col_y;
       bnd.p1.z += frame->col_z;
