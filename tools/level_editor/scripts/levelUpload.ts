@@ -1,5 +1,6 @@
 // uploading a level source to mod.io as the signed-in player: a new mod the
 // first time, then a new file on that same mod each time after
+import { isBootableName } from "../server/settings";
 import { zipLevel } from "./levelZip";
 import * as modio from "./modio";
 import { isProblem, type Answer } from "./answer";
@@ -55,6 +56,18 @@ async function findOrAddLevelMod(
   return { mod: added, isNew: true };
 }
 
+// why level_src/<name> can't be uploaded, or null if it can: a download is
+// refused a folder the game can't boot
+function folderNameProblem(name: string): { problem: string } | null {
+  if (isBootableName(name)) {
+    return null;
+  }
+  return {
+    problem: `Rename the level's folder, ${name}, to only letters, digits, _ and - `
+      + "first: otherwise players can't download it.",
+  };
+}
+
 // uploads level_src/<name>, signed in with the player's token, zipped as the
 // newest file of its mod
 export async function uploadLevel(
@@ -64,6 +77,10 @@ export async function uploadLevel(
   details: LevelDetails,
   calls: UploadCalls = modio,
 ): Promise<Answer<Uploaded>> {
+  const badName = folderNameProblem(name);
+  if (badName) {
+    return badName;
+  }
   const uploaded = await findOrAddLevelMod(token, name, details, calls);
   if (isProblem(uploaded)) {
     return uploaded;
