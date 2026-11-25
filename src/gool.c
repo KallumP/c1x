@@ -2898,7 +2898,8 @@ void GoolOpMisc(gool_object *obj, uint32_t instruction) {
   case 12: /* misc */
     switch (sop2) {
     case 0: /* save level state */
-      LevelSaveState(obj, &savestate, 0); /* saveState(obj, &savestate, 0); */
+      if (CoopMaySaveLevelState(obj))
+        LevelSaveState(obj, &savestate, 0); /* saveState(obj, &savestate, 0); */
       break;
     case 1: /* load level state */
       LevelRestart(&savestate); /* reloadLevel(savestate); */

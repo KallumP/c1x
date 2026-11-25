@@ -69,6 +69,11 @@ gool_object *CoopNearestPlayer(vec *trans) {
   return nearest;
 }
 
+/* the checkpoint is player one's: a player two running crash's script never saves it */
+int CoopMaySaveLevelState(gool_object *obj) {
+  return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
+}
+
 /* where player two starts, beside player one at lead */
 vec CoopBesideLead(vec lead) {
   vec beside;
