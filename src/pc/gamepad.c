@@ -54,8 +54,11 @@ int GamepadConnect(int id) {
 }
 
 static void GamepadRelease(int gamepad_idx) {
-  memset(gamepads[gamepad_idx].buttons_held, 0, sizeof(gamepads[gamepad_idx].buttons_held));
-  memset(gamepads[gamepad_idx].axes, 0, sizeof(gamepads[gamepad_idx].axes));
+  gamepad *pad;
+
+  pad = &gamepads[gamepad_idx];
+  memset(pad->buttons_held, 0, sizeof(pad->buttons_held));
+  memset(pad->axes, 0, sizeof(pad->axes));
 }
 
 /* let go of an unplugged controller, so nothing stays held from it mid-press */
