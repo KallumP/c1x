@@ -17,6 +17,11 @@ int CoopIsPlayer(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_NOT_A_PLAYER;
 }
 
+/* the player's slot in the tween pose table (pc/tween.h), after the objects' */
+int CoopPlayerTweenSlot(int index) {
+  return GOOL_OBJECT_COUNT + index;
+}
+
 /* where player two starts, beside player one at lead */
 vec CoopBesideLead(vec lead) {
   vec beside = lead;

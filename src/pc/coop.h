@@ -18,6 +18,7 @@ extern gool_object *players[COOP_PLAYER_COUNT];
 
 extern int CoopPlayerIndex(gool_object *obj);
 extern int CoopIsPlayer(gool_object *obj);
+extern int CoopPlayerTweenSlot(int index);
 extern vec CoopBesideLead(vec lead);
 
 #endif /* _PC_COOP_H_ */

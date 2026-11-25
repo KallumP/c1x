@@ -1030,7 +1030,10 @@ void GoolObjectLocalBound(gool_object *obj, vec *scale) {
 
 /* the object's slot in the tween pose table (pc/tween.h) */
 int GoolObjectTweenSlot(gool_object *obj) {
-  if (obj == players[0]) { return GOOL_OBJECT_COUNT; }
+  int player_index;
+
+  player_index = CoopPlayerIndex(obj);
+  if (player_index != COOP_NOT_A_PLAYER) { return CoopPlayerTweenSlot(player_index); }
   return obj - objects;
 }
 
@@ -1060,7 +1063,8 @@ static void GoolRecordObjectPose(gool_object *obj) {
 static void GoolRecordObjectPoses() {
   int i;
 
-  GoolRecordObjectPose(players[0]);
+  for (i=0;i<COOP_PLAYER_COUNT;i++)
+    GoolRecordObjectPose(players[i]);
   for (i=0;i<GOOL_OBJECT_COUNT;i++)
     GoolRecordObjectPose(&objects[i]);
 }
