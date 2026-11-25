@@ -1378,7 +1378,7 @@ void GoolDrawObjectsTweened(int32_t alpha) {
 //----- (8001DE78) --------------------------------------------------------
 void GoolObjectTransform(gool_object *obj) {
   gool_anim *anim; // $s0
-  entry *en, *svtx, *cvtx, *zone;
+  entry *en, *svtx, *cvtx;
   zone_header *header;
   texinfo *info;
   texinfo2 *info2;
