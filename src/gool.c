@@ -818,11 +818,6 @@ void GoolPlacePlayerTwo() {
   GoolPlayerTwoStandBesideCrash();
 }
 
-static int GoolObjectPadPort(gool_object *obj) {
-  if (obj == players[COOP_PLAYER_TWO]) { return COOP_PLAYER_TWO_PORT; }
-  return 0;
-}
-
 //----- (8001CB80) --------------------------------------------------------
 int GoolObjectInit(gool_object *obj, int exec, int subtype, int argc, int *argv) {
   gool_object *parent; // $a0 MAPDST
@@ -1867,7 +1862,7 @@ static inline int32_t GoolObjectControlDir(gool_object *obj, int scale) {
   }
   if (state_flags & GOOL_FLAG_FLING_STATE) /* ??? */
     accel_state = &accel_states[3];
-  dir = (pads[GoolObjectPadPort(obj)].held >> 12) & 0xF; /* directional buttons */
+  dir = (pads[CoopObjectPadPort(obj)].held >> 12) & 0xF; /* directional buttons */
   move_state = &move_states[dir];
   if (move_state->dir == 8) { /* none pressed or invalid combination? */
     decel = accel_state->decel;
@@ -2425,7 +2420,7 @@ static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_
       break;
     case 0x1A: {
       uint32_t res;
-      res = GoolTestControls(instruction&0x1FFFFF,GoolObjectPadPort(obj));
+      res = GoolTestControls(instruction&0x1FFFFF,CoopObjectPadPort(obj));
       GoolObjectPush(obj,res);
       break;
     }
