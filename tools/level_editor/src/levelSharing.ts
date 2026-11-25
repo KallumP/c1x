@@ -1,5 +1,6 @@
 // what the editor says when sharing a level on mod.io
 import { errorMessage } from "./errorMessage";
+import { defaultLevelTitle } from "./levelTitle";
 import { isSignedOutError, type Uploaded } from "./modioApi";
 
 export function uploadButtonText(isOnline: boolean): string {
@@ -15,6 +16,12 @@ export function uploadedText({ isNew }: Uploaded): string {
     return "Upload successful.";
   }
   return "Upload successful, a new version is up.";
+}
+
+// the name players see the level by on mod.io: its title, as the upload names it
+// (levelOptions' titleOf), from level.cfg's title or else its folder's name
+export function showsUpAsText(cfgTitle: string, folderName: string): string {
+  return `This level will show up as: ${cfgTitle || defaultLevelTitle(folderName)}`;
 }
 
 // what the dialog says of whether the level has been uploaded

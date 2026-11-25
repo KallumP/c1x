@@ -3,11 +3,17 @@
 import type { LevelInfo } from "../api";
 import { useLevelUpload } from "../hooks/useLevelUpload";
 import { useModioAccount } from "../hooks/useModioAccount";
-import { onlineText, uploadButtonText, uploadedText } from "../levelSharing";
+import {
+  onlineText,
+  showsUpAsText,
+  uploadButtonText,
+  uploadedText,
+} from "../levelSharing";
 import "./ShareDialog.css";
 
-export default function ShareDialog({ level, save, onClose }: {
+export default function ShareDialog({ level, title, save, onClose }: {
   level: LevelInfo;
+  title: string; // level.cfg's title as it's edited, or "" for its folder's name
   // saves the level first, as the upload zips its files; whether it saved
   save: () => Promise<boolean>;
   onClose: () => void;
@@ -96,6 +102,7 @@ export default function ShareDialog({ level, save, onClose }: {
   const renderSignedIn = () => (
     <>
       {renderAccountLine()}
+      <p>{showsUpAsText(title, level.name)}</p>
       {renderOnlineLine()}
       {renderUploadResult()}
     </>
