@@ -87,7 +87,8 @@ static void AddKey(int *key_count, SDL_Scancode (*keys)[BUTTON_KEYS_MAX],
 
 static void AddPlayerKey(launcher_controls *c, rebound_buttons *rebound, int player_idx,
   int button, SDL_Scancode code) {
-  if (player_idx == 0) { AddKey(c->key_count, c->keys, &rebound->keys, button, code); }
+  if (player_idx == PAD_PLAYER_ONE)
+    AddKey(c->key_count, c->keys, &rebound->keys, button, code);
   else { AddKey(c->p2_key_count, c->p2_keys, &rebound->p2_keys, button, code); }
 }
 
@@ -116,7 +117,8 @@ static void ReadControlsLine(const char *line, launcher_controls *c, rebound_but
   if (PadFindButton(button_name, &bits) == -1) { return; }
   button = FindPadButtonByBits(bits);
   if (IsGamepadValue(value)) {
-    if (player_idx != 0) { return; } /* both players share the controller layout */
+    /* both players share the controller layout */
+    if (player_idx != PAD_PLAYER_ONE) { return; }
     control = PadParseGamepadControl(value);
     if (control != -1) { AddPad(c, &rebound->pads, button, control); }
     return;

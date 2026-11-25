@@ -22,7 +22,10 @@
 #define PAD_CROSS       0x40
 #define PAD_SQUARE      0x80
 
-#define PAD_PLAYER_COUNT 2 /* each player has their own keys */
+/* each player has their own keys, and plays the pad and controller of their number */
+#define PAD_PLAYER_COUNT 2
+#define PAD_PLAYER_ONE   0
+#define PAD_PLAYER_TWO   1
 
 uint32_t SwPadRead(int idx);
 uint32_t PadKeysHeld(int player_idx);

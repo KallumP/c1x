@@ -41,12 +41,12 @@ uint32_t SwPadRead(int idx) {
   uint32_t held;
 
   held = 0;
-  if (idx == 1) {
+  if (idx == PAD_PLAYER_TWO) {
     if (ReplayIsPlaying()) { return 0; } /* replays only record pad 1 */
-    return PadKeysHeld(1) | PadGamepadHeld(1);
+    return PadKeysHeld(PAD_PLAYER_TWO) | PadGamepadHeld(PAD_PLAYER_TWO);
   }
   if (ReplayHeld(&held)) { return held; } /* replaying recorded inputs */
-  held = PadKeysHeld(0) | PadGamepadHeld(0);
+  held = PadKeysHeld(PAD_PLAYER_ONE) | PadGamepadHeld(PAD_PLAYER_ONE);
   return (held << 16);
 }
 
@@ -88,8 +88,9 @@ static void SetKeys(key_bindings *bindings, const sw_pad_mapping *defaults, int 
 }
 
 void PadResetBindings() {
-  SetKeys(&player_keys[0], pad_default_mappings, PAD_DEFAULT_KEY_COUNT);
-  SetKeys(&player_keys[1], pad_p2_default_mappings, PAD_P2_DEFAULT_KEY_COUNT);
+  SetKeys(&player_keys[PAD_PLAYER_ONE], pad_default_mappings, PAD_DEFAULT_KEY_COUNT);
+  SetKeys(&player_keys[PAD_PLAYER_TWO], pad_p2_default_mappings,
+    PAD_P2_DEFAULT_KEY_COUNT);
   memcpy(gamepad_mappings, gamepad_default_mappings, sizeof(gamepad_default_mappings));
   gamepad_mapping_count = sizeof(gamepad_default_mappings)/sizeof(gamepad_mapping);
   pad_mappings_set = 1;
@@ -186,7 +187,8 @@ static int PadApplyBinding(char *name, char *value, const char *path,
 
   button = PadBindingButtonName(name, &player_idx);
   if (IsGamepadValue(value)) {
-    if (player_idx != 0) { return -1; } /* both players share the controller layout */
+    /* both players share the controller layout */
+    if (player_idx != PAD_PLAYER_ONE) { return -1; }
     if (PadFindButton(button, &bits) == -1) { return -1; }
     control = PadParseGamepadControl(value);
     if (control == -1) { return -1; }

@@ -115,10 +115,10 @@ const char *PadBindingButtonName(const char *name, int *player_idx) {
 
   prefix_len = strlen(PAD_P2_PREFIX);
   if (SDL_strncasecmp(name, PAD_P2_PREFIX, prefix_len) == 0) {
-    *player_idx = 1;
+    *player_idx = PAD_PLAYER_TWO;
     return name + prefix_len;
   }
-  *player_idx = 0;
+  *player_idx = PAD_PLAYER_ONE;
   return name;
 }
 
