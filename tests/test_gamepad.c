@@ -146,3 +146,9 @@ UTEST(gamepad, unplugging_a_controller_leaves_the_other_held) {
   GamepadDisconnect(FIRST_ID);
   ASSERT_TRUE(GamepadIsHeld(1, SDL_CONTROLLER_BUTTON_A));
 }
+
+UTEST(gamepad, a_controller_connected_twice_keeps_its_place) {
+  UnplugAll();
+  GamepadConnect(FIRST_ID);
+  ASSERT_EQ(0, GamepadConnect(FIRST_ID));
+}
