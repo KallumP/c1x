@@ -49,7 +49,7 @@ UTEST(pad, only_player_one_is_read) {
 UTEST(pad, a_controller_button_presses_its_button) {
   memset(keys, 0, sizeof(keys));
   GamepadReleaseAll();
-  GamepadSetButton(SDL_CONTROLLER_BUTTON_A, 1);
+  GamepadSetButton(0, SDL_CONTROLLER_BUTTON_A, 1);
   ASSERT_EQ(HELD(PAD_CROSS), SwPadRead(0));
   GamepadReleaseAll();
 }
@@ -58,7 +58,7 @@ UTEST(pad, keys_and_controller_buttons_combine) {
   memset(keys, 0, sizeof(keys));
   GamepadReleaseAll();
   press(SDL_SCANCODE_SPACE);
-  GamepadSetButton(SDL_CONTROLLER_BUTTON_DPAD_LEFT, 1);
+  GamepadSetButton(0, SDL_CONTROLLER_BUTTON_DPAD_LEFT, 1);
   ASSERT_EQ(HELD(PAD_CROSS | PAD_LEFT), SwPadRead(0));
   GamepadReleaseAll();
 }
@@ -66,7 +66,7 @@ UTEST(pad, keys_and_controller_buttons_combine) {
 UTEST(pad, a_controller_only_plays_player_one) {
   memset(keys, 0, sizeof(keys));
   GamepadReleaseAll();
-  GamepadSetButton(SDL_CONTROLLER_BUTTON_A, 1);
+  GamepadSetButton(0, SDL_CONTROLLER_BUTTON_A, 1);
   ASSERT_EQ(0u, SwPadRead(1));
   GamepadReleaseAll();
 }
