@@ -52,6 +52,7 @@ extern uint32_t screen_proj;
 #include "pc/gfx/soft.h"
 #include "pc/follow.h"
 #include "pc/rebound.h"
+#include "pc/coop.h"
 extern sw_transform_struct params;
 
 //----- (800253A0) --------------------------------------------------------
@@ -965,7 +966,7 @@ void ZoneColorsScaleSeek(gool_colors *colors, gool_object *obj, int subtype, int
   gool_colors *src, dst;
   int i, step;
 
-  if (obj == crash && obj->state_flags & 0x20)
+  if (CoopIsPlayer(obj) && obj->state_flags & 0x20)
     subtype = 0x37;
   ZoneColorsScaleByNode(subtype, colors, &dst);
   src = &obj->colors;
@@ -1315,7 +1316,7 @@ gool_objnode ZoneFindNearestObjectNode3(gool_object *obj, vec *v, int flags, int
     header = (zone_header*)obj->parent->zone->items[0];
   else
     header = (zone_header*)obj->zone->items[0];
-  if (obj == crash || obj->parent == crash)
+  if (CoopIsPlayer(obj) || CoopIsPlayer(obj->parent))
     colors = &header->player_colors;
   else
     colors = &header->object_colors;
@@ -1350,7 +1351,7 @@ void ZoneColorsScaleSeekByEntityNode(gool_object *obj) {
 
   if (!obj->entity) { return; }
   header = (zone_header*)obj->zone->items[0];
-  if (obj == crash || obj->parent == crash)
+  if (CoopIsPlayer(obj) || CoopIsPlayer(obj->parent))
     colors = &header->player_colors;
   else
     colors = &header->object_colors;
