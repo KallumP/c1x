@@ -116,12 +116,12 @@ Levels are shared on [c1x's page on mod.io](https://mod.io/g/crash-1-n-hanced), 
 
 **Share yours from the level editor:**
 
-1. Open the level and line the view up: the view when you click **Share** is the level's picture on mod.io.
+1. Open the level.
 2. Click **Share** in the top left corner.
 3. Sign in to mod.io with your email. It emails you a code to sign in with.
 4. Click **Upload**.
 
-Once it's up, **Update level** in **Share** uploads your changes, keeping its picture.
+Once it's up, **Update level** in **Share** uploads your changes.
 
 **Play someone else's from the launcher:**
 
