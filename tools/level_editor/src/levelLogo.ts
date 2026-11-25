@@ -1,5 +1,5 @@
-// a level's logo on mod.io: the editor's view as it is, or an image the player
-// chose, cropped to 16:9 (mod.io wants a logo that shape, at least 512x288)
+// a level's logo on mod.io: the editor's view, cropped to 16:9 (mod.io wants a
+// logo that shape, at least 512x288)
 export const LOGO_WIDTH = 1280;
 export const LOGO_HEIGHT = 720;
 
@@ -38,13 +38,3 @@ function logoOf(
 // with three's preserveDrawingBuffer)
 export const viewLogo = (canvas: HTMLCanvasElement) =>
   logoOf(canvas, canvas.width, canvas.height);
-
-// an image file the player chose as a logo, or why it can't be one
-export async function imageLogo(file: File): Promise<string> {
-  try {
-    const image = await createImageBitmap(file);
-    return logoOf(image, image.width, image.height);
-  } catch {
-    throw new Error(`${file.name} isn't an image the browser can read.`);
-  }
-}
