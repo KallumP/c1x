@@ -7,6 +7,7 @@ Custom levels
 
 
 Editor
+- delete a level. need to know how to do this using the api or just request it by email to me
 - zone size chooser? Should show error if a zone has too many objects
 - invisible walls
 - death zones
