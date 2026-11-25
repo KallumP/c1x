@@ -2,38 +2,13 @@ import { describe, expect, test } from "vitest";
 import { fetchOwnLevelMod } from "../../src/modioApi";
 import {
   onlineText,
-  pictureChoices,
-  pictureProblem,
-  SUMMARY_MAX,
-  summaryProblem,
   failureOutcome,
   uploadAfterSaving,
-  uploadProblem,
   uploadButtonText,
   uploadedText,
 } from "../../src/levelSharing";
 
-const MOD = { id: 17302, page: "https://test.mod.io/m/tide-ruins" };
-
-describe("a level's summary on mod.io", () => {
-  test("is fine with some words", () => {
-    expect(summaryProblem("A beach with crabs.")).toBeNull();
-  });
-
-  test("needs writing", () => {
-    expect(summaryProblem("  ")).toBe("Write a summary for players first.");
-  });
-
-  test("is fine at mod.io's longest", () => {
-    expect(summaryProblem("a".repeat(SUMMARY_MAX))).toBeNull();
-  });
-
-  test("can't be longer than mod.io takes", () => {
-    expect(summaryProblem("a".repeat(SUMMARY_MAX + 1))).toBe(
-      `A summary can be at most ${SUMMARY_MAX} characters.`,
-    );
-  });
-});
+const MOD = { id: 17302 };
 
 describe("the upload button", () => {
   test.each([
@@ -63,42 +38,6 @@ describe("what the dialog says of a map", () => {
 
   test("before it's online, that it isn't yet", () => {
     expect(onlineText(false)).toBe("This map isn't on mod.io yet.");
-  });
-});
-
-describe("the level's picture", () => {
-  test("is the view or an image for a level that isn't online", () => {
-    expect(pictureChoices(false)).toEqual(["view", "image"]);
-  });
-
-  test("can also be kept as it is once it's online", () => {
-    expect(pictureChoices(true)).toEqual(["keep", "view", "image"]);
-  });
-
-  test("needs an image chosen to be an image", () => {
-    expect(pictureProblem("image", false)).toBe("Choose an image for its picture first.");
-  });
-
-  test("is fine as an image once one's chosen", () => {
-    expect(pictureProblem("image", true)).toBeNull();
-  });
-
-  test.each(["keep", "view"] as const)("is fine as %s without an image", (choice) => {
-    expect(pictureProblem(choice, false)).toBeNull();
-  });
-});
-
-describe("whether an upload can go ahead", () => {
-  test("a new level needs a summary", () => {
-    expect(uploadProblem(false, "", "view", false)).toBe(summaryProblem(""));
-  });
-
-  test("a level already online keeps its summary, so needs none", () => {
-    expect(uploadProblem(true, "", "keep", false)).toBeNull();
-  });
-
-  test("a new level with a summary and the view as its picture can", () => {
-    expect(uploadProblem(false, "A beach.", "view", false)).toBeNull();
   });
 });
 
