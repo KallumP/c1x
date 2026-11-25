@@ -32,7 +32,7 @@ describe("what an upload says", () => {
 describe("what the dialog says of a map", () => {
   test("once it's online, that it's been uploaded and can be again", () => {
     expect(onlineText(true)).toBe(
-      "This map has already been uploaded. Alternatively, upload a new version below.",
+      "This map is already online. You can update the map if you've made changes below.",
     );
   });
 
