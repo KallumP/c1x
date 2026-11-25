@@ -36,11 +36,15 @@ uint32_t PadKeysHeld(int player_idx) {
   return held;
 }
 
+/* the buttons held on pad 1 (idx 0, in the upper 16 bits, as on the psx) or pad 2 (idx 1, the lower) */
 uint32_t SwPadRead(int idx) {
   uint32_t held;
 
   held = 0;
-  if (idx != 0) { return held; } /* pad 1 only for now */
+  if (idx == 1) {
+    if (ReplayIsPlaying()) { return 0; } /* replays only record pad 1 */
+    return PadKeysHeld(1) | PadGamepadHeld(1);
+  }
   if (ReplayHeld(&held)) { return held; } /* replaying recorded inputs */
   held = PadKeysHeld(0) | PadGamepadHeld(0);
   return (held << 16);
