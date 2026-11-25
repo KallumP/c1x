@@ -8,7 +8,6 @@ import {
   findOwnLevelMod,
   listOnlineLevels,
   fetchOnlineLevel,
-  setLevelLogo,
   MODIO_GAME,
   LEVELS_WITH_NAME,
   TOP_LEVELS,
@@ -37,10 +36,7 @@ const NEW_LEVEL = {
   folder: "1_tide_ruins",
   logo: LOGO,
 };
-const MOD_ANSWER = {
-  id: 17302,
-  profile_url: "https://test.mod.io/g/crash-1-n-hanced/m/tide-ruins",
-};
+const MOD_ANSWER = { id: 17302 };
 
 describe("adding a level's mod", () => {
   test("posts to the game's mods", async () => {
@@ -78,12 +74,9 @@ describe("adding a level's mod", () => {
     ]);
   });
 
-  test("is the new mod's id and page", async () => {
+  test("is the new mod's id", async () => {
     const { fetchUrl } = standInFetch(MOD_ANSWER);
-    expect(await addLevelMod("token", NEW_LEVEL, fetchUrl)).toEqual({
-      id: 17302,
-      page: MOD_ANSWER.profile_url,
-    });
+    expect(await addLevelMod("token", NEW_LEVEL, fetchUrl)).toEqual({ id: 17302 });
   });
 
   test("is mod.io's reason when it refuses", async () => {
@@ -201,11 +194,7 @@ describe("signing in with a code", () => {
 
 describe("finding the player's own mod for a level", () => {
   const OWN_MODS = {
-    data: [{
-      id: 17302,
-      metadata_blob: "1_tide_ruins",
-      profile_url: MOD_ANSWER.profile_url,
-    }],
+    data: [{ id: 17302, metadata_blob: "1_tide_ruins" }],
   };
 
   test("asks for the player's mods of the game with the level's folder as their metadata", async () => {
@@ -219,11 +208,10 @@ describe("finding the player's own mod for a level", () => {
     });
   });
 
-  test("is the mod's id and page", async () => {
+  test("is the mod's id", async () => {
     const { fetchUrl } = standInFetch(OWN_MODS);
     expect(await findOwnLevelMod("token", "1_tide_ruins", fetchUrl)).toEqual({
       id: 17302,
-      page: MOD_ANSWER.profile_url,
     });
   });
 
@@ -234,7 +222,7 @@ describe("finding the player's own mod for a level", () => {
 
   test("is none when mod.io answers with another level's mod", async () => {
     const { fetchUrl } = standInFetch({
-      data: [{ id: 1, metadata_blob: "2_mossy_creek", profile_url: "" }],
+      data: [{ id: 1, metadata_blob: "2_mossy_creek" }],
     });
     expect(await findOwnLevelMod("token", "1_tide_ruins", fetchUrl)).toBeNull();
   });
@@ -256,7 +244,6 @@ const LEVEL_ANSWER = {
   name: "Tide Ruins",
   metadata_blob: "1_tide_ruins",
   submitted_by: { username: "kallum" },
-  profile_url: "https://mod.io/g/crash-1-n-hanced/m/tide-ruins",
   modfile: { download: { binary_url: "https://mod.io/files/tide.zip" } },
 };
 
@@ -299,7 +286,6 @@ describe("listing the levels on mod.io", () => {
         id: 17302,
         name: "Tide Ruins",
         author: "kallum",
-        page: "https://mod.io/g/crash-1-n-hanced/m/tide-ruins",
         fileUrl: "https://mod.io/files/tide.zip",
       },
     ]);
@@ -328,7 +314,6 @@ describe("a level on mod.io, by its id", () => {
       id: 17302,
       name: "Tide Ruins",
       author: "kallum",
-      page: "https://mod.io/g/crash-1-n-hanced/m/tide-ruins",
       fileUrl: "https://mod.io/files/tide.zip",
     });
   });
@@ -338,23 +323,6 @@ describe("a level on mod.io, by its id", () => {
     expect(await fetchOnlineLevel(17302, fetchUrl)).toEqual({
       problem: "Tide Ruins has no file on mod.io yet.",
     });
-  });
-});
-
-describe("setting an online level's picture", () => {
-  test("posts it to its mod's media", async () => {
-    const { fetchUrl, requests } = standInFetch({ code: 201 });
-    await setLevelLogo("token", 17302, LOGO, fetchUrl);
-    expect(requests[0].url).toBe(
-      `${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}/mods/17302/media`,
-    );
-    expect(requests[0].init?.method).toBe("POST");
-  });
-
-  test("sends it as the mod's logo", async () => {
-    const { fetchUrl, requests } = standInFetch({ code: 201 });
-    await setLevelLogo("token", 17302, LOGO, fetchUrl);
-    expect(formOf(requests[0].init).has("logo")).toBe(true);
   });
 });
 

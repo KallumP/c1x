@@ -116,35 +116,17 @@ Levels are shared on [c1x's page on mod.io](https://mod.io/g/crash-1-n-hanced), 
 
 **Share yours from the level editor:**
 
-1. Open the level, and line the view up if you want it as the level's picture.
+1. Open the level.
 2. Click **Share** in the top left corner.
 3. Sign in to mod.io with your email. It emails you a code to sign in with.
-4. Write a summary for players.
-5. Pick its picture: the view as it was when you clicked **Share**, or an image of your own, cut to 16:9.
-6. Click **Upload**.
+4. Click **Upload**.
 
-Once it's up, **Share** uploads a new version of it, keeping its summary, and its picture unless you pick a new one.
+Once it's up, **Update level** in **Share** uploads your changes.
 
 **Play someone else's from the launcher:**
 
 1. Open the **Levels** tab: **Online levels** lists the most downloaded. To search for one, type part of its name and click **Find levels**.
-2. Click **Download** beside the one you want (**View level** opens its page on mod.io). It goes in `level_src/` and builds.
+2. Click **Download** beside the one you want. It goes in `level_src/` and builds.
 3. Choose it as the **Custom level**.
 
 A level you made yourself is never replaced: if one has the same folder name, rename yours first.
-
-### By hand
-
-To upload on mod.io's site instead, add a level on [c1x's page](https://mod.io/g/crash-1-n-hanced) with the zip as its file, a 16:9 picture (at least 512 by 288) and a summary. To play one downloaded from there, unzip it into `level_src/` (the launcher's **Open levels folder** button opens it) and build it in the **Levels** tab.
-
-**Zip it:** zip the level's folder itself, not the files inside it, so that unzipping it gives `my_level/` with the level in it. Put in:
-
-- the `.obj` and `.mtl`
-- the textures you copied in
-- `level.cfg` and `objects.json`
-- `game_textures.json`, `loading.png` and your own song, if the level has them
-
-Leave out:
-
-- the images `game_textures.json` lists: they're the game's own, and each player's build makes them from their own `streams/`
-- the `.blend`, unless you want others to change the map

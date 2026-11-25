@@ -6,7 +6,6 @@
  * tools (tools.h: c1x_tools list-online-levels and download-level)
  */
 #include <stddef.h>
-#include "modio_page.h"
 
 #define ONLINE_LEVELS_MAX 100
 /* how many most downloaded levels the tools list without a search. modio.ts has
@@ -22,7 +21,6 @@ typedef struct {
   int ids[ONLINE_LEVELS_MAX]; /* each level's mod's id on mod.io */
   char authors[ONLINE_LEVELS_MAX][ONLINE_LEVEL_TEXT_MAX];
   char names[ONLINE_LEVELS_MAX][ONLINE_LEVEL_TEXT_MAX];
-  char pages[ONLINE_LEVELS_MAX][MODIO_PAGE_MAX]; /* "" if it's too long to keep */
 } online_levels;
 
 /* whether c can be in a search: a letter, number, space, - or _. the search goes
@@ -45,7 +43,7 @@ extern int ListOnlineLevelsCommand(const char *repo, const char *name, char *com
 extern int DownloadLevelCommand(const char *repo, int id, char *command, size_t size);
 
 /* the levels in the list's output, which has a line for each:
-     online level: <id>\t<author>\t<name>\t<page>
+     online level: <id>\t<author>\t<name>
    a line not all there yet (the output is read while the list runs) is left out */
 extern void FindOnlineLevels(const char *output, online_levels *levels);
 

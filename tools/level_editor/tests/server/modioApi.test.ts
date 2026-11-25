@@ -25,7 +25,7 @@ afterEach(() => { rmSync(repo, { recursive: true, force: true }); });
 
 const NOW = 1700000000; // seconds since 1970
 const LATER = NOW + 1000;
-const ONLINE: LevelMod = { id: 17302, page: "https://test.mod.io/m/tide-ruins" };
+const ONLINE: LevelMod = { id: 17302 };
 const tokenPath = () => join(repo, "modio_token.json");
 const signIn = (expires = LATER) => writeFileSync(
   tokenPath(),
@@ -173,7 +173,7 @@ describe("a level on mod.io", () => {
     await request(
       "POST",
       "/levels/1_tide_ruins/upload",
-      { summary: "A beach.", logo: "AQID" },
+      { logo: "AQID" },
       calls,
     );
     expect(sent.uploads).toEqual([{
@@ -181,7 +181,6 @@ describe("a level on mod.io", () => {
       name: "1_tide_ruins",
       details: {
         name: "Tide Ruins",
-        summary: "A beach.",
         logo: new Uint8Array([1, 2, 3]),
       },
     }]);
@@ -197,19 +196,19 @@ describe("a level on mod.io", () => {
     await request(
       "POST",
       "/levels/1_tide_ruins/upload",
-      { summary: "A beach.", logo: "AQID" },
+      { logo: "AQID" },
       calls,
     );
     expect(sent.uploads[0].details.name).toBe("Sunken Steps");
   });
 
-  test("POST /levels/<name>/upload without a logo keeps its picture", async () => {
+  test("POST /levels/<name>/upload without a logo sends none", async () => {
     signIn();
     const { calls, sent } = standInCalls();
     await request(
       "POST",
       "/levels/1_tide_ruins/upload",
-      { summary: "", logo: null },
+      { logo: null },
       calls,
     );
     expect(sent.uploads[0].details.logo).toBeNull();
@@ -220,7 +219,7 @@ describe("a level on mod.io", () => {
     const response = await request(
       "POST",
       "/levels/1_tide_ruins/upload",
-      { summary: "A beach.", logo: "AQID" },
+      { logo: "AQID" },
     );
     expect(json(response.body)).toEqual({ mod: ONLINE, isNew: true });
   });
@@ -229,7 +228,7 @@ describe("a level on mod.io", () => {
     const response = await request(
       "POST",
       "/levels/1_tide_ruins/upload",
-      { summary: "A beach.", logo: "AQID" },
+      { logo: "AQID" },
     );
     expect([response.status, response.body.toString()]).toEqual([
       401,
@@ -269,7 +268,7 @@ describe("a level on mod.io", () => {
     await request(
       "POST",
       "/levels/1_tide_ruins/upload",
-      { summary: "A beach.", logo: "AQID" },
+      { logo: "AQID" },
       calls,
     );
     expect(existsSync(tokenPath())).toBe(false);

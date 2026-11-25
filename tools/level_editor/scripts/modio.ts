@@ -24,10 +24,9 @@ export interface NewLevel {
 
 export interface LevelMod {
   id: number;
-  page: string; // its page on mod.io
 }
 
-type ModAnswer = { id: number; metadata_blob?: string; profile_url: string };
+type ModAnswer = { id: number; metadata_blob?: string };
 
 const JSON_ACCEPTED = { Accept: "application/json" };
 
@@ -129,16 +128,13 @@ export async function signInWithCode(
   return { token: access_token, expires: date_expires };
 }
 
-const logoFile = (logo: Uint8Array) =>
-  new File([logo], "logo.png", { type: "image/png" });
-
 function newLevelForm({ name, summary, folder, logo }: NewLevel): FormData {
   const form = new FormData();
   form.append("name", name);
   form.append("summary", summary);
   form.append("metadata_blob", folder);
   form.append("tags[]", LEVEL_TAG);
-  form.append("logo", logoFile(logo));
+  form.append("logo", new File([logo], "logo.png", { type: "image/png" }));
   return form;
 }
 
@@ -156,8 +152,7 @@ export async function addLevelMod(
   if (isProblem(answer)) {
     return answer;
   }
-  const { id, profile_url } = answer;
-  return { id, page: profile_url };
+  return { id: answer.id };
 }
 
 // the mod the player, signed in with their token, added for the level in
@@ -183,42 +178,20 @@ export async function findOwnLevelMod(
   if (!mod) {
     return null;
   }
-  return { id: mod.id, page: mod.profile_url };
+  return { id: mod.id };
 }
 
-// posts file as a form's field to one of the game's paths, signed in with the
-// player's token
-async function postSignedInFile(
-  token: string,
-  path: string,
-  field: string,
-  file: File,
-  fetchUrl: Fetch,
-): Promise<Answer<object>> {
-  const form = new FormData();
-  form.append(field, file);
-  const request = { method: "POST", headers: signedInHeaders(token), body: form };
-  return withoutBody(await askModio(fetchUrl, gameUrl(path), request));
-}
-
-export function setLevelLogo(
-  token: string,
-  modId: number,
-  logo: Uint8Array,
-  fetchUrl: Fetch = fetch,
-): Promise<Answer<object>> {
-  const file = logoFile(logo);
-  return postSignedInFile(token, `/mods/${modId}/media`, "logo", file, fetchUrl);
-}
-
-export function addLevelFile(
+// adds zip as the newest file of a level's mod, signed in with the player's token
+export async function addLevelFile(
   token: string,
   modId: number,
   zip: Uint8Array,
   fetchUrl: Fetch = fetch,
 ): Promise<Answer<object>> {
-  const file = new File([zip], "level.zip", { type: "application/zip" });
-  return postSignedInFile(token, `/mods/${modId}/files`, "filedata", file, fetchUrl);
+  const form = new FormData();
+  form.append("filedata", new File([zip], "level.zip", { type: "application/zip" }));
+  const request = { method: "POST", headers: signedInHeaders(token), body: form };
+  return withoutBody(await askModio(fetchUrl, gameUrl(`/mods/${modId}/files`), request));
 }
 
 // a level players can download
@@ -226,7 +199,6 @@ export interface OnlineLevel {
   id: number;
   name: string;
   author: string;
-  page: string;    // its page on mod.io
   fileUrl: string; // its newest zip
 }
 
@@ -234,7 +206,6 @@ type OnlineModAnswer = {
   id: number;
   name: string;
   submitted_by: { username: string };
-  profile_url: string;
   modfile: { download: { binary_url: string } } | null;
 };
 
@@ -247,7 +218,6 @@ function onlineLevelOf(mod: OnlineModAnswer): OnlineLevel | null {
     id: mod.id,
     name: mod.name,
     author: mod.submitted_by.username,
-    page: mod.profile_url,
     fileUrl: mod.modfile.download.binary_url,
   };
 }

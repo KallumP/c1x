@@ -250,64 +250,25 @@ UTEST(launcher_levels, the_level_sources_folder_opens_as_a_file_url) {
 }
 
 /* a level source called name in its own repo, kept apart from the other tests'
-   levels, and its .modio.json saying note, if there is one (note isn't 0) */
-static void MakeDownloadedLevel(const char *name, const char *note) {
+   levels, with a .modio.json saying note */
+static void MakeLevelWithModioNote(const char *name, const char *note) {
   char folder[256];
 
   MakeSourceIn(TEST_MODIO_REPO, name, folder, sizeof(folder));
-  if (note) { MakeFileSaying(folder, ".modio.json", note); }
+  MakeFileSaying(folder, ".modio.json", note);
 }
 
-/* the mod.io page the launcher lists for the level source called name */
-static const char *ModioPageOf(custom_levels *levels, const char *name) {
+/* the kind the launcher lists the level source called name as */
+static level_kind KindOf(custom_levels *levels, const char *name) {
   ListCustomLevels(TEST_MODIO_REPO, levels);
-  return levels->modio_pages[FindCustomLevel(levels, name)];
+  return levels->kinds[FindCustomLevel(levels, name)];
 }
 
-UTEST(launcher_levels, a_level_downloaded_from_mod_io_has_its_page) {
+UTEST(launcher_levels, a_mod_io_note_without_a_mod_id_is_your_own) {
   static custom_levels levels;
 
-  MakeDownloadedLevel("tide_ruins",
-    "{\"modId\":17302,\"page\":\"https://mod.io/g/c1x/m/tide-ruins\"}");
-  ASSERT_STREQ("https://mod.io/g/c1x/m/tide-ruins", ModioPageOf(&levels, "tide_ruins"));
-}
-
-UTEST(launcher_levels, a_level_of_your_own_has_no_mod_io_page) {
-  static custom_levels levels;
-
-  MakeDownloadedLevel("my_level", 0);
-  ASSERT_STREQ("", ModioPageOf(&levels, "my_level"));
-}
-
-UTEST(launcher_levels, a_mod_io_note_without_a_page_has_none) {
-  static custom_levels levels;
-
-  MakeDownloadedLevel("old_download", "{\"modId\":17302}");
-  ASSERT_STREQ("", ModioPageOf(&levels, "old_download"));
-}
-
-UTEST(launcher_levels, a_mod_io_page_with_a_backslash_is_none) {
-  static custom_levels levels;
-
-  MakeDownloadedLevel("escaped_page", "{\"modId\":1,\"page\":\"https:\\/\\/mod.io\\/m\"}");
-  ASSERT_STREQ("", ModioPageOf(&levels, "escaped_page"));
-}
-
-UTEST(launcher_levels, a_mod_io_page_with_no_end_is_none) {
-  static custom_levels levels;
-
-  MakeDownloadedLevel("cut_page", "{\"modId\":1,\"page\":\"https://mod.io/m");
-  ASSERT_STREQ("", ModioPageOf(&levels, "cut_page"));
-}
-
-UTEST(launcher_levels, a_mod_io_page_too_long_to_keep_is_none) {
-  static custom_levels levels;
-  static char note[MODIO_PAGE_MAX + 64];
-
-  snprintf(note, sizeof(note), "{\"modId\":1,\"page\":\"https://mod.io/%0*d\"}",
-    MODIO_PAGE_MAX, 0);
-  MakeDownloadedLevel("long_page", note);
-  ASSERT_STREQ("", ModioPageOf(&levels, "long_page"));
+  MakeLevelWithModioNote("broken_note", "{}");
+  ASSERT_EQ(LEVEL_OWN, KindOf(&levels, "broken_note"));
 }
 
 /* a level source called name in a repo of its own, with level.cfg saying cfg if
@@ -385,12 +346,12 @@ UTEST(launcher_levels, levels_not_included_are_in_order_of_their_titles) {
   ASSERT_STREQ("beta", levels.names[1]);
 }
 
-/* repo's level source called name, downloaded from mod.io: it notes its page */
+/* repo's level source called name, downloaded from mod.io: it notes its mod */
 static void NoteDownloaded(const char *repo, const char *name) {
   char folder[256];
 
   snprintf(folder, sizeof(folder), "%s/level_src/%s", repo, name);
-  MakeFileSaying(folder, ".modio.json", "{\"modId\":1,\"page\":\"https://mod.io/m/x\"}");
+  MakeFileSaying(folder, ".modio.json", "{\"modId\":1}");
 }
 
 #define TEST_KINDS_REPO "build/test_launcher_levels_kinds"
@@ -412,7 +373,7 @@ UTEST(launcher_levels, an_included_level_comes_with_c1x) {
   ASSERT_EQ(LEVEL_COMES_WITH_C1X, levels.kinds[FindCustomLevel(&levels, "1_tide_ruins")]);
 }
 
-UTEST(launcher_levels, a_level_with_a_mod_io_page_was_downloaded) {
+UTEST(launcher_levels, a_level_noting_its_mod_was_downloaded) {
   static custom_levels levels;
 
   ListLevelsOfEachKind(&levels);

@@ -1,5 +1,6 @@
 // uploading a level source to mod.io as the signed-in player: a new mod the
 // first time, then a new file on that same mod each time after
+import { isBootableName } from "../server/settings";
 import { zipLevel } from "./levelZip";
 import * as modio from "./modio";
 import { isProblem, type Answer } from "./answer";
@@ -10,38 +11,23 @@ export interface UploadCalls {
   findOwnLevelMod: typeof modio.findOwnLevelMod;
   addLevelMod: typeof modio.addLevelMod;
   addLevelFile: typeof modio.addLevelFile;
-  setLevelLogo: typeof modio.setLevelLogo;
 }
 
-// what players see of a level's mod: its name and summary when it's new, and its
-// picture, new or (null) kept as it is
+// what players see of a new level's mod: its name and picture (null if there's
+// none, which only a new version can do without, as it keeps its own)
 export interface LevelDetails {
   name: string;
-  summary: string;
   logo: Uint8Array | null;
 }
+
+// mod.io needs a summary for a new mod: one made from the level's name
+const levelSummary = (name: string) => `${name}, a custom level for c1x.`;
 
 const NO_LOGO = { problem: "A level needs a picture the first time it's uploaded." };
 
 export interface Uploaded {
   mod: LevelMod;
   isNew: boolean; // whether its mod was added, rather than updated
-}
-
-// the level's mod, already online, with its picture set to logo if there's one
-async function updateExistingMod(
-  token: string,
-  mod: LevelMod,
-  logo: Uint8Array | null,
-  calls: UploadCalls,
-): Promise<Answer<Uploaded>> {
-  if (logo) {
-    const set = await calls.setLevelLogo(token, mod.id, logo);
-    if (isProblem(set)) {
-      return set;
-    }
-  }
-  return { mod, isNew: false };
 }
 
 // the player's mod for level_src/<name>, adding one if they don't have it yet
@@ -56,17 +42,30 @@ async function findOrAddLevelMod(
     return own;
   }
   if (own) {
-    return updateExistingMod(token, own, details.logo, calls);
+    return { mod: own, isNew: false };
   }
-  const { logo } = details;
+  const { name: title, logo } = details;
   if (!logo) {
     return NO_LOGO;
   }
-  const added = await calls.addLevelMod(token, { ...details, logo, folder: name });
+  const level = { name: title, summary: levelSummary(title), logo, folder: name };
+  const added = await calls.addLevelMod(token, level);
   if (isProblem(added)) {
     return added;
   }
   return { mod: added, isNew: true };
+}
+
+// why level_src/<name> can't be uploaded, or null if it can: a download is
+// refused a folder the game can't boot
+function folderNameProblem(name: string): { problem: string } | null {
+  if (isBootableName(name)) {
+    return null;
+  }
+  return {
+    problem: `Rename the level's folder, ${name}, to only letters, digits, _ and - `
+      + "first: otherwise players can't download it.",
+  };
 }
 
 // uploads level_src/<name>, signed in with the player's token, zipped as the
@@ -78,6 +77,10 @@ export async function uploadLevel(
   details: LevelDetails,
   calls: UploadCalls = modio,
 ): Promise<Answer<Uploaded>> {
+  const badName = folderNameProblem(name);
+  if (badName) {
+    return badName;
+  }
   const uploaded = await findOrAddLevelMod(token, name, details, calls);
   if (isProblem(uploaded)) {
     return uploaded;

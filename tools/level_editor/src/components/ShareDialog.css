@@ -35,8 +35,7 @@
   gap: 8px;
 }
 
-.share-dialog input,
-.share-dialog textarea {
+.share-dialog input {
   padding: 5px 8px;
   background: #1e1f22;
   color: #ddd;
@@ -56,42 +55,6 @@
 .share-dialog button:disabled {
   opacity: 0.45;
   cursor: default;
-}
-
-.share-dialog a {
-  color: #8ab4f8;
-}
-
-/* the parts of the share dialog, each under its heading */
-.share-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  background: #232428;
-  border: 1px solid #3f4147;
-  border-radius: 4px;
-}
-
-.share-section h3 {
-  margin: 0 0 2px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #9a9ca3;
-}
-
-.share-section label {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.share-picture {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 4px;
 }
 
 /* that the player's signed in, quietly under the title */

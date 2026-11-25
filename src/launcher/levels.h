@@ -2,7 +2,6 @@
 #define _LAUNCHER_LEVELS_H_
 
 #include "pc/settings.h"
-#include "modio_page.h"
 #include "level_title.h"
 
 #define CUSTOM_LEVELS_MAX 128
@@ -10,7 +9,7 @@
 /* where a custom level is from, which the launcher lists them under, in this order */
 typedef enum {
   LEVEL_COMES_WITH_C1X, /* level_src/included_levels.txt lists it */
-  LEVEL_DOWNLOADED,     /* from mod.io: it has a page there */
+  LEVEL_DOWNLOADED,     /* from mod.io: its source's .modio.json notes its mod */
   LEVEL_OWN,            /* anything else: made, or added by hand, by the player */
 } level_kind;
 
@@ -23,9 +22,6 @@ typedef struct {
   char titles[CUSTOM_LEVELS_MAX][LEVEL_TITLE_MAX]; /* what the launcher shows it as */
   int built[CUSTOM_LEVELS_MAX];
   int out_of_date[CUSTOM_LEVELS_MAX]; /* built, but a source was saved since */
-  /* its page on mod.io if it was downloaded from there (its source's .modio.json
-     says), else "" */
-  char modio_pages[CUSTOM_LEVELS_MAX][MODIO_PAGE_MAX];
   level_kind kinds[CUSTOM_LEVELS_MAX];
   /* its place among the levels that come with c1x, which they're listed in */
   int included_ranks[CUSTOM_LEVELS_MAX];

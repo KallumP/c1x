@@ -15,9 +15,9 @@ beforeEach(() => {
 afterEach(() => { rmSync(root, { recursive: true, force: true }); });
 
 const LOGO = new Uint8Array([1, 2, 3]);
-const DETAILS = { name: "My Level", summary: "A level.", logo: LOGO };
-const ONLINE: LevelMod = { id: 17302, page: "https://test.mod.io/m/my-level" };
-const NEW_MOD: LevelMod = { id: 20000, page: "https://test.mod.io/m/new" };
+const DETAILS = { name: "My Level", logo: LOGO };
+const ONLINE: LevelMod = { id: 17302 };
+const NEW_MOD: LevelMod = { id: 20000 };
 
 // stand-ins for mod.io's calls: the player has the mod own (or none), and each
 // call answers as given; what they were sent is kept
@@ -27,7 +27,6 @@ function standInModio(own: LevelMod | null, answers: Refusals = {}) {
   const sent = {
     newLevels: [] as NewLevel[],
     files: [] as { modId: number; zip: Uint8Array }[],
-    logos: [] as { modId: number; logo: Uint8Array }[],
     tokens: [] as string[],
   };
   const modio: UploadCalls = {
@@ -45,20 +44,21 @@ function standInModio(own: LevelMod | null, answers: Refusals = {}) {
       sent.files.push({ modId, zip });
       return answers.addLevelFile ?? {};
     },
-    setLevelLogo: async (token, modId, logo) => {
-      sent.tokens.push(token);
-      sent.logos.push({ modId, logo });
-      return answers.setLevelLogo ?? {};
-    },
   };
   return { modio, sent };
 }
 
 describe("uploading a level that isn't online yet", () => {
-  test("adds it as a new mod, with its details and folder name", async () => {
+  test("adds it as a new mod, with its name, picture and folder name", async () => {
     const { modio, sent } = standInModio(null);
     await uploadLevel("token", root, "my_level", DETAILS, modio);
-    expect(sent.newLevels).toEqual([{ ...DETAILS, folder: "my_level" }]);
+    expect(sent.newLevels).toMatchObject([{ ...DETAILS, folder: "my_level" }]);
+  });
+
+  test("gives the new mod a summary made from its name", async () => {
+    const { modio, sent } = standInModio(null);
+    await uploadLevel("token", root, "my_level", DETAILS, modio);
+    expect(sent.newLevels[0].summary).toBe("My Level, a custom level for c1x.");
   });
 
   test("adds its zip to the new mod", async () => {
@@ -104,6 +104,27 @@ describe("uploading a level that's already online", () => {
   });
 });
 
+describe("uploading a level whose folder the game can't boot", () => {
+  beforeEach(() => {
+    mkdirSync(join(root, "my level"));
+    writeFileSync(join(root, "my level", "my_level.obj"), "v 0 0 0");
+  });
+
+  test("says to rename its folder", async () => {
+    const { modio } = standInModio(null);
+    expect(await uploadLevel("token", root, "my level", DETAILS, modio)).toEqual({
+      problem: "Rename the level's folder, my level, to only letters, digits, _ and - "
+        + "first: otherwise players can't download it.",
+    });
+  });
+
+  test("asks mod.io nothing", async () => {
+    const { modio, sent } = standInModio(null);
+    await uploadLevel("token", root, "my level", DETAILS, modio);
+    expect(sent.tokens).toEqual([]);
+  });
+});
+
 describe("uploading a level mod.io refuses", () => {
   test("is why mod.io couldn't say if it's online", async () => {
     const { modio, sent } = standInModio(
@@ -136,41 +157,21 @@ describe("uploading a level mod.io refuses", () => {
 });
 
 describe("a level's picture", () => {
-  const KEEP_LOGO = { ...DETAILS, logo: null };
-
-  test("is set on a level already online when there's a new one", async () => {
-    const { modio, sent } = standInModio(ONLINE);
-    await uploadLevel("token", root, "my_level", DETAILS, modio);
-    expect(sent.logos).toEqual([{ modId: ONLINE.id, logo: LOGO }]);
-  });
-
-  test("is kept on a level already online when there's no new one", async () => {
-    const { modio, sent } = standInModio(ONLINE);
-    await uploadLevel("token", root, "my_level", KEEP_LOGO, modio);
-    expect(sent.logos).toEqual([]);
-  });
-
-  test("is only sent with a new level's mod, not set again", async () => {
-    const { modio, sent } = standInModio(null);
-    await uploadLevel("token", root, "my_level", DETAILS, modio);
-    expect(sent.logos).toEqual([]);
-  });
-
   test("is needed for a new level", async () => {
     const { modio, sent } = standInModio(null);
-    expect(await uploadLevel("token", root, "my_level", KEEP_LOGO, modio)).toEqual({
+    const noLogo = { ...DETAILS, logo: null };
+    expect(await uploadLevel("token", root, "my_level", noLogo, modio)).toEqual({
       problem: "A level needs a picture the first time it's uploaded.",
     });
     expect([sent.newLevels, sent.files]).toEqual([[], []]);
   });
 
-  test("is why mod.io didn't set it", async () => {
-    const { modio } = standInModio(
-      ONLINE,
-      { setLevelLogo: { problem: "The logo is too small." } },
-    );
-    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({
-      problem: "The logo is too small.",
+  test("isn't needed for a new version", async () => {
+    const { modio } = standInModio(ONLINE);
+    const noLogo = { ...DETAILS, logo: null };
+    expect(await uploadLevel("token", root, "my_level", noLogo, modio)).toEqual({
+      mod: ONLINE,
+      isNew: false,
     });
   });
 });
