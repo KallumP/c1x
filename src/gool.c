@@ -39,7 +39,7 @@ int GoolProject(vec*,vec*);
 int GoolSendToColliders2(gool_object*,gool_object*,uint32_t,int,int,uint32_t*);
 int GoolObjectInterrupt(gool_object*,uint32_t,int,uint32_t*);
 
-#define init_obj          player
+#define init_obj          players[0]
 #define main_obj          crash
 
 #define GETRFP(obj)       (!obj->fp)?0:((uint32_t)obj->fp-(uint32_t)&obj->process)
@@ -123,7 +123,6 @@ gool_object *crash = 0;            /* 800566B4; gp[0xAE] */
 uint16_t level_spawns[GOOL_LEVEL_SPAWN_COUNT]; /* 8005E348 */
 uint32_t spawns[GOOL_SPAWN_COUNT]; /* 8005FF58 */
 gool_object *objects;              /* 80060DB0 */
-gool_object *player;               /* 80060DB4 */
 gool_object *player_two = 0;       /* the second crash, with two_players on */
 gool_handle handles[8];            /* 80060DB8 */
 gool_handle free_objects;          /* 80060DF8 */
@@ -154,6 +153,35 @@ extern mat16 ms_rot, ms_cam_rot;
 extern int32_t cam_rot_xz;
 extern quad28_t uv_map[600];
 
+/* a player's slot, empty and not linked to any other object */
+static void GoolEmptyPlayerSlot(gool_object *slot) {
+  slot->handle.type = 0;
+  slot->parent = 0;
+  slot->sibling = 0;
+  slot->children = 0;
+}
+
+/* each player's own slot, outside the object pool; 0 if one couldn't be made */
+static int GoolAllocPlayerSlots() {
+  int i;
+
+  for (i=0;i<COOP_PLAYER_COUNT;i++) {
+    players[i] = (gool_object*)malloc(sizeof(gool_object)+0x100);
+    if (!players[i]) { return 0; }
+    GoolEmptyPlayerSlot(players[i]);
+  }
+  return 1;
+}
+
+static void GoolFreePlayerSlots() {
+  int i;
+
+  for (i=0;i<COOP_PLAYER_COUNT;i++) {
+    free(players[i]);
+    players[i] = 0;
+  }
+}
+
 //----- (8001AAD8) --------------------------------------------------------
 int GoolInitAllocTable() {
   gool_handle *handle; // $v1
@@ -161,9 +189,8 @@ int GoolInitAllocTable() {
   int i; // $a0 MAPDST
 
   crash   = 0;
-  player  = (gool_object*)malloc(sizeof(gool_object)+0x100);
   objects = (gool_object*)malloc(sizeof(gool_object)*GOOL_OBJECT_COUNT);
-  if (!objects || !player) { return ERROR_MALLOC_FAILED; }
+  if (!objects || !GoolAllocPlayerSlots()) { return ERROR_MALLOC_FAILED; }
   cur_obj = 0;
   frames_elapsed = 0;
   free_objects.type = 2;
@@ -183,17 +210,13 @@ int GoolInitAllocTable() {
     handle->type = 2;
     handle->children = 0;
   }
-  player->handle.type = 0;
-  player->parent = 0;
-  player->sibling = 0;
-  player->children = 0;
   return SUCCESS;
 }
 
 //----- (8001AC28) --------------------------------------------------------
 int GoolKillAllocTable() {
   free(objects);
-  free(player);
+  GoolFreePlayerSlots();
   return SUCCESS;
 }
 
@@ -717,7 +740,7 @@ gool_object *GoolObjectCreate(void *parent, int exec, int subtype, int argc, uin
 
   _parent = (gool_object*)parent;
   if (!exec && !subtype) {
-    crash = player;
+    crash = players[0];
     child = crash;
   }
   else {
@@ -854,7 +877,7 @@ int GoolObjectInit(gool_object *obj, int exec, int subtype, int argc, int *argv)
   obj->subtype = subtype;
   obj->anim_seq = 0;
   obj->once_p = 0;
-  obj->player = player;
+  obj->player = players[0];
   header = (gool_header*)obj->global->items[0];
   maps = (gool_state_maps*)obj->global->items[3];
   idx_states = header->subtype_map_idx;
@@ -901,9 +924,7 @@ int GoolObjectKill(gool_object *obj, int sig) {
     children = GoolObjectGetChildren(&free_objects);
     GoolObjectAddChild((gool_object*)&free_objects, obj);
     GoolObjectSetChildren(&free_objects, children);
-    player->parent = 0;
-    player->children = 0;
-    player->sibling = 0;
+    GoolEmptyPlayerSlot(players[0]);
     crash = 0;
   }
   else
@@ -1005,7 +1026,7 @@ void GoolObjectLocalBound(gool_object *obj, vec *scale) {
 
 /* the object's slot in the tween pose table (pc/tween.h) */
 int GoolObjectTweenSlot(gool_object *obj) {
-  if (obj == player) { return GOOL_OBJECT_COUNT; }
+  if (obj == players[0]) { return GOOL_OBJECT_COUNT; }
   return obj - objects;
 }
 
@@ -1035,7 +1056,7 @@ static void GoolRecordObjectPose(gool_object *obj) {
 static void GoolRecordObjectPoses() {
   int i;
 
-  GoolRecordObjectPose(player);
+  GoolRecordObjectPose(players[0]);
   for (i=0;i<GOOL_OBJECT_COUNT;i++)
     GoolRecordObjectPose(&objects[i]);
 }
