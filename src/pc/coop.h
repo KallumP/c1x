@@ -11,7 +11,7 @@
  */
 #define COOP_NOT_A_PLAYER    -1      /* CoopPlayerIndex of any other object */
 #define COOP_PLAYER_TWO      1       /* player two's index in players */
-#define COOP_PLAYER_TWO_PORT 1       /* the pad player two reads */
+#define COOP_PLAYER_TWO_PORT 1
 #define COOP_BESIDE_DISTANCE 0x32000 /* how far beside player one he starts: two boxes */
 
 extern gool_object *players[GOOL_PLAYER_COUNT];

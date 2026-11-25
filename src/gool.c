@@ -798,7 +798,6 @@ void GoolObjectStop(gool_object *obj) {
   obj->speed = 0;
 }
 
-/* player two stands still beside crash, facing the same way */
 static void GoolPlayerTwoStandBesideCrash() {
   gool_object *two;
 
@@ -812,7 +811,6 @@ static void GoolPlayerTwoStandBesideCrash() {
   TweenForget(GoolObjectTweenSlot(two)); /* placed there, not moved there */
 }
 
-/* with two_players on, put player two beside crash, creating him if he isn't there yet */
 void GoolPlacePlayerTwo() {
   if (!game_settings.two_players || !crash || ns.ldat->lid == LID_TITLE) { return; }
   if (!CoopPlayerInPlay(COOP_PLAYER_TWO))
@@ -820,7 +818,6 @@ void GoolPlacePlayerTwo() {
   GoolPlayerTwoStandBesideCrash();
 }
 
-/* the pad an object reads: player two his own, every other object player one's */
 static int GoolObjectPadPort(gool_object *obj) {
   if (obj == players[COOP_PLAYER_TWO]) { return COOP_PLAYER_TWO_PORT; }
   return 0;
