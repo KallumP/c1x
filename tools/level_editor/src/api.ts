@@ -7,6 +7,7 @@ export interface LevelInfo {
   obj: string;   // its .obj
   scale: number; // game units per blender metre
   songs: string[]; // the audio files in its folder, any of which it can pick as its song
+  included: boolean; // whether it comes with c1x, so can't be shared
 }
 
 export interface LevelCfg {

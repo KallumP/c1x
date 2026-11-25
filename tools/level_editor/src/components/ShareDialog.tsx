@@ -11,6 +11,8 @@ import {
 } from "../levelSharing";
 import "./ShareDialog.css";
 
+const INCLUDED_LEVEL_TEXT = "This level comes with c1x, so it can't be shared.";
+
 export default function ShareDialog({ level, title, save, onClose }: {
   level: LevelInfo;
   title: string; // level.cfg's title as it's edited, or "" for its folder's name
@@ -109,6 +111,9 @@ export default function ShareDialog({ level, title, save, onClose }: {
   );
 
   const renderShareContent = () => {
+    if (level.included) {
+      return <p>{INCLUDED_LEVEL_TEXT}</p>;
+    }
     if (modio.signedIn === null) {
       return <p>Checking mod.io...</p>;
     }
@@ -121,7 +126,7 @@ export default function ShareDialog({ level, title, save, onClose }: {
   const renderShareFooter = () => (
     <footer className="share-footer">
       <button onClick={onClose}>Close</button>
-      {modio.signedIn && renderUploadButton()}
+      {modio.signedIn && !level.included && renderUploadButton()}
     </footer>
   );
 
