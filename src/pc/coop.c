@@ -130,6 +130,31 @@ void CoopAimAtNearestPlayer(gool_object *obj) {
   obj->player = CoopNearestPlayer(&obj->trans);
 }
 
+/* how far trans is along direction (a path's direction_x/y/z), to compare who's further */
+static int64_t DistanceAlong(vec *trans, vec *direction) {
+  return (int64_t)trans->x*direction->x + (int64_t)trans->y*direction->y
+    + (int64_t)trans->z*direction->z;
+}
+
+/* the player in play furthest along direction; player one when level or alone */
+gool_object *CoopLeadPlayer(vec *direction) {
+  gool_object *lead;
+  int64_t lead_distance, distance;
+  int idx;
+
+  lead = players[0];
+  lead_distance = INT64_MIN;
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (!CoopPlayerInPlay(idx)) { continue; }
+    distance = DistanceAlong(&players[idx]->trans, direction);
+    if (distance > lead_distance) {
+      lead = players[idx];
+      lead_distance = distance;
+    }
+  }
+  return lead;
+}
+
 /* the checkpoint is player one's: a player two running crash's script never saves it */
 int CoopMaySaveLevelState(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
