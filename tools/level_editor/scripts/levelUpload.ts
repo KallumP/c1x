@@ -1,5 +1,6 @@
 // uploading a level source to mod.io as the signed-in player: a new mod the
 // first time, then a new file on that same mod each time after
+import { includedLevels } from "../server/levels";
 import { isBootableName } from "../server/settings";
 import { zipLevel } from "./levelZip";
 import * as modio from "./modio";
@@ -68,6 +69,16 @@ function folderNameProblem(name: string): { problem: string } | null {
   };
 }
 
+const INCLUDED_LEVEL = { problem: "This level comes with c1x, so it can't be uploaded." };
+
+// why level_src/<name> can't be uploaded, in root, or null if it can
+function uploadProblem(root: string, name: string): { problem: string } | null {
+  if (includedLevels(root).includes(name)) {
+    return INCLUDED_LEVEL;
+  }
+  return folderNameProblem(name);
+}
+
 // uploads level_src/<name>, signed in with the player's token, zipped as the
 // newest file of its mod
 export async function uploadLevel(
@@ -77,9 +88,9 @@ export async function uploadLevel(
   details: LevelDetails,
   calls: UploadCalls = modio,
 ): Promise<Answer<Uploaded>> {
-  const badName = folderNameProblem(name);
-  if (badName) {
-    return badName;
+  const problem = uploadProblem(root, name);
+  if (problem) {
+    return problem;
   }
   const uploaded = await findOrAddLevelMod(token, name, details, calls);
   if (isProblem(uploaded)) {

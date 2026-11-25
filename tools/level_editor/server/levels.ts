@@ -42,6 +42,22 @@ export function listLevels(root: string): LevelInfo[] {
     .sort((first, second) => (first.name < second.name ? -1 : 1));
 }
 
+// root's included_levels.txt: the levels that come with c1x, one folder a line,
+// lines starting with # saying what it is (the launcher reads it too, levels.c)
+const INCLUDED_LEVELS_FILE = "included_levels.txt";
+
+// the folders of the levels that come with c1x, in root
+export function includedLevels(root: string): string[] {
+  const file = join(root, INCLUDED_LEVELS_FILE);
+  if (!existsSync(file)) {
+    return [];
+  }
+  return readFileSync(file, "utf8")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "" && !line.startsWith("#"));
+}
+
 // whether root has a level source called name
 export const hasLevelSource = (root: string, name: string) =>
   listLevels(root).some((level) => level.name === name);
