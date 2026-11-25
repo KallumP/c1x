@@ -128,16 +128,13 @@ export async function signInWithCode(
   return { token: access_token, expires: date_expires };
 }
 
-const logoFile = (logo: Uint8Array) =>
-  new File([logo], "logo.png", { type: "image/png" });
-
 function newLevelForm({ name, summary, folder, logo }: NewLevel): FormData {
   const form = new FormData();
   form.append("name", name);
   form.append("summary", summary);
   form.append("metadata_blob", folder);
   form.append("tags[]", LEVEL_TAG);
-  form.append("logo", logoFile(logo));
+  form.append("logo", new File([logo], "logo.png", { type: "image/png" }));
   return form;
 }
 
@@ -184,29 +181,17 @@ export async function findOwnLevelMod(
   return { id: mod.id };
 }
 
-// posts file as a form's field to one of the game's paths, signed in with the
-// player's token
-async function postSignedInFile(
-  token: string,
-  path: string,
-  field: string,
-  file: File,
-  fetchUrl: Fetch,
-): Promise<Answer<object>> {
-  const form = new FormData();
-  form.append(field, file);
-  const request = { method: "POST", headers: signedInHeaders(token), body: form };
-  return withoutBody(await askModio(fetchUrl, gameUrl(path), request));
-}
-
-export function addLevelFile(
+// adds zip as the newest file of a level's mod, signed in with the player's token
+export async function addLevelFile(
   token: string,
   modId: number,
   zip: Uint8Array,
   fetchUrl: Fetch = fetch,
 ): Promise<Answer<object>> {
-  const file = new File([zip], "level.zip", { type: "application/zip" });
-  return postSignedInFile(token, `/mods/${modId}/files`, "filedata", file, fetchUrl);
+  const form = new FormData();
+  form.append("filedata", new File([zip], "level.zip", { type: "application/zip" }));
+  const request = { method: "POST", headers: signedInHeaders(token), body: form };
+  return withoutBody(await askModio(fetchUrl, gameUrl(`/mods/${modId}/files`), request));
 }
 
 // a level players can download

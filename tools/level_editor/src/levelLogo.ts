@@ -19,22 +19,14 @@ export function logoCrop(viewWidth: number, viewHeight: number): Crop {
   return { x, y, width, height };
 }
 
-// what's drawn in source (width by height) as a logo: a png, in base64
-function logoOf(
-  source: CanvasImageSource,
-  sourceWidth: number,
-  sourceHeight: number,
-): string {
+// the view drawn in canvas as a logo: a png, in base64 (the canvas has to keep
+// what it drew, with three's preserveDrawingBuffer)
+export function viewLogo(canvas: HTMLCanvasElement): string {
   const logo = document.createElement("canvas");
   logo.width = LOGO_WIDTH;
   logo.height = LOGO_HEIGHT;
-  const { x, y, width, height } = logoCrop(sourceWidth, sourceHeight);
+  const { x, y, width, height } = logoCrop(canvas.width, canvas.height);
   const context = logo.getContext("2d");
-  context?.drawImage(source, x, y, width, height, 0, 0, LOGO_WIDTH, LOGO_HEIGHT);
+  context?.drawImage(canvas, x, y, width, height, 0, 0, LOGO_WIDTH, LOGO_HEIGHT);
   return logo.toDataURL("image/png").replace(/^data:image\/png;base64,/, "");
 }
-
-// the view drawn in canvas as a logo (the canvas has to keep what it drew,
-// with three's preserveDrawingBuffer)
-export const viewLogo = (canvas: HTMLCanvasElement) =>
-  logoOf(canvas, canvas.width, canvas.height);
