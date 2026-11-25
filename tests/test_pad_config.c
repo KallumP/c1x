@@ -115,7 +115,9 @@ UTEST(pad_config, example_controls_file_matches_defaults) {
   for (i=0;i<512;i++)
     defaults[i] = held_for((SDL_Scancode)i);
   /* run from the project root */
-  ASSERT_EQ(PAD_DEFAULT_KEY_COUNT, PadLoadBindings("controls.example.cfg")); /* a line per default key */
+  /* a line per default key, player two's too */
+  ASSERT_EQ(PAD_DEFAULT_KEY_COUNT + PAD_P2_DEFAULT_KEY_COUNT,
+    PadLoadBindings("controls.example.cfg"));
   for (i=0;i<512;i++)
     EXPECT_EQ(defaults[i], held_for((SDL_Scancode)i));
 }
@@ -180,4 +182,16 @@ UTEST(pad_config, a_p2_controller_line_is_skipped) {
   PadResetBindings();
   WriteWholeFile(CONFIG_PATH, "p2 cross = pad:b\n");
   ASSERT_EQ(0, PadLoadBindings(CONFIG_PATH));
+}
+
+UTEST(pad_config, example_controls_file_matches_player_two_defaults) {
+  uint32_t defaults[512];
+  int i;
+
+  PadResetBindings();
+  for (i=0;i<512;i++)
+    defaults[i] = player_two_held_for((SDL_Scancode)i);
+  PadLoadBindings("controls.example.cfg"); /* run from the project root */
+  for (i=0;i<512;i++)
+    EXPECT_EQ(defaults[i], player_two_held_for((SDL_Scancode)i));
 }
