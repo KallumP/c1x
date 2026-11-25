@@ -1412,10 +1412,8 @@ void GoolObjectTransform(gool_object *obj) {
     }
     if (status_b & 0x100000) {
       /* inherit zone colors */
-      zone = obj->zone ? obj->zone : cur_zone;
-      header = (zone_header*)zone->items[0];
-      obj->colors = obj == crash ? header->player_colors:
-                                   header->object_colors;
+      header = (zone_header*)GoolObjectZoneOrCurrent(obj)->items[0];
+      obj->colors = *CoopZoneColors(obj, header);
     }
     break;
   case GOOL_ANIM_TYPE_SPRITE:
@@ -1768,7 +1766,7 @@ int GoolObjectColors(gool_object *obj) {
     }
     break;
   default:
-    if (obj == crash && (obj->status_b & 0x4000000))
+    if (CoopIsPlayer(obj) && (obj->status_b & 0x4000000))
       GoolObjectColorByZone(obj);
     break;
   }
