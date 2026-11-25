@@ -1191,11 +1191,15 @@ static int GoolObjectPopFrame(gool_object *obj, uint32_t *flags) {
    spin that carries him off a ledge doesn't lose the jump (JumpGraceCountsAsFloor),
    when the spin_ledge_jump setting is on */
 static void CrashJumpGrace(gool_object *obj) {
-  static jump_grace grace;
+  static jump_grace graces[GOOL_PLAYER_COUNT];
+  jump_grace *grace;
+  uint32_t tapped;
 
-  JumpGraceTrackFloor(&grace, obj->status_a & 1);
+  grace = &graces[CoopPlayerIndex(obj)];
+  JumpGraceTrackFloor(grace, obj->status_a & 1);
   if (!game_settings.spin_ledge_jump) { return; }
-  if (JumpGraceCountsAsFloor(&grace, obj->velocity.y, pads[0].tapped))
+  tapped = pads[CoopObjectPadPort(obj)].tapped;
+  if (JumpGraceCountsAsFloor(grace, obj->velocity.y, tapped))
     obj->status_a |= JUMP_GRACE_FLOOR;
 }
 
@@ -1215,8 +1219,9 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
   if (obj == crash) {
     PadUpdate();
     CustomMenuReadPad(); /* before the title's menu reads it */
-    CrashJumpGrace(obj);
   }
+  if (CoopIsPlayer(obj))
+    CrashJumpGrace(obj);
   cur_obj = obj;
   status_b = obj->status_b;
   if ((cur_display_flags & GOOL_FLAG_ANIMATE) == 0)
