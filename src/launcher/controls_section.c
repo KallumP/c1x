@@ -99,10 +99,15 @@ int SaveControlsSection(const char *repo) {
 }
 
 /* a button's binding count for a kind: how many keys, or controller buttons */
+/* the player whose keys a keyboard tab shows */
+static int KeyboardPlayer(binding_kind kind) {
+  if (kind == P2_KEYBOARD) { return PAD_PLAYER_TWO; }
+  return PAD_PLAYER_ONE;
+}
+
 static int *BindingCount(binding_kind kind, int button) {
   if (kind == CONTROLLER) { return &controls.pad_count[button]; }
-  if (kind == P2_KEYBOARD) { return &controls.p2_key_count[button]; }
-  return &controls.key_count[button];
+  return &controls.key_count[KeyboardPlayer(kind)][button];
 }
 
 /* player two's keys are optional (he can play on a controller); player one's buttons keep one */
@@ -118,15 +123,12 @@ static int MaxBindings(binding_kind kind) {
 
 static int BindingAt(binding_kind kind, int button, int index) {
   if (kind == CONTROLLER) { return controls.pads[button][index]; }
-  if (kind == P2_KEYBOARD) { return controls.p2_keys[button][index]; }
-  return controls.keys[button][index];
+  return controls.keys[KeyboardPlayer(kind)][button][index];
 }
 
 static void SetBindingAt(binding_kind kind, int button, int index, int binding) {
   if (kind == CONTROLLER) { controls.pads[button][index] = binding; }
-  else if (kind == P2_KEYBOARD)
-    controls.p2_keys[button][index] = (SDL_Scancode)binding;
-  else { controls.keys[button][index] = (SDL_Scancode)binding; }
+  else { controls.keys[KeyboardPlayer(kind)][button][index] = (SDL_Scancode)binding; }
 }
 
 static const char *ControllerLabel(int control) {

@@ -8,10 +8,9 @@
 
 /* each button's keys and controller buttons (see pc/gamepad.h), in pad_button_names' order */
 typedef struct {
-  int key_count[PAD_BUTTON_COUNT];
-  SDL_Scancode keys[PAD_BUTTON_COUNT][BUTTON_KEYS_MAX];
-  int p2_key_count[PAD_BUTTON_COUNT]; /* player two's keys: "p2 " lines */
-  SDL_Scancode p2_keys[PAD_BUTTON_COUNT][BUTTON_KEYS_MAX];
+  /* each player's keys; player two's are the "p2 " lines */
+  int key_count[PAD_PLAYER_COUNT][PAD_BUTTON_COUNT];
+  SDL_Scancode keys[PAD_PLAYER_COUNT][PAD_BUTTON_COUNT][BUTTON_KEYS_MAX];
   int pad_count[PAD_BUTTON_COUNT];
   int pads[PAD_BUTTON_COUNT][BUTTON_PADS_MAX];
 } launcher_controls;
