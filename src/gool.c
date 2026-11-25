@@ -1765,8 +1765,45 @@ int GoolObjectColors(gool_object *obj) {
   return SUCCESS;
 }
 
+static void GoolPlayerBound(gool_object *player, bound *player_bound) {
+  player_bound->p1.x = player->trans.x + player->bound.p1.x;
+  player_bound->p1.y = player->trans.y + player->bound.p1.y;
+  player_bound->p1.z = player->trans.z + player->bound.p1.z;
+  player_bound->p2.x = player->trans.x + player->bound.p2.x;
+  player_bound->p2.y = player->trans.y + player->bound.p2.y;
+  player_bound->p2.z = player->trans.z + player->bound.p2.z;
+}
+
+/* obj touches the player only if they're in play, drawn the same frame, and not two players */
+static int GoolObjectCanTouchPlayer(gool_object *obj, int player_idx) {
+  gool_object *player;
+
+  if (!CoopPlayerInPlay(player_idx)) { return 0; }
+  player = players[player_idx];
+  if (CoopIsPlayer(obj) && obj != player) { return 0; }
+  return obj->anim_stamp == player->anim_stamp;
+}
+
+/* signal obj and each player its bound touches (GoolCollide keeps the nearest as obj's
+   collider); an object drawn with crash that touches no one has no collider */
+static void GoolCollideWithPlayers(gool_object *obj, bound *obj_bound) {
+  bound player_bound;
+  int idx, touched;
+
+  touched = 0;
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (!GoolObjectCanTouchPlayer(obj, idx)) { continue; }
+    GoolPlayerBound(players[idx], &player_bound);
+    if (!TestBoundIntersection(&player_bound, obj_bound)) { continue; }
+    GoolCollide(obj, obj_bound, players[idx], &player_bound);
+    touched = 1;
+  }
+  if (!touched && obj->anim_stamp == crash->anim_stamp)
+    obj->collider = 0;
+}
+
 int GoolObjectBound(gool_object *obj) {
-  gool_bound *bound, crash_bound;
+  gool_bound *bound;
   gool_anim *anim;
   svtx_frame *frame;
   entry *entry;
@@ -1842,18 +1879,7 @@ int GoolObjectBound(gool_object *obj) {
     bound->p2.y = obj->trans.y + obj->bound.p2.y;
     bound->p2.z = obj->trans.z + obj->bound.p2.z;
   }
-  if (obj->anim_stamp == crash->anim_stamp) { /* rendered during same frame as crash? */
-    crash_bound.p1.x = crash->trans.x + crash->bound.p1.x;
-    crash_bound.p1.y = crash->trans.y + crash->bound.p1.y;
-    crash_bound.p1.z = crash->trans.z + crash->bound.p1.z;
-    crash_bound.p2.x = crash->trans.x + crash->bound.p2.x;
-    crash_bound.p2.y = crash->trans.y + crash->bound.p2.y;
-    crash_bound.p2.z = crash->trans.z + crash->bound.p2.z;
-    if (TestBoundIntersection(&crash_bound, &bound->bound)) /* collision with crash? */
-      GoolCollide(obj, &bound->bound, crash, &crash_bound); /* handle it (i.e. signal objs) */
-    else
-      obj->collider = 0;
-  }
+  GoolCollideWithPlayers(obj, &bound->bound);
   return 0;
 }
 
