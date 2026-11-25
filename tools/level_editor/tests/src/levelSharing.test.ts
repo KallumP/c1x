@@ -13,7 +13,7 @@ const MOD = { id: 17302 };
 describe("the upload button", () => {
   test.each([
     [false, "Upload"],
-    [true, "Upload new version"],
+    [true, "Update level"],
   ])("for a level online (%s) says %j", (isOnline, text) => {
     expect(uploadButtonText(isOnline)).toBe(text);
   });
