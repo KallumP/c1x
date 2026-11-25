@@ -137,7 +137,8 @@ static int PadApplyKeyBinding(int player_idx, uint32_t bits, SDL_Scancode code,
   key_bindings *bindings;
 
   bindings = &player_keys[player_idx];
-  if (IsFirstLineFor(bits, &rebound->keys[player_idx])) { PadUnbindButton(bindings, bits); }
+  if (IsFirstLineFor(bits, &rebound->keys[player_idx]))
+    PadUnbindButton(bindings, bits);
   if (bindings->count == PAD_KEYS_MAX) {
     ReportTooManyBindings(path, line_num);
     return 0;
