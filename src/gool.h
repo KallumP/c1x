@@ -354,6 +354,7 @@ extern void GoolForEachObjectHandle(
 extern gool_object *GoolObjectSpawn(entry*,int);
 extern gool_object *GoolObjectCreate(void*,int,int,int,uint32_t*,int);
 extern void GoolPlacePlayerTwo();
+extern void GoolObjectStop(gool_object *obj);
 extern int GoolObjectTerminate(gool_object*,int);
 extern void GoolZoneObjectsTerminate(entry*);
 extern void GoolUpdateObjects(int);

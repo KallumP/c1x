@@ -791,6 +791,13 @@ static void GoolPlayerCreate(int player_idx) {
     GoolObjectFree(obj);
 }
 
+void GoolObjectStop(gool_object *obj) {
+  obj->velocity.x = 0;
+  obj->velocity.y = 0;
+  obj->velocity.z = 0;
+  obj->speed = 0;
+}
+
 /* player two stands still beside crash, facing the same way */
 static void GoolPlayerTwoStandBesideCrash() {
   gool_object *two;
@@ -801,10 +808,7 @@ static void GoolPlayerTwoStandBesideCrash() {
   two->target_rot = crash->target_rot;
   two->scale = crash->scale;
   two->zone = cur_zone;
-  two->velocity.x = 0;
-  two->velocity.y = 0;
-  two->velocity.z = 0;
-  two->speed = 0;
+  GoolObjectStop(two);
   TweenForget(GoolObjectTweenSlot(two)); /* placed there, not moved there */
 }
 
