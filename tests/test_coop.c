@@ -357,3 +357,44 @@ UTEST(coop, a_player_out_of_play_never_leads) {
   slots[COOP_PLAYER_TWO].handle.type = 0;
   ASSERT_TRUE(&slots[0] == CoopLeadPlayer(&along_x));
 }
+
+#define FAR_AHEAD 0x80000 /* where the new lead is, along x */
+
+UTEST(coop, the_camera_aims_at_a_lead_that_stays_the_lead) {
+  coop_camera camera = { 0 };
+  gool_object lead;
+  vec subject;
+
+  lead.trans = (vec){ 0x12345, 0x6789, -0x4000 };
+  CoopCameraSubject(&camera, &lead);
+  subject = CoopCameraSubject(&camera, &lead);
+  ASSERT_EQ(lead.trans.x, subject.x);
+  ASSERT_EQ(lead.trans.y, subject.y);
+  ASSERT_EQ(lead.trans.z, subject.z);
+}
+
+UTEST(coop, the_camera_starts_from_the_old_lead_when_the_lead_changes) {
+  coop_camera camera = { 0 };
+  gool_object old_lead, new_lead;
+  vec subject;
+
+  old_lead.trans = (vec){ 0, 0, 0 };
+  new_lead.trans = (vec){ FAR_AHEAD, 0, 0 };
+  CoopCameraSubject(&camera, &old_lead);
+  subject = CoopCameraSubject(&camera, &new_lead);
+  ASSERT_EQ(FAR_AHEAD / COOP_CAMERA_EASE, subject.x); /* 1/COOP_CAMERA_EASE of the way */
+}
+
+UTEST(coop, the_camera_reaches_a_new_lead) {
+  coop_camera camera = { 0 };
+  gool_object old_lead, new_lead;
+  vec subject;
+  int frame;
+
+  old_lead.trans = (vec){ 0, 0, 0 };
+  new_lead.trans = (vec){ FAR_AHEAD, 0, 0 };
+  CoopCameraSubject(&camera, &old_lead);
+  for (frame=0;frame<200;frame++)
+    subject = CoopCameraSubject(&camera, &new_lead);
+  ASSERT_EQ(FAR_AHEAD, subject.x);
+}
