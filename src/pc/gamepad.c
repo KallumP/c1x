@@ -21,7 +21,7 @@ static gamepad gamepads[GAMEPAD_COUNT] = {
   { .id = NO_CONTROLLER_ID },
 };
 
-static int IsGamepad(int gamepad_idx) {
+static int IsGamepadIndex(int gamepad_idx) {
   return gamepad_idx >= 0 && gamepad_idx < GAMEPAD_COUNT;
 }
 
@@ -43,11 +43,15 @@ int GamepadFind(int id) {
   return GAMEPAD_NONE;
 }
 
+static int FindFreeGamepad() {
+  return GamepadFind(NO_CONTROLLER_ID);
+}
+
 /* the controller a newly plugged in id plays as: the first free one, or GAMEPAD_NONE */
 int GamepadConnect(int id) {
   int idx;
 
-  idx = GamepadFind(NO_CONTROLLER_ID);
+  idx = FindFreeGamepad();
   if (idx == GAMEPAD_NONE) { return GAMEPAD_NONE; }
   gamepads[idx].id = id;
   return idx;
@@ -71,6 +75,7 @@ void GamepadDisconnect(int id) {
   gamepads[idx].id = NO_CONTROLLER_ID;
 }
 
+/* every controller lets go of everything: a fresh start for the tests */
 void GamepadReleaseAll() {
   int idx;
 
@@ -79,12 +84,12 @@ void GamepadReleaseAll() {
 }
 
 void GamepadSetButton(int gamepad_idx, int button, int down) {
-  if (!IsGamepad(gamepad_idx) || !IsButton(button)) { return; }
+  if (!IsGamepadIndex(gamepad_idx) || !IsButton(button)) { return; }
   gamepads[gamepad_idx].buttons_held[button] = down != 0;
 }
 
 void GamepadSetAxis(int gamepad_idx, int axis, int value) {
-  if (!IsGamepad(gamepad_idx) || !IsAxis(axis)) { return; }
+  if (!IsGamepadIndex(gamepad_idx) || !IsAxis(axis)) { return; }
   gamepads[gamepad_idx].axes[axis] = value;
 }
 
@@ -102,7 +107,7 @@ int GamepadPulledTrigger(int axis, int value) {
 
 /* is a control (an SDL button or GAMEPAD_LEFT/RIGHT_TRIGGER) held? */
 int GamepadIsHeld(int gamepad_idx, int control) {
-  if (!IsGamepad(gamepad_idx)) { return 0; }
+  if (!IsGamepadIndex(gamepad_idx)) { return 0; }
   if (IsButton(control)) { return gamepads[gamepad_idx].buttons_held[control]; }
   if (control == GAMEPAD_LEFT_TRIGGER)
     return IsTriggerPulled(gamepad_idx, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
@@ -113,6 +118,6 @@ int GamepadIsHeld(int gamepad_idx, int control) {
 
 /* an axis's position, -32768 to 32767 (0 to 32767 for the triggers) */
 int GamepadAxis(int gamepad_idx, int axis) {
-  if (!IsGamepad(gamepad_idx) || !IsAxis(axis)) { return 0; }
+  if (!IsGamepadIndex(gamepad_idx) || !IsAxis(axis)) { return 0; }
   return gamepads[gamepad_idx].axes[axis];
 }
