@@ -123,7 +123,6 @@ gool_object *crash = 0;            /* 800566B4; gp[0xAE] */
 uint16_t level_spawns[GOOL_LEVEL_SPAWN_COUNT]; /* 8005E348 */
 uint32_t spawns[GOOL_SPAWN_COUNT]; /* 8005FF58 */
 gool_object *objects;              /* 80060DB0 */
-gool_object *player_two = 0;       /* the second crash, with two_players on */
 gool_handle handles[8];            /* 80060DB8 */
 gool_handle free_objects;          /* 80060DF8 */
 gool_object *cur_obj;              /* 80060E00 */
@@ -759,52 +758,46 @@ gool_object *GoolObjectCreate(void *parent, int exec, int subtype, int argc, uin
   return child;
 }
 
-/* a second crash, from the same crash program, beside the first under the player handle */
-static gool_object *GoolPlayerTwoCreate() {
+/* a second crash in player two's slot, from the same crash program, beside the first under the player handle */
+static void GoolPlayerTwoCreate() {
   gool_object *obj;
   zone_header *header;
 
-  obj = GoolObjectAlloc(1);
-  if (ISERRORCODE(obj))
-    return obj;
+  obj = players[COOP_PLAYER_TWO];
   GoolObjectAddChild((gool_object*)&handles[6], obj);
   obj->handle.subtype = 3;
   GoolObjectInit(obj, 0, 0, 0, 0);
   header = (zone_header*)cur_zone->items[0];
   obj->colors = header->player_colors;
-  return obj;
 }
 
 /* player two stands still beside crash, facing the same way */
 static void GoolPlayerTwoStandBesideCrash() {
-  player_two->trans = CoopBesideLead(crash->trans);
-  player_two->rot = crash->rot;
-  player_two->target_rot = crash->target_rot;
-  player_two->scale = crash->scale;
-  player_two->zone = cur_zone;
-  player_two->velocity.x = 0;
-  player_two->velocity.y = 0;
-  player_two->velocity.z = 0;
-  player_two->speed = 0;
-  TweenForget(GoolObjectTweenSlot(player_two)); /* placed there, not moved there */
+  gool_object *two = players[COOP_PLAYER_TWO];
+
+  two->trans = CoopBesideLead(crash->trans);
+  two->rot = crash->rot;
+  two->target_rot = crash->target_rot;
+  two->scale = crash->scale;
+  two->zone = cur_zone;
+  two->velocity.x = 0;
+  two->velocity.y = 0;
+  two->velocity.z = 0;
+  two->speed = 0;
+  TweenForget(GoolObjectTweenSlot(two)); /* placed there, not moved there */
 }
 
 /* with two_players on, put player two beside crash, creating him if he isn't there yet */
 void GoolPlacePlayerTwo() {
-  gool_object *obj;
-
   if (!game_settings.two_players || !crash || ns.ldat->lid == LID_TITLE) { return; }
-  if (!player_two) {
-    obj = GoolPlayerTwoCreate();
-    if (ISERRORCODE(obj)) { return; }
-    player_two = obj;
-  }
+  if (!CoopPlayerInPlay(COOP_PLAYER_TWO))
+    GoolPlayerTwoCreate();
   GoolPlayerTwoStandBesideCrash();
 }
 
 /* the pad an object reads: player two his own, every other object player one's */
 static int GoolObjectPadPort(gool_object *obj) {
-  if (obj == player_two) { return COOP_PLAYER_TWO_PORT; }
+  if (obj == players[COOP_PLAYER_TWO]) { return COOP_PLAYER_TWO_PORT; }
   return 0;
 }
 
@@ -927,8 +920,6 @@ int GoolObjectKill(gool_object *obj, int sig) {
   idx = obj->pid_flags >> 8;
   spawns[idx] &= 0xFFFFFFFE; /* clear bit 1 */
   obj->handle.type = 0;
-  if (obj == player_two)
-    player_two = 0;
   if (CoopIsPlayer(obj))
     GoolPlayerSlotRelease(obj);
   else

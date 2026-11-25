@@ -17,6 +17,11 @@ int CoopIsPlayer(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_NOT_A_PLAYER;
 }
 
+/* the player is in the level: their slot holds a live object */
+int CoopPlayerInPlay(int index) {
+  return players[index]->handle.type != 0;
+}
+
 /* the player's slot in the tween pose table (pc/tween.h), after the objects' */
 int CoopPlayerTweenSlot(int index) {
   return GOOL_OBJECT_COUNT + index;
