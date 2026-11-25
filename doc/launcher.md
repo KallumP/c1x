@@ -57,7 +57,7 @@ When something else changes `settings.cfg`, such as the level editor's **Build +
 
 ## Controls
 
-The Controls tab shows each PlayStation button's keys, on its **Keyboard** tab, and game controller buttons, on its **Controller** tab, from `controls.cfg` (see [Controls](controls.md)), which it creates from `controls.example.cfg` if there isn't one. They're grouped by what they do: movement first, then jump, spin, start and select, then the other buttons.
+The Controls tab shows each PlayStation button's keys, on its **Player 1 keyboard** tab, and game controller buttons, on its **Controller** tab, from `controls.cfg` (see [Controls](controls.md)), which it creates from `controls.example.cfg` if there isn't one. They're grouped by what they do: movement first, then jump, spin, start and select, then the other buttons.
 
 - Click a key, then press the key you want instead; on the Controller tab, click a controller button and press the one you want on a plugged in controller. Esc cancels.
 - **+** gives a button another key or controller button, and **x** removes one. A button always keeps at least one.
