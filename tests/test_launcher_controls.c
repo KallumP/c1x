@@ -260,3 +260,83 @@ UTEST(launcher_controls, saving_the_defaults_adds_no_lines) {
   ASSERT_STREQ("# mine\n", text);
   SDL_free(text);
 }
+
+UTEST(launcher_controls, reset_binds_player_two_cross_to_right_ctrl) {
+  launcher_controls c;
+
+  ResetControls(&c);
+  ASSERT_EQ(1, c.p2_key_count[FindPadButton("cross")]);
+  ASSERT_EQ(SDL_SCANCODE_RCTRL, c.p2_keys[FindPadButton("cross")][0]);
+}
+
+UTEST(launcher_controls, reset_leaves_player_two_select_without_a_key) {
+  launcher_controls c;
+
+  ResetControls(&c);
+  ASSERT_EQ(0, c.p2_key_count[FindPadButton("select")]);
+}
+
+UTEST(launcher_controls, a_p2_line_replaces_player_two_default_key) {
+  launcher_controls c;
+  int cross;
+
+  WriteWholeFile(LAUNCHER_CONTROLS_PATH, "p2 cross = V\n");
+  ASSERT_EQ(1, ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c));
+  cross = FindPadButton("cross");
+  ASSERT_EQ(1, c.p2_key_count[cross]);
+  ASSERT_EQ(SDL_SCANCODE_V, c.p2_keys[cross][0]);
+}
+
+UTEST(launcher_controls, a_p2_line_leaves_player_one_keys_alone) {
+  launcher_controls c;
+
+  WriteWholeFile(LAUNCHER_CONTROLS_PATH, "p2 cross = V\n");
+  ASSERT_EQ(1, ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c));
+  ASSERT_EQ(SDL_SCANCODE_SPACE, c.keys[FindPadButton("cross")][0]);
+}
+
+UTEST(launcher_controls, a_p2_pad_line_is_skipped) {
+  launcher_controls c, defaults;
+
+  WriteWholeFile(LAUNCHER_CONTROLS_PATH, "p2 cross = pad:b\n");
+  ASSERT_EQ(1, ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c));
+  ResetControls(&defaults);
+  ASSERT_TRUE(AreControlsEqual(&defaults, &c));
+}
+
+UTEST(launcher_controls, controls_with_a_different_player_two_key_arent_equal) {
+  launcher_controls a, b;
+
+  ResetControls(&a);
+  ResetControls(&b);
+  b.p2_keys[FindPadButton("cross")][0] = SDL_SCANCODE_K;
+  ASSERT_FALSE(AreControlsEqual(&a, &b));
+}
+
+UTEST(launcher_controls, saved_player_two_keys_read_back_the_same) {
+  launcher_controls c, read;
+  int select;
+
+  remove(LAUNCHER_CONTROLS_PATH);
+  ResetControls(&c);
+  select = FindPadButton("select");
+  c.p2_keys[select][0] = SDL_SCANCODE_BACKSPACE;
+  c.p2_key_count[select] = 1;
+  ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, "no_such_example.cfg", &c));
+  ASSERT_EQ(1, ReadControlsFile(LAUNCHER_CONTROLS_PATH, &read));
+  ASSERT_TRUE(AreControlsEqual(&c, &read));
+}
+
+UTEST(launcher_controls, saving_player_two_keys_keeps_player_one_lines) {
+  launcher_controls c;
+  char *text;
+
+  WriteWholeFile(LAUNCHER_CONTROLS_PATH, "cross = Space\n");
+  ASSERT_EQ(1, ReadControlsFile(LAUNCHER_CONTROLS_PATH, &c));
+  c.p2_keys[FindPadButton("cross")][0] = SDL_SCANCODE_V;
+  ASSERT_EQ(1, SaveControlsFile(LAUNCHER_CONTROLS_PATH, "no_such_example.cfg", &c));
+  text = ReadWholeFile(LAUNCHER_CONTROLS_PATH);
+  ASSERT_TRUE(text != 0);
+  ASSERT_STREQ("cross = Space\np2 cross = V\n", text);
+  SDL_free(text);
+}
