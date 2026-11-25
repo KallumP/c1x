@@ -620,7 +620,6 @@ static inline gool_object *GoolObjectAlloc(int flag) {
 gool_object *GoolObjectSpawn(entry *zone, int entity_idx) {
   gool_object *obj, *near_box; /* near_box = $s3 */
   gool_handle *handle;
-  gool_colors *colors;
   zone_header *header;
   zone_entity *entity;
   gool_header *g_header;
@@ -686,9 +685,7 @@ gool_object *GoolObjectSpawn(entry *zone, int entity_idx) {
   if (zone && zone->type == 17) { zone = cur_zone; }
   obj->zone = zone;
   header = (zone_header*)zone->items[0];
-  colors = is_main ? &header->player_colors:
-                     &header->object_colors;
-  obj->colors = *colors;
+  obj->colors = *CoopZoneColors(obj, header);
   obj->entity = entity;
   obj->path_length = entity->path_length << 8;
   if (!(entity->spawn_flags & 1)) { /* has rot initializer? */
