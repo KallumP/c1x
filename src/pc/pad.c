@@ -30,19 +30,19 @@ uint32_t SwPadRead(int idx) {
       held |= bits;
     }
   }
-  held |= PadGamepadHeld();
+  held |= PadGamepadHeld(0);
   return (held << 16);
 }
 
 #define STICK_PUSHED_FROM 13000 /* about 40% of the way out; an axis runs -32768 to 32767 */
 
 /* the d-pad directions the left stick is pushed towards (SDL's y is down) */
-static uint32_t LeftStickDirections() {
+static uint32_t LeftStickDirections(int gamepad_idx) {
   uint32_t held;
   int x, y;
 
-  x = GamepadAxis(0, SDL_CONTROLLER_AXIS_LEFTX);
-  y = GamepadAxis(0, SDL_CONTROLLER_AXIS_LEFTY);
+  x = GamepadAxis(gamepad_idx, SDL_CONTROLLER_AXIS_LEFTX);
+  y = GamepadAxis(gamepad_idx, SDL_CONTROLLER_AXIS_LEFTY);
   held = 0;
   if (x <= -STICK_PUSHED_FROM) { held |= PAD_LEFT; }
   if (x >= STICK_PUSHED_FROM) { held |= PAD_RIGHT; }
@@ -51,15 +51,15 @@ static uint32_t LeftStickDirections() {
   return held;
 }
 
-/* the buttons held on game controllers: by the controller bindings, and the left stick as the d-pad */
-uint32_t PadGamepadHeld() {
+/* the buttons held on a game controller: by the controller bindings, and the left stick as the d-pad */
+uint32_t PadGamepadHeld(int gamepad_idx) {
   uint32_t held;
   int i;
 
   if (!pad_mappings_set) { PadResetBindings(); }
-  held = LeftStickDirections();
+  held = LeftStickDirections(gamepad_idx);
   for (i=0;i<gamepad_mapping_count;i++) {
-    if (GamepadIsHeld(0, gamepad_mappings[i].control))
+    if (GamepadIsHeld(gamepad_idx, gamepad_mappings[i].control))
       held |= gamepad_mappings[i].bits;
   }
   return held;
