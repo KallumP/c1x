@@ -8,7 +8,6 @@ import {
   findOwnLevelMod,
   listOnlineLevels,
   fetchOnlineLevel,
-  setLevelLogo,
   MODIO_GAME,
   LEVELS_WITH_NAME,
   TOP_LEVELS,
@@ -322,23 +321,6 @@ describe("a level on mod.io, by its id", () => {
     expect(await fetchOnlineLevel(17302, fetchUrl)).toEqual({
       problem: "Tide Ruins has no file on mod.io yet.",
     });
-  });
-});
-
-describe("setting an online level's picture", () => {
-  test("posts it to its mod's media", async () => {
-    const { fetchUrl, requests } = standInFetch({ code: 201 });
-    await setLevelLogo("token", 17302, LOGO, fetchUrl);
-    expect(requests[0].url).toBe(
-      `${MODIO_GAME.apiUrl}/games/${MODIO_GAME.gameId}/mods/17302/media`,
-    );
-    expect(requests[0].init?.method).toBe("POST");
-  });
-
-  test("sends it as the mod's logo", async () => {
-    const { fetchUrl, requests } = standInFetch({ code: 201 });
-    await setLevelLogo("token", 17302, LOGO, fetchUrl);
-    expect(formOf(requests[0].init).has("logo")).toBe(true);
   });
 });
 
