@@ -116,7 +116,12 @@ export default function App() {
         onLevelCfg={levelCfg.change}
       />
       {isSharing && level && (
-        <ShareDialog level={level} save={save} onClose={() => setIsSharing(false)} />
+        <ShareDialog
+          level={level}
+          title={levelCfg.cfg.title}
+          save={save}
+          onClose={() => setIsSharing(false)}
+        />
       )}
     </div>
   );

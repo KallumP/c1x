@@ -125,6 +125,25 @@ describe("uploading a level whose folder the game can't boot", () => {
   });
 });
 
+describe("uploading a level that comes with c1x", () => {
+  beforeEach(() => {
+    writeFileSync(join(root, "included_levels.txt"), "# the levels that come with c1x\nmy_level\n");
+  });
+
+  test("says it can't be uploaded", async () => {
+    const { modio } = standInModio(null);
+    expect(await uploadLevel("token", root, "my_level", DETAILS, modio)).toEqual({
+      problem: "This level comes with c1x, so it can't be uploaded.",
+    });
+  });
+
+  test("asks mod.io nothing", async () => {
+    const { modio, sent } = standInModio(null);
+    await uploadLevel("token", root, "my_level", DETAILS, modio);
+    expect(sent.tokens).toEqual([]);
+  });
+});
+
 describe("uploading a level mod.io refuses", () => {
   test("is why mod.io couldn't say if it's online", async () => {
     const { modio, sent } = standInModio(

@@ -49,7 +49,7 @@ export function useLevelUpload(
     setOnline(undefined);
     setUploaded(null);
     setProblem(null);
-    if (!signedIn) {
+    if (!signedIn || level.included) {
       return;
     }
     fetchOwnLevelMod(level.name).then(setOnline, showFailure);

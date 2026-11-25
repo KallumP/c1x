@@ -13,6 +13,7 @@ export interface LevelInfo {
   obj: string;   // its .obj, in the folder
   scale: number; // game units per blender metre (level.cfg, or the default)
   songs: string[]; // the audio files in the folder, any of which it can pick as its song
+  included: boolean; // whether it comes with c1x (included_levels.txt), so can't be shared
 }
 
 function objsIn(folder: string): string[] {
@@ -32,13 +33,41 @@ function scaleIn(folder: string): number {
   return parseLevelCfg(existsSync(cfg) ? readFileSync(cfg, "utf8") : "").scale;
 }
 
+// root's included_levels.txt: the levels that come with c1x, one folder a line,
+// lines starting with # saying what it is (the launcher reads it too, levels.c)
+const INCLUDED_LEVELS_FILE = "included_levels.txt";
+
+// the folders of the levels that come with c1x, in root
+export function includedLevels(root: string): string[] {
+  const file = join(root, INCLUDED_LEVELS_FILE);
+  if (!existsSync(file)) {
+    return [];
+  }
+  return readFileSync(file, "utf8")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "" && !line.startsWith("#"));
+}
+
+function levelInfo(root: string, name: string, obj: string, included: string[]): LevelInfo {
+  const folder = join(root, name);
+  return {
+    name,
+    obj,
+    scale: scaleIn(folder),
+    songs: songsIn(folder),
+    included: included.includes(name),
+  };
+}
+
 // the level sources in root: its folders holding exactly one .obj, by name
 export function listLevels(root: string): LevelInfo[] {
+  const included = includedLevels(root);
   return readdirSync(root)
     .filter((name) => statSync(join(root, name)).isDirectory())
     .map((name) => ({ name, objs: objsIn(join(root, name)) }))
     .filter((folder) => folder.objs.length === 1)
-    .map((folder) => ({ name: folder.name, obj: folder.objs[0], scale: scaleIn(join(root, folder.name)), songs: songsIn(join(root, folder.name)) }))
+    .map((folder) => levelInfo(root, folder.name, folder.objs[0], included))
     .sort((first, second) => (first.name < second.name ? -1 : 1));
 }
 

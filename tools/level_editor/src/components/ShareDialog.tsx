@@ -3,11 +3,19 @@
 import type { LevelInfo } from "../api";
 import { useLevelUpload } from "../hooks/useLevelUpload";
 import { useModioAccount } from "../hooks/useModioAccount";
-import { onlineText, uploadButtonText, uploadedText } from "../levelSharing";
+import {
+  onlineText,
+  showsUpAsText,
+  uploadButtonText,
+  uploadedText,
+} from "../levelSharing";
 import "./ShareDialog.css";
 
-export default function ShareDialog({ level, save, onClose }: {
+const INCLUDED_LEVEL_TEXT = "This level comes with c1x, so it can't be shared.";
+
+export default function ShareDialog({ level, title, save, onClose }: {
   level: LevelInfo;
+  title: string; // level.cfg's title as it's edited, or "" for its folder's name
   // saves the level first, as the upload zips its files; whether it saved
   save: () => Promise<boolean>;
   onClose: () => void;
@@ -96,12 +104,16 @@ export default function ShareDialog({ level, save, onClose }: {
   const renderSignedIn = () => (
     <>
       {renderAccountLine()}
+      <p>{showsUpAsText(title, level.name)}</p>
       {renderOnlineLine()}
       {renderUploadResult()}
     </>
   );
 
   const renderShareContent = () => {
+    if (level.included) {
+      return <p>{INCLUDED_LEVEL_TEXT}</p>;
+    }
     if (modio.signedIn === null) {
       return <p>Checking mod.io...</p>;
     }
@@ -114,7 +126,7 @@ export default function ShareDialog({ level, save, onClose }: {
   const renderShareFooter = () => (
     <footer className="share-footer">
       <button onClick={onClose}>Close</button>
-      {modio.signedIn && renderUploadButton()}
+      {modio.signedIn && !level.included && renderUploadButton()}
     </footer>
   );
 

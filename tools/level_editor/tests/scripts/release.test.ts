@@ -108,6 +108,14 @@ describe("the release zip's files", () => {
       .forEach((file) => expect(sameNamed(file.from)).toBe(file.to));
   });
 
+  test.each(["modio_token.json", "settings.cfg", "controls.cfg", "imgui.ini"])(
+    "the player's own %s doesn't go in, even if git had it",
+    (playersFile) => {
+      const released = releaseFiles([...GIT_FILES, playersFile], BUILD_FILES, EDITOR_PAGE_FILES);
+      expect(released.map((file) => file.to)).not.toContain(playersFile);
+    },
+  );
+
   test("a build without the game, the tools or the editor's page is an error", () => {
     expect(() => files(["c1x_tools.exe"])).toThrow("build/c1x.exe isn't built: run make first");
     expect(() => files(["c1x.exe"])).toThrow("build/c1x_tools.exe isn't built: run make first");
