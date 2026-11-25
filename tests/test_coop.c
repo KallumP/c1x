@@ -27,3 +27,14 @@ UTEST(coop, an_object_outside_the_player_slots_is_not_a_player) {
   ASSERT_FALSE(CoopIsPlayer(&other));
   ASSERT_TRUE(CoopIsPlayer(&slots[COOP_PLAYER_COUNT-1]));
 }
+
+UTEST(coop, a_player_is_in_play_only_while_their_slot_is_in_use) {
+  gool_object slots[COOP_PLAYER_COUNT];
+  int i;
+
+  for (i=0;i<COOP_PLAYER_COUNT;i++) { players[i] = &slots[i]; }
+  slots[1].handle.type = 0;
+  ASSERT_EQ(0, CoopPlayerInPlay(1));
+  slots[1].handle.type = 1;
+  ASSERT_EQ(1, CoopPlayerInPlay(1));
+}
