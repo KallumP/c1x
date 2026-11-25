@@ -22,7 +22,10 @@
 #define PAD_CROSS       0x40
 #define PAD_SQUARE      0x80
 
+#define PAD_PLAYER_COUNT 2 /* each player has their own keys */
+
 uint32_t SwPadRead(int idx);
+uint32_t PadKeysHeld(int player_idx);
 uint32_t PadGamepadHeld(int gamepad_idx);
 int PadLoadBindings(const char *path);
 void PadResetBindings();
