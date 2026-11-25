@@ -191,3 +191,11 @@ UTEST(pad_config, example_controls_file_matches_player_two_defaults) {
   for (i=0;i<512;i++)
     EXPECT_EQ(defaults[i], player_two_held_for((SDL_Scancode)i));
 }
+
+/* button names aren't case-sensitive, so neither is the prefix */
+UTEST(pad_config, an_upper_case_p2_line_binds_a_player_two_key) {
+  PadResetBindings();
+  WriteWholeFile(CONFIG_PATH, "P2 cross = V\n");
+  PadLoadBindings(CONFIG_PATH);
+  ASSERT_EQ((uint32_t)PAD_CROSS, player_two_held_for(SDL_SCANCODE_V));
+}
