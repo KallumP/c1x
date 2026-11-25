@@ -119,6 +119,7 @@ static void CamPickSubject() {
   direction.y = cur_path->direction_y;
   direction.z = cur_path->direction_z;
   cam_lead = CoopLeadPlayer(&direction);
+  GoolLeashPlayersTo(cam_lead);
   cam_subject = CoopCameraSubject(&coop_cam, cam_lead);
 }
 

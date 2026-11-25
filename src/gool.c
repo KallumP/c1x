@@ -817,24 +817,33 @@ void GoolObjectStop(gool_object *obj) {
   obj->speed = 0;
 }
 
-static void GoolPlayerTwoStandBesideCrash() {
-  gool_object *two;
+/* the player stands still at trans, facing the way lead does */
+static void GoolPlayerStandAt(gool_object *player, gool_object *lead, vec trans) {
+  player->trans = trans;
+  player->rot = lead->rot;
+  player->target_rot = lead->target_rot;
+  player->scale = lead->scale;
+  player->zone = cur_zone;
+  GoolObjectStop(player);
+  TweenForget(GoolObjectTweenSlot(player)); /* placed there, not moved there */
+}
 
-  two = players[COOP_PLAYER_TWO];
-  two->trans = CoopBesideLead(crash->trans);
-  two->rot = crash->rot;
-  two->target_rot = crash->target_rot;
-  two->scale = crash->scale;
-  two->zone = cur_zone;
-  GoolObjectStop(two);
-  TweenForget(GoolObjectTweenSlot(two)); /* placed there, not moved there */
+/* a player left too far behind the lead (off screen) is brought to where the lead is */
+void GoolLeashPlayersTo(gool_object *lead) {
+  int idx;
+
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (!CoopPlayerInPlay(idx) || players[idx] == lead) { continue; }
+    if (CoopLeftBehind(lead, players[idx]))
+      GoolPlayerStandAt(players[idx], lead, lead->trans);
+  }
 }
 
 void GoolPlacePlayerTwo() {
   if (!game_settings.two_players || !crash || ns.ldat->lid == LID_TITLE) { return; }
   if (!CoopPlayerInPlay(COOP_PLAYER_TWO))
     GoolPlayerCreate(COOP_PLAYER_TWO);
-  GoolPlayerTwoStandBesideCrash();
+  GoolPlayerStandAt(players[COOP_PLAYER_TWO], crash, CoopBesideLead(crash->trans));
 }
 
 //----- (8001CB80) --------------------------------------------------------
