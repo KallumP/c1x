@@ -133,10 +133,10 @@ void SDLUpdate() {
       break;
     case SDL_CONTROLLERBUTTONDOWN:
     case SDL_CONTROLLERBUTTONUP:
-      GamepadSetButton(e.cbutton.button, e.type == SDL_CONTROLLERBUTTONDOWN);
+      GamepadSetButton(0, e.cbutton.button, e.type == SDL_CONTROLLERBUTTONDOWN);
       break;
     case SDL_CONTROLLERAXISMOTION:
-      GamepadSetAxis(e.caxis.axis, e.caxis.value);
+      GamepadSetAxis(0, e.caxis.axis, e.caxis.value);
       break;
     case SDL_MOUSEBUTTONUP:
     case SDL_MOUSEBUTTONDOWN:

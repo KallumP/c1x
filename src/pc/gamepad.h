@@ -11,11 +11,17 @@
 #define GAMEPAD_RIGHT_TRIGGER (SDL_CONTROLLER_BUTTON_MAX + 1)
 #define GAMEPAD_CONTROL_COUNT (SDL_CONTROLLER_BUTTON_MAX + 2)
 
-void GamepadSetButton(int button, int down);
-void GamepadSetAxis(int axis, int value);
+#define GAMEPAD_COUNT 2  /* controller 1 plays pad 1, controller 2 pad 2 */
+#define GAMEPAD_NONE  -1 /* no controller: not plugged in, or one too many */
+
+int GamepadConnect(int id);
+void GamepadDisconnect(int id);
+int GamepadFind(int id);
+void GamepadSetButton(int gamepad_idx, int button, int down);
+void GamepadSetAxis(int gamepad_idx, int axis, int value);
 void GamepadReleaseAll();
-int GamepadIsHeld(int control);
-int GamepadAxis(int axis);
+int GamepadIsHeld(int gamepad_idx, int control);
+int GamepadAxis(int gamepad_idx, int axis);
 int GamepadPulledTrigger(int axis, int value);
 
 #endif /* _PC_GAMEPAD_H_ */

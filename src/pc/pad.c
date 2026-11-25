@@ -41,8 +41,8 @@ static uint32_t LeftStickDirections() {
   uint32_t held;
   int x, y;
 
-  x = GamepadAxis(SDL_CONTROLLER_AXIS_LEFTX);
-  y = GamepadAxis(SDL_CONTROLLER_AXIS_LEFTY);
+  x = GamepadAxis(0, SDL_CONTROLLER_AXIS_LEFTX);
+  y = GamepadAxis(0, SDL_CONTROLLER_AXIS_LEFTY);
   held = 0;
   if (x <= -STICK_PUSHED_FROM) { held |= PAD_LEFT; }
   if (x >= STICK_PUSHED_FROM) { held |= PAD_RIGHT; }
@@ -59,7 +59,7 @@ uint32_t PadGamepadHeld() {
   if (!pad_mappings_set) { PadResetBindings(); }
   held = LeftStickDirections();
   for (i=0;i<gamepad_mapping_count;i++) {
-    if (GamepadIsHeld(gamepad_mappings[i].control))
+    if (GamepadIsHeld(0, gamepad_mappings[i].control))
       held |= gamepad_mappings[i].bits;
   }
   return held;
