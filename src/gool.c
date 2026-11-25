@@ -1222,6 +1222,8 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
   }
   if (CoopIsPlayer(obj))
     CrashJumpGrace(obj);
+  else
+    obj->player = CoopNearestPlayer(&obj->trans); /* enemies go for the nearest crash */
   cur_obj = obj;
   status_b = obj->status_b;
   if ((cur_display_flags & GOOL_FLAG_ANIMATE) == 0)
