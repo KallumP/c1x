@@ -518,7 +518,7 @@ void AudioUpdate() {
       continue; /* keyed on after the key status was read; it's read again next update */
     }
     if (keys_status[i] == KEYS_STATUS_ON) {
-      if (!VoiceSustainEnded(voice->flags & VOICE_KEYED_ON_BY_FRAME, &voice->sustain_counter)) { /* decrement sustain; still sustaining? (pc: or keyed on by frame) */
+      if (!VoiceSustainEnded(voice->flags & VOICE_KEYED_ON_BY_FRAME, &voice->sustain_counter)) { /* decrement sustain; still sustaining? (or keyed on by frame) */
       }
       else {
         SwNoteOff(i);

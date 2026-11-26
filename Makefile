@@ -33,6 +33,7 @@ SRC =	src/ns.c \
 	src/pc/spin.c \
 	src/pc/jumpgrace.c \
 	src/pc/coop.c \
+	src/pc/coop_game.c \
 	src/pc/levelend.c \
 	src/pc/audiosong.c \
 	src/pc/boxhud.c \

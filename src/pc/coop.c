@@ -1,3 +1,4 @@
+#include <string.h>
 #include "coop.h"
 #include "boxhud.h"
 #include "math.h"
@@ -7,6 +8,8 @@ extern gool_handle handles[8];
 
 /* each player's own object slot, outside the object pool; player one's is crash's */
 gool_object *players[GOOL_PLAYER_COUNT];
+
+coop_camera coop_cam;
 
 /* which player's slot obj is, or COOP_NOT_A_PLAYER */
 int CoopPlayerIndex(gool_object *obj) {
@@ -130,16 +133,65 @@ void CoopAimAtNearestPlayer(gool_object *obj) {
   obj->player = CoopNearestPlayer(&obj->trans);
 }
 
+static int32_t EasedLag(int32_t lag) {
+  int32_t step;
+
+  step = lag / COOP_CAMERA_EASE;
+  if (step == 0) { return 0; } /* too small to ease: it would never close */
+  return lag - step;
+}
+
+static void LagBehind(coop_camera *camera, gool_object *followed) {
+  camera->lag.x = camera->aim.x - followed->trans.x;
+  camera->lag.y = camera->aim.y - followed->trans.y;
+  camera->lag.z = camera->aim.z - followed->trans.z;
+}
+
+/* call once a frame: each call eases the aim a step nearer followed */
+vec CoopCameraStep(coop_camera *camera, gool_object *followed) {
+  if (camera->followed && followed != camera->followed) { LagBehind(camera, followed); }
+  camera->followed = followed;
+  camera->lag.x = EasedLag(camera->lag.x);
+  camera->lag.y = EasedLag(camera->lag.y);
+  camera->lag.z = EasedLag(camera->lag.z);
+  camera->aim.x = followed->trans.x + camera->lag.x;
+  camera->aim.y = followed->trans.y + camera->lag.y;
+  camera->aim.z = followed->trans.z + camera->lag.z;
+  return camera->aim;
+}
+
+void CoopCameraReset(coop_camera *camera) {
+  memset(camera, 0, sizeof(*camera));
+}
+
+/* the camera sits by whom it follows, so it stays with him until the other comes nearer it */
+vec CoopCameraAim(coop_camera *camera, vec *camera_trans) {
+  if (CoopPlayerInPlay(COOP_PLAYER_TWO))
+    return CoopCameraStep(camera, CoopNearestPlayer(camera_trans));
+  CoopCameraReset(camera);
+  camera->followed = players[0];
+  camera->aim = players[0]->trans;
+  return camera->aim;
+}
+
 /* the checkpoint is player one's: a player two running crash's script never saves it */
 int CoopMaySaveLevelState(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
 }
 
-/* where player two starts, beside player one at lead */
-vec CoopBesideLead(vec lead) {
-  vec beside;
+/* a demo plays back one pad: player two would stand still, and could hold the camera */
+int CoopPlayerTwoJoins(int two_players, int on_title, int in_demo) {
+  return two_players && !on_title && !in_demo;
+}
 
-  beside = lead;
-  beside.x += COOP_BESIDE_DISTANCE;
-  return beside;
+vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans)) {
+  vec spot;
+  int32_t distance;
+
+  for (distance=COOP_BESIDE_DISTANCE;distance>0;distance-=COOP_BESIDE_STEP) {
+    spot = one;
+    spot.x += distance;
+    if ((*has_floor)(&spot)) { return spot; }
+  }
+  return one; /* unchecked: he's standing on it */
 }
