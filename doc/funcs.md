@@ -9,6 +9,7 @@ These are here for now but will likely moved into code as function comments in t
 - `CamGetProgress2` - alternate version of `CamGetProgress`
 - `CamFollow` - adjust current progress according to a delta calculated based on the projected progress of the player (or more correctly, a point slightly behind or left/right of the player which dynamically zooms and/or pans) along the nearest camera path and update the level
 - `CamUpdate` - update progress and level according to current path's camera mode (where mode 5 and 6 use `CamFollow`)
+  - with two players, "the player" in these is whichever Crash is nearest the camera, and the point followed eases over to him when that changes (`CoopCameraAim` in `src/pc/coop.c`)
 - `CamDeath` - update camera during the spinning death sequence
 
 ## gfx.c
