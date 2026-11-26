@@ -29,7 +29,6 @@ speed run mode
 
 
 local multiplayer
-- ability to have more than one crash
 - Replays recording both pads
 - Split screen in place of the leash
 - color crash differently?
