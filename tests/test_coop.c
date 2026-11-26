@@ -1,6 +1,12 @@
+#include <string.h>
 #include "utest.h"
+#include "globals.h"
+#include "pad.h"
 #include "pc/coop.h"
+#include "pc/pad.h"
 #include "pc/tween.h"
+
+extern pad pads[2];
 
 static void UsePlayerSlots(gool_object *slots) {
   int idx;
@@ -94,6 +100,38 @@ UTEST(coop, other_objects_read_pad_one) {
 
   UsePlayerSlots(slots);
   ASSERT_EQ(0, CoopObjectPadPort(&other));
+}
+
+/* both players in play, the hud is life_hud, and only player two holds triangle */
+static void PlayerTwoHoldsTriangle(gool_object *slots, gool_object *hud) {
+  UsePlayerSlots(slots);
+  slots[0].handle.type = 1;
+  slots[COOP_PLAYER_TWO].handle.type = 1;
+  life_hud = hud;
+  memset(pads, 0, sizeof(pads));
+  pads[COOP_PLAYER_TWO].held = PAD_TRIANGLE;
+}
+
+UTEST(coop, the_hud_sees_a_button_player_two_holds) {
+  gool_object slots[GOOL_PLAYER_COUNT], hud;
+
+  PlayerTwoHoldsTriangle(slots, &hud);
+  ASSERT_EQ(PAD_TRIANGLE, CoopObjectPad(&hud).held);
+}
+
+UTEST(coop, the_hud_ignores_the_pad_of_a_player_out_of_play) {
+  gool_object slots[GOOL_PLAYER_COUNT], hud;
+
+  PlayerTwoHoldsTriangle(slots, &hud);
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  ASSERT_EQ(0, CoopObjectPad(&hud).held);
+}
+
+UTEST(coop, other_objects_dont_see_player_twos_buttons) {
+  gool_object slots[GOOL_PLAYER_COUNT], hud, other;
+
+  PlayerTwoHoldsTriangle(slots, &hud);
+  ASSERT_EQ(0, CoopObjectPad(&other).held);
 }
 
 /* player one at the origin, player two a box to the right; both in play */

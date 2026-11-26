@@ -4,6 +4,7 @@
 #include "common.h"
 #include "geom.h"
 #include "gool.h"
+#include "pad.h"
 
 /*
  * local multiplayer (pc): with the two_players setting on, a second crash
@@ -21,6 +22,7 @@ extern int CoopPlayerInPlay(int idx);
 extern gool_colors *CoopZoneColors(gool_object *obj, zone_header *header);
 extern int CoopPlayerTweenSlot(int idx);
 extern int CoopObjectPadPort(gool_object *obj);
+extern pad CoopObjectPad(gool_object *obj);
 extern gool_object *CoopNearestPlayer(vec *trans);
 extern int CoopMaySaveLevelState(gool_object *obj);
 extern vec CoopBesideLead(vec lead);
