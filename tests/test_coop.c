@@ -365,3 +365,18 @@ UTEST(coop, the_camera_reaches_the_player_it_changed_to) {
     aim = CoopCameraStep(&camera, &after);
   ASSERT_EQ(FAR_AHEAD, aim.x);
 }
+
+UTEST(coop, a_reset_camera_aims_straight_at_the_player_it_follows) {
+  coop_camera camera = { 0 };
+  gool_object before, after, placed;
+  vec aim;
+
+  before.trans = (vec){ 0, 0, 0 };
+  after.trans = (vec){ FAR_AHEAD, 0, 0 };
+  placed.trans = (vec){ 0x1000, 0x2000, 0x3000 };
+  CoopCameraStep(&camera, &before);
+  CoopCameraStep(&camera, &after); /* mid-ease */
+  CoopCameraReset(&camera);
+  aim = CoopCameraStep(&camera, &placed);
+  ASSERT_EQ(placed.trans.x, aim.x);
+}

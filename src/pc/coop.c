@@ -160,6 +160,9 @@ vec CoopCameraStep(coop_camera *camera, gool_object *followed) {
   return camera->aim;
 }
 
+void CoopCameraReset(coop_camera *camera) {
+}
+
 /* the checkpoint is player one's: a player two running crash's script never saves it */
 int CoopMaySaveLevelState(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
