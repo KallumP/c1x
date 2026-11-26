@@ -114,7 +114,6 @@ static void CamPickSubject() {
     return;
   }
   cam_lead = CoopNearestPlayer(&cam_trans);
-  GoolLeashPlayersTo(cam_lead);
   cam_subject = CoopCameraSubject(&coop_cam, cam_lead);
 }
 

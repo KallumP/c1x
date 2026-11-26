@@ -828,17 +828,6 @@ static void GoolPlayerStandAt(gool_object *player, gool_object *lead, vec trans)
   TweenForget(GoolObjectTweenSlot(player)); /* placed there, not moved there */
 }
 
-/* a player left too far behind the lead (off screen) is brought to where the lead is */
-void GoolLeashPlayersTo(gool_object *lead) {
-  int idx;
-
-  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
-    if (!CoopPlayerInPlay(idx) || players[idx] == lead) { continue; }
-    if (CoopLeftBehind(lead, players[idx]))
-      GoolPlayerStandAt(players[idx], lead, lead->trans);
-  }
-}
-
 void GoolPlacePlayerTwo() {
   if (!game_settings.two_players || !crash || ns.ldat->lid == LID_TITLE) { return; }
   if (!CoopPlayerInPlay(COOP_PLAYER_TWO))

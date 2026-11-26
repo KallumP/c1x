@@ -14,7 +14,6 @@
 #define COOP_PLAYER_TWO      1       /* player two's index in players */
 #define COOP_BESIDE_DISTANCE 0x32000 /* how far beside player one he starts: two boxes */
 #define COOP_CAMERA_EASE     8       /* closes 1/8 of the gap to a new lead a frame */
-#define COOP_LEASH_DISTANCE  0xC8000 /* eight boxes: further from the lead goes off screen */
 
 /* where the camera aims with two players: the lead, eased over from the last one */
 typedef struct {
@@ -43,7 +42,6 @@ extern int CoopObjectCanTouchPlayer(gool_object *obj, int player_idx);
 extern void CoopAimAtNearestPlayer(gool_object *obj);
 extern int CoopMaySaveLevelState(gool_object *obj);
 extern vec CoopCameraSubject(coop_camera *camera, gool_object *lead);
-extern int CoopLeftBehind(gool_object *lead, gool_object *other);
 extern vec CoopBesideLead(vec lead);
 
 #endif /* _PC_COOP_H_ */

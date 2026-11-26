@@ -159,10 +159,6 @@ vec CoopCameraSubject(coop_camera *camera, gool_object *lead) {
   return subject;
 }
 
-int CoopLeftBehind(gool_object *lead, gool_object *other) {
-  return ApxDist(&lead->trans, &other->trans) > COOP_LEASH_DISTANCE;
-}
-
 /* the checkpoint is player one's: a player two running crash's script never saves it */
 int CoopMaySaveLevelState(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
