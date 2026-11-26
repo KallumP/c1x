@@ -30,12 +30,11 @@ speed run mode
 
 local multiplayer
 - ability to have more than one crash
-- can each break boxes and kill enemies
-- camera follows closes crash
 - Replays recording both pads
 - Split screen in place of the leash
 - color crash differently?
 - way to assign a controller to a player (if you want p1 on keyboard, and p2 on controller 1)
+- side level custom rules, or is it fine as it is
 
 time trails
 - Should be able to start a time trail by running over a clock object at the start of the level
@@ -46,6 +45,8 @@ time trails
 
 Generic
 - play as coco, and other characters from the game (might need to import coco?)
+- increase render distance of custom levels
+- input recording also needs to store what settings were used for the game start, similar to how the memory card is also stored
 - europe support
 - Jaws of Darkness's demo drifts from its recording: Crash dies 5 times in it
 - linux download downloads a windows version...
