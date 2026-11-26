@@ -132,6 +132,14 @@ UTEST(coop, a_part_of_a_hud_counter_sees_a_button_player_two_holds) {
   ASSERT_EQ(PAD_TRIANGLE, CoopObjectPad(&digits).held);
 }
 
+UTEST(coop, an_object_in_another_list_is_not_on_the_hud) {
+  gool_object enemy;
+
+  enemy.handle.subtype = GOOL_OBJECT_SUBTYPE;
+  enemy.parent = (gool_object*)&handles[3];
+  ASSERT_FALSE(CoopObjectIsOnHud(&enemy));
+}
+
 UTEST(coop, the_hud_ignores_the_pad_of_a_player_out_of_play) {
   gool_object slots[GOOL_PLAYER_COUNT], hud;
 
@@ -178,6 +186,16 @@ UTEST(coop, a_player_out_of_play_is_never_the_nearest) {
   vec beside_two = { 0x20000, 0, 0 };
 
   PlacePlayersApart(slots);
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  ASSERT_TRUE(&slots[0] == CoopNearestPlayer(&beside_two));
+}
+
+UTEST(coop, the_nearest_player_is_player_one_when_no_one_is_in_play) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  vec beside_two = { 0x20000, 0, 0 };
+
+  PlacePlayersApart(slots);
+  slots[0].handle.type = 0;
   slots[COOP_PLAYER_TWO].handle.type = 0;
   ASSERT_TRUE(&slots[0] == CoopNearestPlayer(&beside_two));
 }
@@ -275,15 +293,14 @@ UTEST(coop, the_players_cant_touch_each_other) {
   ASSERT_FALSE(CoopObjectCanTouchPlayer(&slots[0], COOP_PLAYER_TWO));
 }
 
-/* a collected fruit keeps its own target in the player link */
 UTEST(coop, an_object_whose_player_link_isnt_a_player_keeps_it) {
-  gool_object slots[GOOL_PLAYER_COUNT], hud, counter;
+  gool_object slots[GOOL_PLAYER_COUNT], fruit, target;
 
   PlacePlayersApart(slots);
-  hud.trans = (vec){ 0x20000, 0, 0 };
-  hud.player = &counter;
-  CoopAimAtNearestPlayer(&hud);
-  ASSERT_TRUE(&counter == hud.player);
+  fruit.trans = (vec){ 0x20000, 0, 0 };
+  fruit.player = &target;
+  CoopAimAtNearestPlayer(&fruit);
+  ASSERT_TRUE(&target == fruit.player);
 }
 
 /* his own death script would save where he died as everyone's checkpoint */
