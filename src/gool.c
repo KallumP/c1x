@@ -817,22 +817,24 @@ void GoolObjectStop(gool_object *obj) {
   obj->speed = 0;
 }
 
-/* the player stands still at trans, facing the way lead does */
-static void GoolPlayerStandAt(gool_object *player, gool_object *lead, vec trans) {
-  player->trans = trans;
-  player->rot = lead->rot;
-  player->target_rot = lead->target_rot;
-  player->scale = lead->scale;
-  player->zone = cur_zone;
-  GoolObjectStop(player);
-  TweenForget(GoolObjectTweenSlot(player)); /* placed there, not moved there */
+static void GoolPlayerTwoStandBesideCrash() {
+  gool_object *two;
+
+  two = players[COOP_PLAYER_TWO];
+  two->trans = CoopSpawnBeside(crash->trans, CoopFloorBelow);
+  two->rot = crash->rot;
+  two->target_rot = crash->target_rot;
+  two->scale = crash->scale;
+  two->zone = cur_zone;
+  GoolObjectStop(two);
+  TweenForget(GoolObjectTweenSlot(two)); /* placed there, not moved there */
 }
 
 void GoolPlacePlayerTwo() {
   if (!game_settings.two_players || !crash || ns.ldat->lid == LID_TITLE) { return; }
   if (!CoopPlayerInPlay(COOP_PLAYER_TWO))
     GoolPlayerCreate(COOP_PLAYER_TWO);
-  GoolPlayerStandAt(players[COOP_PLAYER_TWO], crash, CoopBesideLead(crash->trans));
+  GoolPlayerTwoStandBesideCrash();
   CoopCameraReset(&coop_cam); /* both were just placed: the camera cuts to them */
 }
 

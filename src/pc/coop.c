@@ -187,15 +187,6 @@ int CoopMaySaveLevelState(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
 }
 
-/* where player two starts, beside player one at lead */
-vec CoopBesideLead(vec lead) {
-  vec beside;
-
-  beside = lead;
-  beside.x += COOP_BESIDE_DISTANCE;
-  return beside;
-}
-
 /* where player two starts: two boxes beside player one, or (near a drop) the furthest
    spot towards him that has floor (has_floor), half a box nearer each try. player one's
    own spot is the last resort and isn't checked: he's standing on it */
