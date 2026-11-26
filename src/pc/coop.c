@@ -196,8 +196,17 @@ vec CoopBesideLead(vec lead) {
   return beside;
 }
 
+/* where player two starts: two boxes beside player one, or (near a drop) the furthest
+   spot towards him that has floor (has_floor), half a box nearer each try. player one's
+   own spot is the last resort and isn't checked: he's standing on it */
 vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans)) {
-  vec nowhere = { 0 };
+  vec spot;
+  int32_t distance;
 
-  return nowhere;
+  for (distance=COOP_BESIDE_DISTANCE;distance>0;distance-=COOP_BESIDE_STEP) {
+    spot = one;
+    spot.x += distance;
+    if ((*has_floor)(&spot)) { return spot; }
+  }
+  return one;
 }
