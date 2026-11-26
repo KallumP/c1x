@@ -44,6 +44,7 @@ extern void CoopAimAtNearestPlayer(gool_object *obj);
 extern int CoopMaySaveLevelState(gool_object *obj);
 extern void CoopCameraReset(coop_camera *camera);
 extern vec CoopCameraStep(coop_camera *camera, gool_object *followed);
+extern vec CoopCameraAim(coop_camera *camera, vec *cam_trans);
 extern vec CoopBesideLead(vec lead);
 
 #endif /* _PC_COOP_H_ */

@@ -166,6 +166,12 @@ void CoopCameraReset(coop_camera *camera) {
   memset(camera, 0, sizeof(*camera));
 }
 
+vec CoopCameraAim(coop_camera *camera, vec *cam_trans) {
+  vec aim = { 0 };
+
+  return aim;
+}
+
 /* the checkpoint is player one's: a player two running crash's script never saves it */
 int CoopMaySaveLevelState(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
