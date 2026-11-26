@@ -2142,7 +2142,7 @@ static uint32_t* GoolTranslateOutGop(gool_object *obj, uint32_t gop) {
 }
 
 //----- (8001FDC4) --------------------------------------------------------
-static int GoolTestControls(uint32_t instruction, int port) {
+static int GoolTestControls(uint32_t instruction, pad *controller) {
   uint32_t button_mask, dir_mask, test_type, dir_test, dir_test_type;
   uint32_t buttons, buttons_prev, dir_idx, dir, dir_prev;
   int not, cond;
@@ -2155,31 +2155,31 @@ static int GoolTestControls(uint32_t instruction, int port) {
   if (test_type == 0) /* directional test only? */
     cond = 1;
   else if (test_type == 1) { /* nondir test tapped */
-    buttons = pads[port].tapped & 0xFFF;
+    buttons = controller->tapped & 0xFFF;
     cond = buttons & button_mask;
     if (!cond) { return not; }
   }
   else if (test_type == 2) { /* nondir test held */
-    buttons = pads[port].held & 0xFFF;
+    buttons = controller->held & 0xFFF;
     cond = buttons & button_mask;
     if (!cond) { return not; }
   }
   else if (test_type == 3) { /* nondir test tapped (2-frame) */
-    buttons = pads[port].tapped;
-    buttons_prev = pads[port].tapped_prev;
+    buttons = controller->tapped;
+    buttons_prev = controller->tapped_prev;
     cond = button_mask & (buttons | buttons_prev);
     if (!cond) { return not; }
   }
   else if (test_type == 3) { /* nondir test held (2 frame) */
-    buttons = pads[port].held;
-    buttons_prev = pads[port].held_prev;
+    buttons = controller->held;
+    buttons_prev = controller->held_prev;
     cond = button_mask & (buttons | buttons_prev);
     if (!cond) { return not; }
   }
   if (dir_test_type == 0) /* nondir test only? */
     return cond ^ not; /* not=0=>cond, not=1=>!cond */
   else if (dir_test_type == 1) { /* single dir test tapped, multi-dir test held or released? */
-    buttons = pads[port].tapped;
+    buttons = controller->tapped;
     if (dir_test == 9)
       cond = buttons & 0x1000;
     else if (dir_test == 10)
@@ -2189,15 +2189,15 @@ static int GoolTestControls(uint32_t instruction, int port) {
     else if (dir_test == 12)
       cond = buttons & 0x8000;
     else {
-      dir_idx = (pads[port].held & 0xF000) >> 12;
+      dir_idx = (controller->held & 0xF000) >> 12;
       dir = move_states[dir_idx].dir;
-      dir_idx = (pads[port].held_prev & 0xF000) >> 12;
+      dir_idx = (controller->held_prev & 0xF000) >> 12;
       dir_prev = move_states[dir_idx].dir;
       cond = (dir == dir_test) && (dir != dir_prev);
     }
   }
   else if (dir_test_type == 2) { /* single dir test held, multi-dir test held? */
-    buttons = pads[port].held;
+    buttons = controller->held;
     if (dir_test == 9)
       cond = buttons & 0x1000;
     else if (dir_test == 10)
@@ -2207,15 +2207,15 @@ static int GoolTestControls(uint32_t instruction, int port) {
     else if (dir_test == 12)
       cond = buttons & 0x8000;
     else {
-      dir_idx = (pads[port].held & 0xF000) >> 12;
+      dir_idx = (controller->held & 0xF000) >> 12;
       dir = move_states[dir_idx].dir;
       cond = dir == dir_test;
     }
   }
   else if (dir_test_type == 3 || dir_test_type == 4) { /* multi-dir test held or pressed? */
-    dir_idx = (pads[port].held & 0xF000) >> 12;
+    dir_idx = (controller->held & 0xF000) >> 12;
     dir = move_states[dir_idx].dir;
-    dir_idx = (pads[port].held_prev & 0xF000) >> 12;
+    dir_idx = (controller->held_prev & 0xF000) >> 12;
     dir_prev = move_states[dir_idx].dir;
     cond = (dir == dir_test) || (dir_prev == dir_test);
   }
@@ -2483,7 +2483,10 @@ static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_
       break;
     case 0x1A: {
       uint32_t res;
-      res = GoolTestControls(instruction&0x1FFFFF,CoopObjectPadPort(obj));
+      pad controller;
+
+      controller = CoopObjectPad(obj);
+      res = GoolTestControls(instruction&0x1FFFFF,&controller);
       GoolObjectPush(obj,res);
       break;
     }

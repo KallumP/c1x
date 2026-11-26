@@ -1,4 +1,7 @@
 #include "coop.h"
+#include "globals.h"
+
+extern pad pads[2];
 
 /* each player's own object slot, outside the object pool; player one's is crash's */
 gool_object *players[GOOL_PLAYER_COUNT];
@@ -39,6 +42,33 @@ int CoopObjectPadPort(gool_object *obj) {
   player_idx = CoopPlayerIndex(obj);
   if (player_idx == COOP_NOT_A_PLAYER) { return 0; }
   return player_idx;
+}
+
+/* the hud opens on triangle from either player */
+static int CoopObjectIsHud(gool_object *obj) {
+  return obj == life_hud || obj == fruit_hud || obj == pickup_hud;
+}
+
+/* every button any player in play presses, as one pad */
+static pad CoopEveryPlayersPad() {
+  pad every = { 0 };
+  int idx;
+
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (!CoopPlayerInPlay(idx)) { continue; }
+    every.tapped |= pads[idx].tapped;
+    every.held |= pads[idx].held;
+    every.held_prev |= pads[idx].held_prev;
+    every.tapped_prev |= pads[idx].tapped_prev;
+    every.held_prev2 |= pads[idx].held_prev2;
+  }
+  return every;
+}
+
+/* the buttons obj's code tests: the hud every player's, anything else its pad port's */
+pad CoopObjectPad(gool_object *obj) {
+  if (CoopObjectIsHud(obj)) { return CoopEveryPlayersPad(); }
+  return pads[CoopObjectPadPort(obj)];
 }
 
 static int64_t DistanceSquared(vec *a, vec *b) {
