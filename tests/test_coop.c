@@ -178,7 +178,7 @@ UTEST(coop, an_object_after_player_one_turns_to_a_nearer_player_two) {
   ASSERT_TRUE(&slots[COOP_PLAYER_TWO] == enemy.player);
 }
 
-/* the hud and collected fruit keep their own target in the player link */
+/* a collected fruit keeps its own target in the player link */
 UTEST(coop, an_object_whose_player_link_isnt_a_player_keeps_it) {
   gool_object slots[GOOL_PLAYER_COUNT], hud, counter;
 

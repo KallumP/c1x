@@ -1222,6 +1222,17 @@ static void CrashJumpGrace(gool_object *obj) {
     obj->status_a |= JUMP_GRACE_FLOOR;
 }
 
+/* the hud is drawn by the screen, not the level: the nearest crash means nothing to it,
+   and a hud whose player changes starts its count again */
+static int GoolObjectIsOnHud(gool_object *obj) {
+  gool_object *top;
+
+  top = obj;
+  while (top->parent && top->parent->handle.subtype == 3)
+    top = top->parent;
+  return top->parent == (gool_object*)&handles[1];
+}
+
 /* in range (as OutOfRange measures it) of any player in play, not just crash */
 static int GoolObjectNearAnyPlayer(gool_object *obj, int32_t x, int32_t y, int32_t z) {
   int idx;
@@ -1252,7 +1263,7 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
   }
   if (CoopIsPlayer(obj))
     CrashJumpGrace(obj);
-  else
+  else if (!GoolObjectIsOnHud(obj))
     CoopAimAtNearestPlayer(obj);
   cur_obj = obj;
   status_b = obj->status_b;
