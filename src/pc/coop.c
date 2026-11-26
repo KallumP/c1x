@@ -1,7 +1,8 @@
 #include "coop.h"
-#include "globals.h"
+#include "boxhud.h"
 
 extern pad pads[2];
+extern gool_handle handles[8];
 
 /* each player's own object slot, outside the object pool; player one's is crash's */
 gool_object *players[GOOL_PLAYER_COUNT];
@@ -44,9 +45,14 @@ int CoopObjectPadPort(gool_object *obj) {
   return player_idx;
 }
 
-/* the hud opens on triangle from either player */
-static int CoopObjectIsHud(gool_object *obj) {
-  return obj == life_hud || obj == fruit_hud || obj == pickup_hud;
+/* a hud counter (lives, wumpa, crystals, boxes) or a part of one */
+int CoopObjectIsOnHud(gool_object *obj) {
+  gool_object *top;
+
+  top = obj;
+  while (top->parent && top->parent->handle.subtype == GOOL_OBJECT_SUBTYPE)
+    top = top->parent;
+  return top->parent == (gool_object*)&handles[HUD_HANDLE];
 }
 
 /* every button any player in play presses, as one pad */
@@ -65,9 +71,10 @@ static pad CoopEveryPlayersPad() {
   return every;
 }
 
-/* the buttons obj's code tests: the hud every player's, anything else its pad port's */
+/* the buttons obj's code tests: the hud (which opens on triangle) every player's,
+   anything else its pad port's */
 pad CoopObjectPad(gool_object *obj) {
-  if (CoopObjectIsHud(obj)) { return CoopEveryPlayersPad(); }
+  if (CoopObjectIsOnHud(obj)) { return CoopEveryPlayersPad(); }
   return pads[CoopObjectPadPort(obj)];
 }
 
