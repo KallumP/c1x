@@ -99,6 +99,13 @@ gool_object *CoopNearestPlayer(vec *trans) {
   return nearest;
 }
 
+/* an object after a crash goes after the nearest one; a player link its script
+   set to something else (the hud's counter, a collected fruit's target) stays */
+void CoopAimAtNearestPlayer(gool_object *obj) {
+  if (!CoopIsPlayer(obj->player)) { return; }
+  obj->player = CoopNearestPlayer(&obj->trans);
+}
+
 /* the checkpoint is player one's: a player two running crash's script never saves it */
 int CoopMaySaveLevelState(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
