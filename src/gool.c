@@ -836,7 +836,7 @@ void GoolPlacePlayerTwo() {
   if (!CoopPlayerInPlay(COOP_PLAYER_TWO))
     GoolPlayerCreate(COOP_PLAYER_TWO);
   GoolPlayerTwoStandBesideCrash();
-  CoopCameraReset(&coop_cam); /* both were just placed: the camera cuts to them */
+  CoopCameraReset(&coop_cam);
 }
 
 //----- (8001CB80) --------------------------------------------------------

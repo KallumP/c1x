@@ -16,12 +16,10 @@
 #define COOP_BESIDE_STEP     0xC800  /* how much nearer each try with no floor is: half a box */
 #define COOP_CAMERA_EASE     8       /* the aim closes 1/8 of its lag a frame */
 
-/* the camera with two players: whom it follows, and its aim easing over to him */
 typedef struct {
-  gool_object *followed; /* last frame's, 0 when there's no one to ease from; never read
-                            through (his slot may be from a level since unloaded) */
-  vec aim;               /* where it last aimed; a change of player eases from here */
-  vec lag;               /* how far the aim still trails him; eases to nothing */
+  gool_object *followed; /* 0 with no one to ease from; never read through: his slot may be freed */
+  vec aim;
+  vec lag;               /* how far the aim still trails him */
 } coop_camera;
 
 /* how near a player an object keeps its collision bound: five boxes to a side, seven up or down */
@@ -49,6 +47,6 @@ extern vec CoopCameraStep(coop_camera *camera, gool_object *followed);
 extern vec CoopCameraAim(coop_camera *camera, vec *camera_trans);
 extern int CoopPlayerTwoJoins(int two_players, int on_title, int in_demo);
 extern vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans));
-extern int CoopFloorBelow(vec *trans); /* coop_game.c */
+extern int CoopFloorBelow(vec *trans);
 
 #endif /* _PC_COOP_H_ */

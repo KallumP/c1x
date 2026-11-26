@@ -27,8 +27,6 @@ int32_t dcam_angvel2 = 0;         /* 800565CC; gp[0x74] */
 int32_t dcam_rot_y1 = 0;          /* 800565D0; gp[0x75] */
 int32_t dcam_rot_y2 = 0;          /* 800565D4; gp[0x76] */
 int32_t dcam_trans_z = 0;         /* 800565D8; gp[0x77] */
-/* whom the camera follows this frame and where it aims: crash, or with two players
-   the one nearest it, the aim easing over when that changes (CoopCameraAim) */
 static gool_object *cam_followed;
 static vec cam_aim;
 
@@ -276,8 +274,7 @@ static int CamGetProgress2(vec *trans, zone_path *path, cam_info *cam, int flags
   return 1;
 }
 
-/* obj is whom the camera follows (his zoom, and his d-pad looks ahead); the point
-   it follows is cam_aim, which trails him while the camera eases over to him */
+/* follows cam_aim, not obj's position: the aim trails obj while the camera eases over to him */
 //----- (8002A82C) --------------------------------------------------------
 static void CamFollow(gool_object *obj, uint32_t flag) {
   cam_info cameras[5], *cam_nearest;
@@ -508,7 +505,7 @@ int CamUpdate() {
   if (!(cur_display_flags & GOOL_FLAG_CAM_UPDATE)) { return 0; }
   cam_mode = cur_path->cam_mode;
   switch (cam_mode) {
-  case 5: /* follow crash (with two players, the one nearest the camera) */
+  case 5: /* follow crash */
   case 6:
     game_state = GAME_STATE_PLAYING;
     CamFollow(cam_followed, 0);

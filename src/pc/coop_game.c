@@ -10,7 +10,7 @@
 #define FLOOR_ABOVE    62500      /* and how far over it: the step up the game lets crash land on */
 
 extern entry *cur_zone;
-extern bound test_bound_surface; /* solid.c's: the sliver of crash the game finds his floor with */
+extern bound test_bound_surface; /* the sliver of crash the game finds his floor with */
 
 static zone_query floor_query;
 
@@ -19,7 +19,7 @@ static int SkipHazardNode(gool_object *obj, uint32_t node) {
   return 1;
 }
 
-/* there's level floor at trans, or just under it, to stand on (objects don't count) */
+/* level floor only: boxes and platforms don't count */
 int CoopFloorBelow(vec *trans) {
   zone_query_summary found;
   bound feet;

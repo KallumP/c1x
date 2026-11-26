@@ -9,7 +9,6 @@ extern gool_handle handles[8];
 /* each player's own object slot, outside the object pool; player one's is crash's */
 gool_object *players[GOOL_PLAYER_COUNT];
 
-/* the game's camera (src/cam.c) */
 coop_camera coop_cam;
 
 /* which player's slot obj is, or COOP_NOT_A_PLAYER */
@@ -134,24 +133,21 @@ void CoopAimAtNearestPlayer(gool_object *obj) {
   obj->player = CoopNearestPlayer(&obj->trans);
 }
 
-/* the lag left after one frame's easing; one too small to ease would never close, so it's closed */
 static int32_t EasedLag(int32_t lag) {
   int32_t step;
 
   step = lag / COOP_CAMERA_EASE;
-  if (step == 0) { return 0; }
+  if (step == 0) { return 0; } /* too small to ease: it would never close */
   return lag - step;
 }
 
-/* the aim stays where it was: it lags the new player by however far apart they are */
 static void LagBehind(coop_camera *camera, gool_object *followed) {
   camera->lag.x = camera->aim.x - followed->trans.x;
   camera->lag.y = camera->aim.y - followed->trans.y;
   camera->lag.z = camera->aim.z - followed->trans.z;
 }
 
-/* where the camera aims this frame, following followed. call it once a frame: each
-   call eases the aim a step nearer him, starting from where it was when he changed */
+/* call once a frame: each call eases the aim a step nearer followed */
 vec CoopCameraStep(coop_camera *camera, gool_object *followed) {
   if (camera->followed && followed != camera->followed) { LagBehind(camera, followed); }
   camera->followed = followed;
@@ -164,15 +160,11 @@ vec CoopCameraStep(coop_camera *camera, gool_object *followed) {
   return camera->aim;
 }
 
-/* the players were placed somewhere new: there's nowhere to ease from */
 void CoopCameraReset(coop_camera *camera) {
   memset(camera, 0, sizeof(*camera));
 }
 
-/* where the camera aims this frame (call it once a frame), and whom it follows
-   (camera->followed): player one alone, or with two players the one nearest the camera.
-   the camera is where it is because of whom it followed last frame, so it stays with
-   him until the other comes nearer it */
+/* the camera sits by whom it follows, so it stays with him until the other comes nearer it */
 vec CoopCameraAim(coop_camera *camera, vec *camera_trans) {
   if (CoopPlayerInPlay(COOP_PLAYER_TWO))
     return CoopCameraStep(camera, CoopNearestPlayer(camera_trans));
@@ -187,14 +179,11 @@ int CoopMaySaveLevelState(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
 }
 
-/* a demo plays back one pad: a player two would stand at the start, and could hold the camera there */
+/* a demo plays back one pad: player two would stand still, and could hold the camera */
 int CoopPlayerTwoJoins(int two_players, int on_title, int in_demo) {
   return two_players && !on_title && !in_demo;
 }
 
-/* where player two starts: two boxes beside player one, or (near a drop) the furthest
-   spot towards him that has floor (has_floor), half a box nearer each try. player one's
-   own spot is the last resort and isn't checked: he's standing on it */
 vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans)) {
   vec spot;
   int32_t distance;
@@ -204,5 +193,5 @@ vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans)) {
     spot.x += distance;
     if ((*has_floor)(&spot)) { return spot; }
   }
-  return one;
+  return one; /* unchecked: he's standing on it */
 }
