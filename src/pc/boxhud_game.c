@@ -8,8 +8,6 @@
 #include "pc/settings.h"
 #include "pc/boxtotals.h"
 
-#define HUD_HANDLE 1 /* the handle the hud counters are created under */
-
 extern ns_struct ns;
 extern gool_handle handles[8];
 

@@ -42,7 +42,7 @@ time trails
 - Show the relic list somewhere?
 
 Generic
-- play as coco
+- play as coco, and other characters from the game (might need to import coco?)
 - europe support
 - Jaws of Darkness's demo drifts from its recording: Crash dies 5 times in it
 - linux download downloads a windows version...

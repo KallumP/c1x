@@ -8,6 +8,9 @@
 #include "formats/gool.h"
 #include "formats/zdat.h"
 
+/* handle.subtype of an object, not a list's head */
+#define GOOL_OBJECT_SUBTYPE 3
+
 /* events */
 #define GOOL_EVENT_JUMPED_ON       0
 #define GOOL_EVENT_HIT             0x300

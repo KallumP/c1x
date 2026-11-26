@@ -80,6 +80,21 @@ static inline void GoolObjectAddChild(gool_object *obj, gool_object *child) {
   child->sibling = GoolObjectGetChildren(obj);
   GoolObjectSetChildren(obj, child);
 }
+/* pc: move child to the end of obj's children, so it updates after its siblings */
+static void GoolObjectMoveToLastChild(gool_object *obj, gool_object *child) {
+  gool_object *last;
+
+  GoolObjectRemoveChild(obj, child);
+  child->sibling = 0;
+  last = GoolObjectGetChildren(obj);
+  if (!last) {
+    GoolObjectSetChildren(obj, child);
+    return;
+  }
+  while (last->sibling)
+    last = last->sibling;
+  last->sibling = child;
+}
 
 /* .data */
 const gool_move_state move_states[16] = { /* 80052B64 */
@@ -787,8 +802,12 @@ static void GoolPlayerCreate(int player_idx) {
 
   obj = players[player_idx];
   res = GoolObjectSetUp(obj, (gool_object*)&handles[6], 0, 0, 0, 0);
-  if (ISERRORCODE(res))
+  if (ISERRORCODE(res)) {
     GoolObjectFree(obj);
+    return;
+  }
+  /* after crash, whose update reads the pads, so this player doesn't read them a frame late */
+  GoolObjectMoveToLastChild((gool_object*)&handles[6], obj);
 }
 
 void GoolObjectStop(gool_object *obj) {
@@ -875,7 +894,7 @@ int GoolObjectInit(gool_object *obj, int exec, int subtype, int argc, int *argv)
   p_eid = &ns.ldat->exec_map[exec];
   if (exec == 4 || exec == 5 || exec == 29) { obj->zone = 0; }
   if (exec == 0)                            { obj->cam_zoom = 0; }
-  if (obj->handle.subtype != 3 || *p_eid == EID_NONE || exec >= 64) { return ERROR; }
+  if (obj->handle.subtype != GOOL_OBJECT_SUBTYPE || *p_eid == EID_NONE || exec >= 64) { return ERROR; }
   global = NSOpen(p_eid, 1, 0);
   obj->global = global;
   if (ISERRORCODE(global)) { return ERROR; }
@@ -1050,7 +1069,7 @@ static void GoolSetObjectPose(gool_object *obj, tween_pose *pose) {
 static void GoolRecordObjectPose(gool_object *obj) {
   tween_pose pose;
 
-  if (obj->handle.subtype != 3) { return; }
+  if (obj->handle.subtype != GOOL_OBJECT_SUBTYPE) { return; }
   GoolObjectPose(obj, &pose);
   TweenRecord(GoolObjectTweenSlot(obj), &pose);
 }
@@ -1213,7 +1232,7 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
   int elapsed_since;
   int res;
 
-  if (obj->handle.subtype != 3) { return SUCCESS; }
+  if (obj->handle.subtype != GOOL_OBJECT_SUBTYPE) { return SUCCESS; }
   EnhancedTitleSeeObject(obj); /* has the title's logo landed? */
   CustomMenuSeeObject(obj); /* which row is the title menu's cursor on? */
   if (obj == crash) {
@@ -1222,6 +1241,8 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
   }
   if (CoopIsPlayer(obj))
     CrashJumpGrace(obj);
+  else if (!CoopObjectIsOnHud(obj)) /* a hud whose player changes starts its count again */
+    CoopAimAtNearestPlayer(obj);
   cur_obj = obj;
   status_b = obj->status_b;
   if ((cur_display_flags & GOOL_FLAG_ANIMATE) == 0)
@@ -1327,7 +1348,7 @@ static void GoolObjectTweenedPose(gool_object *obj, tween_pose *now, int alpha,
 static int GoolObjectDrawTweened(gool_object *obj, int alpha) {
   tween_pose now, drawn;
 
-  if (obj->handle.subtype != 3) { return SUCCESS; }
+  if (obj->handle.subtype != GOOL_OBJECT_SUBTYPE) { return SUCCESS; }
   if (!GoolObjectIsDisplayed(obj, obj->status_b)) { return SUCCESS; }
   GoolObjectPose(obj, &now);
   GoolObjectTweenedPose(obj, &now, alpha, &drawn);
@@ -1752,8 +1773,36 @@ int GoolObjectColors(gool_object *obj) {
   return SUCCESS;
 }
 
+/* pc: obj's bound in the world, at its position */
+static void GoolObjectWorldBound(gool_object *obj, bound *world_bound) {
+  world_bound->p1.x = obj->trans.x + obj->bound.p1.x;
+  world_bound->p1.y = obj->trans.y + obj->bound.p1.y;
+  world_bound->p1.z = obj->trans.z + obj->bound.p1.z;
+  world_bound->p2.x = obj->trans.x + obj->bound.p2.x;
+  world_bound->p2.y = obj->trans.y + obj->bound.p2.y;
+  world_bound->p2.z = obj->trans.z + obj->bound.p2.z;
+}
+
+/* signal obj and each player its bound touches (GoolCollide keeps the nearest as obj's
+   collider); an object drawn with crash that touches no one has no collider */
+static void GoolCollideWithPlayers(gool_object *obj, bound *obj_bound) {
+  bound player_bound;
+  int idx, touched;
+
+  touched = 0;
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (!CoopObjectCanTouchPlayer(obj, idx)) { continue; }
+    GoolObjectWorldBound(players[idx], &player_bound);
+    if (!TestBoundIntersection(&player_bound, obj_bound)) { continue; }
+    GoolCollide(obj, obj_bound, players[idx], &player_bound);
+    touched = 1;
+  }
+  if (!touched && obj->anim_stamp == crash->anim_stamp)
+    obj->collider = 0;
+}
+
 int GoolObjectBound(gool_object *obj) {
-  gool_bound *bound, crash_bound;
+  gool_bound *bound;
   gool_anim *anim;
   svtx_frame *frame;
   entry *entry;
@@ -1822,25 +1871,9 @@ int GoolObjectBound(gool_object *obj) {
     }
   }
   else {
-    bound->p1.x = obj->trans.x + obj->bound.p1.x;
-    bound->p1.y = obj->trans.y + obj->bound.p1.y;
-    bound->p1.z = obj->trans.z + obj->bound.p1.z;
-    bound->p2.x = obj->trans.x + obj->bound.p2.x;
-    bound->p2.y = obj->trans.y + obj->bound.p2.y;
-    bound->p2.z = obj->trans.z + obj->bound.p2.z;
+    GoolObjectWorldBound(obj, &bound->bound);
   }
-  if (obj->anim_stamp == crash->anim_stamp) { /* rendered during same frame as crash? */
-    crash_bound.p1.x = crash->trans.x + crash->bound.p1.x;
-    crash_bound.p1.y = crash->trans.y + crash->bound.p1.y;
-    crash_bound.p1.z = crash->trans.z + crash->bound.p1.z;
-    crash_bound.p2.x = crash->trans.x + crash->bound.p2.x;
-    crash_bound.p2.y = crash->trans.y + crash->bound.p2.y;
-    crash_bound.p2.z = crash->trans.z + crash->bound.p2.z;
-    if (TestBoundIntersection(&crash_bound, &bound->bound)) /* collision with crash? */
-      GoolCollide(obj, &bound->bound, crash, &crash_bound); /* handle it (i.e. signal objs) */
-    else
-      obj->collider = 0;
-  }
+  GoolCollideWithPlayers(obj, &bound->bound);
   return 0;
 }
 
@@ -1993,9 +2026,9 @@ int GoolObjectPhysics(gool_object *obj) {
       obj->velocity.y = -0x2EE000;
   }
   if (status_b & GOOL_FLAG_COLLIDABLE) { /* collidable? */
-    /* not the same render frame as crash and within range of crash? */
+    /* not the same render frame as crash and within range of a player? */
     if (obj->anim_stamp != crash->anim_stamp &&
-      !OutOfRange(obj, &obj->trans, &crash->trans, 0x7D000, 0xAF000, 0x7D000))
+      CoopObjectNearAnyPlayer(obj))
       GoolObjectBound(obj); /* compute and record object rect */
   }
   return 0;
@@ -2084,7 +2117,7 @@ static uint32_t* GoolTranslateOutGop(gool_object *obj, uint32_t gop) {
 }
 
 //----- (8001FDC4) --------------------------------------------------------
-static int GoolTestControls(uint32_t instruction, int port) {
+static int GoolTestControls(uint32_t instruction, pad *controller) {
   uint32_t button_mask, dir_mask, test_type, dir_test, dir_test_type;
   uint32_t buttons, buttons_prev, dir_idx, dir, dir_prev;
   int not, cond;
@@ -2097,31 +2130,31 @@ static int GoolTestControls(uint32_t instruction, int port) {
   if (test_type == 0) /* directional test only? */
     cond = 1;
   else if (test_type == 1) { /* nondir test tapped */
-    buttons = pads[port].tapped & 0xFFF;
+    buttons = controller->tapped & 0xFFF;
     cond = buttons & button_mask;
     if (!cond) { return not; }
   }
   else if (test_type == 2) { /* nondir test held */
-    buttons = pads[port].held & 0xFFF;
+    buttons = controller->held & 0xFFF;
     cond = buttons & button_mask;
     if (!cond) { return not; }
   }
   else if (test_type == 3) { /* nondir test tapped (2-frame) */
-    buttons = pads[port].tapped;
-    buttons_prev = pads[port].tapped_prev;
+    buttons = controller->tapped;
+    buttons_prev = controller->tapped_prev;
     cond = button_mask & (buttons | buttons_prev);
     if (!cond) { return not; }
   }
   else if (test_type == 3) { /* nondir test held (2 frame) */
-    buttons = pads[port].held;
-    buttons_prev = pads[port].held_prev;
+    buttons = controller->held;
+    buttons_prev = controller->held_prev;
     cond = button_mask & (buttons | buttons_prev);
     if (!cond) { return not; }
   }
   if (dir_test_type == 0) /* nondir test only? */
     return cond ^ not; /* not=0=>cond, not=1=>!cond */
   else if (dir_test_type == 1) { /* single dir test tapped, multi-dir test held or released? */
-    buttons = pads[port].tapped;
+    buttons = controller->tapped;
     if (dir_test == 9)
       cond = buttons & 0x1000;
     else if (dir_test == 10)
@@ -2131,15 +2164,15 @@ static int GoolTestControls(uint32_t instruction, int port) {
     else if (dir_test == 12)
       cond = buttons & 0x8000;
     else {
-      dir_idx = (pads[port].held & 0xF000) >> 12;
+      dir_idx = (controller->held & 0xF000) >> 12;
       dir = move_states[dir_idx].dir;
-      dir_idx = (pads[port].held_prev & 0xF000) >> 12;
+      dir_idx = (controller->held_prev & 0xF000) >> 12;
       dir_prev = move_states[dir_idx].dir;
       cond = (dir == dir_test) && (dir != dir_prev);
     }
   }
   else if (dir_test_type == 2) { /* single dir test held, multi-dir test held? */
-    buttons = pads[port].held;
+    buttons = controller->held;
     if (dir_test == 9)
       cond = buttons & 0x1000;
     else if (dir_test == 10)
@@ -2149,15 +2182,15 @@ static int GoolTestControls(uint32_t instruction, int port) {
     else if (dir_test == 12)
       cond = buttons & 0x8000;
     else {
-      dir_idx = (pads[port].held & 0xF000) >> 12;
+      dir_idx = (controller->held & 0xF000) >> 12;
       dir = move_states[dir_idx].dir;
       cond = dir == dir_test;
     }
   }
   else if (dir_test_type == 3 || dir_test_type == 4) { /* multi-dir test held or pressed? */
-    dir_idx = (pads[port].held & 0xF000) >> 12;
+    dir_idx = (controller->held & 0xF000) >> 12;
     dir = move_states[dir_idx].dir;
-    dir_idx = (pads[port].held_prev & 0xF000) >> 12;
+    dir_idx = (controller->held_prev & 0xF000) >> 12;
     dir_prev = move_states[dir_idx].dir;
     cond = (dir == dir_test) || (dir_prev == dir_test);
   }
@@ -2425,7 +2458,10 @@ static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_
       break;
     case 0x1A: {
       uint32_t res;
-      res = GoolTestControls(instruction&0x1FFFFF,CoopObjectPadPort(obj));
+      pad controller;
+
+      controller = CoopObjectPad(obj);
+      res = GoolTestControls(instruction&0x1FFFFF,&controller);
       GoolObjectPush(obj,res);
       break;
     }
@@ -2859,7 +2895,8 @@ void GoolOpMisc(gool_object *obj, uint32_t instruction) {
   case 12: /* misc */
     switch (sop2) {
     case 0: /* save level state */
-      LevelSaveState(obj, &savestate, 0); /* saveState(obj, &savestate, 0); */
+      if (CoopMaySaveLevelState(obj))
+        LevelSaveState(obj, &savestate, 0); /* saveState(obj, &savestate, 0); */
       break;
     case 1: /* load level state */
       LevelRestart(&savestate); /* reloadLevel(savestate); */
@@ -3053,7 +3090,7 @@ static inline
 int GoolOpChangeAnim(gool_object *obj, uint32_t instruction, uint32_t *flags) {
   gool_anim *anim;
   uint32_t frame_idx, anim_offs, wait, flip;
-  int out_of_range;
+  int near_player;
 
   frame_idx = instruction & 0x7F;
   anim_offs = (instruction >> 7) & 0x1FF;
@@ -3070,9 +3107,8 @@ int GoolOpChangeAnim(gool_object *obj, uint32_t instruction, uint32_t *flags) {
   else if (flip == 2)
     obj->scale.x = -obj->scale.x;
   if (obj->status_b & 0x18) { /* object is solid and stopped by solid matter */
-    out_of_range = OutOfRange(obj, &obj->trans, &crash->trans,
-                              0x7D000, 0xAF000, 0x7D000);
-    if (!out_of_range || (obj->status_b & 0x80000000))
+    near_player = CoopObjectNearAnyPlayer(obj);
+    if (near_player || (obj->status_b & 0x80000000))
       GoolObjectLocalBound(obj, &obj->scale);
   }
   if (*flags & GOOL_FLAG_SUSPEND_ON_ANIM)
