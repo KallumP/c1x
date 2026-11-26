@@ -894,7 +894,7 @@ int GoolObjectInit(gool_object *obj, int exec, int subtype, int argc, int *argv)
   p_eid = &ns.ldat->exec_map[exec];
   if (exec == 4 || exec == 5 || exec == 29) { obj->zone = 0; }
   if (exec == 0)                            { obj->cam_zoom = 0; }
-  if (obj->handle.subtype != 3 || *p_eid == EID_NONE || exec >= 64) { return ERROR; }
+  if (obj->handle.subtype != GOOL_OBJECT_SUBTYPE || *p_eid == EID_NONE || exec >= 64) { return ERROR; }
   global = NSOpen(p_eid, 1, 0);
   obj->global = global;
   if (ISERRORCODE(global)) { return ERROR; }
@@ -1069,7 +1069,7 @@ static void GoolSetObjectPose(gool_object *obj, tween_pose *pose) {
 static void GoolRecordObjectPose(gool_object *obj) {
   tween_pose pose;
 
-  if (obj->handle.subtype != 3) { return; }
+  if (obj->handle.subtype != GOOL_OBJECT_SUBTYPE) { return; }
   GoolObjectPose(obj, &pose);
   TweenRecord(GoolObjectTweenSlot(obj), &pose);
 }
@@ -1232,7 +1232,7 @@ int GoolObjectUpdate(gool_object *obj, int flag) {
   int elapsed_since;
   int res;
 
-  if (obj->handle.subtype != 3) { return SUCCESS; }
+  if (obj->handle.subtype != GOOL_OBJECT_SUBTYPE) { return SUCCESS; }
   EnhancedTitleSeeObject(obj); /* has the title's logo landed? */
   CustomMenuSeeObject(obj); /* which row is the title menu's cursor on? */
   if (obj == crash) {
@@ -1348,7 +1348,7 @@ static void GoolObjectTweenedPose(gool_object *obj, tween_pose *now, int alpha,
 static int GoolObjectDrawTweened(gool_object *obj, int alpha) {
   tween_pose now, drawn;
 
-  if (obj->handle.subtype != 3) { return SUCCESS; }
+  if (obj->handle.subtype != GOOL_OBJECT_SUBTYPE) { return SUCCESS; }
   if (!GoolObjectIsDisplayed(obj, obj->status_b)) { return SUCCESS; }
   GoolObjectPose(obj, &now);
   GoolObjectTweenedPose(obj, &now, alpha, &drawn);

@@ -8,6 +8,9 @@
 #include "formats/gool.h"
 #include "formats/zdat.h"
 
+/* handle.subtype of an object, not a list's head */
+#define GOOL_OBJECT_SUBTYPE 3
+
 /* events */
 #define GOOL_EVENT_JUMPED_ON       0
 #define GOOL_EVENT_HIT             0x300
@@ -63,7 +66,6 @@
 #define GOOL_FLAG_DPAD_CONTROL      0x80
 #define GOOL_FLAG_INVISIBLE         0x100
 #define GOOL_FLAG_2D                0x200
-#define GOOL_OBJECT_SUBTYPE         3 /* handle.subtype of an object, not a list's head */
 #define GOOL_FLAG_ROT_X             0x2000
 #define GOOL_FLAG_SOLID_GROUND      0x4000
 #define GOOL_FLAG_ORIENT_ON_PATH    0x8000
