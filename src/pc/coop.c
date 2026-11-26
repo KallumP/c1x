@@ -166,10 +166,17 @@ void CoopCameraReset(coop_camera *camera) {
   memset(camera, 0, sizeof(*camera));
 }
 
+/* where the camera aims this frame (call it once a frame), and whom it follows
+   (camera->followed): player one alone, or with two players the one nearest the camera.
+   the camera is where it is because of whom it followed last frame, so it stays with
+   him until the other comes nearer it */
 vec CoopCameraAim(coop_camera *camera, vec *cam_trans) {
-  vec aim = { 0 };
-
-  return aim;
+  if (CoopPlayerInPlay(COOP_PLAYER_TWO))
+    return CoopCameraStep(camera, CoopNearestPlayer(cam_trans));
+  CoopCameraReset(camera);
+  camera->followed = players[0];
+  camera->aim = players[0]->trans;
+  return camera->aim;
 }
 
 /* the checkpoint is player one's: a player two running crash's script never saves it */
