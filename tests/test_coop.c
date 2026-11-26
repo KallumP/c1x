@@ -17,6 +17,22 @@ static void UsePlayerSlots(gool_object *slots) {
     players[idx] = &slots[idx];
 }
 
+UTEST(coop, player_two_joins_a_level_when_two_players_is_on) {
+  ASSERT_TRUE(CoopPlayerTwoJoins(1, 0, 0));
+}
+
+UTEST(coop, player_two_stays_out_when_two_players_is_off) {
+  ASSERT_FALSE(CoopPlayerTwoJoins(0, 0, 0));
+}
+
+UTEST(coop, player_two_stays_off_the_title_screen) {
+  ASSERT_FALSE(CoopPlayerTwoJoins(1, 1, 0));
+}
+
+UTEST(coop, player_two_stays_out_of_a_demo) {
+  ASSERT_FALSE(CoopPlayerTwoJoins(1, 0, 1));
+}
+
 static vec one_spot = { 0x10000, 0x20000, 0x30000 }; /* where player one stands */
 static int32_t floor_ends_x; /* FloorUpTo's floor reaches this far along x */
 static int floor_checks;     /* how many spots NoFloor was asked about */

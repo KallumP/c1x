@@ -187,6 +187,10 @@ int CoopMaySaveLevelState(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
 }
 
+int CoopPlayerTwoJoins(int two_players, int on_title, int in_demo) {
+  return 0;
+}
+
 /* where player two starts: two boxes beside player one, or (near a drop) the furthest
    spot towards him that has floor (has_floor), half a box nearer each try. player one's
    own spot is the last resort and isn't checked: he's standing on it */
