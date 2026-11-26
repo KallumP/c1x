@@ -1782,16 +1782,6 @@ static void GoolPlayerBound(gool_object *player, bound *player_bound) {
   player_bound->p2.z = player->trans.z + player->bound.p2.z;
 }
 
-/* obj touches the player only if they're in play, drawn the same frame, and not two players */
-static int GoolObjectCanTouchPlayer(gool_object *obj, int player_idx) {
-  gool_object *player;
-
-  if (!CoopPlayerInPlay(player_idx)) { return 0; }
-  player = players[player_idx];
-  if (CoopIsPlayer(obj) && obj != player) { return 0; }
-  return obj->anim_stamp == player->anim_stamp;
-}
-
 /* signal obj and each player its bound touches (GoolCollide keeps the nearest as obj's
    collider); an object drawn with crash that touches no one has no collider */
 static void GoolCollideWithPlayers(gool_object *obj, bound *obj_bound) {
@@ -1800,7 +1790,7 @@ static void GoolCollideWithPlayers(gool_object *obj, bound *obj_bound) {
 
   touched = 0;
   for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
-    if (!GoolObjectCanTouchPlayer(obj, idx)) { continue; }
+    if (!CoopObjectCanTouchPlayer(obj, idx)) { continue; }
     GoolPlayerBound(players[idx], &player_bound);
     if (!TestBoundIntersection(&player_bound, obj_bound)) { continue; }
     GoolCollide(obj, obj_bound, players[idx], &player_bound);

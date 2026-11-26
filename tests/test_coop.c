@@ -236,6 +236,45 @@ UTEST(coop, an_object_near_only_player_two_keeps_its_bound_valid) {
   ASSERT_FALSE(box.status_a & GOOL_FLAG_LBOUND_INVALID);
 }
 
+/* both players in play and drawn on frame 5 */
+static void DrawBothPlayers(gool_object *slots) {
+  PlacePlayersApart(slots);
+  slots[0].anim_stamp = 5;
+  slots[COOP_PLAYER_TWO].anim_stamp = 5;
+}
+
+UTEST(coop, an_object_drawn_the_same_frame_as_a_player_can_touch_them) {
+  gool_object slots[GOOL_PLAYER_COUNT], box;
+
+  DrawBothPlayers(slots);
+  box.anim_stamp = 5;
+  ASSERT_TRUE(CoopObjectCanTouchPlayer(&box, COOP_PLAYER_TWO));
+}
+
+UTEST(coop, an_object_drawn_on_another_frame_cant_touch_a_player) {
+  gool_object slots[GOOL_PLAYER_COUNT], box;
+
+  DrawBothPlayers(slots);
+  box.anim_stamp = 4;
+  ASSERT_FALSE(CoopObjectCanTouchPlayer(&box, COOP_PLAYER_TWO));
+}
+
+UTEST(coop, an_object_cant_touch_a_player_out_of_play) {
+  gool_object slots[GOOL_PLAYER_COUNT], box;
+
+  DrawBothPlayers(slots);
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  box.anim_stamp = 5;
+  ASSERT_FALSE(CoopObjectCanTouchPlayer(&box, COOP_PLAYER_TWO));
+}
+
+UTEST(coop, the_players_cant_touch_each_other) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  DrawBothPlayers(slots);
+  ASSERT_FALSE(CoopObjectCanTouchPlayer(&slots[0], COOP_PLAYER_TWO));
+}
+
 /* a collected fruit keeps its own target in the player link */
 UTEST(coop, an_object_whose_player_link_isnt_a_player_keeps_it) {
   gool_object slots[GOOL_PLAYER_COUNT], hud, counter;

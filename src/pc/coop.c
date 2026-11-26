@@ -121,6 +121,17 @@ int CoopObjectNearAnyPlayer(gool_object *obj) {
   return 0;
 }
 
+/* players never collide with each other, and an object only touches a player
+   drawn the same frame as it */
+int CoopObjectCanTouchPlayer(gool_object *obj, int player_idx) {
+  gool_object *player;
+
+  if (!CoopPlayerInPlay(player_idx)) { return 0; }
+  player = players[player_idx];
+  if (CoopIsPlayer(obj) && obj != player) { return 0; }
+  return obj->anim_stamp == player->anim_stamp;
+}
+
 /* an object after a crash goes after the nearest one; a player link its script
    set to something else (a collected fruit's target) stays */
 void CoopAimAtNearestPlayer(gool_object *obj) {

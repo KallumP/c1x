@@ -30,6 +30,7 @@ extern int CoopObjectIsOnHud(gool_object *obj);
 extern pad CoopObjectPad(gool_object *obj);
 extern gool_object *CoopNearestPlayer(vec *trans);
 extern int CoopObjectNearAnyPlayer(gool_object *obj);
+extern int CoopObjectCanTouchPlayer(gool_object *obj, int player_idx);
 extern void CoopAimAtNearestPlayer(gool_object *obj);
 extern int CoopMaySaveLevelState(gool_object *obj);
 extern vec CoopBesideLead(vec lead);
