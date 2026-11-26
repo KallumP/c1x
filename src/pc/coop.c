@@ -187,8 +187,9 @@ int CoopMaySaveLevelState(gool_object *obj) {
   return CoopPlayerIndex(obj) != COOP_PLAYER_TWO;
 }
 
+/* a demo plays back one pad: a player two would stand at the start, and could hold the camera there */
 int CoopPlayerTwoJoins(int two_players, int on_title, int in_demo) {
-  return 0;
+  return two_players && !on_title && !in_demo;
 }
 
 /* where player two starts: two boxes beside player one, or (near a drop) the furthest

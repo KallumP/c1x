@@ -831,7 +831,8 @@ static void GoolPlayerTwoStandBesideCrash() {
 }
 
 void GoolPlacePlayerTwo() {
-  if (!game_settings.two_players || !crash || ns.ldat->lid == LID_TITLE) { return; }
+  if (!crash) { return; }
+  if (!CoopPlayerTwoJoins(game_settings.two_players, ns.ldat->lid == LID_TITLE, pbak_state != 0)) { return; }
   if (!CoopPlayerInPlay(COOP_PLAYER_TWO))
     GoolPlayerCreate(COOP_PLAYER_TWO);
   GoolPlayerTwoStandBesideCrash();
