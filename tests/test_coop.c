@@ -17,13 +17,54 @@ static void UsePlayerSlots(gool_object *slots) {
     players[idx] = &slots[idx];
 }
 
-UTEST(coop, player_two_starts_beside_player_one) {
-  vec lead = { 0x10000, 0x20000, 0x30000 };
-  vec beside = CoopBesideLead(lead);
+static vec one_spot = { 0x10000, 0x20000, 0x30000 }; /* where player one stands */
+static int32_t floor_ends_x; /* FloorUpTo's floor reaches this far along x */
+static int floor_checks;     /* how many spots NoFloor was asked about */
 
-  ASSERT_EQ(lead.x + COOP_BESIDE_DISTANCE, beside.x);
-  ASSERT_EQ(lead.y, beside.y);
-  ASSERT_EQ(lead.z, beside.z);
+static int FloorEverywhere(vec *trans) {
+  return 1;
+}
+
+static int FloorUpTo(vec *trans) {
+  return trans->x <= floor_ends_x;
+}
+
+static int NoFloor(vec *trans) {
+  floor_checks++;
+  return 0;
+}
+
+UTEST(coop, player_two_starts_two_boxes_beside_player_one) {
+  vec spot = CoopSpawnBeside(one_spot, FloorEverywhere);
+
+  ASSERT_EQ(one_spot.x + COOP_BESIDE_DISTANCE, spot.x);
+  ASSERT_EQ(one_spot.y, spot.y);
+  ASSERT_EQ(one_spot.z, spot.z);
+}
+
+UTEST(coop, with_no_floor_two_boxes_away_player_two_starts_half_a_box_nearer) {
+  floor_ends_x = one_spot.x + COOP_BESIDE_DISTANCE - 1;
+  ASSERT_EQ(one_spot.x + COOP_BESIDE_DISTANCE - COOP_BESIDE_STEP,
+    CoopSpawnBeside(one_spot, FloorUpTo).x);
+}
+
+UTEST(coop, player_two_starts_at_the_furthest_spot_with_floor) {
+  floor_ends_x = one_spot.x + COOP_BESIDE_STEP;
+  ASSERT_EQ(one_spot.x + COOP_BESIDE_STEP, CoopSpawnBeside(one_spot, FloorUpTo).x);
+}
+
+UTEST(coop, with_no_floor_beside_him_player_two_starts_on_player_ones_spot) {
+  vec spot = CoopSpawnBeside(one_spot, NoFloor);
+
+  ASSERT_EQ(one_spot.x, spot.x);
+  ASSERT_EQ(one_spot.y, spot.y);
+  ASSERT_EQ(one_spot.z, spot.z);
+}
+
+UTEST(coop, player_ones_own_spot_isnt_checked_for_floor) {
+  floor_checks = 0;
+  CoopSpawnBeside(one_spot, NoFloor);
+  ASSERT_EQ(COOP_BESIDE_DISTANCE / COOP_BESIDE_STEP, floor_checks);
 }
 
 UTEST(coop, each_player_slot_has_its_player_index) {

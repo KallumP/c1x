@@ -13,6 +13,7 @@
 #define COOP_NOT_A_PLAYER    -1      /* CoopPlayerIndex of any other object */
 #define COOP_PLAYER_TWO      1       /* player two's index in players */
 #define COOP_BESIDE_DISTANCE 0x32000 /* how far beside player one he starts: two boxes */
+#define COOP_BESIDE_STEP     0xC800  /* how much nearer each try with no floor is: half a box */
 #define COOP_CAMERA_EASE     8       /* the aim closes 1/8 of its lag a frame */
 
 /* the camera with two players: whom it follows, and its aim easing over to him */
@@ -47,5 +48,6 @@ extern void CoopCameraReset(coop_camera *camera);
 extern vec CoopCameraStep(coop_camera *camera, gool_object *followed);
 extern vec CoopCameraAim(coop_camera *camera, vec *camera_trans);
 extern vec CoopBesideLead(vec lead);
+extern vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans));
 
 #endif /* _PC_COOP_H_ */

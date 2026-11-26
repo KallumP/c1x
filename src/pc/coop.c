@@ -195,3 +195,9 @@ vec CoopBesideLead(vec lead) {
   beside.x += COOP_BESIDE_DISTANCE;
   return beside;
 }
+
+vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans)) {
+  vec nowhere = { 0 };
+
+  return nowhere;
+}
