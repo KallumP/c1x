@@ -325,31 +325,78 @@ UTEST(coop, other_objects_save_the_level_state) {
   ASSERT_TRUE(CoopMaySaveLevelState(&checkpoint));
 }
 
-#define FAR_AHEAD 0x80000 /* how far apart the two players are, along x */
+#define FAR_AHEAD        0x80000 /* how far apart the two players are */
+#define FRAMES_TO_SETTLE 200     /* more than enough: FAR_AHEAD eases out in about 85 */
 
-UTEST(coop, the_camera_aims_at_a_player_it_keeps_following) {
+/* the aim the frame the camera, settled on a player at from, changes to one at to */
+static vec AimAfterChange(vec from, vec to) {
+  coop_camera camera = { 0 };
+  gool_object before, after;
+
+  before.trans = from;
+  after.trans = to;
+  CoopCameraStep(&camera, &before);
+  return CoopCameraStep(&camera, &after);
+}
+
+UTEST(coop, the_camera_aims_at_the_first_player_it_follows_at_once) {
   coop_camera camera = { 0 };
   gool_object player;
   vec aim;
 
   player.trans = (vec){ 0x12345, 0x6789, -0x4000 };
-  CoopCameraStep(&camera, &player);
   aim = CoopCameraStep(&camera, &player);
   ASSERT_EQ(player.trans.x, aim.x);
   ASSERT_EQ(player.trans.y, aim.y);
   ASSERT_EQ(player.trans.z, aim.z);
 }
 
-UTEST(coop, the_camera_moves_an_eighth_of_the_way_the_frame_its_player_changes) {
+UTEST(coop, the_camera_stays_on_a_player_who_moves) {
   coop_camera camera = { 0 };
-  gool_object before, after;
+  gool_object player;
   vec aim;
 
-  before.trans = (vec){ 0, 0, 0 };
-  after.trans = (vec){ FAR_AHEAD, 0, 0 };
+  player.trans = (vec){ 0x12345, 0x6789, -0x4000 };
+  CoopCameraStep(&camera, &player);
+  player.trans = (vec){ 0x20000, 0x7000, -0x9000 };
+  aim = CoopCameraStep(&camera, &player);
+  ASSERT_EQ(player.trans.x, aim.x);
+  ASSERT_EQ(player.trans.y, aim.y);
+  ASSERT_EQ(player.trans.z, aim.z);
+}
+
+UTEST(coop, the_frame_its_player_changes_the_camera_moves_an_eighth_of_the_way_across) {
+  vec from = { 0x10000, 0, 0 }, to = { 0x10000 + FAR_AHEAD, 0, 0 };
+
+  ASSERT_EQ(from.x + FAR_AHEAD / COOP_CAMERA_EASE, AimAfterChange(from, to).x);
+}
+
+UTEST(coop, the_frame_its_player_changes_the_camera_moves_an_eighth_of_the_way_down) {
+  vec from = { 0, 0x10000 + FAR_AHEAD, 0 }, to = { 0, 0x10000, 0 };
+
+  ASSERT_EQ(from.y - FAR_AHEAD / COOP_CAMERA_EASE, AimAfterChange(from, to).y);
+}
+
+UTEST(coop, the_frame_its_player_changes_the_camera_moves_an_eighth_of_the_way_in) {
+  vec from = { 0, 0, 0x10000 }, to = { 0, 0, 0x10000 + FAR_AHEAD };
+
+  ASSERT_EQ(from.z + FAR_AHEAD / COOP_CAMERA_EASE, AimAfterChange(from, to).z);
+}
+
+UTEST(coop, the_camera_closes_an_eighth_of_what_is_left_each_frame) {
+  coop_camera camera = { 0 };
+  gool_object before, after;
+  int32_t left;
+  vec aim;
+
+  before.trans = (vec){ 0x10000, 0, 0 };
+  after.trans = (vec){ 0x10000 + FAR_AHEAD, 0, 0 };
   CoopCameraStep(&camera, &before);
+  CoopCameraStep(&camera, &after);
   aim = CoopCameraStep(&camera, &after);
-  ASSERT_EQ(FAR_AHEAD / COOP_CAMERA_EASE, aim.x); /* 1/COOP_CAMERA_EASE of the way */
+  left = FAR_AHEAD - FAR_AHEAD / COOP_CAMERA_EASE; /* after the first frame */
+  left -= left / COOP_CAMERA_EASE;
+  ASSERT_EQ(after.trans.x - left, aim.x);
 }
 
 UTEST(coop, the_camera_reaches_the_player_it_changed_to) {
@@ -358,12 +405,39 @@ UTEST(coop, the_camera_reaches_the_player_it_changed_to) {
   vec aim;
   int frame;
 
-  before.trans = (vec){ 0, 0, 0 };
-  after.trans = (vec){ FAR_AHEAD, 0, 0 };
+  before.trans = (vec){ 0x10000, 0, 0 };
+  after.trans = (vec){ 0x10000 + FAR_AHEAD, 0, 0 };
   CoopCameraStep(&camera, &before);
-  for (frame=0;frame<200;frame++)
+  for (frame=0;frame<FRAMES_TO_SETTLE;frame++)
     aim = CoopCameraStep(&camera, &after);
-  ASSERT_EQ(FAR_AHEAD, aim.x);
+  ASSERT_EQ(after.trans.x, aim.x);
+}
+
+UTEST(coop, a_lag_too_small_to_ease_is_closed_at_once) {
+  vec from = { 0x10000, 0, 0 }, to = { 0x10000 + COOP_CAMERA_EASE - 1, 0, 0 };
+
+  ASSERT_EQ(to.x, AimAfterChange(from, to).x);
+}
+
+UTEST(coop, the_smallest_lag_that_eases_closes_by_one) {
+  vec from = { 0x10000, 0, 0 }, to = { 0x10000 + COOP_CAMERA_EASE, 0, 0 };
+
+  ASSERT_EQ(from.x + 1, AimAfterChange(from, to).x);
+}
+
+UTEST(coop, a_change_mid_ease_starts_from_where_the_camera_aimed) {
+  coop_camera camera = { 0 };
+  gool_object one, two;
+  int32_t left;
+  vec mid, aim;
+
+  one.trans = (vec){ 0x10000, 0, 0 };
+  two.trans = (vec){ 0x10000 + FAR_AHEAD, 0, 0 };
+  CoopCameraStep(&camera, &one);
+  mid = CoopCameraStep(&camera, &two); /* an eighth of the way to player two */
+  aim = CoopCameraStep(&camera, &one);
+  left = mid.x - one.trans.x;
+  ASSERT_EQ(one.trans.x + left - left / COOP_CAMERA_EASE, aim.x);
 }
 
 UTEST(coop, a_reset_camera_aims_straight_at_the_player_it_follows) {
@@ -371,8 +445,8 @@ UTEST(coop, a_reset_camera_aims_straight_at_the_player_it_follows) {
   gool_object before, after, placed;
   vec aim;
 
-  before.trans = (vec){ 0, 0, 0 };
-  after.trans = (vec){ FAR_AHEAD, 0, 0 };
+  before.trans = (vec){ 0x10000, 0, 0 };
+  after.trans = (vec){ 0x10000 + FAR_AHEAD, 0, 0 };
   placed.trans = (vec){ 0x1000, 0x2000, 0x3000 };
   CoopCameraStep(&camera, &before);
   CoopCameraStep(&camera, &after); /* mid-ease */
@@ -399,6 +473,7 @@ UTEST(coop, with_one_player_the_camera_aims_at_player_one_at_once) {
   vec aim;
 
   PlacePlayersApart(slots);
+  slots[0].trans.x = -0x4000;
   CoopCameraAim(&camera, &beside_one);
   CoopCameraAim(&camera, &beside_two); /* easing over to player two */
   slots[COOP_PLAYER_TWO].handle.type = 0;
