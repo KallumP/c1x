@@ -30,9 +30,12 @@ speed run mode
 
 local multiplayer
 - ability to have more than one crash
-- maybe two controllers?
 - can each break boxes and kill enemies
 - camera follows closes crash
+- Replays recording both pads
+- Split screen in place of the leash
+- color crash differently?
+- way to assign a controller to a player (if you want p1 on keyboard, and p2 on controller 1)
 
 time trails
 - Should be able to start a time trail by running over a clock object at the start of the level

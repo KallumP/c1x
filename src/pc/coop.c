@@ -1,3 +1,4 @@
+#include <string.h>
 #include "coop.h"
 #include "boxhud.h"
 #include "math.h"
@@ -160,7 +161,9 @@ vec CoopCameraStep(coop_camera *camera, gool_object *followed) {
   return camera->aim;
 }
 
+/* the players were placed somewhere new: there's nowhere to ease from */
 void CoopCameraReset(coop_camera *camera) {
+  memset(camera, 0, sizeof(*camera));
 }
 
 /* the checkpoint is player one's: a player two running crash's script never saves it */
