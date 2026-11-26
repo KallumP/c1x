@@ -15,6 +15,7 @@
  * and its copy is kept at the source's, so it only slides in with the hud (triangle)
  */
 #define HUD_EXEC            4    /* the hud counters' exec slot (DispC) */
+#define HUD_HANDLE          1    /* the handle the hud counters are created under */
 #define HUD_LIVES_SUBTYPE   0    /* the lives counter; it doesn't spin its icon, as wumpa does */
 #define HUD_START_STATE     0    /* the lives counter's start state, which picks its register, place and icon */
 #define HUD_SHOWN_REG_IDX   0x4a /* obj[0x188]: which register (shifted 8 left) a counter shows */
