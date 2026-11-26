@@ -559,3 +559,36 @@ UTEST(coop, with_two_players_the_camera_eases_over_when_the_nearest_changes) {
   aim = CoopCameraAim(&camera, &beside_two);
   ASSERT_EQ(slots[COOP_PLAYER_TWO].trans.x / COOP_CAMERA_EASE, aim.x);
 }
+
+UTEST(coop, a_frame_with_one_player_ends_the_ease_for_when_two_play_again) {
+  coop_camera camera = { 0 };
+  gool_object slots[GOOL_PLAYER_COUNT];
+  vec beside_one = { -0x8000, 0, 0 }, beside_two = { 0x20000, 0, 0 };
+  vec aim;
+
+  PlacePlayersApart(slots);
+  CoopCameraAim(&camera, &beside_two);
+  CoopCameraAim(&camera, &beside_one); /* easing over to player one */
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  CoopCameraAim(&camera, &beside_one);
+  slots[COOP_PLAYER_TWO].handle.type = 1;
+  aim = CoopCameraAim(&camera, &beside_one);
+  ASSERT_EQ(slots[0].trans.x, aim.x);
+}
+
+UTEST(coop, the_camera_eases_from_player_one_to_a_player_two_who_joins_nearer_it) {
+  coop_camera camera = { 0 };
+  gool_object slots[GOOL_PLAYER_COUNT];
+  vec beside_two = { 0x20000, 0, 0 };
+  int32_t apart;
+  vec aim;
+
+  PlacePlayersApart(slots);
+  slots[0].trans.x = -0x4000;
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  CoopCameraAim(&camera, &beside_two);
+  slots[COOP_PLAYER_TWO].handle.type = 1;
+  aim = CoopCameraAim(&camera, &beside_two);
+  apart = slots[COOP_PLAYER_TWO].trans.x - slots[0].trans.x;
+  ASSERT_EQ(slots[0].trans.x + apart / COOP_CAMERA_EASE, aim.x);
+}
