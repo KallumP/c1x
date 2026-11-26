@@ -100,7 +100,7 @@ static void CamAdjustProgress(int32_t speed, cam_info *cam) {
   LevelUpdate(cur_zone, cur_path, next_progress, 0);
 }
 
-/* pc: whom the camera follows and where it aims: crash, or with two players the one
+/* whom the camera follows and where it aims: crash, or with two players the one
    nearest the camera, eased over when that changes (pc/coop.h) */
 static gool_object *cam_lead;
 static vec cam_subject;

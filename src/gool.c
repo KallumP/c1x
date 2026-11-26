@@ -80,7 +80,7 @@ static inline void GoolObjectAddChild(gool_object *obj, gool_object *child) {
   child->sibling = GoolObjectGetChildren(obj);
   GoolObjectSetChildren(obj, child);
 }
-/* pc: move child to the end of obj's children, so it updates after its siblings */
+/* move child to the end of obj's children, so it updates after its siblings */
 static void GoolObjectMoveToLastChild(gool_object *obj, gool_object *child) {
   gool_object *last;
 
@@ -1782,7 +1782,7 @@ int GoolObjectColors(gool_object *obj) {
   return SUCCESS;
 }
 
-/* pc: obj's bound in the world, at its position */
+/* obj's bound in the world, at its position */
 static void GoolObjectWorldBound(gool_object *obj, bound *world_bound) {
   world_bound->p1.x = obj->trans.x + obj->bound.p1.x;
   world_bound->p1.y = obj->trans.y + obj->bound.p1.y;
@@ -2281,7 +2281,7 @@ static void GoolTurnShieldPush(gool_object *native) {
 
 static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_ref *transition);
 
-/* runs obj's code (GoolObjectInterpretCode). pc: a custom level's native
+/* runs obj's code (GoolObjectInterpretCode). a custom level's native
    that pushes crash with its shield pushes him along its path (GoolTurnShieldPush) */
 int GoolObjectInterpret(gool_object *obj, uint32_t flags, gool_state_ref *transition) {
   vec velocity_before;
