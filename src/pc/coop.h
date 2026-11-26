@@ -28,6 +28,7 @@ typedef struct {
 #define COOP_NEAR_RANGE_Y    0xAF000
 
 extern gool_object *players[GOOL_PLAYER_COUNT];
+extern coop_camera coop_cam;
 
 extern int CoopPlayerIndex(gool_object *obj);
 extern int CoopIsPlayer(gool_object *obj);
@@ -44,7 +45,7 @@ extern void CoopAimAtNearestPlayer(gool_object *obj);
 extern int CoopMaySaveLevelState(gool_object *obj);
 extern void CoopCameraReset(coop_camera *camera);
 extern vec CoopCameraStep(coop_camera *camera, gool_object *followed);
-extern vec CoopCameraAim(coop_camera *camera, vec *cam_trans);
+extern vec CoopCameraAim(coop_camera *camera, vec *camera_trans);
 extern vec CoopBesideLead(vec lead);
 
 #endif /* _PC_COOP_H_ */

@@ -27,6 +27,10 @@ int32_t dcam_angvel2 = 0;         /* 800565CC; gp[0x74] */
 int32_t dcam_rot_y1 = 0;          /* 800565D0; gp[0x75] */
 int32_t dcam_rot_y2 = 0;          /* 800565D4; gp[0x76] */
 int32_t dcam_trans_z = 0;         /* 800565D8; gp[0x77] */
+/* whom the camera follows this frame and where it aims: crash, or with two players
+   the one nearest it, the aim easing over when that changes (CoopCameraAim) */
+static gool_object *cam_followed;
+static vec cam_aim;
 
 extern ns_struct ns;
 extern level_state savestate;
@@ -98,23 +102,6 @@ static void CamAdjustProgress(int32_t speed, cam_info *cam) {
     }
   }
   LevelUpdate(cur_zone, cur_path, next_progress, 0);
-}
-
-/* whom the camera follows and where it aims: crash, or with two players the one
-   nearest the camera, eased over when that changes (pc/coop.h) */
-static gool_object *cam_followed;
-static vec cam_aim;
-static coop_camera coop_cam;
-
-static void CamPickSubject() {
-  if (!CoopPlayerInPlay(COOP_PLAYER_TWO)) {
-    cam_followed = crash;
-    cam_aim = crash->trans;
-    coop_cam.followed = 0; /* nothing to ease from when two play again */
-    return;
-  }
-  cam_followed = CoopNearestPlayer(&cam_trans);
-  cam_aim = CoopCameraStep(&coop_cam, cam_followed);
 }
 
 //----- (8002A0C4) --------------------------------------------------------
@@ -289,6 +276,8 @@ static int CamGetProgress2(vec *trans, zone_path *path, cam_info *cam, int flags
   return 1;
 }
 
+/* obj is whom the camera follows (his zoom, and his d-pad looks ahead); the point
+   it follows is cam_aim, which trails him while the camera eases over to him */
 //----- (8002A82C) --------------------------------------------------------
 static void CamFollow(gool_object *obj, uint32_t flag) {
   cam_info cameras[5], *cam_nearest;
@@ -314,8 +303,8 @@ static void CamFollow(gool_object *obj, uint32_t flag) {
   if (path_idx >= (length/2) || (length-path_idx) < 50)
     flags |= 2;
   if (!(header->flags & 0x80) && (cam_zoom > 0x31FFF)) { /* first person zone? */
-    if (!(pads[0].held & 0x1000)) { /* up not pressed? */
-      if (pads[0].held & 0x4000) /* down pressed? */
+    if (!(pads[CoopObjectPadPort(obj)].held & 0x1000)) { /* up not pressed? */
+      if (pads[CoopObjectPadPort(obj)].held & 0x4000) /* down pressed? */
         cam_offset_dir_z = 1; /* offset cam backward */
       /* else no adjust */
     }
@@ -324,8 +313,8 @@ static void CamFollow(gool_object *obj, uint32_t flag) {
   }
   else /* cam z dir depends on zone flag */
     cam_offset_dir_z = !!(header->flags & 0x8000);
-  if (!(pads[0].held & 0x8000)) { /* left not pressed? */
-    if (pads[0].held & 0x2000)  /* right pressed? */
+  if (!(pads[CoopObjectPadPort(obj)].held & 0x8000)) { /* left not pressed? */
+    if (pads[CoopObjectPadPort(obj)].held & 0x2000)  /* right pressed? */
       cam_offset_dir_x = 1; /* offset cam right */
     /* else no adjust */
   }
@@ -510,7 +499,8 @@ int CamUpdate() {
   int32_t path_x, path_y;
 
   if (!crash) { return 0; }
-  CamPickSubject();
+  cam_aim = CoopCameraAim(&coop_cam, &cam_trans);
+  cam_followed = coop_cam.followed;
   if (cur_display_flags & GOOL_FLAG_SPIN_DEATH) {
     CamDeath(&i_death_cam);
     return 0;
@@ -518,7 +508,7 @@ int CamUpdate() {
   if (!(cur_display_flags & GOOL_FLAG_CAM_UPDATE)) { return 0; }
   cam_mode = cur_path->cam_mode;
   switch (cam_mode) {
-  case 5: /* follow crash */
+  case 5: /* follow crash (with two players, the one nearest the camera) */
   case 6:
     game_state = GAME_STATE_PLAYING;
     CamFollow(cam_followed, 0);
@@ -537,6 +527,7 @@ int CamUpdate() {
       cur_path->direction_x);
     cam_trans.x = path_x + follow_cam_offset;
     path_y = cam_trans.y; /* the path's until the camera has a height of its own */
+    /* the aim's height, though it's his floor: they differ only while the camera eases over */
     follow_cam_ground_y = FollowCamGroundY(follow_cam_ground_y, cam_aim.y,
       cam_followed->status_a & GOOL_FLAG_GROUNDLAND);
     follow_cam_y = FollowCamHeight(follow_cam_y, follow_cam_ground_y, path_y,

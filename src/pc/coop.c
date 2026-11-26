@@ -9,6 +9,9 @@ extern gool_handle handles[8];
 /* each player's own object slot, outside the object pool; player one's is crash's */
 gool_object *players[GOOL_PLAYER_COUNT];
 
+/* the game's camera (src/cam.c) */
+coop_camera coop_cam;
+
 /* which player's slot obj is, or COOP_NOT_A_PLAYER */
 int CoopPlayerIndex(gool_object *obj) {
   int i;
@@ -170,9 +173,9 @@ void CoopCameraReset(coop_camera *camera) {
    (camera->followed): player one alone, or with two players the one nearest the camera.
    the camera is where it is because of whom it followed last frame, so it stays with
    him until the other comes nearer it */
-vec CoopCameraAim(coop_camera *camera, vec *cam_trans) {
+vec CoopCameraAim(coop_camera *camera, vec *camera_trans) {
   if (CoopPlayerInPlay(COOP_PLAYER_TWO))
-    return CoopCameraStep(camera, CoopNearestPlayer(cam_trans));
+    return CoopCameraStep(camera, CoopNearestPlayer(camera_trans));
   CoopCameraReset(camera);
   camera->followed = players[0];
   camera->aim = players[0]->trans;
