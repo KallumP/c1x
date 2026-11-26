@@ -8,7 +8,6 @@
 #include "pc/settings.h"
 #include "pc/boxtotals.h"
 
-
 extern ns_struct ns;
 extern gool_handle handles[8];
 
