@@ -107,15 +107,17 @@ gool_object *CoopNearestPlayer(vec *trans) {
   return nearest;
 }
 
-/* in range (as OutOfRange measures it) of any player in play, not just crash */
+/* in range (as OutOfRange measures it) of any player in play, not just crash;
+   an object near no one has its bound marked invalid, as OutOfRange does for crash */
 int CoopObjectNearAnyPlayer(gool_object *obj) {
   int idx;
 
   for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
     if (!CoopPlayerInPlay(idx)) { continue; }
-    if (!OutOfRange(obj, &obj->trans, &players[idx]->trans,
+    if (!OutOfRange(0, &obj->trans, &players[idx]->trans,
       COOP_NEAR_RANGE_XZ, COOP_NEAR_RANGE_Y, COOP_NEAR_RANGE_XZ)) { return 1; }
   }
+  obj->status_a |= GOOL_FLAG_LBOUND_INVALID;
   return 0;
 }
 
