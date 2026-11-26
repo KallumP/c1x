@@ -1,5 +1,6 @@
 #include "coop.h"
 #include "boxhud.h"
+#include "math.h"
 
 extern pad pads[2];
 extern gool_handle handles[8];
@@ -104,6 +105,18 @@ gool_object *CoopNearestPlayer(vec *trans) {
     }
   }
   return nearest;
+}
+
+/* in range (as OutOfRange measures it) of any player in play, not just crash */
+int CoopObjectNearAnyPlayer(gool_object *obj) {
+  int idx;
+
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (!CoopPlayerInPlay(idx)) { continue; }
+    if (!OutOfRange(obj, &obj->trans, &players[idx]->trans,
+      COOP_NEAR_RANGE_XZ, COOP_NEAR_RANGE_Y, COOP_NEAR_RANGE_XZ)) { return 1; }
+  }
+  return 0;
 }
 
 /* an object after a crash goes after the nearest one; a player link its script

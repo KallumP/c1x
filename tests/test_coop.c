@@ -192,6 +192,40 @@ UTEST(coop, an_object_after_player_one_turns_to_a_nearer_player_two) {
   ASSERT_TRUE(&slots[COOP_PLAYER_TWO] == enemy.player);
 }
 
+UTEST(coop, an_object_within_range_of_player_one_is_near_a_player) {
+  gool_object slots[GOOL_PLAYER_COUNT], box;
+
+  PlacePlayersApart(slots);
+  box.trans = (vec){ -COOP_NEAR_RANGE_XZ, 0, 0 };
+  ASSERT_TRUE(CoopObjectNearAnyPlayer(&box));
+}
+
+UTEST(coop, an_object_within_range_of_only_player_two_is_near_a_player) {
+  gool_object slots[GOOL_PLAYER_COUNT], box;
+
+  PlacePlayersApart(slots);
+  box.trans = (vec){ 0x19000 + COOP_NEAR_RANGE_XZ, 0, 0 };
+  ASSERT_TRUE(CoopObjectNearAnyPlayer(&box));
+}
+
+UTEST(coop, an_object_out_of_range_of_every_player_is_near_no_one) {
+  gool_object slots[GOOL_PLAYER_COUNT], box;
+
+  PlacePlayersApart(slots);
+  box.trans = (vec){ 0, COOP_NEAR_RANGE_Y + 1, 0 };
+  ASSERT_FALSE(CoopObjectNearAnyPlayer(&box));
+}
+
+UTEST(coop, an_object_near_no_one_has_its_bound_marked_invalid) {
+  gool_object slots[GOOL_PLAYER_COUNT], box;
+
+  PlacePlayersApart(slots);
+  box.trans = (vec){ 0, COOP_NEAR_RANGE_Y + 1, 0 };
+  box.status_a = 0;
+  CoopObjectNearAnyPlayer(&box);
+  ASSERT_TRUE(box.status_a & GOOL_FLAG_LBOUND_INVALID);
+}
+
 /* a collected fruit keeps its own target in the player link */
 UTEST(coop, an_object_whose_player_link_isnt_a_player_keeps_it) {
   gool_object slots[GOOL_PLAYER_COUNT], hud, counter;

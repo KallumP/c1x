@@ -31,9 +31,6 @@ int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event,
   return 0;
 }
 
-void sranda(uint32_t seed) {}
-uint32_t randb(uint32_t max) { return 0; }
-
 gool_object *GoolObjectCreate(void *parent, int exec, int subtype,
   int argc, uint32_t *argv, int flag) {
   return 0;

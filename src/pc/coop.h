@@ -14,6 +14,10 @@
 #define COOP_PLAYER_TWO      1       /* player two's index in players */
 #define COOP_BESIDE_DISTANCE 0x32000 /* how far beside player one he starts: two boxes */
 
+/* how near a player an object keeps its collision bound: five boxes to a side, seven up or down */
+#define COOP_NEAR_RANGE_XZ   0x7D000
+#define COOP_NEAR_RANGE_Y    0xAF000
+
 extern gool_object *players[GOOL_PLAYER_COUNT];
 
 extern int CoopPlayerIndex(gool_object *obj);
@@ -25,6 +29,7 @@ extern int CoopObjectPadPort(gool_object *obj);
 extern int CoopObjectIsOnHud(gool_object *obj);
 extern pad CoopObjectPad(gool_object *obj);
 extern gool_object *CoopNearestPlayer(vec *trans);
+extern int CoopObjectNearAnyPlayer(gool_object *obj);
 extern void CoopAimAtNearestPlayer(gool_object *obj);
 extern int CoopMaySaveLevelState(gool_object *obj);
 extern vec CoopBesideLead(vec lead);

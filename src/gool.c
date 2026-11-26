@@ -1222,17 +1222,6 @@ static void CrashJumpGrace(gool_object *obj) {
     obj->status_a |= JUMP_GRACE_FLOOR;
 }
 
-/* in range (as OutOfRange measures it) of any player in play, not just crash */
-static int GoolObjectNearAnyPlayer(gool_object *obj, int32_t x, int32_t y, int32_t z) {
-  int idx;
-
-  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
-    if (!CoopPlayerInPlay(idx)) { continue; }
-    if (!OutOfRange(obj, &obj->trans, &players[idx]->trans, x, y, z)) { return 1; }
-  }
-  return 0;
-}
-
 //----- (8001DA0C) --------------------------------------------------------
 int GoolObjectUpdate(gool_object *obj, int flag) {
   gool_header *header;
@@ -2053,7 +2042,7 @@ int GoolObjectPhysics(gool_object *obj) {
   if (status_b & GOOL_FLAG_COLLIDABLE) { /* collidable? */
     /* not the same render frame as crash and within range of a player? */
     if (obj->anim_stamp != crash->anim_stamp &&
-      GoolObjectNearAnyPlayer(obj, 0x7D000, 0xAF000, 0x7D000))
+      CoopObjectNearAnyPlayer(obj))
       GoolObjectBound(obj); /* compute and record object rect */
   }
   return 0;
@@ -3132,7 +3121,7 @@ int GoolOpChangeAnim(gool_object *obj, uint32_t instruction, uint32_t *flags) {
   else if (flip == 2)
     obj->scale.x = -obj->scale.x;
   if (obj->status_b & 0x18) { /* object is solid and stopped by solid matter */
-    near_player = GoolObjectNearAnyPlayer(obj, 0x7D000, 0xAF000, 0x7D000);
+    near_player = CoopObjectNearAnyPlayer(obj);
     if (near_player || (obj->status_b & 0x80000000))
       GoolObjectLocalBound(obj, &obj->scale);
   }
