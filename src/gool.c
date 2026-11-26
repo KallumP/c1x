@@ -1773,13 +1773,14 @@ int GoolObjectColors(gool_object *obj) {
   return SUCCESS;
 }
 
-static void GoolPlayerBound(gool_object *player, bound *player_bound) {
-  player_bound->p1.x = player->trans.x + player->bound.p1.x;
-  player_bound->p1.y = player->trans.y + player->bound.p1.y;
-  player_bound->p1.z = player->trans.z + player->bound.p1.z;
-  player_bound->p2.x = player->trans.x + player->bound.p2.x;
-  player_bound->p2.y = player->trans.y + player->bound.p2.y;
-  player_bound->p2.z = player->trans.z + player->bound.p2.z;
+/* pc: obj's bound in the world, at its position */
+static void GoolObjectWorldBound(gool_object *obj, bound *world_bound) {
+  world_bound->p1.x = obj->trans.x + obj->bound.p1.x;
+  world_bound->p1.y = obj->trans.y + obj->bound.p1.y;
+  world_bound->p1.z = obj->trans.z + obj->bound.p1.z;
+  world_bound->p2.x = obj->trans.x + obj->bound.p2.x;
+  world_bound->p2.y = obj->trans.y + obj->bound.p2.y;
+  world_bound->p2.z = obj->trans.z + obj->bound.p2.z;
 }
 
 /* signal obj and each player its bound touches (GoolCollide keeps the nearest as obj's
@@ -1791,7 +1792,7 @@ static void GoolCollideWithPlayers(gool_object *obj, bound *obj_bound) {
   touched = 0;
   for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
     if (!CoopObjectCanTouchPlayer(obj, idx)) { continue; }
-    GoolPlayerBound(players[idx], &player_bound);
+    GoolObjectWorldBound(players[idx], &player_bound);
     if (!TestBoundIntersection(&player_bound, obj_bound)) { continue; }
     GoolCollide(obj, obj_bound, players[idx], &player_bound);
     touched = 1;
@@ -1870,12 +1871,7 @@ int GoolObjectBound(gool_object *obj) {
     }
   }
   else {
-    bound->p1.x = obj->trans.x + obj->bound.p1.x;
-    bound->p1.y = obj->trans.y + obj->bound.p1.y;
-    bound->p1.z = obj->trans.z + obj->bound.p1.z;
-    bound->p2.x = obj->trans.x + obj->bound.p2.x;
-    bound->p2.y = obj->trans.y + obj->bound.p2.y;
-    bound->p2.z = obj->trans.z + obj->bound.p2.z;
+    GoolObjectWorldBound(obj, &bound->bound);
   }
   GoolCollideWithPlayers(obj, &bound->bound);
   return 0;
