@@ -79,26 +79,17 @@ pad CoopObjectPad(gool_object *obj) {
   return pads[CoopObjectPadPort(obj)];
 }
 
-static int64_t DistanceSquared(vec *a, vec *b) {
-  int64_t dx, dy, dz;
-
-  dx = a->x - b->x;
-  dy = a->y - b->y;
-  dz = a->z - b->z;
-  return dx*dx + dy*dy + dz*dz;
-}
-
-/* the player in play nearest trans; player one when no one else is in play */
+/* the player in play nearest trans; player one when no one is in play */
 gool_object *CoopNearestPlayer(vec *trans) {
   gool_object *nearest;
-  int64_t nearest_distance, distance;
+  uint32_t nearest_distance, distance;
   int idx;
 
   nearest = players[0];
-  nearest_distance = INT64_MAX;
+  nearest_distance = UINT32_MAX;
   for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
     if (!CoopPlayerInPlay(idx)) { continue; }
-    distance = DistanceSquared(&players[idx]->trans, trans);
+    distance = ApxDist(&players[idx]->trans, trans);
     if (distance < nearest_distance) {
       nearest = players[idx];
       nearest_distance = distance;
