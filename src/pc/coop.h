@@ -42,7 +42,6 @@ extern int CoopObjectNearAnyPlayer(gool_object *obj);
 extern int CoopObjectCanTouchPlayer(gool_object *obj, int player_idx);
 extern void CoopAimAtNearestPlayer(gool_object *obj);
 extern int CoopMaySaveLevelState(gool_object *obj);
-extern gool_object *CoopLeadPlayer(vec *direction);
 extern vec CoopCameraSubject(coop_camera *camera, gool_object *lead);
 extern int CoopLeftBehind(gool_object *lead, gool_object *other);
 extern vec CoopBesideLead(vec lead);

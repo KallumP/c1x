@@ -100,25 +100,20 @@ static void CamAdjustProgress(int32_t speed, cam_info *cam) {
   LevelUpdate(cur_zone, cur_path, next_progress, 0);
 }
 
-/* pc: whom the camera follows and where it aims: crash, or with two players the lead,
-   eased over when the lead changes (pc/coop.h) */
+/* pc: whom the camera follows and where it aims: crash, or with two players the one
+   nearest the camera, eased over when that changes (pc/coop.h) */
 static gool_object *cam_lead;
 static vec cam_subject;
 static coop_camera coop_cam;
 
 static void CamPickSubject() {
-  vec direction;
-
   if (!CoopPlayerInPlay(COOP_PLAYER_TWO)) {
     cam_lead = crash;
     cam_subject = crash->trans;
     coop_cam.lead = 0; /* nothing to ease from when two play again */
     return;
   }
-  direction.x = cur_path->direction_x;
-  direction.y = cur_path->direction_y;
-  direction.z = cur_path->direction_z;
-  cam_lead = CoopLeadPlayer(&direction);
+  cam_lead = CoopNearestPlayer(&cam_trans);
   GoolLeashPlayersTo(cam_lead);
   cam_subject = CoopCameraSubject(&coop_cam, cam_lead);
 }
