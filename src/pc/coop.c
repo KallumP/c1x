@@ -130,33 +130,34 @@ void CoopAimAtNearestPlayer(gool_object *obj) {
   obj->player = CoopNearestPlayer(&obj->trans);
 }
 
-/* the gap left after one frame's easing; a gap too small to ease is closed */
-static int32_t EasedGap(int32_t gap) {
-  if (gap / COOP_CAMERA_EASE == 0) { return 0; }
-  return gap - gap / COOP_CAMERA_EASE;
+/* the lag left after one frame's easing; one too small to ease would never close, so it's closed */
+static int32_t EasedLag(int32_t lag) {
+  int32_t step;
+
+  step = lag / COOP_CAMERA_EASE;
+  if (step == 0) { return 0; }
+  return lag - step;
 }
 
-static void StartFromLastSubject(coop_camera *camera, gool_object *lead) {
-  if (camera->lead) {
-    camera->offset.x = camera->subject.x - lead->trans.x;
-    camera->offset.y = camera->subject.y - lead->trans.y;
-    camera->offset.z = camera->subject.z - lead->trans.z;
-  }
-  camera->lead = lead;
+/* the aim stays where it was: it lags the new player by however far apart they are */
+static void LagBehind(coop_camera *camera, gool_object *followed) {
+  camera->lag.x = camera->aim.x - followed->trans.x;
+  camera->lag.y = camera->aim.y - followed->trans.y;
+  camera->lag.z = camera->aim.z - followed->trans.z;
 }
 
-vec CoopCameraSubject(coop_camera *camera, gool_object *lead) {
-  vec subject;
-
-  if (lead != camera->lead) { StartFromLastSubject(camera, lead); }
-  camera->offset.x = EasedGap(camera->offset.x);
-  camera->offset.y = EasedGap(camera->offset.y);
-  camera->offset.z = EasedGap(camera->offset.z);
-  subject.x = lead->trans.x + camera->offset.x;
-  subject.y = lead->trans.y + camera->offset.y;
-  subject.z = lead->trans.z + camera->offset.z;
-  camera->subject = subject;
-  return subject;
+/* where the camera aims this frame, following followed. call it once a frame: each
+   call eases the aim a step nearer him, starting from where it was when he changed */
+vec CoopCameraStep(coop_camera *camera, gool_object *followed) {
+  if (camera->followed && followed != camera->followed) { LagBehind(camera, followed); }
+  camera->followed = followed;
+  camera->lag.x = EasedLag(camera->lag.x);
+  camera->lag.y = EasedLag(camera->lag.y);
+  camera->lag.z = EasedLag(camera->lag.z);
+  camera->aim.x = followed->trans.x + camera->lag.x;
+  camera->aim.y = followed->trans.y + camera->lag.y;
+  camera->aim.z = followed->trans.z + camera->lag.z;
+  return camera->aim;
 }
 
 /* the checkpoint is player one's: a player two running crash's script never saves it */

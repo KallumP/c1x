@@ -102,19 +102,19 @@ static void CamAdjustProgress(int32_t speed, cam_info *cam) {
 
 /* whom the camera follows and where it aims: crash, or with two players the one
    nearest the camera, eased over when that changes (pc/coop.h) */
-static gool_object *cam_lead;
-static vec cam_subject;
+static gool_object *cam_followed;
+static vec cam_aim;
 static coop_camera coop_cam;
 
 static void CamPickSubject() {
   if (!CoopPlayerInPlay(COOP_PLAYER_TWO)) {
-    cam_lead = crash;
-    cam_subject = crash->trans;
-    coop_cam.lead = 0; /* nothing to ease from when two play again */
+    cam_followed = crash;
+    cam_aim = crash->trans;
+    coop_cam.followed = 0; /* nothing to ease from when two play again */
     return;
   }
-  cam_lead = CoopNearestPlayer(&cam_trans);
-  cam_subject = CoopCameraSubject(&coop_cam, cam_lead);
+  cam_followed = CoopNearestPlayer(&cam_trans);
+  cam_aim = CoopCameraStep(&coop_cam, cam_followed);
 }
 
 //----- (8002A0C4) --------------------------------------------------------
@@ -173,9 +173,9 @@ static int CamGetProgress(vec *trans, zone_path *path, cam_info *cam, int flags,
     pt_idx = 0;
     cam->progress_made = 0; /* no progress made */
   }
-  adjust.x = (cam->pan_x + cam_subject.x) >> 8;
-  adjust.y = (cam->pan_y + cam_subject.y) >> 8;
-  adjust.z = (cam->zoom + cam_subject.z) >> 8;
+  adjust.x = (cam->pan_x + cam_aim.x) >> 8;
+  adjust.y = (cam->pan_y + cam_aim.y) >> 8;
+  adjust.z = (cam->zoom + cam_aim.z) >> 8;
   v_dist.x = adjust.x - (rect->x + path->points[pt_idx].x);
   v_dist.y = adjust.y - (rect->y + path->points[pt_idx].y);
   v_dist.z = adjust.z - (rect->z + path->points[pt_idx].z);
@@ -276,9 +276,9 @@ static int CamGetProgress2(vec *trans, zone_path *path, cam_info *cam, int flags
     cam->progress_made = 0; /* no progress made */
   }
   pt_idx = progress >> 8;
-  adjust.x = (cam->pan_x + cam_subject.x) >> 8;
-  adjust.y = (cam->pan_y + cam_subject.y) >> 8;
-  adjust.z = (cam->zoom + cam_subject.z) >> 8;
+  adjust.x = (cam->pan_x + cam_aim.x) >> 8;
+  adjust.y = (cam->pan_y + cam_aim.y) >> 8;
+  adjust.z = (cam->zoom + cam_aim.z) >> 8;
   v_dist.x = adjust.x - (rect->x + path->points[pt_idx].x);
   v_dist.y = adjust.y - (rect->y + path->points[pt_idx].y);
   v_dist.z = adjust.z - (rect->z + path->points[pt_idx].z);
@@ -391,13 +391,13 @@ static void CamFollow(gool_object *obj, uint32_t flag) {
   cameras[icam].pan_y = cam_offset_y;
   cameras[icam].zoom = total_zoom;
   if (cur_path->direction_z != 0) {
-    trans = cam_subject;
+    trans = cam_aim;
     progress_made = CamGetProgress2(&trans, cur_path, &cameras[icam], 0, 0);
   }
   else {
-    trans.x = cam_subject.x + cam_offset_x;
-    trans.y = cam_subject.y + cam_offset_y;
-    trans.z = cam_subject.z + total_zoom;
+    trans.x = cam_aim.x + cam_offset_x;
+    trans.y = cam_aim.y + cam_offset_y;
+    trans.z = cam_aim.z + total_zoom;
     progress_made = CamGetProgress(&trans, cur_path, &cameras[icam], 0, 0);
   }
   if (progress_made) { /* was progress made? */
@@ -425,13 +425,13 @@ static void CamFollow(gool_object *obj, uint32_t flag) {
     cameras[icam].pan_y = cam_offset_y;
     cameras[icam].zoom = total_zoom;
     if (n_path->direction_z != 0) {
-      trans = cam_subject;
+      trans = cam_aim;
       progress_made = CamGetProgress2(&trans, n_path, &cameras[icam], flags, !same_dir);
     }
     else {
-      trans.x = cam_subject.x + cam_offset_x;
-      trans.y = cam_subject.y + cam_offset_y;
-      trans.z = cam_subject.z + total_zoom;
+      trans.x = cam_aim.x + cam_offset_x;
+      trans.y = cam_aim.y + cam_offset_y;
+      trans.z = cam_aim.z + total_zoom;
       progress_made = CamGetProgress(&trans, n_path, &cameras[icam], flags, !same_dir);
     }
     if (progress_made) { /* was progress made? */
@@ -521,7 +521,7 @@ int CamUpdate() {
   case 5: /* follow crash */
   case 6:
     game_state = GAME_STATE_PLAYING;
-    CamFollow(cam_lead, 0);
+    CamFollow(cam_followed, 0);
     return 1;
   case FOLLOW_CAM_MODE: /* follow crash, sideways and up too (custom levels) */
     game_state = GAME_STATE_PLAYING;
@@ -529,16 +529,16 @@ int CamUpdate() {
        at once: CamFollow only eases towards it away from the path's ends, so at
        the start of a level the camera would stay as near as the last level's */
     cam_zoom = (int32_t)cur_path->cam_zoom << 8;
-    CamFollow(cam_lead, 0); /* along the path; LevelUpdate keeps the offsets on */
+    CamFollow(cam_followed, 0); /* along the path; LevelUpdate keeps the offsets on */
     path_x = cam_trans.x - follow_cam_offset;
     follow_cam_offset = FollowCamSlide( /* level with him along a side view's path */
       follow_cam_offset,
-      cam_subject.x - path_x,
+      cam_aim.x - path_x,
       cur_path->direction_x);
     cam_trans.x = path_x + follow_cam_offset;
     path_y = cam_trans.y; /* the path's until the camera has a height of its own */
-    follow_cam_ground_y = FollowCamGroundY(follow_cam_ground_y, cam_subject.y,
-      cam_lead->status_a & GOOL_FLAG_GROUNDLAND);
+    follow_cam_ground_y = FollowCamGroundY(follow_cam_ground_y, cam_aim.y,
+      cam_followed->status_a & GOOL_FLAG_GROUNDLAND);
     follow_cam_y = FollowCamHeight(follow_cam_y, follow_cam_ground_y, path_y,
       FollowCamAbove(cur_path->unknown_a)); /* the level's camera height, kept in its path */
     cam_trans.y = follow_cam_y;

@@ -325,43 +325,43 @@ UTEST(coop, other_objects_save_the_level_state) {
   ASSERT_TRUE(CoopMaySaveLevelState(&checkpoint));
 }
 
-#define FAR_AHEAD 0x80000 /* where the new lead is, along x */
+#define FAR_AHEAD 0x80000 /* how far apart the two players are, along x */
 
-UTEST(coop, the_camera_aims_at_a_lead_that_stays_the_lead) {
+UTEST(coop, the_camera_aims_at_a_player_it_keeps_following) {
   coop_camera camera = { 0 };
-  gool_object lead;
-  vec subject;
+  gool_object player;
+  vec aim;
 
-  lead.trans = (vec){ 0x12345, 0x6789, -0x4000 };
-  CoopCameraSubject(&camera, &lead);
-  subject = CoopCameraSubject(&camera, &lead);
-  ASSERT_EQ(lead.trans.x, subject.x);
-  ASSERT_EQ(lead.trans.y, subject.y);
-  ASSERT_EQ(lead.trans.z, subject.z);
+  player.trans = (vec){ 0x12345, 0x6789, -0x4000 };
+  CoopCameraStep(&camera, &player);
+  aim = CoopCameraStep(&camera, &player);
+  ASSERT_EQ(player.trans.x, aim.x);
+  ASSERT_EQ(player.trans.y, aim.y);
+  ASSERT_EQ(player.trans.z, aim.z);
 }
 
-UTEST(coop, the_camera_starts_from_the_old_lead_when_the_lead_changes) {
+UTEST(coop, the_camera_moves_an_eighth_of_the_way_the_frame_its_player_changes) {
   coop_camera camera = { 0 };
-  gool_object old_lead, new_lead;
-  vec subject;
+  gool_object before, after;
+  vec aim;
 
-  old_lead.trans = (vec){ 0, 0, 0 };
-  new_lead.trans = (vec){ FAR_AHEAD, 0, 0 };
-  CoopCameraSubject(&camera, &old_lead);
-  subject = CoopCameraSubject(&camera, &new_lead);
-  ASSERT_EQ(FAR_AHEAD / COOP_CAMERA_EASE, subject.x); /* 1/COOP_CAMERA_EASE of the way */
+  before.trans = (vec){ 0, 0, 0 };
+  after.trans = (vec){ FAR_AHEAD, 0, 0 };
+  CoopCameraStep(&camera, &before);
+  aim = CoopCameraStep(&camera, &after);
+  ASSERT_EQ(FAR_AHEAD / COOP_CAMERA_EASE, aim.x); /* 1/COOP_CAMERA_EASE of the way */
 }
 
-UTEST(coop, the_camera_reaches_a_new_lead) {
+UTEST(coop, the_camera_reaches_the_player_it_changed_to) {
   coop_camera camera = { 0 };
-  gool_object old_lead, new_lead;
-  vec subject;
+  gool_object before, after;
+  vec aim;
   int frame;
 
-  old_lead.trans = (vec){ 0, 0, 0 };
-  new_lead.trans = (vec){ FAR_AHEAD, 0, 0 };
-  CoopCameraSubject(&camera, &old_lead);
+  before.trans = (vec){ 0, 0, 0 };
+  after.trans = (vec){ FAR_AHEAD, 0, 0 };
+  CoopCameraStep(&camera, &before);
   for (frame=0;frame<200;frame++)
-    subject = CoopCameraSubject(&camera, &new_lead);
-  ASSERT_EQ(FAR_AHEAD, subject.x);
+    aim = CoopCameraStep(&camera, &after);
+  ASSERT_EQ(FAR_AHEAD, aim.x);
 }
