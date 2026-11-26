@@ -226,6 +226,16 @@ UTEST(coop, an_object_near_no_one_has_its_bound_marked_invalid) {
   ASSERT_TRUE(box.status_a & GOOL_FLAG_LBOUND_INVALID);
 }
 
+UTEST(coop, an_object_near_only_player_two_keeps_its_bound_valid) {
+  gool_object slots[GOOL_PLAYER_COUNT], box;
+
+  PlacePlayersApart(slots);
+  box.trans = (vec){ 0x19000 + COOP_NEAR_RANGE_XZ, 0, 0 };
+  box.status_a = 0;
+  CoopObjectNearAnyPlayer(&box);
+  ASSERT_FALSE(box.status_a & GOOL_FLAG_LBOUND_INVALID);
+}
+
 /* a collected fruit keeps its own target in the player link */
 UTEST(coop, an_object_whose_player_link_isnt_a_player_keeps_it) {
   gool_object slots[GOOL_PLAYER_COUNT], hud, counter;
