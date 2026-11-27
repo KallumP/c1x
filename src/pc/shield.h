@@ -37,7 +37,14 @@ typedef struct {
 /* which of count crashes a shield just pushed, bit idx set for crash idx:
    each by his own motion, from before to after */
 static inline int ShieldPushedCrashes(shield_motion *before, shield_motion *after, int count) {
-  return 0;
+  int idx, pushed;
+
+  pushed = 0;
+  for (idx=0;idx<count;idx++) {
+    if (ShieldPushed(&before[idx].velocity, before[idx].heading, &after[idx].velocity, after[idx].heading))
+      pushed |= 1 << idx;
+  }
+  return pushed;
 }
 
 /* the way (across the ground; its length doesn't matter) a native at native,
