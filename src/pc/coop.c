@@ -216,6 +216,9 @@ int CoopOneDiesWhileAnotherPlays(void) {
   return dying && playing;
 }
 
+/* the display flags to show: those from before a death, while someone plays on */
 uint32_t CoopViewFlags(coop_view *view, uint32_t flags, int one_dies_while_another_plays) {
+  if (one_dies_while_another_plays) { return view->before_death; }
+  view->before_death = flags;
   return flags;
 }
