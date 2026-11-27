@@ -4,6 +4,7 @@
 #include "pad.h"
 #include "pc/boxhud.h"
 #include "pc/coop.h"
+#include "pc/fling.h"
 #include "pc/pad.h"
 #include "pc/tween.h"
 
@@ -676,4 +677,235 @@ UTEST(coop, the_death_view_shows_once_no_one_plays_on) {
   CoopViewFlags(&view, LEVEL_VIEW, 0);
   CoopViewFlags(&view, DEATH_VIEW, 1);
   ASSERT_EQ((uint32_t)DEATH_VIEW, CoopViewFlags(&view, DEATH_VIEW, 0));
+}
+
+#define NOT_IN_POOL -1 /* a slot outside the object pool: a player's */
+
+UTEST(coop, no_object_has_a_spinner_once_cleared) {
+  coop_spinners spinners;
+
+  CoopSpinnersClear(&spinners);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, 0));
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, GOOL_OBJECT_COUNT-1));
+}
+
+UTEST(coop, an_object_outside_the_pool_has_no_spinner) {
+  coop_spinners spinners;
+
+  CoopSpinnersClear(&spinners);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, NOT_IN_POOL));
+}
+
+UTEST(coop, a_forgotten_slot_has_no_spinner) {
+  coop_spinners spinners;
+
+  CoopSpinnersClear(&spinners);
+  spinners.spinner[3] = COOP_PLAYER_TWO;
+  CoopForgetSpinner(&spinners, 3);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, 3));
+}
+
+UTEST(coop, forgetting_a_slot_outside_the_pool_does_nothing) {
+  coop_spinners spinners;
+
+  CoopSpinnersClear(&spinners);
+  CoopForgetSpinner(&spinners, NOT_IN_POOL);
+  CoopForgetSpinner(&spinners, GOOL_OBJECT_COUNT);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, 0));
+}
+
+#define ENEMY_SLOT 3
+
+UTEST(coop, an_enemy_keeps_the_player_whose_spin_it_took) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  coop_spinners spinners;
+
+  BothPlaying(slots);
+  CoopSpinnersClear(&spinners);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_TWO], GOOL_EVENT_SPIN_HIT, FLING_ENEMY, 1);
+  ASSERT_EQ(COOP_PLAYER_TWO, CoopSpinnerOf(&spinners, ENEMY_SLOT));
+}
+
+/* both spin it at once: the one it flies off from is kept */
+UTEST(coop, a_spin_the_enemy_didnt_take_leaves_its_spinner) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  coop_spinners spinners;
+
+  BothPlaying(slots);
+  CoopSpinnersClear(&spinners);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_ONE], GOOL_EVENT_SPIN_HIT, FLING_ENEMY, 1);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_TWO], GOOL_EVENT_SPIN_HIT, FLING_ENEMY, 0);
+  ASSERT_EQ(COOP_PLAYER_ONE, CoopSpinnerOf(&spinners, ENEMY_SLOT));
+}
+
+UTEST(coop, a_spun_box_keeps_no_spinner) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  coop_spinners spinners;
+
+  BothPlaying(slots);
+  CoopSpinnersClear(&spinners);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_TWO], GOOL_EVENT_SPIN_HIT, FLING_BOX, 1);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, ENEMY_SLOT));
+}
+
+UTEST(coop, an_enemy_a_player_jumped_on_keeps_no_spinner) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  coop_spinners spinners;
+
+  BothPlaying(slots);
+  CoopSpinnersClear(&spinners);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_TWO], GOOL_EVENT_JUMPED_ON, FLING_ENEMY, 1);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, ENEMY_SLOT));
+}
+
+UTEST(coop, an_enemy_spun_by_something_other_than_a_player_keeps_no_spinner) {
+  gool_object slots[GOOL_PLAYER_COUNT], other;
+  coop_spinners spinners;
+
+  BothPlaying(slots);
+  CoopSpinnersClear(&spinners);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &other, GOOL_EVENT_SPIN_HIT, FLING_ENEMY, 1);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, ENEMY_SLOT));
+}
+
+#define AKU_AKU_INVINCIBLE 3 /* invincibility_state with three masks */
+#define HIT_PROOF          2 /* status_c: a hit can't hurt him */
+
+UTEST(coop, a_player_takes_a_hit) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  ASSERT_TRUE(CoopPlayerTakesHit(&slots[COOP_PLAYER_TWO]));
+}
+
+UTEST(coop, a_dying_player_takes_no_hit) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].state_flags = COOP_DYING_STATE_FLAG;
+  ASSERT_FALSE(CoopPlayerTakesHit(&slots[COOP_PLAYER_TWO]));
+}
+
+UTEST(coop, an_invincible_player_takes_no_hit) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].invincibility_state = AKU_AKU_INVINCIBLE;
+  ASSERT_FALSE(CoopPlayerTakesHit(&slots[COOP_PLAYER_TWO]));
+}
+
+UTEST(coop, a_hit_proof_player_takes_no_hit) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].status_c = HIT_PROOF;
+  ASSERT_FALSE(CoopPlayerTakesHit(&slots[COOP_PLAYER_TWO]));
+}
+
+#define BOX_WIDTH 0x19000
+
+/* both playing, player one at the enemy's spot and player two a box along x; enemy spun by player one */
+static void FlungFromPlayerOne(gool_object *slots, coop_spinners *spinners, gool_object *enemy) {
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].trans.x = BOX_WIDTH;
+  memset(enemy, 0, sizeof(gool_object));
+  CoopSpinnersClear(spinners);
+  spinners->spinner[ENEMY_SLOT] = COOP_PLAYER_ONE;
+}
+
+UTEST(coop, a_flung_enemy_goes_for_the_other_player_nearer_than_what_it_found) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  ASSERT_EQ(&slots[COOP_PLAYER_TWO], CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, 2*BOX_WIDTH));
+}
+
+UTEST(coop, a_flung_enemy_keeps_what_it_found_as_near_as_the_other_player) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  ASSERT_TRUE(CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, BOX_WIDTH) == 0);
+}
+
+UTEST(coop, a_flung_enemy_never_goes_for_its_spinner) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  slots[COOP_PLAYER_TWO].trans.x = 5*BOX_WIDTH;
+  ASSERT_TRUE(CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, 2*BOX_WIDTH) == 0);
+}
+
+UTEST(coop, a_flung_enemy_doesnt_go_for_another_player_who_wouldnt_take_the_hit) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  slots[COOP_PLAYER_TWO].state_flags = COOP_DYING_STATE_FLAG;
+  ASSERT_TRUE(CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, 2*BOX_WIDTH) == 0);
+}
+
+UTEST(coop, a_flung_enemy_doesnt_go_for_another_player_out_of_play) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  ASSERT_TRUE(CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, 2*BOX_WIDTH) == 0);
+}
+
+UTEST(coop, an_enemy_no_one_spun_goes_for_no_player) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  CoopForgetSpinner(&spinners, ENEMY_SLOT);
+  ASSERT_TRUE(CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, 2*BOX_WIDTH) == 0);
+}
+
+UTEST(coop, a_flung_enemys_fling_into_a_player_hits_him) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  ASSERT_EQ((uint32_t)GOOL_EVENT_HIT,
+    CoopFlungEventFor(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_TWO], GOOL_EVENT_FLING));
+}
+
+UTEST(coop, a_flung_enemys_fling_into_a_box_breaks_it) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy, box;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  ASSERT_EQ((uint32_t)GOOL_EVENT_FLING, CoopFlungEventFor(&spinners, ENEMY_SLOT, &box, GOOL_EVENT_FLING));
+}
+
+UTEST(coop, a_flung_enemys_other_events_stay_as_sent) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  ASSERT_EQ((uint32_t)GOOL_EVENT_COMBO,
+    CoopFlungEventFor(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_ONE], GOOL_EVENT_COMBO));
+}
+
+UTEST(coop, a_fling_from_an_enemy_no_one_spun_stays_a_fling) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  CoopForgetSpinner(&spinners, ENEMY_SLOT);
+  ASSERT_EQ((uint32_t)GOOL_EVENT_FLING,
+    CoopFlungEventFor(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_TWO], GOOL_EVENT_FLING));
+}
+
+UTEST(coop, a_fling_from_outside_the_pool_stays_a_fling) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  ASSERT_EQ((uint32_t)GOOL_EVENT_FLING,
+    CoopFlungEventFor(&spinners, NOT_IN_POOL, &slots[COOP_PLAYER_TWO], GOOL_EVENT_FLING));
 }

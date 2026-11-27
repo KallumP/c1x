@@ -2,6 +2,7 @@
 #include "coop.h"
 #include "boxhud.h"
 #include "math.h"
+#include "fling.h"
 
 extern pad pads[2];
 extern gool_handle handles[8];
@@ -10,6 +11,7 @@ extern gool_handle handles[8];
 gool_object *players[GOOL_PLAYER_COUNT];
 
 coop_camera coop_cam;
+coop_spinners spun_by; /* cleared with the object pool (gool.c) */
 
 /* which player's slot obj is, or COOP_NOT_A_PLAYER */
 int CoopPlayerIndex(gool_object *obj) {
@@ -221,4 +223,64 @@ uint32_t CoopViewFlags(coop_view *view, uint32_t flags, int one_dies_while_anoth
   if (one_dies_while_another_plays) { return view->before_death; }
   view->before_death = flags;
   return flags;
+}
+
+static int IsPoolSlot(int slot) {
+  return slot >= 0 && slot < GOOL_OBJECT_COUNT;
+}
+
+void CoopSpinnersClear(coop_spinners *spinners) {
+  int slot;
+
+  for (slot=0;slot<GOOL_OBJECT_COUNT;slot++)
+    spinners->spinner[slot] = COOP_NOT_A_PLAYER;
+}
+
+int CoopSpinnerOf(const coop_spinners *spinners, int slot) {
+  if (!IsPoolSlot(slot)) { return COOP_NOT_A_PLAYER; }
+  return spinners->spinner[slot];
+}
+
+void CoopForgetSpinner(coop_spinners *spinners, int slot) {
+  if (IsPoolSlot(slot))
+    spinners->spinner[slot] = COOP_NOT_A_PLAYER;
+}
+
+void CoopKeepSpinner(coop_spinners *spinners, int slot, gool_object *sender,
+  uint32_t event, uint32_t category, int taken) {
+  if (event != GOOL_EVENT_SPIN_HIT || category != FLING_ENEMY || !taken) { return; }
+  if (!CoopIsPlayer(sender) || !IsPoolSlot(slot)) { return; }
+  spinners->spinner[slot] = CoopPlayerIndex(sender);
+}
+
+/* as the game decides who a hit can find (GoolFindNearestObject), and a dying player too */
+int CoopPlayerTakesHit(gool_object *player) {
+  if (player->state_flags & COOP_DYING_STATE_FLAG) { return 0; }
+  if (player->invincibility_state >= 2 && player->invincibility_state <= 4) { return 0; }
+  return !(player->status_c & 2);
+}
+
+/* the other player, if nearer the enemy flung from slot than what it found and he'd take its hit; or 0 */
+gool_object *CoopFlungTarget(const coop_spinners *spinners, int slot, gool_object *flung,
+  int32_t found_dist) {
+  gool_object *other;
+  int spinner, idx;
+
+  spinner = CoopSpinnerOf(spinners, slot);
+  if (spinner == COOP_NOT_A_PLAYER) { return 0; }
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (idx == spinner || !CoopPlayerInPlay(idx)) { continue; }
+    other = players[idx];
+    if (!CoopPlayerTakesHit(other)) { continue; }
+    if ((int32_t)ApxDist(&flung->trans, &other->trans) < found_dist) { return other; }
+  }
+  return 0;
+}
+
+/* the event the object in sender_slot sends recipient: a spun enemy's fling into a player is an enemy's hit */
+uint32_t CoopFlungEventFor(const coop_spinners *spinners, int sender_slot,
+  gool_object *recipient, uint32_t event) {
+  if (event != GOOL_EVENT_FLING || !CoopIsPlayer(recipient)) { return event; }
+  if (CoopSpinnerOf(spinners, sender_slot) == COOP_NOT_A_PLAYER) { return event; }
+  return GOOL_EVENT_HIT;
 }

@@ -203,6 +203,12 @@ static void GoolPlayerSlotRelease(gool_object *obj) {
     crash = 0;
 }
 
+/* obj's index in the object pool, or -1 for one outside it (a player's slot) */
+static int GoolObjectPoolSlot(gool_object *obj) {
+  if (!obj || CoopIsPlayer(obj)) { return -1; }
+  return obj - objects;
+}
+
 /* player slots live outside the object pool, so one must never go on the free list */
 static void GoolObjectFree(gool_object *obj) {
   if (CoopIsPlayer(obj))
@@ -239,6 +245,7 @@ int GoolInitAllocTable() {
     handle->type = 2;
     handle->children = 0;
   }
+  CoopSpinnersClear(&spun_by); /* no object in a new pool has been spun */
   return SUCCESS;
 }
 
@@ -937,6 +944,7 @@ int GoolObjectKill(gool_object *obj, int sig) {
    * title state */
   if (!obj || (obj == crash && ns.ldat->lid != LID_TITLE))
     return SUCCESS;
+  CoopForgetSpinner(&spun_by, GoolObjectPoolSlot(obj)); /* the next object in its slot wasn't spun */
   if (sig)
     GoolSendEvent(0, obj, GOOL_EVENT_TERMINATE, 0, 0);
   child = GoolObjectGetChildren(obj);
@@ -2986,7 +2994,7 @@ void GoolOpMisc(gool_object *obj, uint32_t instruction) {
   case 13: { /* find nearest object */
     gool_nearest_query query;
     gool_handle *handle;
-    gool_object *child, *sibling;
+    gool_object *child, *sibling, *other_player;
     int res;
     link_idx = (instruction >> 12) & 7;
     link = ((gool_object**)&obj->self)[link_idx];
@@ -3006,6 +3014,10 @@ void GoolOpMisc(gool_object *obj, uint32_t instruction) {
           (int)&query);
         child = child->sibling;
       }
+    }
+    if (query.event == GOOL_EVENT_FLING) {
+      other_player = CoopFlungTarget(&spun_by, GoolObjectPoolSlot(link), link, query.dist);
+      if (other_player) { query.nearest_obj = other_player; }
     }
     GoolObjectPush(obj, (uint32_t)query.nearest_obj); /* is this correct? */
     break;
@@ -3565,7 +3577,20 @@ static int GoolSwitchChainStops(gool_object *sender, gool_object *recipient, uin
   return 0;
 }
 
+static int GoolDeliverEvent(gool_object *sender, gool_object *recipient, uint32_t event, int argc, uint32_t *argv);
+
+/* sender->misc_flag says whether recipient took it, so a spin it took is kept (coop.h) */
 int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event, int argc, uint32_t *argv) {
+  int res;
+
+  res = GoolDeliverEvent(sender, recipient, event, argc, argv);
+  if (sender && recipient)
+    CoopKeepSpinner(&spun_by, GoolObjectPoolSlot(recipient), sender, event,
+      GoolObjectCategory(recipient), sender->misc_flag);
+  return res;
+}
+
+static int GoolDeliverEvent(gool_object *sender, gool_object *recipient, uint32_t event, int argc, uint32_t *argv) {
   entry *exec;
   gool_header *header;
   gool_state_maps *maps;
@@ -3576,6 +3601,8 @@ int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event, i
   uint32_t *code, flags;
   int res, test, i;
 
+  if (recipient)
+    event = CoopFlungEventFor(&spun_by, GoolObjectPoolSlot(sender), recipient, event);
   if (recipient && GoolFlungPastReach(sender, recipient, event))
     recipient = 0; /* it flies on through the box, as if it weren't there */
   if (recipient && GoolSwitchChainStops(sender, recipient, event))
