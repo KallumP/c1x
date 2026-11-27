@@ -24,6 +24,17 @@ static const crash_outfit crashs_own = {
   .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR
 };
 
+const outfit_preset outfit_presets[] = { { 0 } };
+const int outfit_preset_count = 0;
+
+int OutfitFindPreset(const crash_outfit *outfit) {
+  return OUTFIT_NO_PRESET;
+}
+
+const char *OutfitPresetName(const crash_outfit *outfit) {
+  return "";
+}
+
 int OutfitsEqual(const crash_outfit *a, const crash_outfit *b) {
   return a->fur == b->fur && a->belly == b->belly && a->hair == b->hair
     && a->shorts == b->shorts && a->shoes == b->shoes;

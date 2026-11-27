@@ -31,6 +31,20 @@ typedef struct {
 #define OUTFIT_PART_HAIR       5
 #define OUTFIT_PART_SHOE_LINES 6 /* in his shoes' texture */
 
+#define OUTFIT_PRESET_DEFAULT 0
+#define OUTFIT_PRESET_SKUNK   1
+#define OUTFIT_NO_PRESET      -1
+
+typedef struct {
+  const char *name;
+  crash_outfit outfit;
+} outfit_preset;
+
+extern const outfit_preset outfit_presets[];
+extern const int outfit_preset_count;
+
+extern int OutfitFindPreset(const crash_outfit *outfit);
+extern const char *OutfitPresetName(const crash_outfit *outfit);
 extern int OutfitsEqual(const crash_outfit *a, const crash_outfit *b);
 extern int OutfitIsCrashsOwn(const crash_outfit *outfit);
 extern int OutfitPart(rgb8 color);

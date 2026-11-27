@@ -56,11 +56,6 @@ extern const settings_color settings_colors[SETTINGS_COLOR_COUNT];
 #define SETTINGS_PRESET_COUNT 2
 #define SETTINGS_NO_PRESET    -1
 
-typedef struct {
-  const char *name;
-  crash_outfit outfit;
-} outfit_preset;
-
 extern const outfit_preset settings_outfit_presets[SETTINGS_PRESET_COUNT];
 
 extern crash_outfit SettingsDefaultOutfit(int player_idx);
