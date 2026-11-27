@@ -335,8 +335,27 @@ static void DrawOutfitButtons(crash_outfit *outfit, int player_idx) {
   DrawTooltip("Back to the colours this player starts in.");
 }
 
+#define PRESET_WIDTH 200.0f
+
+static void DrawPresetChoice(crash_outfit *outfit) {
+  const char *preview;
+  int i, current;
+
+  current = SettingsFindOutfitPreset(outfit);
+  preview = current == SETTINGS_NO_PRESET ? "Custom" : settings_outfit_presets[current].name;
+  igSetNextItemWidth(PRESET_WIDTH);
+  if (!igBeginCombo("Preset", preview, 0)) { return; }
+  for (i=0;i<SETTINGS_PRESET_COUNT;i++) {
+    if (igSelectable_Bool(settings_outfit_presets[i].name, current == i, 0, (ImVec2){ 0, 0 }))
+      *outfit = settings_outfit_presets[i].outfit;
+  }
+  igEndCombo();
+}
+
 static void DrawOutfitPopup(const char *title, crash_outfit *outfit, int player_idx) {
   if (!igBeginPopupModal(title, 0, ImGuiWindowFlags_AlwaysAutoResize)) { return; }
+  DrawPresetChoice(outfit);
+  DrawTooltip("A ready-made set of colours. Changing a colour below makes it Custom.");
   DrawPartList(outfit);
   igSameLine(0, -1);
   DrawPartPicker(outfit);
