@@ -231,8 +231,6 @@ static void DrawGameAdjustmentFields(void) {
     "Show how fast Crash is moving in the top right corner.");
   DrawOnOff("Spin display", &settings.spin_display,
     "Show how many spins Crash has left in the top right corner.");
-  DrawOnOff("Couch co-op", &settings.two_players,
-    "A second Crash plays beside the first, on the Player 2 keyboard keys or a second controller.");
 }
 
 /* a swatch that opens a colour picker for color (0xRRGGBB), with label after it */
@@ -270,10 +268,12 @@ static void DrawOutfit(const char *label, crash_outfit *outfit) {
   igPopID();
 }
 
-static void DrawPlayerColourFields(void) {
-  DrawFieldGroupTitle("Player colours");
-  DrawOutfit("Player 1", &settings.outfits[0]);
-  DrawOutfit("Player 2", &settings.outfits[1]);
+static void DrawCoopFields(void) {
+  DrawFieldGroupTitle("Co-op");
+  DrawOnOff("Couch co-op", &settings.two_players,
+    "A second Crash plays beside the first, on the Player 2 keyboard keys or a second controller.");
+  DrawOutfit("Player 1 colours", &settings.outfits[0]);
+  DrawOutfit("Player 2 colours", &settings.outfits[1]);
 }
 
 /* the game's own save and load screens */
@@ -296,7 +296,7 @@ static void DrawFields(const char *repo) {
   DrawBootLevel(repo);
   DrawGeneralFields();
   DrawGameAdjustmentFields();
-  DrawPlayerColourFields();
+  DrawCoopFields();
   DrawSavingFields();
   DrawReplayFields();
   EndFieldRows();

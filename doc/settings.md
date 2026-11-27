@@ -22,8 +22,13 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | `fix_model_draw_order` | `on` | Draw 3D models in front of or behind each other by their actual depth, so a crate can't be drawn over Crash in front of it. `off` keeps the original game's order. |
 | `spin_ledge_jump` | `on` | Let Crash jump for a moment after a spin carries him off a ledge (such as one he landed on mid-spin), as he can after walking off one. `off` keeps the original game, where he can't jump until the spin ends. |
 | `speed_display` | `off` | Show how fast Crash is moving in the top right corner. |
-| `two_players` | `off` | Two Crashes play together: player 2 on the arrow keys and number pad, or a second controller (see [Controls](controls.md#two-players)). The camera follows whoever is nearest it, and the other can walk out of view. If either Crash dies, both go back to the last checkpoint. |
 | `spin_display` | `off` | Show how many spins Crash has left in the top right corner, and the seconds until the next comes back. He holds up to 5, and each comes back 2 seconds after it's used. |
+
+### Co-op
+
+| Setting | Default | What it does |
+|---|---|---|
+| `two_players` | `off` | Two Crashes play together: player 2 on the arrow keys and number pad, or a second controller (see [Controls](controls.md#two-players)). The camera follows whoever is nearest it, and the other can walk out of view. If either Crash dies, both go back to the last checkpoint. |
 | `p1_fur_color` | `ff3100` | The colour of player 1's fur, as six hex digits: red, green, blue. His belly is a lighter shade of it. The default is Crash's own, and leaves him exactly as the original draws him. |
 | `p1_shorts_color` | `002790` | The colour of player 1's shorts. |
 | `p1_shoes_color` | `330000` | The colour of player 1's shoes and gloves. |
