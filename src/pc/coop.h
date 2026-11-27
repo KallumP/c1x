@@ -5,6 +5,7 @@
 #include "geom.h"
 #include "gool.h"
 #include "pad.h"
+#include "settings.h"
 
 /*
  * local multiplayer (pc): with the two_players setting on, a second crash
@@ -48,5 +49,6 @@ extern vec CoopCameraAim(coop_camera *camera, vec *camera_trans);
 extern int CoopPlayerTwoJoins(int two_players, int on_title, int in_demo);
 extern vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans));
 extern int CoopFloorBelow(vec *trans);
+extern const crash_outfit *CoopPlayerOutfit(gool_object *obj);
 
 #endif /* _PC_COOP_H_ */

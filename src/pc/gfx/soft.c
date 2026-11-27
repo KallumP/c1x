@@ -9,6 +9,7 @@
 #include "gte.h"
 #include "gpu.h"
 #include "pc/reach.h"
+#include "pc/outfit.h"
 
 #define gte_divide(a,b) ((a)/(b))
 
@@ -353,6 +354,8 @@ void SwTransformSvtx(
   for (i=0;i<header->poly_count;i++) {
     poly=&polys[i];
     info=*(tgeo_texinfo*)&((uint32_t*)texinfos)[poly->texinfo_idx];
+    if (params->outfit && info.type != 1) /* a player's flat-coloured polygon? */
+      info.rgb = OutfitRecolor(info.rgb, params->outfit);
     poly_verts[0]=(svtx_vertex*)((uint8_t*)verts+poly->a_idx);
     poly_verts[1]=(svtx_vertex*)((uint8_t*)verts+poly->b_idx);
     poly_verts[2]=(svtx_vertex*)((uint8_t*)verts+poly->c_idx);
