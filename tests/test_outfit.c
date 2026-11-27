@@ -20,7 +20,10 @@ static rgb8 colour(uint32_t color) {
 #define SHOES_DARK   0x130000
 #define HAIR         0x9D0000
 #define HAIR_DARK    0x440000
-#define SKIN         0xDF7F7F
+#define MUZZLE       0xDF7F7F
+#define MUZZLE_DARK  0xA54D4D
+#define TEETH        0xFFE7E7
+#define SOLE         0xAA9090
 #define NOSE         0x0C0928
 #define EYEBROW      0x281500
 #define HOG          0x664825
@@ -53,7 +56,7 @@ UTEST(outfit, his_hair_is_no_part_of_the_outfit) {
 }
 
 UTEST(outfit, his_face_is_no_part_of_the_outfit) {
-  ASSERT_EQ(OUTFIT_PART_NONE, OutfitPart(colour(SKIN)));
+  ASSERT_EQ(OUTFIT_PART_NONE, OutfitPart(colour(TEETH)));
   ASSERT_EQ(OUTFIT_PART_NONE, OutfitPart(colour(NOSE)));
   ASSERT_EQ(OUTFIT_PART_NONE, OutfitPart(colour(EYEBROW)));
   ASSERT_EQ(OUTFIT_PART_NONE, OutfitPart(colour(BLACK)));
@@ -132,7 +135,7 @@ UTEST(outfit, colours_of_no_part_stay_as_they_are) {
   crash_outfit outfit = { GREEN, GREEN, GREEN };
 
   ASSERT_EQ((uint32_t)HAIR, recolored(HAIR, outfit));
-  ASSERT_EQ((uint32_t)SKIN, recolored(SKIN, outfit));
+  ASSERT_EQ((uint32_t)TEETH, recolored(TEETH, outfit));
 }
 
 /* the palette of the texture on his back (WillT): oranges from redder than his fur to his belly's */
@@ -181,4 +184,24 @@ UTEST(outfit, a_pixel_recoloured_black_isnt_the_all_zero_pixel_which_is_drawn_as
 
   outfit.fur = BLACK;
   ASSERT_NE(0, OutfitRecolorPixel(PIXEL_FUR, &outfit));
+}
+
+UTEST(outfit, his_pinks_are_muzzle) {
+  ASSERT_EQ(OUTFIT_PART_MUZZLE, OutfitPart(colour(MUZZLE)));
+  ASSERT_EQ(OUTFIT_PART_MUZZLE, OutfitPart(colour(MUZZLE_DARK)));
+}
+
+UTEST(outfit, the_pinkish_soles_of_his_shoes_are_no_part_of_the_outfit) {
+  ASSERT_EQ(OUTFIT_PART_NONE, OutfitPart(colour(SOLE)));
+}
+
+UTEST(outfit, his_brightest_muzzle_is_the_fur_colour_halfway_to_white) {
+  crash_outfit outfit = his_own();
+
+  outfit.fur = HALF_GREEN;
+  ASSERT_EQ((uint32_t)0x7FBF7F, recolored(MUZZLE, outfit));
+}
+
+UTEST(outfit, his_muzzle_stays_pink_with_crashs_own_fur) {
+  ASSERT_EQ((uint32_t)MUZZLE, recolored(MUZZLE, his_own()));
 }
