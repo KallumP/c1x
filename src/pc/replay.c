@@ -99,7 +99,7 @@ int ReplayMakeDir(const char *dir) {
 static replay_recorder recorder = { 0 };
 
 static FILE *replay_file = 0;   /* recording being replayed, or 0 */
-static uint32_t replay_held = 0; /* buttons held this frame of the replay */
+static uint32_t replay_held[REPLAY_PLAYER_COUNT] = { 0 }; /* buttons held this frame of the replay */
 static int replay_desynced = 0;
 
 /*
@@ -124,7 +124,7 @@ static int ReplayPlayStart(const char *path, uint32_t lid, uint32_t seed) {
     return 0;
   }
   replay_file = file;
-  replay_held = 0;
+  memset(replay_held, 0, sizeof(replay_held));
   replay_desynced = 0;
   TimeSetFixed(1);
   SetTicksElapsed(header.start_ticks);
@@ -172,7 +172,7 @@ void ReplayUpdate() {
         GetTicksElapsed(), frame.ticks);
       replay_desynced = 1;
     }
-    replay_held = frame.held[0];
+    memcpy(replay_held, frame.held, sizeof(replay_held));
     return;
   }
   for (i=0;i<REPLAY_PLAYER_COUNT;i++)
@@ -182,10 +182,10 @@ void ReplayUpdate() {
     fflush(recorder.file); /* keep what's recorded if the game crashes */
 }
 
-/* while replaying, sets held to the replay's buttons and returns 1 */
-int ReplayHeld(uint32_t *held) {
+/* while replaying, sets held to the replay's buttons on pad idx and returns 1 */
+int ReplayHeld(int idx, uint32_t *held) {
   if (!replay_file) { return 0; }
-  *held = replay_held;
+  *held = replay_held[idx];
   return 1;
 }
 
