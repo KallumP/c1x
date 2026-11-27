@@ -63,21 +63,25 @@ static int LoadPicture(const char *path) {
   return texture;
 }
 
-static void DrawPicture(int *texture, const char *path, void (*place)(rect2 *at)) {
+/* returns 0 if the picture couldn't be loaded */
+static int DrawPicture(int *texture, const char *path, void (*place)(rect2 *at)) {
   rect2 at;
 
   if (*texture == NOT_LOADED)
     *texture = LoadPicture(path);
-  if (*texture == NO_PICTURE) { return; }
+  if (*texture == NO_PICTURE) { return 0; }
   (*place)(&at);
   GLDrawPicture(*texture, &at);
+  return 1;
 }
 
 /* after the game's objects are drawn: the pictures, if the main menu was drawn */
 void EnhancedTitleDraw(void) {
+  int n_hanced_shown;
+
   if (!drawn_this_frame) { return; }
   drawn_this_frame = 0;
-  DrawPicture(&picture_texture, ENHANCED_TITLE_PICTURE, EnhancedTitleAt);
-  if (game_settings.two_players)
+  n_hanced_shown = DrawPicture(&picture_texture, ENHANCED_TITLE_PICTURE, EnhancedTitleAt);
+  if (EnhancedTitleShowsCoop(n_hanced_shown, game_settings.two_players))
     DrawPicture(&coop_texture, ENHANCED_TITLE_COOP_PICTURE, EnhancedTitleCoopAt);
 }
