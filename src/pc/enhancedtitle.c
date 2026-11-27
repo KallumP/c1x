@@ -22,3 +22,27 @@ int EnhancedTitleDrawsWith(const enhanced_title *title, const char *menu_text) {
   if (!title->logo_landed) { return 0; }
   return strcmp(menu_text, ENHANCED_TITLE_ANCHOR) == 0;
 }
+
+void EnhancedTitleAt(rect2 *at) {
+  at->x = ENHANCED_TITLE_LEFT;
+  at->y = ENHANCED_TITLE_TOP;
+  at->w = ENHANCED_TITLE_WIDTH;
+  at->h = ENHANCED_TITLE_HEIGHT;
+}
+
+void EnhancedTitleCoopAt(rect2 *at) {
+  rect2 n_hanced;
+  int32_t right, bottom;
+
+  EnhancedTitleAt(&n_hanced);
+  right = n_hanced.x + (int32_t)n_hanced.w + ENHANCED_TITLE_COOP_OVERHANG;
+  bottom = n_hanced.y + (int32_t)n_hanced.h - ENHANCED_TITLE_COOP_RISE;
+  at->x = right - ENHANCED_TITLE_COOP_WIDTH;
+  at->y = bottom - ENHANCED_TITLE_COOP_HEIGHT;
+  at->w = ENHANCED_TITLE_COOP_WIDTH;
+  at->h = ENHANCED_TITLE_COOP_HEIGHT;
+}
+
+int EnhancedTitleShowsCoop(int n_hanced_shown, int two_players) {
+  return n_hanced_shown && two_players;
+}

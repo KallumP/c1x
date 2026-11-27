@@ -8,6 +8,7 @@
 #include "gool.h"
 #include "ns.h"
 #include "pc/gfx/gl.h"
+#include "pc/settings.h"
 
 #define NOT_LOADED  0
 #define NO_PICTURE  -1 /* the picture couldn't be loaded: don't try again */
@@ -17,6 +18,7 @@ extern ns_struct ns;
 static enhanced_title title;
 static int drawn_this_frame; /* the main menu was drawn this frame, after the logo landed */
 static int picture_texture = NOT_LOADED;
+static int coop_texture = NOT_LOADED;
 
 static int IsOnTitleScreen(void) {
   return ns.ldat && ns.ldat->lid == LID_TITLE;
@@ -40,15 +42,15 @@ void EnhancedTitleSeeMenuText(const char *menu_text) {
     drawn_this_frame = 1;
 }
 
-/* the picture as a texture, its pixels as RGBA bytes */
-static int LoadPicture(void) {
+/* a picture as a texture, its pixels as RGBA bytes */
+static int LoadPicture(const char *path) {
   SDL_Surface *bmp, *rgba;
   dim2 dim;
   int texture;
 
-  bmp = SDL_LoadBMP(ENHANCED_TITLE_PICTURE);
+  bmp = SDL_LoadBMP(path);
   if (!bmp) {
-    fprintf(stderr, "no %s: %s\n", ENHANCED_TITLE_PICTURE, SDL_GetError());
+    fprintf(stderr, "no %s: %s\n", path, SDL_GetError());
     return NO_PICTURE;
   }
   rgba = SDL_ConvertSurfaceFormat(bmp, SDL_PIXELFORMAT_ABGR8888, 0);
@@ -61,18 +63,26 @@ static int LoadPicture(void) {
   return texture;
 }
 
-/* after the game's objects are drawn: the picture, if the main menu was drawn */
-void EnhancedTitleDraw(void) {
+/* returns 0 if the picture couldn't be loaded */
+static int DrawPicture(int *texture, const char *path, void (*place)(rect2 *at)) {
   rect2 at;
+
+  if (*texture == NOT_LOADED)
+    *texture = LoadPicture(path);
+  if (*texture == NO_PICTURE) { return 0; }
+  (*place)(&at);
+  GLDrawPicture(*texture, &at);
+  return 1;
+}
+
+/* after the game's objects are drawn: the pictures, if the main menu was drawn */
+void EnhancedTitleDraw(void) {
+  int n_hanced_shown;
 
   if (!drawn_this_frame) { return; }
   drawn_this_frame = 0;
-  if (picture_texture == NOT_LOADED)
-    picture_texture = LoadPicture();
-  if (picture_texture == NO_PICTURE) { return; }
-  at.x = ENHANCED_TITLE_LEFT;
-  at.y = ENHANCED_TITLE_TOP;
-  at.w = ENHANCED_TITLE_WIDTH;
-  at.h = ENHANCED_TITLE_HEIGHT;
-  GLDrawPicture(picture_texture, &at);
+  n_hanced_shown = DrawPicture(&picture_texture, ENHANCED_TITLE_PICTURE,
+    EnhancedTitleAt);
+  if (EnhancedTitleShowsCoop(n_hanced_shown, game_settings.two_players))
+    DrawPicture(&coop_texture, ENHANCED_TITLE_COOP_PICTURE, EnhancedTitleCoopAt);
 }

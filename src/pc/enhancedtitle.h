@@ -2,6 +2,7 @@
 #define _PC_ENHANCEDTITLE_H_
 
 #include "common.h"
+#include "geom.h"
 
 /*
  * "N-Hanced" under the title screen's logo (pc), a picture in the style of the
@@ -27,11 +28,21 @@ typedef struct {
 #define ENHANCED_TITLE_WIDTH   190
 #define ENHANCED_TITLE_HEIGHT  40
 
+/* CO-OP MODE, with two players: over the right end of N-Hanced's underline */
+#define ENHANCED_TITLE_COOP_PICTURE  "assets/coop_title.bmp"
+#define ENHANCED_TITLE_COOP_WIDTH    72
+#define ENHANCED_TITLE_COOP_HEIGHT   13
+#define ENHANCED_TITLE_COOP_OVERHANG 4 /* how far past N-Hanced's right edge it reaches */
+#define ENHANCED_TITLE_COOP_RISE     4 /* how far its bottom sits above N-Hanced's */
+
 extern void EnhancedTitleReset(enhanced_title *title);
 extern void EnhancedTitleNoteObject(enhanced_title *title, uint32_t subtype,
   uint32_t status_b);
 extern int EnhancedTitleDrawsWith(const enhanced_title *title,
   const char *menu_text);
+extern void EnhancedTitleAt(rect2 *at);
+extern void EnhancedTitleCoopAt(rect2 *at);
+extern int EnhancedTitleShowsCoop(int n_hanced_shown, int two_players);
 
 /* the game's title screen (enhancedtitle_game.c) */
 struct _gool_object;

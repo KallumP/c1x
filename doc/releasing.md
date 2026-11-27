@@ -60,7 +60,7 @@ The zip has a `c1x-<version>` folder laid out like the repository, as the launch
 - `build/`: `c1x.exe`, `c1x_tools.exe` and the game's DLLs, and `editor/`, the level editor's built page
 - `streams/README.html`: the game's files go there
 - `level_src/`: the files git has, so the included custom levels, with its readme as `README.html`
-- `assets/`: the files git has, the pictures the game shows that aren't in its files (N-Hanced on the title screen)
+- `assets/`: the files git has, the pictures the game shows that aren't in its files (N-Hanced and CO-OP MODE on the title screen)
 - `doc/`: the docs for players, as pages (running, the launcher, controls, settings, custom levels and the changelog)
 
 What isn't in it:
