@@ -46,7 +46,7 @@ Each colour is six hex digits: red, green, blue. Player 1's colours apply with o
 
 | Setting | Default | What it does |
 |---|---|---|
-| `boot_level` | none | The custom level, built to `build/levels/`, that **CUSTOM LEVEL** on the title screen starts; without one, the title screen has no **CUSTOM LEVEL** (see [Custom levels](custom_levels.md)). |
+| `boot_level` | none | The custom level that **CUSTOM LEVEL** on the title screen starts; without one, the title screen has no **CUSTOM LEVEL** (see [Custom levels](custom_levels.md)). |
 
 ### Saving
 
