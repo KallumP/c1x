@@ -39,7 +39,7 @@ Besides this check, the launcher only goes online for mod.io's levels, when you 
 
 ## Game
 
-**Play** saves the settings and controls (see below), then starts `build/c1x.exe` (`build/c1x` on Linux) from the project folder, so the game finds `streams/`, `settings.cfg` and `controls.cfg` there. It starts the game without a console window, so the game's messages (such as "replaying ...") only show when you run `build/c1x.exe` yourself from a terminal. The launcher stays open, and the game keeps running if you close it. While a level is building, **Play** is greyed out until it's built.
+**Play** saves the settings and controls (see below), then starts the game. The launcher stays open, and the game keeps running if you close it. While a level is building, **Play** is greyed out until it's built.
 
 If the game isn't built, the launcher says so instead of showing **Play**. Build it, then the button appears.
 
