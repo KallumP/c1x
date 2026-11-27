@@ -225,3 +225,11 @@ static int SettingsApplyLine(char *name, char *value, const char *path,
 int SettingsLoad(const char *path) {
   return ConfigLoad(path, "setting", "name = value", SettingsApplyLine, 0);
 }
+
+int SettingsCopyFile(const char *from, const char *to) {
+  return 0;
+}
+
+int SettingsLoadRecorded(const char *path) {
+  return -1;
+}
