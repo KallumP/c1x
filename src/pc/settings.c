@@ -20,18 +20,28 @@ const settings_color settings_colors[SETTINGS_COLOR_COUNT] = {
   { "p2_shoes_color",  1, offsetof(crash_outfit, shoes) },
 };
 
-const outfit_preset settings_outfit_presets[SETTINGS_PRESET_COUNT] = { 0 };
+#define DEFAULT_PRESET 0
+#define SKUNK_PRESET   1
+
+const outfit_preset settings_outfit_presets[SETTINGS_PRESET_COUNT] = {
+  { "Default", { .fur = CRASH_FUR_COLOR, .belly = CRASH_BELLY_COLOR, .hair = CRASH_HAIR_COLOR,
+    .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR } },
+  { "Skunk", { .fur = SETTINGS_P2_FUR_COLOR, .belly = SETTINGS_P2_BELLY_COLOR, .hair = SETTINGS_P2_HAIR_COLOR,
+    .shorts = SETTINGS_P2_SHORTS_COLOR, .shoes = SETTINGS_P2_SHOES_COLOR } },
+};
 
 int SettingsFindOutfitPreset(const crash_outfit *outfit) {
+  int i;
+
+  for (i=0;i<SETTINGS_PRESET_COUNT;i++) {
+    if (OutfitsEqual(outfit, &settings_outfit_presets[i].outfit)) { return i; }
+  }
   return SETTINGS_NO_PRESET;
 }
 
 crash_outfit SettingsDefaultOutfit(int player_idx) {
-  if (player_idx == 1)
-    return (crash_outfit){ .fur = SETTINGS_P2_FUR_COLOR, .belly = SETTINGS_P2_BELLY_COLOR,
-      .hair = SETTINGS_P2_HAIR_COLOR, .shorts = SETTINGS_P2_SHORTS_COLOR, .shoes = SETTINGS_P2_SHOES_COLOR };
-  return (crash_outfit){ .fur = CRASH_FUR_COLOR, .belly = CRASH_BELLY_COLOR, .hair = CRASH_HAIR_COLOR,
-    .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR };
+  if (player_idx == 1) { return settings_outfit_presets[SKUNK_PRESET].outfit; }
+  return settings_outfit_presets[DEFAULT_PRESET].outfit;
 }
 
 static void SettingsResetOutfits(pc_settings *s) {
