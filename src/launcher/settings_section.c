@@ -390,8 +390,8 @@ static void DrawCoopFields(void) {
   DrawFieldGroupTitle("Co-op");
   DrawOnOff("Couch co-op", &settings.two_players,
     "A second Crash plays beside the first, on the Player 2 keyboard keys or a second controller.");
-  DrawOutfit("Player 1 colours", 0);
-  DrawOutfit("Player 2 colours", 1);
+  DrawOutfit("Player 1 customization", 0);
+  DrawOutfit("Player 2 customization", 1);
 }
 
 /* the game's own save and load screens */
