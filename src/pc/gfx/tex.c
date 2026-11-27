@@ -36,7 +36,7 @@ typedef struct {
  * crash's are all in his own page
  */
 #define TEX_RECOLORED_COUNT   2  /* one for each player */
-#define TEX_RECOLORED_REGIONS 64
+#define TEX_RECOLORED_REGIONS 256 /* crash's models use about 180 between them */
 #define TEX_RECOLORED_WIDTH   1024
 #define TEX_RECOLORED_HEIGHT  128
 
@@ -414,7 +414,7 @@ static int TextureRegionCopied(tex_recolored *copies, texinfo *texinfo) {
   int i;
 
   for (i=0;i<copies->region_count;i++) {
-    if (memcmp(&copies->regions[i], texinfo, sizeof(*texinfo)) == 0) { return 1; }
+    if (TexturesShareRegion(&copies->regions[i], texinfo)) { return 1; }
   }
   return 0;
 }

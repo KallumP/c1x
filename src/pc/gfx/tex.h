@@ -17,8 +17,11 @@ extern void TexturesUpdate();
 extern int TextureId();
 extern int TextureLoad(texinfo *texinfo, fvec(*uvs)[4]);
 
+/* a and b draw the same pixels: their polygons' tint and culling don't matter */
 static inline int TexturesShareRegion(const texinfo *a, const texinfo *b) {
-  return 0;
+  return a->tpage == b->tpage && a->clut_x == b->clut_x && a->clut_y == b->clut_y
+    && a->semi_trans == b->semi_trans && a->color_mode == b->color_mode && a->uv_idx == b->uv_idx
+    && a->segment == b->segment && a->offs_x == b->offs_x && a->offs_y == b->offs_y;
 }
 typedef uint16_t (*tex_recolor_t)(uint16_t pixel, const void *owner);
 extern int TextureLoadRecolored(texinfo *texinfo, fvec(*uvs)[4], tex_recolor_t recolor, const void *owner);
