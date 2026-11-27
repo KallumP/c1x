@@ -39,6 +39,7 @@ typedef struct {
   int memory_card;                /* the game's save and load screens save to files in memory_card/ */
   int mute;                       /* the game plays no sound */
   int two_players;                /* a second crash plays beside the first, on pad 2 */
+  crash_outfit outfits[SETTINGS_PLAYER_COUNT]; /* the colours each player's crash is drawn in */
   char boot_level[SETTINGS_BOOT_LEVEL_MAX+1]; /* custom level to boot into, or "" */
 } pc_settings;
 

@@ -247,3 +247,55 @@ UTEST(settings, mute_is_off_unless_its_turned_on) {
   SettingsReset(&s);
   ASSERT_EQ(0, s.mute);
 }
+
+/* the settings that are a colour, and where each is kept */
+static const struct {
+  const char *name;
+  size_t offset;
+  uint32_t crashs_own;
+} color_settings[] = {
+  { "p1_fur_color",    offsetof(pc_settings, outfits[0].fur),    SETTINGS_FUR_COLOR },
+  { "p1_shorts_color", offsetof(pc_settings, outfits[0].shorts), SETTINGS_SHORTS_COLOR },
+  { "p1_shoes_color",  offsetof(pc_settings, outfits[0].shoes),  SETTINGS_SHOES_COLOR },
+  { "p2_fur_color",    offsetof(pc_settings, outfits[1].fur),    SETTINGS_FUR_COLOR },
+  { "p2_shorts_color", offsetof(pc_settings, outfits[1].shorts), SETTINGS_SHORTS_COLOR },
+  { "p2_shoes_color",  offsetof(pc_settings, outfits[1].shoes),  SETTINGS_SHOES_COLOR },
+};
+
+#define COLOR_SETTING_COUNT (int)(sizeof(color_settings)/sizeof(color_settings[0]))
+
+static uint32_t *ColorSetting(pc_settings *s, int index) {
+  return (uint32_t*)((char*)s + color_settings[index].offset);
+}
+
+UTEST(settings, each_players_colours_are_crashs_own_by_default) {
+  pc_settings s;
+  int i;
+
+  SettingsReset(&s);
+  for (i=0;i<COLOR_SETTING_COUNT;i++)
+    ASSERT_EQ(color_settings[i].crashs_own, *ColorSetting(&s, i));
+}
+
+UTEST(settings, colour_settings_take_six_hex_digits_as_red_green_blue) {
+  pc_settings s;
+  int i;
+
+  for (i=0;i<COLOR_SETTING_COUNT;i++) {
+    SettingsReset(&s);
+    ASSERT_EQ(1, ParseSetting(color_settings[i].name, "1a2B3c", &s));
+    ASSERT_EQ((uint32_t)0x1A2B3C, *ColorSetting(&s, i));
+  }
+}
+
+UTEST(settings, colour_settings_reject_anything_but_six_hex_digits) {
+  pc_settings s;
+
+  SettingsReset(&s);
+  ASSERT_EQ(-1, ParseSetting("p1_fur_color", "", &s));
+  ASSERT_EQ(-1, ParseSetting("p1_fur_color", "fff", &s));
+  ASSERT_EQ(-1, ParseSetting("p1_fur_color", "1a2b3c4", &s));
+  ASSERT_EQ(-1, ParseSetting("p1_fur_color", "1a2b3g", &s));
+  ASSERT_EQ(-1, ParseSetting("p1_fur_color", "green", &s));
+  ASSERT_EQ((uint32_t)SETTINGS_FUR_COLOR, s.outfits[0].fur);
+}
