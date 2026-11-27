@@ -302,7 +302,8 @@ static void DrawPartList(crash_outfit *outfit) {
     igPushID_Int(i);
     DrawSwatch("##swatch", *OutfitPartColor(outfit, i), igGetFrameHeight());
     igSameLine(0, -1);
-    if (igSelectable_Bool(outfit_parts[i].label, editing_part == i, 0, (ImVec2){ PART_LIST_WIDTH, 0 }))
+    if (igSelectable_Bool(outfit_parts[i].label, editing_part == i, ImGuiSelectableFlags_DontClosePopups,
+      (ImVec2){ PART_LIST_WIDTH, 0 }))
       editing_part = i;
     DrawTooltip(outfit_parts[i].covers);
     igPopID();
