@@ -336,3 +336,28 @@ UTEST(settings, colour_setting_names_are_case_insensitive) {
   ASSERT_EQ(1, ParseSetting("P2_Fur_Color", "00ff00", &s));
   ASSERT_EQ((uint32_t)0x00FF00, s.outfits[1].fur);
 }
+
+UTEST(settings, the_default_preset_is_crashs_own_colours) {
+  ASSERT_STREQ("Default", settings_outfit_presets[0].name);
+  ASSERT_TRUE(OutfitIsCrashsOwn(&settings_outfit_presets[0].outfit));
+}
+
+UTEST(settings, the_skunk_preset_is_player_twos_starting_colours) {
+  crash_outfit two = SettingsDefaultOutfit(1);
+
+  ASSERT_STREQ("Skunk", settings_outfit_presets[1].name);
+  ASSERT_TRUE(OutfitsEqual(&two, &settings_outfit_presets[1].outfit));
+}
+
+UTEST(settings, an_outfit_of_a_presets_colours_is_that_preset) {
+  crash_outfit two = SettingsDefaultOutfit(1);
+
+  ASSERT_EQ(1, SettingsFindOutfitPreset(&two));
+}
+
+UTEST(settings, an_outfit_of_other_colours_is_no_preset) {
+  crash_outfit outfit = SettingsDefaultOutfit(0);
+
+  outfit.hair = 0x00FF00;
+  ASSERT_EQ(SETTINGS_NO_PRESET, SettingsFindOutfitPreset(&outfit));
+}

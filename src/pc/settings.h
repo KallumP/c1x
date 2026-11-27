@@ -53,7 +53,18 @@ typedef struct {
 extern pc_settings game_settings;
 extern const settings_color settings_colors[SETTINGS_COLOR_COUNT];
 
+#define SETTINGS_PRESET_COUNT 2
+#define SETTINGS_NO_PRESET    -1
+
+typedef struct {
+  const char *name;
+  crash_outfit outfit;
+} outfit_preset;
+
+extern const outfit_preset settings_outfit_presets[SETTINGS_PRESET_COUNT];
+
 extern crash_outfit SettingsDefaultOutfit(int player_idx);
+extern int SettingsFindOutfitPreset(const crash_outfit *outfit);
 extern uint32_t *SettingsColor(pc_settings *s, int color_idx);
 extern uint32_t SettingsColorValue(const pc_settings *s, int color_idx);
 extern void SettingsReset(pc_settings *s);
