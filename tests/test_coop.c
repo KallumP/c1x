@@ -656,3 +656,47 @@ UTEST(coop, with_every_fling_kept_the_oldest_makes_room) {
   ASSERT_EQ(COOP_NOT_A_PLAYER, CoopFlingSpinner(&flings, &enemies[0]));
   ASSERT_EQ(COOP_PLAYER_TWO, CoopFlingSpinner(&flings, &enemies[COOP_FLING_COUNT]));
 }
+
+#define ONE_BOX 0x19000
+
+/* both players in play, player one at the origin and player two a box along x */
+static void PlayersInPlay(gool_object *slots) {
+  memset(slots, 0, sizeof(gool_object)*GOOL_PLAYER_COUNT);
+  UsePlayerSlots(slots);
+  slots[0].handle.type = 1;
+  slots[COOP_PLAYER_TWO].handle.type = 1;
+  slots[COOP_PLAYER_TWO].trans.x = ONE_BOX;
+}
+
+UTEST(coop, a_flung_enemy_goes_for_the_friend_nearer_than_what_it_found) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy = { 0 };
+
+  PlayersInPlay(slots);
+  enemy.trans.x = ONE_BOX;
+  ASSERT_EQ(&slots[COOP_PLAYER_TWO], CoopFlingFriend(&enemy, 0, 2*ONE_BOX));
+}
+
+UTEST(coop, a_flung_enemy_keeps_what_it_found_when_thats_nearer_than_the_friend) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy = { 0 };
+
+  PlayersInPlay(slots);
+  enemy.trans.x = 3*ONE_BOX;
+  ASSERT_TRUE(CoopFlingFriend(&enemy, 0, ONE_BOX) == 0);
+}
+
+UTEST(coop, a_flung_enemy_never_goes_for_the_player_who_spun_it) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy = { 0 };
+
+  PlayersInPlay(slots);
+  slots[COOP_PLAYER_TWO].trans.x = 5*ONE_BOX;
+  ASSERT_TRUE(CoopFlingFriend(&enemy, 0, 2*ONE_BOX) == 0);
+}
+
+UTEST(coop, a_flung_enemy_doesnt_go_for_a_friend_out_of_play) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy = { 0 };
+
+  PlayersInPlay(slots);
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  enemy.trans.x = ONE_BOX;
+  ASSERT_TRUE(CoopFlingFriend(&enemy, 0, 2*ONE_BOX) == 0);
+}

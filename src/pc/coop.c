@@ -241,3 +241,7 @@ void CoopFlingForget(coop_flings *flings, gool_object *obj) {
   if (fling)
     fling->obj = 0;
 }
+
+gool_object *CoopFlingFriend(gool_object *flung, int spinner, int32_t nearest_dist) {
+  return 0;
+}

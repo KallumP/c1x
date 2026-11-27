@@ -72,5 +72,6 @@ extern const crash_outfit *CoopPlayerOutfit(gool_object *obj);
 extern void CoopFlingSpun(coop_flings *flings, gool_object *obj, int spinner);
 extern int CoopFlingSpinner(const coop_flings *flings, gool_object *obj);
 extern void CoopFlingForget(coop_flings *flings, gool_object *obj);
+extern gool_object *CoopFlingFriend(gool_object *flung, int spinner, int32_t nearest_dist);
 
 #endif /* _PC_COOP_H_ */
