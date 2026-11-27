@@ -1,14 +1,6 @@
 # Launcher
 
-The launcher is a small window for starting the game, changing its settings and controls, and opening the level editor. It's built alongside the game, as `c1x_launcher.exe` in the project folder (`c1x_launcher` on Linux).
-
-It's a second program in C, built from SDL 2, OpenGL and cimgui, which the game already uses. So it needs nothing more to build, and it runs wherever the game runs.
-
-## Building and running it
-
-`make` builds the launcher along with the game (see [Building](building.md)). To build only the launcher, run `make launcher`. On Windows, `rebuild.bat` builds both, and on Linux, `rebuild.sh` does.
-
-Run `c1x_launcher.exe`, by double-clicking it or from any folder. It works on its own folder, the project folder, wherever it's started from, and finds the game and the rest in `build/` from there. On Windows it has SDL2 and the GCC runtime built in, so it needs no DLLs beside it.
+The launcher is a small window for starting the game, changing its settings and controls, and opening the level editor. Open `c1x_launcher.exe` to start it.
 
 **Play** is at the top, with a tab each for Settings, Controls, Levels, the Level editor and Help below it.
 
@@ -29,11 +21,7 @@ If you download a release yourself, copy these across from the old folder:
 - `memory_card/`, if you save to the memory card
 - any levels of your own in `level_src/`
 
-If the launcher shows no button for a newer release, it couldn't check. That happens when:
-
-- **You're offline**, or GitHub doesn't answer. It checks again the next time it opens.
-- **`build/c1x_tools.exe` is missing.** The check runs from it. A release comes with it, and in a project folder `make` builds it (see [Building](building.md#the-level-build-and-editor-without-node)).
-- **It's a launcher you built yourself.** That says `dev build` instead of a version, so there's nothing to compare. Only a released launcher checks (see [Releasing](releasing.md#the-launchers-version)).
+If you're offline, or GitHub doesn't answer, there's no button. It checks again the next time the launcher opens.
 
 Besides this check, the launcher only goes online for mod.io's levels, when you open the Levels tab, search or download one, and when you install a release.
 
@@ -41,13 +29,11 @@ Besides this check, the launcher only goes online for mod.io's levels, when you 
 
 **Play** saves the settings and controls (see below), then starts the game. The launcher stays open, and the game keeps running if you close it. While a level is building, **Play** is greyed out until it's built.
 
-If the game isn't built, the launcher says so instead of showing **Play**. Build it, then the button appears.
-
-If any of the game's files are missing from `streams/`, the launcher lists them instead of showing **Play**, with **Check again** and a way to extract them from a disc image. See [Running](running.md) for getting them.
+If any of the game's files are missing, the launcher lists them instead of showing **Play**, with **Check again** and a way to extract them from a disc image. See [Running](running.md) for getting them.
 
 ## Settings
 
-The launcher has a field for each setting in `settings.cfg` (see [Settings](settings.md)): a checkbox for each on/off setting and a box for each number. Hover over a field to see what it does. When it opens, the fields show what `settings.cfg` sets. If there isn't one, it creates it from `settings.example.cfg`, with the defaults.
+The launcher has a field for each setting in `settings.cfg` (see [Settings](settings.md)): a checkbox for each on/off setting and a box for each number. Hover over a field to see what it does.
 
 Under **Co-op**, **Player 1 customization** and **Player 2 customization** show each player's colours. Click one of the colour squares, or **Edit**, to choose them in a popup:
 
@@ -55,38 +41,36 @@ Under **Co-op**, **Player 1 customization** and **Player 2 customization** show 
 - The list on the left picks a part (fur, belly, hair, shorts or shoes), and the picker beside it sets that part's colour.
 - **Done** keeps the colours. **Cancel**, or Escape, leaves them as they were.
 
-**Custom level**, the first setting, is the custom level that **CUSTOM LEVEL** on the game's title screen starts (under **LOAD GAME**): it lists the custom levels (see [Levels](#levels)), and **none**, which leaves **CUSTOM LEVEL** off the title screen. A level that isn't built says `(not built)`; choosing it builds it, then sets it as the boot level once it builds.
+**Custom level**, the first setting, is the custom level that **CUSTOM LEVEL** on the game's title screen starts (under **LOAD GAME**): it lists the custom levels (see [Levels](#levels)), and **none**, which leaves **CUSTOM LEVEL** off the title screen. A level that isn't built says `(not built)`; choosing it builds it, then picks it once it's built.
 
-**Save** writes the settings to `settings.cfg`. It changes each setting's line, or adds one for a setting the file doesn't have, and keeps the rest of the file as it is, comments included. Choosing **none** comments out the `boot_level` line. **Play** saves too, so you only need **Save** to keep the settings without playing.
+**Save** keeps your settings. **Play** saves too, so you only need **Save** to keep them without playing.
 
-When something else changes `settings.cfg`, such as the level editor's **Build + boot** button, the fields update to match, unless you've changed them without saving. **Reload** reads `settings.cfg` again, dropping changes you haven't saved, and looks for newly built levels.
+When the level editor's **Build + boot** picks a level, the launcher shows it, unless you've changed settings without saving. **Reload** drops changes you haven't saved, and looks for newly built levels.
 
 ## Controls
 
-The Controls tab shows each PlayStation button's keys, on its **Player 1 keyboard** tab, and game controller buttons, on its **Controller** tab, from `controls.cfg` (see [Controls](controls.md)), which it creates from `controls.example.cfg` if there isn't one. They're grouped by what they do: movement first, then jump, spin, start and select, then the other buttons.
+The Controls tab shows each PlayStation button's keys, on its **Player 1 keyboard** tab, and game controller buttons, on its **Controller** tab (see [Controls](controls.md)). They're grouped by what they do: movement first, then jump, spin, start and select, then the other buttons.
 
 - Click a key, then press the key you want instead; on the Controller tab, click a controller button and press the one you want on a plugged in controller. Esc cancels.
 - **+** gives a button another key or controller button, and **x** removes one. A button always keeps at least one.
 - **Reset to defaults** puts every button back to its default key and controller button.
-- **Save** writes `controls.cfg`, changing only the lines for buttons whose keys or controller buttons changed and keeping the rest of the file. **Play** saves too.
+- **Save** keeps them. **Play** saves too.
 
 ## Levels
 
-The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)): each level source in `level_src/` (a folder with a map, its `.obj`) and each level built to `build/levels/`. Each is listed by its title (its loading screen's, set under **Level** in the level editor), under **Comes with c1x** (the five levels that do), **Downloaded** and **Your own**. The **Custom level** setting lists them the same way.
+The Levels tab lists the custom levels (see [Custom levels](custom_levels.md)). Each is listed by its title (its loading screen's, set under **Level** in the level editor), under **Comes with c1x** (the five levels that do), **Downloaded** and **Your own**. The **Custom level** setting lists them the same way.
 
 Beside each level is whether it's built. It says `out of date` when a file in its source folder was saved after it was built (its `.blend` doesn't count: export the `.obj` again).
 
-- **Build** builds that level with `build/c1x_tools.exe`, without Node or the level editor, showing its output below. When it builds, it's set as the boot level and `settings.cfg` is saved. Only one level builds at a time.
+- **Build** builds that level, showing how it went below. Once it's built, it's the **Custom level**. Only one level builds at a time.
 - **Check again** looks for level sources added, and ones saved, since the launcher opened.
-- **Open levels folder** opens `level_src/`, to drop a level into.
+- **Open levels folder** opens the folder the levels are in, to drop a level into.
 
-**Online levels** lists the 10 most downloaded levels players have shared (see [Sharing levels](custom_levels.md#sharing-levels)) when you open the tab. Type part of a name in the box and click **Find levels** to list the levels with that in their name. **Download** puts a level in `level_src/` and builds it.
-
-If `c1x_tools.exe` isn't there (`make` skips it without Node; see [Building](building.md#the-level-build-and-editor-without-node)), the tab says so and **Build** is greyed out.
+**Online levels** lists the 10 most downloaded levels players have shared (see [Sharing levels](custom_levels.md#sharing-levels)) when you open the tab. Type part of a name in the box and click **Find levels** to list the levels with that in their name. **Download** adds a level and builds it.
 
 ## Level editor
 
-The level editor (see [Custom levels](custom_levels.md)) runs from `build/c1x_tools.exe`, so it needs nothing installed. If that isn't there (see [Building](building.md#the-level-build-and-editor-without-node)), the tab says so.
+The level editor (see [Custom levels](custom_levels.md)) needs nothing installed.
 
 - **Open editor** starts the editor, which opens in your browser.
 - While it runs, the launcher shows its address, with **Open in browser** to open it again and **Stop** to stop it.
@@ -94,4 +78,4 @@ The level editor (see [Custom levels](custom_levels.md)) runs from `build/c1x_to
 
 ## Help
 
-The Help tab has a button for each page of c1x's guide (getting started, controls, settings, custom levels and what's new), which opens it in your browser: a release's own page (its docs as pages; see [Releasing](releasing.md#whats-in-the-zip)), or the doc on GitHub in a project folder without them.
+The Help tab has a button for each page of c1x's guide (getting started, controls, settings, custom levels and what's new), which opens it in your browser.
