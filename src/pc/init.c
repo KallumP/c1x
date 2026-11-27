@@ -232,8 +232,7 @@ static void InitCustomLevel() {
   AudioSongFind(level, &custom_level_audio_song);
 }
 
-/* a recording keeps a copy of the memory card's saves and the settings as they were when it started */
-static void KeepWithRecording(const char *recording_path) {
+static void KeepCardAndSettingsWithRecording(const char *recording_path) {
   char dir[1024], settings_path[1024];
 
   ReplayCardDir(dir, sizeof(dir), recording_path);
@@ -255,6 +254,14 @@ static void UseRecordingsCard(const char *recording_path) {
   CardGameUseFolder(CARD_GAME_REPLAY_DIR);
 }
 
+static void UseRecordingsSettings(const char *recording_path) {
+  char settings_path[1024];
+
+  ReplaySettingsFile(settings_path, sizeof(settings_path), recording_path);
+  if (!SettingsLoadRecorded(settings_path))
+    fprintf(stderr, "no settings kept with %s, replaying with your own\n", recording_path);
+}
+
 static void RecordingsDir(char *dir, size_t size) {
   char *base;
 
@@ -263,47 +270,31 @@ static void RecordingsDir(char *dir, size_t size) {
   SDL_free(base);
 }
 
-static char replay_path[1024] = ""; /* the recording to replay, or "" */
+static int FindReplay(char *path, size_t size) {
+  char dir[1024];
 
-/*
- * with replay_inputs on, pick the newest recording to replay and play with
- * the settings it started with. before anything reads the settings, as they
- * can change the boot level
- */
-static void FindReplay() {
-  char dir[1024], settings_path[1024];
-
-  if (!game_settings.replay_inputs) { return; }
   RecordingsDir(dir, sizeof(dir));
-  if (!ReplayNewestFile(dir, replay_path, sizeof(replay_path))) {
+  if (!ReplayNewestFile(dir, path, size)) {
     fprintf(stderr, "no recordings in %s to replay\n", dir);
-    return;
+    return 0;
   }
-  ReplaySettingsFile(settings_path, sizeof(settings_path), replay_path);
-  if (!SettingsLoadRecorded(settings_path))
-    fprintf(stderr, "no settings kept with %s, replaying with your own\n", replay_path);
+  return 1;
 }
 
-/*
- * replay the recording FindReplay picked, or if replay_inputs is off, record
- * this run to a new file in recorded_inputs (next to the executable), named
- * by its start time
- */
-static void InitReplay() {
+static void StartReplay(const char *path) {
+  if (!ReplayStart(path, REPLAY_PLAY, boot_lid, seed_a)) {
+    fprintf(stderr, "could not replay %s\n", path);
+    return;
+  }
+  fprintf(stderr, "replaying %s\n", path);
+  TimeSetSpeed(game_settings.replay_speed);
+  UseRecordingsCard(path);
+}
+
+static void StartRecording() {
   char dir[1024], path[1024];
   time_t now;
 
-  if (game_settings.replay_inputs) {
-    if (!replay_path[0]) { return; }
-    if (ReplayStart(replay_path, REPLAY_PLAY, boot_lid, seed_a)) {
-      fprintf(stderr, "replaying %s\n", replay_path);
-      TimeSetSpeed(game_settings.replay_speed);
-      UseRecordingsCard(replay_path);
-    }
-    else
-      fprintf(stderr, "could not replay %s\n", replay_path);
-    return;
-  }
   RecordingsDir(dir, sizeof(dir));
   if (!ReplayMakeDir(dir)) {
     fprintf(stderr, "could not make %s to record inputs\n", dir);
@@ -315,19 +306,22 @@ static void InitReplay() {
     fprintf(stderr, "could not open %s to record inputs\n", path);
     return;
   }
-  KeepWithRecording(path);
+  KeepCardAndSettingsWithRecording(path);
 }
 
 int init() {
   gl_callbacks callbacks;
-  int i;
+  char replay_path[1024];
+  int i, replaying;
 
   FindDataDir();
   PadInit(2); /* initialize 2 joypad structs */
   PadLoadBindings("controls.cfg"); /* keeps the default bindings if missing */
   SettingsReset(&game_settings);
   SettingsLoad("settings.cfg"); /* keeps the default settings if missing */
-  FindReplay();
+  replaying = game_settings.replay_inputs && FindReplay(replay_path, sizeof(replay_path));
+  if (replaying)
+    UseRecordingsSettings(replay_path); /* first, as a recording's settings can change the boot level */
   SetTicksElapsed(0);
   SDLInit();
   callbacks.pre_update = SDLUpdate;
@@ -339,7 +333,10 @@ int init() {
   GLInit(&callbacks);
   sranda2();
   InitCustomLevel();
-  InitReplay();
+  if (replaying)
+    StartReplay(replay_path);
+  else if (!game_settings.replay_inputs)
+    StartRecording();
   for (i=1;i<4;i++)
     insts[i] = EID_NONE;
   for (i=0;i<NS_TEXTURE_PAGE_COUNT;i++)
