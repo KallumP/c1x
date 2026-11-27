@@ -46,26 +46,31 @@ void ReplayFileName(char *name, size_t size, const char *dir,
 }
 
 #define RECORDING_EXTENSION      ".inputs"
-#define RECORDING_EXTENSION_SIZE 7
+#define RECORDING_EXTENSION_SIZE (sizeof(RECORDING_EXTENSION)-1)
 #define CARD_DIR_EXTENSION       ".card"
 #define SETTINGS_FILE_EXTENSION  ".settings"
 
-static void ReplayBesideFile(char *path, size_t size, const char *recording_path,
+static int IsRecordingName(const char *name, size_t len) {
+  return len >= RECORDING_EXTENSION_SIZE
+    && strcmp(&name[len-RECORDING_EXTENSION_SIZE], RECORDING_EXTENSION) == 0;
+}
+
+static void ReplayBesidePath(char *path, size_t size, const char *recording_path,
   const char *extension) {
   size_t len;
 
   len = strlen(recording_path);
-  if (len >= RECORDING_EXTENSION_SIZE && strcmp(&recording_path[len-RECORDING_EXTENSION_SIZE], RECORDING_EXTENSION) == 0)
+  if (IsRecordingName(recording_path, len))
     len -= RECORDING_EXTENSION_SIZE;
   snprintf(path, size, "%.*s%s", (int)len, recording_path, extension);
 }
 
 void ReplayCardDir(char *dir, size_t size, const char *recording_path) {
-  ReplayBesideFile(dir, size, recording_path, CARD_DIR_EXTENSION);
+  ReplayBesidePath(dir, size, recording_path, CARD_DIR_EXTENSION);
 }
 
 void ReplaySettingsFile(char *path, size_t size, const char *recording_path) {
-  ReplayBesideFile(path, size, recording_path, SETTINGS_FILE_EXTENSION);
+  ReplayBesidePath(path, size, recording_path, SETTINGS_FILE_EXTENSION);
 }
 
 /* find the newest recording in dir; returns 0 if there are none */
@@ -80,7 +85,7 @@ int ReplayNewestFile(const char *dir, char *path, size_t size) {
   newest[0] = 0;
   while ((e = readdir(d))) {
     len = strlen(e->d_name);
-    if (len < 7 || strcmp(&e->d_name[len-7], ".inputs") != 0) { continue; }
+    if (!IsRecordingName(e->d_name, len)) { continue; }
     if (len < sizeof(newest) && strcmp(e->d_name, newest) > 0)
       strcpy(newest, e->d_name);
   }
