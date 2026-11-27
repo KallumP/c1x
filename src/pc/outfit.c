@@ -19,6 +19,12 @@
 #define MUZZLE_GREEN_PERCENT_MAX 65   /* his shoes' soles and his teeth are paler */
 #define CRASH_MUZZLE_COLOR       0xDF7F7F
 
+const outfit_colour outfit_colours[OUTFIT_COLOUR_COUNT] = { { 0 } };
+
+uint32_t *OutfitColour(crash_outfit *outfit, int colour_idx) {
+  return &outfit->fur;
+}
+
 const outfit_preset outfit_presets[] = {
   [OUTFIT_PRESET_DEFAULT] = { "Default", { .fur = CRASH_FUR_COLOR, .belly = CRASH_BELLY_COLOR,
     .hair = CRASH_HAIR_COLOR, .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR } },

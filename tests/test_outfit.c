@@ -91,6 +91,43 @@ UTEST(outfit, a_chosen_colour_isnt_crashs_own_outfit) {
   ASSERT_FALSE(OutfitIsCrashsOwn(&outfit));
 }
 
+/* the colours a player chooses */
+
+UTEST(outfit, the_fur_colour_is_his_fur) {
+  crash_outfit outfit = his_own();
+
+  ASSERT_STREQ("Fur", outfit_colours[OUTFIT_COLOUR_FUR].label);
+  ASSERT_TRUE(OutfitColour(&outfit, OUTFIT_COLOUR_FUR) == &outfit.fur);
+}
+
+UTEST(outfit, the_belly_colour_is_his_belly) {
+  crash_outfit outfit = his_own();
+
+  ASSERT_STREQ("Belly", outfit_colours[OUTFIT_COLOUR_BELLY].label);
+  ASSERT_TRUE(OutfitColour(&outfit, OUTFIT_COLOUR_BELLY) == &outfit.belly);
+}
+
+UTEST(outfit, the_hair_colour_is_his_hair) {
+  crash_outfit outfit = his_own();
+
+  ASSERT_STREQ("Hair", outfit_colours[OUTFIT_COLOUR_HAIR].label);
+  ASSERT_TRUE(OutfitColour(&outfit, OUTFIT_COLOUR_HAIR) == &outfit.hair);
+}
+
+UTEST(outfit, the_shorts_colour_is_his_shorts) {
+  crash_outfit outfit = his_own();
+
+  ASSERT_STREQ("Shorts", outfit_colours[OUTFIT_COLOUR_SHORTS].label);
+  ASSERT_TRUE(OutfitColour(&outfit, OUTFIT_COLOUR_SHORTS) == &outfit.shorts);
+}
+
+UTEST(outfit, the_shoes_colour_is_his_shoes) {
+  crash_outfit outfit = his_own();
+
+  ASSERT_STREQ("Shoes", outfit_colours[OUTFIT_COLOUR_SHOES].label);
+  ASSERT_TRUE(OutfitColour(&outfit, OUTFIT_COLOUR_SHOES) == &outfit.shoes);
+}
+
 /* presets */
 
 UTEST(outfit, every_preset_is_found_as_itself) {
