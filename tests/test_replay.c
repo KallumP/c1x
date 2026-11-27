@@ -57,9 +57,25 @@ UTEST(replay, each_update_records_the_clock_and_the_buttons_held) {
   ASSERT_EQ(2, ReadRecording(&header, frames, 3));
   ASSERT_EQ(start, header.start_ticks);
   ASSERT_EQ(start, frames[0].ticks);
-  ASSERT_EQ((uint32_t)PAD_CROSS << 16, frames[0].held);
+  ASSERT_EQ((uint32_t)PAD_CROSS << 16, frames[0].held[PAD_PLAYER_ONE]);
   ASSERT_EQ(start + FRAME_TICKS, frames[1].ticks);
-  ASSERT_EQ(0u, frames[1].held);
+  ASSERT_EQ(0u, frames[1].held[PAD_PLAYER_ONE]);
+}
+
+UTEST(replay, each_update_records_player_twos_buttons) {
+  replay_header header;
+  replay_frame frames[1];
+
+  memset(keys, 0, sizeof(keys));
+  PadResetBindings();
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
+  keys[SDL_SCANCODE_KP_0] = 1;
+  ReplayUpdate();
+  keys[SDL_SCANCODE_KP_0] = 0;
+  ReplayStop();
+  ASSERT_EQ(1, ReadRecording(&header, frames, 1));
+  ASSERT_EQ(0u, frames[0].held[PAD_PLAYER_ONE]);
+  ASSERT_EQ((uint32_t)PAD_CROSS, frames[0].held[PAD_PLAYER_TWO]);
 }
 
 UTEST(replay, stopping_goes_back_to_the_real_clock) {

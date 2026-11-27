@@ -24,7 +24,7 @@ void ReplayRecordFrame(replay_recorder *r, int32_t ticks, uint32_t held) {
 
   if (!r->file) { return; }
   frame.ticks = ticks;
-  frame.held = held;
+  frame.held[0] = held;
   fwrite(&frame, sizeof(replay_frame), 1, r->file);
 }
 
@@ -169,7 +169,7 @@ void ReplayUpdate() {
         GetTicksElapsed(), frame.ticks);
       replay_desynced = 1;
     }
-    replay_held = frame.held;
+    replay_held = frame.held[0];
     return;
   }
   ReplayRecordFrame(&recorder, GetTicksElapsed(), SwPadRead(0));

@@ -7,6 +7,7 @@
 
 #define REPLAY_DIR   "recorded_inputs" /* next to the executable; one file per run, named by start time */
 #define REPLAY_MAGIC 0x31434552 /* "REC1" */
+#define REPLAY_PLAYER_COUNT 2
 
 /* state needed to start a level the same way again */
 typedef struct {
@@ -19,7 +20,7 @@ typedef struct {
 /* one frame of input */
 typedef struct {
   int32_t ticks;        /* tick count when the frame was drawn */
-  uint32_t held;        /* buttons held */
+  uint32_t held[REPLAY_PLAYER_COUNT]; /* buttons held on each pad, as SwPadRead reads them */
 } replay_frame;
 
 typedef struct {
