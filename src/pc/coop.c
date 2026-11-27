@@ -259,7 +259,10 @@ gool_object *CoopFlingFriend(gool_object *flung, int spinner, int32_t nearest_di
   return friend;
 }
 
+/* a flung enemy's fling into a player hurts him as an enemy does */
 uint32_t CoopFlingEvent(const coop_flings *flings, gool_object *sender,
   gool_object *recipient, uint32_t event) {
-  return event;
+  if (event != GOOL_EVENT_FLING || !CoopIsPlayer(recipient)) { return event; }
+  if (CoopFlingSpinner(flings, sender) == COOP_NOT_A_PLAYER) { return event; }
+  return GOOL_EVENT_HIT;
 }
