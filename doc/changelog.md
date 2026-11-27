@@ -164,9 +164,8 @@
 
 ### Changed
 
-- the launcher is now `c1x_launcher.exe` in the top folder, and needs no DLLs beside it
-- the game is now `build/c1x.exe`
-- the level editor needs nothing installed: no Node.js and no Install, as it runs from `build/c1x_tools.exe`, which builds levels in place of `build-level.exe`
+- the launcher is now `c1x_launcher.exe`, in the top folder
+- the level editor needs nothing installed
 - the launcher's Play no longer opens a console window beside the game
 - mossy creek and sunset canyon no longer come with their own songs, and play the game's music
 - the default controls are WASD to move, Space to jump and K to spin; your own controls stay until you Reset to defaults
@@ -200,14 +199,13 @@
 
 - obstacles in custom levels: moving platforms, traps and the like from the game's own levels, set up in the level editor
 - fullscreen, set in the launcher or switched with Alt+Enter while playing
-- build custom levels from the launcher's new Levels tab, without Node.js
+- build custom levels from the launcher's new Levels tab
 - an option to show how many of a level's boxes Crash has broken (such as 12/49), with the lives and wumpa counters
 
 ### Changed
 
-- the rolling stone is an obstacle now, not an enemy, in the level editor and objects.json
-- extracting the game's files from a disc image no longer needs Node.js
-- the launcher is now `build/_launcher.exe`, so it's first in the `build` folder
+- the rolling stone is an obstacle now, not an enemy, in the level editor
+- extracting the game's files from a disc image needs nothing installed
 
 ## 2026-11-10
 
@@ -294,7 +292,7 @@
 
 ### Added
 
-- a launcher (`build/launcher.exe`, built with the game) for checking and extracting the game's files, changing the settings and controls, starting the game, and opening the level editor; see [Launcher](launcher.md)
+- a launcher for checking and extracting the game's files, changing the settings and controls, starting the game, and opening the level editor; see [Launcher](launcher.md)
 - the level editor sets a level's turn and scale, shows which way the camera faces from the spawn, and F5 builds the level and boots into it, saying what it's doing as it goes; Shift gives finer steps for x, y and z
 - textures can be TIFF images, as well as PNG and JPEG
 - custom levels can have every box the game has: TNT, iron arrow and iron outline as well
@@ -304,28 +302,23 @@
 ### Changed
 
 - custom levels are built from Jungle Rollers, which has every box, instead of N. Sanity Beach
-- building levels and extracting the game's files need only Node, not Python (`npm run build-level`, `npm run extract-streams`)
-
-### Removed
-
-- `mossy_creek`'s generator (`make_map.py`); it's now edited like any other level source
 
 ### Fixed
 
 - custom levels: polygons drawn untextured grey, invisible walls along banks and low edges, the end warp pad not working off the floor, and stray rock slabs and a spike in `mossy_creek`
 - custom levels: the camera jumping up or down and settling back where the ground under its path changes height but Crash's doesn't, such as at ledges and rocks off to the side; it now keeps to the height of the floor Crash is on
-- the level editor: dragging a box lagging on big levels, as every move rechecked every box against every face of the map
+- the level editor: dragging a box lagging on big levels
 
 ## 2026-10-30
 
 ### Added
 
 - custom levels: maps modelled in Blender, built into playable levels with a spawn, an end and boxes; see [Custom levels](custom_levels.md)
-- a level editor (`npm run dev` in `tools/level_editor`) for placing a level's spawn, end and boxes on its map in 3D
+- a level editor for placing a level's spawn, end and boxes on its map in 3D
 - two level sources to try custom levels with, `tide_ruins` and `mossy_creek`
 - `boot_level` setting to start straight in a built level
 - `fix_model_draw_order` setting (default off), so a model can't be drawn over one in front of it
-- every run records its inputs to `build/recorded_inputs/` for reproducing bugs, and `replay_inputs` plays the newest one back
+- every run records its inputs for reproducing bugs, and `replay_inputs` plays the newest one back
 
 ### Fixed
 
@@ -341,22 +334,14 @@
 
 ### Added
 
-- Windows builds, using MSYS2; see [Building](building.md)
-- `streams/` can be next to the executable or one folder above it, so the game can start from any folder
 - an error naming the missing file when a game file can't be opened
-- key bindings in `controls.cfg`, with several keys per button and Shift, Ctrl and Alt usable; see [Controls](controls.md)
-- game settings in `settings.cfg`: the loading screen, a speed display and skipping the splash screens; see [Settings](settings.md)
-- a script to extract the game's files from a disc image
-- unit tests (`make test`)
+- changeable key bindings, with several keys per button and Shift, Ctrl and Alt usable; see [Controls](controls.md)
+- game settings: the loading screen, a speed display and skipping the splash screens; see [Settings](settings.md)
 
 ### Fixed
 
-- the build failing with GCC 15 or newer
-- a crash loading the music in 32-bit builds with FluidSynth 2.2 or newer
 - no music on Windows
 - game files read wrongly on Windows
-- the README's controls list not matching the real keys
-- the game freezing while the in-game GUI shows the object tree
 - the level loading screen never appearing
 - Crash drawn behind crates he's in front of, especially while jumping
 
@@ -390,19 +375,10 @@
 
 ### Fixed
 
-- broken sfx code
-- broken music/midi player code
+- broken sound effects
+- broken music
 - myriad of issues related to audio
-- no initialization of gool globals at game init
 - transparency/blending behavior is incorrect for some objects
-
-### Added
-
-- custom audio sampler and mixer implementation
-
-### Removed
-
-- SDL mixer dependency
 
 ### Other
 
@@ -413,13 +389,9 @@
 ### Fixed
 
 - flickering colors during intro sequence
-- rot matrix calc errors
 - some text does not render
 - issues preventing level transitions
-- more ripple shader inaccuracies
-- fog shader inaccuracies
-- lightning shader inaccuracies
-- dark shader inaccuracies
+- the water ripple, fog, lightning and dark effects not looking right
 - background color not visible in levels that have one
 - animated textures do not animate
 - some objects randomly respawn
@@ -432,12 +404,6 @@
 ### Added
 
 - top and bottom screen borders present in original
-- toggleable render of object bounds (press <key>q</key> to toggle)
-- issue tracking document
-
-### Removed
-
-- patches code (no longer used)
 
 ## 2022-12-13
 
@@ -456,32 +422,20 @@
 - (partial) transparency has not been implemented
 - screen does not fade out/in after death/before respawn
 - player does not inherit zone brightness levels
-- (some) gool issues
-- timing issue with gool animations
+- animations playing at the wrong speed
 - no deceleration of player when jumping
 - (partial) it is sometimes possible to jump in mid-air when beside walls
 - auto-cam transition takes multiple button presses to skip
 - (many) solidity check/collision issues
-- ripple shader inaccuracies
+- the water ripple effect not looking right
 - text is not rendered at the correct locations
-
-### Removed
-
-- vertex buffer based draw code
-- gl extensions dependency
-
-### Added
-
-- immediate mode based draw code
-- toggleable render of wall bitmap image (press <key>d</key> to toggle)
 
 ## 2022-12-7
 
 ### Fixed
 
 - path traversing objects are not oriented correctly
-- display list ordering of objects is incorrect
-- object geometry outside of viewing frustum is not rejected as it should be
+- objects drawn in the wrong order
 
 ## 2022-11-24
 
@@ -492,21 +446,4 @@
 - (partial) HUD fails to render
 - camera lags behind player
 - camera path selection at divergences is incorrect
-- infinite loop in `GoolObjectSearchTree`
-- segfault on exit
-
-### Added
-
-- changelog (this file)
-- in-game GUI re-write using [c]imgui as backend (press <key>esc</key> to toggle)
-  - GOOL object code debugger
-- toggleable render of zone octree query results (press <key>a</key> to toggle)
-
-### Removed
-
-- old in-game GUI implementation
-- freetype dependency
-
-### Other
-
-Audio SFX are still disabled by default as they are not working 100% correctly, however they can now be enabled with compilation flag `-DCFLAGS_SFX_FLUIDSYNTH`.
+- a crash on exit
