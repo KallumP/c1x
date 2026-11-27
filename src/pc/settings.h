@@ -13,9 +13,9 @@
 #define SETTINGS_FUR_COLOR             0xFF3100 /* crash's own colours, as 0xRRGGBB */
 #define SETTINGS_SHORTS_COLOR          0x002790
 #define SETTINGS_SHOES_COLOR           0x330000
-#define SETTINGS_P2_FUR_COLOR          0x2F80ED /* what player two starts in: player one's fur and shorts swapped */
-#define SETTINGS_P2_SHORTS_COLOR       0xE8590C
-#define SETTINGS_P2_SHOES_COLOR        0x1B2A4A
+#define SETTINGS_P2_FUR_COLOR          0x2E9E6B /* what player two starts in: green fur, gold shorts, brown shoes */
+#define SETTINGS_P2_SHORTS_COLOR       0xD9A21B
+#define SETTINGS_P2_SHOES_COLOR        0x3B2414
 #define LEVELS_DIR "levels" /* next to the executable; built levels to boot into, by name */
 
 /* the colours a player's crash is drawn in, each 0xRRGGBB (see pc/outfit.h) */
