@@ -104,20 +104,22 @@ static int SettingsParseNumberFrom(const char *value, uint32_t min, uint32_t max
   return 1;
 }
 
-static uint32_t HexDigitValue(char digit) {
+/* only for a digit SDL_isxdigit takes */
+static uint32_t SettingsHexDigit(char digit) {
   if (SDL_isdigit(digit)) { return digit - '0'; }
   return SDL_tolower(digit) - 'a' + 10;
 }
 
-/* parse six hex digits, red green blue, into color as 0xRRGGBB; returns 0 for anything else */
+/* parse rrggbb into color; returns 0 for anything else */
 static int SettingsParseColor(const char *value, uint32_t *color) {
   uint32_t parsed;
   int i;
 
   if (strlen(value) != SETTINGS_COLOR_DIGITS) { return 0; }
-  for (i=0,parsed=0;i<SETTINGS_COLOR_DIGITS;i++) {
+  parsed = 0;
+  for (i=0;i<SETTINGS_COLOR_DIGITS;i++) {
     if (!SDL_isxdigit(value[i])) { return 0; }
-    parsed = (parsed << 4) | HexDigitValue(value[i]);
+    parsed = (parsed << 4) | SettingsHexDigit(value[i]);
   }
   *color = parsed;
   return 1;

@@ -233,18 +233,24 @@ static void DrawGameAdjustmentFields(void) {
     "Show how many spins Crash has left in the top right corner.");
 }
 
-/* a swatch that opens a colour picker for color (0xRRGGBB), with label after it */
+static float ChannelToFloat(uint32_t color, int shift) {
+  return ((color >> shift) & 0xFF) / 255.0f;
+}
+
+static uint32_t FloatToChannel(float channel, int shift) {
+  if (channel < 0) { channel = 0; }
+  if (channel > 1) { channel = 1; }
+  return (uint32_t)((channel * 255.0f) + 0.5f) << shift;
+}
+
 static void DrawColorPicker(const char *label, uint32_t *color, const char *tooltip) {
   float rgb[3];
-  int i;
 
-  for (i=0;i<3;i++)
-    rgb[i] = ((*color >> (16 - (i * 8))) & 0xFF) / 255.0f;
-  if (igColorEdit3(label, rgb, ImGuiColorEditFlags_NoInputs)) {
-    *color = 0;
-    for (i=0;i<3;i++)
-      *color = (*color << 8) | (uint32_t)((rgb[i] * 255.0f) + 0.5f);
-  }
+  rgb[0] = ChannelToFloat(*color, 16);
+  rgb[1] = ChannelToFloat(*color, 8);
+  rgb[2] = ChannelToFloat(*color, 0);
+  if (igColorEdit3(label, rgb, ImGuiColorEditFlags_NoInputs))
+    *color = FloatToChannel(rgb[0], 16) | FloatToChannel(rgb[1], 8) | FloatToChannel(rgb[2], 0);
   DrawTooltip(tooltip);
 }
 
