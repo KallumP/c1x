@@ -313,4 +313,7 @@ void CoopForgetSpinner(coop_spinners *spinners, int slot) {
 
 void CoopKeepSpinner(coop_spinners *spinners, int slot, gool_object *sender,
   uint32_t event, uint32_t category, int taken) {
+  if (event != GOOL_EVENT_SPIN_HIT || category != FLING_ENEMY || !taken) { return; }
+  if (!CoopIsPlayer(sender) || !IsPoolSlot(slot)) { return; }
+  spinners->spinner[slot] = CoopPlayerIndex(sender);
 }
