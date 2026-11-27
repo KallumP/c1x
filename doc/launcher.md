@@ -47,7 +47,13 @@ If any of the game's files are missing from `streams/`, the launcher lists them 
 
 ## Settings
 
-The launcher has a field for each setting in `settings.cfg` (see [Settings](settings.md)): a checkbox for each on/off setting, a box for each number, and under **Co-op** each player's colours. Click a colour, or **Edit**, to choose them in a popup: pick a ready-made set from **Preset** (**Default**, Crash's own, or **Skunk**), or a part (fur, belly, hair, shorts or shoes) and its colour. **Done** keeps them, **Cancel** puts back what they were, and **Reset** goes back to that player's starting colours. Hover over a field to see what it does. When it opens, the fields show what `settings.cfg` sets. If there isn't one, it creates it from `settings.example.cfg`, with the defaults.
+The launcher has a field for each setting in `settings.cfg` (see [Settings](settings.md)): a checkbox for each on/off setting and a box for each number. Hover over a field to see what it does. When it opens, the fields show what `settings.cfg` sets. If there isn't one, it creates it from `settings.example.cfg`, with the defaults.
+
+Under **Co-op**, **Player 1 customization** and **Player 2 customization** show each player's colours. Click a colour, or **Edit**, to choose them in a popup:
+
+- **Preset** picks a ready-made set: **Default** (Crash's own) or **Skunk**.
+- The list on the left picks a part (fur, belly, hair, shorts or shoes), and the picker beside it its colour.
+- **Done** keeps them, **Cancel** puts back what they were, and **Reset** goes back to that player's starting colours.
 
 **Custom level**, the first setting, is the custom level that **CUSTOM LEVEL** on the game's title screen starts (under **LOAD GAME**): it lists the custom levels (see [Levels](#levels)), and **none**, which leaves **CUSTOM LEVEL** off the title screen. A level that isn't built says `(not built)`; choosing it builds it, then sets it as the boot level once it builds.
 
