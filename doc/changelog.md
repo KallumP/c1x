@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-27
+
+### Added
+
+- each player's fur, shorts and shoes colours can be chosen in the launcher's settings
+
 ## 2026-11-25
 
 ### Added

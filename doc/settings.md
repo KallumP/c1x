@@ -24,6 +24,10 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | `speed_display` | `off` | Show how fast Crash is moving in the top right corner. |
 | `two_players` | `off` | Two Crashes play together: player 2 on the arrow keys and number pad, or a second controller (see [Controls](controls.md#two-players)). The camera follows whoever is nearest it, and the other can walk out of view. If either Crash dies, both go back to the last checkpoint. |
 | `spin_display` | `off` | Show how many spins Crash has left in the top right corner, and the seconds until the next comes back. He holds up to 5, and each comes back 2 seconds after it's used. |
+| `p1_fur_color` | `ff3100` | The colour of player 1's fur, as six hex digits: red, green, blue. His belly is a lighter shade of it. The default is Crash's own, and leaves him exactly as the original draws him. |
+| `p1_shorts_color` | `002790` | The colour of player 1's shorts. |
+| `p1_shoes_color` | `330000` | The colour of player 1's shoes and gloves. |
+| `p2_fur_color`, `p2_shorts_color`, `p2_shoes_color` | as player 1's | The same three colours for player 2. |
 
 ### Start
 
