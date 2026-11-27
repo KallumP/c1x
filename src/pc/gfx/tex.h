@@ -5,6 +5,7 @@
 #include "geom.h"
 #include "ns.h"
 #include "pcgfx.h"
+#include "pc/outfit.h"
 
 typedef int (*tex_create_callback_t)(dim2, uint8_t*);
 typedef void (*tex_delete_callback_t)(int);
@@ -23,8 +24,7 @@ static inline int TexturesShareRegion(const texinfo *a, const texinfo *b) {
     && a->semi_trans == b->semi_trans && a->color_mode == b->color_mode && a->uv_idx == b->uv_idx
     && a->segment == b->segment && a->offs_x == b->offs_x && a->offs_y == b->offs_y;
 }
-typedef uint16_t (*tex_recolor_t)(uint16_t pixel, const void *owner);
-extern int TextureLoadRecolored(texinfo *texinfo, fvec(*uvs)[4], tex_recolor_t recolor, const void *owner);
+extern int TextureLoadForOutfit(texinfo *texinfo, fvec(*uvs)[4], const crash_outfit *outfit);
 extern void TexturePageChanged(eid_t eid);
 // extern int TexturePageGlobal(tpage *tpage);
 extern void TextureCopy(uint8_t *src, uint8_t *dst, dim2 *sdim, dim2 *ddim,

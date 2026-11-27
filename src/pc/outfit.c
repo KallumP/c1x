@@ -178,7 +178,7 @@ static int FiveBitsToEight(int five) {
 /* a ps1 pixel (five bits each of red, green and blue, then its transparency
    bit) of a texture of crash's, in outfit's colours. all zeroes is drawn as
    nothing, so a pixel recoloured black keeps a trace of red */
-uint16_t OutfitRecolorPixel(uint16_t pixel, const void *outfit) {
+uint16_t OutfitRecolorPixel(uint16_t pixel, const crash_outfit *outfit) {
   rgb8 color, recolored;
   uint16_t changed;
 
@@ -186,7 +186,7 @@ uint16_t OutfitRecolorPixel(uint16_t pixel, const void *outfit) {
   color.g = FiveBitsToEight((pixel >> 5) & 0x1F);
   color.b = FiveBitsToEight((pixel >> 10) & 0x1F);
   if (OutfitPart(color) == OUTFIT_PART_NONE) { return pixel; }
-  recolored = OutfitRecolor(color, (const crash_outfit*)outfit);
+  recolored = OutfitRecolor(color, outfit);
   changed = (recolored.r >> 3) | ((recolored.g >> 3) << 5) | ((recolored.b >> 3) << 10);
   if (changed == 0) { changed = 1; }
   return changed | (pixel & 0x8000);

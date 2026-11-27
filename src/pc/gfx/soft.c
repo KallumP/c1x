@@ -422,7 +422,7 @@ void SwTransformSvtx(
       }
     }
     if (info.type == 1 && params->outfit) /* a player's textured poly? */
-      texid = TextureLoadRecolored((texinfo*)&info, &uvs, OutfitRecolorPixel, params->outfit);
+      texid = TextureLoadForOutfit((texinfo*)&info, &uvs, params->outfit);
     else if (info.type == 1) { /* textured poly? */
       texid = TextureLoad((texinfo*)&info, &uvs);
     }
