@@ -12,6 +12,7 @@
 
 - a replay plays with the settings its recording started with, so it plays out the same after your settings change; how you watch it (speed, frame rate, fullscreen, sound and the hud displays) stays your own
 - recordings made before this can't be replayed
+- in two player mode, the level stays in view while one Crash dies, and the other plays on until both go back to the checkpoint
 
 ## 2026-11-25
 
