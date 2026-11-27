@@ -15,6 +15,7 @@
 #include "pc/gfx/gl.h"
 #include "pc/time.h"
 #include "pc/settings.h"
+#include "pc/config.h"
 #include "pc/replay.h"
 #include "pc/card.h"
 #include "pc/card_game.h"
@@ -236,7 +237,7 @@ static void KeepSettingsWithRecording(const char *recording_path) {
   char settings_path[1024];
 
   ReplaySettingsFile(settings_path, sizeof(settings_path), recording_path);
-  if (!SettingsCopyFile("settings.cfg", settings_path))
+  if (!ConfigCopyFile("settings.cfg", settings_path))
     fprintf(stderr, "could not keep the settings with %s\n", recording_path);
 }
 

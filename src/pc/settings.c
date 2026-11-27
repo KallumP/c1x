@@ -226,26 +226,6 @@ int SettingsLoad(const char *path) {
   return ConfigLoad(path, "setting", "name = value", SettingsApplyLine, 0);
 }
 
-/*
- * copy a settings file to to, or write an empty one if from is missing (as
- * the game then plays with the defaults). returns 0 if to can't be written
- */
-int SettingsCopyFile(const char *from, const char *to) {
-  FILE *in, *out;
-  char buf[1024];
-  size_t len;
-
-  out = fopen(to, "wb");
-  if (!out) { return 0; }
-  in = fopen(from, "rb");
-  if (in) {
-    while ((len = fread(buf, 1, sizeof(buf), in)) > 0)
-      fwrite(buf, 1, len, out);
-    fclose(in);
-  }
-  return fclose(out) == 0;
-}
-
 /* how a replay is watched doesn't change how it plays out, so that stays the player's own */
 static void SettingsKeepOwnViewing(pc_settings *s, const pc_settings *own) {
   s->replay_inputs = own->replay_inputs;

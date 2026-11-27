@@ -1,4 +1,5 @@
 #include <string.h>
+#include <SDL2/SDL.h>
 #include "utest.h"
 #include "pc/config.h"
 #include "test_files.h"
@@ -105,4 +106,28 @@ UTEST(config, load_counts_only_applied_lines) {
   ASSERT_EQ(1, ConfigLoad(CONFIG_TEST_PATH, "setting", "name = value", record_line, &rec));
   ASSERT_EQ(1, rec.calls);
   ASSERT_EQ(4, rec.last_line_num);
+}
+
+#define CONFIG_COPY_PATH "build/test_config_copy.cfg"
+
+UTEST(config, copying_a_file_copies_its_text) {
+  char *copied;
+
+  WriteWholeFile(CONFIG_TEST_PATH, "two_players = on\nspin_ledge_jump = off\n");
+  remove(CONFIG_COPY_PATH);
+  ASSERT_EQ(1, ConfigCopyFile(CONFIG_TEST_PATH, CONFIG_COPY_PATH));
+  copied = ReadWholeFile(CONFIG_COPY_PATH);
+  ASSERT_STREQ("two_players = on\nspin_ledge_jump = off\n", copied);
+  SDL_free(copied);
+}
+
+UTEST(config, copying_a_missing_file_writes_an_empty_one) {
+  char *copied;
+
+  remove("build/no_such_config.cfg");
+  WriteWholeFile(CONFIG_COPY_PATH, "stale = on\n");
+  ASSERT_EQ(1, ConfigCopyFile("build/no_such_config.cfg", CONFIG_COPY_PATH));
+  copied = ReadWholeFile(CONFIG_COPY_PATH);
+  ASSERT_STREQ("", copied);
+  SDL_free(copied);
 }

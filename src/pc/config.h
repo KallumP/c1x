@@ -15,5 +15,6 @@ extern int ConfigParseLine(const char *line, char *buf, size_t size,
   char **name, char **value);
 extern int ConfigLoad(const char *path, const char *what, const char *expected,
   config_line_t handle, void *data);
+extern int ConfigCopyFile(const char *from, const char *to);
 
 #endif /* _PC_CONFIG_H_ */

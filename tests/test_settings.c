@@ -344,30 +344,7 @@ UTEST(settings, player_two_starts_as_the_skunk) {
   ASSERT_TRUE(OutfitsEqual(&two, &outfit_presets[OUTFIT_PRESET_SKUNK].outfit));
 }
 
-#define TEST_OWN_SETTINGS      "build/test_own_settings.cfg"
 #define TEST_RECORDED_SETTINGS "build/test_recording.settings"
-
-UTEST(settings, keeping_settings_with_a_recording_copies_the_file) {
-  char *kept;
-
-  WriteWholeFile(TEST_OWN_SETTINGS, "two_players = on\nspin_ledge_jump = off\n");
-  remove(TEST_RECORDED_SETTINGS);
-  ASSERT_EQ(1, SettingsCopyFile(TEST_OWN_SETTINGS, TEST_RECORDED_SETTINGS));
-  kept = ReadWholeFile(TEST_RECORDED_SETTINGS);
-  ASSERT_STREQ("two_players = on\nspin_ledge_jump = off\n", kept);
-  SDL_free(kept);
-}
-
-/* no settings file plays with the defaults, so the recording keeps an empty one */
-UTEST(settings, keeping_settings_with_a_recording_when_there_are_none_keeps_an_empty_file) {
-  char *kept;
-
-  remove("build/no_such_settings.cfg");
-  ASSERT_EQ(1, SettingsCopyFile("build/no_such_settings.cfg", TEST_RECORDED_SETTINGS));
-  kept = ReadWholeFile(TEST_RECORDED_SETTINGS);
-  ASSERT_STREQ("", kept);
-  SDL_free(kept);
-}
 
 UTEST(settings, a_replay_plays_with_its_recordings_settings) {
   pc_settings own = game_settings;
