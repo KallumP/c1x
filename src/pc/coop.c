@@ -10,6 +10,7 @@ extern gool_handle handles[8];
 gool_object *players[GOOL_PLAYER_COUNT];
 
 coop_camera coop_cam;
+coop_flings coop_flung;
 
 /* which player's slot obj is, or COOP_NOT_A_PLAYER */
 int CoopPlayerIndex(gool_object *obj) {
@@ -199,4 +200,14 @@ vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans)) {
     if ((*has_floor)(&spot)) { return spot; }
   }
   return one; /* unchecked: he's standing on it */
+}
+
+void CoopFlingSpun(coop_flings *flings, gool_object *obj, int spinner) {
+}
+
+int CoopFlingSpinner(const coop_flings *flings, gool_object *obj) {
+  return COOP_NOT_A_PLAYER;
+}
+
+void CoopFlingForget(coop_flings *flings, gool_object *obj) {
 }

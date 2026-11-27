@@ -612,3 +612,47 @@ UTEST(coop, the_camera_eases_from_player_one_to_a_player_two_who_joins_nearer_it
   apart = slots[COOP_PLAYER_TWO].trans.x - slots[0].trans.x;
   ASSERT_EQ(slots[0].trans.x + apart / COOP_CAMERA_EASE, aim.x);
 }
+
+UTEST(coop, a_spun_enemy_remembers_who_spun_it) {
+  coop_flings flings = { 0 };
+  gool_object enemy;
+
+  CoopFlingSpun(&flings, &enemy, COOP_PLAYER_TWO);
+  ASSERT_EQ(COOP_PLAYER_TWO, CoopFlingSpinner(&flings, &enemy));
+}
+
+UTEST(coop, an_enemy_no_one_spun_has_no_spinner) {
+  coop_flings flings = { 0 };
+  gool_object enemy;
+
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopFlingSpinner(&flings, &enemy));
+}
+
+UTEST(coop, an_enemy_spun_again_remembers_the_latest_spinner) {
+  coop_flings flings = { 0 };
+  gool_object enemy;
+
+  CoopFlingSpun(&flings, &enemy, 0);
+  CoopFlingSpun(&flings, &enemy, COOP_PLAYER_TWO);
+  ASSERT_EQ(COOP_PLAYER_TWO, CoopFlingSpinner(&flings, &enemy));
+}
+
+UTEST(coop, a_forgotten_enemy_has_no_spinner) {
+  coop_flings flings = { 0 };
+  gool_object enemy;
+
+  CoopFlingSpun(&flings, &enemy, COOP_PLAYER_TWO);
+  CoopFlingForget(&flings, &enemy);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopFlingSpinner(&flings, &enemy));
+}
+
+UTEST(coop, with_every_fling_kept_the_oldest_makes_room) {
+  coop_flings flings = { 0 };
+  gool_object enemies[COOP_FLING_COUNT+1];
+  int i;
+
+  for (i=0;i<COOP_FLING_COUNT+1;i++)
+    CoopFlingSpun(&flings, &enemies[i], COOP_PLAYER_TWO);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopFlingSpinner(&flings, &enemies[0]));
+  ASSERT_EQ(COOP_PLAYER_TWO, CoopFlingSpinner(&flings, &enemies[COOP_FLING_COUNT]));
+}

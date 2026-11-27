@@ -23,12 +23,30 @@ typedef struct {
   vec lag;               /* how far the aim still trails him */
 } coop_camera;
 
+/*
+ * a spun enemy flies off and hits the nearest enemy or box in its way (the
+ * FLING event). in co-op it can hit the other player too, so who spun it is
+ * kept until it's gone: never the one who spun it, as it leaves his spin
+ */
+#define COOP_FLING_COUNT 8 /* enemies in flight at once; the oldest makes room */
+
+typedef struct {
+  gool_object *obj;
+  int spinner;
+} coop_fling;
+
+typedef struct {
+  coop_fling flings[COOP_FLING_COUNT];
+  int next; /* the entry the next new one takes, once they're all used */
+} coop_flings;
+
 /* how near a player an object keeps its collision bound: five boxes to a side, seven up or down */
 #define COOP_NEAR_RANGE_XZ   0x7D000
 #define COOP_NEAR_RANGE_Y    0xAF000
 
 extern gool_object *players[GOOL_PLAYER_COUNT];
 extern coop_camera coop_cam;
+extern coop_flings coop_flung;
 
 extern int CoopPlayerIndex(gool_object *obj);
 extern int CoopIsPlayer(gool_object *obj);
@@ -51,5 +69,8 @@ extern int CoopLevelShowsOutfits(int lid);
 extern vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans));
 extern int CoopFloorBelow(vec *trans);
 extern const crash_outfit *CoopPlayerOutfit(gool_object *obj);
+extern void CoopFlingSpun(coop_flings *flings, gool_object *obj, int spinner);
+extern int CoopFlingSpinner(const coop_flings *flings, gool_object *obj);
+extern void CoopFlingForget(coop_flings *flings, gool_object *obj);
 
 #endif /* _PC_COOP_H_ */
