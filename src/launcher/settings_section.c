@@ -235,6 +235,47 @@ static void DrawGameAdjustmentFields(void) {
     "A second Crash plays beside the first, on the Player 2 keyboard keys or a second controller.");
 }
 
+/* a swatch that opens a colour picker for color (0xRRGGBB), with label after it */
+static void DrawColorPicker(const char *label, uint32_t *color, const char *tooltip) {
+  float rgb[3];
+  int i;
+
+  for (i=0;i<3;i++)
+    rgb[i] = ((*color >> (16 - (i * 8))) & 0xFF) / 255.0f;
+  if (igColorEdit3(label, rgb, ImGuiColorEditFlags_NoInputs)) {
+    *color = 0;
+    for (i=0;i<3;i++)
+      *color = (*color << 8) | (uint32_t)((rgb[i] * 255.0f) + 0.5f);
+  }
+  DrawTooltip(tooltip);
+}
+
+static void ResetOutfit(crash_outfit *outfit) {
+  outfit->fur = SETTINGS_FUR_COLOR;
+  outfit->shorts = SETTINGS_SHORTS_COLOR;
+  outfit->shoes = SETTINGS_SHOES_COLOR;
+}
+
+static void DrawOutfit(const char *label, crash_outfit *outfit) {
+  BeginFieldRow(label, "The colours this player's Crash is drawn in.");
+  igPushID_Str(label);
+  DrawColorPicker("Fur", &outfit->fur, "His fur. His belly is a lighter shade of it.");
+  igSameLine(0, -1);
+  DrawColorPicker("Shorts", &outfit->shorts, "His shorts.");
+  igSameLine(0, -1);
+  DrawColorPicker("Shoes", &outfit->shoes, "His shoes and his gloves.");
+  igSameLine(0, -1);
+  if (igSmallButton("Reset")) { ResetOutfit(outfit); }
+  DrawTooltip("Back to Crash's own colours.");
+  igPopID();
+}
+
+static void DrawPlayerColourFields(void) {
+  DrawFieldGroupTitle("Player colours");
+  DrawOutfit("Player 1", &settings.outfits[0]);
+  DrawOutfit("Player 2", &settings.outfits[1]);
+}
+
 /* the game's own save and load screens */
 static void DrawSavingFields(void) {
   DrawFieldGroupTitle("Saving");
@@ -255,6 +296,7 @@ static void DrawFields(const char *repo) {
   DrawBootLevel(repo);
   DrawGeneralFields();
   DrawGameAdjustmentFields();
+  DrawPlayerColourFields();
   DrawSavingFields();
   DrawReplayFields();
   EndFieldRows();
