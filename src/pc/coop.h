@@ -47,6 +47,7 @@ extern void CoopCameraReset(coop_camera *camera);
 extern vec CoopCameraStep(coop_camera *camera, gool_object *followed);
 extern vec CoopCameraAim(coop_camera *camera, vec *camera_trans);
 extern int CoopPlayerTwoJoins(int two_players, int on_title, int in_demo);
+extern int CoopLevelShowsOutfits(int lid);
 extern vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans));
 extern int CoopFloorBelow(vec *trans);
 extern const crash_outfit *CoopPlayerOutfit(gool_object *obj);

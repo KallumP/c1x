@@ -33,6 +33,26 @@ UTEST(coop, player_two_stays_out_of_a_demo) {
   ASSERT_FALSE(CoopPlayerTwoJoins(1, 0, 1));
 }
 
+UTEST(coop, a_level_shows_the_players_colours) {
+  ASSERT_TRUE(CoopLevelShowsOutfits(LID_BOULDERS));
+}
+
+UTEST(coop, the_title_doesnt_show_the_players_colours) {
+  ASSERT_FALSE(CoopLevelShowsOutfits(LID_TITLE));
+}
+
+UTEST(coop, the_level_end_screen_doesnt_show_the_players_colours) {
+  ASSERT_FALSE(CoopLevelShowsOutfits(LID_LEVELEND));
+}
+
+UTEST(coop, the_intro_doesnt_show_the_players_colours) {
+  ASSERT_FALSE(CoopLevelShowsOutfits(LID_INTRO));
+}
+
+UTEST(coop, the_ending_doesnt_show_the_players_colours) {
+  ASSERT_FALSE(CoopLevelShowsOutfits(LID_GAMEWIN));
+}
+
 static vec one_spot = { 0x10000, 0x20000, 0x30000 }; /* where player one stands */
 static int32_t floor_ends_x; /* FloorUpTo's floor reaches this far along x */
 static int floor_checks;     /* how many spots NoFloor was asked about */
