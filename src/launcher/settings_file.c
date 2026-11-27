@@ -115,8 +115,29 @@ static char *ReplaceNumberLine(char *text, const char *name, uint32_t number) {
   return ReplaceSettingLine(text, name, value);
 }
 
+static char *ReplaceColorLine(char *text, const char *name, uint32_t color) {
+  char value[SETTINGS_COLOR_DIGITS + 1];
+
+  SDL_snprintf(value, sizeof(value), "%06x", color);
+  return ReplaceSettingLine(text, name, value);
+}
+
+/* text with player's (1 or 2) three colour lines set to outfit's */
+static char *ReplaceOutfitLines(char *text, int player, const crash_outfit *outfit) {
+  char name[32];
+
+  SDL_snprintf(name, sizeof(name), "p%d_fur_color", player);
+  text = ReplaceColorLine(text, name, outfit->fur);
+  SDL_snprintf(name, sizeof(name), "p%d_shorts_color", player);
+  text = ReplaceColorLine(text, name, outfit->shorts);
+  SDL_snprintf(name, sizeof(name), "p%d_shoes_color", player);
+  return ReplaceColorLine(text, name, outfit->shoes);
+}
+
 /* text (a settings file's, to SDL_free) with every setting in s set */
 static char *SettingsTextWith(char *text, const pc_settings *s) {
+  int i;
+
   text = ReplaceOnOffLine(text, "skip_loading_screen", s->skip_loading_screen);
   text = ReplaceNumberLine(text, "loading_screen_min_ms", s->loading_screen_min_ms);
   text = ReplaceOnOffLine(text, "speed_display", s->speed_display);
@@ -133,6 +154,8 @@ static char *SettingsTextWith(char *text, const pc_settings *s) {
   text = ReplaceOnOffLine(text, "fullscreen", s->fullscreen);
   text = ReplaceOnOffLine(text, "memory_card", s->memory_card);
   text = ReplaceOnOffLine(text, "mute", s->mute);
+  for (i=0;i<SETTINGS_PLAYER_COUNT;i++)
+    text = ReplaceOutfitLines(text, i + 1, &s->outfits[i]);
   if (s->boot_level[0]) {
     text = ReplaceSettingLine(text, "boot_level", s->boot_level);
   }
@@ -160,6 +183,10 @@ int SaveSettingsFile(const char *path, const char *example_path, const pc_settin
   return saved;
 }
 
+static int AreOutfitsEqual(const crash_outfit *a, const crash_outfit *b) {
+  return a->fur == b->fur && a->shorts == b->shorts && a->shoes == b->shoes;
+}
+
 /* whether a and b set the same settings (boot_level by its text, not what's after it) */
 int AreSettingsEqual(const pc_settings *a, const pc_settings *b) {
   return a->skip_loading_screen == b->skip_loading_screen
@@ -178,5 +205,7 @@ int AreSettingsEqual(const pc_settings *a, const pc_settings *b) {
     && a->fullscreen == b->fullscreen
     && a->memory_card == b->memory_card
     && a->mute == b->mute
+    && AreOutfitsEqual(&a->outfits[0], &b->outfits[0])
+    && AreOutfitsEqual(&a->outfits[1], &b->outfits[1])
     && SDL_strcmp(a->boot_level, b->boot_level) == 0;
 }
