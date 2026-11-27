@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include "utest.h"
 #include "pc/settings.h"
+#include "pc/config.h"
 #include "launcher/settings_file.h"
 #include "test_files.h"
 
@@ -404,5 +405,26 @@ UTEST(settings, a_replay_keeps_the_players_own_hud_displays) {
   ASSERT_EQ(1, game_settings.speed_display);
   ASSERT_EQ(1, game_settings.spin_display);
   ASSERT_EQ(1, game_settings.box_display);
+  SettingsReset(&game_settings);
+}
+
+UTEST(settings, a_replay_of_a_recording_kept_with_no_settings_file_plays_with_the_defaults) {
+  pc_settings defaults;
+
+  WriteWholeFile(TEST_RECORDED_SETTINGS, "");
+  SettingsReset(&defaults);
+  SettingsReset(&game_settings);
+  game_settings.two_players = 1;
+  ASSERT_EQ(1, SettingsLoadRecorded(TEST_RECORDED_SETTINGS));
+  ASSERT_EQ(defaults.two_players, game_settings.two_players);
+  SettingsReset(&game_settings);
+}
+
+UTEST(settings, a_replay_plays_with_the_settings_its_recording_kept) {
+  WriteWholeFile("build/test_own_settings.cfg", "two_players = on\n");
+  ASSERT_EQ(1, ConfigCopyFile("build/test_own_settings.cfg", TEST_RECORDED_SETTINGS));
+  SettingsReset(&game_settings);
+  ASSERT_EQ(1, SettingsLoadRecorded(TEST_RECORDED_SETTINGS));
+  ASSERT_EQ(1, game_settings.two_players);
   SettingsReset(&game_settings);
 }
