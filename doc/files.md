@@ -24,7 +24,7 @@ The following must be done in converting the region of pixel data referred to by
 - convert from 15 bit rgb (5 bpc) to 32 bit (8 bpc)
 - copy 32 bit pixels to the corresponding region in a destination texture, as a subtexture
 
-The destination texture can then be uploaded to the gpu as necessary and the uvs/texid recalculated accordingly. The same destination texture can be reused for all regions of the source texture which use the same color mode. In the case of crash/psx gpu, all textures are regions of 1 of 8 texture pages which occupy the gpu's vram in its entirety; so there can be 3 destination textures per texture page, 1 per color mode.
+The destination texture can then be uploaded to the gpu as necessary and the uvs/texid recalculated accordingly. The same destination texture can be reused for all regions of the source texture which use the same color mode. In the case of crash/psx gpu, all textures are regions of 1 of 8 texture pages which occupy the gpu's vram in its entirety; so there can be 3 destination textures per texture page, 1 per color mode. A player drawn in colours of their own also has a destination texture of their own, where their 16-colour textures are copied with recoloured palettes (`TextureLoadForOutfit`).
 
 Furthermore, since multiple references to any given texture region should be expected throughout the game's lifetime (as there can be many polygons amongst one or more models that use the same texture region) it is necessary to have a cache to prevent unnecessarily converting and copying the same region of pixel data into the destination texture for each reference.
 

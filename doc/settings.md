@@ -26,15 +26,21 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 
 ### Co-op
 
+Each colour is six hex digits: red, green, blue. Player 1's colours apply with one player too. A colour left at Crash's own (player 1's defaults) leaves that part exactly as the original draws it. The colours show in levels, not on the title screen's map, game over or level-end screens.
+
 | Setting | Default | What it does |
 |---|---|---|
 | `two_players` | `off` | Two Crashes play together: player 2 on the arrow keys and number pad, or a second controller (see [Controls](controls.md#two-players)). The camera follows whoever is nearest it, and the other can walk out of view. If either Crash dies, both go back to the last checkpoint. |
-| `p1_fur_color` | `ff3100` | The colour of player 1's fur, as six hex digits: red, green, blue. Each colour's default is Crash's own, and leaves that part exactly as the original draws it. |
+| `p1_fur_color` | `ff3100` | The colour of player 1's fur. |
 | `p1_belly_color` | `ff7600` | The colour of player 1's belly and the patch on his back. His muzzle is a paler shade of it. |
-| `p1_hair_color` | `9d0000` | The colour of the tuft on player 1's head. |
+| `p1_hair_color` | `9d0000` | The colour of player 1's hair, the tuft on his head. |
 | `p1_shorts_color` | `002790` | The colour of player 1's shorts. |
 | `p1_shoes_color` | `330000` | The colour of player 1's shoes and gloves. |
-| `p2_fur_color`, `p2_belly_color`, `p2_hair_color`, `p2_shorts_color`, `p2_shoes_color` | `33333a`, `f0f0f0`, `f0f0f0`, `7a3e9d`, `2d2d2d` | The same five colours for player 2, who starts as a skunk (black fur, a white belly and tuft, purple shorts, dark grey shoes and gloves) so the two are easy to tell apart. |
+| `p2_fur_color` | `33333a` | Player 2's fur. Player 2 starts as a skunk, so the two are easy to tell apart. |
+| `p2_belly_color` | `f0f0f0` | Player 2's belly and the patch on his back. |
+| `p2_hair_color` | `f0f0f0` | Player 2's hair. |
+| `p2_shorts_color` | `7a3e9d` | Player 2's shorts. |
+| `p2_shoes_color` | `2d2d2d` | Player 2's shoes and gloves. |
 
 ### Start
 
