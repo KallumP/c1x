@@ -105,7 +105,26 @@ int ReplayMakeDir(const char *dir) {
   return stat(dir, &st) == 0 && S_ISDIR(st.st_mode);
 }
 
+/* open a recording and read its header; returns 0 if it isn't one in this format */
+static FILE *ReplayOpen(const char *path, replay_header *header) {
+  FILE *file;
+
+  file = fopen(path, "rb");
+  if (!file) { return 0; }
+  if (fread(header, sizeof(*header), 1, file) != 1 || header->magic != REPLAY_MAGIC) {
+    fclose(file);
+    return 0;
+  }
+  return file;
+}
+
 int ReplayCanPlay(const char *path) {
+  replay_header header;
+  FILE *file;
+
+  file = ReplayOpen(path, &header);
+  if (!file) { return 0; }
+  fclose(file);
   return 1;
 }
 
@@ -123,12 +142,9 @@ static int ReplayPlayStart(const char *path, uint32_t lid, uint32_t seed) {
   replay_header header;
   FILE *file;
 
-  file = fopen(path, "rb");
-  if (!file) { return 0; }
-  if (fread(&header, sizeof(header), 1, file) != 1
-   || header.magic != REPLAY_MAGIC) {
+  file = ReplayOpen(path, &header);
+  if (!file) {
     fprintf(stderr, "%s is not an input recording\n", path);
-    fclose(file);
     return 0;
   }
   if (header.lid != lid || header.seed != seed) {
