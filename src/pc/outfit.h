@@ -5,9 +5,9 @@
 #include "geom.h"
 
 /*
- * a player's outfit (pc): crash's model is mostly polygons of one flat colour,
- * and his fur, shorts and shoes are each shades of a colour of their own, so
- * each can be drawn in a colour the player chose instead
+ * a player's outfit: each part of crash's models is shades of a colour of its
+ * own, in its flat-coloured polygons and in his textures' palettes, so a part
+ * is told by its colour and drawn in the colour the player chose
  */
 #define CRASH_FUR_COLOR    0xFF3100 /* crash's own colours, as 0xRRGGBB */
 #define CRASH_BELLY_COLOR  0xFF7600
@@ -17,16 +17,16 @@
 
 typedef struct {
   uint32_t fur;
-  uint32_t belly;  /* and the patch on his back, and his muzzle, paler */
+  uint32_t belly;  /* and the patch on his back; his muzzle is a paler shade */
   uint32_t hair;
   uint32_t shorts;
   uint32_t shoes;  /* and his gloves */
 } crash_outfit;
 
 #define OUTFIT_PART_NONE       0
-#define OUTFIT_PART_FUR        1 /* his oranges: his fur, belly and the patch on his back */
+#define OUTFIT_PART_FUR        1 /* all his oranges, belly too */
 #define OUTFIT_PART_SHORTS     2
-#define OUTFIT_PART_SHOES      3 /* and his gloves */
+#define OUTFIT_PART_SHOES      3
 #define OUTFIT_PART_MUZZLE     4
 #define OUTFIT_PART_HAIR       5
 #define OUTFIT_PART_SHOE_LINES 6 /* in his shoes' texture */

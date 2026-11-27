@@ -39,7 +39,7 @@ typedef struct {
   uint32_t shamt_sub;
   uint32_t amb_fx0;
   uint32_t amb_fx1;
-  const crash_outfit *outfit; /* the colours to draw a player's model in, or 0 for any other */
+  const crash_outfit *outfit; /* 0 to draw the model as it is */
 } sw_transform_struct;
 
 extern int SwRot(vec *in, vec *out, mat16 *m_rot);

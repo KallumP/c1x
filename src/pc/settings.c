@@ -20,7 +20,6 @@ const settings_color settings_colors[SETTINGS_COLOR_COUNT] = {
   { "p2_shoes_color",  1, offsetof(crash_outfit, shoes) },
 };
 
-/* the colours a player starts in: crash's own for player one */
 crash_outfit SettingsDefaultOutfit(int player_idx) {
   if (player_idx == 1)
     return (crash_outfit){ .fur = SETTINGS_P2_FUR_COLOR, .belly = SETTINGS_P2_BELLY_COLOR,

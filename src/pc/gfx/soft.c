@@ -322,7 +322,6 @@ int SwCalcSpriteRotMatrix(
   return 1;
 }
 
-/* a player's flat-coloured polygon in their outfit's colours */
 static void SwOutfitColor(tgeo_texinfo *info, const crash_outfit *outfit) {
   if (!outfit || info->type == 1) { return; }
   info->rgb = OutfitRecolor(info->rgb, outfit);

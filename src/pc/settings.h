@@ -13,10 +13,11 @@
 #define SETTINGS_PLAYER_COUNT          2
 #define SETTINGS_COLOR_DIGITS          6
 #define SETTINGS_COLOR_COUNT           (SETTINGS_PLAYER_COUNT * 5) /* fur, belly, hair, shorts, shoes */
-#define SETTINGS_P2_FUR_COLOR          0x33333A /* what player two starts in, a skunk: black fur, purple shorts, dark grey shoes */
+/* what player two starts in: a skunk */
+#define SETTINGS_P2_FUR_COLOR          0x33333A
 #define SETTINGS_P2_SHORTS_COLOR       0x7A3E9D
 #define SETTINGS_P2_SHOES_COLOR        0x2D2D2D
-#define SETTINGS_P2_BELLY_COLOR        0xF0F0F0 /* his stripe */
+#define SETTINGS_P2_BELLY_COLOR        0xF0F0F0
 #define SETTINGS_P2_HAIR_COLOR         0xF0F0F0
 #define LEVELS_DIR "levels" /* next to the executable; built levels to boot into, by name */
 
@@ -42,7 +43,7 @@ typedef struct {
   char boot_level[SETTINGS_BOOT_LEVEL_MAX+1]; /* custom level to boot into, or "" */
 } pc_settings;
 
-/* a colour setting: its name, and the colour of whose outfit it sets */
+/* a colour setting: its name, and which player's colour it sets */
 typedef struct {
   const char *name;
   int player_idx;
