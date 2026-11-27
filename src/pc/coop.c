@@ -202,5 +202,16 @@ vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans)) {
 }
 
 int CoopOneDiesWhileAnotherPlays(void) {
-  return 0;
+  int idx, dying, playing;
+
+  dying = 0;
+  playing = 0;
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (!CoopPlayerInPlay(idx)) { continue; }
+    if (players[idx]->state_flags & COOP_DYING_STATE_FLAG)
+      dying = 1;
+    else
+      playing = 1;
+  }
+  return dying && playing;
 }
