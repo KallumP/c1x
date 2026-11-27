@@ -1708,13 +1708,11 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
 }
 
 static inline int GoolObjectColorByZone(gool_object *obj) {
-  entry *zone;
   zone_header *header;
   gool_colors *colors;
 
   obj->invincibility_state = 0;
-  zone = obj->zone ? obj->zone : cur_zone;
-  header = (zone_header*)zone->items[0];
+  header = (zone_header*)GoolObjectZoneOrCurrent(obj)->items[0];
   colors = CoopZoneColors(obj, header);
   obj->colors.intensity = colors->intensity;
   return 0;
