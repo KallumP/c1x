@@ -317,3 +317,7 @@ void CoopKeepSpinner(coop_spinners *spinners, int slot, gool_object *sender,
   if (!CoopIsPlayer(sender) || !IsPoolSlot(slot)) { return; }
   spinners->spinner[slot] = CoopPlayerIndex(sender);
 }
+
+int CoopPlayerTakesHit(gool_object *player) {
+  return 0;
+}

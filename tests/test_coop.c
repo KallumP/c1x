@@ -893,3 +893,37 @@ UTEST(coop, an_enemy_spun_by_something_other_than_a_player_keeps_no_spinner) {
   CoopKeepSpinner(&spinners, ENEMY_SLOT, &other, GOOL_EVENT_SPIN_HIT, FLING_ENEMY, 1);
   ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, ENEMY_SLOT));
 }
+
+#define AKU_AKU_INVINCIBLE 3 /* invincibility_state with three masks */
+#define HIT_PROOF          2 /* status_c: a hit can't hurt him */
+
+UTEST(coop, a_player_takes_a_hit) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  ASSERT_TRUE(CoopPlayerTakesHit(&slots[COOP_PLAYER_TWO]));
+}
+
+UTEST(coop, a_dying_player_takes_no_hit) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].state_flags = COOP_DYING_STATE_FLAG;
+  ASSERT_FALSE(CoopPlayerTakesHit(&slots[COOP_PLAYER_TWO]));
+}
+
+UTEST(coop, an_invincible_player_takes_no_hit) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].invincibility_state = AKU_AKU_INVINCIBLE;
+  ASSERT_FALSE(CoopPlayerTakesHit(&slots[COOP_PLAYER_TWO]));
+}
+
+UTEST(coop, a_hit_proof_player_takes_no_hit) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].status_c = HIT_PROOF;
+  ASSERT_FALSE(CoopPlayerTakesHit(&slots[COOP_PLAYER_TWO]));
+}
