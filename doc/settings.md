@@ -1,6 +1,6 @@
 # Settings
 
-The game's settings are in `settings.cfg`, next to `streams/`. Change them in the [launcher](launcher.md#settings), which creates the file from [`settings.example.cfg`](../settings.example.cfg) and keeps it up to date. The game reads it when it starts.
+Change the settings in the [launcher](launcher.md#settings). They're kept in `settings.cfg`, by the names below, so you can also edit that file by hand.
 
 ### General
 
