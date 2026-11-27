@@ -12,6 +12,7 @@
  * plays beside the first, from the same crash program, on pad 2
  */
 #define COOP_NOT_A_PLAYER    -1      /* CoopPlayerIndex of any other object */
+#define COOP_PLAYER_ONE      0       /* player one's index in players: crash */
 #define COOP_PLAYER_TWO      1       /* player two's index in players */
 #define COOP_BESIDE_DISTANCE 0x32000 /* how far beside player one he starts: two boxes */
 #define COOP_BESIDE_STEP     0xC800  /* how much nearer each try with no floor is: half a box */
@@ -39,6 +40,16 @@ typedef struct {
   coop_fling flings[COOP_FLING_COUNT];
   int next; /* the entry the next new one takes, once they're all used */
 } coop_flings;
+
+/*
+ * a spun enemy flies off and hits the nearest enemy or box within two boxes
+ * (the FLING event, which only flung enemies send). in co-op the other player
+ * can be that target, as for any enemy's hit; never the one who spun it, as
+ * it flies off from him
+ */
+typedef struct {
+  int spinner[GOOL_OBJECT_COUNT]; /* each object slot's, or COOP_NOT_A_PLAYER */
+} coop_spinners;
 
 /*
  * a crash dying hides the level, leaving him on black, until the level
@@ -85,6 +96,9 @@ extern void CoopFlingForget(coop_flings *flings, gool_object *obj);
 extern gool_object *CoopFlingFriend(gool_object *flung, int spinner, int32_t nearest_dist);
 extern uint32_t CoopFlingEvent(const coop_flings *flings, gool_object *sender,
   gool_object *recipient, uint32_t event);
+extern void CoopSpinnersClear(coop_spinners *spinners);
+extern int CoopSpinnerOf(const coop_spinners *spinners, int slot);
+extern void CoopForgetSpinner(coop_spinners *spinners, int slot);
 extern int CoopOneDiesWhileAnotherPlays(void);
 extern uint32_t CoopViewFlags(coop_view *view, uint32_t flags, int one_dies_while_another_plays);
 

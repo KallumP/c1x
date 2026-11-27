@@ -288,3 +288,13 @@ uint32_t CoopViewFlags(coop_view *view, uint32_t flags, int one_dies_while_anoth
   view->before_death = flags;
   return flags;
 }
+
+void CoopSpinnersClear(coop_spinners *spinners) {
+}
+
+int CoopSpinnerOf(const coop_spinners *spinners, int slot) {
+  return 0;
+}
+
+void CoopForgetSpinner(coop_spinners *spinners, int slot) {
+}

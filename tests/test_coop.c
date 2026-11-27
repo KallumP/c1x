@@ -803,3 +803,38 @@ UTEST(coop, the_death_view_shows_once_no_one_plays_on) {
   CoopViewFlags(&view, DEATH_VIEW, 1);
   ASSERT_EQ((uint32_t)DEATH_VIEW, CoopViewFlags(&view, DEATH_VIEW, 0));
 }
+
+#define NOT_IN_POOL -1 /* a slot outside the object pool: a player's */
+
+UTEST(coop, no_object_has_a_spinner_once_cleared) {
+  coop_spinners spinners;
+
+  CoopSpinnersClear(&spinners);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, 0));
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, GOOL_OBJECT_COUNT-1));
+}
+
+UTEST(coop, an_object_outside_the_pool_has_no_spinner) {
+  coop_spinners spinners;
+
+  CoopSpinnersClear(&spinners);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, NOT_IN_POOL));
+}
+
+UTEST(coop, a_forgotten_slot_has_no_spinner) {
+  coop_spinners spinners;
+
+  CoopSpinnersClear(&spinners);
+  spinners.spinner[3] = COOP_PLAYER_TWO;
+  CoopForgetSpinner(&spinners, 3);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, 3));
+}
+
+UTEST(coop, forgetting_a_slot_outside_the_pool_does_nothing) {
+  coop_spinners spinners;
+
+  CoopSpinnersClear(&spinners);
+  CoopForgetSpinner(&spinners, NOT_IN_POOL);
+  CoopForgetSpinner(&spinners, GOOL_OBJECT_COUNT);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, 0));
+}
