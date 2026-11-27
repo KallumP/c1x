@@ -225,7 +225,7 @@ static void DrawGameAdjustmentFields(void) {
     "Minimum loading screen time (ms): keep the loading screen up for at least this long. 0 shows it only while loading.");
   DrawOnOff("Fix model draw order", &settings.fix_model_draw_order,
     "Draw 3D models in front of or behind each other by their actual depth.");
-  DrawOnOff("Fix jumping+spinning off a ledge", &settings.spin_ledge_jump,
+  DrawOnOff("Fix spinning + jumping off a ledge", &settings.spin_ledge_jump,
     "In the original, once a spin carries Crash off a ledge (such as one he landed on mid-spin), he can't jump until the spin ends. This lets him jump for a moment after leaving the ledge, as he can when walking off one.");
   DrawOnOff("Speed display", &settings.speed_display,
     "Show how fast Crash is moving in the top right corner.");
