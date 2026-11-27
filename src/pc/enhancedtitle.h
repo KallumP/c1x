@@ -33,7 +33,7 @@ typedef struct {
 #define ENHANCED_TITLE_COOP_WIDTH    72
 #define ENHANCED_TITLE_COOP_HEIGHT   13
 #define ENHANCED_TITLE_COOP_OVERHANG 4 /* how far past N-Hanced's right edge it reaches */
-#define ENHANCED_TITLE_COOP_RISE     4 /* how far above N-Hanced's bottom its own is */
+#define ENHANCED_TITLE_COOP_RISE     4 /* how far its bottom sits above N-Hanced's */
 
 extern void EnhancedTitleReset(enhanced_title *title);
 extern void EnhancedTitleNoteObject(enhanced_title *title, uint32_t subtype,

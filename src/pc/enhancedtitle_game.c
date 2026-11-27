@@ -81,7 +81,8 @@ void EnhancedTitleDraw(void) {
 
   if (!drawn_this_frame) { return; }
   drawn_this_frame = 0;
-  n_hanced_shown = DrawPicture(&picture_texture, ENHANCED_TITLE_PICTURE, EnhancedTitleAt);
+  n_hanced_shown = DrawPicture(&picture_texture, ENHANCED_TITLE_PICTURE,
+    EnhancedTitleAt);
   if (EnhancedTitleShowsCoop(n_hanced_shown, game_settings.two_players))
     DrawPicture(&coop_texture, ENHANCED_TITLE_COOP_PICTURE, EnhancedTitleCoopAt);
 }
