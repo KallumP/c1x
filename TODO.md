@@ -29,7 +29,6 @@ speed run mode
 
 
 local multiplayer
-- show "co-op mode" under the n-hanced logo on the title screen
 - Split screen, so neither player walks out of view
 - way to assign a controller to a player (if you want p1 on keyboard, and p2 on controller 1)
 - side level custom rules, or is it fine as it is
