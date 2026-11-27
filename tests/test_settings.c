@@ -314,3 +314,25 @@ UTEST(settings, player_twos_default_outfit_isnt_crashs_own) {
   ASSERT_NE(one.belly, two.belly);
   ASSERT_NE(one.hair, two.hair);
 }
+
+UTEST(settings, a_colour_for_a_player_there_isnt_is_invalid) {
+  pc_settings s;
+
+  SettingsReset(&s);
+  ASSERT_EQ(-1, ParseSetting("p3_fur_color", "00ff00", &s));
+}
+
+UTEST(settings, a_colour_for_a_part_there_isnt_is_invalid) {
+  pc_settings s;
+
+  SettingsReset(&s);
+  ASSERT_EQ(-1, ParseSetting("p1_eyes_color", "00ff00", &s));
+}
+
+UTEST(settings, colour_setting_names_are_case_insensitive) {
+  pc_settings s;
+
+  SettingsReset(&s);
+  ASSERT_EQ(1, ParseSetting("P2_Fur_Color", "00ff00", &s));
+  ASSERT_EQ((uint32_t)0x00FF00, s.outfits[1].fur);
+}
