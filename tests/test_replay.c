@@ -26,10 +26,18 @@ static int ReadRecording(replay_header *header, replay_frame *frames, int max) {
   return count;
 }
 
+/* no replay or recording left open, and no keys held, by a test that failed part way */
+static void StartClean() {
+  ReplayStop();
+  memset(keys, 0, sizeof(keys));
+  PadResetBindings();
+}
+
 UTEST(replay, start_recording_fixes_the_clock_and_writes_the_header) {
   replay_header header;
   replay_frame frames[1];
 
+  StartClean();
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   ASSERT_TRUE(TimeIsFixed());
   ReplayStop();
@@ -44,8 +52,7 @@ UTEST(replay, each_update_records_the_clock_and_the_buttons_held) {
   replay_frame frames[3];
   int32_t start;
 
-  memset(keys, 0, sizeof(keys));
-  PadResetBindings();
+  StartClean();
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   start = GetTicksElapsed();
   keys[SDL_SCANCODE_SPACE] = 1;
@@ -66,8 +73,7 @@ UTEST(replay, each_update_records_player_twos_buttons) {
   replay_header header;
   replay_frame frames[1];
 
-  memset(keys, 0, sizeof(keys));
-  PadResetBindings();
+  StartClean();
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   keys[SDL_SCANCODE_KP_0] = 1;
   ReplayUpdate();
@@ -79,6 +85,7 @@ UTEST(replay, each_update_records_player_twos_buttons) {
 }
 
 UTEST(replay, stopping_goes_back_to_the_real_clock) {
+  StartClean();
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   ReplayStop();
   ASSERT_FALSE(TimeIsFixed());
@@ -88,8 +95,7 @@ UTEST(replay, stopping_goes_back_to_the_real_clock) {
 static void Record(uint32_t lid, SDL_Scancode *held, int count) {
   int i;
 
-  memset(keys, 0, sizeof(keys));
-  PadResetBindings();
+  StartClean();
   ReplayStart(TEST_REPLAY, REPLAY_RECORD, lid, RECORDED_SEED);
   for (i=0;i<count;i++) {
     memset(keys, 0, sizeof(keys));
