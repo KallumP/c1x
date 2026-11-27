@@ -242,6 +242,19 @@ void CoopFlingForget(coop_flings *flings, gool_object *obj) {
     fling->obj = 0;
 }
 
+/* the player flung would hit before the nearest enemy or box, or 0 */
 gool_object *CoopFlingFriend(gool_object *flung, int spinner, int32_t nearest_dist) {
-  return 0;
+  gool_object *friend;
+  int32_t dist;
+  int idx;
+
+  friend = 0;
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (idx == spinner || !CoopPlayerInPlay(idx)) { continue; }
+    dist = (int32_t)ApxDist(&flung->trans, &players[idx]->trans);
+    if (dist >= nearest_dist) { continue; }
+    friend = players[idx];
+    nearest_dist = dist;
+  }
+  return friend;
 }
