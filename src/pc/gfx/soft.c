@@ -421,7 +421,9 @@ void SwTransformSvtx(
         prim->colors[ii]=Rgb8ToA32(color);
       }
     }
-    if (info.type == 1) { /* textured poly? */
+    if (info.type == 1 && params->outfit) /* a player's textured poly? */
+      texid = TextureLoadRecolored((texinfo*)&info, &uvs, OutfitRecolorPixel, params->outfit);
+    else if (info.type == 1) { /* textured poly? */
       texid = TextureLoad((texinfo*)&info, &uvs);
     }
     else

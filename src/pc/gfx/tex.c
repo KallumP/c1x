@@ -29,6 +29,29 @@ typedef struct {
   int texid;
 } tex_atlas;
 
+/*
+ * recoloured copies of textures (pc): an owner (a player's outfit) draws its
+ * textures from an atlas of its own, where each is copied with its palette
+ * put through the owner's recolouring. 16-colour textures of one page only:
+ * crash's are all in his own page
+ */
+#define TEX_RECOLORED_COUNT   2  /* one for each player */
+#define TEX_RECOLORED_REGIONS 64
+#define TEX_RECOLORED_WIDTH   1024
+#define TEX_RECOLORED_HEIGHT  128
+
+typedef struct {
+  const void *owner; /* 0 if no one's yet */
+  eid_t tpage;       /* the page its copies are from */
+  int texid;
+  int invalid;
+  int region_count;
+  texinfo regions[TEX_RECOLORED_REGIONS]; /* the textures copied so far */
+  uint32_t data[TEX_RECOLORED_WIDTH*TEX_RECOLORED_HEIGHT];
+} tex_recolored;
+
+static tex_recolored recolored[TEX_RECOLORED_COUNT];
+
 typedef struct {
   eid_t eids[TEX_TPAGE_COUNT];
   tex_cache_entry table[TEX_TPAGE_COUNT][0x8000];
@@ -77,6 +100,10 @@ void TexturesInit(
       data += w*128*sizeof(uint32_t);
     }
   }
+  for (i=0;i<TEX_RECOLORED_COUNT;i++) {
+    memset(&recolored[i], 0, sizeof(recolored[i]));
+    recolored[i].texid = (*cache.create)((dim2){ TEX_RECOLORED_WIDTH, TEX_RECOLORED_HEIGHT }, 0);
+  }
   // cache.global_count = 0;
 }
 
@@ -87,6 +114,29 @@ void TexturesKill() {
   for (i=0;i<TEX_TPAGE_COUNT*6;i++) {
     atlas = &cache.atlases[i];
     (*cache.delete)(atlas->texid);
+  }
+  for (i=0;i<TEX_RECOLORED_COUNT;i++)
+    (*cache.delete)(recolored[i].texid);
+}
+
+/* the pages changed, so the copies are made again when next drawn */
+static void TexturesForgetRecolored() {
+  int i;
+
+  for (i=0;i<TEX_RECOLORED_COUNT;i++)
+    recolored[i].region_count = 0;
+}
+
+static void TexturesUpdateRecolored() {
+  rect2 rect;
+  int i;
+
+  rect.x = 0; rect.y = 0;
+  rect.w = TEX_RECOLORED_WIDTH; rect.h = TEX_RECOLORED_HEIGHT;
+  for (i=0;i<TEX_RECOLORED_COUNT;i++) {
+    if (!recolored[i].invalid) { continue; }
+    (*cache.subimage)(recolored[i].texid, rect, (uint8_t*)recolored[i].data);
+    recolored[i].invalid = 0;
   }
 }
 
@@ -100,7 +150,9 @@ void TexturesUpdate() {
     if (texture_pages[i].eid == cache.eids[i]) { continue; }
     memset(cache.table[i], 0, sizeof(cache.table[i]));
     cache.eids[i] = texture_pages[i].eid;
+    TexturesForgetRecolored();
   }
+  TexturesUpdateRecolored();
   for (i=0;i<TEX_TPAGE_COUNT*6;i++) {
     atlas = &cache.atlases[i];
     if (atlas->invalid) {
@@ -342,6 +394,97 @@ static int TextureNew(texinfo *texinfo, fvec (*uvs)[4]) {
   return texid;
 }
 
+/* owner's atlas of recoloured copies: the one it has, or a free one, or 0 */
+static tex_recolored *TextureRecoloredFor(const void *owner) {
+  int i;
+
+  for (i=0;i<TEX_RECOLORED_COUNT;i++) {
+    if (recolored[i].owner == owner) { return &recolored[i]; }
+  }
+  for (i=0;i<TEX_RECOLORED_COUNT;i++) {
+    if (!recolored[i].owner) {
+      recolored[i].owner = owner;
+      return &recolored[i];
+    }
+  }
+  return 0;
+}
+
+static int TextureRegionCopied(tex_recolored *copies, texinfo *texinfo) {
+  int i;
+
+  for (i=0;i<copies->region_count;i++) {
+    if (memcmp(&copies->regions[i], texinfo, sizeof(*texinfo)) == 0) { return 1; }
+  }
+  return 0;
+}
+
+/* where texinfo's texture is in its page, and its corners there */
+static rect2 TextureRegion(texinfo *texinfo, fvec (*uvs)[4]) {
+  quad28 quad;
+  rect2 rect;
+  int i, ppi;
+
+  ppi = (2 << (2 - texinfo->color_mode));
+  quad = *(quad28*)&uv_map[texinfo->uv_idx];
+  rect.x = ((texinfo->segment*32)+texinfo->offs_x)*ppi;
+  rect.y = texinfo->offs_y*4;
+  rect.w = max3(quad.p[0].x,quad.p[1].x,quad.p[2].x)+1;
+  rect.h = max3(quad.p[0].y,quad.p[1].y,quad.p[2].y)+1;
+  for (i=0;i<4;i++) {
+    (*uvs)[i].x = rect.x+quad.p[i].x;
+    (*uvs)[i].y = rect.y+quad.p[i].y;
+  }
+  return rect;
+}
+
+/* copies texinfo's texture from page into copies, its palette recoloured */
+static void TextureCopyRecolored(tex_recolored *copies, tpage *page, texinfo *texinfo,
+  rect2 rect, tex_recolor_t recolor) {
+  uint16_t *palette, changed[16];
+  dim2 dim;
+  int i;
+
+  palette = &((uint16_t*)page)[(texinfo->clut_x*16)+(texinfo->clut_y*256)];
+  for (i=0;i<16;i++)
+    changed[i] = (*recolor)(palette[i], copies->owner);
+  dim.w = TEX_RECOLORED_WIDTH; dim.h = TEX_RECOLORED_HEIGHT;
+  TextureCopy((uint8_t*)page, (uint8_t*)copies->data, &dim, &dim, &rect, &rect.loc,
+    changed, 2, 0, texinfo->semi_trans);
+  copies->invalid = 1;
+}
+
+/**
+* TextureLoad, for a texture drawn with its palette's colours each put through
+* recolor: owner's own copy of it. a texture that isn't 16-colour, or more
+* owners or textures than there's room for, is drawn as it is
+*/
+int TextureLoadRecolored(texinfo *texinfo, fvec(*uvs)[4], tex_recolor_t recolor, const void *owner) {
+  tex_recolored *copies;
+  tpage *page;
+  rect2 rect;
+  int i;
+
+  copies = TextureRecoloredFor(owner);
+  page = TexturePage((entry_ref*)&texinfo->tpage);
+  if (!copies || !page || texinfo->color_mode != 0) { return TextureLoad(texinfo, uvs); }
+  if (copies->tpage != page->eid) { /* another page's textures would be copied over these */
+    copies->tpage = page->eid;
+    copies->region_count = 0;
+  }
+  rect = TextureRegion(texinfo, uvs);
+  if (!TextureRegionCopied(copies, texinfo)) {
+    if (copies->region_count == TEX_RECOLORED_REGIONS) { return TextureLoad(texinfo, uvs); }
+    TextureCopyRecolored(copies, page, texinfo, rect, recolor);
+    copies->regions[copies->region_count++] = *texinfo;
+  }
+  for (i=0;i<4;i++) {
+    (*uvs)[i].x /= TEX_RECOLORED_WIDTH;
+    (*uvs)[i].y /= TEX_RECOLORED_HEIGHT;
+  }
+  return copies->texid;
+}
+
 /**
 * returns the id of the atlas
 * which contains the texture referenced by the given texinfo
@@ -393,6 +536,7 @@ void TexturePageChanged(eid_t eid) {
   idx = TexturePageIdx((entry_ref*)&eid);
   if (idx == -1) { return; }
   memset(cache.table[idx], 0, sizeof(cache.table[idx]));
+  TexturesForgetRecolored();
 }
 
 /**

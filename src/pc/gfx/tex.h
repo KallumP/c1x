@@ -16,6 +16,8 @@ extern void TexturesKill();
 extern void TexturesUpdate();
 extern int TextureId();
 extern int TextureLoad(texinfo *texinfo, fvec(*uvs)[4]);
+typedef uint16_t (*tex_recolor_t)(uint16_t pixel, const void *owner);
+extern int TextureLoadRecolored(texinfo *texinfo, fvec(*uvs)[4], tex_recolor_t recolor, const void *owner);
 extern void TexturePageChanged(eid_t eid);
 // extern int TexturePageGlobal(tpage *tpage);
 extern void TextureCopy(uint8_t *src, uint8_t *dst, dim2 *sdim, dim2 *ddim,
