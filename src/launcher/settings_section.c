@@ -4,7 +4,6 @@
  * something else changes it, such as the level editor's Boot button
  */
 #include <SDL2/SDL.h>
-#include <stddef.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "settings_section.h"
@@ -246,27 +245,6 @@ static uint32_t FloatToChannel(float channel, int shift) {
 
 #define SWATCH_SIZE 18.0f
 
-/* a part of the outfit the popup chooses a colour for */
-typedef struct {
-  const char *label;
-  const char *covers;
-  size_t offset; /* in crash_outfit */
-} outfit_part;
-
-static const outfit_part outfit_parts[] = {
-  { "Fur",    "His fur.",                                                  offsetof(crash_outfit, fur) },
-  { "Belly",  "His belly, the patch on his back and, paler, his muzzle.",  offsetof(crash_outfit, belly) },
-  { "Hair",   "The tuft on his head.",                                     offsetof(crash_outfit, hair) },
-  { "Shorts", "His shorts.",                                               offsetof(crash_outfit, shorts) },
-  { "Shoes",  "His shoes and his gloves.",                                 offsetof(crash_outfit, shoes) },
-};
-
-#define OUTFIT_PART_COUNT (int)(sizeof(outfit_parts)/sizeof(outfit_parts[0]))
-
-static uint32_t *OutfitPartColor(crash_outfit *outfit, int part_idx) {
-  return (uint32_t*)((char*)outfit + outfit_parts[part_idx].offset);
-}
-
 static ImVec4 ColorToVec4(uint32_t color) {
   return (ImVec4){ ChannelToFloat(color, 16), ChannelToFloat(color, 8), ChannelToFloat(color, 0), 1.0f };
 }
@@ -281,9 +259,9 @@ static int DrawOutfitSwatches(crash_outfit *outfit) {
   int i, clicked;
 
   clicked = -1;
-  for (i=0;i<OUTFIT_PART_COUNT;i++) {
-    if (DrawSwatch(outfit_parts[i].label, *OutfitPartColor(outfit, i), SWATCH_SIZE)) { clicked = i; }
-    DrawTooltip(outfit_parts[i].label);
+  for (i=0;i<OUTFIT_COLOUR_COUNT;i++) {
+    if (DrawSwatch(outfit_colours[i].label, *OutfitColour(outfit, i), SWATCH_SIZE)) { clicked = i; }
+    DrawTooltip(outfit_colours[i].label);
     igSameLine(0, 2.0f);
   }
   return clicked;
@@ -298,14 +276,14 @@ static void DrawPartList(crash_outfit *outfit) {
   int i;
 
   igBeginGroup();
-  for (i=0;i<OUTFIT_PART_COUNT;i++) {
+  for (i=0;i<OUTFIT_COLOUR_COUNT;i++) {
     igPushID_Int(i);
-    DrawSwatch("##swatch", *OutfitPartColor(outfit, i), igGetFrameHeight());
+    DrawSwatch("##swatch", *OutfitColour(outfit, i), igGetFrameHeight());
     igSameLine(0, -1);
-    if (igSelectable_Bool(outfit_parts[i].label, editing_part == i, ImGuiSelectableFlags_DontClosePopups,
+    if (igSelectable_Bool(outfit_colours[i].label, editing_part == i, ImGuiSelectableFlags_DontClosePopups,
       (ImVec2){ PART_LIST_WIDTH, 0 }))
       editing_part = i;
-    DrawTooltip(outfit_parts[i].covers);
+    DrawTooltip(outfit_colours[i].covers);
     igPopID();
   }
   igEndGroup();
@@ -315,7 +293,7 @@ static void DrawPartPicker(crash_outfit *outfit) {
   uint32_t *color;
   float rgb[3];
 
-  color = OutfitPartColor(outfit, editing_part);
+  color = OutfitColour(outfit, editing_part);
   rgb[0] = ChannelToFloat(*color, 16);
   rgb[1] = ChannelToFloat(*color, 8);
   rgb[2] = ChannelToFloat(*color, 0);

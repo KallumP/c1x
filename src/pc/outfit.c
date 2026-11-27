@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "outfit.h"
 #include "gfx/pixel.h"
 
@@ -19,10 +20,24 @@
 #define MUZZLE_GREEN_PERCENT_MAX 65   /* his shoes' soles and his teeth are paler */
 #define CRASH_MUZZLE_COLOR       0xDF7F7F
 
-const outfit_colour outfit_colours[OUTFIT_COLOUR_COUNT] = { { 0 } };
+const outfit_colour outfit_colours[OUTFIT_COLOUR_COUNT] = {
+  [OUTFIT_COLOUR_FUR]    = { "Fur",    "His fur." },
+  [OUTFIT_COLOUR_BELLY]  = { "Belly",  "His belly, the patch on his back and, paler, his muzzle." },
+  [OUTFIT_COLOUR_HAIR]   = { "Hair",   "The tuft on his head." },
+  [OUTFIT_COLOUR_SHORTS] = { "Shorts", "His shorts." },
+  [OUTFIT_COLOUR_SHOES]  = { "Shoes",  "His shoes and his gloves." },
+};
+
+static const size_t colour_offsets[OUTFIT_COLOUR_COUNT] = {
+  [OUTFIT_COLOUR_FUR]    = offsetof(crash_outfit, fur),
+  [OUTFIT_COLOUR_BELLY]  = offsetof(crash_outfit, belly),
+  [OUTFIT_COLOUR_HAIR]   = offsetof(crash_outfit, hair),
+  [OUTFIT_COLOUR_SHORTS] = offsetof(crash_outfit, shorts),
+  [OUTFIT_COLOUR_SHOES]  = offsetof(crash_outfit, shoes),
+};
 
 uint32_t *OutfitColour(crash_outfit *outfit, int colour_idx) {
-  return &outfit->fur;
+  return (uint32_t*)((char*)outfit + colour_offsets[colour_idx]);
 }
 
 const outfit_preset outfit_presets[] = {
