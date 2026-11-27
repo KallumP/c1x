@@ -64,3 +64,73 @@ UTEST(outfit, the_hog_he_rides_is_no_part_of_the_outfit) {
   ASSERT_EQ(OUTFIT_PART_NONE, OutfitPart(colour(HOG_DARK)));
   ASSERT_EQ(OUTFIT_PART_NONE, OutfitPart(colour(HOG_RED)));
 }
+
+#define GREEN        0x00FF00
+#define HALF_GREEN   0x008000
+
+static crash_outfit his_own(void) {
+  return (crash_outfit){ SETTINGS_FUR_COLOR, SETTINGS_SHORTS_COLOR, SETTINGS_SHOES_COLOR };
+}
+
+static uint32_t recolored(uint32_t color, crash_outfit outfit) {
+  rgb8 c = OutfitRecolor(colour(color), &outfit);
+
+  return (c.r << 16) | (c.g << 8) | c.b;
+}
+
+UTEST(outfit, crashs_own_colours_leave_every_part_as_it_is) {
+  ASSERT_EQ((uint32_t)FUR_SHADED, recolored(FUR_SHADED, his_own()));
+  ASSERT_EQ((uint32_t)BELLY, recolored(BELLY, his_own()));
+  ASSERT_EQ((uint32_t)SHORTS_DARK, recolored(SHORTS_DARK, his_own()));
+  ASSERT_EQ((uint32_t)SHOES_DARK, recolored(SHOES_DARK, his_own()));
+}
+
+UTEST(outfit, his_brightest_fur_is_drawn_in_the_fur_colour) {
+  crash_outfit outfit = his_own();
+
+  outfit.fur = GREEN;
+  ASSERT_EQ((uint32_t)GREEN, recolored(FUR, outfit));
+}
+
+UTEST(outfit, shaded_fur_is_as_much_darker_in_the_fur_colour) {
+  crash_outfit outfit = his_own();
+
+  outfit.fur = GREEN;
+  ASSERT_EQ((uint32_t)0x006600, recolored(FUR_SHADED, outfit));
+}
+
+UTEST(outfit, his_belly_is_a_lighter_fur_colour) {
+  crash_outfit outfit = his_own();
+
+  outfit.fur = HALF_GREEN;
+  ASSERT_EQ((uint32_t)0x3F9F3F, recolored(BELLY, outfit));
+}
+
+UTEST(outfit, his_brightest_shorts_are_drawn_in_the_shorts_colour) {
+  crash_outfit outfit = his_own();
+
+  outfit.shorts = GREEN;
+  ASSERT_EQ((uint32_t)GREEN, recolored(SHORTS, outfit));
+}
+
+UTEST(outfit, his_brightest_shoes_are_drawn_in_the_shoes_colour) {
+  crash_outfit outfit = his_own();
+
+  outfit.shoes = GREEN;
+  ASSERT_EQ((uint32_t)GREEN, recolored(SHOES, outfit));
+}
+
+UTEST(outfit, a_colour_for_one_part_leaves_the_others) {
+  crash_outfit outfit = his_own();
+
+  outfit.fur = GREEN;
+  ASSERT_EQ((uint32_t)SHORTS, recolored(SHORTS, outfit));
+  ASSERT_EQ((uint32_t)SHOES, recolored(SHOES, outfit));
+}
+
+UTEST(outfit, colours_of_no_part_stay_as_they_are) {
+  crash_outfit outfit = { GREEN, GREEN, GREEN };
+
+  ASSERT_EQ((uint32_t)HAIR, recolored(HAIR, outfit));
+  ASSERT_EQ((uint32_t)SKIN, recolored(SKIN, outfit));
+}
