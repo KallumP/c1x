@@ -2270,47 +2270,40 @@ static void GoolTurnShieldPush(gool_object *native, gool_object *player) {
   player->velocity.z = ((cos(heading)>>4)*SHIELD_PUSH_SPEED)>>8;
 }
 
-/* each player's velocity and heading, to tell afterwards whom a shield pushed */
-typedef struct {
-  vec velocity[GOOL_PLAYER_COUNT];
-  int32_t heading[GOOL_PLAYER_COUNT];
-} player_motions;
-
-static void GoolRecordPlayerMotions(player_motions *before) {
+static void GoolPlayerMotions(shield_motion *motions) {
   int idx;
 
   for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
-    before->velocity[idx] = players[idx]->velocity;
-    before->heading[idx] = players[idx]->target_rot.x;
+    motions[idx].velocity = players[idx]->velocity;
+    motions[idx].heading = players[idx]->target_rot.x;
   }
 }
 
-static void GoolTurnShieldPushes(gool_object *native, player_motions *before) {
-  gool_object *player;
-  int idx;
+static void GoolTurnShieldPushes(gool_object *native, shield_motion *before) {
+  shield_motion after[GOOL_PLAYER_COUNT];
+  int idx, pushed;
 
+  GoolPlayerMotions(after);
+  pushed = ShieldPushedCrashes(before, after, GOOL_PLAYER_COUNT);
   for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
-    if (!CoopPlayerInPlay(idx)) { continue; }
-    player = players[idx];
-    if (ShieldPushed(&before->velocity[idx], before->heading[idx], &player->velocity,
-      player->target_rot.x))
-      GoolTurnShieldPush(native, player);
+    if (pushed & (1 << idx))
+      GoolTurnShieldPush(native, players[idx]);
   }
 }
 
 static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_ref *transition);
 
 /* runs obj's code (GoolObjectInterpretCode). a custom level's native
-   that pushes a crash with its shield pushes him along its path (GoolTurnShieldPush) */
+   that pushes a crash with its shield pushes him along its path (GoolTurnShieldPushes) */
 int GoolObjectInterpret(gool_object *obj, uint32_t flags, gool_state_ref *transition) {
-  player_motions before;
+  shield_motion before[GOOL_PLAYER_COUNT];
   int res;
 
   if (!crash || !GoolObjectIsCustomLevelNative(obj))
     return GoolObjectInterpretCode(obj, flags, transition);
-  GoolRecordPlayerMotions(&before);
+  GoolPlayerMotions(before);
   res = GoolObjectInterpretCode(obj, flags, transition);
-  GoolTurnShieldPushes(obj, &before);
+  GoolTurnShieldPushes(obj, before);
   return res;
 }
 
