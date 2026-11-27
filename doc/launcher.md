@@ -16,10 +16,10 @@ When it opens, it asks GitHub once whether c1x has a newer release. If it does, 
 
 If you download a release yourself, copy these across from the old folder:
 
-- `streams/`, the game's files
-- `settings.cfg` and `controls.cfg`
-- `memory_card/`, if you save to the memory card
-- any levels of your own in `level_src/`
+- `memory_card/`, your saves
+- `controls.cfg`, your keys
+
+Everything else is quick to set up again in the launcher.
 
 If you're offline, or GitHub doesn't answer, there's no button. It checks again the next time the launcher opens.
 
