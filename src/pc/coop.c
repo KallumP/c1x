@@ -342,7 +342,10 @@ gool_object *CoopFlungTarget(const coop_spinners *spinners, int slot, gool_objec
   return 0;
 }
 
+/* the event the object in sender_slot sends recipient: a spun enemy's fling into a player is an enemy's hit */
 uint32_t CoopFlungEventFor(const coop_spinners *spinners, int sender_slot,
   gool_object *recipient, uint32_t event) {
-  return event;
+  if (event != GOOL_EVENT_FLING || !CoopIsPlayer(recipient)) { return event; }
+  if (CoopSpinnerOf(spinners, sender_slot) == COOP_NOT_A_PLAYER) { return event; }
+  return GOOL_EVENT_HIT;
 }
