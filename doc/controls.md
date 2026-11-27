@@ -45,7 +45,3 @@ With the `two_players` setting on (the launcher's **Couch co-op** switch), playe
 - triangle - <kbd>Keypad 8</kbd>
 
 Change them on the launcher's Controls tab, under **Player 2 keyboard**.
-
-## controls.cfg
-
-The launcher saves them to `controls.cfg`, next to `streams/`, which the game reads when it starts. Each line binds a button to a key, such as `cross = Space`, and a button with several keys has a line for each. Keys are matched by where they are on the keyboard, so on a non-QWERTY layout `Z` means the key where Z is on a US keyboard. A controller button's line starts its name with `pad:`, such as `cross = pad:a` or `r2 = pad:righttrigger`. Player 2's keys have `p2 ` in front of the button, such as `p2 cross = Keypad 0`.
