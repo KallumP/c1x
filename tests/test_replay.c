@@ -239,6 +239,13 @@ UTEST(replay, the_card_folder_of_a_file_thats_not_a_recording_is_named_after_all
   ASSERT_STREQ("recorded_inputs/notes.card", dir);
 }
 
+UTEST(replay, a_recordings_settings_file_is_named_after_it) {
+  char path[64];
+
+  ReplaySettingsFile(path, sizeof(path), "recorded_inputs/2026-10-30_14-05-09.inputs");
+  ASSERT_STREQ("recorded_inputs/2026-10-30_14-05-09.settings", path);
+}
+
 UTEST(replay, newest_file_is_the_latest_start_time) {
   char path[256];
 

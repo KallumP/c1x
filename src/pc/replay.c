@@ -62,6 +62,10 @@ void ReplayCardDir(char *dir, size_t size, const char *recording_path) {
   snprintf(dir, size, "%.*s%s", (int)len, recording_path, CARD_DIR_EXTENSION);
 }
 
+void ReplaySettingsFile(char *path, size_t size, const char *recording_path) {
+  path[0] = 0;
+}
+
 /* find the newest recording in dir; returns 0 if there are none */
 int ReplayNewestFile(const char *dir, char *path, size_t size) {
   DIR *d;
