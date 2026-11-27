@@ -36,14 +36,12 @@ int CoopFloorBelow(vec *trans) {
   return found.floor_nodes_y != NO_FLOOR || found.solid_nodes_y != NO_FLOOR;
 }
 
-/* the colours to draw obj's model in: a player's, if they chose any, or 0 to
-   draw it as it is. the title's screens run in player one's slot, and aren't crash */
 const crash_outfit *CoopPlayerOutfit(gool_object *obj) {
   const crash_outfit *outfit;
   int player_idx;
 
   player_idx = CoopPlayerIndex(obj);
-  if (player_idx == COOP_NOT_A_PLAYER || ns.ldat->lid == LID_TITLE) { return 0; }
+  if (player_idx == COOP_NOT_A_PLAYER || !CoopLevelShowsOutfits(ns.ldat->lid)) { return 0; }
   outfit = &game_settings.outfits[player_idx];
   if (OutfitIsCrashsOwn(outfit)) { return 0; }
   return outfit;
