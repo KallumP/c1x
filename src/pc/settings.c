@@ -7,18 +7,18 @@
 
 pc_settings game_settings; /* SettingsReset gives it the defaults, at startup (init.c) */
 
+/* the colours a player starts in: crash's own for player one */
 crash_outfit SettingsDefaultOutfit(int player_idx) {
+  if (player_idx == 1)
+    return (crash_outfit){ SETTINGS_P2_FUR_COLOR, SETTINGS_P2_SHORTS_COLOR, SETTINGS_P2_SHOES_COLOR };
   return (crash_outfit){ SETTINGS_FUR_COLOR, SETTINGS_SHORTS_COLOR, SETTINGS_SHOES_COLOR };
 }
 
 static void SettingsResetOutfits(pc_settings *s) {
   int i;
 
-  for (i=0;i<SETTINGS_PLAYER_COUNT;i++) {
-    s->outfits[i].fur = SETTINGS_FUR_COLOR;
-    s->outfits[i].shorts = SETTINGS_SHORTS_COLOR;
-    s->outfits[i].shoes = SETTINGS_SHOES_COLOR;
-  }
+  for (i=0;i<SETTINGS_PLAYER_COUNT;i++)
+    s->outfits[i] = SettingsDefaultOutfit(i);
 }
 
 /* restore the default settings */
