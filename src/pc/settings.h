@@ -8,7 +8,18 @@
 #define SETTINGS_BOOT_LEVEL_MAX        31
 #define SETTINGS_FRAME_RATE_MIN        30 /* the game's own frame rate: nothing drawn between game frames */
 #define SETTINGS_FRAME_RATE_MAX        240
+#define SETTINGS_PLAYER_COUNT          2
+#define SETTINGS_FUR_COLOR             0xFF3100 /* crash's own colours, as 0xRRGGBB */
+#define SETTINGS_SHORTS_COLOR          0x002790
+#define SETTINGS_SHOES_COLOR           0x330000
 #define LEVELS_DIR "levels" /* next to the executable; built levels to boot into, by name */
+
+/* the colours a player's crash is drawn in, each 0xRRGGBB (see pc/outfit.h) */
+typedef struct {
+  uint32_t fur;
+  uint32_t shorts;
+  uint32_t shoes; /* and his gloves */
+} crash_outfit;
 
 /* game settings (pc), read from settings.cfg */
 typedef struct {
