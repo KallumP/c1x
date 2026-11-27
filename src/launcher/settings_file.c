@@ -122,7 +122,7 @@ static char *ReplaceColorLine(char *text, const char *name, uint32_t color) {
   return ReplaceSettingLine(text, name, value);
 }
 
-/* text with player's (1 or 2) three colour lines set to outfit's */
+/* text with player's (1 or 2) colour lines set to outfit's */
 static char *ReplaceOutfitLines(char *text, int player, const crash_outfit *outfit) {
   char name[32];
 
@@ -131,7 +131,11 @@ static char *ReplaceOutfitLines(char *text, int player, const crash_outfit *outf
   SDL_snprintf(name, sizeof(name), "p%d_shorts_color", player);
   text = ReplaceColorLine(text, name, outfit->shorts);
   SDL_snprintf(name, sizeof(name), "p%d_shoes_color", player);
-  return ReplaceColorLine(text, name, outfit->shoes);
+  text = ReplaceColorLine(text, name, outfit->shoes);
+  SDL_snprintf(name, sizeof(name), "p%d_belly_color", player);
+  text = ReplaceColorLine(text, name, outfit->belly);
+  SDL_snprintf(name, sizeof(name), "p%d_hair_color", player);
+  return ReplaceColorLine(text, name, outfit->hair);
 }
 
 /* text (a settings file's, to SDL_free) with every setting in s set */
@@ -184,7 +188,8 @@ int SaveSettingsFile(const char *path, const char *example_path, const pc_settin
 }
 
 static int AreOutfitsEqual(const crash_outfit *a, const crash_outfit *b) {
-  return a->fur == b->fur && a->shorts == b->shorts && a->shoes == b->shoes;
+  return a->fur == b->fur && a->shorts == b->shorts && a->shoes == b->shoes
+    && a->belly == b->belly && a->hair == b->hair;
 }
 
 /* whether a and b set the same settings (boot_level by its text, not what's after it) */
