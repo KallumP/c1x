@@ -11,7 +11,7 @@ pc_settings game_settings; /* SettingsReset gives it the defaults, at startup (i
 crash_outfit SettingsDefaultOutfit(int player_idx) {
   if (player_idx == 1)
     return (crash_outfit){ SETTINGS_P2_FUR_COLOR, SETTINGS_P2_SHORTS_COLOR, SETTINGS_P2_SHOES_COLOR,
-      SETTINGS_BELLY_COLOR, SETTINGS_HAIR_COLOR };
+      SETTINGS_P2_BELLY_COLOR, SETTINGS_P2_HAIR_COLOR };
   return (crash_outfit){ SETTINGS_FUR_COLOR, SETTINGS_SHORTS_COLOR, SETTINGS_SHOES_COLOR,
     SETTINGS_BELLY_COLOR, SETTINGS_HAIR_COLOR };
 }
@@ -121,6 +121,8 @@ static uint32_t *SettingsOutfitColor(const char *name, pc_settings *s) {
   if (SDL_strcasecmp(name, "fur_color") == 0) { return &outfit->fur; }
   if (SDL_strcasecmp(name, "shorts_color") == 0) { return &outfit->shorts; }
   if (SDL_strcasecmp(name, "shoes_color") == 0) { return &outfit->shoes; }
+  if (SDL_strcasecmp(name, "belly_color") == 0) { return &outfit->belly; }
+  if (SDL_strcasecmp(name, "hair_color") == 0) { return &outfit->hair; }
   return 0;
 }
 
