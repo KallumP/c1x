@@ -9,7 +9,7 @@
 
 ### Changed
 
-- a replay plays with the settings its recording started with, so it plays out the same after your settings change
+- a replay plays with the settings its recording started with, so it plays out the same after your settings change; how you watch it (speed, frame rate, fullscreen, sound and the hud displays) stays your own
 - recordings made before this can't be replayed
 
 ## 2026-11-25
