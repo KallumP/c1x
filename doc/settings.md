@@ -69,6 +69,23 @@ A save keeps what the PS1 game's does: the levels reached, gems and keys, lives 
 
 ## Recorded inputs
 
-To help reproduce bugs, every run records the buttons both players pressed to its own file in `build/recorded_inputs/`, named by when it started. `replay_inputs` plays the newest one back, so delete or move newer ones to replay an older run. A recording only plays back the same way with the same game files. A replay plays with the settings its run started with, except how you watch it: `replay_inputs`, `replay_speed`, `frame_rate`, `fullscreen` and `mute` stay your own. A replay never changes your own saves or settings.
+To help reproduce bugs, every run records the buttons both players pressed, in `build/recorded_inputs/`. A recording is named by when it started, and is three things with that name:
+
+- the `.inputs` file, the buttons pressed;
+- the `.settings` file, your settings when it started;
+- the `.card` folder, your saves when it started.
+
+Keep all three together when you move or share a recording, or it won't play back the same.
+
+`replay_inputs` plays the newest recording back, so delete or move newer ones to replay an older run. It only plays back the same way with the same game files, and the same custom level if it started in one.
+
+A replay plays with the settings its recording started with, except these, which stay your own as they only change how you watch it:
+
+- `replay_inputs` and `replay_speed`
+- `frame_rate` and `fullscreen`
+- `mute`
+- `fps_display`, `speed_display`, `spin_display` and `box_display`
+
+When the replay ends you play on from where it stopped, still with its settings, until you restart the game. A replay never changes your `settings.cfg` or your saves.
 
 Recordings are never deleted for you (each is about 22 KB a minute).
