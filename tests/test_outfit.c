@@ -33,6 +33,48 @@ static rgb8 colour(uint32_t color) {
 #define WHITE        0xFFFFFF
 #define SHOE_LINE    0x3A0808 /* in his shoes' texture */
 
+#define GREEN        0x00FF00
+#define HALF_GREEN   0x008000
+
+static crash_outfit his_own(void) {
+  return (crash_outfit){ .fur = CRASH_FUR_COLOR, .belly = CRASH_BELLY_COLOR, .hair = CRASH_HAIR_COLOR,
+    .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR };
+}
+
+UTEST(outfit, outfits_of_the_same_colours_are_equal) {
+  crash_outfit a = his_own(), b = his_own();
+
+  ASSERT_TRUE(OutfitsEqual(&a, &b));
+}
+
+UTEST(outfit, outfits_differing_in_any_one_colour_arent_equal) {
+  crash_outfit a = his_own(), fur = a, belly = a, hair = a, shorts = a, shoes = a;
+
+  fur.fur = GREEN;
+  belly.belly = GREEN;
+  hair.hair = GREEN;
+  shorts.shorts = GREEN;
+  shoes.shoes = GREEN;
+  ASSERT_FALSE(OutfitsEqual(&a, &fur));
+  ASSERT_FALSE(OutfitsEqual(&a, &belly));
+  ASSERT_FALSE(OutfitsEqual(&a, &hair));
+  ASSERT_FALSE(OutfitsEqual(&a, &shorts));
+  ASSERT_FALSE(OutfitsEqual(&a, &shoes));
+}
+
+UTEST(outfit, crashs_own_colours_are_crashs_own_outfit) {
+  crash_outfit outfit = his_own();
+
+  ASSERT_TRUE(OutfitIsCrashsOwn(&outfit));
+}
+
+UTEST(outfit, a_chosen_colour_isnt_crashs_own_outfit) {
+  crash_outfit outfit = his_own();
+
+  outfit.hair = GREEN;
+  ASSERT_FALSE(OutfitIsCrashsOwn(&outfit));
+}
+
 UTEST(outfit, his_orange_shades_are_fur) {
   ASSERT_EQ(OUTFIT_PART_FUR, OutfitPart(colour(FUR)));
   ASSERT_EQ(OUTFIT_PART_FUR, OutfitPart(colour(FUR_SHADED)));
@@ -68,14 +110,6 @@ UTEST(outfit, the_hog_he_rides_is_no_part_of_the_outfit) {
   ASSERT_EQ(OUTFIT_PART_NONE, OutfitPart(colour(HOG)));
   ASSERT_EQ(OUTFIT_PART_NONE, OutfitPart(colour(HOG_DARK)));
   ASSERT_EQ(OUTFIT_PART_NONE, OutfitPart(colour(HOG_RED)));
-}
-
-#define GREEN        0x00FF00
-#define HALF_GREEN   0x008000
-
-static crash_outfit his_own(void) {
-  return (crash_outfit){ .fur = CRASH_FUR_COLOR, .belly = CRASH_BELLY_COLOR, .hair = CRASH_HAIR_COLOR,
-    .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR };
 }
 
 static uint32_t recolored(uint32_t color, crash_outfit outfit) {

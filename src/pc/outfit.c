@@ -1,5 +1,13 @@
 #include "outfit.h"
 
+int OutfitsEqual(const crash_outfit *a, const crash_outfit *b) {
+  return 0;
+}
+
+int OutfitIsCrashsOwn(const crash_outfit *outfit) {
+  return 0;
+}
+
 /* what tells the parts of crash's models (WillG and the rest) apart by colour */
 #define FUR_DARKEST      0x60 /* the least red a fur shade has: the hog he rides has darker oranges */
 #define FUR_GREEN_MIN    9    /* fur's green, as a percent of its red: his hair is redder */
