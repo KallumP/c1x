@@ -126,6 +126,8 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
   s.spin_ledge_jump = 0;
   s.two_players = 1;
   s.outfits[1].shorts = 0x0A0B0C;
+  s.outfits[0].belly = 0x0D0E0F;
+  s.outfits[1].hair = 0x102030;
   strcpy(s.boot_level, "tide_ruins");
   ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
   ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &read));
@@ -140,6 +142,8 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
   ASSERT_EQ(0, read.spin_ledge_jump);
   ASSERT_EQ(1, read.two_players);
   ASSERT_EQ((uint32_t)0x0A0B0C, read.outfits[1].shorts);
+  ASSERT_EQ((uint32_t)0x0D0E0F, read.outfits[0].belly);
+  ASSERT_EQ((uint32_t)0x102030, read.outfits[1].hair);
 }
 
 /* CommentOutSettingLine's result for text, compared with expected, then freed */
@@ -297,5 +301,23 @@ UTEST(launcher_settings, settings_that_differ_only_in_a_players_colour_arent_equ
   SettingsReset(&a);
   SettingsReset(&b);
   b.outfits[1].shoes = 0x00FF00;
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, settings_that_differ_only_in_a_players_belly_colour_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  b.outfits[0].belly = 0x00FF00;
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, settings_that_differ_only_in_a_players_hair_colour_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  b.outfits[1].hair = 0x00FF00;
   ASSERT_FALSE(AreSettingsEqual(&a, &b));
 }
