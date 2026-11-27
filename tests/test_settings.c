@@ -413,3 +413,19 @@ UTEST(settings, a_replay_without_its_settings_file_keeps_the_players_own) {
   ASSERT_EQ(1, game_settings.two_players);
   game_settings = own;
 }
+
+UTEST(settings, a_replay_keeps_the_players_own_hud_displays) {
+  WriteWholeFile(TEST_RECORDED_SETTINGS,
+    "fps_display = off\nspeed_display = off\nspin_display = off\nbox_display = off\n");
+  SettingsReset(&game_settings);
+  game_settings.fps_display = 1;
+  game_settings.speed_display = 1;
+  game_settings.spin_display = 1;
+  game_settings.box_display = 1;
+  ASSERT_EQ(1, SettingsLoadRecorded(TEST_RECORDED_SETTINGS));
+  ASSERT_EQ(1, game_settings.fps_display);
+  ASSERT_EQ(1, game_settings.speed_display);
+  ASSERT_EQ(1, game_settings.spin_display);
+  ASSERT_EQ(1, game_settings.box_display);
+  SettingsReset(&game_settings);
+}
