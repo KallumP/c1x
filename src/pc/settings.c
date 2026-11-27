@@ -7,6 +7,10 @@
 
 pc_settings game_settings; /* SettingsReset gives it the defaults, at startup (init.c) */
 
+crash_outfit SettingsDefaultOutfit(int player_idx) {
+  return (crash_outfit){ SETTINGS_FUR_COLOR, SETTINGS_SHORTS_COLOR, SETTINGS_SHOES_COLOR };
+}
+
 static void SettingsResetOutfits(pc_settings *s) {
   int i;
 

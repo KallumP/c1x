@@ -13,6 +13,9 @@
 #define SETTINGS_FUR_COLOR             0xFF3100 /* crash's own colours, as 0xRRGGBB */
 #define SETTINGS_SHORTS_COLOR          0x002790
 #define SETTINGS_SHOES_COLOR           0x330000
+#define SETTINGS_P2_FUR_COLOR          0x2F80ED /* what player two starts in: player one's fur and shorts swapped */
+#define SETTINGS_P2_SHORTS_COLOR       0xE8590C
+#define SETTINGS_P2_SHOES_COLOR        0x1B2A4A
 #define LEVELS_DIR "levels" /* next to the executable; built levels to boot into, by name */
 
 /* the colours a player's crash is drawn in, each 0xRRGGBB (see pc/outfit.h) */
@@ -46,6 +49,7 @@ typedef struct {
 
 extern pc_settings game_settings;
 
+extern crash_outfit SettingsDefaultOutfit(int player_idx);
 extern void SettingsReset(pc_settings *s);
 extern int SettingsParseLine(const char *line, pc_settings *s);
 extern int SettingsLoad(const char *path);
