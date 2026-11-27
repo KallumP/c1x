@@ -34,6 +34,7 @@ local multiplayer
 - color crash differently?
 - way to assign a controller to a player (if you want p1 on keyboard, and p2 on controller 1)
 - side level custom rules, or is it fine as it is
+- p2 to be fake crash, load a different model
 
 time trails
 - Should be able to start a time trail by running over a clock object at the start of the level
