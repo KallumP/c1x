@@ -4,6 +4,7 @@
  * something else changes it, such as the level editor's Boot button
  */
 #include <SDL2/SDL.h>
+#include <stddef.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "settings_section.h"
@@ -243,15 +244,46 @@ static uint32_t FloatToChannel(float channel, int shift) {
   return (uint32_t)((channel * 255.0f) + 0.5f) << shift;
 }
 
-static void DrawColorPicker(const char *label, uint32_t *color, const char *tooltip) {
-  float rgb[3];
+#define SWATCH_SIZE 18.0f
 
-  rgb[0] = ChannelToFloat(*color, 16);
-  rgb[1] = ChannelToFloat(*color, 8);
-  rgb[2] = ChannelToFloat(*color, 0);
-  if (igColorEdit3(label, rgb, ImGuiColorEditFlags_NoInputs))
-    *color = FloatToChannel(rgb[0], 16) | FloatToChannel(rgb[1], 8) | FloatToChannel(rgb[2], 0);
-  DrawTooltip(tooltip);
+/* a part of the outfit the popup chooses a colour for */
+typedef struct {
+  const char *label;
+  const char *covers;
+  size_t offset; /* in crash_outfit */
+} outfit_part;
+
+static const outfit_part outfit_parts[] = {
+  { "Fur",    "His fur.",                                                  offsetof(crash_outfit, fur) },
+  { "Belly",  "His belly, the patch on his back and, paler, his muzzle.",  offsetof(crash_outfit, belly) },
+  { "Hair",   "The tuft on his head.",                                     offsetof(crash_outfit, hair) },
+  { "Shorts", "His shorts.",                                               offsetof(crash_outfit, shorts) },
+  { "Shoes",  "His shoes and his gloves.",                                 offsetof(crash_outfit, shoes) },
+};
+
+#define OUTFIT_PART_COUNT (int)(sizeof(outfit_parts)/sizeof(outfit_parts[0]))
+
+static uint32_t *OutfitPartColor(crash_outfit *outfit, int part_idx) {
+  return (uint32_t*)((char*)outfit + outfit_parts[part_idx].offset);
+}
+
+static ImVec4 ColorToVec4(uint32_t color) {
+  return (ImVec4){ ChannelToFloat(color, 16), ChannelToFloat(color, 8), ChannelToFloat(color, 0), 1.0f };
+}
+
+/* a swatch of color that only shows it; returns whether it was clicked */
+static int DrawSwatch(const char *id, uint32_t color, float size) {
+  return igColorButton(id, ColorToVec4(color), ImGuiColorEditFlags_NoTooltip, (ImVec2){ size, size });
+}
+
+static void DrawOutfitSwatches(crash_outfit *outfit) {
+  int i;
+
+  for (i=0;i<OUTFIT_PART_COUNT;i++) {
+    DrawSwatch(outfit_parts[i].label, *OutfitPartColor(outfit, i), SWATCH_SIZE);
+    DrawTooltip(outfit_parts[i].label);
+    igSameLine(0, 2.0f);
+  }
 }
 
 static void DrawOutfit(const char *label, int player_idx) {
@@ -260,18 +292,10 @@ static void DrawOutfit(const char *label, int player_idx) {
   outfit = &settings.outfits[player_idx];
   BeginFieldRow(label, "The colours this player's Crash is drawn in.");
   igPushID_Str(label);
-  DrawColorPicker("Fur", &outfit->fur, "His fur.");
+  DrawOutfitSwatches(outfit);
   igSameLine(0, -1);
-  DrawColorPicker("Belly", &outfit->belly, "His belly, the patch on his back and, paler, his muzzle.");
-  igSameLine(0, -1);
-  DrawColorPicker("Hair", &outfit->hair, "The tuft on his head.");
-  igSameLine(0, -1);
-  DrawColorPicker("Shorts", &outfit->shorts, "His shorts.");
-  igSameLine(0, -1);
-  DrawColorPicker("Shoes", &outfit->shoes, "His shoes and his gloves.");
-  igSameLine(0, -1);
-  if (igSmallButton("Reset")) { *outfit = SettingsDefaultOutfit(player_idx); }
-  DrawTooltip("Back to the colours this player starts in.");
+  igSmallButton("Edit");
+  DrawTooltip("Choose this player's colours.");
   igPopID();
 }
 
