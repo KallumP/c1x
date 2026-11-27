@@ -318,6 +318,9 @@ void CoopKeepSpinner(coop_spinners *spinners, int slot, gool_object *sender,
   spinners->spinner[slot] = CoopPlayerIndex(sender);
 }
 
+/* as the game decides who a hit can find (GoolFindNearestObject), and a dying player too */
 int CoopPlayerTakesHit(gool_object *player) {
-  return 0;
+  if (player->state_flags & COOP_DYING_STATE_FLAG) { return 0; }
+  if (player->invincibility_state >= 2 && player->invincibility_state <= 4) { return 0; }
+  return !(player->status_c & 2);
 }
