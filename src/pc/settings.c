@@ -226,10 +226,49 @@ int SettingsLoad(const char *path) {
   return ConfigLoad(path, "setting", "name = value", SettingsApplyLine, 0);
 }
 
+/*
+ * copy a settings file to to, or write an empty one if from is missing (as
+ * the game then plays with the defaults). returns 0 if to can't be written
+ */
 int SettingsCopyFile(const char *from, const char *to) {
-  return 0;
+  FILE *in, *out;
+  char buf[1024];
+  size_t len;
+
+  out = fopen(to, "wb");
+  if (!out) { return 0; }
+  in = fopen(from, "rb");
+  if (in) {
+    while ((len = fread(buf, 1, sizeof(buf), in)) > 0)
+      fwrite(buf, 1, len, out);
+    fclose(in);
+  }
+  return fclose(out) == 0;
 }
 
+/* the settings for how a replay is watched, which stay the player's own */
+static void SettingsKeepWatching(pc_settings *s, const pc_settings *own) {
+  s->replay_inputs = own->replay_inputs;
+  s->replay_speed = own->replay_speed;
+  s->frame_rate = own->frame_rate;
+  s->fullscreen = own->fullscreen;
+  s->mute = own->mute;
+}
+
+/*
+ * play with the settings a recording kept, so its replay plays out the same,
+ * but watched the player's own way. returns 0, leaving game_settings as they
+ * were, if the file can't be read
+ */
 int SettingsLoadRecorded(const char *path) {
-  return -1;
+  pc_settings own;
+
+  own = game_settings;
+  SettingsReset(&game_settings);
+  if (SettingsLoad(path) < 0) {
+    game_settings = own;
+    return 0;
+  }
+  SettingsKeepWatching(&game_settings, &own);
+  return 1;
 }
