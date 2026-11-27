@@ -7,6 +7,16 @@
 
 pc_settings game_settings; /* SettingsReset gives it the defaults, at startup (init.c) */
 
+static void SettingsResetOutfits(pc_settings *s) {
+  int i;
+
+  for (i=0;i<SETTINGS_PLAYER_COUNT;i++) {
+    s->outfits[i].fur = SETTINGS_FUR_COLOR;
+    s->outfits[i].shorts = SETTINGS_SHORTS_COLOR;
+    s->outfits[i].shoes = SETTINGS_SHOES_COLOR;
+  }
+}
+
 /* restore the default settings */
 void SettingsReset(pc_settings *s) {
   s->skip_loading_screen = 0;
@@ -25,6 +35,7 @@ void SettingsReset(pc_settings *s) {
   s->memory_card = 0;
   s->mute = 0;
   s->two_players = 0;
+  SettingsResetOutfits(s);
   s->boot_level[0] = 0;
 }
 
@@ -74,6 +85,39 @@ static int SettingsParseNumberFrom(const char *value, uint32_t min, uint32_t max
   return 1;
 }
 
+static uint32_t HexDigitValue(char digit) {
+  if (SDL_isdigit(digit)) { return digit - '0'; }
+  return SDL_tolower(digit) - 'a' + 10;
+}
+
+/* parse six hex digits, red green blue, into color as 0xRRGGBB; returns 0 for anything else */
+static int SettingsParseColor(const char *value, uint32_t *color) {
+  uint32_t parsed;
+  int i;
+
+  if (strlen(value) != SETTINGS_COLOR_DIGITS) { return 0; }
+  for (i=0,parsed=0;i<SETTINGS_COLOR_DIGITS;i++) {
+    if (!SDL_isxdigit(value[i])) { return 0; }
+    parsed = (parsed << 4) | HexDigitValue(value[i]);
+  }
+  *color = parsed;
+  return 1;
+}
+
+/* the colour of a player's outfit that name ("p1_fur_color" and the like) sets, or 0 */
+static uint32_t *SettingsOutfitColor(const char *name, pc_settings *s) {
+  crash_outfit *outfit;
+
+  if (SDL_strncasecmp(name, "p1_", 3) == 0) { outfit = &s->outfits[0]; }
+  else if (SDL_strncasecmp(name, "p2_", 3) == 0) { outfit = &s->outfits[1]; }
+  else { return 0; }
+  name += 3;
+  if (SDL_strcasecmp(name, "fur_color") == 0) { return &outfit->fur; }
+  if (SDL_strcasecmp(name, "shorts_color") == 0) { return &outfit->shorts; }
+  if (SDL_strcasecmp(name, "shoes_color") == 0) { return &outfit->shoes; }
+  return 0;
+}
+
 static int AppliedOrInvalid(int parsed) {
   if (parsed) { return 1; }
   return -1;
@@ -81,6 +125,8 @@ static int AppliedOrInvalid(int parsed) {
 
 /* apply one setting; returns 1, or -1 if the name or value is invalid */
 static int SettingsApply(const char *name, const char *value, pc_settings *s) {
+  uint32_t *outfit_color;
+
   if (SDL_strcasecmp(name, "skip_loading_screen") == 0)
     return AppliedOrInvalid(SettingsParseOnOff(value, &s->skip_loading_screen));
   if (SDL_strcasecmp(name, "loading_screen_min_ms") == 0)
@@ -118,6 +164,9 @@ static int SettingsApply(const char *name, const char *value, pc_settings *s) {
     return AppliedOrInvalid(SettingsParseOnOff(value, &s->two_players));
   if (SDL_strcasecmp(name, "boot_level") == 0)
     return AppliedOrInvalid(SettingsParseLevelName(value, s->boot_level));
+  outfit_color = SettingsOutfitColor(name, s);
+  if (outfit_color)
+    return AppliedOrInvalid(SettingsParseColor(value, outfit_color));
   return -1;
 }
 

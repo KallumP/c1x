@@ -9,6 +9,7 @@
 #define SETTINGS_FRAME_RATE_MIN        30 /* the game's own frame rate: nothing drawn between game frames */
 #define SETTINGS_FRAME_RATE_MAX        240
 #define SETTINGS_PLAYER_COUNT          2
+#define SETTINGS_COLOR_DIGITS          6
 #define SETTINGS_FUR_COLOR             0xFF3100 /* crash's own colours, as 0xRRGGBB */
 #define SETTINGS_SHORTS_COLOR          0x002790
 #define SETTINGS_SHOES_COLOR           0x330000
