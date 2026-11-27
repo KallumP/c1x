@@ -18,5 +18,6 @@
 
 extern int OutfitPart(rgb8 color);
 extern rgb8 OutfitRecolor(rgb8 color, const crash_outfit *outfit);
+extern uint16_t OutfitRecolorPixel(uint16_t pixel, const void *outfit);
 
 #endif /* _PC_OUTFIT_H_ */

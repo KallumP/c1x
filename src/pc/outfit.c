@@ -97,3 +97,7 @@ rgb8 OutfitRecolor(rgb8 color, const crash_outfit *outfit) {
   }
   return color;
 }
+
+uint16_t OutfitRecolorPixel(uint16_t pixel, const void *outfit) {
+  return pixel;
+}

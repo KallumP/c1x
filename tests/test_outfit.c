@@ -134,3 +134,51 @@ UTEST(outfit, colours_of_no_part_stay_as_they_are) {
   ASSERT_EQ((uint32_t)HAIR, recolored(HAIR, outfit));
   ASSERT_EQ((uint32_t)SKIN, recolored(SKIN, outfit));
 }
+
+/* the palette of the texture on his back (WillT): oranges from redder than his fur to his belly's */
+#define BACK_REDDEST  0xF01800
+#define BACK_MIDWAY   0xFF5A00
+
+UTEST(outfit, the_reddest_orange_on_his_back_is_fur) {
+  ASSERT_EQ(OUTFIT_PART_FUR, OutfitPart(colour(BACK_REDDEST)));
+}
+
+UTEST(outfit, an_orange_between_his_fur_and_his_belly_is_lightened_part_of_the_way) {
+  crash_outfit outfit = his_own();
+
+  outfit.fur = HALF_GREEN;
+  ASSERT_EQ((uint32_t)0x259225, recolored(BACK_MIDWAY, outfit));
+}
+
+/* ps1 pixels: five bits each of red, green and blue from the low bit up, then a transparency bit */
+#define PIXEL_FUR       0x00DF /* 0xFF3100, to five bits */
+#define PIXEL_GREEN     0x03E0
+#define PIXEL_WHITE     0x7FFF
+#define PIXEL_SEE_THROUGH 0x8000
+
+UTEST(outfit, a_fur_pixel_is_drawn_in_the_fur_colour) {
+  crash_outfit outfit = his_own();
+
+  outfit.fur = GREEN;
+  ASSERT_EQ(PIXEL_GREEN, OutfitRecolorPixel(PIXEL_FUR, &outfit));
+}
+
+UTEST(outfit, a_recoloured_pixel_keeps_its_transparency_bit) {
+  crash_outfit outfit = his_own();
+
+  outfit.fur = GREEN;
+  ASSERT_EQ(PIXEL_GREEN | PIXEL_SEE_THROUGH, OutfitRecolorPixel(PIXEL_FUR | PIXEL_SEE_THROUGH, &outfit));
+}
+
+UTEST(outfit, a_pixel_of_no_part_stays_as_it_is) {
+  crash_outfit outfit = { GREEN, GREEN, GREEN };
+
+  ASSERT_EQ(PIXEL_WHITE, OutfitRecolorPixel(PIXEL_WHITE, &outfit));
+}
+
+UTEST(outfit, a_pixel_recoloured_black_isnt_the_all_zero_pixel_which_is_drawn_as_nothing) {
+  crash_outfit outfit = his_own();
+
+  outfit.fur = BLACK;
+  ASSERT_NE(0, OutfitRecolorPixel(PIXEL_FUR, &outfit));
+}
