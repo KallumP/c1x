@@ -325,7 +325,19 @@ int CoopPlayerTakesHit(gool_object *player) {
   return !(player->status_c & 2);
 }
 
+/* the other player, if nearer the enemy flung from slot than what it found and he'd take its hit; or 0 */
 gool_object *CoopFlungTarget(const coop_spinners *spinners, int slot, gool_object *flung,
   int32_t found_dist) {
+  gool_object *other;
+  int spinner, idx;
+
+  spinner = CoopSpinnerOf(spinners, slot);
+  if (spinner == COOP_NOT_A_PLAYER) { return 0; }
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (idx == spinner || !CoopPlayerInPlay(idx)) { continue; }
+    other = players[idx];
+    if (!CoopPlayerTakesHit(other)) { continue; }
+    if ((int32_t)ApxDist(&flung->trans, &other->trans) < found_dist) { return other; }
+  }
   return 0;
 }
