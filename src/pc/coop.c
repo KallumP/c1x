@@ -2,6 +2,7 @@
 #include "coop.h"
 #include "boxhud.h"
 #include "math.h"
+#include "fling.h"
 
 extern pad pads[2];
 extern gool_handle handles[8];
@@ -308,4 +309,8 @@ int CoopSpinnerOf(const coop_spinners *spinners, int slot) {
 void CoopForgetSpinner(coop_spinners *spinners, int slot) {
   if (IsPoolSlot(slot))
     spinners->spinner[slot] = COOP_NOT_A_PLAYER;
+}
+
+void CoopKeepSpinner(coop_spinners *spinners, int slot, gool_object *sender,
+  uint32_t event, uint32_t category, int taken) {
 }

@@ -4,6 +4,7 @@
 #include "pad.h"
 #include "pc/boxhud.h"
 #include "pc/coop.h"
+#include "pc/fling.h"
 #include "pc/pad.h"
 #include "pc/tween.h"
 
@@ -837,4 +838,58 @@ UTEST(coop, forgetting_a_slot_outside_the_pool_does_nothing) {
   CoopForgetSpinner(&spinners, NOT_IN_POOL);
   CoopForgetSpinner(&spinners, GOOL_OBJECT_COUNT);
   ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, 0));
+}
+
+#define ENEMY_SLOT 3
+
+UTEST(coop, an_enemy_keeps_the_player_whose_spin_it_took) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  coop_spinners spinners;
+
+  BothPlaying(slots);
+  CoopSpinnersClear(&spinners);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_TWO], GOOL_EVENT_SPIN_HIT, FLING_ENEMY, 1);
+  ASSERT_EQ(COOP_PLAYER_TWO, CoopSpinnerOf(&spinners, ENEMY_SLOT));
+}
+
+/* both spin it at once: the one it flies off from is kept */
+UTEST(coop, a_spin_the_enemy_didnt_take_leaves_its_spinner) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  coop_spinners spinners;
+
+  BothPlaying(slots);
+  CoopSpinnersClear(&spinners);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_ONE], GOOL_EVENT_SPIN_HIT, FLING_ENEMY, 1);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_TWO], GOOL_EVENT_SPIN_HIT, FLING_ENEMY, 0);
+  ASSERT_EQ(COOP_PLAYER_ONE, CoopSpinnerOf(&spinners, ENEMY_SLOT));
+}
+
+UTEST(coop, a_spun_box_keeps_no_spinner) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  coop_spinners spinners;
+
+  BothPlaying(slots);
+  CoopSpinnersClear(&spinners);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_TWO], GOOL_EVENT_SPIN_HIT, FLING_BOX, 1);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, ENEMY_SLOT));
+}
+
+UTEST(coop, an_enemy_a_player_jumped_on_keeps_no_spinner) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+  coop_spinners spinners;
+
+  BothPlaying(slots);
+  CoopSpinnersClear(&spinners);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &slots[COOP_PLAYER_TWO], GOOL_EVENT_JUMPED_ON, FLING_ENEMY, 1);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, ENEMY_SLOT));
+}
+
+UTEST(coop, an_enemy_spun_by_something_other_than_a_player_keeps_no_spinner) {
+  gool_object slots[GOOL_PLAYER_COUNT], other;
+  coop_spinners spinners;
+
+  BothPlaying(slots);
+  CoopSpinnersClear(&spinners);
+  CoopKeepSpinner(&spinners, ENEMY_SLOT, &other, GOOL_EVENT_SPIN_HIT, FLING_ENEMY, 1);
+  ASSERT_EQ(COOP_NOT_A_PLAYER, CoopSpinnerOf(&spinners, ENEMY_SLOT));
 }
