@@ -44,7 +44,6 @@ time trails
 
 Generic
 - play as coco, and other characters from the game (might need to import coco?)
-- player color presets
 - increase render distance of custom levels. Maybe this comes with camera clamping. Define a rail for the camera, and then the geometry can be optimized for that rail
 - input recording also needs to store what settings were used for the game start, similar to how the memory card is also stored
 - europe support
