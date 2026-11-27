@@ -69,3 +69,16 @@ UTEST(enhancedtitle, coop_mode_sits_over_the_right_end_of_n_hanceds_underline) {
   EnhancedTitleCoopAt(&coop);
   ASSERT_EQ(n_hanced.y + (int32_t)n_hanced.h - ENHANCED_TITLE_COOP_RISE, coop.y + (int32_t)coop.h);
 }
+
+UTEST(enhancedtitle, coop_mode_shows_with_two_players_under_n_hanced) {
+  ASSERT_TRUE(EnhancedTitleShowsCoop(1, 1));
+}
+
+UTEST(enhancedtitle, coop_mode_doesnt_show_with_one_player) {
+  ASSERT_FALSE(EnhancedTitleShowsCoop(1, 0));
+}
+
+/* it sits over N-Hanced's underline, so it'd float on its own without it */
+UTEST(enhancedtitle, coop_mode_doesnt_show_without_n_hanced) {
+  ASSERT_FALSE(EnhancedTitleShowsCoop(0, 1));
+}

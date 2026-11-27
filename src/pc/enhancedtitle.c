@@ -39,3 +39,7 @@ void EnhancedTitleCoopAt(rect2 *at) {
   at->w = ENHANCED_TITLE_COOP_WIDTH;
   at->h = ENHANCED_TITLE_COOP_HEIGHT;
 }
+
+int EnhancedTitleShowsCoop(int n_hanced_shown, int two_players) {
+  return 0;
+}

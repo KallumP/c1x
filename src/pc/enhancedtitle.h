@@ -42,6 +42,7 @@ extern int EnhancedTitleDrawsWith(const enhanced_title *title,
   const char *menu_text);
 extern void EnhancedTitleAt(rect2 *at);
 extern void EnhancedTitleCoopAt(rect2 *at);
+extern int EnhancedTitleShowsCoop(int n_hanced_shown, int two_players);
 
 /* the game's title screen (enhancedtitle_game.c) */
 struct _gool_object;
