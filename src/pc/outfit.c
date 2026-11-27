@@ -10,12 +10,15 @@
 #define SHORTS_DARKEST   0x40 /* the least blue a shorts shade has: his nose is a darker blue */
 #define SHORTS_RED_MAX   0x18
 #define SHORTS_GREEN_MAX 0x30
+#define MUZZLE_GREEN_MIN 40   /* a muzzle pink's green and blue, alike, as a percent of its red: */
+#define MUZZLE_GREEN_MAX 65   /* his shoes' soles and his teeth are paler */
 #define SHOES_DARKEST    0x10
 #define SHOES_BRIGHTEST  0x33 /* his hair is the brighter pure reds */
 
 /* each part's brightest shade, which is drawn in the chosen colour itself */
 #define FUR_BRIGHTEST    0xFF
 #define SHORTS_BRIGHTEST 0x90
+#define MUZZLE_BRIGHTEST 0xDF
 
 static int GreenPercent(rgb8 color) {
   return (color.g * 100) / color.r;
@@ -38,11 +41,17 @@ static int IsShoes(rgb8 color) {
   return color.g == 0 && color.b == 0 && color.r >= SHOES_DARKEST && color.r <= SHOES_BRIGHTEST;
 }
 
+static int IsMuzzle(rgb8 color) {
+  if (color.g != color.b || color.r < FUR_DARKEST) { return 0; }
+  return GreenPercent(color) >= MUZZLE_GREEN_MIN && GreenPercent(color) <= MUZZLE_GREEN_MAX;
+}
+
 int OutfitPart(rgb8 color) {
   if (IsBelly(color)) { return OUTFIT_PART_BELLY; }
   if (IsOrange(color)) { return OUTFIT_PART_FUR; }
   if (IsShorts(color)) { return OUTFIT_PART_SHORTS; }
   if (IsShoes(color)) { return OUTFIT_PART_SHOES; }
+  if (IsMuzzle(color)) { return OUTFIT_PART_MUZZLE; }
   return OUTFIT_PART_NONE;
 }
 
@@ -85,6 +94,19 @@ static uint32_t FurColor(uint32_t fur, rgb8 orange) {
     | Lightened(fur & 0xFF, toward_belly);
 }
 
+/* halfway to white: his muzzle is as pale beside his own fur */
+static uint32_t MuzzleColor(uint32_t fur) {
+  uint32_t r, g, b;
+
+  r = (fur >> 16) & 0xFF;
+  g = (fur >> 8) & 0xFF;
+  b = fur & 0xFF;
+  r += (0xFF - r) / 2;
+  g += (0xFF - g) / 2;
+  b += (0xFF - b) / 2;
+  return (r << 16) | (g << 8) | b;
+}
+
 /* a polygon of crash's coloured color, in outfit's colour for its part. a part
    left crash's own colour is drawn as it is, shade for shade */
 rgb8 OutfitRecolor(rgb8 color, const crash_outfit *outfit) {
@@ -93,6 +115,9 @@ rgb8 OutfitRecolor(rgb8 color, const crash_outfit *outfit) {
   case OUTFIT_PART_BELLY:
     if (outfit->fur == SETTINGS_FUR_COLOR) { return color; }
     return Shaded(FurColor(outfit->fur, color), color, FUR_BRIGHTEST);
+  case OUTFIT_PART_MUZZLE:
+    if (outfit->fur == SETTINGS_FUR_COLOR) { return color; }
+    return Shaded(MuzzleColor(outfit->fur), color, MUZZLE_BRIGHTEST);
   case OUTFIT_PART_SHORTS:
     if (outfit->shorts == SETTINGS_SHORTS_COLOR) { return color; }
     return Shaded(outfit->shorts, color, SHORTS_BRIGHTEST);
