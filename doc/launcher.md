@@ -17,7 +17,7 @@ When it opens, it asks GitHub once whether c1x has a newer release. If it does, 
 If you download a release yourself, copy these across from the old folder:
 
 - `memory_card/`, your saves
-- `controls.cfg`, your keys
+- `controls.cfg`, your keybinds
 
 Everything else is quick to set up again in the launcher.
 
