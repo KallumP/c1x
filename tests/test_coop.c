@@ -738,3 +738,68 @@ UTEST(coop, a_flung_enemys_other_events_into_a_player_stay_as_sent) {
   CoopFlingSpun(&flings, &enemy, 0);
   ASSERT_EQ((uint32_t)GOOL_EVENT_COMBO, CoopFlingEvent(&flings, &enemy, &slots[0], GOOL_EVENT_COMBO));
 }
+
+/* both players in play, neither dying */
+static void BothPlaying(gool_object *slots) {
+  memset(slots, 0, sizeof(gool_object)*GOOL_PLAYER_COUNT);
+  UsePlayerSlots(slots);
+  slots[0].handle.type = 1;
+  slots[COOP_PLAYER_TWO].handle.type = 1;
+}
+
+UTEST(coop, one_dies_while_another_plays_when_one_players_state_is_a_dying_one) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].state_flags = COOP_DYING_STATE_FLAG;
+  ASSERT_TRUE(CoopOneDiesWhileAnotherPlays());
+}
+
+UTEST(coop, no_one_dies_while_both_play) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  ASSERT_FALSE(CoopOneDiesWhileAnotherPlays());
+}
+
+UTEST(coop, no_one_plays_on_while_both_are_dying) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[0].state_flags = COOP_DYING_STATE_FLAG;
+  slots[COOP_PLAYER_TWO].state_flags = COOP_DYING_STATE_FLAG;
+  ASSERT_FALSE(CoopOneDiesWhileAnotherPlays());
+}
+
+UTEST(coop, no_one_plays_on_while_the_only_player_in_play_is_dying) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  slots[0].state_flags = COOP_DYING_STATE_FLAG;
+  ASSERT_FALSE(CoopOneDiesWhileAnotherPlays());
+}
+
+#define LEVEL_VIEW 0xFFFF  /* the level, its objects and the camera */
+#define DEATH_VIEW 0x5C73C /* a dying crash on black */
+
+UTEST(coop, the_display_flags_show_as_set_while_no_one_dies) {
+  coop_view view = { 0 };
+
+  ASSERT_EQ((uint32_t)LEVEL_VIEW, CoopViewFlags(&view, LEVEL_VIEW, 0));
+}
+
+UTEST(coop, the_level_stays_in_view_while_one_dies_and_another_plays) {
+  coop_view view = { 0 };
+
+  CoopViewFlags(&view, LEVEL_VIEW, 0);
+  ASSERT_EQ((uint32_t)LEVEL_VIEW, CoopViewFlags(&view, DEATH_VIEW, 1));
+}
+
+UTEST(coop, the_death_view_shows_once_no_one_plays_on) {
+  coop_view view = { 0 };
+
+  CoopViewFlags(&view, LEVEL_VIEW, 0);
+  CoopViewFlags(&view, DEATH_VIEW, 1);
+  ASSERT_EQ((uint32_t)DEATH_VIEW, CoopViewFlags(&view, DEATH_VIEW, 0));
+}

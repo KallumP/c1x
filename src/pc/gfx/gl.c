@@ -27,6 +27,7 @@ static PFNGLBLENDEQUATIONPROC pglBlendEquation;
 #include "pc/tween.h"
 #include "pc/screen_fit.h"
 #include "pc/enhancedtitle.h"
+#include "pc/coop.h"
 
 #ifdef CFLAGS_GUI
 #include "ext/gui.h"
@@ -872,6 +873,15 @@ static void GLWaitForFrame(int32_t frame_ticks) {
   }
 }
 
+static coop_view coop_view_now;
+
+/* a crash dying in co-op leaves the level in view for the other (coop.h) */
+static void GLKeepLevelInViewForCoop() {
+  if (!players[0]) { return; } /* the player slots are made with the objects */
+  next_display_flags = CoopViewFlags(&coop_view_now, next_display_flags,
+    CoopOneDiesWhileAnotherPlays());
+}
+
 void GLUpdate() {
   zone_header *header;
   rgb8 fill;
@@ -888,6 +898,7 @@ void GLUpdate() {
 #ifdef CFLAGS_GUI
   ImGui_ImplOpenGL2_NewFrame();
 #endif
+  GLKeepLevelInViewForCoop();
   cur_display_flags = next_display_flags;  /* copy display/animate flags */
   if (cur_display_flags & CARD_DISPLAY_FLAG) {
     CardGameUpdate(); /* memory card i/o, as the ps1 game did it each frame a card screen was up */

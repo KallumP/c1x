@@ -266,3 +266,25 @@ uint32_t CoopFlingEvent(const coop_flings *flings, gool_object *sender,
   if (CoopFlingSpinner(flings, sender) == COOP_NOT_A_PLAYER) { return event; }
   return GOOL_EVENT_HIT;
 }
+
+int CoopOneDiesWhileAnotherPlays(void) {
+  int idx, dying, playing;
+
+  dying = 0;
+  playing = 0;
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (!CoopPlayerInPlay(idx)) { continue; }
+    if (players[idx]->state_flags & COOP_DYING_STATE_FLAG)
+      dying = 1;
+    else
+      playing = 1;
+  }
+  return dying && playing;
+}
+
+/* the display flags to show: those from before a death, while someone plays on */
+uint32_t CoopViewFlags(coop_view *view, uint32_t flags, int one_dies_while_another_plays) {
+  if (one_dies_while_another_plays) { return view->before_death; }
+  view->before_death = flags;
+  return flags;
+}

@@ -40,6 +40,16 @@ typedef struct {
   int next; /* the entry the next new one takes, once they're all used */
 } coop_flings;
 
+/*
+ * a crash dying hides the level, leaving him on black, until the level
+ * restarts. in co-op the other plays on, so the level stays in view
+ */
+#define COOP_DYING_STATE_FLAG 0x20 /* state_flags of a player's dying states */
+
+typedef struct {
+  uint32_t before_death; /* the display flags while no one was dying */
+} coop_view;
+
 /* how near a player an object keeps its collision bound: five boxes to a side, seven up or down */
 #define COOP_NEAR_RANGE_XZ   0x7D000
 #define COOP_NEAR_RANGE_Y    0xAF000
@@ -75,5 +85,7 @@ extern void CoopFlingForget(coop_flings *flings, gool_object *obj);
 extern gool_object *CoopFlingFriend(gool_object *flung, int spinner, int32_t nearest_dist);
 extern uint32_t CoopFlingEvent(const coop_flings *flings, gool_object *sender,
   gool_object *recipient, uint32_t event);
+extern int CoopOneDiesWhileAnotherPlays(void);
+extern uint32_t CoopViewFlags(coop_view *view, uint32_t flags, int one_dies_while_another_plays);
 
 #endif /* _PC_COOP_H_ */
