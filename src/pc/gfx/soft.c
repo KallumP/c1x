@@ -9,6 +9,7 @@
 #include "gte.h"
 #include "gpu.h"
 #include "pc/reach.h"
+#include "pc/outfit.h"
 
 #define gte_divide(a,b) ((a)/(b))
 
@@ -321,6 +322,17 @@ int SwCalcSpriteRotMatrix(
   return 1;
 }
 
+static void SwOutfitColor(tgeo_texinfo *info, const crash_outfit *outfit) {
+  if (!outfit || info->type == 1) { return; }
+  info->rgb = OutfitRecolor(info->rgb, outfit);
+}
+
+static int SwTexture(tgeo_texinfo *info, fvec (*uvs)[4], const crash_outfit *outfit) {
+  if (info->type != 1) { return -1; } /* not a textured poly? */
+  if (outfit) { return TextureLoadForOutfit((texinfo*)info, uvs, outfit); }
+  return TextureLoad((texinfo*)info, uvs);
+}
+
 void SwTransformSvtx(
   svtx_frame *frame,
   void *ot,
@@ -353,6 +365,7 @@ void SwTransformSvtx(
   for (i=0;i<header->poly_count;i++) {
     poly=&polys[i];
     info=*(tgeo_texinfo*)&((uint32_t*)texinfos)[poly->texinfo_idx];
+    SwOutfitColor(&info, params->outfit);
     poly_verts[0]=(svtx_vertex*)((uint8_t*)verts+poly->a_idx);
     poly_verts[1]=(svtx_vertex*)((uint8_t*)verts+poly->b_idx);
     poly_verts[2]=(svtx_vertex*)((uint8_t*)verts+poly->c_idx);
@@ -418,11 +431,7 @@ void SwTransformSvtx(
         prim->colors[ii]=Rgb8ToA32(color);
       }
     }
-    if (info.type == 1) { /* textured poly? */
-      texid = TextureLoad((texinfo*)&info, &uvs);
-    }
-    else
-      texid = -1;
+    texid = SwTexture(&info, &uvs, params->outfit);
     for (ii=0;ii<3;ii++) {
       prim->verts[ii]=r_verts[ii];
       prim->uvs[ii]=uvs[ii];

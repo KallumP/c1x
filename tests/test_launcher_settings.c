@@ -288,3 +288,35 @@ UTEST(launcher_settings, settings_that_differ_only_in_two_players_arent_equal) {
   b.two_players = 1;
   ASSERT_FALSE(AreSettingsEqual(&a, &b));
 }
+
+UTEST(launcher_settings, every_colour_setting_saved_reads_back) {
+  pc_settings s, read;
+  int i;
+
+  remove(LAUNCHER_SETTINGS_PATH);
+  SettingsReset(&s);
+  for (i=0;i<SETTINGS_COLOR_COUNT;i++)
+    *SettingsColor(&s, i) = 0x010101 * (i + 1); /* a different colour for each */
+  ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
+  ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &read));
+  for (i=0;i<SETTINGS_COLOR_COUNT;i++)
+    ASSERT_EQ(SettingsColorValue(&s, i), SettingsColorValue(&read, i));
+}
+
+UTEST(launcher_settings, settings_that_differ_only_in_player_ones_fur_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  b.outfits[0].fur = 0x00FF00;
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, settings_that_differ_only_in_player_twos_shorts_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  b.outfits[1].shorts = 0x00FF00;
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
+}

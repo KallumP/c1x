@@ -231,8 +231,56 @@ static void DrawGameAdjustmentFields(void) {
     "Show how fast Crash is moving in the top right corner.");
   DrawOnOff("Spin display", &settings.spin_display,
     "Show how many spins Crash has left in the top right corner.");
+}
+
+static float ChannelToFloat(uint32_t color, int shift) {
+  return ((color >> shift) & 0xFF) / 255.0f;
+}
+
+static uint32_t FloatToChannel(float channel, int shift) {
+  if (channel < 0) { channel = 0; }
+  if (channel > 1) { channel = 1; }
+  return (uint32_t)((channel * 255.0f) + 0.5f) << shift;
+}
+
+static void DrawColorPicker(const char *label, uint32_t *color, const char *tooltip) {
+  float rgb[3];
+
+  rgb[0] = ChannelToFloat(*color, 16);
+  rgb[1] = ChannelToFloat(*color, 8);
+  rgb[2] = ChannelToFloat(*color, 0);
+  if (igColorEdit3(label, rgb, ImGuiColorEditFlags_NoInputs))
+    *color = FloatToChannel(rgb[0], 16) | FloatToChannel(rgb[1], 8) | FloatToChannel(rgb[2], 0);
+  DrawTooltip(tooltip);
+}
+
+static void DrawOutfit(const char *label, int player_idx) {
+  crash_outfit *outfit;
+
+  outfit = &settings.outfits[player_idx];
+  BeginFieldRow(label, "The colours this player's Crash is drawn in.");
+  igPushID_Str(label);
+  DrawColorPicker("Fur", &outfit->fur, "His fur.");
+  igSameLine(0, -1);
+  DrawColorPicker("Belly", &outfit->belly, "His belly, the patch on his back and, paler, his muzzle.");
+  igSameLine(0, -1);
+  DrawColorPicker("Hair", &outfit->hair, "The tuft on his head.");
+  igSameLine(0, -1);
+  DrawColorPicker("Shorts", &outfit->shorts, "His shorts.");
+  igSameLine(0, -1);
+  DrawColorPicker("Shoes", &outfit->shoes, "His shoes and his gloves.");
+  igSameLine(0, -1);
+  if (igSmallButton("Reset")) { *outfit = SettingsDefaultOutfit(player_idx); }
+  DrawTooltip("Back to the colours this player starts in.");
+  igPopID();
+}
+
+static void DrawCoopFields(void) {
+  DrawFieldGroupTitle("Co-op");
   DrawOnOff("Couch co-op", &settings.two_players,
     "A second Crash plays beside the first, on the Player 2 keyboard keys or a second controller.");
+  DrawOutfit("Player 1 colours", 0);
+  DrawOutfit("Player 2 colours", 1);
 }
 
 /* the game's own save and load screens */
@@ -255,6 +303,7 @@ static void DrawFields(const char *repo) {
   DrawBootLevel(repo);
   DrawGeneralFields();
   DrawGameAdjustmentFields();
+  DrawCoopFields();
   DrawSavingFields();
   DrawReplayFields();
   EndFieldRows();

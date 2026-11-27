@@ -5,6 +5,7 @@
 #include "geom.h"
 #include "ns.h"
 #include "pcgfx.h"
+#include "pc/outfit.h"
 
 typedef int (*tex_create_callback_t)(dim2, uint8_t*);
 typedef void (*tex_delete_callback_t)(int);
@@ -16,6 +17,14 @@ extern void TexturesKill();
 extern void TexturesUpdate();
 extern int TextureId();
 extern int TextureLoad(texinfo *texinfo, fvec(*uvs)[4]);
+
+/* a and b draw the same pixels: their polygons' tint and culling don't matter */
+static inline int TexturesShareRegion(const texinfo *a, const texinfo *b) {
+  return a->tpage == b->tpage && a->clut_x == b->clut_x && a->clut_y == b->clut_y
+    && a->semi_trans == b->semi_trans && a->color_mode == b->color_mode && a->uv_idx == b->uv_idx
+    && a->segment == b->segment && a->offs_x == b->offs_x && a->offs_y == b->offs_y;
+}
+extern int TextureLoadForOutfit(texinfo *texinfo, fvec(*uvs)[4], const crash_outfit *outfit);
 extern void TexturePageChanged(eid_t eid);
 // extern int TexturePageGlobal(tpage *tpage);
 extern void TextureCopy(uint8_t *src, uint8_t *dst, dim2 *sdim, dim2 *ddim,

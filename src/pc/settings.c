@@ -7,6 +7,34 @@
 
 pc_settings game_settings; /* SettingsReset gives it the defaults, at startup (init.c) */
 
+const settings_color settings_colors[SETTINGS_COLOR_COUNT] = {
+  { "p1_fur_color",    0, offsetof(crash_outfit, fur) },
+  { "p1_belly_color",  0, offsetof(crash_outfit, belly) },
+  { "p1_hair_color",   0, offsetof(crash_outfit, hair) },
+  { "p1_shorts_color", 0, offsetof(crash_outfit, shorts) },
+  { "p1_shoes_color",  0, offsetof(crash_outfit, shoes) },
+  { "p2_fur_color",    1, offsetof(crash_outfit, fur) },
+  { "p2_belly_color",  1, offsetof(crash_outfit, belly) },
+  { "p2_hair_color",   1, offsetof(crash_outfit, hair) },
+  { "p2_shorts_color", 1, offsetof(crash_outfit, shorts) },
+  { "p2_shoes_color",  1, offsetof(crash_outfit, shoes) },
+};
+
+crash_outfit SettingsDefaultOutfit(int player_idx) {
+  if (player_idx == 1)
+    return (crash_outfit){ .fur = SETTINGS_P2_FUR_COLOR, .belly = SETTINGS_P2_BELLY_COLOR,
+      .hair = SETTINGS_P2_HAIR_COLOR, .shorts = SETTINGS_P2_SHORTS_COLOR, .shoes = SETTINGS_P2_SHOES_COLOR };
+  return (crash_outfit){ .fur = CRASH_FUR_COLOR, .belly = CRASH_BELLY_COLOR, .hair = CRASH_HAIR_COLOR,
+    .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR };
+}
+
+static void SettingsResetOutfits(pc_settings *s) {
+  int i;
+
+  for (i=0;i<SETTINGS_PLAYER_COUNT;i++)
+    s->outfits[i] = SettingsDefaultOutfit(i);
+}
+
 /* restore the default settings */
 void SettingsReset(pc_settings *s) {
   s->skip_loading_screen = 0;
@@ -25,6 +53,7 @@ void SettingsReset(pc_settings *s) {
   s->memory_card = 0;
   s->mute = 0;
   s->two_players = 0;
+  SettingsResetOutfits(s);
   s->boot_level[0] = 0;
 }
 
@@ -74,6 +103,50 @@ static int SettingsParseNumberFrom(const char *value, uint32_t min, uint32_t max
   return 1;
 }
 
+/* only for a digit SDL_isxdigit takes */
+static uint32_t SettingsHexDigit(char digit) {
+  if (SDL_isdigit(digit)) { return digit - '0'; }
+  return SDL_tolower(digit) - 'a' + 10;
+}
+
+/* parse rrggbb into color; returns 0 for anything else */
+static int SettingsParseColor(const char *value, uint32_t *color) {
+  uint32_t parsed;
+  int i;
+
+  if (strlen(value) != SETTINGS_COLOR_DIGITS) { return 0; }
+  parsed = 0;
+  for (i=0;i<SETTINGS_COLOR_DIGITS;i++) {
+    if (!SDL_isxdigit(value[i])) { return 0; }
+    parsed = (parsed << 4) | SettingsHexDigit(value[i]);
+  }
+  *color = parsed;
+  return 1;
+}
+
+uint32_t *SettingsColor(pc_settings *s, int color_idx) {
+  const settings_color *color;
+
+  color = &settings_colors[color_idx];
+  return (uint32_t*)((char*)&s->outfits[color->player_idx] + color->offset);
+}
+
+uint32_t SettingsColorValue(const pc_settings *s, int color_idx) {
+  const settings_color *color;
+
+  color = &settings_colors[color_idx];
+  return *(const uint32_t*)((const char*)&s->outfits[color->player_idx] + color->offset);
+}
+
+static uint32_t *SettingsColorNamed(const char *name, pc_settings *s) {
+  int i;
+
+  for (i=0;i<SETTINGS_COLOR_COUNT;i++) {
+    if (SDL_strcasecmp(name, settings_colors[i].name) == 0) { return SettingsColor(s, i); }
+  }
+  return 0;
+}
+
 static int AppliedOrInvalid(int parsed) {
   if (parsed) { return 1; }
   return -1;
@@ -81,6 +154,8 @@ static int AppliedOrInvalid(int parsed) {
 
 /* apply one setting; returns 1, or -1 if the name or value is invalid */
 static int SettingsApply(const char *name, const char *value, pc_settings *s) {
+  uint32_t *outfit_color;
+
   if (SDL_strcasecmp(name, "skip_loading_screen") == 0)
     return AppliedOrInvalid(SettingsParseOnOff(value, &s->skip_loading_screen));
   if (SDL_strcasecmp(name, "loading_screen_min_ms") == 0)
@@ -118,6 +193,9 @@ static int SettingsApply(const char *name, const char *value, pc_settings *s) {
     return AppliedOrInvalid(SettingsParseOnOff(value, &s->two_players));
   if (SDL_strcasecmp(name, "boot_level") == 0)
     return AppliedOrInvalid(SettingsParseLevelName(value, s->boot_level));
+  outfit_color = SettingsColorNamed(name, s);
+  if (outfit_color)
+    return AppliedOrInvalid(SettingsParseColor(value, outfit_color));
   return -1;
 }
 

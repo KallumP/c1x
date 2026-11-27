@@ -184,6 +184,11 @@ int CoopPlayerTwoJoins(int two_players, int on_title, int in_demo) {
   return two_players && !on_title && !in_demo;
 }
 
+/* these levels run their own screens in player one's slot, and draw crash, if at all, from other objects */
+int CoopLevelShowsOutfits(int lid) {
+  return lid != LID_TITLE && lid != LID_LEVELEND && lid != LID_INTRO && lid != LID_GAMEWIN;
+}
+
 vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans)) {
   vec spot;
   int32_t distance;

@@ -1043,6 +1043,7 @@ void GfxTransformSvtx(svtx_frame *frame, void *ot, gool_object *obj) {
   res = GfxCalcObjectMatrices(frame, header, obj, 1, 0);
   if (res) {
     prims_tail = GLGetPrimsTail();
+    params.outfit = CoopPlayerOutfit(obj);
     SwTransformSvtx(
       frame,
       ot,

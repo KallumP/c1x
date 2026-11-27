@@ -33,6 +33,7 @@ SRC =	src/ns.c \
 	src/pc/spin.c \
 	src/pc/jumpgrace.c \
 	src/pc/coop.c \
+	src/pc/outfit.c \
 	src/pc/coop_game.c \
 	src/pc/levelend.c \
 	src/pc/audiosong.c \
@@ -84,6 +85,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/pc/spin.c \
 	src/pc/jumpgrace.c \
 	src/pc/coop.c \
+	src/pc/outfit.c \
 	src/pc/levelend.c \
 	src/pc/audiosong.c \
 	src/pc/boxhud.c \
@@ -159,6 +161,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/tool_output.c \
 	src/launcher/version_corner.c \
 	src/pc/settings.c \
+	src/pc/outfit.c \
 	src/pc/controls.c \
 	src/pc/gamepad.c \
 	src/pc/config.c
