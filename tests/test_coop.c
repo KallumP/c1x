@@ -653,3 +653,27 @@ UTEST(coop, no_one_plays_on_while_the_only_player_in_play_is_dying) {
   slots[0].state_flags = COOP_DYING_STATE_FLAG;
   ASSERT_FALSE(CoopOneDiesWhileAnotherPlays());
 }
+
+#define LEVEL_VIEW 0xFFFF  /* the level, its objects and the camera */
+#define DEATH_VIEW 0x5C73C /* a dying crash on black */
+
+UTEST(coop, the_display_flags_show_as_set_while_no_one_dies) {
+  coop_view view = { 0 };
+
+  ASSERT_EQ((uint32_t)LEVEL_VIEW, CoopViewFlags(&view, LEVEL_VIEW, 0));
+}
+
+UTEST(coop, the_level_stays_in_view_while_one_dies_and_another_plays) {
+  coop_view view = { 0 };
+
+  CoopViewFlags(&view, LEVEL_VIEW, 0);
+  ASSERT_EQ((uint32_t)LEVEL_VIEW, CoopViewFlags(&view, DEATH_VIEW, 1));
+}
+
+UTEST(coop, the_death_view_shows_once_no_one_plays_on) {
+  coop_view view = { 0 };
+
+  CoopViewFlags(&view, LEVEL_VIEW, 0);
+  CoopViewFlags(&view, DEATH_VIEW, 1);
+  ASSERT_EQ((uint32_t)DEATH_VIEW, CoopViewFlags(&view, DEATH_VIEW, 0));
+}

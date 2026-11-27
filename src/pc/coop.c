@@ -215,3 +215,7 @@ int CoopOneDiesWhileAnotherPlays(void) {
   }
   return dying && playing;
 }
+
+uint32_t CoopViewFlags(coop_view *view, uint32_t flags, int one_dies_while_another_plays) {
+  return flags;
+}

@@ -29,6 +29,10 @@ typedef struct {
  */
 #define COOP_DYING_STATE_FLAG 0x20 /* state_flags of a player's dying states */
 
+typedef struct {
+  uint32_t before_death; /* the display flags while no one was dying */
+} coop_view;
+
 /* how near a player an object keeps its collision bound: five boxes to a side, seven up or down */
 #define COOP_NEAR_RANGE_XZ   0x7D000
 #define COOP_NEAR_RANGE_Y    0xAF000
@@ -58,5 +62,6 @@ extern vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans));
 extern int CoopFloorBelow(vec *trans);
 extern const crash_outfit *CoopPlayerOutfit(gool_object *obj);
 extern int CoopOneDiesWhileAnotherPlays(void);
+extern uint32_t CoopViewFlags(coop_view *view, uint32_t flags, int one_dies_while_another_plays);
 
 #endif /* _PC_COOP_H_ */
