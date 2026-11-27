@@ -927,3 +927,66 @@ UTEST(coop, a_hit_proof_player_takes_no_hit) {
   slots[COOP_PLAYER_TWO].status_c = HIT_PROOF;
   ASSERT_FALSE(CoopPlayerTakesHit(&slots[COOP_PLAYER_TWO]));
 }
+
+#define BOX_WIDTH 0x19000
+
+/* both playing, player one at the enemy's spot and player two a box along x; enemy spun by player one */
+static void FlungFromPlayerOne(gool_object *slots, coop_spinners *spinners, gool_object *enemy) {
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].trans.x = BOX_WIDTH;
+  memset(enemy, 0, sizeof(gool_object));
+  CoopSpinnersClear(spinners);
+  spinners->spinner[ENEMY_SLOT] = COOP_PLAYER_ONE;
+}
+
+UTEST(coop, a_flung_enemy_goes_for_the_other_player_nearer_than_what_it_found) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  ASSERT_EQ(&slots[COOP_PLAYER_TWO], CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, 2*BOX_WIDTH));
+}
+
+UTEST(coop, a_flung_enemy_keeps_what_it_found_as_near_as_the_other_player) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  ASSERT_TRUE(CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, BOX_WIDTH) == 0);
+}
+
+UTEST(coop, a_flung_enemy_never_goes_for_its_spinner) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  slots[COOP_PLAYER_TWO].trans.x = 5*BOX_WIDTH;
+  ASSERT_TRUE(CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, 2*BOX_WIDTH) == 0);
+}
+
+UTEST(coop, a_flung_enemy_doesnt_go_for_another_player_who_wouldnt_take_the_hit) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  slots[COOP_PLAYER_TWO].state_flags = COOP_DYING_STATE_FLAG;
+  ASSERT_TRUE(CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, 2*BOX_WIDTH) == 0);
+}
+
+UTEST(coop, a_flung_enemy_doesnt_go_for_another_player_out_of_play) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  ASSERT_TRUE(CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, 2*BOX_WIDTH) == 0);
+}
+
+UTEST(coop, an_enemy_no_one_spun_goes_for_no_player) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_spinners spinners;
+
+  FlungFromPlayerOne(slots, &spinners, &enemy);
+  CoopForgetSpinner(&spinners, ENEMY_SLOT);
+  ASSERT_TRUE(CoopFlungTarget(&spinners, ENEMY_SLOT, &enemy, 2*BOX_WIDTH) == 0);
+}

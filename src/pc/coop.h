@@ -102,6 +102,8 @@ extern void CoopForgetSpinner(coop_spinners *spinners, int slot);
 extern void CoopKeepSpinner(coop_spinners *spinners, int slot, gool_object *sender,
   uint32_t event, uint32_t category, int taken);
 extern int CoopPlayerTakesHit(gool_object *player);
+extern gool_object *CoopFlungTarget(const coop_spinners *spinners, int slot, gool_object *flung,
+  int32_t found_dist);
 extern int CoopOneDiesWhileAnotherPlays(void);
 extern uint32_t CoopViewFlags(coop_view *view, uint32_t flags, int one_dies_while_another_plays);
 

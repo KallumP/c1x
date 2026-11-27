@@ -324,3 +324,8 @@ int CoopPlayerTakesHit(gool_object *player) {
   if (player->invincibility_state >= 2 && player->invincibility_state <= 4) { return 0; }
   return !(player->status_c & 2);
 }
+
+gool_object *CoopFlungTarget(const coop_spinners *spinners, int slot, gool_object *flung,
+  int32_t found_dist) {
+  return 0;
+}
