@@ -15,9 +15,9 @@
 #define SETTINGS_SHOES_COLOR           0x330000
 #define SETTINGS_BELLY_COLOR           0xFF7600
 #define SETTINGS_HAIR_COLOR            0x9D0000
-#define SETTINGS_P2_FUR_COLOR          0x33333A /* what player two starts in, a skunk: black fur, purple shorts, white shoes */
+#define SETTINGS_P2_FUR_COLOR          0x33333A /* what player two starts in, a skunk: black fur, purple shorts, dark grey shoes */
 #define SETTINGS_P2_SHORTS_COLOR       0x7A3E9D
-#define SETTINGS_P2_SHOES_COLOR        0xE6E6E6
+#define SETTINGS_P2_SHOES_COLOR        0x2D2D2D
 #define SETTINGS_P2_BELLY_COLOR        0xF0F0F0 /* his stripe */
 #define SETTINGS_P2_HAIR_COLOR         0xF0F0F0
 #define LEVELS_DIR "levels" /* next to the executable; built levels to boot into, by name */

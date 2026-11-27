@@ -34,7 +34,7 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | `p1_hair_color` | `9d0000` | The colour of the tuft on player 1's head. |
 | `p1_shorts_color` | `002790` | The colour of player 1's shorts. |
 | `p1_shoes_color` | `330000` | The colour of player 1's shoes and gloves. |
-| `p2_fur_color`, `p2_belly_color`, `p2_hair_color`, `p2_shorts_color`, `p2_shoes_color` | `33333a`, `f0f0f0`, `f0f0f0`, `7a3e9d`, `e6e6e6` | The same five colours for player 2, who starts as a skunk (black fur, a white belly and tuft, purple shorts, white shoes and gloves) so the two are easy to tell apart. |
+| `p2_fur_color`, `p2_belly_color`, `p2_hair_color`, `p2_shorts_color`, `p2_shoes_color` | `33333a`, `f0f0f0`, `f0f0f0`, `7a3e9d`, `2d2d2d` | The same five colours for player 2, who starts as a skunk (black fur, a white belly and tuft, purple shorts, dark grey shoes and gloves) so the two are easy to tell apart. |
 
 ### Start
 
