@@ -187,11 +187,6 @@ int SaveSettingsFile(const char *path, const char *example_path, const pc_settin
   return saved;
 }
 
-static int AreOutfitsEqual(const crash_outfit *a, const crash_outfit *b) {
-  return a->fur == b->fur && a->shorts == b->shorts && a->shoes == b->shoes
-    && a->belly == b->belly && a->hair == b->hair;
-}
-
 /* whether a and b set the same settings (boot_level by its text, not what's after it) */
 int AreSettingsEqual(const pc_settings *a, const pc_settings *b) {
   return a->skip_loading_screen == b->skip_loading_screen
@@ -210,7 +205,7 @@ int AreSettingsEqual(const pc_settings *a, const pc_settings *b) {
     && a->fullscreen == b->fullscreen
     && a->memory_card == b->memory_card
     && a->mute == b->mute
-    && AreOutfitsEqual(&a->outfits[0], &b->outfits[0])
-    && AreOutfitsEqual(&a->outfits[1], &b->outfits[1])
+    && OutfitsEqual(&a->outfits[0], &b->outfits[0])
+    && OutfitsEqual(&a->outfits[1], &b->outfits[1])
     && SDL_strcmp(a->boot_level, b->boot_level) == 0;
 }

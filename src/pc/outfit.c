@@ -1,11 +1,17 @@
 #include "outfit.h"
 
+static const crash_outfit crashs_own = {
+  .fur = CRASH_FUR_COLOR, .belly = CRASH_BELLY_COLOR, .hair = CRASH_HAIR_COLOR,
+  .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR
+};
+
 int OutfitsEqual(const crash_outfit *a, const crash_outfit *b) {
-  return 0;
+  return a->fur == b->fur && a->belly == b->belly && a->hair == b->hair
+    && a->shorts == b->shorts && a->shoes == b->shoes;
 }
 
 int OutfitIsCrashsOwn(const crash_outfit *outfit) {
-  return 0;
+  return OutfitsEqual(outfit, &crashs_own);
 }
 
 /* what tells the parts of crash's models (WillG and the rest) apart by colour */

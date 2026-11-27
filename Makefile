@@ -161,6 +161,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/tool_output.c \
 	src/launcher/version_corner.c \
 	src/pc/settings.c \
+	src/pc/outfit.c \
 	src/pc/controls.c \
 	src/pc/gamepad.c \
 	src/pc/config.c
