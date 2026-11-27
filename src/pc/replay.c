@@ -105,6 +105,10 @@ int ReplayMakeDir(const char *dir) {
   return stat(dir, &st) == 0 && S_ISDIR(st.st_mode);
 }
 
+int ReplayCanPlay(const char *path) {
+  return 1;
+}
+
 static replay_recorder recorder = { 0 };
 
 static FILE *replay_file = 0;   /* recording being replayed, or 0 */

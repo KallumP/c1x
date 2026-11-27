@@ -193,6 +193,36 @@ UTEST(replay, replay_refuses_a_recording_from_another_boot_level) {
   ASSERT_FALSE(TimeIsFixed());
 }
 
+#define OLD_REPLAY_MAGIC 0x31434552 /* "REC1": one pad a frame */
+
+UTEST(replay, a_finished_recording_can_be_played) {
+  SDL_Scancode held[1] = { 0 };
+
+  Record(RECORDED_LEVEL, held, 1);
+  ASSERT_TRUE(ReplayCanPlay(TEST_REPLAY));
+}
+
+UTEST(replay, an_empty_file_cant_be_played) {
+  WriteWholeFile(TEST_REPLAY, "");
+  ASSERT_FALSE(ReplayCanPlay(TEST_REPLAY));
+}
+
+UTEST(replay, a_recording_in_the_one_pad_format_cant_be_played) {
+  replay_header header = { OLD_REPLAY_MAGIC, RECORDED_LEVEL, RECORDED_SEED, 0 };
+  FILE *file;
+
+  file = fopen(TEST_REPLAY, "wb");
+  ASSERT_TRUE(file != 0);
+  fwrite(&header, sizeof(header), 1, file);
+  fclose(file);
+  ASSERT_FALSE(ReplayCanPlay(TEST_REPLAY));
+}
+
+UTEST(replay, a_missing_file_cant_be_played) {
+  remove("build/no_such_file.inputs");
+  ASSERT_FALSE(ReplayCanPlay("build/no_such_file.inputs"));
+}
+
 UTEST(replay, replay_of_a_missing_file_fails_cleanly) {
   remove("build/no_such_file.inputs");
   ASSERT_EQ(0, ReplayStart("build/no_such_file.inputs", REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));

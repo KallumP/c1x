@@ -40,6 +40,7 @@ extern int ReplayNewestFile(const char *dir, char *path, size_t size);
 extern void ReplayCardDir(char *dir, size_t size, const char *recording_path);
 extern void ReplaySettingsFile(char *path, size_t size, const char *recording_path);
 extern int ReplayMakeDir(const char *dir);
+extern int ReplayCanPlay(const char *path);
 
 /* game side */
 #define REPLAY_RECORD 1
