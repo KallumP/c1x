@@ -78,3 +78,26 @@ UTEST(shield, a_native_whose_path_has_no_length_pushes_along_x) {
   ASSERT_LT(way.x, 0);
   ASSERT_EQ(0, way.z);
 }
+
+static shield_motion walking_motion(void) { return (shield_motion){ at(0x1000, 0, 0x2000), WALKING_HEADING }; }
+static shield_motion pushed_motion(void) { return (shield_motion){ pushed(1), SHIELD_HEADING_PLUS_X }; }
+
+UTEST(shield, only_the_crash_whose_motion_became_a_push_is_pushed) {
+  shield_motion before[2] = { walking_motion(), walking_motion() };
+  shield_motion after[2] = { walking_motion(), pushed_motion() };
+
+  ASSERT_EQ(1 << 1, ShieldPushedCrashes(before, after, 2));
+}
+
+UTEST(shield, two_crashes_pushed_at_once_are_both_pushed) {
+  shield_motion before[2] = { walking_motion(), walking_motion() };
+  shield_motion after[2] = { pushed_motion(), pushed_motion() };
+
+  ASSERT_EQ((1 << 0) | (1 << 1), ShieldPushedCrashes(before, after, 2));
+}
+
+UTEST(shield, no_crash_is_pushed_when_none_changed_motion) {
+  shield_motion before[2] = { walking_motion(), pushed_motion() };
+
+  ASSERT_EQ(0, ShieldPushedCrashes(before, before, 2));
+}

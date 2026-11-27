@@ -1016,7 +1016,7 @@ int GfxCalcObjectMatrices(svtx_frame *frame, tgeo_header *t_header,
         //if (extents.p1.y >  108 && extents.p2.y >  108) { return 0; }
       }
     }
-    if (obj != crash && !(status_b & 0x400)) {
+    if (!CoopIsPlayer(obj) && !(status_b & 0x400)) {
       if (!GfxCalcObjectZoneMatrices(obj, flag, zdist, r_trans))
         return 0;
     }

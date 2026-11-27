@@ -1019,7 +1019,7 @@ void GoolObjectLocalBound(gool_object *obj, vec *scale) {
     frame_idx = obj->anim_frame >> 8;
     frame = (svtx_frame*)svtx->items[frame_idx];
     bnd = *(bound*)&frame->bound_x1;
-    if (obj == crash) { /* is crash object? */
+    if (CoopIsPlayer(obj)) { /* is a crash object? */
       bnd.p1.x += frame->col_x; /* readjust bound box center for collision purposes */
       bnd.p1.y += frame->col_y;
       bnd.p1.z += frame->col_z;
@@ -1378,7 +1378,7 @@ void GoolDrawObjectsTweened(int32_t alpha) {
 //----- (8001DE78) --------------------------------------------------------
 void GoolObjectTransform(gool_object *obj) {
   gool_anim *anim; // $s0
-  entry *en, *svtx, *cvtx, *zone;
+  entry *en, *svtx, *cvtx;
   zone_header *header;
   texinfo *info;
   texinfo2 *info2;
@@ -1412,10 +1412,8 @@ void GoolObjectTransform(gool_object *obj) {
     }
     if (status_b & 0x100000) {
       /* inherit zone colors */
-      zone = obj->zone ? obj->zone : cur_zone;
-      header = (zone_header*)zone->items[0];
-      obj->colors = obj == crash ? header->player_colors:
-                                   header->object_colors;
+      header = (zone_header*)GoolObjectZoneOrCurrent(obj)->items[0];
+      obj->colors = *CoopZoneColors(obj, header);
     }
     break;
   case GOOL_ANIM_TYPE_SPRITE:
@@ -1710,13 +1708,11 @@ void GoolTextObjectTransform(gool_object *obj, gool_text *text, int terms_skip, 
 }
 
 static inline int GoolObjectColorByZone(gool_object *obj) {
-  entry *zone;
   zone_header *header;
   gool_colors *colors;
 
   obj->invincibility_state = 0;
-  zone = obj->zone ? obj->zone : cur_zone;
-  header = (zone_header*)zone->items[0];
+  header = (zone_header*)GoolObjectZoneOrCurrent(obj)->items[0];
   colors = CoopZoneColors(obj, header);
   obj->colors.intensity = colors->intensity;
   return 0;
@@ -1768,7 +1764,7 @@ int GoolObjectColors(gool_object *obj) {
     }
     break;
   default:
-    if (obj == crash && (obj->status_b & 0x4000000))
+    if (CoopIsPlayer(obj) && (obj->status_b & 0x4000000))
       GoolObjectColorByZone(obj);
     break;
   }
@@ -2257,37 +2253,55 @@ static int GoolObjectIsCustomLevelNative(gool_object *obj) {
   return ns.ldat->lid == LID_TEST && obj->global && obj->global->eid == native_eid;
 }
 
-/* turns the push a native's shield just gave crash, along the game's x,
+/* turns the push a native's shield just gave a player, along the game's x,
    to lie along the native's own path (ShieldPushWay), at the same speed */
-static void GoolTurnShieldPush(gool_object *native) {
+static void GoolTurnShieldPush(gool_object *native, gool_object *player) {
   vec *start, *end, way;
   int32_t heading;
 
   start = (vec*)&native->memory[SHIELD_PATH_START];
   end = (vec*)&native->memory[SHIELD_PATH_END];
-  way = ShieldPushWay(&native->trans, &crash->trans, start, end);
+  way = ShieldPushWay(&native->trans, &player->trans, start, end);
   heading = angle12(atan2(way.x, way.z));
-  crash->target_rot.x = heading;
-  crash->velocity.x = ((sin(heading)>>4)*SHIELD_PUSH_SPEED)>>8;
-  crash->velocity.z = ((cos(heading)>>4)*SHIELD_PUSH_SPEED)>>8;
+  player->target_rot.x = heading;
+  player->velocity.x = ((sin(heading)>>4)*SHIELD_PUSH_SPEED)>>8;
+  player->velocity.z = ((cos(heading)>>4)*SHIELD_PUSH_SPEED)>>8;
+}
+
+static void GoolPlayerMotions(shield_motion *motions) {
+  int idx;
+
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    motions[idx].velocity = players[idx]->velocity;
+    motions[idx].heading = players[idx]->target_rot.x;
+  }
+}
+
+static void GoolTurnShieldPushes(gool_object *native, shield_motion *before) {
+  shield_motion after[GOOL_PLAYER_COUNT];
+  int idx, pushed;
+
+  GoolPlayerMotions(after);
+  pushed = ShieldPushedCrashes(before, after, GOOL_PLAYER_COUNT);
+  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
+    if (pushed & (1 << idx))
+      GoolTurnShieldPush(native, players[idx]);
+  }
 }
 
 static int GoolObjectInterpretCode(gool_object *obj, uint32_t flags, gool_state_ref *transition);
 
 /* runs obj's code (GoolObjectInterpretCode). a custom level's native
-   that pushes crash with its shield pushes him along its path (GoolTurnShieldPush) */
+   that pushes a crash with its shield pushes him along its path (GoolTurnShieldPushes) */
 int GoolObjectInterpret(gool_object *obj, uint32_t flags, gool_state_ref *transition) {
-  vec velocity_before;
-  int32_t heading_before;
+  shield_motion before[GOOL_PLAYER_COUNT];
   int res;
 
   if (!crash || !GoolObjectIsCustomLevelNative(obj))
     return GoolObjectInterpretCode(obj, flags, transition);
-  velocity_before = crash->velocity;
-  heading_before = crash->target_rot.x;
+  GoolPlayerMotions(before);
   res = GoolObjectInterpretCode(obj, flags, transition);
-  if (ShieldPushed(&velocity_before, heading_before, &crash->velocity, crash->target_rot.x))
-    GoolTurnShieldPush(obj);
+  GoolTurnShieldPushes(obj, before);
   return res;
 }
 
@@ -3473,7 +3487,7 @@ static inline void GoolOpReactSolidSurfaces(gool_object *obj, uint32_t instructi
   case 1:
     trans = obj->trans;
     trans2 = obj->trans;
-    if (obj == crash || obj->parent == crash)
+    if (CoopIsPlayer(obj) || CoopIsPlayer(obj->parent))
       ZoneFindNearestObjectNode2(obj, &trans2);
     *((gool_objnode*)&obj->misc_node) = ZoneFindNearestObjectNode(obj, &trans);
     if (G_OPB(instruction) != 0xBE0)
@@ -3618,7 +3632,7 @@ int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event, i
     exec = recipient->global;
     descs = (gool_state*)exec->items[4];
     desc = &descs[state];
-    if ((recipient == crash) &&
+    if (CoopIsPlayer(recipient) &&
         (recipient->invincibility_state >= 2 && recipient->invincibility_state <= 4))
       status_c |= 0x1002;
     if (!(status_c & desc->flags)) {

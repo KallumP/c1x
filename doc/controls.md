@@ -19,7 +19,7 @@ Change the controls in the [launcher](launcher.md#controls)'s Controls tab. The 
 
 ## Game controllers
 
-Plug in a game controller (Xbox, PlayStation, Switch Pro and most others) and it plays as player 1 alongside the keyboard, even when plugged in mid-game. By default its buttons are where a PlayStation pad's are:
+Plug in a game controller (Xbox, PlayStation, Switch Pro and most others) and it plays as player 1 alongside the keyboard, even when plugged in mid-game. With two players, the second controller plugged in plays as player 2. By default its buttons are where a PlayStation pad's are:
 
 - move - the d-pad or the left stick
 - jump (X) - the bottom face button (A on an Xbox controller)
@@ -32,8 +32,16 @@ Plug in a game controller (Xbox, PlayStation, Switch Pro and most others) and it
 - start - Start (Menu)
 - select - Back (View)
 
-Change them on the launcher's Controls tab, under **Controller**. The launcher names them as on an Xbox controller.
+Change them on the launcher's Controls tab, under **Controller**. The launcher names them as on an Xbox controller. Both players' controllers use the same buttons.
 
-## controls.cfg
+## Two players
 
-The launcher saves them to `controls.cfg`, next to `streams/`, which the game reads when it starts. Each line binds a button to a key, such as `cross = Space`, and a button with several keys has a line for each. Keys are matched by where they are on the keyboard, so on a non-QWERTY layout `Z` means the key where Z is on a US keyboard. A controller button's line starts its name with `pad:`, such as `cross = pad:a` or `r2 = pad:righttrigger`.
+With the `two_players` setting on (the launcher's **Couch co-op** switch), player 2 plays on a second controller or on the keyboard beside player 1:
+
+- move - the arrow keys
+- jump (X) - <kbd>Keypad 0</kbd>
+- spin (square) - <kbd>Keypad 4</kbd>
+- circle - <kbd>Keypad 6</kbd>
+- triangle - <kbd>Keypad 8</kbd>
+
+Change them on the launcher's Controls tab, under **Player 2 keyboard**.

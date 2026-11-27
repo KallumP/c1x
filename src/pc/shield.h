@@ -28,6 +28,25 @@ static inline int ShieldPushed(vec *velocity_before, int32_t heading_before, vec
   return !unchanged && velocity->z == 0 && (pushing_plus || pushing_minus);
 }
 
+/* a crash's velocity and heading (target_rot.x) */
+typedef struct {
+  vec velocity;
+  int32_t heading;
+} shield_motion;
+
+/* which of count crashes a shield just pushed, bit idx set for crash idx:
+   each by his own motion, from before to after */
+static inline int ShieldPushedCrashes(shield_motion *before, shield_motion *after, int count) {
+  int idx, pushed;
+
+  pushed = 0;
+  for (idx=0;idx<count;idx++) {
+    if (ShieldPushed(&before[idx].velocity, before[idx].heading, &after[idx].velocity, after[idx].heading))
+      pushed |= 1 << idx;
+  }
+  return pushed;
+}
+
 /* the way (across the ground; its length doesn't matter) a native at native,
    walking a path from start to end, pushes crash, at crash: along its path,
    away from it. a path with no length across the ground pushes along the

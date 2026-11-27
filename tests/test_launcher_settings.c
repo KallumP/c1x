@@ -124,6 +124,7 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
   s.memory_card = 1;
   s.mute = 1;
   s.spin_ledge_jump = 0;
+  s.two_players = 1;
   strcpy(s.boot_level, "tide_ruins");
   ASSERT_EQ(1, SaveSettingsFile(LAUNCHER_SETTINGS_PATH, "no_such_example.cfg", &s));
   ASSERT_EQ(1, ReadSettingsFile(LAUNCHER_SETTINGS_PATH, &read));
@@ -136,6 +137,7 @@ UTEST(launcher_settings, saved_settings_read_back_the_same) {
   ASSERT_EQ(1, read.memory_card);
   ASSERT_EQ(1, read.mute);
   ASSERT_EQ(0, read.spin_ledge_jump);
+  ASSERT_EQ(1, read.two_players);
 }
 
 /* CommentOutSettingLine's result for text, compared with expected, then freed */
@@ -275,5 +277,14 @@ UTEST(launcher_settings, settings_that_differ_only_in_mute_arent_equal) {
   SettingsReset(&a);
   SettingsReset(&b);
   b.mute = 1;
+  ASSERT_FALSE(AreSettingsEqual(&a, &b));
+}
+
+UTEST(launcher_settings, settings_that_differ_only_in_two_players_arent_equal) {
+  pc_settings a, b;
+
+  SettingsReset(&a);
+  SettingsReset(&b);
+  b.two_players = 1;
   ASSERT_FALSE(AreSettingsEqual(&a, &b));
 }
