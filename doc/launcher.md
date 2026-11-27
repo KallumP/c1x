@@ -8,11 +8,11 @@ The launcher is a small window for starting the game, changing its settings and 
 
 The launcher's version is in the top right corner of its window, for example `v1.3`.
 
-When it opens, it asks GitHub once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to install that release next to your c1x folder, as `c1x-1.4` beside `c1x-1.3`, then **Open v1.4** to switch to it.
+When it opens, it asks the update server once whether c1x has a newer release. If it does, a button naming that release appears beside the version, for example **Version 1.4 is out**. Click it to install that release next to your c1x folder, as `c1x-1.4` beside `c1x-1.3`, then **Open v1.4** to switch to it.
 
 - Your settings, controls, game files, memory card and custom levels are copied in. Custom levels build again when you choose them.
 - Your old folder isn't changed: delete it once you're happy with the new one.
-- If it can't install, the button opens the release's page on GitHub instead.
+- If it can't install, the button opens the release's download page instead.
 
 If you download a release yourself, copy these across from the old folder:
 
@@ -21,7 +21,7 @@ If you download a release yourself, copy these across from the old folder:
 
 Everything else is quick to set up again in the launcher.
 
-If you're offline, or GitHub doesn't answer, there's no button. It checks again the next time the launcher opens.
+If you're offline, or the update server doesn't answer, there's no button. It checks again the next time the launcher opens.
 
 Besides this check, the launcher only goes online for mod.io's levels, when you open the Levels tab, search or download one, and when you install a release.
 
