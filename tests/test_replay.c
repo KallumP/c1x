@@ -131,6 +131,17 @@ UTEST(replay, replay_feeds_player_two_the_recorded_buttons_instead_of_the_keyboa
   keys[SDL_SCANCODE_KP_4] = 0;
 }
 
+UTEST(replay, a_pad_beyond_the_recorded_ones_reads_nothing_from_the_replay) {
+  SDL_Scancode held[1] = { SDL_SCANCODE_SPACE };
+  uint32_t replayed;
+
+  Record(RECORDED_LEVEL, held, 1);
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
+  ReplayUpdate();
+  ASSERT_FALSE(ReplayHeld(PAD_PLAYER_COUNT, &replayed));
+  ReplayStop();
+}
+
 UTEST(replay, replay_starts_on_the_fixed_clock_at_the_recorded_time) {
   SDL_Scancode held[1] = { 0 };
   replay_header header;
