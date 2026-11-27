@@ -80,8 +80,8 @@ UTEST(outfit, his_orange_shades_are_fur) {
   ASSERT_EQ(OUTFIT_PART_FUR, OutfitPart(colour(FUR_SHADED)));
 }
 
-UTEST(outfit, the_lighter_orange_down_his_front_is_belly) {
-  ASSERT_EQ(OUTFIT_PART_BELLY, OutfitPart(colour(BELLY)));
+UTEST(outfit, the_lighter_orange_down_his_front_is_fur_too) {
+  ASSERT_EQ(OUTFIT_PART_FUR, OutfitPart(colour(BELLY)));
 }
 
 UTEST(outfit, his_blues_are_shorts) {

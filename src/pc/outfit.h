@@ -23,14 +23,13 @@ typedef struct {
   uint32_t shoes;  /* and his gloves */
 } crash_outfit;
 
-#define OUTFIT_PART_NONE   0
-#define OUTFIT_PART_FUR    1
-#define OUTFIT_PART_BELLY  2 /* the lighter fur down his front, and on his back */
-#define OUTFIT_PART_SHORTS 3
-#define OUTFIT_PART_SHOES  4 /* and his gloves, the same colours */
-#define OUTFIT_PART_MUZZLE 5 /* the pink around his mouth, drawn a paler belly colour */
-#define OUTFIT_PART_HAIR   6
-#define OUTFIT_PART_SHOE_LINES 7 /* the lines on his shoes' caps, in their texture */
+#define OUTFIT_PART_NONE       0
+#define OUTFIT_PART_FUR        1 /* his oranges: his fur, belly and the patch on his back */
+#define OUTFIT_PART_SHORTS     2
+#define OUTFIT_PART_SHOES      3 /* and his gloves */
+#define OUTFIT_PART_MUZZLE     4
+#define OUTFIT_PART_HAIR       5
+#define OUTFIT_PART_SHOE_LINES 6 /* in his shoes' texture */
 
 extern int OutfitsEqual(const crash_outfit *a, const crash_outfit *b);
 extern int OutfitIsCrashsOwn(const crash_outfit *outfit);
