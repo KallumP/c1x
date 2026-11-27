@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "outfit.h"
 #include "gfx/pixel.h"
 
@@ -19,10 +20,51 @@
 #define MUZZLE_GREEN_PERCENT_MAX 65   /* his shoes' soles and his teeth are paler */
 #define CRASH_MUZZLE_COLOR       0xDF7F7F
 
-static const crash_outfit crashs_own = {
-  .fur = CRASH_FUR_COLOR, .belly = CRASH_BELLY_COLOR, .hair = CRASH_HAIR_COLOR,
-  .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR
+const outfit_colour outfit_colours[OUTFIT_COLOUR_COUNT] = {
+  [OUTFIT_COLOUR_FUR]    = { "Fur",    "His fur." },
+  [OUTFIT_COLOUR_BELLY]  = { "Belly",  "His belly, the patch on his back and, paler, his muzzle." },
+  [OUTFIT_COLOUR_HAIR]   = { "Hair",   "The tuft on his head." },
+  [OUTFIT_COLOUR_SHORTS] = { "Shorts", "His shorts." },
+  [OUTFIT_COLOUR_SHOES]  = { "Shoes",  "His shoes and his gloves." },
 };
+
+static const size_t colour_offsets[OUTFIT_COLOUR_COUNT] = {
+  [OUTFIT_COLOUR_FUR]    = offsetof(crash_outfit, fur),
+  [OUTFIT_COLOUR_BELLY]  = offsetof(crash_outfit, belly),
+  [OUTFIT_COLOUR_HAIR]   = offsetof(crash_outfit, hair),
+  [OUTFIT_COLOUR_SHORTS] = offsetof(crash_outfit, shorts),
+  [OUTFIT_COLOUR_SHOES]  = offsetof(crash_outfit, shoes),
+};
+
+uint32_t *OutfitColour(crash_outfit *outfit, int colour_idx) {
+  return (uint32_t*)((char*)outfit + colour_offsets[colour_idx]);
+}
+
+const outfit_preset outfit_presets[] = {
+  [OUTFIT_PRESET_DEFAULT] = { "Default", { .fur = CRASH_FUR_COLOR, .belly = CRASH_BELLY_COLOR,
+    .hair = CRASH_HAIR_COLOR, .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR } },
+  [OUTFIT_PRESET_SKUNK] = { "Skunk", { .fur = SKUNK_FUR_COLOR, .belly = SKUNK_BELLY_COLOR,
+    .hair = SKUNK_HAIR_COLOR, .shorts = SKUNK_SHORTS_COLOR, .shoes = SKUNK_SHOES_COLOR } },
+};
+
+const int outfit_preset_count = sizeof(outfit_presets) / sizeof(outfit_presets[0]);
+
+int OutfitFindPreset(const crash_outfit *outfit) {
+  int i;
+
+  for (i=0;i<outfit_preset_count;i++) {
+    if (OutfitsEqual(outfit, &outfit_presets[i].outfit)) { return i; }
+  }
+  return OUTFIT_NO_PRESET;
+}
+
+const char *OutfitPresetName(const crash_outfit *outfit) {
+  int preset_idx;
+
+  preset_idx = OutfitFindPreset(outfit);
+  if (preset_idx == OUTFIT_NO_PRESET) { return "Custom"; }
+  return outfit_presets[preset_idx].name;
+}
 
 int OutfitsEqual(const crash_outfit *a, const crash_outfit *b) {
   return a->fur == b->fur && a->belly == b->belly && a->hair == b->hair
@@ -30,7 +72,7 @@ int OutfitsEqual(const crash_outfit *a, const crash_outfit *b) {
 }
 
 int OutfitIsCrashsOwn(const crash_outfit *outfit) {
-  return OutfitsEqual(outfit, &crashs_own);
+  return OutfitsEqual(outfit, &outfit_presets[OUTFIT_PRESET_DEFAULT].outfit);
 }
 
 static rgb8 Rgb8FromHex(uint32_t color) {

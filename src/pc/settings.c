@@ -20,12 +20,10 @@ const settings_color settings_colors[SETTINGS_COLOR_COUNT] = {
   { "p2_shoes_color",  1, offsetof(crash_outfit, shoes) },
 };
 
+static const int start_presets[SETTINGS_PLAYER_COUNT] = { OUTFIT_PRESET_DEFAULT, OUTFIT_PRESET_SKUNK };
+
 crash_outfit SettingsDefaultOutfit(int player_idx) {
-  if (player_idx == 1)
-    return (crash_outfit){ .fur = SETTINGS_P2_FUR_COLOR, .belly = SETTINGS_P2_BELLY_COLOR,
-      .hair = SETTINGS_P2_HAIR_COLOR, .shorts = SETTINGS_P2_SHORTS_COLOR, .shoes = SETTINGS_P2_SHOES_COLOR };
-  return (crash_outfit){ .fur = CRASH_FUR_COLOR, .belly = CRASH_BELLY_COLOR, .hair = CRASH_HAIR_COLOR,
-    .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR };
+  return outfit_presets[start_presets[player_idx]].outfit;
 }
 
 static void SettingsResetOutfits(pc_settings *s) {

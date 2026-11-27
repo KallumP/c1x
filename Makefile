@@ -106,6 +106,7 @@ TEST_SRC = $(wildcard tests/*.c) \
 	src/launcher/paths.c \
 	src/launcher/game.c \
 	src/launcher/settings_file.c \
+	src/launcher/outfit_edit.c \
 	src/launcher/text_file.c \
 	src/launcher/controls_file.c \
 	src/launcher/levels.c \
@@ -135,6 +136,7 @@ LAUNCHER_SRC = src/launcher/main.c \
 	src/launcher/help.c \
 	src/launcher/help_section.c \
 	src/launcher/settings_file.c \
+	src/launcher/outfit_edit.c \
 	src/launcher/text_file.c \
 	src/launcher/controls_file.c \
 	src/launcher/controls_section.c \

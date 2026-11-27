@@ -91,6 +91,82 @@ UTEST(outfit, a_chosen_colour_isnt_crashs_own_outfit) {
   ASSERT_FALSE(OutfitIsCrashsOwn(&outfit));
 }
 
+/* the colours a player chooses */
+
+UTEST(outfit, the_fur_colour_is_his_fur) {
+  crash_outfit outfit = his_own();
+
+  ASSERT_STREQ("Fur", outfit_colours[OUTFIT_COLOUR_FUR].label);
+  ASSERT_TRUE(OutfitColour(&outfit, OUTFIT_COLOUR_FUR) == &outfit.fur);
+}
+
+UTEST(outfit, the_belly_colour_is_his_belly) {
+  crash_outfit outfit = his_own();
+
+  ASSERT_STREQ("Belly", outfit_colours[OUTFIT_COLOUR_BELLY].label);
+  ASSERT_TRUE(OutfitColour(&outfit, OUTFIT_COLOUR_BELLY) == &outfit.belly);
+}
+
+UTEST(outfit, the_hair_colour_is_his_hair) {
+  crash_outfit outfit = his_own();
+
+  ASSERT_STREQ("Hair", outfit_colours[OUTFIT_COLOUR_HAIR].label);
+  ASSERT_TRUE(OutfitColour(&outfit, OUTFIT_COLOUR_HAIR) == &outfit.hair);
+}
+
+UTEST(outfit, the_shorts_colour_is_his_shorts) {
+  crash_outfit outfit = his_own();
+
+  ASSERT_STREQ("Shorts", outfit_colours[OUTFIT_COLOUR_SHORTS].label);
+  ASSERT_TRUE(OutfitColour(&outfit, OUTFIT_COLOUR_SHORTS) == &outfit.shorts);
+}
+
+UTEST(outfit, the_shoes_colour_is_his_shoes) {
+  crash_outfit outfit = his_own();
+
+  ASSERT_STREQ("Shoes", outfit_colours[OUTFIT_COLOUR_SHOES].label);
+  ASSERT_TRUE(OutfitColour(&outfit, OUTFIT_COLOUR_SHOES) == &outfit.shoes);
+}
+
+/* presets */
+
+UTEST(outfit, every_preset_is_found_as_itself) {
+  int i;
+
+  for (i=0;i<outfit_preset_count;i++)
+    ASSERT_EQ(i, OutfitFindPreset(&outfit_presets[i].outfit));
+}
+
+UTEST(outfit, an_outfit_of_no_presets_colours_is_no_preset) {
+  crash_outfit outfit = his_own();
+
+  outfit.hair = GREEN;
+  ASSERT_EQ(OUTFIT_NO_PRESET, OutfitFindPreset(&outfit));
+}
+
+UTEST(outfit, the_default_preset_is_crashs_own_outfit) {
+  ASSERT_TRUE(OutfitIsCrashsOwn(&outfit_presets[OUTFIT_PRESET_DEFAULT].outfit));
+}
+
+UTEST(outfit, the_default_preset_is_named_default) {
+  ASSERT_STREQ("Default", outfit_presets[OUTFIT_PRESET_DEFAULT].name);
+}
+
+UTEST(outfit, the_skunk_preset_is_named_skunk) {
+  ASSERT_STREQ("Skunk", outfit_presets[OUTFIT_PRESET_SKUNK].name);
+}
+
+UTEST(outfit, an_outfit_of_a_presets_colours_is_named_after_it) {
+  ASSERT_STREQ("Skunk", OutfitPresetName(&outfit_presets[OUTFIT_PRESET_SKUNK].outfit));
+}
+
+UTEST(outfit, an_outfit_of_no_presets_colours_is_named_custom) {
+  crash_outfit outfit = his_own();
+
+  outfit.hair = GREEN;
+  ASSERT_STREQ("Custom", OutfitPresetName(&outfit));
+}
+
 /* which part a colour is */
 
 UTEST(outfit, his_oranges_are_fur) {

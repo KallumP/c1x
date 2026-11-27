@@ -12,10 +12,15 @@
 #include "levels.h"
 #include "levels_section.h"
 #include "paths.h"
+#include "outfit_edit.h"
 
 #define NUMBER_WIDTH 160.0f
 #define SLIDER_WIDTH 320.0f
 #define BOOT_LEVEL_WIDTH 240.0f
+#define PRESET_WIDTH 200.0f
+#define COLOUR_LIST_WIDTH 140.0f
+#define SWATCH_GAP 2.0f
+#define NO_COLOUR -1
 #define NO_BOOT_LEVEL "none"
 #define CHANGE_CHECK_MS 500 /* how often to look for settings.cfg changing */
 
@@ -25,6 +30,7 @@ static Uint32 last_change_check;
 static custom_levels levels;
 static char save_status[PATH_MAX_LEN + 64]; /* what Save last did, or "" */
 static int save_failed;
+static outfit_edit popup_edit;
 
 static void SettingsPath(const char *repo, char *path, size_t size) {
   JoinPath(path, size, repo, "settings.cfg");
@@ -233,45 +239,128 @@ static void DrawGameAdjustmentFields(void) {
     "Show how many spins Crash has left in the top right corner.");
 }
 
-static float ChannelToFloat(uint32_t color, int shift) {
-  return ((color >> shift) & 0xFF) / 255.0f;
-}
-
-static uint32_t FloatToChannel(float channel, int shift) {
-  if (channel < 0) { channel = 0; }
-  if (channel > 1) { channel = 1; }
-  return (uint32_t)((channel * 255.0f) + 0.5f) << shift;
-}
-
-static void DrawColorPicker(const char *label, uint32_t *color, const char *tooltip) {
+static ImVec4 ColorToVec4(uint32_t color) {
   float rgb[3];
 
-  rgb[0] = ChannelToFloat(*color, 16);
-  rgb[1] = ChannelToFloat(*color, 8);
-  rgb[2] = ChannelToFloat(*color, 0);
-  if (igColorEdit3(label, rgb, ImGuiColorEditFlags_NoInputs))
-    *color = FloatToChannel(rgb[0], 16) | FloatToChannel(rgb[1], 8) | FloatToChannel(rgb[2], 0);
-  DrawTooltip(tooltip);
+  ColourToFloats(color, rgb);
+  return (ImVec4){ rgb[0], rgb[1], rgb[2], 1.0f };
+}
+
+static int DrawPlainSwatch(const char *id, uint32_t color) {
+  ImGuiColorEditFlags flags;
+  float size;
+
+  flags = ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop;
+  size = igGetFrameHeight();
+  return igColorButton(id, ColorToVec4(color), flags, (ImVec2){ size, size });
+}
+
+static int ClickedOutfitSwatch(crash_outfit *outfit) {
+  int i, clicked;
+
+  clicked = NO_COLOUR;
+  for (i=0;i<OUTFIT_COLOUR_COUNT;i++) {
+    if (i > 0) { igSameLine(0, SWATCH_GAP); }
+    if (DrawPlainSwatch(outfit_colours[i].label, *OutfitColour(outfit, i))) { clicked = i; }
+    DrawTooltip(outfit_colours[i].covers);
+  }
+  return clicked;
+}
+
+static void DrawPresetChoice(void) {
+  crash_outfit *outfit;
+  int i, current;
+
+  outfit = &popup_edit.outfit;
+  current = OutfitFindPreset(outfit);
+  igSetNextItemWidth(PRESET_WIDTH);
+  if (igBeginCombo("Preset", OutfitPresetName(outfit), 0)) {
+    for (i=0;i<outfit_preset_count;i++) {
+      if (igSelectable_Bool(outfit_presets[i].name, current == i, 0, (ImVec2){ 0, 0 })) {
+        *outfit = outfit_presets[i].outfit;
+      }
+    }
+    igEndCombo();
+  }
+  DrawTooltip("A ready-made set of colours. Changing a colour below makes it Custom.");
+}
+
+static void DrawColourListRow(int colour_idx) {
+  ImGuiSelectableFlags flags;
+  int selected;
+
+  flags = ImGuiSelectableFlags_DontClosePopups;
+  selected = popup_edit.colour_idx == colour_idx;
+  igPushID_Int(colour_idx);
+  if (DrawPlainSwatch("##swatch", *OutfitColour(&popup_edit.outfit, colour_idx))) {
+    popup_edit.colour_idx = colour_idx;
+  }
+  igSameLine(0, -1);
+  if (igSelectable_Bool(outfit_colours[colour_idx].label, selected, flags, (ImVec2){ COLOUR_LIST_WIDTH, 0 })) {
+    popup_edit.colour_idx = colour_idx;
+  }
+  DrawTooltip(outfit_colours[colour_idx].covers);
+  igPopID();
+}
+
+static void DrawColourList(void) {
+  int i;
+
+  igBeginGroup();
+  for (i=0;i<OUTFIT_COLOUR_COUNT;i++)
+    DrawColourListRow(i);
+  igEndGroup();
+}
+
+static void DrawColourPicker(void) {
+  ImGuiColorEditFlags flags;
+  uint32_t *color;
+  float rgb[3];
+
+  flags = ImGuiColorEditFlags_DisplayHex | ImGuiColorEditFlags_NoSidePreview;
+  color = OutfitColour(&popup_edit.outfit, popup_edit.colour_idx);
+  ColourToFloats(*color, rgb);
+  if (igColorPicker3("##picker", rgb, flags)) { *color = ColourFromFloats(rgb); }
+}
+
+static void DrawOutfitButtons(void) {
+  if (igButton("Done", (ImVec2){ BUTTON_WIDTH, 0 })) {
+    OutfitEditDone(&popup_edit, &settings);
+    igCloseCurrentPopup();
+  }
+  igSameLine(0, -1);
+  if (igButton("Cancel", (ImVec2){ BUTTON_WIDTH, 0 }) || igIsKeyPressed(ImGuiKey_Escape, false)) {
+    igCloseCurrentPopup();
+  }
+}
+
+static void DrawOutfitPopup(const char *title) {
+  if (!igBeginPopupModal(title, 0, ImGuiWindowFlags_AlwaysAutoResize)) { return; }
+  DrawPresetChoice();
+  DrawColourList();
+  igSameLine(0, -1);
+  DrawColourPicker();
+  igSeparator();
+  DrawOutfitButtons();
+  igEndPopup();
+}
+
+static void OpenOutfitPopup(const char *title, int player_idx, int colour_idx) {
+  OutfitEditOpen(&popup_edit, &settings, player_idx, colour_idx);
+  igOpenPopup_Str(title, 0);
 }
 
 static void DrawOutfit(const char *label, int player_idx) {
-  crash_outfit *outfit;
+  int clicked;
 
-  outfit = &settings.outfits[player_idx];
   BeginFieldRow(label, "The colours this player's Crash is drawn in.");
   igPushID_Str(label);
-  DrawColorPicker("Fur", &outfit->fur, "His fur.");
+  clicked = ClickedOutfitSwatch(&settings.outfits[player_idx]);
+  if (clicked != NO_COLOUR) { OpenOutfitPopup(label, player_idx, clicked); }
   igSameLine(0, -1);
-  DrawColorPicker("Belly", &outfit->belly, "His belly, the patch on his back and, paler, his muzzle.");
-  igSameLine(0, -1);
-  DrawColorPicker("Hair", &outfit->hair, "The tuft on his head.");
-  igSameLine(0, -1);
-  DrawColorPicker("Shorts", &outfit->shorts, "His shorts.");
-  igSameLine(0, -1);
-  DrawColorPicker("Shoes", &outfit->shoes, "His shoes and his gloves.");
-  igSameLine(0, -1);
-  if (igSmallButton("Reset")) { *outfit = SettingsDefaultOutfit(player_idx); }
-  DrawTooltip("Back to the colours this player starts in.");
+  if (igSmallButton("Edit")) { OpenOutfitPopup(label, player_idx, OUTFIT_COLOUR_FUR); }
+  DrawTooltip("Choose this player's colours.");
+  DrawOutfitPopup(label);
   igPopID();
 }
 
@@ -279,8 +368,8 @@ static void DrawCoopFields(void) {
   DrawFieldGroupTitle("Co-op");
   DrawOnOff("Couch co-op", &settings.two_players,
     "A second Crash plays beside the first, on the Player 2 keyboard keys or a second controller.");
-  DrawOutfit("Player 1 colours", 0);
-  DrawOutfit("Player 2 colours", 1);
+  DrawOutfit("Player 1 customization", 0);
+  DrawOutfit("Player 2 customization", 1);
 }
 
 /* the game's own save and load screens */

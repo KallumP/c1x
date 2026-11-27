@@ -15,6 +15,12 @@
 #define CRASH_SHORTS_COLOR 0x002790
 #define CRASH_SHOES_COLOR  0x330000
 
+#define SKUNK_FUR_COLOR    0x33333A /* the Skunk preset, which player two starts in */
+#define SKUNK_BELLY_COLOR  0xF0F0F0
+#define SKUNK_HAIR_COLOR   0xF0F0F0
+#define SKUNK_SHORTS_COLOR 0x7A3E9D
+#define SKUNK_SHOES_COLOR  0x2D2D2D
+
 typedef struct {
   uint32_t fur;
   uint32_t belly;  /* and the patch on his back; his muzzle is a paler shade */
@@ -31,6 +37,35 @@ typedef struct {
 #define OUTFIT_PART_HAIR       5
 #define OUTFIT_PART_SHOE_LINES 6 /* in his shoes' texture */
 
+#define OUTFIT_COLOUR_FUR    0
+#define OUTFIT_COLOUR_BELLY  1
+#define OUTFIT_COLOUR_HAIR   2
+#define OUTFIT_COLOUR_SHORTS 3
+#define OUTFIT_COLOUR_SHOES  4
+#define OUTFIT_COLOUR_COUNT  5
+
+typedef struct {
+  const char *label;
+  const char *covers;
+} outfit_colour;
+
+extern const outfit_colour outfit_colours[OUTFIT_COLOUR_COUNT];
+
+#define OUTFIT_PRESET_DEFAULT 0
+#define OUTFIT_PRESET_SKUNK   1
+#define OUTFIT_NO_PRESET      -1
+
+typedef struct {
+  const char *name;
+  crash_outfit outfit;
+} outfit_preset;
+
+extern const outfit_preset outfit_presets[];
+extern const int outfit_preset_count;
+
+extern uint32_t *OutfitColour(crash_outfit *outfit, int colour_idx);
+extern int OutfitFindPreset(const crash_outfit *outfit);
+extern const char *OutfitPresetName(const crash_outfit *outfit);
 extern int OutfitsEqual(const crash_outfit *a, const crash_outfit *b);
 extern int OutfitIsCrashsOwn(const crash_outfit *outfit);
 extern int OutfitPart(rgb8 color);

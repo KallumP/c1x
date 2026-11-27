@@ -259,11 +259,11 @@ static const struct {
   { "p1_hair_color",   offsetof(pc_settings, outfits[0].hair),   CRASH_HAIR_COLOR },
   { "p1_shorts_color", offsetof(pc_settings, outfits[0].shorts), CRASH_SHORTS_COLOR },
   { "p1_shoes_color",  offsetof(pc_settings, outfits[0].shoes),  CRASH_SHOES_COLOR },
-  { "p2_fur_color",    offsetof(pc_settings, outfits[1].fur),    SETTINGS_P2_FUR_COLOR },
-  { "p2_belly_color",  offsetof(pc_settings, outfits[1].belly),  SETTINGS_P2_BELLY_COLOR },
-  { "p2_hair_color",   offsetof(pc_settings, outfits[1].hair),   SETTINGS_P2_HAIR_COLOR },
-  { "p2_shorts_color", offsetof(pc_settings, outfits[1].shorts), SETTINGS_P2_SHORTS_COLOR },
-  { "p2_shoes_color",  offsetof(pc_settings, outfits[1].shoes),  SETTINGS_P2_SHOES_COLOR },
+  { "p2_fur_color",    offsetof(pc_settings, outfits[1].fur),    SKUNK_FUR_COLOR },
+  { "p2_belly_color",  offsetof(pc_settings, outfits[1].belly),  SKUNK_BELLY_COLOR },
+  { "p2_hair_color",   offsetof(pc_settings, outfits[1].hair),   SKUNK_HAIR_COLOR },
+  { "p2_shorts_color", offsetof(pc_settings, outfits[1].shorts), SKUNK_SHORTS_COLOR },
+  { "p2_shoes_color",  offsetof(pc_settings, outfits[1].shoes),  SKUNK_SHOES_COLOR },
 };
 
 #define COLOR_SETTING_COUNT (int)(sizeof(color_settings)/sizeof(color_settings[0]))
@@ -335,4 +335,10 @@ UTEST(settings, colour_setting_names_are_case_insensitive) {
   SettingsReset(&s);
   ASSERT_EQ(1, ParseSetting("P2_Fur_Color", "00ff00", &s));
   ASSERT_EQ((uint32_t)0x00FF00, s.outfits[1].fur);
+}
+
+UTEST(settings, player_two_starts_as_the_skunk) {
+  crash_outfit two = SettingsDefaultOutfit(1);
+
+  ASSERT_TRUE(OutfitsEqual(&two, &outfit_presets[OUTFIT_PRESET_SKUNK].outfit));
 }

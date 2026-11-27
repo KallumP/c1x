@@ -39,7 +39,7 @@ Besides this check, the launcher only goes online for mod.io's levels, when you 
 
 ## Game
 
-**Play** saves the settings and controls (see below), then starts `build/c1x.exe` (`build/c1x` on Linux) from the project folder, so the game finds `streams/`, `settings.cfg` and `controls.cfg` there. It starts the game without a console window, so the game's messages (such as "replaying ...") only show when you run `build/c1x.exe` yourself from a terminal. The launcher stays open, and the game keeps running if you close it. While a level is building, **Play** is greyed out until it's built.
+**Play** saves the settings and controls (see below), then starts the game. The launcher stays open, and the game keeps running if you close it. While a level is building, **Play** is greyed out until it's built.
 
 If the game isn't built, the launcher says so instead of showing **Play**. Build it, then the button appears.
 
@@ -47,7 +47,13 @@ If any of the game's files are missing from `streams/`, the launcher lists them 
 
 ## Settings
 
-The launcher has a field for each setting in `settings.cfg` (see [Settings](settings.md)): a checkbox for each on/off setting, a box for each number, and under **Co-op** a colour swatch for each player's fur, belly, hair, shorts and shoes, with **Reset** to go back to that player's starting colours. Hover over a field to see what it does. When it opens, the fields show what `settings.cfg` sets. If there isn't one, it creates it from `settings.example.cfg`, with the defaults.
+The launcher has a field for each setting in `settings.cfg` (see [Settings](settings.md)): a checkbox for each on/off setting and a box for each number. Hover over a field to see what it does. When it opens, the fields show what `settings.cfg` sets. If there isn't one, it creates it from `settings.example.cfg`, with the defaults.
+
+Under **Co-op**, **Player 1 customization** and **Player 2 customization** show each player's colours. Click one of the colour squares, or **Edit**, to choose them in a popup:
+
+- **Preset** picks a ready-made set: **Default** (Crash's own) or **Skunk**, which player 2 starts as.
+- The list on the left picks a part (fur, belly, hair, shorts or shoes), and the picker beside it sets that part's colour.
+- **Done** keeps the colours. **Cancel**, or Escape, leaves them as they were.
 
 **Custom level**, the first setting, is the custom level that **CUSTOM LEVEL** on the game's title screen starts (under **LOAD GAME**): it lists the custom levels (see [Levels](#levels)), and **none**, which leaves **CUSTOM LEVEL** off the title screen. A level that isn't built says `(not built)`; choosing it builds it, then sets it as the boot level once it builds.
 
