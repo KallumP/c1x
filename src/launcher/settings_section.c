@@ -248,13 +248,10 @@ static void DrawColorPicker(const char *label, uint32_t *color, const char *tool
   DrawTooltip(tooltip);
 }
 
-static void ResetOutfit(crash_outfit *outfit) {
-  outfit->fur = SETTINGS_FUR_COLOR;
-  outfit->shorts = SETTINGS_SHORTS_COLOR;
-  outfit->shoes = SETTINGS_SHOES_COLOR;
-}
+static void DrawOutfit(const char *label, int player_idx) {
+  crash_outfit *outfit;
 
-static void DrawOutfit(const char *label, crash_outfit *outfit) {
+  outfit = &settings.outfits[player_idx];
   BeginFieldRow(label, "The colours this player's Crash is drawn in.");
   igPushID_Str(label);
   DrawColorPicker("Fur", &outfit->fur, "His fur. His belly is a lighter shade of it.");
@@ -263,8 +260,8 @@ static void DrawOutfit(const char *label, crash_outfit *outfit) {
   igSameLine(0, -1);
   DrawColorPicker("Shoes", &outfit->shoes, "His shoes and his gloves.");
   igSameLine(0, -1);
-  if (igSmallButton("Reset")) { ResetOutfit(outfit); }
-  DrawTooltip("Back to Crash's own colours.");
+  if (igSmallButton("Reset")) { *outfit = SettingsDefaultOutfit(player_idx); }
+  DrawTooltip("Back to the colours this player starts in.");
   igPopID();
 }
 
@@ -272,8 +269,8 @@ static void DrawCoopFields(void) {
   DrawFieldGroupTitle("Co-op");
   DrawOnOff("Couch co-op", &settings.two_players,
     "A second Crash plays beside the first, on the Player 2 keyboard keys or a second controller.");
-  DrawOutfit("Player 1 colours", &settings.outfits[0]);
-  DrawOutfit("Player 2 colours", &settings.outfits[1]);
+  DrawOutfit("Player 1 colours", 0);
+  DrawOutfit("Player 2 colours", 1);
 }
 
 /* the game's own save and load screens */

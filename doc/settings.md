@@ -32,7 +32,7 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | `p1_fur_color` | `ff3100` | The colour of player 1's fur, as six hex digits: red, green, blue. His belly is a lighter shade of it. The default is Crash's own, and leaves him exactly as the original draws him. |
 | `p1_shorts_color` | `002790` | The colour of player 1's shorts. |
 | `p1_shoes_color` | `330000` | The colour of player 1's shoes and gloves. |
-| `p2_fur_color`, `p2_shorts_color`, `p2_shoes_color` | as player 1's | The same three colours for player 2. |
+| `p2_fur_color`, `p2_shorts_color`, `p2_shoes_color` | `2f80ed`, `e8590c`, `1b2a4a` | The same three colours for player 2, who starts in blue fur, orange shorts and navy shoes so the two are easy to tell apart. |
 
 ### Start
 
