@@ -232,14 +232,19 @@ static void InitCustomLevel() {
   AudioSongFind(level, &custom_level_audio_song);
 }
 
-static void KeepCardAndSettingsWithRecording(const char *recording_path) {
-  char dir[1024], settings_path[1024];
+static void KeepSettingsWithRecording(const char *recording_path) {
+  char settings_path[1024];
 
-  ReplayCardDir(dir, sizeof(dir), recording_path);
-  CardCopyFiles(CARD_GAME_DIR, dir);
   ReplaySettingsFile(settings_path, sizeof(settings_path), recording_path);
   if (!SettingsCopyFile("settings.cfg", settings_path))
     fprintf(stderr, "could not keep the settings with %s\n", recording_path);
+}
+
+static void KeepCardWithRecording(const char *recording_path) {
+  char dir[1024];
+
+  ReplayCardDir(dir, sizeof(dir), recording_path);
+  CardCopyFiles(CARD_GAME_DIR, dir);
 }
 
 /*
@@ -295,37 +300,45 @@ static void StartReplay(const char *path) {
   UseRecordingsCard(path);
 }
 
-static void StartRecording() {
-  char dir[1024], path[1024];
+/* a new file in recorded_inputs to record this run to, named by its start time */
+static int NameRecording(char *path, size_t size) {
+  char dir[1024];
   time_t now;
 
   RecordingsDir(dir, sizeof(dir));
   if (!ReplayMakeDir(dir)) {
     fprintf(stderr, "could not make %s to record inputs\n", dir);
-    return;
+    return 0;
   }
   now = time(0);
-  ReplayFileName(path, sizeof(path), dir, localtime(&now));
+  ReplayFileName(path, size, dir, localtime(&now));
+  return 1;
+}
+
+static void StartRecording(const char *path) {
   if (!ReplayStart(path, REPLAY_RECORD, boot_lid, seed_a)) {
     fprintf(stderr, "could not open %s to record inputs\n", path);
     return;
   }
-  KeepCardAndSettingsWithRecording(path);
+  KeepCardWithRecording(path);
 }
 
 int init() {
   gl_callbacks callbacks;
-  char replay_path[1024];
-  int i, replaying;
+  char recording_path[1024];
+  int i, replaying, recording;
 
   FindDataDir();
   PadInit(2); /* initialize 2 joypad structs */
   PadLoadBindings("controls.cfg"); /* keeps the default bindings if missing */
   SettingsReset(&game_settings);
   SettingsLoad("settings.cfg"); /* keeps the default settings if missing */
-  replaying = game_settings.replay_inputs && FindReplay(replay_path, sizeof(replay_path));
+  replaying = game_settings.replay_inputs && FindReplay(recording_path, sizeof(recording_path));
+  recording = !game_settings.replay_inputs && NameRecording(recording_path, sizeof(recording_path));
   if (replaying)
-    UseRecordingsSettings(replay_path); /* first, as a recording's settings can change the boot level */
+    UseRecordingsSettings(recording_path); /* first, as a recording's settings can change the boot level */
+  if (recording)
+    KeepSettingsWithRecording(recording_path);
   SetTicksElapsed(0);
   SDLInit();
   callbacks.pre_update = SDLUpdate;
@@ -338,9 +351,9 @@ int init() {
   sranda2();
   InitCustomLevel();
   if (replaying)
-    StartReplay(replay_path);
-  else if (!game_settings.replay_inputs)
-    StartRecording();
+    StartReplay(recording_path);
+  if (recording)
+    StartRecording(recording_path);
   for (i=1;i<4;i++)
     insts[i] = EID_NONE;
   for (i=0;i<NS_TEXTURE_PAGE_COUNT;i++)
