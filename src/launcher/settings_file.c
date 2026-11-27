@@ -128,14 +128,14 @@ static char *ReplaceOutfitLines(char *text, int player, const crash_outfit *outf
 
   SDL_snprintf(name, sizeof(name), "p%d_fur_color", player);
   text = ReplaceColorLine(text, name, outfit->fur);
-  SDL_snprintf(name, sizeof(name), "p%d_shorts_color", player);
-  text = ReplaceColorLine(text, name, outfit->shorts);
-  SDL_snprintf(name, sizeof(name), "p%d_shoes_color", player);
-  text = ReplaceColorLine(text, name, outfit->shoes);
   SDL_snprintf(name, sizeof(name), "p%d_belly_color", player);
   text = ReplaceColorLine(text, name, outfit->belly);
   SDL_snprintf(name, sizeof(name), "p%d_hair_color", player);
-  return ReplaceColorLine(text, name, outfit->hair);
+  text = ReplaceColorLine(text, name, outfit->hair);
+  SDL_snprintf(name, sizeof(name), "p%d_shorts_color", player);
+  text = ReplaceColorLine(text, name, outfit->shorts);
+  SDL_snprintf(name, sizeof(name), "p%d_shoes_color", player);
+  return ReplaceColorLine(text, name, outfit->shoes);
 }
 
 /* text (a settings file's, to SDL_free) with every setting in s set */

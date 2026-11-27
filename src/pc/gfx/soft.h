@@ -11,7 +11,7 @@
 #include "formats/slst.h"
 #include "formats/zdat.h"
 #include "pc/gfx/magnitude.h"
-#include "pc/settings.h"
+#include "pc/outfit.h"
 
 /* this structure is a combination of values
    some are the equivalent of GTE state/register values used in the psx implementation

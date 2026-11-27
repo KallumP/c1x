@@ -126,7 +126,7 @@ static uint32_t FurColor(const crash_outfit *outfit, rgb8 orange) {
 }
 
 static int HasCrashsOwnFur(const crash_outfit *outfit) {
-  return outfit->fur == SETTINGS_FUR_COLOR && outfit->belly == SETTINGS_BELLY_COLOR;
+  return outfit->fur == CRASH_FUR_COLOR && outfit->belly == CRASH_BELLY_COLOR;
 }
 
 /* a polygon of crash's coloured color, in outfit's colour for its part. a part
@@ -138,19 +138,19 @@ rgb8 OutfitRecolor(rgb8 color, const crash_outfit *outfit) {
     if (HasCrashsOwnFur(outfit)) { return color; }
     return Shaded(FurColor(outfit, color), color, FUR_BRIGHTEST);
   case OUTFIT_PART_MUZZLE: /* halfway to white: his muzzle is as pale beside his own belly */
-    if (outfit->belly == SETTINGS_BELLY_COLOR) { return color; }
+    if (outfit->belly == CRASH_BELLY_COLOR) { return color; }
     return Shaded(MixedColor(outfit->belly, 0xFFFFFF, 1, 2), color, MUZZLE_BRIGHTEST);
   case OUTFIT_PART_HAIR:
-    if (outfit->hair == SETTINGS_HAIR_COLOR) { return color; }
+    if (outfit->hair == CRASH_HAIR_COLOR) { return color; }
     return Shaded(outfit->hair, color, HAIR_BRIGHTEST);
   case OUTFIT_PART_SHORTS:
-    if (outfit->shorts == SETTINGS_SHORTS_COLOR) { return color; }
+    if (outfit->shorts == CRASH_SHORTS_COLOR) { return color; }
     return Shaded(outfit->shorts, color, SHORTS_BRIGHTEST);
   case OUTFIT_PART_SHOES:
-    if (outfit->shoes == SETTINGS_SHOES_COLOR) { return color; }
+    if (outfit->shoes == CRASH_SHOES_COLOR) { return color; }
     return Shaded(outfit->shoes, color, SHOES_BRIGHTEST);
   case OUTFIT_PART_SHOE_LINES: /* lighter than his own dark shoes, but darker so they show on any colour */
-    if (outfit->shoes == SETTINGS_SHOES_COLOR) { return color; }
+    if (outfit->shoes == CRASH_SHOES_COLOR) { return color; }
     return Rgb(MixedColor(outfit->shoes, 0x000000, 1, 2));
   }
   return color;

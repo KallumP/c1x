@@ -254,16 +254,16 @@ static const struct {
   size_t offset;
   uint32_t by_default;
 } color_settings[] = {
-  { "p1_fur_color",    offsetof(pc_settings, outfits[0].fur),    SETTINGS_FUR_COLOR },
-  { "p1_shorts_color", offsetof(pc_settings, outfits[0].shorts), SETTINGS_SHORTS_COLOR },
-  { "p1_shoes_color",  offsetof(pc_settings, outfits[0].shoes),  SETTINGS_SHOES_COLOR },
-  { "p1_belly_color",  offsetof(pc_settings, outfits[0].belly),  SETTINGS_BELLY_COLOR },
-  { "p1_hair_color",   offsetof(pc_settings, outfits[0].hair),   SETTINGS_HAIR_COLOR },
+  { "p1_fur_color",    offsetof(pc_settings, outfits[0].fur),    CRASH_FUR_COLOR },
+  { "p1_belly_color",  offsetof(pc_settings, outfits[0].belly),  CRASH_BELLY_COLOR },
+  { "p1_hair_color",   offsetof(pc_settings, outfits[0].hair),   CRASH_HAIR_COLOR },
+  { "p1_shorts_color", offsetof(pc_settings, outfits[0].shorts), CRASH_SHORTS_COLOR },
+  { "p1_shoes_color",  offsetof(pc_settings, outfits[0].shoes),  CRASH_SHOES_COLOR },
   { "p2_fur_color",    offsetof(pc_settings, outfits[1].fur),    SETTINGS_P2_FUR_COLOR },
-  { "p2_shorts_color", offsetof(pc_settings, outfits[1].shorts), SETTINGS_P2_SHORTS_COLOR },
-  { "p2_shoes_color",  offsetof(pc_settings, outfits[1].shoes),  SETTINGS_P2_SHOES_COLOR },
   { "p2_belly_color",  offsetof(pc_settings, outfits[1].belly),  SETTINGS_P2_BELLY_COLOR },
   { "p2_hair_color",   offsetof(pc_settings, outfits[1].hair),   SETTINGS_P2_HAIR_COLOR },
+  { "p2_shorts_color", offsetof(pc_settings, outfits[1].shorts), SETTINGS_P2_SHORTS_COLOR },
+  { "p2_shoes_color",  offsetof(pc_settings, outfits[1].shoes),  SETTINGS_P2_SHOES_COLOR },
 };
 
 #define COLOR_SETTING_COUNT (int)(sizeof(color_settings)/sizeof(color_settings[0]))
@@ -301,13 +301,13 @@ UTEST(settings, colour_settings_reject_anything_but_six_hex_digits) {
   ASSERT_EQ(-1, ParseSetting("p1_fur_color", "1a2b3c4", &s));
   ASSERT_EQ(-1, ParseSetting("p1_fur_color", "1a2b3g", &s));
   ASSERT_EQ(-1, ParseSetting("p1_fur_color", "green", &s));
-  ASSERT_EQ((uint32_t)SETTINGS_FUR_COLOR, s.outfits[0].fur);
+  ASSERT_EQ((uint32_t)CRASH_FUR_COLOR, s.outfits[0].fur);
 }
 
 UTEST(settings, player_twos_default_outfit_isnt_crashs_own) {
   crash_outfit one = SettingsDefaultOutfit(0), two = SettingsDefaultOutfit(1);
 
-  ASSERT_EQ((uint32_t)SETTINGS_FUR_COLOR, one.fur);
+  ASSERT_EQ((uint32_t)CRASH_FUR_COLOR, one.fur);
   ASSERT_NE(one.fur, two.fur);
   ASSERT_NE(one.shorts, two.shorts);
   ASSERT_NE(one.shoes, two.shoes);

@@ -2,6 +2,7 @@
 #define _PC_SETTINGS_H_
 
 #include "common.h"
+#include "outfit.h"
 
 #define SETTINGS_LOADING_SCREEN_MAX_MS 60000
 #define SETTINGS_REPLAY_SPEED_MAX      16
@@ -10,26 +11,12 @@
 #define SETTINGS_FRAME_RATE_MAX        240
 #define SETTINGS_PLAYER_COUNT          2
 #define SETTINGS_COLOR_DIGITS          6
-#define SETTINGS_FUR_COLOR             0xFF3100 /* crash's own colours, as 0xRRGGBB */
-#define SETTINGS_SHORTS_COLOR          0x002790
-#define SETTINGS_SHOES_COLOR           0x330000
-#define SETTINGS_BELLY_COLOR           0xFF7600
-#define SETTINGS_HAIR_COLOR            0x9D0000
 #define SETTINGS_P2_FUR_COLOR          0x33333A /* what player two starts in, a skunk: black fur, purple shorts, dark grey shoes */
 #define SETTINGS_P2_SHORTS_COLOR       0x7A3E9D
 #define SETTINGS_P2_SHOES_COLOR        0x2D2D2D
 #define SETTINGS_P2_BELLY_COLOR        0xF0F0F0 /* his stripe */
 #define SETTINGS_P2_HAIR_COLOR         0xF0F0F0
 #define LEVELS_DIR "levels" /* next to the executable; built levels to boot into, by name */
-
-/* the colours a player's crash is drawn in, each 0xRRGGBB (see pc/outfit.h) */
-typedef struct {
-  uint32_t fur;
-  uint32_t shorts;
-  uint32_t shoes; /* and his gloves */
-  uint32_t belly; /* and the patch on his back, and his muzzle, paler */
-  uint32_t hair;
-} crash_outfit;
 
 /* game settings (pc), read from settings.cfg */
 typedef struct {

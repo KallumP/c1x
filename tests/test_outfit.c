@@ -74,8 +74,8 @@ UTEST(outfit, the_hog_he_rides_is_no_part_of_the_outfit) {
 #define HALF_GREEN   0x008000
 
 static crash_outfit his_own(void) {
-  return (crash_outfit){ SETTINGS_FUR_COLOR, SETTINGS_SHORTS_COLOR, SETTINGS_SHOES_COLOR,
-    SETTINGS_BELLY_COLOR, SETTINGS_HAIR_COLOR };
+  return (crash_outfit){ .fur = CRASH_FUR_COLOR, .belly = CRASH_BELLY_COLOR, .hair = CRASH_HAIR_COLOR,
+    .shorts = CRASH_SHORTS_COLOR, .shoes = CRASH_SHOES_COLOR };
 }
 
 static uint32_t recolored(uint32_t color, crash_outfit outfit) {

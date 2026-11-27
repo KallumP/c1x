@@ -5,7 +5,7 @@
 #include "geom.h"
 #include "gool.h"
 #include "pad.h"
-#include "settings.h"
+#include "outfit.h"
 
 /*
  * local multiplayer (pc): with the two_players setting on, a second crash

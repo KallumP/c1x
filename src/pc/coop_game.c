@@ -5,6 +5,7 @@
 #include "level.h"
 #include "solid.h"
 #include "ns.h"
+#include "settings.h"
 
 #define NO_FLOOR       -999999999 /* the game's own floor search's "nothing there" */
 #define FLOOR_BELOW    0x8000     /* how far under a spot still counts as its floor: a third of a box */
@@ -36,9 +37,9 @@ int CoopFloorBelow(vec *trans) {
 }
 
 static int IsCrashsOwnOutfit(const crash_outfit *outfit) {
-  return outfit->fur == SETTINGS_FUR_COLOR && outfit->shorts == SETTINGS_SHORTS_COLOR
-    && outfit->shoes == SETTINGS_SHOES_COLOR && outfit->belly == SETTINGS_BELLY_COLOR
-    && outfit->hair == SETTINGS_HAIR_COLOR;
+  return outfit->fur == CRASH_FUR_COLOR && outfit->shorts == CRASH_SHORTS_COLOR
+    && outfit->shoes == CRASH_SHOES_COLOR && outfit->belly == CRASH_BELLY_COLOR
+    && outfit->hair == CRASH_HAIR_COLOR;
 }
 
 /* the colours to draw obj's model in: a player's, if they chose any, or 0 to
