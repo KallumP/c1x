@@ -37,7 +37,8 @@ int CoopFloorBelow(vec *trans) {
 
 static int IsCrashsOwnOutfit(const crash_outfit *outfit) {
   return outfit->fur == SETTINGS_FUR_COLOR && outfit->shorts == SETTINGS_SHORTS_COLOR
-    && outfit->shoes == SETTINGS_SHOES_COLOR;
+    && outfit->shoes == SETTINGS_SHOES_COLOR && outfit->belly == SETTINGS_BELLY_COLOR
+    && outfit->hair == SETTINGS_HAIR_COLOR;
 }
 
 /* the colours to draw obj's model in: a player's, if they chose any, or 0 to

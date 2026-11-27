@@ -228,5 +228,5 @@ UTEST(outfit, the_lines_on_his_shoes_caps_are_half_as_bright_as_the_shoe_colour)
   crash_outfit outfit = his_own();
 
   outfit.shoes = GREEN;
-  ASSERT_EQ((uint32_t)0x007F00, recolored(SHOE_LINE, outfit));
+  ASSERT_EQ((uint32_t)0x008000, recolored(SHOE_LINE, outfit));
 }

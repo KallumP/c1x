@@ -14,11 +14,15 @@
 #define MUZZLE_GREEN_MAX 65   /* his shoes' soles and his teeth are paler */
 #define SHOES_DARKEST    0x10
 #define SHOES_BRIGHTEST  0x33 /* his hair is the brighter pure reds */
+#define LINE_RED_MIN      0x34 /* the lines on his shoes' caps: dull reds, a little green and blue alike */
+#define LINE_RED_MAX      0x58
+#define LINE_GREEN_MAX    0x18
 
 /* each part's brightest shade, which is drawn in the chosen colour itself */
 #define FUR_BRIGHTEST    0xFF
 #define SHORTS_BRIGHTEST 0x90
 #define MUZZLE_BRIGHTEST 0xDF
+#define HAIR_BRIGHTEST   0x9D
 
 static int GreenPercent(rgb8 color) {
   return (color.g * 100) / color.r;
@@ -46,11 +50,22 @@ static int IsMuzzle(rgb8 color) {
   return GreenPercent(color) >= MUZZLE_GREEN_MIN && GreenPercent(color) <= MUZZLE_GREEN_MAX;
 }
 
+static int IsHair(rgb8 color) {
+  return color.g == 0 && color.b == 0 && color.r > SHOES_BRIGHTEST;
+}
+
+static int IsShoeLine(rgb8 color) {
+  return color.g == color.b && color.g > 0 && color.g <= LINE_GREEN_MAX
+    && color.r >= LINE_RED_MIN && color.r <= LINE_RED_MAX;
+}
+
 int OutfitPart(rgb8 color) {
   if (IsBelly(color)) { return OUTFIT_PART_BELLY; }
   if (IsOrange(color)) { return OUTFIT_PART_FUR; }
   if (IsShorts(color)) { return OUTFIT_PART_SHORTS; }
   if (IsShoes(color)) { return OUTFIT_PART_SHOES; }
+  if (IsHair(color)) { return OUTFIT_PART_HAIR; }
+  if (IsShoeLine(color)) { return OUTFIT_PART_SHOE_LINES; }
   if (IsMuzzle(color)) { return OUTFIT_PART_MUZZLE; }
   return OUTFIT_PART_NONE;
 }
@@ -62,6 +77,15 @@ static int Brightest(rgb8 color) {
   if (color.g > brightest) { brightest = color.g; }
   if (color.b > brightest) { brightest = color.b; }
   return brightest;
+}
+
+static rgb8 Rgb(uint32_t color) {
+  rgb8 rgb;
+
+  rgb.r = (color >> 16) & 0xFF;
+  rgb.g = (color >> 8) & 0xFF;
+  rgb.b = color & 0xFF;
+  return rgb;
 }
 
 /* chosen (0xRRGGBB), as dark as shade is beside its part's brightest shade */
@@ -77,34 +101,32 @@ static rgb8 Shaded(uint32_t chosen, rgb8 shade, int part_brightest) {
   return shaded;
 }
 
-static uint32_t Lightened(uint32_t channel, int toward_belly) {
-  return channel + (((0xFF - channel) * toward_belly) / ((BELLY_GREEN - FUR_GREEN) * 4));
+/* from's channel (the bits at shift), amount/whole of the way to to's */
+static uint32_t Mixed(uint32_t from, uint32_t to, int shift, int amount, int whole) {
+  int32_t from_channel, to_channel;
+
+  from_channel = (from >> shift) & 0xFF;
+  to_channel = (to >> shift) & 0xFF;
+  return (uint32_t)(from_channel + (((to_channel - from_channel) * amount) / whole)) << shift;
 }
 
-/* the fur colour for orange, one of his oranges: the yellower it is, from his
-   fur's orange to his belly's, the lighter, up to a quarter of the way to white */
-static uint32_t FurColor(uint32_t fur, rgb8 orange) {
+static uint32_t MixedColor(uint32_t from, uint32_t to, int amount, int whole) {
+  return Mixed(from, to, 16, amount, whole) | Mixed(from, to, 8, amount, whole) | Mixed(from, to, 0, amount, whole);
+}
+
+/* the colour for orange, one of his oranges: the yellower it is, from his
+   fur's orange to his belly's, the further from the fur colour to the belly colour */
+static uint32_t FurColor(const crash_outfit *outfit, rgb8 orange) {
   int toward_belly;
 
   toward_belly = GreenPercent(orange) - FUR_GREEN;
   if (toward_belly < 0) { toward_belly = 0; }
   if (toward_belly > BELLY_GREEN - FUR_GREEN) { toward_belly = BELLY_GREEN - FUR_GREEN; }
-  return (Lightened((fur >> 16) & 0xFF, toward_belly) << 16)
-    | (Lightened((fur >> 8) & 0xFF, toward_belly) << 8)
-    | Lightened(fur & 0xFF, toward_belly);
+  return MixedColor(outfit->fur, outfit->belly, toward_belly, BELLY_GREEN - FUR_GREEN);
 }
 
-/* halfway to white: his muzzle is as pale beside his own fur */
-static uint32_t MuzzleColor(uint32_t fur) {
-  uint32_t r, g, b;
-
-  r = (fur >> 16) & 0xFF;
-  g = (fur >> 8) & 0xFF;
-  b = fur & 0xFF;
-  r += (0xFF - r) / 2;
-  g += (0xFF - g) / 2;
-  b += (0xFF - b) / 2;
-  return (r << 16) | (g << 8) | b;
+static int HasCrashsOwnFur(const crash_outfit *outfit) {
+  return outfit->fur == SETTINGS_FUR_COLOR && outfit->belly == SETTINGS_BELLY_COLOR;
 }
 
 /* a polygon of crash's coloured color, in outfit's colour for its part. a part
@@ -113,17 +135,23 @@ rgb8 OutfitRecolor(rgb8 color, const crash_outfit *outfit) {
   switch (OutfitPart(color)) {
   case OUTFIT_PART_FUR:
   case OUTFIT_PART_BELLY:
-    if (outfit->fur == SETTINGS_FUR_COLOR) { return color; }
-    return Shaded(FurColor(outfit->fur, color), color, FUR_BRIGHTEST);
-  case OUTFIT_PART_MUZZLE:
-    if (outfit->fur == SETTINGS_FUR_COLOR) { return color; }
-    return Shaded(MuzzleColor(outfit->fur), color, MUZZLE_BRIGHTEST);
+    if (HasCrashsOwnFur(outfit)) { return color; }
+    return Shaded(FurColor(outfit, color), color, FUR_BRIGHTEST);
+  case OUTFIT_PART_MUZZLE: /* halfway to white: his muzzle is as pale beside his own belly */
+    if (outfit->belly == SETTINGS_BELLY_COLOR) { return color; }
+    return Shaded(MixedColor(outfit->belly, 0xFFFFFF, 1, 2), color, MUZZLE_BRIGHTEST);
+  case OUTFIT_PART_HAIR:
+    if (outfit->hair == SETTINGS_HAIR_COLOR) { return color; }
+    return Shaded(outfit->hair, color, HAIR_BRIGHTEST);
   case OUTFIT_PART_SHORTS:
     if (outfit->shorts == SETTINGS_SHORTS_COLOR) { return color; }
     return Shaded(outfit->shorts, color, SHORTS_BRIGHTEST);
   case OUTFIT_PART_SHOES:
     if (outfit->shoes == SETTINGS_SHOES_COLOR) { return color; }
     return Shaded(outfit->shoes, color, SHOES_BRIGHTEST);
+  case OUTFIT_PART_SHOE_LINES: /* lighter than his own dark shoes, but darker so they show on any colour */
+    if (outfit->shoes == SETTINGS_SHOES_COLOR) { return color; }
+    return Rgb(MixedColor(outfit->shoes, 0x000000, 1, 2));
   }
   return color;
 }
