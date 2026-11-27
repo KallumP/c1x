@@ -20,7 +20,7 @@ int ReplayRecordStart(replay_recorder *r, const char *path,
 
 /* record one frame */
 void ReplayRecordFrame(replay_recorder *r, int32_t ticks,
-  const uint32_t held[REPLAY_PLAYER_COUNT]) {
+  const uint32_t held[PAD_PLAYER_COUNT]) {
   replay_frame frame;
 
   if (!r->file) { return; }
@@ -131,7 +131,7 @@ int ReplayCanPlay(const char *path) {
 static replay_recorder recorder = { 0 };
 
 static FILE *replay_file = 0;   /* recording being replayed, or 0 */
-static uint32_t replay_held[REPLAY_PLAYER_COUNT] = { 0 }; /* buttons held this frame of the replay */
+static uint32_t replay_held[PAD_PLAYER_COUNT] = { 0 }; /* buttons held this frame of the replay */
 static int replay_desynced = 0;
 
 /*
@@ -187,7 +187,7 @@ int ReplayStart(const char *path, int mode, uint32_t lid, uint32_t seed) {
  */
 void ReplayUpdate() {
   replay_frame frame;
-  uint32_t held[REPLAY_PLAYER_COUNT];
+  uint32_t held[PAD_PLAYER_COUNT];
   int i;
 
   if (replay_file) {
@@ -204,7 +204,7 @@ void ReplayUpdate() {
     memcpy(replay_held, frame.held, sizeof(replay_held));
     return;
   }
-  for (i=0;i<REPLAY_PLAYER_COUNT;i++)
+  for (i=0;i<PAD_PLAYER_COUNT;i++)
     held[i] = SwPadRead(i);
   ReplayRecordFrame(&recorder, GetTicksElapsed(), held);
   if (recorder.file)
@@ -213,7 +213,7 @@ void ReplayUpdate() {
 
 /* while replaying, sets held to the replay's buttons on pad idx and returns 1 */
 int ReplayHeld(int idx, uint32_t *held) {
-  if (!replay_file) { return 0; }
+  if (!replay_file || idx < 0 || idx >= PAD_PLAYER_COUNT) { return 0; }
   *held = replay_held[idx];
   return 1;
 }

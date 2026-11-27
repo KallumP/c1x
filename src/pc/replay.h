@@ -4,10 +4,10 @@
 #include <stdio.h>
 #include <time.h>
 #include "common.h"
+#include "pad.h"
 
 #define REPLAY_DIR   "recorded_inputs" /* next to the executable; one file per run, named by start time */
 #define REPLAY_MAGIC 0x32434552 /* "REC2" */
-#define REPLAY_PLAYER_COUNT 2
 
 /* state needed to start a level the same way again */
 typedef struct {
@@ -20,7 +20,7 @@ typedef struct {
 /* one frame of input */
 typedef struct {
   int32_t ticks;        /* tick count when the frame was drawn */
-  uint32_t held[REPLAY_PLAYER_COUNT]; /* buttons held on each pad, as SwPadRead reads them */
+  uint32_t held[PAD_PLAYER_COUNT]; /* buttons held on each pad, as SwPadRead reads them */
 } replay_frame;
 
 typedef struct {
@@ -30,7 +30,7 @@ typedef struct {
 extern int ReplayRecordStart(replay_recorder *r, const char *path,
   replay_header *header);
 extern void ReplayRecordFrame(replay_recorder *r, int32_t ticks,
-  const uint32_t held[REPLAY_PLAYER_COUNT]);
+  const uint32_t held[PAD_PLAYER_COUNT]);
 extern void ReplayRecordStop(replay_recorder *r);
 
 /* recording files */
