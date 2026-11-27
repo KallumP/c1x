@@ -28,11 +28,12 @@ typedef struct {
 #define ENHANCED_TITLE_WIDTH   190
 #define ENHANCED_TITLE_HEIGHT  40
 
-/* CO-OP MODE, with two players: at N-Hanced's bottom right, hanging just below it */
-#define ENHANCED_TITLE_COOP_PICTURE "assets/coop_title.bmp"
-#define ENHANCED_TITLE_COOP_WIDTH   72
-#define ENHANCED_TITLE_COOP_HEIGHT  13
-#define ENHANCED_TITLE_COOP_DROP    5 /* how far below N-Hanced's bottom it reaches */
+/* CO-OP MODE, with two players: over the right end of N-Hanced's underline */
+#define ENHANCED_TITLE_COOP_PICTURE  "assets/coop_title.bmp"
+#define ENHANCED_TITLE_COOP_WIDTH    72
+#define ENHANCED_TITLE_COOP_HEIGHT   13
+#define ENHANCED_TITLE_COOP_OVERHANG 4 /* how far past N-Hanced's right edge it reaches */
+#define ENHANCED_TITLE_COOP_RISE     4 /* how far above N-Hanced's bottom its own is */
 
 extern void EnhancedTitleReset(enhanced_title *title);
 extern void EnhancedTitleNoteObject(enhanced_title *title, uint32_t subtype,

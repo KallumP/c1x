@@ -35,7 +35,7 @@ void EnhancedTitleCoopAt(rect2 *at) {
 
   EnhancedTitleAt(&n_hanced);
   at->x = n_hanced.x + (int32_t)n_hanced.w - ENHANCED_TITLE_COOP_WIDTH;
-  at->y = n_hanced.y + (int32_t)n_hanced.h + ENHANCED_TITLE_COOP_DROP - ENHANCED_TITLE_COOP_HEIGHT;
+  at->y = n_hanced.y + (int32_t)n_hanced.h + 0 - ENHANCED_TITLE_COOP_HEIGHT;
   at->w = ENHANCED_TITLE_COOP_WIDTH;
   at->h = ENHANCED_TITLE_COOP_HEIGHT;
 }
