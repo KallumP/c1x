@@ -5,6 +5,12 @@
 ### Added
 
 - each player's colours (fur, belly, hair, shorts and shoes) can be chosen in a popup in the launcher's settings, from presets (Default and Skunk) or part by part; player two starts as the skunk
+- input recordings record player two's buttons too, and replay both players
+
+### Changed
+
+- a replay plays with the settings its recording started with, so it plays out the same after your settings change
+- recordings made before this can't be replayed
 
 ## 2026-11-25
 
