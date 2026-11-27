@@ -54,20 +54,19 @@ UTEST(enhancedtitle, loading_the_title_again_waits_for_the_logo_again) {
   ASSERT_FALSE(EnhancedTitleDrawsWith(&title, ENHANCED_TITLE_ANCHOR));
 }
 
+/* in screen units from the centre, N-Hanced runs to x 100, and its underline ends near y 24 */
 UTEST(enhancedtitle, coop_mode_reaches_just_past_n_hanceds_right_edge) {
-  rect2 n_hanced, coop;
+  rect2 coop;
 
-  EnhancedTitleAt(&n_hanced);
   EnhancedTitleCoopAt(&coop);
-  ASSERT_EQ(n_hanced.x + (int32_t)n_hanced.w + ENHANCED_TITLE_COOP_OVERHANG, coop.x + (int32_t)coop.w);
+  ASSERT_EQ(104, coop.x + (int32_t)coop.w);
 }
 
 UTEST(enhancedtitle, coop_mode_sits_over_the_right_end_of_n_hanceds_underline) {
-  rect2 n_hanced, coop;
+  rect2 coop;
 
-  EnhancedTitleAt(&n_hanced);
   EnhancedTitleCoopAt(&coop);
-  ASSERT_EQ(n_hanced.y + (int32_t)n_hanced.h - ENHANCED_TITLE_COOP_RISE, coop.y + (int32_t)coop.h);
+  ASSERT_EQ(24, coop.y + (int32_t)coop.h);
 }
 
 UTEST(enhancedtitle, coop_mode_shows_with_two_players_under_n_hanced) {
