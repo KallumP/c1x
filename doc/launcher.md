@@ -21,7 +21,7 @@ If you download a release yourself, copy these across from the old folder:
 
 Everything else is quick to set up again in the launcher.
 
-If you're offline, or the update server doesn't answer, there's no button. It checks again the next time the launcher opens.
+If you're offline, or the update server doesn't answer, it can't check, so the update button won't show. It checks again the next time the launcher opens.
 
 Besides this check, the launcher only goes online for mod.io's levels, when you open the Levels tab, search or download one, and when you install a release.
 
