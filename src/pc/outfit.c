@@ -130,17 +130,28 @@ static uint32_t MixedColor(uint32_t from, uint32_t to, int amount, int whole) {
 
 /* the colour for orange, one of his oranges: the yellower it is, from his
    fur's orange to his belly's, the further from the fur colour to the belly colour */
-static uint32_t FurColor(const crash_outfit *outfit, rgb8 orange) {
+static int TowardBelly(rgb8 orange) {
   int toward_belly;
 
   toward_belly = GreenPercent(orange) - FUR_GREEN;
-  if (toward_belly < 0) { toward_belly = 0; }
-  if (toward_belly > BELLY_GREEN - FUR_GREEN) { toward_belly = BELLY_GREEN - FUR_GREEN; }
-  return MixedColor(outfit->fur, outfit->belly, toward_belly, BELLY_GREEN - FUR_GREEN);
+  if (toward_belly < 0) { return 0; }
+  if (toward_belly > BELLY_GREEN - FUR_GREEN) { return BELLY_GREEN - FUR_GREEN; }
+  return toward_belly;
 }
 
-static int HasCrashsOwnFur(const crash_outfit *outfit) {
-  return outfit->fur == CRASH_FUR_COLOR && outfit->belly == CRASH_BELLY_COLOR;
+static uint32_t FurColor(const crash_outfit *outfit, rgb8 orange) {
+  return MixedColor(outfit->fur, outfit->belly, TowardBelly(orange), BELLY_GREEN - FUR_GREEN);
+}
+
+/* an orange at an end that's crash's own colour is his; only those between take from both */
+static int IsCrashsOwnOrange(const crash_outfit *outfit, rgb8 orange) {
+  int toward_belly;
+
+  toward_belly = TowardBelly(orange);
+  if (outfit->fur == CRASH_FUR_COLOR && outfit->belly == CRASH_BELLY_COLOR) { return 1; }
+  if (toward_belly == 0) { return outfit->fur == CRASH_FUR_COLOR; }
+  if (toward_belly == BELLY_GREEN - FUR_GREEN) { return outfit->belly == CRASH_BELLY_COLOR; }
+  return 0;
 }
 
 /* a polygon of crash's coloured color, in outfit's colour for its part. a part
@@ -149,7 +160,7 @@ rgb8 OutfitRecolor(rgb8 color, const crash_outfit *outfit) {
   switch (OutfitPart(color)) {
   case OUTFIT_PART_FUR:
   case OUTFIT_PART_BELLY:
-    if (HasCrashsOwnFur(outfit)) { return color; }
+    if (IsCrashsOwnOrange(outfit, color)) { return color; }
     return Shaded(FurColor(outfit, color), color, FUR_BRIGHTEST);
   case OUTFIT_PART_MUZZLE: /* halfway to white: his muzzle is as pale beside his own belly */
     if (outfit->belly == CRASH_BELLY_COLOR) { return color; }
