@@ -17,6 +17,10 @@
 #define NUMBER_WIDTH 160.0f
 #define SLIDER_WIDTH 320.0f
 #define BOOT_LEVEL_WIDTH 240.0f
+#define PRESET_WIDTH 200.0f
+#define COLOUR_LIST_WIDTH 140.0f
+#define SWATCH_GAP 2.0f
+#define NO_COLOUR -1
 #define NO_BOOT_LEVEL "none"
 #define CHANGE_CHECK_MS 500 /* how often to look for settings.cfg changing */
 
@@ -26,6 +30,7 @@ static Uint32 last_change_check;
 static custom_levels levels;
 static char save_status[PATH_MAX_LEN + 64]; /* what Save last did, or "" */
 static int save_failed;
+static outfit_edit popup_edit;
 
 static void SettingsPath(const char *repo, char *path, size_t size) {
   JoinPath(path, size, repo, "settings.cfg");
@@ -234,8 +239,6 @@ static void DrawGameAdjustmentFields(void) {
     "Show how many spins Crash has left in the top right corner.");
 }
 
-#define SWATCH_SIZE 18.0f
-
 static ImVec4 ColorToVec4(uint32_t color) {
   float rgb[3];
 
@@ -243,53 +246,81 @@ static ImVec4 ColorToVec4(uint32_t color) {
   return (ImVec4){ rgb[0], rgb[1], rgb[2], 1.0f };
 }
 
-/* a swatch of color that only shows it; returns whether it was clicked */
-static int DrawSwatch(const char *id, uint32_t color, float size) {
-  return igColorButton(id, ColorToVec4(color), ImGuiColorEditFlags_NoTooltip, (ImVec2){ size, size });
+static int DrawPlainSwatch(const char *id, uint32_t color) {
+  ImGuiColorEditFlags flags;
+  float size;
+
+  flags = ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop;
+  size = igGetFrameHeight();
+  return igColorButton(id, ColorToVec4(color), flags, (ImVec2){ size, size });
 }
 
-/* returns the part whose swatch was clicked, or -1 */
-static int DrawOutfitSwatches(crash_outfit *outfit) {
+static int ClickedOutfitSwatch(crash_outfit *outfit) {
   int i, clicked;
 
-  clicked = -1;
+  clicked = NO_COLOUR;
   for (i=0;i<OUTFIT_COLOUR_COUNT;i++) {
-    if (DrawSwatch(outfit_colours[i].label, *OutfitColour(outfit, i), SWATCH_SIZE)) { clicked = i; }
-    DrawTooltip(outfit_colours[i].label);
-    igSameLine(0, 2.0f);
+    if (i > 0) { igSameLine(0, SWATCH_GAP); }
+    if (DrawPlainSwatch(outfit_colours[i].label, *OutfitColour(outfit, i))) { clicked = i; }
+    DrawTooltip(outfit_colours[i].covers);
   }
   return clicked;
 }
 
-#define PART_LIST_WIDTH 140.0f
+static void DrawPresetChoice(void) {
+  crash_outfit *outfit;
+  int i, current;
 
-static outfit_edit popup_edit;
+  outfit = &popup_edit.outfit;
+  current = OutfitFindPreset(outfit);
+  igSetNextItemWidth(PRESET_WIDTH);
+  if (igBeginCombo("Preset", OutfitPresetName(outfit), 0)) {
+    for (i=0;i<outfit_preset_count;i++) {
+      if (igSelectable_Bool(outfit_presets[i].name, current == i, 0, (ImVec2){ 0, 0 })) {
+        *outfit = outfit_presets[i].outfit;
+      }
+    }
+    igEndCombo();
+  }
+  DrawTooltip("A ready-made set of colours. Changing a colour below makes it Custom.");
+}
 
-static void DrawPartList(void) {
+static void DrawColourListRow(int colour_idx) {
+  ImGuiSelectableFlags flags;
+  int selected;
+
+  flags = ImGuiSelectableFlags_DontClosePopups;
+  selected = popup_edit.colour_idx == colour_idx;
+  igPushID_Int(colour_idx);
+  if (DrawPlainSwatch("##swatch", *OutfitColour(&popup_edit.outfit, colour_idx))) {
+    popup_edit.colour_idx = colour_idx;
+  }
+  igSameLine(0, -1);
+  if (igSelectable_Bool(outfit_colours[colour_idx].label, selected, flags, (ImVec2){ COLOUR_LIST_WIDTH, 0 })) {
+    popup_edit.colour_idx = colour_idx;
+  }
+  DrawTooltip(outfit_colours[colour_idx].covers);
+  igPopID();
+}
+
+static void DrawColourList(void) {
   int i;
 
   igBeginGroup();
-  for (i=0;i<OUTFIT_COLOUR_COUNT;i++) {
-    igPushID_Int(i);
-    DrawSwatch("##swatch", *OutfitColour(&popup_edit.outfit, i), igGetFrameHeight());
-    igSameLine(0, -1);
-    if (igSelectable_Bool(outfit_colours[i].label, popup_edit.colour_idx == i, ImGuiSelectableFlags_DontClosePopups,
-      (ImVec2){ PART_LIST_WIDTH, 0 }))
-      popup_edit.colour_idx = i;
-    DrawTooltip(outfit_colours[i].covers);
-    igPopID();
-  }
+  for (i=0;i<OUTFIT_COLOUR_COUNT;i++)
+    DrawColourListRow(i);
   igEndGroup();
 }
 
-static void DrawPartPicker(void) {
+static void DrawColourPicker(void) {
+  ImGuiColorEditFlags flags;
   uint32_t *color;
   float rgb[3];
 
+  flags = ImGuiColorEditFlags_DisplayHex | ImGuiColorEditFlags_NoSidePreview;
   color = OutfitColour(&popup_edit.outfit, popup_edit.colour_idx);
   ColourToFloats(*color, rgb);
-  if (igColorPicker3("##picker", rgb, ImGuiColorEditFlags_DisplayHex | ImGuiColorEditFlags_NoSidePreview))
-    *color = ColourFromFloats(rgb);
+  if (igColorPicker3("##picker", rgb, flags)) { *color = ColourFromFloats(rgb); }
 }
 
 static void DrawOutfitButtons(void) {
@@ -298,35 +329,17 @@ static void DrawOutfitButtons(void) {
     igCloseCurrentPopup();
   }
   igSameLine(0, -1);
-  if (igButton("Cancel", (ImVec2){ BUTTON_WIDTH, 0 }) || igIsKeyPressed(ImGuiKey_Escape, false))
+  if (igButton("Cancel", (ImVec2){ BUTTON_WIDTH, 0 }) || igIsKeyPressed(ImGuiKey_Escape, false)) {
     igCloseCurrentPopup();
-  igSameLine(0, -1);
-  if (igButton("Reset", (ImVec2){ BUTTON_WIDTH, 0 })) { popup_edit.outfit = SettingsDefaultOutfit(popup_edit.player_idx); }
-  DrawTooltip("Back to the colours this player starts in.");
-}
-
-#define PRESET_WIDTH 200.0f
-
-static void DrawPresetChoice(crash_outfit *outfit) {
-  int i, current;
-
-  current = OutfitFindPreset(outfit);
-  igSetNextItemWidth(PRESET_WIDTH);
-  if (!igBeginCombo("Preset", OutfitPresetName(outfit), 0)) { return; }
-  for (i=0;i<outfit_preset_count;i++) {
-    if (igSelectable_Bool(outfit_presets[i].name, current == i, 0, (ImVec2){ 0, 0 }))
-      *outfit = outfit_presets[i].outfit;
   }
-  igEndCombo();
 }
 
 static void DrawOutfitPopup(const char *title) {
   if (!igBeginPopupModal(title, 0, ImGuiWindowFlags_AlwaysAutoResize)) { return; }
-  DrawPresetChoice(&popup_edit.outfit);
-  DrawTooltip("A ready-made set of colours. Changing a colour below makes it Custom.");
-  DrawPartList();
+  DrawPresetChoice();
+  DrawColourList();
   igSameLine(0, -1);
-  DrawPartPicker();
+  DrawColourPicker();
   igSeparator();
   DrawOutfitButtons();
   igEndPopup();
@@ -338,14 +351,14 @@ static void OpenOutfitPopup(const char *title, int player_idx, int colour_idx) {
 }
 
 static void DrawOutfit(const char *label, int player_idx) {
-  int clicked_part;
+  int clicked;
 
   BeginFieldRow(label, "The colours this player's Crash is drawn in.");
   igPushID_Str(label);
-  clicked_part = DrawOutfitSwatches(&settings.outfits[player_idx]);
-  if (clicked_part != -1) { OpenOutfitPopup(label, player_idx, clicked_part); }
+  clicked = ClickedOutfitSwatch(&settings.outfits[player_idx]);
+  if (clicked != NO_COLOUR) { OpenOutfitPopup(label, player_idx, clicked); }
   igSameLine(0, -1);
-  if (igSmallButton("Edit")) { OpenOutfitPopup(label, player_idx, 0); }
+  if (igSmallButton("Edit")) { OpenOutfitPopup(label, player_idx, OUTFIT_COLOUR_FUR); }
   DrawTooltip("Choose this player's colours.");
   DrawOutfitPopup(label);
   igPopID();
