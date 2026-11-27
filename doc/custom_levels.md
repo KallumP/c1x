@@ -44,7 +44,7 @@ level_src/my_level/grass.png
 
 ### Textures from the game
 
-A level can use the game's own textures without sharing them: list them in a `game_textures.json` in the level's folder, instead of copying the images in. The build and the level editor make each one from the game's files in `streams/` when it isn't in the folder, so Blender has it too once the level has been opened or built. The acid cave's (`level_src/4_acid_cave/game_textures.json`) shows the layout: each image's file name, the game's file it's from (such as `s0000004`), the texture page, and where on the page it is. `npm run export-cut-level` writes one for a level it exports.
+A level can use the game's own textures without sharing them: list them in a `game_textures.json` in the level's folder, instead of copying the images in. The build and the level editor make each one from the game's files in `streams/` when it isn't in the folder, so Blender has it too once the level has been opened or built. The acid cave's (`level_src/4_acid_cave/game_textures.json`) shows the layout: each image's file name, the game's file it's from (such as `s0000004`), the texture page, and where on the page it is.
 
 ## 2. Place objects in the level editor
 
@@ -85,18 +85,18 @@ See [Objects](../level_src/README.md#objects) for how each box, enemy and obstac
 
 ## 3. Build the level and play it
 
-**Set it up (once):** build the game (see [Building](building.md)), and put its files in `streams/` (see [Running](running.md)). The launcher and the level editor build levels themselves, so there's nothing else to install.
+**Set it up (once):** add the game's files (see [Running](running.md)). The launcher and the level editor build levels themselves, so there's nothing else to install.
 
 **From the launcher** (no editor needed, as for a level someone sent you: put its folder in `level_src/`): in the **Levels** tab, click **Build** beside the level, or choose it as the **Custom level**, where a level that isn't built yet says `(not built)` and builds when chosen. Once it builds, it's the level the title screen's **CUSTOM LEVEL** starts. Click **Play**, then choose **CUSTOM LEVEL** (under **LOAD GAME**).
 
 **From the level editor:**
 
-1. Click **Build + boot** at the top right (or press **F5**). It saves your changes, builds the level, then, if the build worked, sets it as the game's custom level by writing `boot_level = my_level` in `settings.cfg`. A bar slides along the bottom of the top bar while it works, and it says `CUSTOM LEVEL on the game's title screen starts my_level` when it's done, or why it failed (hover over the message for the full output).
+1. Click **Build + boot** at the top right (or press **F5**). It saves your changes, builds the level, then, if the build worked, sets it as the launcher's **Custom level**. A bar slides along the bottom of the top bar while it works, and it says `CUSTOM LEVEL on the game's title screen starts my_level` when it's done, or why it failed (hover over the message for the full output).
 2. In the launcher, click **Play**, then choose **CUSTOM LEVEL** on the title screen (under **LOAD GAME**). When the level ends, the game is back at the title screen.
 
 **Build** (or Ctrl+Shift+B) on its own saves and builds the level without changing which level **CUSTOM LEVEL** starts. Hovering over a button shows its shortcut.
 
-**After any change** to the map or objects, build again. You don't need to rebuild the game.
+**After any change** to the map or objects, build again.
 
 **To take CUSTOM LEVEL off the title screen**, choose **none** as the launcher's **Custom level**. It stays there, starting the level, until you do, even after you close the editor.
 

@@ -36,7 +36,7 @@ Change them on the launcher's Controls tab, under **Controller**. The launcher n
 
 ## Two players
 
-With the `two_players` setting on (the launcher's **Couch co-op** switch), player 2 plays on a second controller or on the keyboard beside player 1:
+With **Couch co-op** on in the launcher's settings, player 2 plays on a second controller or on the keyboard beside player 1:
 
 - move - the arrow keys
 - jump (X) - <kbd>Keypad 0</kbd>
