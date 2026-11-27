@@ -13,6 +13,8 @@
 #define SETTINGS_FUR_COLOR             0xFF3100 /* crash's own colours, as 0xRRGGBB */
 #define SETTINGS_SHORTS_COLOR          0x002790
 #define SETTINGS_SHOES_COLOR           0x330000
+#define SETTINGS_BELLY_COLOR           0xFF7600
+#define SETTINGS_HAIR_COLOR            0x9D0000
 #define SETTINGS_P2_FUR_COLOR          0x33333A /* what player two starts in, a skunk: black fur, purple shorts, white shoes */
 #define SETTINGS_P2_SHORTS_COLOR       0x7A3E9D
 #define SETTINGS_P2_SHOES_COLOR        0xE6E6E6
@@ -23,6 +25,8 @@ typedef struct {
   uint32_t fur;
   uint32_t shorts;
   uint32_t shoes; /* and his gloves */
+  uint32_t belly; /* and the patch on his back, and his muzzle, paler */
+  uint32_t hair;
 } crash_outfit;
 
 /* game settings (pc), read from settings.cfg */
