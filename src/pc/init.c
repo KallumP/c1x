@@ -278,6 +278,10 @@ static int FindReplay(char *path, size_t size) {
     fprintf(stderr, "no recordings in %s to replay\n", dir);
     return 0;
   }
+  if (!ReplayCanPlay(path)) {
+    fprintf(stderr, "%s is not an input recording that can be replayed\n", path);
+    return 0;
+  }
   return 1;
 }
 
