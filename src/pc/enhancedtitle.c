@@ -41,5 +41,5 @@ void EnhancedTitleCoopAt(rect2 *at) {
 }
 
 int EnhancedTitleShowsCoop(int n_hanced_shown, int two_players) {
-  return 0;
+  return n_hanced_shown && two_players;
 }
