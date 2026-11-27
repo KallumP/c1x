@@ -289,12 +289,23 @@ uint32_t CoopViewFlags(coop_view *view, uint32_t flags, int one_dies_while_anoth
   return flags;
 }
 
+static int IsPoolSlot(int slot) {
+  return slot >= 0 && slot < GOOL_OBJECT_COUNT;
+}
+
 void CoopSpinnersClear(coop_spinners *spinners) {
+  int slot;
+
+  for (slot=0;slot<GOOL_OBJECT_COUNT;slot++)
+    spinners->spinner[slot] = COOP_NOT_A_PLAYER;
 }
 
 int CoopSpinnerOf(const coop_spinners *spinners, int slot) {
-  return 0;
+  if (!IsPoolSlot(slot)) { return COOP_NOT_A_PLAYER; }
+  return spinners->spinner[slot];
 }
 
 void CoopForgetSpinner(coop_spinners *spinners, int slot) {
+  if (IsPoolSlot(slot))
+    spinners->spinner[slot] = COOP_NOT_A_PLAYER;
 }
