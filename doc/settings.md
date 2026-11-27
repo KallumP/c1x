@@ -1,6 +1,6 @@
 # Settings
 
-The game's settings are in `settings.cfg`, next to `streams/`. Change them in the [launcher](launcher.md#settings), which creates the file from [`settings.example.cfg`](../settings.example.cfg) and keeps it up to date. The game reads it when it starts.
+Change the settings in the [launcher](launcher.md#settings). They're kept in `settings.cfg`, by the names below, so you can also edit that file by hand.
 
 ### General
 
@@ -46,7 +46,7 @@ Each colour is six hex digits: red, green, blue. Player 1's colours apply with o
 
 | Setting | Default | What it does |
 |---|---|---|
-| `boot_level` | none | The custom level, built to `build/levels/`, that **CUSTOM LEVEL** on the title screen starts; without one, the title screen has no **CUSTOM LEVEL** (see [Custom levels](custom_levels.md)). |
+| `boot_level` | none | The custom level that **CUSTOM LEVEL** on the title screen starts; without one, the title screen has no **CUSTOM LEVEL** (see [Custom levels](custom_levels.md)). |
 
 ### Saving
 
@@ -69,8 +69,6 @@ A save keeps what the PS1 game's does: the levels reached, gems and keys, lives 
 
 ## Recorded inputs
 
-To help reproduce bugs, every run records the buttons held each frame to its own file in `build/recorded_inputs/`, named by when it started. `replay_inputs` plays the newest one back, so delete or move newer ones to replay an older run. A recording only plays back the same way with the same game files and `skip_splash_screens` setting.
+To help reproduce bugs, every run records the buttons pressed to its own file in `build/recorded_inputs/`, named by when it started. `replay_inputs` plays the newest one back, so delete or move newer ones to replay an older run. A recording only plays back the same way with the same game files and `skip_splash_screens` setting. A replay never changes your own saves.
 
-A recording also keeps a copy of the memory card's saves as they were when it started, in a `.card` folder named after it. A replay plays on that copy, in `memory_card_replay/`, so it never changes your own saves.
-
-Recordings are never deleted for you (each is about 15 KB a minute), but `make clean` deletes `build/` with them in it.
+Recordings are never deleted for you (each is about 15 KB a minute).
