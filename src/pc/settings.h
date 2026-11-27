@@ -13,12 +13,6 @@
 #define SETTINGS_PLAYER_COUNT          2
 #define SETTINGS_COLOR_DIGITS          6
 #define SETTINGS_COLOR_COUNT           (SETTINGS_PLAYER_COUNT * 5) /* fur, belly, hair, shorts, shoes */
-/* what player two starts in: a skunk */
-#define SETTINGS_P2_FUR_COLOR          0x33333A
-#define SETTINGS_P2_SHORTS_COLOR       0x7A3E9D
-#define SETTINGS_P2_SHOES_COLOR        0x2D2D2D
-#define SETTINGS_P2_BELLY_COLOR        0xF0F0F0
-#define SETTINGS_P2_HAIR_COLOR         0xF0F0F0
 #define LEVELS_DIR "levels" /* next to the executable; built levels to boot into, by name */
 
 /* game settings (pc), read from settings.cfg */
@@ -53,13 +47,8 @@ typedef struct {
 extern pc_settings game_settings;
 extern const settings_color settings_colors[SETTINGS_COLOR_COUNT];
 
-#define SETTINGS_PRESET_COUNT 2
-#define SETTINGS_NO_PRESET    -1
-
-extern const outfit_preset settings_outfit_presets[SETTINGS_PRESET_COUNT];
 
 extern crash_outfit SettingsDefaultOutfit(int player_idx);
-extern int SettingsFindOutfitPreset(const crash_outfit *outfit);
 extern uint32_t *SettingsColor(pc_settings *s, int color_idx);
 extern uint32_t SettingsColorValue(const pc_settings *s, int color_idx);
 extern void SettingsReset(pc_settings *s);

@@ -15,6 +15,12 @@
 #define CRASH_SHORTS_COLOR 0x002790
 #define CRASH_SHOES_COLOR  0x330000
 
+#define SKUNK_FUR_COLOR    0x33333A /* the Skunk preset, which player two starts in */
+#define SKUNK_BELLY_COLOR  0xF0F0F0
+#define SKUNK_HAIR_COLOR   0xF0F0F0
+#define SKUNK_SHORTS_COLOR 0x7A3E9D
+#define SKUNK_SHOES_COLOR  0x2D2D2D
+
 typedef struct {
   uint32_t fur;
   uint32_t belly;  /* and the patch on his back; his muzzle is a paler shade */
