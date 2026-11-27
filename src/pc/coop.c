@@ -258,3 +258,8 @@ gool_object *CoopFlingFriend(gool_object *flung, int spinner, int32_t nearest_di
   }
   return friend;
 }
+
+uint32_t CoopFlingEvent(const coop_flings *flings, gool_object *sender,
+  gool_object *recipient, uint32_t event) {
+  return event;
+}

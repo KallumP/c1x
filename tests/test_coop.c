@@ -700,3 +700,41 @@ UTEST(coop, a_flung_enemy_doesnt_go_for_a_friend_out_of_play) {
   enemy.trans.x = ONE_BOX;
   ASSERT_TRUE(CoopFlingFriend(&enemy, 0, 2*ONE_BOX) == 0);
 }
+
+UTEST(coop, a_flung_enemys_fling_into_a_player_is_a_normal_hit) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_flings flings = { 0 };
+
+  PlayersInPlay(slots);
+  CoopFlingSpun(&flings, &enemy, 0);
+  ASSERT_EQ((uint32_t)GOOL_EVENT_HIT,
+    CoopFlingEvent(&flings, &enemy, &slots[COOP_PLAYER_TWO], GOOL_EVENT_FLING));
+}
+
+UTEST(coop, a_flung_enemys_fling_into_a_box_stays_a_fling) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy, box;
+  coop_flings flings = { 0 };
+
+  PlayersInPlay(slots);
+  CoopFlingSpun(&flings, &enemy, 0);
+  ASSERT_EQ((uint32_t)GOOL_EVENT_FLING, CoopFlingEvent(&flings, &enemy, &box, GOOL_EVENT_FLING));
+}
+
+/* the fling's event is also the one a beaten boss sends crash */
+UTEST(coop, the_fling_event_from_an_enemy_no_one_spun_stays_as_sent) {
+  gool_object slots[GOOL_PLAYER_COUNT], boss;
+  coop_flings flings = { 0 };
+
+  PlayersInPlay(slots);
+  ASSERT_EQ((uint32_t)GOOL_EVENT_WIN_BOSS,
+    CoopFlingEvent(&flings, &boss, &slots[0], GOOL_EVENT_WIN_BOSS));
+}
+
+UTEST(coop, a_flung_enemys_other_events_into_a_player_stay_as_sent) {
+  gool_object slots[GOOL_PLAYER_COUNT], enemy;
+  coop_flings flings = { 0 };
+
+  PlayersInPlay(slots);
+  CoopFlingSpun(&flings, &enemy, 0);
+  ASSERT_EQ((uint32_t)GOOL_EVENT_COMBO, CoopFlingEvent(&flings, &enemy, &slots[0], GOOL_EVENT_COMBO));
+}

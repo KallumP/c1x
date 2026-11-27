@@ -73,5 +73,7 @@ extern void CoopFlingSpun(coop_flings *flings, gool_object *obj, int spinner);
 extern int CoopFlingSpinner(const coop_flings *flings, gool_object *obj);
 extern void CoopFlingForget(coop_flings *flings, gool_object *obj);
 extern gool_object *CoopFlingFriend(gool_object *flung, int spinner, int32_t nearest_dist);
+extern uint32_t CoopFlingEvent(const coop_flings *flings, gool_object *sender,
+  gool_object *recipient, uint32_t event);
 
 #endif /* _PC_COOP_H_ */
