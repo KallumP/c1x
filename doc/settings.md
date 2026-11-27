@@ -30,7 +30,7 @@ Each colour is six hex digits: red, green, blue. Player 1's colours apply with o
 
 | Setting | Default | What it does |
 |---|---|---|
-| `two_players` | `off` | Two Crashes play together: player 2 on the arrow keys and number pad, or a second controller (see [Controls](controls.md#two-players)). The camera follows whoever is nearest it, and the other can walk out of view. If either Crash dies, both go back to the last checkpoint. The title screen shows CO-OP MODE under the logo. |
+| `two_players` | `off` | Two Crashes play together: player 2 on the arrow keys and number pad, or a second controller (see [Controls](controls.md#two-players)). The camera follows whoever is nearest it, and the other can walk out of view. If either Crash dies, both go back to the last checkpoint. An enemy one Crash spins hurts the other if it flies into him. The title screen shows CO-OP MODE under the logo. |
 | `p1_fur_color` | `ff3100` | The colour of player 1's fur. |
 | `p1_belly_color` | `ff7600` | The colour of player 1's belly and the patch on his back. His muzzle is a paler shade of it. |
 | `p1_hair_color` | `9d0000` | The colour of player 1's hair, the tuft on his head. |
