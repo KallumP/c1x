@@ -11,7 +11,7 @@ extern gool_handle handles[8];
 gool_object *players[GOOL_PLAYER_COUNT];
 
 coop_camera coop_cam;
-coop_flings coop_flung;
+coop_spinners spun_by; /* cleared with the object pool (gool.c) */
 
 /* which player's slot obj is, or COOP_NOT_A_PLAYER */
 int CoopPlayerIndex(gool_object *obj) {
@@ -201,71 +201,6 @@ vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans)) {
     if ((*has_floor)(&spot)) { return spot; }
   }
   return one; /* unchecked: he's standing on it */
-}
-
-static coop_fling *CoopFlingOf(const coop_flings *flings, gool_object *obj) {
-  int i;
-
-  for (i=0;i<COOP_FLING_COUNT;i++) {
-    if (flings->flings[i].obj == obj) { return (coop_fling*)&flings->flings[i]; }
-  }
-  return 0;
-}
-
-void CoopFlingSpun(coop_flings *flings, gool_object *obj, int spinner) {
-  coop_fling *fling;
-
-  fling = CoopFlingOf(flings, obj);
-  if (!fling)
-    fling = CoopFlingOf(flings, 0);
-  if (!fling) {
-    fling = &flings->flings[flings->next];
-    flings->next = (flings->next + 1) % COOP_FLING_COUNT;
-  }
-  fling->obj = obj;
-  fling->spinner = spinner;
-}
-
-int CoopFlingSpinner(const coop_flings *flings, gool_object *obj) {
-  coop_fling *fling;
-
-  if (!obj) { return COOP_NOT_A_PLAYER; } /* an empty entry's obj is 0 too */
-  fling = CoopFlingOf(flings, obj);
-  if (!fling) { return COOP_NOT_A_PLAYER; }
-  return fling->spinner;
-}
-
-void CoopFlingForget(coop_flings *flings, gool_object *obj) {
-  coop_fling *fling;
-
-  fling = CoopFlingOf(flings, obj);
-  if (fling)
-    fling->obj = 0;
-}
-
-/* the player flung would hit before the nearest enemy or box, or 0 */
-gool_object *CoopFlingFriend(gool_object *flung, int spinner, int32_t nearest_dist) {
-  gool_object *friend;
-  int32_t dist;
-  int idx;
-
-  friend = 0;
-  for (idx=0;idx<GOOL_PLAYER_COUNT;idx++) {
-    if (idx == spinner || !CoopPlayerInPlay(idx)) { continue; }
-    dist = (int32_t)ApxDist(&flung->trans, &players[idx]->trans);
-    if (dist >= nearest_dist) { continue; }
-    friend = players[idx];
-    nearest_dist = dist;
-  }
-  return friend;
-}
-
-/* a flung enemy's fling into a player hurts him as an enemy does */
-uint32_t CoopFlingEvent(const coop_flings *flings, gool_object *sender,
-  gool_object *recipient, uint32_t event) {
-  if (event != GOOL_EVENT_FLING || !CoopIsPlayer(recipient)) { return event; }
-  if (CoopFlingSpinner(flings, sender) == COOP_NOT_A_PLAYER) { return event; }
-  return GOOL_EVENT_HIT;
 }
 
 int CoopOneDiesWhileAnotherPlays(void) {

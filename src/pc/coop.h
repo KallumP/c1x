@@ -25,23 +25,6 @@ typedef struct {
 } coop_camera;
 
 /*
- * a spun enemy flies off and hits the nearest enemy or box in its way (the
- * FLING event). in co-op it can hit the other player too, so who spun it is
- * kept until it's gone: never the one who spun it, as it leaves his spin
- */
-#define COOP_FLING_COUNT 8 /* enemies in flight at once; the oldest makes room */
-
-typedef struct {
-  gool_object *obj;
-  int spinner;
-} coop_fling;
-
-typedef struct {
-  coop_fling flings[COOP_FLING_COUNT];
-  int next; /* the entry the next new one takes, once they're all used */
-} coop_flings;
-
-/*
  * a spun enemy flies off and hits the nearest enemy or box within two boxes
  * (the FLING event, which only flung enemies send). in co-op the other player
  * can be that target, as for any enemy's hit; never the one who spun it, as
@@ -67,7 +50,7 @@ typedef struct {
 
 extern gool_object *players[GOOL_PLAYER_COUNT];
 extern coop_camera coop_cam;
-extern coop_flings coop_flung;
+extern coop_spinners spun_by;
 
 extern int CoopPlayerIndex(gool_object *obj);
 extern int CoopIsPlayer(gool_object *obj);
@@ -90,12 +73,6 @@ extern int CoopLevelShowsOutfits(int lid);
 extern vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans));
 extern int CoopFloorBelow(vec *trans);
 extern const crash_outfit *CoopPlayerOutfit(gool_object *obj);
-extern void CoopFlingSpun(coop_flings *flings, gool_object *obj, int spinner);
-extern int CoopFlingSpinner(const coop_flings *flings, gool_object *obj);
-extern void CoopFlingForget(coop_flings *flings, gool_object *obj);
-extern gool_object *CoopFlingFriend(gool_object *flung, int spinner, int32_t nearest_dist);
-extern uint32_t CoopFlingEvent(const coop_flings *flings, gool_object *sender,
-  gool_object *recipient, uint32_t event);
 extern void CoopSpinnersClear(coop_spinners *spinners);
 extern int CoopSpinnerOf(const coop_spinners *spinners, int slot);
 extern void CoopForgetSpinner(coop_spinners *spinners, int slot);
