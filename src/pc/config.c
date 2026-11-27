@@ -66,3 +66,25 @@ int ConfigLoad(const char *path, const char *what, const char *expected,
   fclose(file);
   return applied;
 }
+
+/*
+ * a missing config file means the defaults, so copying one writes an empty
+ * file. returns 0 if to can't be written in full
+ */
+int ConfigCopyFile(const char *from, const char *to) {
+  FILE *in, *out;
+  char buf[1024];
+  size_t len;
+  int written;
+
+  out = fopen(to, "wb");
+  if (!out) { return 0; }
+  written = 1;
+  in = fopen(from, "rb");
+  if (in) {
+    while (written && (len = fread(buf, 1, sizeof(buf), in)) > 0)
+      written = fwrite(buf, 1, len, out) == len;
+    fclose(in);
+  }
+  return fclose(out) == 0 && written;
+}

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <SDL2/SDL.h>
 #include "utest.h"
 #include "pc/config.h"
 #include "test_files.h"
@@ -105,4 +106,51 @@ UTEST(config, load_counts_only_applied_lines) {
   ASSERT_EQ(1, ConfigLoad(CONFIG_TEST_PATH, "setting", "name = value", record_line, &rec));
   ASSERT_EQ(1, rec.calls);
   ASSERT_EQ(4, rec.last_line_num);
+}
+
+#define CONFIG_COPY_PATH "build/test_config_copy.cfg"
+
+UTEST(config, copying_a_file_copies_its_text) {
+  char *copied;
+
+  WriteWholeFile(CONFIG_TEST_PATH, "two_players = on\nspin_ledge_jump = off\n");
+  remove(CONFIG_COPY_PATH);
+  ASSERT_EQ(1, ConfigCopyFile(CONFIG_TEST_PATH, CONFIG_COPY_PATH));
+  copied = ReadWholeFile(CONFIG_COPY_PATH);
+  ASSERT_STREQ("two_players = on\nspin_ledge_jump = off\n", copied);
+  SDL_free(copied);
+}
+
+UTEST(config, copying_a_missing_file_writes_an_empty_one) {
+  char *copied;
+
+  remove("build/no_such_config.cfg");
+  WriteWholeFile(CONFIG_COPY_PATH, "stale = on\n");
+  ASSERT_EQ(1, ConfigCopyFile("build/no_such_config.cfg", CONFIG_COPY_PATH));
+  copied = ReadWholeFile(CONFIG_COPY_PATH);
+  ASSERT_STREQ("", copied);
+  SDL_free(copied);
+}
+
+UTEST(config, copying_a_file_longer_than_the_copy_buffer_copies_all_of_it) {
+  char text[3000], *copied;
+
+  memset(text, 'a', sizeof(text)-1);
+  text[sizeof(text)-1] = 0;
+  WriteWholeFile(CONFIG_TEST_PATH, text);
+  ASSERT_EQ(1, ConfigCopyFile(CONFIG_TEST_PATH, CONFIG_COPY_PATH));
+  copied = ReadWholeFile(CONFIG_COPY_PATH);
+  ASSERT_STREQ(text, copied);
+  SDL_free(copied);
+}
+
+UTEST(config, copying_over_a_longer_file_leaves_only_the_copy) {
+  char *copied;
+
+  WriteWholeFile(CONFIG_COPY_PATH, "an old file, longer than the one copied over it\n");
+  WriteWholeFile(CONFIG_TEST_PATH, "mute = on\n");
+  ASSERT_EQ(1, ConfigCopyFile(CONFIG_TEST_PATH, CONFIG_COPY_PATH));
+  copied = ReadWholeFile(CONFIG_COPY_PATH);
+  ASSERT_STREQ("mute = on\n", copied);
+  SDL_free(copied);
 }

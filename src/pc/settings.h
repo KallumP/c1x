@@ -54,5 +54,6 @@ extern uint32_t SettingsColorValue(const pc_settings *s, int color_idx);
 extern void SettingsReset(pc_settings *s);
 extern int SettingsParseLine(const char *line, pc_settings *s);
 extern int SettingsLoad(const char *path);
+extern int SettingsLoadRecorded(const char *path);
 
 #endif /* _PC_SETTINGS_H_ */

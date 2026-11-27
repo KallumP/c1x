@@ -225,3 +225,30 @@ static int SettingsApplyLine(char *name, char *value, const char *path,
 int SettingsLoad(const char *path) {
   return ConfigLoad(path, "setting", "name = value", SettingsApplyLine, 0);
 }
+
+/* how a replay is watched doesn't change how it plays out, so that stays the player's own */
+static void SettingsKeepOwnViewing(pc_settings *s, const pc_settings *own) {
+  s->replay_inputs = own->replay_inputs;
+  s->replay_speed = own->replay_speed;
+  s->frame_rate = own->frame_rate;
+  s->fullscreen = own->fullscreen;
+  s->mute = own->mute;
+  s->fps_display = own->fps_display;
+  s->speed_display = own->speed_display;
+  s->spin_display = own->spin_display;
+  s->box_display = own->box_display;
+}
+
+/* so a replay plays out the same; 0, leaving game_settings as they were, if path can't be read */
+int SettingsLoadRecorded(const char *path) {
+  pc_settings own;
+
+  own = game_settings;
+  SettingsReset(&game_settings);
+  if (SettingsLoad(path) < 0) {
+    game_settings = own;
+    return 0;
+  }
+  SettingsKeepOwnViewing(&game_settings, &own);
+  return 1;
+}

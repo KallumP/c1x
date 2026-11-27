@@ -29,7 +29,7 @@ speed run mode
 
 
 local multiplayer
-- Replays recording both pads
+- show "co-op mode" under the n-hanced logo on the title screen
 - Split screen, so neither player walks out of view
 - way to assign a controller to a player (if you want p1 on keyboard, and p2 on controller 1)
 - side level custom rules, or is it fine as it is
@@ -45,7 +45,6 @@ time trails
 Generic
 - play as coco, and other characters from the game (might need to import coco?)
 - increase render distance of custom levels. Maybe this comes with camera clamping. Define a rail for the camera, and then the geometry can be optimized for that rail
-- input recording also needs to store what settings were used for the game start, similar to how the memory card is also stored
 - europe support
 - Jaws of Darkness's demo drifts from its recording: Crash dies 5 times in it
 - linux download downloads a windows version...

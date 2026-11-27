@@ -19,12 +19,13 @@ int ReplayRecordStart(replay_recorder *r, const char *path,
 }
 
 /* record one frame */
-void ReplayRecordFrame(replay_recorder *r, int32_t ticks, uint32_t held) {
+void ReplayRecordFrame(replay_recorder *r, int32_t ticks,
+  const uint32_t held[PAD_PLAYER_COUNT]) {
   replay_frame frame;
 
   if (!r->file) { return; }
   frame.ticks = ticks;
-  frame.held = held;
+  memcpy(frame.held, held, sizeof(frame.held));
   fwrite(&frame, sizeof(replay_frame), 1, r->file);
 }
 
@@ -45,20 +46,31 @@ void ReplayFileName(char *name, size_t size, const char *dir,
 }
 
 #define RECORDING_EXTENSION      ".inputs"
-#define RECORDING_EXTENSION_SIZE 7
+#define RECORDING_EXTENSION_SIZE (sizeof(RECORDING_EXTENSION)-1)
 #define CARD_DIR_EXTENSION       ".card"
+#define SETTINGS_FILE_EXTENSION  ".settings"
 
-/*
- * the folder a recording keeps the memory card's saves in, as they were when
- * it started: its path with .card in place of .inputs
- */
-void ReplayCardDir(char *dir, size_t size, const char *recording_path) {
+static int IsRecordingName(const char *name, size_t len) {
+  return len >= RECORDING_EXTENSION_SIZE
+    && strcmp(&name[len-RECORDING_EXTENSION_SIZE], RECORDING_EXTENSION) == 0;
+}
+
+static void ReplayBesidePath(char *path, size_t size, const char *recording_path,
+  const char *extension) {
   size_t len;
 
   len = strlen(recording_path);
-  if (len >= RECORDING_EXTENSION_SIZE && strcmp(&recording_path[len-RECORDING_EXTENSION_SIZE], RECORDING_EXTENSION) == 0)
+  if (IsRecordingName(recording_path, len))
     len -= RECORDING_EXTENSION_SIZE;
-  snprintf(dir, size, "%.*s%s", (int)len, recording_path, CARD_DIR_EXTENSION);
+  snprintf(path, size, "%.*s%s", (int)len, recording_path, extension);
+}
+
+void ReplayCardDir(char *dir, size_t size, const char *recording_path) {
+  ReplayBesidePath(dir, size, recording_path, CARD_DIR_EXTENSION);
+}
+
+void ReplaySettingsFile(char *path, size_t size, const char *recording_path) {
+  ReplayBesidePath(path, size, recording_path, SETTINGS_FILE_EXTENSION);
 }
 
 /* find the newest recording in dir; returns 0 if there are none */
@@ -73,7 +85,7 @@ int ReplayNewestFile(const char *dir, char *path, size_t size) {
   newest[0] = 0;
   while ((e = readdir(d))) {
     len = strlen(e->d_name);
-    if (len < 7 || strcmp(&e->d_name[len-7], ".inputs") != 0) { continue; }
+    if (!IsRecordingName(e->d_name, len)) { continue; }
     if (len < sizeof(newest) && strcmp(e->d_name, newest) > 0)
       strcpy(newest, e->d_name);
   }
@@ -95,10 +107,33 @@ int ReplayMakeDir(const char *dir) {
   return stat(dir, &st) == 0 && S_ISDIR(st.st_mode);
 }
 
+/* 0 if it isn't a recording in this format */
+static FILE *ReplayOpen(const char *path, replay_header *header) {
+  FILE *file;
+
+  file = fopen(path, "rb");
+  if (!file) { return 0; }
+  if (fread(header, sizeof(*header), 1, file) != 1 || header->magic != REPLAY_MAGIC) {
+    fclose(file);
+    return 0;
+  }
+  return file;
+}
+
+int ReplayCanPlay(const char *path) {
+  replay_header header;
+  FILE *file;
+
+  file = ReplayOpen(path, &header);
+  if (!file) { return 0; }
+  fclose(file);
+  return 1;
+}
+
 static replay_recorder recorder = { 0 };
 
 static FILE *replay_file = 0;   /* recording being replayed, or 0 */
-static uint32_t replay_held = 0; /* buttons held this frame of the replay */
+static uint32_t replay_held[PAD_PLAYER_COUNT] = { 0 };
 static int replay_desynced = 0;
 
 /*
@@ -109,12 +144,9 @@ static int ReplayPlayStart(const char *path, uint32_t lid, uint32_t seed) {
   replay_header header;
   FILE *file;
 
-  file = fopen(path, "rb");
-  if (!file) { return 0; }
-  if (fread(&header, sizeof(header), 1, file) != 1
-   || header.magic != REPLAY_MAGIC) {
+  file = ReplayOpen(path, &header);
+  if (!file) {
     fprintf(stderr, "%s is not an input recording\n", path);
-    fclose(file);
     return 0;
   }
   if (header.lid != lid || header.seed != seed) {
@@ -123,7 +155,7 @@ static int ReplayPlayStart(const char *path, uint32_t lid, uint32_t seed) {
     return 0;
   }
   replay_file = file;
-  replay_held = 0;
+  memset(replay_held, 0, sizeof(replay_held));
   replay_desynced = 0;
   TimeSetFixed(1);
   SetTicksElapsed(header.start_ticks);
@@ -157,6 +189,8 @@ int ReplayStart(const char *path, int mode, uint32_t lid, uint32_t seed) {
  */
 void ReplayUpdate() {
   replay_frame frame;
+  uint32_t held[PAD_PLAYER_COUNT];
+  int i;
 
   if (replay_file) {
     if (fread(&frame, sizeof(frame), 1, replay_file) != 1) {
@@ -169,18 +203,20 @@ void ReplayUpdate() {
         GetTicksElapsed(), frame.ticks);
       replay_desynced = 1;
     }
-    replay_held = frame.held;
+    memcpy(replay_held, frame.held, sizeof(replay_held));
     return;
   }
-  ReplayRecordFrame(&recorder, GetTicksElapsed(), SwPadRead(0));
+  for (i=0;i<PAD_PLAYER_COUNT;i++)
+    held[i] = SwPadRead(i);
+  ReplayRecordFrame(&recorder, GetTicksElapsed(), held);
   if (recorder.file)
     fflush(recorder.file); /* keep what's recorded if the game crashes */
 }
 
-/* while replaying, sets held to the replay's buttons and returns 1 */
-int ReplayHeld(uint32_t *held) {
-  if (!replay_file) { return 0; }
-  *held = replay_held;
+/* 0 when not replaying, or for a pad no recording has */
+int ReplayHeld(int idx, uint32_t *held) {
+  if (!replay_file || idx < 0 || idx >= PAD_PLAYER_COUNT) { return 0; }
+  *held = replay_held[idx];
   return 1;
 }
 

@@ -39,12 +39,9 @@ uint32_t PadKeysHeld(int player_idx) {
 uint32_t SwPadRead(int idx) {
   uint32_t held;
 
-  held = 0;
-  if (idx == PAD_PLAYER_TWO) {
-    if (ReplayIsPlaying()) { return 0; } /* replays only record pad 1 */
+  if (ReplayHeld(idx, &held)) { return held; } /* recorded as returned below, pad 1's already shifted */
+  if (idx == PAD_PLAYER_TWO)
     return PadKeysHeld(PAD_PLAYER_TWO) | PadGamepadHeld(PAD_PLAYER_TWO);
-  }
-  if (ReplayHeld(&held)) { return held; } /* replaying recorded inputs */
   held = PadKeysHeld(PAD_PLAYER_ONE) | PadGamepadHeld(PAD_PLAYER_ONE);
   return (held << 16);
 }

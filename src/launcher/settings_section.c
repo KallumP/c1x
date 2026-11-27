@@ -382,7 +382,7 @@ static void DrawSavingFields(void) {
 static void DrawReplayFields(void) {
   DrawFieldGroupTitle("Replays");
   DrawOnOff("Replay inputs", &settings.replay_inputs,
-    "Play back the newest recording in build/recorded_inputs/");
+    "Play back the newest recording in build/recorded_inputs/, with the settings it was recorded with");
   DrawNumberBeside("replay_speed", &settings.replay_speed, 1, SETTINGS_REPLAY_SPEED_MAX,
     settings.replay_inputs, "Replay speed: how many times normal speed replays play at, or 0 for as fast as possible.");
 }

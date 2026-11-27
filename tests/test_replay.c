@@ -26,10 +26,18 @@ static int ReadRecording(replay_header *header, replay_frame *frames, int max) {
   return count;
 }
 
+/* no replay or recording left open, and no keys held, by a test that failed part way */
+static void StartClean() {
+  ReplayStop();
+  memset(keys, 0, sizeof(keys));
+  PadResetBindings();
+}
+
 UTEST(replay, start_recording_fixes_the_clock_and_writes_the_header) {
   replay_header header;
   replay_frame frames[1];
 
+  StartClean();
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   ASSERT_TRUE(TimeIsFixed());
   ReplayStop();
@@ -44,8 +52,7 @@ UTEST(replay, each_update_records_the_clock_and_the_buttons_held) {
   replay_frame frames[3];
   int32_t start;
 
-  memset(keys, 0, sizeof(keys));
-  PadResetBindings();
+  StartClean();
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   start = GetTicksElapsed();
   keys[SDL_SCANCODE_SPACE] = 1;
@@ -57,12 +64,28 @@ UTEST(replay, each_update_records_the_clock_and_the_buttons_held) {
   ASSERT_EQ(2, ReadRecording(&header, frames, 3));
   ASSERT_EQ(start, header.start_ticks);
   ASSERT_EQ(start, frames[0].ticks);
-  ASSERT_EQ((uint32_t)PAD_CROSS << 16, frames[0].held);
+  ASSERT_EQ((uint32_t)PAD_CROSS << 16, frames[0].held[PAD_PLAYER_ONE]);
   ASSERT_EQ(start + FRAME_TICKS, frames[1].ticks);
-  ASSERT_EQ(0u, frames[1].held);
+  ASSERT_EQ(0u, frames[1].held[PAD_PLAYER_ONE]);
+}
+
+UTEST(replay, each_update_records_player_twos_buttons) {
+  replay_header header;
+  replay_frame frames[1];
+
+  StartClean();
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
+  keys[SDL_SCANCODE_KP_0] = 1;
+  ReplayUpdate();
+  keys[SDL_SCANCODE_KP_0] = 0;
+  ReplayStop();
+  ASSERT_EQ(1, ReadRecording(&header, frames, 1));
+  ASSERT_EQ(0u, frames[0].held[PAD_PLAYER_ONE]);
+  ASSERT_EQ((uint32_t)PAD_CROSS, frames[0].held[PAD_PLAYER_TWO]);
 }
 
 UTEST(replay, stopping_goes_back_to_the_real_clock) {
+  StartClean();
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_RECORD, RECORDED_LEVEL, RECORDED_SEED));
   ReplayStop();
   ASSERT_FALSE(TimeIsFixed());
@@ -72,8 +95,7 @@ UTEST(replay, stopping_goes_back_to_the_real_clock) {
 static void Record(uint32_t lid, SDL_Scancode *held, int count) {
   int i;
 
-  memset(keys, 0, sizeof(keys));
-  PadResetBindings();
+  StartClean();
   ReplayStart(TEST_REPLAY, REPLAY_RECORD, lid, RECORDED_SEED);
   for (i=0;i<count;i++) {
     memset(keys, 0, sizeof(keys));
@@ -100,17 +122,30 @@ UTEST(replay, replay_feeds_the_recorded_buttons_instead_of_the_keyboard) {
   keys[SDL_SCANCODE_LEFT] = 0;
 }
 
-/* replays only record pad 1, so player two stands still to keep them playing the same */
-UTEST(replay, pad_two_reads_nothing_while_replaying) {
-  SDL_Scancode held[1] = { 0 };
+UTEST(replay, replay_feeds_player_two_the_recorded_buttons_instead_of_the_keyboard) {
+  SDL_Scancode held[2] = { SDL_SCANCODE_KP_0, 0 };
 
-  Record(RECORDED_LEVEL, held, 1);
+  Record(RECORDED_LEVEL, held, 2);
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
-  keys[SDL_SCANCODE_KP_0] = 1;
+  keys[SDL_SCANCODE_KP_4] = 1;
+  ReplayUpdate();
+  ASSERT_EQ((uint32_t)PAD_CROSS, SwPadRead(1));
+  TimeWaitFrame(FRAME_TICKS);
   ReplayUpdate();
   ASSERT_EQ(0u, SwPadRead(1));
   ReplayStop();
-  keys[SDL_SCANCODE_KP_0] = 0;
+  keys[SDL_SCANCODE_KP_4] = 0;
+}
+
+UTEST(replay, a_pad_beyond_the_recorded_ones_reads_nothing_from_the_replay) {
+  SDL_Scancode held[1] = { SDL_SCANCODE_SPACE };
+  uint32_t replayed;
+
+  Record(RECORDED_LEVEL, held, 1);
+  ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
+  ReplayUpdate();
+  ASSERT_FALSE(ReplayHeld(PAD_PLAYER_COUNT, &replayed));
+  ReplayStop();
 }
 
 UTEST(replay, replay_starts_on_the_fixed_clock_at_the_recorded_time) {
@@ -175,6 +210,36 @@ UTEST(replay, replay_refuses_a_recording_from_another_boot_level) {
   ASSERT_FALSE(TimeIsFixed());
 }
 
+#define OLD_REPLAY_MAGIC 0x31434552 /* "REC1": one pad a frame */
+
+UTEST(replay, a_finished_recording_can_be_played) {
+  SDL_Scancode held[1] = { 0 };
+
+  Record(RECORDED_LEVEL, held, 1);
+  ASSERT_TRUE(ReplayCanPlay(TEST_REPLAY));
+}
+
+UTEST(replay, an_empty_file_cant_be_played) {
+  WriteWholeFile(TEST_REPLAY, "");
+  ASSERT_FALSE(ReplayCanPlay(TEST_REPLAY));
+}
+
+UTEST(replay, a_recording_in_the_one_pad_format_cant_be_played) {
+  replay_header header = { OLD_REPLAY_MAGIC, RECORDED_LEVEL, RECORDED_SEED, 0 };
+  FILE *file;
+
+  file = fopen(TEST_REPLAY, "wb");
+  ASSERT_TRUE(file != 0);
+  fwrite(&header, sizeof(header), 1, file);
+  fclose(file);
+  ASSERT_FALSE(ReplayCanPlay(TEST_REPLAY));
+}
+
+UTEST(replay, a_missing_file_cant_be_played) {
+  remove("build/no_such_file.inputs");
+  ASSERT_FALSE(ReplayCanPlay("build/no_such_file.inputs"));
+}
+
 UTEST(replay, replay_of_a_missing_file_fails_cleanly) {
   remove("build/no_such_file.inputs");
   ASSERT_EQ(0, ReplayStart("build/no_such_file.inputs", REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
@@ -219,6 +284,13 @@ UTEST(replay, the_card_folder_of_a_file_thats_not_a_recording_is_named_after_all
 
   ReplayCardDir(dir, sizeof(dir), "recorded_inputs/notes");
   ASSERT_STREQ("recorded_inputs/notes.card", dir);
+}
+
+UTEST(replay, a_recordings_settings_file_is_named_after_it) {
+  char path[64];
+
+  ReplaySettingsFile(path, sizeof(path), "recorded_inputs/2026-10-30_14-05-09.inputs");
+  ASSERT_STREQ("recorded_inputs/2026-10-30_14-05-09.settings", path);
 }
 
 UTEST(replay, newest_file_is_the_latest_start_time) {

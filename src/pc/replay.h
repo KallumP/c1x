@@ -4,9 +4,10 @@
 #include <stdio.h>
 #include <time.h>
 #include "common.h"
+#include "pad.h"
 
 #define REPLAY_DIR   "recorded_inputs" /* next to the executable; one file per run, named by start time */
-#define REPLAY_MAGIC 0x31434552 /* "REC1" */
+#define REPLAY_MAGIC 0x32434552 /* "REC2" */
 
 /* state needed to start a level the same way again */
 typedef struct {
@@ -19,7 +20,7 @@ typedef struct {
 /* one frame of input */
 typedef struct {
   int32_t ticks;        /* tick count when the frame was drawn */
-  uint32_t held;        /* buttons held */
+  uint32_t held[PAD_PLAYER_COUNT]; /* as SwPadRead returns them: pad 1's in the upper 16 bits */
 } replay_frame;
 
 typedef struct {
@@ -29,7 +30,7 @@ typedef struct {
 extern int ReplayRecordStart(replay_recorder *r, const char *path,
   replay_header *header);
 extern void ReplayRecordFrame(replay_recorder *r, int32_t ticks,
-  uint32_t held);
+  const uint32_t held[PAD_PLAYER_COUNT]);
 extern void ReplayRecordStop(replay_recorder *r);
 
 /* recording files */
@@ -37,7 +38,9 @@ extern void ReplayFileName(char *name, size_t size, const char *dir,
   struct tm *start);
 extern int ReplayNewestFile(const char *dir, char *path, size_t size);
 extern void ReplayCardDir(char *dir, size_t size, const char *recording_path);
+extern void ReplaySettingsFile(char *path, size_t size, const char *recording_path);
 extern int ReplayMakeDir(const char *dir);
+extern int ReplayCanPlay(const char *path);
 
 /* game side */
 #define REPLAY_RECORD 1
@@ -46,7 +49,7 @@ extern int ReplayMakeDir(const char *dir);
 extern int ReplayStart(const char *path, int mode, uint32_t lid,
   uint32_t seed);
 extern void ReplayUpdate();
-extern int ReplayHeld(uint32_t *held);
+extern int ReplayHeld(int idx, uint32_t *held);
 extern int ReplayIsPlaying();
 extern void ReplayStop();
 

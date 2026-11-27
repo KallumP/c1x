@@ -1,6 +1,8 @@
 #include <stddef.h>
+#include <SDL2/SDL.h>
 #include "utest.h"
 #include "pc/settings.h"
+#include "pc/config.h"
 #include "launcher/settings_file.h"
 #include "test_files.h"
 
@@ -341,4 +343,89 @@ UTEST(settings, player_two_starts_as_the_skunk) {
   crash_outfit two = SettingsDefaultOutfit(1);
 
   ASSERT_TRUE(OutfitsEqual(&two, &outfit_presets[OUTFIT_PRESET_SKUNK].outfit));
+}
+
+#define TEST_RECORDED_SETTINGS "build/test_recording.settings"
+
+UTEST(settings, a_replay_plays_with_its_recordings_settings) {
+  WriteWholeFile(TEST_RECORDED_SETTINGS, "two_players = on\nspin_ledge_jump = off\nboot_level = my_level\n");
+  SettingsReset(&game_settings);
+  ASSERT_EQ(1, SettingsLoadRecorded(TEST_RECORDED_SETTINGS));
+  ASSERT_EQ(1, game_settings.two_players);
+  ASSERT_EQ(0, game_settings.spin_ledge_jump);
+  ASSERT_STREQ("my_level", game_settings.boot_level);
+  SettingsReset(&game_settings);
+}
+
+UTEST(settings, settings_a_recording_left_out_are_the_defaults_in_its_replay) {
+  WriteWholeFile(TEST_RECORDED_SETTINGS, "two_players = on\n");
+  SettingsReset(&game_settings);
+  game_settings.skip_splash_screens = 0;
+  ASSERT_EQ(1, SettingsLoadRecorded(TEST_RECORDED_SETTINGS));
+  ASSERT_EQ(1, game_settings.skip_splash_screens);
+  SettingsReset(&game_settings);
+}
+
+UTEST(settings, a_replay_keeps_the_players_own_way_of_watching_it) {
+  WriteWholeFile(TEST_RECORDED_SETTINGS,
+    "replay_inputs = off\nreplay_speed = 1\nframe_rate = 60\nfullscreen = off\nmute = off\n");
+  SettingsReset(&game_settings);
+  game_settings.replay_inputs = 1;
+  game_settings.replay_speed = 8;
+  game_settings.frame_rate = 144;
+  game_settings.fullscreen = 1;
+  game_settings.mute = 1;
+  ASSERT_EQ(1, SettingsLoadRecorded(TEST_RECORDED_SETTINGS));
+  ASSERT_EQ(1, game_settings.replay_inputs);
+  ASSERT_EQ(8u, game_settings.replay_speed);
+  ASSERT_EQ(144u, game_settings.frame_rate);
+  ASSERT_EQ(1, game_settings.fullscreen);
+  ASSERT_EQ(1, game_settings.mute);
+  SettingsReset(&game_settings);
+}
+
+UTEST(settings, a_replay_without_its_settings_file_keeps_the_players_own) {
+  remove("build/no_such_recording.settings");
+  SettingsReset(&game_settings);
+  game_settings.two_players = 1;
+  ASSERT_EQ(0, SettingsLoadRecorded("build/no_such_recording.settings"));
+  ASSERT_EQ(1, game_settings.two_players);
+  SettingsReset(&game_settings);
+}
+
+UTEST(settings, a_replay_keeps_the_players_own_hud_displays) {
+  WriteWholeFile(TEST_RECORDED_SETTINGS,
+    "fps_display = off\nspeed_display = off\nspin_display = off\nbox_display = off\n");
+  SettingsReset(&game_settings);
+  game_settings.fps_display = 1;
+  game_settings.speed_display = 1;
+  game_settings.spin_display = 1;
+  game_settings.box_display = 1;
+  ASSERT_EQ(1, SettingsLoadRecorded(TEST_RECORDED_SETTINGS));
+  ASSERT_EQ(1, game_settings.fps_display);
+  ASSERT_EQ(1, game_settings.speed_display);
+  ASSERT_EQ(1, game_settings.spin_display);
+  ASSERT_EQ(1, game_settings.box_display);
+  SettingsReset(&game_settings);
+}
+
+UTEST(settings, a_replay_of_a_recording_kept_with_no_settings_file_plays_with_the_defaults) {
+  pc_settings defaults;
+
+  WriteWholeFile(TEST_RECORDED_SETTINGS, "");
+  SettingsReset(&defaults);
+  SettingsReset(&game_settings);
+  game_settings.two_players = 1;
+  ASSERT_EQ(1, SettingsLoadRecorded(TEST_RECORDED_SETTINGS));
+  ASSERT_EQ(defaults.two_players, game_settings.two_players);
+  SettingsReset(&game_settings);
+}
+
+UTEST(settings, a_replay_plays_with_the_settings_its_recording_kept) {
+  WriteWholeFile("build/test_own_settings.cfg", "two_players = on\n");
+  ASSERT_EQ(1, ConfigCopyFile("build/test_own_settings.cfg", TEST_RECORDED_SETTINGS));
+  SettingsReset(&game_settings);
+  ASSERT_EQ(1, SettingsLoadRecorded(TEST_RECORDED_SETTINGS));
+  ASSERT_EQ(1, game_settings.two_players);
+  SettingsReset(&game_settings);
 }
