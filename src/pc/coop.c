@@ -200,3 +200,7 @@ vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans)) {
   }
   return one; /* unchecked: he's standing on it */
 }
+
+int CoopOneDiesWhileAnotherPlays(void) {
+  return 0;
+}

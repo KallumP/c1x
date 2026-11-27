@@ -612,3 +612,44 @@ UTEST(coop, the_camera_eases_from_player_one_to_a_player_two_who_joins_nearer_it
   apart = slots[COOP_PLAYER_TWO].trans.x - slots[0].trans.x;
   ASSERT_EQ(slots[0].trans.x + apart / COOP_CAMERA_EASE, aim.x);
 }
+
+/* both players in play, neither dying */
+static void BothPlaying(gool_object *slots) {
+  memset(slots, 0, sizeof(gool_object)*GOOL_PLAYER_COUNT);
+  UsePlayerSlots(slots);
+  slots[0].handle.type = 1;
+  slots[COOP_PLAYER_TWO].handle.type = 1;
+}
+
+UTEST(coop, one_dies_while_another_plays_when_one_players_state_is_a_dying_one) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].state_flags = COOP_DYING_STATE_FLAG;
+  ASSERT_TRUE(CoopOneDiesWhileAnotherPlays());
+}
+
+UTEST(coop, no_one_dies_while_both_play) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  ASSERT_FALSE(CoopOneDiesWhileAnotherPlays());
+}
+
+UTEST(coop, no_one_plays_on_while_both_are_dying) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[0].state_flags = COOP_DYING_STATE_FLAG;
+  slots[COOP_PLAYER_TWO].state_flags = COOP_DYING_STATE_FLAG;
+  ASSERT_FALSE(CoopOneDiesWhileAnotherPlays());
+}
+
+UTEST(coop, no_one_plays_on_while_the_only_player_in_play_is_dying) {
+  gool_object slots[GOOL_PLAYER_COUNT];
+
+  BothPlaying(slots);
+  slots[COOP_PLAYER_TWO].handle.type = 0;
+  slots[0].state_flags = COOP_DYING_STATE_FLAG;
+  ASSERT_FALSE(CoopOneDiesWhileAnotherPlays());
+}
