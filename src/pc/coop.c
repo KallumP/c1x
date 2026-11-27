@@ -202,12 +202,42 @@ vec CoopSpawnBeside(vec one, int (*has_floor)(vec *trans)) {
   return one; /* unchecked: he's standing on it */
 }
 
+static coop_fling *CoopFlingOf(const coop_flings *flings, gool_object *obj) {
+  int i;
+
+  for (i=0;i<COOP_FLING_COUNT;i++) {
+    if (flings->flings[i].obj == obj) { return (coop_fling*)&flings->flings[i]; }
+  }
+  return 0;
+}
+
 void CoopFlingSpun(coop_flings *flings, gool_object *obj, int spinner) {
+  coop_fling *fling;
+
+  fling = CoopFlingOf(flings, obj);
+  if (!fling)
+    fling = CoopFlingOf(flings, 0);
+  if (!fling) {
+    fling = &flings->flings[flings->next];
+    flings->next = (flings->next + 1) % COOP_FLING_COUNT;
+  }
+  fling->obj = obj;
+  fling->spinner = spinner;
 }
 
 int CoopFlingSpinner(const coop_flings *flings, gool_object *obj) {
-  return COOP_NOT_A_PLAYER;
+  coop_fling *fling;
+
+  if (!obj) { return COOP_NOT_A_PLAYER; } /* an empty entry's obj is 0 too */
+  fling = CoopFlingOf(flings, obj);
+  if (!fling) { return COOP_NOT_A_PLAYER; }
+  return fling->spinner;
 }
 
 void CoopFlingForget(coop_flings *flings, gool_object *obj) {
+  coop_fling *fling;
+
+  fling = CoopFlingOf(flings, obj);
+  if (fling)
+    fling->obj = 0;
 }

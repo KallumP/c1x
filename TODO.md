@@ -29,6 +29,9 @@ speed run mode
 
 
 local multiplayer
+- knock enemies into your friends
+- hog wild should show both crashes on the hog
+or replace the hog with p2, with p1 on p2
 - Split screen, so neither player walks out of view
 - way to assign a controller to a player (if you want p1 on keyboard, and p2 on controller 1)
 - side level custom rules, or is it fine as it is
