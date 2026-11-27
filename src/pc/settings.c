@@ -246,13 +246,17 @@ int SettingsCopyFile(const char *from, const char *to) {
   return fclose(out) == 0;
 }
 
-/* the settings for how a replay is watched, which stay the player's own */
-static void SettingsKeepWatching(pc_settings *s, const pc_settings *own) {
+/* how a replay is watched doesn't change how it plays out, so that stays the player's own */
+static void SettingsKeepOwnViewing(pc_settings *s, const pc_settings *own) {
   s->replay_inputs = own->replay_inputs;
   s->replay_speed = own->replay_speed;
   s->frame_rate = own->frame_rate;
   s->fullscreen = own->fullscreen;
   s->mute = own->mute;
+  s->fps_display = own->fps_display;
+  s->speed_display = own->speed_display;
+  s->spin_display = own->spin_display;
+  s->box_display = own->box_display;
 }
 
 /*
@@ -269,6 +273,6 @@ int SettingsLoadRecorded(const char *path) {
     game_settings = own;
     return 0;
   }
-  SettingsKeepWatching(&game_settings, &own);
+  SettingsKeepOwnViewing(&game_settings, &own);
   return 1;
 }

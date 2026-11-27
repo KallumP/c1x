@@ -374,12 +374,12 @@ UTEST(settings, a_replay_plays_with_its_recordings_settings) {
 
   WriteWholeFile(TEST_RECORDED_SETTINGS, "two_players = on\nspin_ledge_jump = off\nboot_level = my_level\n");
   SettingsReset(&game_settings);
-  game_settings.box_display = 0;
+  game_settings.skip_splash_screens = 0;
   ASSERT_EQ(1, SettingsLoadRecorded(TEST_RECORDED_SETTINGS));
   ASSERT_EQ(1, game_settings.two_players);
   ASSERT_EQ(0, game_settings.spin_ledge_jump);
   ASSERT_STREQ("my_level", game_settings.boot_level);
-  ASSERT_EQ(1, game_settings.box_display); /* not in the recording's file, so the default */
+  ASSERT_EQ(1, game_settings.skip_splash_screens); /* not in the recording's file, so the default */
   game_settings = own;
 }
 
