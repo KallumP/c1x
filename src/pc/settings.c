@@ -7,6 +7,19 @@
 
 pc_settings game_settings; /* SettingsReset gives it the defaults, at startup (init.c) */
 
+const settings_color settings_colors[SETTINGS_COLOR_COUNT] = {
+  { "p1_fur_color",    0, offsetof(crash_outfit, fur) },
+  { "p1_belly_color",  0, offsetof(crash_outfit, belly) },
+  { "p1_hair_color",   0, offsetof(crash_outfit, hair) },
+  { "p1_shorts_color", 0, offsetof(crash_outfit, shorts) },
+  { "p1_shoes_color",  0, offsetof(crash_outfit, shoes) },
+  { "p2_fur_color",    1, offsetof(crash_outfit, fur) },
+  { "p2_belly_color",  1, offsetof(crash_outfit, belly) },
+  { "p2_hair_color",   1, offsetof(crash_outfit, hair) },
+  { "p2_shorts_color", 1, offsetof(crash_outfit, shorts) },
+  { "p2_shoes_color",  1, offsetof(crash_outfit, shoes) },
+};
+
 /* the colours a player starts in: crash's own for player one */
 crash_outfit SettingsDefaultOutfit(int player_idx) {
   if (player_idx == 1)
@@ -110,19 +123,26 @@ static int SettingsParseColor(const char *value, uint32_t *color) {
   return 1;
 }
 
-/* the colour of a player's outfit that name ("p1_fur_color" and the like) sets, or 0 */
-static uint32_t *SettingsOutfitColor(const char *name, pc_settings *s) {
-  crash_outfit *outfit;
+uint32_t *SettingsColor(pc_settings *s, int color_idx) {
+  const settings_color *color;
 
-  if (SDL_strncasecmp(name, "p1_", 3) == 0) { outfit = &s->outfits[0]; }
-  else if (SDL_strncasecmp(name, "p2_", 3) == 0) { outfit = &s->outfits[1]; }
-  else { return 0; }
-  name += 3;
-  if (SDL_strcasecmp(name, "fur_color") == 0) { return &outfit->fur; }
-  if (SDL_strcasecmp(name, "shorts_color") == 0) { return &outfit->shorts; }
-  if (SDL_strcasecmp(name, "shoes_color") == 0) { return &outfit->shoes; }
-  if (SDL_strcasecmp(name, "belly_color") == 0) { return &outfit->belly; }
-  if (SDL_strcasecmp(name, "hair_color") == 0) { return &outfit->hair; }
+  color = &settings_colors[color_idx];
+  return (uint32_t*)((char*)&s->outfits[color->player_idx] + color->offset);
+}
+
+uint32_t SettingsColorValue(const pc_settings *s, int color_idx) {
+  const settings_color *color;
+
+  color = &settings_colors[color_idx];
+  return *(const uint32_t*)((const char*)&s->outfits[color->player_idx] + color->offset);
+}
+
+static uint32_t *SettingsColorNamed(const char *name, pc_settings *s) {
+  int i;
+
+  for (i=0;i<SETTINGS_COLOR_COUNT;i++) {
+    if (SDL_strcasecmp(name, settings_colors[i].name) == 0) { return SettingsColor(s, i); }
+  }
   return 0;
 }
 
@@ -172,7 +192,7 @@ static int SettingsApply(const char *name, const char *value, pc_settings *s) {
     return AppliedOrInvalid(SettingsParseOnOff(value, &s->two_players));
   if (SDL_strcasecmp(name, "boot_level") == 0)
     return AppliedOrInvalid(SettingsParseLevelName(value, s->boot_level));
-  outfit_color = SettingsOutfitColor(name, s);
+  outfit_color = SettingsColorNamed(name, s);
   if (outfit_color)
     return AppliedOrInvalid(SettingsParseColor(value, outfit_color));
   return -1;

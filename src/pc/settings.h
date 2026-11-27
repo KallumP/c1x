@@ -1,6 +1,7 @@
 #ifndef _PC_SETTINGS_H_
 #define _PC_SETTINGS_H_
 
+#include <stddef.h>
 #include "common.h"
 #include "outfit.h"
 
@@ -11,6 +12,7 @@
 #define SETTINGS_FRAME_RATE_MAX        240
 #define SETTINGS_PLAYER_COUNT          2
 #define SETTINGS_COLOR_DIGITS          6
+#define SETTINGS_COLOR_COUNT           (SETTINGS_PLAYER_COUNT * 5) /* fur, belly, hair, shorts, shoes */
 #define SETTINGS_P2_FUR_COLOR          0x33333A /* what player two starts in, a skunk: black fur, purple shorts, dark grey shoes */
 #define SETTINGS_P2_SHORTS_COLOR       0x7A3E9D
 #define SETTINGS_P2_SHOES_COLOR        0x2D2D2D
@@ -40,9 +42,19 @@ typedef struct {
   char boot_level[SETTINGS_BOOT_LEVEL_MAX+1]; /* custom level to boot into, or "" */
 } pc_settings;
 
+/* a colour setting: its name, and the colour of whose outfit it sets */
+typedef struct {
+  const char *name;
+  int player_idx;
+  size_t offset; /* in crash_outfit */
+} settings_color;
+
 extern pc_settings game_settings;
+extern const settings_color settings_colors[SETTINGS_COLOR_COUNT];
 
 extern crash_outfit SettingsDefaultOutfit(int player_idx);
+extern uint32_t *SettingsColor(pc_settings *s, int color_idx);
+extern uint32_t SettingsColorValue(const pc_settings *s, int color_idx);
 extern void SettingsReset(pc_settings *s);
 extern int SettingsParseLine(const char *line, pc_settings *s);
 extern int SettingsLoad(const char *path);

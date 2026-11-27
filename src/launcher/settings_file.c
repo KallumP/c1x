@@ -122,22 +122,6 @@ static char *ReplaceColorLine(char *text, const char *name, uint32_t color) {
   return ReplaceSettingLine(text, name, value);
 }
 
-/* text with player's (1 or 2) colour lines set to outfit's */
-static char *ReplaceOutfitLines(char *text, int player, const crash_outfit *outfit) {
-  char name[32];
-
-  SDL_snprintf(name, sizeof(name), "p%d_fur_color", player);
-  text = ReplaceColorLine(text, name, outfit->fur);
-  SDL_snprintf(name, sizeof(name), "p%d_belly_color", player);
-  text = ReplaceColorLine(text, name, outfit->belly);
-  SDL_snprintf(name, sizeof(name), "p%d_hair_color", player);
-  text = ReplaceColorLine(text, name, outfit->hair);
-  SDL_snprintf(name, sizeof(name), "p%d_shorts_color", player);
-  text = ReplaceColorLine(text, name, outfit->shorts);
-  SDL_snprintf(name, sizeof(name), "p%d_shoes_color", player);
-  return ReplaceColorLine(text, name, outfit->shoes);
-}
-
 /* text (a settings file's, to SDL_free) with every setting in s set */
 static char *SettingsTextWith(char *text, const pc_settings *s) {
   int i;
@@ -158,8 +142,8 @@ static char *SettingsTextWith(char *text, const pc_settings *s) {
   text = ReplaceOnOffLine(text, "fullscreen", s->fullscreen);
   text = ReplaceOnOffLine(text, "memory_card", s->memory_card);
   text = ReplaceOnOffLine(text, "mute", s->mute);
-  for (i=0;i<SETTINGS_PLAYER_COUNT;i++)
-    text = ReplaceOutfitLines(text, i + 1, &s->outfits[i]);
+  for (i=0;i<SETTINGS_COLOR_COUNT;i++)
+    text = ReplaceColorLine(text, settings_colors[i].name, SettingsColorValue(s, i));
   if (s->boot_level[0]) {
     text = ReplaceSettingLine(text, "boot_level", s->boot_level);
   }
