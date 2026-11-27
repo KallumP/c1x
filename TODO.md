@@ -30,7 +30,7 @@ speed run mode
 
 local multiplayer
 - Replays recording both pads
-- Split screen in place of the leash
+- Split screen, so neither player walks out of view
 - color crash differently?
 - way to assign a controller to a player (if you want p1 on keyboard, and p2 on controller 1)
 - side level custom rules, or is it fine as it is
