@@ -6,7 +6,7 @@
 
 - each player's colours (fur, belly, hair, shorts and shoes) can be chosen in a popup in the launcher's settings, from presets (Default and Skunk) or part by part; player two starts as the skunk
 - input recordings record player two's buttons too, and replay both players
-- with two players on, the title screen shows CO-OP MODE at the bottom right of N-Hanced
+- with two players on, the title screen shows CO-OP MODE over the right end of N-Hanced's underline
 
 ### Changed
 
