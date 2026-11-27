@@ -276,26 +276,93 @@ static int DrawSwatch(const char *id, uint32_t color, float size) {
   return igColorButton(id, ColorToVec4(color), ImGuiColorEditFlags_NoTooltip, (ImVec2){ size, size });
 }
 
-static void DrawOutfitSwatches(crash_outfit *outfit) {
-  int i;
+/* returns the part whose swatch was clicked, or -1 */
+static int DrawOutfitSwatches(crash_outfit *outfit) {
+  int i, clicked;
 
+  clicked = -1;
   for (i=0;i<OUTFIT_PART_COUNT;i++) {
-    DrawSwatch(outfit_parts[i].label, *OutfitPartColor(outfit, i), SWATCH_SIZE);
+    if (DrawSwatch(outfit_parts[i].label, *OutfitPartColor(outfit, i), SWATCH_SIZE)) { clicked = i; }
     DrawTooltip(outfit_parts[i].label);
     igSameLine(0, 2.0f);
   }
+  return clicked;
+}
+
+#define PART_LIST_WIDTH 140.0f
+
+static int editing_part;         /* which part the open popup's picker is for */
+static crash_outfit outfit_before; /* what Cancel goes back to */
+
+static void DrawPartList(crash_outfit *outfit) {
+  int i;
+
+  igBeginGroup();
+  for (i=0;i<OUTFIT_PART_COUNT;i++) {
+    igPushID_Int(i);
+    DrawSwatch("##swatch", *OutfitPartColor(outfit, i), igGetFrameHeight());
+    igSameLine(0, -1);
+    if (igSelectable_Bool(outfit_parts[i].label, editing_part == i, 0, (ImVec2){ PART_LIST_WIDTH, 0 }))
+      editing_part = i;
+    DrawTooltip(outfit_parts[i].covers);
+    igPopID();
+  }
+  igEndGroup();
+}
+
+static void DrawPartPicker(crash_outfit *outfit) {
+  uint32_t *color;
+  float rgb[3];
+
+  color = OutfitPartColor(outfit, editing_part);
+  rgb[0] = ChannelToFloat(*color, 16);
+  rgb[1] = ChannelToFloat(*color, 8);
+  rgb[2] = ChannelToFloat(*color, 0);
+  if (igColorPicker3("##picker", rgb, ImGuiColorEditFlags_DisplayHex | ImGuiColorEditFlags_NoSidePreview))
+    *color = FloatToChannel(rgb[0], 16) | FloatToChannel(rgb[1], 8) | FloatToChannel(rgb[2], 0);
+}
+
+static void DrawOutfitButtons(crash_outfit *outfit, int player_idx) {
+  if (igButton("Done", (ImVec2){ BUTTON_WIDTH, 0 })) { igCloseCurrentPopup(); }
+  igSameLine(0, -1);
+  if (igButton("Cancel", (ImVec2){ BUTTON_WIDTH, 0 })) {
+    *outfit = outfit_before;
+    igCloseCurrentPopup();
+  }
+  igSameLine(0, -1);
+  if (igButton("Reset", (ImVec2){ BUTTON_WIDTH, 0 })) { *outfit = SettingsDefaultOutfit(player_idx); }
+  DrawTooltip("Back to the colours this player starts in.");
+}
+
+static void DrawOutfitPopup(const char *title, crash_outfit *outfit, int player_idx) {
+  if (!igBeginPopupModal(title, 0, ImGuiWindowFlags_AlwaysAutoResize)) { return; }
+  DrawPartList(outfit);
+  igSameLine(0, -1);
+  DrawPartPicker(outfit);
+  igSeparator();
+  DrawOutfitButtons(outfit, player_idx);
+  igEndPopup();
+}
+
+static void OpenOutfitPopup(const char *title, crash_outfit *outfit, int part_idx) {
+  outfit_before = *outfit;
+  editing_part = part_idx;
+  igOpenPopup_Str(title, 0);
 }
 
 static void DrawOutfit(const char *label, int player_idx) {
   crash_outfit *outfit;
+  int clicked_part;
 
   outfit = &settings.outfits[player_idx];
   BeginFieldRow(label, "The colours this player's Crash is drawn in.");
   igPushID_Str(label);
-  DrawOutfitSwatches(outfit);
+  clicked_part = DrawOutfitSwatches(outfit);
+  if (clicked_part != -1) { OpenOutfitPopup(label, outfit, clicked_part); }
   igSameLine(0, -1);
-  igSmallButton("Edit");
+  if (igSmallButton("Edit")) { OpenOutfitPopup(label, outfit, 0); }
   DrawTooltip("Choose this player's colours.");
+  DrawOutfitPopup(label, outfit, player_idx);
   igPopID();
 }
 
