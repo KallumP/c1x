@@ -19,12 +19,13 @@ int ReplayRecordStart(replay_recorder *r, const char *path,
 }
 
 /* record one frame */
-void ReplayRecordFrame(replay_recorder *r, int32_t ticks, uint32_t held) {
+void ReplayRecordFrame(replay_recorder *r, int32_t ticks,
+  const uint32_t held[REPLAY_PLAYER_COUNT]) {
   replay_frame frame;
 
   if (!r->file) { return; }
   frame.ticks = ticks;
-  frame.held[0] = held;
+  memcpy(frame.held, held, sizeof(frame.held));
   fwrite(&frame, sizeof(replay_frame), 1, r->file);
 }
 
@@ -157,6 +158,8 @@ int ReplayStart(const char *path, int mode, uint32_t lid, uint32_t seed) {
  */
 void ReplayUpdate() {
   replay_frame frame;
+  uint32_t held[REPLAY_PLAYER_COUNT];
+  int i;
 
   if (replay_file) {
     if (fread(&frame, sizeof(frame), 1, replay_file) != 1) {
@@ -172,7 +175,9 @@ void ReplayUpdate() {
     replay_held = frame.held[0];
     return;
   }
-  ReplayRecordFrame(&recorder, GetTicksElapsed(), SwPadRead(0));
+  for (i=0;i<REPLAY_PLAYER_COUNT;i++)
+    held[i] = SwPadRead(i);
+  ReplayRecordFrame(&recorder, GetTicksElapsed(), held);
   if (recorder.file)
     fflush(recorder.file); /* keep what's recorded if the game crashes */
 }

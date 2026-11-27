@@ -6,7 +6,7 @@
 #include "common.h"
 
 #define REPLAY_DIR   "recorded_inputs" /* next to the executable; one file per run, named by start time */
-#define REPLAY_MAGIC 0x31434552 /* "REC1" */
+#define REPLAY_MAGIC 0x32434552 /* "REC2" */
 #define REPLAY_PLAYER_COUNT 2
 
 /* state needed to start a level the same way again */
@@ -30,7 +30,7 @@ typedef struct {
 extern int ReplayRecordStart(replay_recorder *r, const char *path,
   replay_header *header);
 extern void ReplayRecordFrame(replay_recorder *r, int32_t ticks,
-  uint32_t held);
+  const uint32_t held[REPLAY_PLAYER_COUNT]);
 extern void ReplayRecordStop(replay_recorder *r);
 
 /* recording files */
