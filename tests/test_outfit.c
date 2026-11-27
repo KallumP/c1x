@@ -264,3 +264,20 @@ UTEST(outfit, the_lines_on_his_shoes_caps_are_half_as_bright_as_the_shoe_colour)
   outfit.shoes = GREEN;
   ASSERT_EQ((uint32_t)0x008000, recolored(SHOE_LINE, outfit));
 }
+
+#define FUR_DIMMER   0xCC2800 /* a shade of his fur */
+#define BELLY_DIMMER 0xD86400 /* a shade of his belly */
+
+UTEST(outfit, his_fur_is_drawn_as_it_is_when_only_the_belly_is_chosen) {
+  crash_outfit outfit = his_own();
+
+  outfit.belly = WHITE;
+  ASSERT_EQ((uint32_t)FUR_DIMMER, recolored(FUR_DIMMER, outfit));
+}
+
+UTEST(outfit, his_belly_is_drawn_as_it_is_when_only_the_fur_is_chosen) {
+  crash_outfit outfit = his_own();
+
+  outfit.fur = BLACK;
+  ASSERT_EQ((uint32_t)BELLY_DIMMER, recolored(BELLY_DIMMER, outfit));
+}
