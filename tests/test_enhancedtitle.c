@@ -53,3 +53,19 @@ UTEST(enhancedtitle, loading_the_title_again_waits_for_the_logo_again) {
   EnhancedTitleReset(&title);
   ASSERT_FALSE(EnhancedTitleDrawsWith(&title, ENHANCED_TITLE_ANCHOR));
 }
+
+UTEST(enhancedtitle, coop_mode_lines_up_with_n_hanceds_right_edge) {
+  rect2 n_hanced, coop;
+
+  EnhancedTitleAt(&n_hanced);
+  EnhancedTitleCoopAt(&coop);
+  ASSERT_EQ(n_hanced.x + (int32_t)n_hanced.w, coop.x + (int32_t)coop.w);
+}
+
+UTEST(enhancedtitle, coop_mode_hangs_just_below_n_hanceds_bottom) {
+  rect2 n_hanced, coop;
+
+  EnhancedTitleAt(&n_hanced);
+  EnhancedTitleCoopAt(&coop);
+  ASSERT_EQ(n_hanced.y + (int32_t)n_hanced.h + ENHANCED_TITLE_COOP_DROP, coop.y + (int32_t)coop.h);
+}

@@ -22,3 +22,17 @@ int EnhancedTitleDrawsWith(const enhanced_title *title, const char *menu_text) {
   if (!title->logo_landed) { return 0; }
   return strcmp(menu_text, ENHANCED_TITLE_ANCHOR) == 0;
 }
+
+void EnhancedTitleAt(rect2 *at) {
+  at->x = ENHANCED_TITLE_LEFT;
+  at->y = ENHANCED_TITLE_TOP;
+  at->w = ENHANCED_TITLE_WIDTH;
+  at->h = ENHANCED_TITLE_HEIGHT;
+}
+
+void EnhancedTitleCoopAt(rect2 *at) {
+  at->x = 0;
+  at->y = 0;
+  at->w = ENHANCED_TITLE_COOP_WIDTH;
+  at->h = ENHANCED_TITLE_COOP_HEIGHT;
+}
