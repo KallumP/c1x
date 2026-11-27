@@ -341,3 +341,8 @@ gool_object *CoopFlungTarget(const coop_spinners *spinners, int slot, gool_objec
   }
   return 0;
 }
+
+uint32_t CoopFlungEventFor(const coop_spinners *spinners, int sender_slot,
+  gool_object *recipient, uint32_t event) {
+  return event;
+}
