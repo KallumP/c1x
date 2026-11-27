@@ -608,6 +608,18 @@ int GoolFindNearestObject(gool_object *obj, gool_nearest_query *query) {
   return 0;
 }
 
+/* a flung enemy looking for what to hit takes the player who didn't spin it, if he's nearer (coop.h) */
+static void GoolFlingAtFriend(gool_nearest_query *query) {
+  gool_object *friend;
+  int spinner;
+
+  spinner = CoopFlingSpinner(&coop_flung, query->obj);
+  if (spinner == COOP_NOT_A_PLAYER) { return; }
+  friend = CoopFlingFriend(query->obj, spinner, query->dist);
+  if (friend)
+    query->nearest_obj = friend;
+}
+
 //----- (8001BCA4) --------------------------------------------------------
 gool_object *GoolObjectTestStateFlags(gool_object *obj, int flags) {
   if (obj->state_flags & flags)
@@ -937,6 +949,7 @@ int GoolObjectKill(gool_object *obj, int sig) {
    * title state */
   if (!obj || (obj == crash && ns.ldat->lid != LID_TITLE))
     return SUCCESS;
+  CoopFlingForget(&coop_flung, obj); /* its slot may hold another object next */
   if (sig)
     GoolSendEvent(0, obj, GOOL_EVENT_TERMINATE, 0, 0);
   child = GoolObjectGetChildren(obj);
@@ -3007,6 +3020,8 @@ void GoolOpMisc(gool_object *obj, uint32_t instruction) {
         child = child->sibling;
       }
     }
+    if (query.event == GOOL_EVENT_FLING)
+      GoolFlingAtFriend(&query);
     GoolObjectPush(obj, (uint32_t)query.nearest_obj); /* is this correct? */
     break;
   }
@@ -3547,6 +3562,13 @@ static int GoolFlungPastReach(gool_object *sender, gool_object *recipient, uint3
   return !FlingBreaksBox(ns.ldat->lid, &stood, &sender->trans);
 }
 
+/* a player spinning an enemy flings it: who did is kept, as it may fly into the other (coop.h) */
+static void GoolNoteSpin(gool_object *sender, gool_object *recipient, uint32_t event) {
+  if (event != GOOL_EVENT_SPIN_HIT || !CoopIsPlayer(sender)) { return; }
+  if (GoolObjectCategory(recipient) != FLING_ENEMY) { return; }
+  CoopFlingSpun(&coop_flung, recipient, CoopPlayerIndex(sender));
+}
+
 static switch_chain_stops switch_chain_stops_now;
 
 /* whether event is a switch, filled in by another's chain, passing the fill on into its own before it's hit (switchchain.h) */
@@ -3576,6 +3598,10 @@ int GoolSendEvent(gool_object *sender, gool_object *recipient, uint32_t event, i
   uint32_t *code, flags;
   int res, test, i;
 
+  if (recipient) {
+    GoolNoteSpin(sender, recipient, event);
+    event = CoopFlingEvent(&coop_flung, sender, recipient, event);
+  }
   if (recipient && GoolFlungPastReach(sender, recipient, event))
     recipient = 0; /* it flies on through the box, as if it weren't there */
   if (recipient && GoolSwitchChainStops(sender, recipient, event))
