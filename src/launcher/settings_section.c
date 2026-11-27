@@ -254,7 +254,11 @@ static void DrawOutfit(const char *label, int player_idx) {
   outfit = &settings.outfits[player_idx];
   BeginFieldRow(label, "The colours this player's Crash is drawn in.");
   igPushID_Str(label);
-  DrawColorPicker("Fur", &outfit->fur, "His fur. His belly and muzzle are lighter shades of it.");
+  DrawColorPicker("Fur", &outfit->fur, "His fur.");
+  igSameLine(0, -1);
+  DrawColorPicker("Belly", &outfit->belly, "His belly, the patch on his back and, paler, his muzzle.");
+  igSameLine(0, -1);
+  DrawColorPicker("Hair", &outfit->hair, "The tuft on his head.");
   igSameLine(0, -1);
   DrawColorPicker("Shorts", &outfit->shorts, "His shorts.");
   igSameLine(0, -1);

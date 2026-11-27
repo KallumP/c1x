@@ -29,10 +29,12 @@ The game's settings are in `settings.cfg`, next to `streams/`. Change them in th
 | Setting | Default | What it does |
 |---|---|---|
 | `two_players` | `off` | Two Crashes play together: player 2 on the arrow keys and number pad, or a second controller (see [Controls](controls.md#two-players)). The camera follows whoever is nearest it, and the other can walk out of view. If either Crash dies, both go back to the last checkpoint. |
-| `p1_fur_color` | `ff3100` | The colour of player 1's fur, as six hex digits: red, green, blue. His belly and muzzle are lighter shades of it. The default is Crash's own, and leaves him exactly as the original draws him. |
+| `p1_fur_color` | `ff3100` | The colour of player 1's fur, as six hex digits: red, green, blue. Each colour's default is Crash's own, and leaves that part exactly as the original draws it. |
+| `p1_belly_color` | `ff7600` | The colour of player 1's belly and the patch on his back. His muzzle is a paler shade of it. |
+| `p1_hair_color` | `9d0000` | The colour of the tuft on player 1's head. |
 | `p1_shorts_color` | `002790` | The colour of player 1's shorts. |
 | `p1_shoes_color` | `330000` | The colour of player 1's shoes and gloves. |
-| `p2_fur_color`, `p2_shorts_color`, `p2_shoes_color` | `33333a`, `7a3e9d`, `e6e6e6` | The same three colours for player 2, who starts as a skunk, in black fur, purple shorts and white shoes and gloves, so the two are easy to tell apart. |
+| `p2_fur_color`, `p2_belly_color`, `p2_hair_color`, `p2_shorts_color`, `p2_shoes_color` | `33333a`, `f0f0f0`, `f0f0f0`, `7a3e9d`, `e6e6e6` | The same five colours for player 2, who starts as a skunk (black fur, a white belly and tuft, purple shorts, white shoes and gloves) so the two are easy to tell apart. |
 
 ### Start
 

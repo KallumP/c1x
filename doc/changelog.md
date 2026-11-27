@@ -4,8 +4,8 @@
 
 ### Added
 
-- each player's fur, shorts and shoes colours can be chosen in the launcher's settings
-- player two starts in colours of his own, a skunk: black fur, purple shorts and white shoes and gloves
+- each player's fur, belly, hair, shorts and shoes colours can be chosen in the launcher's settings
+- player two starts in colours of his own, a skunk: black fur, a white belly and tuft, purple shorts and white shoes and gloves
 
 ## 2026-11-25
 
