@@ -20,7 +20,7 @@ typedef struct {
 /* one frame of input */
 typedef struct {
   int32_t ticks;        /* tick count when the frame was drawn */
-  uint32_t held[PAD_PLAYER_COUNT]; /* buttons held on each pad, as SwPadRead reads them */
+  uint32_t held[PAD_PLAYER_COUNT]; /* as SwPadRead returns them: pad 1's in the upper 16 bits */
 } replay_frame;
 
 typedef struct {

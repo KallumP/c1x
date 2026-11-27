@@ -50,7 +50,6 @@ void ReplayFileName(char *name, size_t size, const char *dir,
 #define CARD_DIR_EXTENSION       ".card"
 #define SETTINGS_FILE_EXTENSION  ".settings"
 
-/* a file kept beside a recording: its path with extension in place of .inputs */
 static void ReplayBesideFile(char *path, size_t size, const char *recording_path,
   const char *extension) {
   size_t len;
@@ -61,12 +60,10 @@ static void ReplayBesideFile(char *path, size_t size, const char *recording_path
   snprintf(path, size, "%.*s%s", (int)len, recording_path, extension);
 }
 
-/* the folder a recording keeps the memory card's saves in, as they were when it started */
 void ReplayCardDir(char *dir, size_t size, const char *recording_path) {
   ReplayBesideFile(dir, size, recording_path, CARD_DIR_EXTENSION);
 }
 
-/* the file a recording keeps the settings in, as they were when it started */
 void ReplaySettingsFile(char *path, size_t size, const char *recording_path) {
   ReplayBesideFile(path, size, recording_path, SETTINGS_FILE_EXTENSION);
 }
@@ -105,7 +102,7 @@ int ReplayMakeDir(const char *dir) {
   return stat(dir, &st) == 0 && S_ISDIR(st.st_mode);
 }
 
-/* open a recording and read its header; returns 0 if it isn't one in this format */
+/* 0 if it isn't a recording in this format */
 static FILE *ReplayOpen(const char *path, replay_header *header) {
   FILE *file;
 
@@ -131,7 +128,7 @@ int ReplayCanPlay(const char *path) {
 static replay_recorder recorder = { 0 };
 
 static FILE *replay_file = 0;   /* recording being replayed, or 0 */
-static uint32_t replay_held[PAD_PLAYER_COUNT] = { 0 }; /* buttons held this frame of the replay */
+static uint32_t replay_held[PAD_PLAYER_COUNT] = { 0 };
 static int replay_desynced = 0;
 
 /*
@@ -211,7 +208,7 @@ void ReplayUpdate() {
     fflush(recorder.file); /* keep what's recorded if the game crashes */
 }
 
-/* while replaying, sets held to the replay's buttons on pad idx and returns 1 */
+/* 0 when not replaying, or for a pad no recording has */
 int ReplayHeld(int idx, uint32_t *held) {
   if (!replay_file || idx < 0 || idx >= PAD_PLAYER_COUNT) { return 0; }
   *held = replay_held[idx];

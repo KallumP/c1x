@@ -127,7 +127,7 @@ UTEST(replay, replay_feeds_player_two_the_recorded_buttons_instead_of_the_keyboa
 
   Record(RECORDED_LEVEL, held, 2);
   ASSERT_EQ(1, ReplayStart(TEST_REPLAY, REPLAY_PLAY, RECORDED_LEVEL, RECORDED_SEED));
-  keys[SDL_SCANCODE_KP_4] = 1; /* ignored while replaying */
+  keys[SDL_SCANCODE_KP_4] = 1;
   ReplayUpdate();
   ASSERT_EQ((uint32_t)PAD_CROSS, SwPadRead(1));
   TimeWaitFrame(FRAME_TICKS);

@@ -239,11 +239,7 @@ static void SettingsKeepOwnViewing(pc_settings *s, const pc_settings *own) {
   s->box_display = own->box_display;
 }
 
-/*
- * play with the settings a recording kept, so its replay plays out the same,
- * but watched the player's own way. returns 0, leaving game_settings as they
- * were, if the file can't be read
- */
+/* so a replay plays out the same; 0, leaving game_settings as they were, if path can't be read */
 int SettingsLoadRecorded(const char *path) {
   pc_settings own;
 

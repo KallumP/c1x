@@ -301,7 +301,6 @@ static void StartReplay(const char *path) {
   UseRecordingsCard(path);
 }
 
-/* a new file in recorded_inputs to record this run to, named by its start time */
 static int NameRecording(char *path, size_t size) {
   char dir[1024];
   time_t now;
